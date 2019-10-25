@@ -120,6 +120,7 @@ class AbstractEventListener {
 		if (this.useEventReplay() && this.checkpointer instanceof BaseCheckpointer) {
 			this._firstCheckpoint = checkpoint = await this.checkpointer.loadLatestCheckpoint();
 			const blockchainInfo = await this.channel.queryInfo();
+			// eslint-disable-next-line no-prototype-builtins
 			if (checkpoint && checkpoint.hasOwnProperty('blockNumber') && !isNaN(checkpoint.blockNumber) && blockchainInfo.height - 1 > Number(checkpoint.blockNumber)) {
 				logger.debug(`Requested Block Number: ${Number(checkpoint.blockNumber) + 1} Latest Block Number: ${blockchainInfo.height - 1}`);
 				this.clientOptions.startBlock = Long.fromInt(Number(checkpoint.blockNumber) + 1);

@@ -574,6 +574,7 @@ module.exports = function () {
 				const event_service = channel.newEventService('myhub');
 
 				// TEST 1 - all good, get all requested blocks
+				// eslint-disable-next-line no-async-promise-executor
 				let receiveBlocks = new Promise(async (resolve, reject) => {
 					const handle = setTimeout(() => {
 						reject(new Error('Test application has timed out waiting for final block event'));
@@ -646,6 +647,7 @@ module.exports = function () {
 				}
 
 				// TEST 2 - get callback with error, due to endblock received
+				// eslint-disable-next-line no-async-promise-executor
 				receiveBlocks = new Promise(async (resolve, reject) => {
 					const handle = setTimeout(() => {
 						reject(new Error('Test application has timed out waiting for final block event'));
@@ -881,7 +883,7 @@ module.exports = function () {
 			testUtil.logMsg(format('\n\n%s - COMPLETE\n', step));
 		});
 
-		// Then endorse with transient on chaincode fabcar01 on channel mychannel
+	// Then endorse with transient on chaincode fabcar01 on channel mychannel
 	this.Then(/^endorse with transient on chaincode (.+?) on channel (.+?)$/,
 		{timeout: testUtil.TIMEOUTS.LONG_STEP},
 		async (chaincode_name, channel_name) => {

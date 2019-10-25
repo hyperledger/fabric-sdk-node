@@ -8,6 +8,7 @@
 // in a happy-path scenario
 'use strict';
 
+// tslint:disable:typedef
 import fs = require('fs-extra');
 import os = require('os');
 import path = require('path');

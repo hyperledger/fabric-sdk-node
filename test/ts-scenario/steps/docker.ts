@@ -12,15 +12,15 @@ import { StateStore } from './lib/utility/stateStore';
 import { Given } from 'cucumber';
 import * as path from 'path';
 
-const commandRunner = CommandRunner.getInstance();
-const stateStore = StateStore.getInstance();
+const commandRunner: CommandRunner = CommandRunner.getInstance();
+const stateStore: StateStore = StateStore.getInstance();
 
-const nonTlsNetwork = '../../ts-fixtures/docker-compose/docker-compose.yaml';
-const tlsNetwork = '../../ts-fixtures/docker-compose/docker-compose-tls.yaml';
+const nonTlsNetwork: string = '../../ts-fixtures/docker-compose/docker-compose.yaml';
+const tlsNetwork: string = '../../ts-fixtures/docker-compose/docker-compose-tls.yaml';
 
-Given(/^I deploy a (.+?) Fabric network/, { timeout: Constants.STEP_LONG as number }, async (type) => {
+Given(/^I deploy a (.+?) Fabric network/, { timeout: Constants.STEP_LONG as number }, async (type: string) => {
 
-	const fabricState = stateStore.get(Constants.FABRIC_STATE);
+	const fabricState: any = stateStore.get(Constants.FABRIC_STATE);
 
 	// If not deployed, deploy the requested type of network
 	if (!fabricState) {

@@ -9,7 +9,7 @@ import { IdentityData } from './identitydata';
 import { IdentityProviderRegistry } from './identityproviderregistry';
 import { WalletStore } from './walletstore';
 
-const encoding = 'utf8';
+const encoding: 'utf8' = 'utf8';
 
 /**
  * Stores identity information for use when connecting a Gateway. The wallet is backed by a store that handles
@@ -37,9 +37,9 @@ export class Wallet {
 	 * @returns {Promise<void>}
 	 */
 	public async put(label: string, identity: Identity): Promise<void> {
-		const json = this.providerRegistry.getProvider(identity.type).toJson(identity);
-		const jsonString = JSON.stringify(json);
-		const buffer = Buffer.from(jsonString, encoding);
+		const json: IdentityData = this.providerRegistry.getProvider(identity.type).toJson(identity);
+		const jsonString: string = JSON.stringify(json);
+		const buffer: Buffer = Buffer.from(jsonString, encoding) as Buffer;
 		await this.store.put(label, buffer);
 	}
 
@@ -49,12 +49,12 @@ export class Wallet {
 	 * @returns {Promise<module:fabric-network.Identity|undefined>} An identity if it exists; otherwise undefined.
 	 */
 	public async get(label: string): Promise<Identity|undefined> {
-		const buffer = await this.store.get(label);
+		const buffer: Buffer | undefined = await this.store.get(label);
 		if (!buffer) {
 			return undefined;
 		}
 
-		const jsonString = buffer.toString(encoding);
+		const jsonString: string = buffer.toString(encoding);
 		const json: IdentityData = JSON.parse(jsonString);
 		return this.providerRegistry.getProvider(json.type).fromJson(json);
 	}

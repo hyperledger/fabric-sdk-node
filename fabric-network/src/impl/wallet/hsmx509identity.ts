@@ -40,7 +40,7 @@ export interface HsmOptions {
  * @implements module:fabric-network.IdentityProvider
  */
 export class HsmX509Provider implements IdentityProvider {
-	public readonly type = 'HSM-X.509';
+	public readonly type: string = 'HSM-X.509';
 	private readonly options: any;
 
 	/**
@@ -60,7 +60,7 @@ export class HsmX509Provider implements IdentityProvider {
 		}
 
 		if (data.version === 1) {
-			const x509Data = data as HsmX509IdentityDataV1;
+			const x509Data: HsmX509IdentityDataV1 = data as HsmX509IdentityDataV1;
 			return {
 				credentials: {
 					certificate: x509Data.credentials.certificate,
@@ -86,11 +86,11 @@ export class HsmX509Provider implements IdentityProvider {
 	}
 
 	public async setUserContext(client: Client, identity: HsmX509Identity, name: string): Promise<void> {
-		const cryptoSuite = Client.newCryptoSuite(this.options);
+		const cryptoSuite: Client.ICryptoSuite = Client.newCryptoSuite(this.options);
 		client.setCryptoSuite(cryptoSuite);
 
-		const publicKey = await cryptoSuite.importKey(identity.credentials.certificate);
-		const privateKeyObj = await cryptoSuite.getKey(publicKey.getSKI());
+		const publicKey: Client.ICryptoKey = await cryptoSuite.importKey(identity.credentials.certificate);
+		const privateKeyObj: Client.ICryptoKey = await cryptoSuite.getKey(publicKey.getSKI());
 
 		const userData: Client.UserOpts = {
 			cryptoContent: {
@@ -101,7 +101,7 @@ export class HsmX509Provider implements IdentityProvider {
 			skipPersistence: true,
 			username: name,
 		};
-		const user = await client.createUser(userData);
+		const user: Client.User = await client.createUser(userData);
 		client.setUserContext(user, true);
 	}
 }

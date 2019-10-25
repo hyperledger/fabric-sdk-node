@@ -3,6 +3,7 @@
 #
 
 @discovery
+@gateway
 Feature: Configure Fabric using CLI and submit/evaluate using a network Gateway with discovery enabled
 
 	Background:
@@ -13,7 +14,7 @@ Feature: Configure Fabric using CLI and submit/evaluate using a network Gateway 
 		And I use the cli to deploy a node smart contract named fabcar at version 1.0.0 for all organizations on channel discoverychannel with endorsement policy 1of and arguments ["initLedger"]
 
  	Scenario: Using a Gateway I can submit and evaluate transactions on instantiated node smart contract
-		Given I have a gateway named myDiscoveryGateway with discovery set to true for user User1 using the connection profile named ccp-tls.json
+		Given I have a file backed gateway named myDiscoveryGateway with discovery set to true for user User1 using the connection profile named ccp-tls.json
 	    When I use the gateway named myDiscoveryGateway to submit a transaction with args [createCar,1001,Ariel,Atom,red,Nick] for contract fabcar instantiated on channel discoverychannel
 	    Then The gateway named myDiscoveryGateway has a submit type response
 	 	When I use the gateway named myDiscoveryGateway to evaluate a transaction with args [queryCar,1001] for contract fabcar instantiated on channel discoverychannel

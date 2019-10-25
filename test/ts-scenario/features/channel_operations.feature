@@ -1,0 +1,27 @@
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+@channel_operations
+Feature: Use the channel query methods
+
+	Background:
+		Given I place a scenario start message CHANNEL FEATURE
+	 	Given I deploy a tls Fabric network
+		And I use the cli to create and join the channel named channelopschannel on the deployed network
+	 	And I use the cli to create and join the channel named channelopschannelvtwo on the deployed network
+		And I use the cli to update the channel with name channelopschannelvtwo with config file channelopschannelvtwo-anchor.tx on the deployed network
+		And I use the cli to lifecycle deploy a node smart contract named fabcar at version 1.0.0 as fabbyDoCar for all organizations on channel channelopschannelvtwo with default endorsement policy and arguments ["initLedger"]
+		And I use the cli to deploy a node smart contract named events at version 1.0.0 for all organizations on channel channelopschannel with endorsement policy 1ofAny and arguments ["initLedger"]
+
+ 	Scenario: Using a V2 channel object, I can query for chaincode information
+	 	When I perform a queryInstantiatedChaincodes operation on channel channelopschannel with Org1 the response matches fields {"chaincodes":[{"name":"events", "version":"1.0.0", "path":"/opt/gopath/src/github.com/chaincode/node/events"}]}
+		When I perform a queryInstalledChaincode operation with arguments {"contract":"fabcar"} on channel channelopschannelvtwo with Org1 the response matches fields {"label":"fabcar"}
+		When I perform a queryInstalledChaincodes operation on channel channelopschannelvtwo with Org1 the response includes fields {"installed_chaincodes": [{"label":"fabcar"}]}
+		When I perform a queryChaincodeDefinition operation with arguments {"contract":"fabbyDoCar"} on channel channelopschannelvtwo with Org1 the response matches fields {"approvals": {"Org1MSP": true, "Org2MSP": true},"init_required":false, "version": "1.0.0", "sequence": "1"}
+
+	Scenario: Using a channel object, I can query for block information
+		When I perform a queryInfo operation on channel channelopschannelvtwo with Org1 the response mirrors fields {"currentBlockHash":{"buffer":"any"},"height":"any","previousBlockHash":{"buffer":"any"}}
+		When I perform a queryBlock operation with arguments {"block":1} on channel channelopschannelvtwo with Org1 the response mirrors fields {"data":{"data":"any"},"header":{"data_hash":"any","number":"any","previous_hash":"any"},"metadata":{"metadata":"any"}}
+		When I perform a queryBlockByHash operation on channel channelopschannelvtwo with Org1 the response mirrors fields {"data":{"data":"any"},"header":{"data_hash":"any","number":"any","previous_hash":"any"},"metadata":{"metadata":"any"}}
+		When I perform a queryBlockByTxId operation with arguments {"contract":"fabbyDoCar", "function":"createCar", "contractAgs":["53","VW","Beetle","cream","Herbie"]} on channel channelopschannelvtwo with Org1 the response mirrors fields {"data":"anyObject","header":{"data_hash":"X","number":"5","previous_hash":"Y"},"metadata":"anyObject"}

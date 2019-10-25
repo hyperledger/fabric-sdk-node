@@ -10,7 +10,7 @@ import stripAnsi from 'strip-ansi';
 
 export class CommandRunner {
 
-	public static getInstance() {
+	public static getInstance(): CommandRunner {
 		// Do you need arguments? Make it a regular static method instead.
 		return this.instance || (this.instance = new this());
 	}
@@ -28,20 +28,20 @@ export class CommandRunner {
 	 * @param {DataTable} cmd -  CLI command with parameters to be run
 	 * @return {Promise} - Promise that will be resolved or rejected with an error
 	 */
-	public runShellCommand(pass: any, cmd: string, verbose: boolean = true) {
+	public runShellCommand(pass: any, cmd: string, verbose: boolean = true): Promise<any> {
 		if (typeof cmd !== 'string') {
 			return Promise.reject('Command passed to function was not a string');
 		} else {
-			const command = cmd.replace(/\s*[\n\r]+\s*/g, ' ');
-			let stdout = '';
-			let stderr = '';
-			const env = Object.create(process.env);
+			const command: string = cmd.replace(/\s*[\n\r]+\s*/g, ' ');
+			let stdout: string = '';
+			let stderr: string = '';
+			const env: any = Object.create(process.env);
 
-			return new Promise((resolve, reject) => {
+			return new Promise((resolve: any, reject: any): any => {
 
 				logMsg('SCENARIO CMD:', cmd);
 
-				const options = {
+				const options: any = {
 					env,
 					maxBuffer: 100000000,
 				};
@@ -54,21 +54,19 @@ export class CommandRunner {
 					childCliProcess.stdout.setEncoding('utf8');
 					childCliProcess.stderr.setEncoding('utf8');
 
-					childCliProcess.stdout.on('data', (data) => {
+					childCliProcess.stdout.on('data', (data: string) => {
 						data = stripAnsi(data);
 						stdout += data;
 					});
 
-					childCliProcess.stderr.on('data', (data) => {
+					childCliProcess.stderr.on('data', (data: string) => {
 						data = stripAnsi(data);
 						stderr += data;
 					});
 
-					childCliProcess.on('error', (error) => {
-						if (verbose) {
-							logMsg('SCENARIO CMD - STDOUT:\n', stdout);
-							logMsg('SCENARIO CMD - STDERR:\n', stderr);
-						}
+					childCliProcess.on('error', (error: any) => {
+						logMsg('SCENARIO CMD - STDOUT:\n', stdout);
+						logMsg('SCENARIO CMD - STDERR:\n', stderr);
 						this.lastResp = {
 							error,
 							stderr,
@@ -79,7 +77,7 @@ export class CommandRunner {
 						}
 					});
 
-					childCliProcess.on('close', (code) => {
+					childCliProcess.on('close', (code: any) => {
 						if (verbose) {
 							logMsg('SCENARIO CMD - STDOUT:\n', stdout);
 							logMsg('SCENARIO CMD - STDERR:\n', stderr);

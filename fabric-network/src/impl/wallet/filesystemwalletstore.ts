@@ -9,19 +9,19 @@ import path = require('path');
 
 import { WalletStore } from './walletstore';
 
-const suffix = '.id';
+const suffix: string = '.id';
 
 function isIdentityFile(file: string): boolean {
 	return file.endsWith(suffix);
 }
 
 function toLabel(file: string): string {
-	const endIndex = file.length - suffix.length;
+	const endIndex: number = file.length - suffix.length;
 	return file.substring(0, endIndex);
 }
 
 export class FileSystemWalletStore implements WalletStore {
-	public static async newInstance(directory: string): Promise<WalletStore> {
+	public static async newInstance(directory: string): Promise<FileSystemWalletStore> {
 		await fs.mkdirp(directory);
 		return new FileSystemWalletStore(directory);
 	}
@@ -33,12 +33,12 @@ export class FileSystemWalletStore implements WalletStore {
 	}
 
 	public async delete(label: string): Promise<void> {
-		const file = this.toPath(label);
+		const file: string = this.toPath(label);
 		await fs.unlink(file);
 	}
 
 	public async get(label: string): Promise<Buffer|undefined> {
-		const file = this.toPath(label);
+		const file: string = this.toPath(label);
 		try {
 			return await fs.readFile(file);
 		} catch (error) {
@@ -53,7 +53,7 @@ export class FileSystemWalletStore implements WalletStore {
 	}
 
 	public async put(label: string, data: Buffer): Promise<void> {
-		const file = this.toPath(label);
+		const file: string = this.toPath(label);
 		await fs.writeFile(file, data);
 	}
 

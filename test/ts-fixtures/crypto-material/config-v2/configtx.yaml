@@ -22,6 +22,12 @@ Application: &ApplicationDefaults
     # For Application policies, their canonical path is
     #   /Channel/Application/<PolicyName>
     Policies: &ApplicationDefaultPolicies
+        LifecycleEndorsement:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Endorsement:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
         Readers:
             Type: ImplicitMeta
             Rule: "ANY Readers"

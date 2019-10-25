@@ -34,7 +34,7 @@
 		"chaincodes":[
 		]
 	  },
-	  "channelopschannelvtwo":{
+	"channelopschannelvtwo":{
 		"orderers":[
 		  "orderer.example.com"
 		],
@@ -55,7 +55,7 @@
 		"chaincodes":[
 		]
 	  },
-    "eventschannel":{
+	"eventschannel":{
 		"orderers":[
 		  "orderer.example.com"
 		],
@@ -97,7 +97,7 @@
       "chaincodes":[
       ]
 	},
-	"discoverychannel":{
+	"dicoverychannel":{
 		"orderers":[
 		  "orderer.example.com"
 		],
@@ -195,7 +195,7 @@
   },
   "orderers":{
     "orderer.example.com":{
-	  "url":"grpcs://localhost:7050",
+	  "url":"grpc://localhost:7050",
 	  "mspid": "OrdererMSP",
       "grpcOptions":{
         "ssl-target-name-override":"orderer.example.com"
@@ -213,7 +213,7 @@
   },
   "peers":{
     "peer0.org1.example.com":{
-      "url":"grpcs://localhost:7051",
+      "url":"grpc://localhost:7051",
       "grpcOptions":{
         "ssl-target-name-override":"peer0.org1.example.com",
 		"request-timeout": 120001
@@ -223,7 +223,7 @@
       }
     },
     "peer0.org2.example.com":{
-      "url":"grpcs://localhost:8051",
+      "url":"grpc://localhost:8051",
       "grpcOptions":{
         "ssl-target-name-override":"peer0.org2.example.com",
 		"request-timeout": 120001
@@ -235,7 +235,7 @@
   },
   "certificateAuthorities":{
     "ca-org1":{
-      "url":"https://localhost:7054",
+      "url":"http://localhost:7054",
       "grpcOptions":{
         "verify":true
       },
@@ -250,7 +250,7 @@
       ]
     },
 	"ca-org2":{
-		"url":"https://localhost:8054",
+		"url":"http://localhost:8054",
 		"grpcOptions":{
 		  "verify":true
 		},

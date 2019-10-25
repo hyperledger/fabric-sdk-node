@@ -14,10 +14,10 @@ import { After, AfterAll } from 'cucumber';
 
 // const networkUtils = require('../lib/network');
 
-const commandRunner = CommandRunner.getInstance();
-const stateStore = StateStore.getInstance();
+const commandRunner: CommandRunner = CommandRunner.getInstance();
+const stateStore: StateStore = StateStore.getInstance();
 
-AfterAll({}, async () => {
+AfterAll({ timeout: Constants.HUGE_TIME as number }, async () => {
 	// Clean off Docker step
 	BaseUtils.logMsg('Tearing down network ...', null);
 	await commandRunner.runShellCommand(undefined, 'docker kill $(docker ps -aq); docker rm $(docker ps -aq)');
@@ -27,7 +27,7 @@ AfterAll({}, async () => {
 	await commandRunner.runShellCommand(undefined, 'docker rmi $(docker images dev-* -q)');
 });
 
-After({tags: '@clean-gateway'}, async () => {
+After({tags: '@clean-gateway', timeout: Constants.HUGE_TIME as number}, async () => {
 	// If a test fails without disconnecting gateways, then the tests will hang
 	BaseUtils.logMsg('Disconnecting from all gateways ...',  null);
 	await Gateway.disconnectAllGateways();

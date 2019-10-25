@@ -5,41 +5,41 @@
 'use strict';
 
 import { Constants } from '../constants';
-import { CommonConnectionProfile } from './commonConnectionProfile';
 import * as AdminUtils from './utility/adminUtils';
 import * as BaseUtils from './utility/baseUtils';
+import { CommonConnectionProfileHelper } from './utility/commonConnectionProfileHelper';
 
 import * as Client from 'fabric-client';
 import * as fs from 'fs';
 import * as path from 'path';
 
-const supportedLanguageTypes = ['node', 'golang'];
+const supportedLanguageTypes: string[] = ['node', 'golang'];
 
-export async function sdk_chaincode_install_for_org(ccType: string, ccName: string,  ccVersion: string, chaincodeId: string, tls: boolean, ccp: CommonConnectionProfile, orgName: string, channelName: string) {
+export async function sdk_chaincode_install_for_org(ccType: 'golang' | 'car' | 'java' | 'node', ccName: string,  ccVersion: string, chaincodeId: string, tls: boolean, ccp: CommonConnectionProfileHelper, orgName: string, channelName: string): Promise<void> {
 
 	if (!supportedLanguageTypes.includes(ccType)) {
 		Promise.reject(`Unsupported test ccType ${ccType}`);
 	}
 
 	Client.setConfigSetting('request-timeout', Constants.INSTALL_TIMEOUT);
-	const client = new Client();
-	const channel = client.newChannel(channelName);
+	const client: Client = new Client();
+	const channel: Client.Channel = client.newChannel(channelName);
 
 	// Conditional action on TLS enablement
 	if (tls) {
-		const caName = ccp.getCertificateAuthoritiesForOrg(orgName)[0];
-		const fabricCAEndpoint = ccp.getCertificateAuthority(caName).url;
-		const tlsInfo = await AdminUtils.tlsEnroll(fabricCAEndpoint, caName);
+		const caName: string = ccp.getCertificateAuthoritiesForOrg(orgName)[0];
+		const fabricCAEndpoint: string = ccp.getCertificateAuthority(caName).url;
+		const tlsInfo: any = await AdminUtils.tlsEnroll(fabricCAEndpoint, caName);
 		client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 	}
 
-	const cryptoSuite = Client.newCryptoSuite();
+	const cryptoSuite: Client.ICryptoSuite = Client.newCryptoSuite();
 	client.setCryptoSuite(cryptoSuite);
 
-	const ordererName = ccp.getOrderersForChannel(channelName)[0];
-	const caRootsPath = ccp.getOrderer(ordererName).tlsCACerts.path;
-	let data = fs.readFileSync(caRootsPath);
-	const pem = Buffer.from(data).toString();
+	const ordererName: string = ccp.getOrderersForChannel(channelName)[0];
+	const caRootsPath: string = ccp.getOrderer(ordererName).tlsCACerts.path;
+	let data: Buffer = fs.readFileSync(caRootsPath);
+	const pem: string = Buffer.from(data).toString();
 
 	channel.addOrderer(
 		client.newOrderer(
@@ -52,9 +52,9 @@ export async function sdk_chaincode_install_for_org(ccType: string, ccName: stri
 	);
 
 	const targets: Client.Peer[] = [];
-	const peers = ccp.getPeersForOrganization(orgName) as string[];
-	peers.forEach((peerName) => {
-		const peer = ccp.getPeer(peerName);
+	const peers: string[] = ccp.getPeersForOrganization(orgName);
+	peers.forEach((peerName: string) => {
+		const peer: any = ccp.getPeer(peerName);
 		data = fs.readFileSync(peer.tlsCACerts.path);
 		targets.push(
 			client.newPeer(
@@ -72,11 +72,11 @@ export async function sdk_chaincode_install_for_org(ccType: string, ccName: stri
 		await AdminUtils.getSubmitter(client, true /* get peer org admin */, orgName, ccp);
 
 		// chaincode and metadata paths
-		const chaincodePath = path.join(__dirname, Constants.LIB_TO_CHAINCODE, ccType, ccName);
-		const metadataPath = path.join(chaincodePath, 'metadata');
+		const chaincodePath: string = path.join(__dirname, Constants.LIB_TO_CHAINCODE, ccType, ccName);
+		const metadataPath: string = path.join(chaincodePath, 'metadata');
 
 		// send proposal to endorser
-		const request = {
+		const request: Client.ChaincodeInstallRequestv1 = {
 			chaincodeId,
 			chaincodePath,
 			chaincodeType: ccType,
@@ -87,21 +87,21 @@ export async function sdk_chaincode_install_for_org(ccType: string, ccName: stri
 
 		BaseUtils.logMsg(`Using deprecated API to install chaincode with ID ${chaincodeId}@${ccVersion} on organization ${orgName} peers [${ccp.getPeersForOrganization(orgName).toString()}] ...`, undefined);
 
-		const results = await client.installChaincode(request as any);
+		const results: Client.ProposalResponseObject = await client.installChaincode(request as any);
 
-		const proposalResponses = results[0];
+		const proposalResponses: Array<Client.ProposalResponse | Client.ProposalErrorResponse> = results[0];
 		if (!proposalResponses) {
 			throw new Error('No response returned from client.installChaincode() request when using deprecated API');
 		}
 
-		let proposalResponsesValid = true;
-		const errors = [];
+		let proposalResponsesValid: boolean = true;
+		const errors: Client.ProposalErrorResponse[] = [];
 		for (const proposalResponse of proposalResponses) {
-			let valid = false;
-			if ((proposalResponse  as any).response && (proposalResponse  as any).response.status === 200) {
+			let valid: boolean = false;
+			if ((proposalResponse as Client.ProposalResponse).response && (proposalResponse as Client.ProposalResponse).response.status === 200) {
 				valid = true;
 			} else {
-				errors.push(proposalResponse);
+				errors.push(proposalResponse as Client.ProposalErrorResponse);
 			}
 			proposalResponsesValid = proposalResponsesValid && valid;
 		}
@@ -122,45 +122,45 @@ export async function sdk_chaincode_install_for_org(ccType: string, ccName: stri
  * @param {String} ccName The name of the chaincode to instantiate
  * @param {String} ccType The chaincode type to install (node | goLang | Java ...)
  * @param {String} ccVersion The chaincode version
- * @param {String} chaincodeId The chaincode id to delploy as
+ * @param {String} chaincodeId The chaincode id to deploy as
  * @param {String} args chaincode arguments
  * @param {Boolean} upgrade Indicates whether the call is an upgrade or a new instantiation.
  * @param {Boolean} tls true if tls enabled network; false if not
- * @param {CommonConnectionProfile} ccp The common connection profile
+ * @param {CommonConnectionProfileHelper} ccp The common connection profile
  * @param {String} orgName The name of the organization to use
  * @param {String} channelName The channel name
  * @param {Object} policy The endorsement policy object from the configuration file.
  * @return {Promise} The return promise.
  */
-export async function sdk_chaincode_instantiate(ccName: string, ccType: string, ccVersion: string, chaincodeId: string, args: string, upgrade: boolean, tls: boolean, ccp: CommonConnectionProfile, orgName: string, channelName: string, policy: any) {
+export async function sdk_chaincode_instantiate(ccName: string, ccType: 'golang' | 'car' | 'java' | 'node', ccVersion: string, chaincodeId: string, args: string, upgrade: boolean, tls: boolean, ccp: CommonConnectionProfileHelper, orgName: string, channelName: string, policy: any): Promise<void> {
 	if (!supportedLanguageTypes.includes(ccType)) {
 		Promise.reject(`Unsupported test ccType: ${ccType}`);
 	}
 
 	Client.setConfigSetting('request-timeout', Constants.INSTANTIATE_TIMEOUT);
 
-	const type = upgrade ? 'upgrade' : 'instantiate';
+	const type: string = upgrade ? 'upgrade' : 'instantiate';
 
 	const targets: Client.Peer[] = [];
 	const eventHubs: Client.ChannelEventHub[]  = [];
-	const client = new Client();
+	const client: Client = new Client();
 	const channel: Client.Channel = client.newChannel(channelName);
 
-	const cryptoSuite = Client.newCryptoSuite();
+	const cryptoSuite: Client.ICryptoSuite = Client.newCryptoSuite();
 	client.setCryptoSuite(cryptoSuite);
 
 	// Conditional action on TLS enablement
 	if (tls) {
-		const caName = ccp.getCertificateAuthoritiesForOrg(orgName)[0];
-		const fabricCAEndpoint = ccp.getCertificateAuthority(caName).url;
-		const tlsInfo = await AdminUtils.tlsEnroll(fabricCAEndpoint, caName);
+		const caName: string = ccp.getCertificateAuthoritiesForOrg(orgName)[0];
+		const fabricCAEndpoint: string = ccp.getCertificateAuthority(caName).url;
+		const tlsInfo: any = await AdminUtils.tlsEnroll(fabricCAEndpoint, caName);
 		client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 	}
 
-	const ordererName = ccp.getOrderersForChannel(channelName)[0];
-	const caRootsPath = ccp.getOrderer(ordererName).tlsCACerts.path;
-	let data = fs.readFileSync(caRootsPath);
-	const pem = Buffer.from(data).toString();
+	const ordererName: string = ccp.getOrderersForChannel(channelName)[0];
+	const caRootsPath: string = ccp.getOrderer(ordererName).tlsCACerts.path;
+	let data: Buffer = fs.readFileSync(caRootsPath);
+	const pem: string = Buffer.from(data).toString();
 
 	channel.addOrderer(
 		client.newOrderer(
@@ -177,11 +177,11 @@ export async function sdk_chaincode_instantiate(ccName: string, ccType: string, 
 		// set user to send install chaincode requests
 		await AdminUtils.getSubmitter(client, true /* get peer org admin */, orgName, ccp);
 
-		const peers = ccp.getPeersForOrganization(orgName) as string[];
-		peers.forEach((peerName) => {
-			const thisPeer = ccp.getPeer(peerName);
+		const peers: string[] = ccp.getPeersForOrganization(orgName);
+		peers.forEach((peerName: string) => {
+			const thisPeer: any = ccp.getPeer(peerName);
 			data = fs.readFileSync(thisPeer.tlsCACerts.path);
-			const peer = client.newPeer(
+			const peer: Client.Peer = client.newPeer(
 				thisPeer.url,
 				{
 					'pem': Buffer.from(data).toString(),
@@ -190,59 +190,58 @@ export async function sdk_chaincode_instantiate(ccName: string, ccType: string, 
 
 			targets.push(peer);
 			channel.addPeer(peer, ccp.getOrganization(orgName).mspid);
-			const eh = channel.newChannelEventHub(peer);
+			const eh: Client.ChannelEventHub = channel.newChannelEventHub(peer);
 			eventHubs.push(eh);
 		});
 
 		await channel.initialize();
 
-		const transientMap = {test: 'transientValue'};
-		const ccPath = path.join(__dirname, Constants.LIB_TO_CHAINCODE, ccName, ccType);
-		const proposalRequest = buildChaincodeProposal(client, chaincodeId, ccPath, ccVersion, ccType, args, upgrade, transientMap, policy);
+		const transientMap: any = {test: 'transientValue'};
+		const proposalRequest: Client.ChaincodeInstantiateUpgradeRequest = buildChaincodeProposal(client, chaincodeId, ccVersion, ccType, args, upgrade, transientMap, policy);
 
-		let results;
+		let results: Client.ProposalResponseObject;
 		if (upgrade) {
 			results = await channel.sendUpgradeProposal(proposalRequest as any);
 		} else {
 			results = await channel.sendInstantiateProposal(proposalRequest as any);
 		}
 
-		const proposalResponses = results[0];
+		const proposalResponses: Array<Client.ProposalResponse> = results[0] as Array<Client.ProposalResponse>;
 		if (!proposalResponses) {
 			throw new Error('No response returned from channel.sendInstantiateProposal() request when using deprecated API');
 		}
-		const proposal = results[1];
+		const proposal: Client.Proposal = results[1];
 		for (const proposalResponse of proposalResponses) {
-			if (!((proposalResponse as any).response && (proposalResponse as any).response.status === 200)) {
+			if (!((proposalResponse as Client.ProposalResponse).response && (proposalResponse as Client.ProposalResponse).response.status === 200)) {
 				Promise.reject(`The proposal of type ${type} was bad: ${JSON.stringify(proposalResponse)}`);
 			}
 		}
 
-		const request = {
+		const request: Client.TransactionRequest = {
 			proposal,
 			proposalResponses,
 		};
 
-		const deployId = proposalRequest.txId.getTransactionID();
+		const deployId: string = proposalRequest.txId.getTransactionID();
 
-		const eventPromises = [];
-		eventPromises.push(channel.sendTransaction(request as any));
-		eventHubs.forEach((eh) => {
-			const txPromise = new Promise((resolve, reject) => {
-				const handle = setTimeout(reject, 300000);
+		const eventPromises: Promise<any>[] = [];
+		eventPromises.push(channel.sendTransaction(request as Client.TransactionRequest));
+		eventHubs.forEach((eh: Client.ChannelEventHub) => {
+			const txPromise: Promise<any> = new Promise((resolve: any, reject: any): any => {
+				const handle: NodeJS.Timeout = setTimeout(reject, 300000);
 
-				eh.registerTxEvent(deployId.toString(), (tx, code) => {
+				eh.registerTxEvent(deployId.toString(), (tx: any, code: string) => {
 					clearTimeout(handle);
 					if (code !== 'VALID') {
-						const msg = `The chaincode ${type} transaction was invalid, code = ${code}`;
+						const msg: string = `The chaincode ${type} transaction was invalid, code = ${code}`;
 						BaseUtils.logError(msg, undefined);
 						reject(msg);
 					} else {
 						resolve();
 					}
-				}, (err) => {
+				}, (err: Error) => {
 					clearTimeout(handle);
-					const msg = `There was a problem with the ${type} transaction event: ${JSON.stringify(err)}`;
+					const msg: string = `There was a problem with the ${type} transaction event: ${JSON.stringify(err)}`;
 					BaseUtils.logError(msg, undefined);
 					reject(msg);
 				}, {
@@ -253,35 +252,34 @@ export async function sdk_chaincode_instantiate(ccName: string, ccType: string, 
 			eventPromises.push(txPromise);
 		});
 
-		results = await Promise.all(eventPromises);
-		if (results && !(results[0] instanceof Error) && results[0].status === 'SUCCESS') {
+		const eventResults: any[] = await Promise.all(eventPromises) ;
+		if (eventResults && !(eventResults[0] instanceof Error) && (eventResults[0].status === 'SUCCESS')) {
 			BaseUtils.logMsg(`Successfully performed ${type} transaction on chaincode with ID ${chaincodeId}@${ccVersion} using deprecated API`, undefined);
 			return await BaseUtils.sleep(Constants.INC_SHORT);
 		} else {
-			const msg = `Failed to order the ${type} transaction using deprecated API. Error code: ${results[0].status}`;
+			const msg: string = `Failed to order the ${type} transaction using deprecated API. Error code: ${eventResults[0].status}`;
 			BaseUtils.logError(msg, undefined);
 			throw new Error(msg);
 		}
 	} catch (err) {
-		const msg = `Failed to perform ${type} instantiation on chaincode with ID ${chaincodeId}@${ccVersion} using deprecated API`;
+		const msg: string = `Failed to perform ${type} instantiation on chaincode with ID ${chaincodeId}@${ccVersion} using deprecated API`;
 		BaseUtils.logError(msg, err);
 		throw new Error(`${msg} due to error: ${err.stack ? err.stack : err}`);
 	}
 }
 
-function buildChaincodeProposal(client: Client, chaincodeId: string, chaincodePath: string, chaincodeVersion: string, chaincodeType: string, ccArgs: string, isUpgrade: boolean, transientMap: any, policy: any) {
-	const txId = client.newTransactionID();
+function buildChaincodeProposal(client: Client, chaincodeId: string, chaincodeVersion: string, chaincodeType: 'golang' | 'car' | 'java' | 'node', ccArgs: string, isUpgrade: boolean, transientMap: any, policy: any): Client.ChaincodeInstantiateUpgradeRequest {
+	const txId: Client.TransactionId = client.newTransactionID();
 
 	// args is a string array for the arguments to pass [function, arg0, arg1, arg2, ..., argn]
-	const argArray = ccArgs.slice(1, -1).split(',');
-	const fcn = argArray[0];
-	const args = argArray.slice(1);
+	const argArray: string[] = ccArgs.slice(1, -1).split(',');
+	const fcn: string = argArray[0];
+	const args: string[] = argArray.slice(1);
 
 	// send proposal to endorser
-	const request = {
+	const request: Client.ChaincodeInstantiateUpgradeRequest = {
 		args,
 		chaincodeId,
-		chaincodePath,
 		chaincodeType,
 		chaincodeVersion,
 		'endorsement-policy': policy,

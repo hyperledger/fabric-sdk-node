@@ -7,17 +7,17 @@
 import { Constants } from '../../constants';
 import { StateStore } from './stateStore';
 
-const stateStore = StateStore.getInstance();
+const stateStore: StateStore = StateStore.getInstance();
 
 /**
  * Perform a sleep
  * @param ms the time in milliseconds to sleep for
  */
-export function sleep(ms: number) {
-	return new Promise((resolve) => setTimeout(resolve, ms));
+export function sleep(ms: number): Promise<void> {
+	return new Promise((resolve: any): any => setTimeout(resolve, ms));
 }
 
-export function logMsg(msg: string, obj: any) {
+export function logMsg(msg: string, obj: any): void {
 	if (obj) {
 		// tslint:disable-next-line:no-console
 		console.log(msg, obj);
@@ -27,7 +27,7 @@ export function logMsg(msg: string, obj: any) {
 	}
 }
 
-export function logError(msg: string, obj: any) {
+export function logError(msg: string, obj: any): void {
 	if (obj) {
 		// tslint:disable-next-line:no-console
 		console.error(msg, obj);
@@ -37,7 +37,7 @@ export function logError(msg: string, obj: any) {
 	}
 }
 
-export function logAndThrow(msg: any) {
+export function logAndThrow(msg: any): Error {
 	logError(msg, undefined);
 	if (msg instanceof Error) {
 		throw msg;
@@ -46,9 +46,9 @@ export function logAndThrow(msg: any) {
 	}
 }
 
-export function checkString(actual: string, expected: string, enableThrow: boolean) {
+export function checkString(actual: string, expected: string, enableThrow: boolean): Error | void {
 	if (actual.localeCompare(expected) !== 0) {
-		const msg = `Expected ${actual} to be ${expected}`;
+		const msg: string = `Expected ${actual} to be ${expected}`;
 		if (enableThrow) {
 			logAndThrow(msg);
 		} else {
@@ -57,9 +57,9 @@ export function checkString(actual: string, expected: string, enableThrow: boole
 	}
 }
 
-export function checkProperty(object: any, expectedProperty: string, enableThrow: boolean) {
+export function checkProperty(object: any, expectedProperty: string, enableThrow: boolean): Error | void {
 	if (!object.hasOwnProperty(expectedProperty)) {
-		const msg = `Property ${expectedProperty} missing from object ${JSON.stringify(object)}`;
+		const msg: string = `Property ${expectedProperty} missing from object ${JSON.stringify(object)}`;
 		if (enableThrow) {
 			logAndThrow(msg);
 		} else {
@@ -68,9 +68,9 @@ export function checkProperty(object: any, expectedProperty: string, enableThrow
 	}
 }
 
-export function checkSizeEquality(item0: number, item1: number, greaterThan: boolean, enableThrow: boolean) {
+export function checkSizeEquality(item0: number, item1: number, greaterThan: boolean, enableThrow: boolean): Error | void {
 	if (greaterThan && item0 < item1) {
-		const msg = `Property ${item0} to be larger than ${item1}`;
+		const msg: string = `Property ${item0} to be larger than ${item1}`;
 		if (enableThrow) {
 			logAndThrow(msg);
 		} else {
@@ -79,7 +79,7 @@ export function checkSizeEquality(item0: number, item1: number, greaterThan: boo
 	}
 
 	if (!greaterThan && item0 > item1) {
-		const msg = `Property ${item0} to be less than ${item1}`;
+		const msg: string = `Property ${item0} to be less than ${item1}`;
 		if (enableThrow) {
 			logAndThrow(msg);
 		} else {
@@ -88,20 +88,21 @@ export function checkSizeEquality(item0: number, item1: number, greaterThan: boo
 	}
 }
 
-export function logScenarioStart(featureType: string) {
-	const features = stateStore.get(Constants.FEATURES);
+export function logScenarioStart(featureType: string): void {
+	const features: Map<string, number> = stateStore.get(Constants.FEATURES);
 
-	let counter = 0;
+	let counter: number = 0;
 
 	if (!features) {
 		// does not exist
-		const featureMap = new Map<string, number>();
+		const featureMap: Map<string, number> = new Map<string, number>();
 		featureMap.set(featureType, 0);
 		stateStore.set(Constants.FEATURES, featureMap);
 	} else {
 		// do we have any feature scenarios run?
-		if (features.has(featureType)) {
-			counter = features.get(featureType) + 1;
+		const previousCount: number | undefined = features.get(featureType);
+		if (previousCount !== undefined) {
+			counter = previousCount + 1;
 			features.set(featureType, counter);
 		} else {
 			features.set(featureType, 0);

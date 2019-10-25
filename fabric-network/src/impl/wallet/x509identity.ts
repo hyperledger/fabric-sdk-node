@@ -29,7 +29,7 @@ interface X509IdentityDataV1 extends IdentityData {
 }
 
 export class X509Provider implements IdentityProvider {
-	public readonly type = 'X.509';
+	public readonly type: string = 'X.509';
 
 	public fromJson(data: IdentityData): X509Identity {
 		if (data.type !== this.type) {
@@ -37,7 +37,7 @@ export class X509Provider implements IdentityProvider {
 		}
 
 		if (data.version === 1) {
-			const x509Data = data as X509IdentityDataV1;
+			const x509Data: X509IdentityDataV1 = data as X509IdentityDataV1;
 			return {
 				credentials: {
 					certificate: x509Data.credentials.certificate,
@@ -74,7 +74,7 @@ export class X509Provider implements IdentityProvider {
 			skipPersistence: true,
 			username: name,
 		};
-		const user = await client.createUser(userData);
+		const user: Client.User = await client.createUser(userData);
 		client.setUserContext(user, true);
 	}
 }

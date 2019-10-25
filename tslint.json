@@ -1,15 +1,64 @@
 {
-    "defaultSeverity": "error",
     "extends": [
         "tslint:recommended"
     ],
-    "jsRules": {},
     "rules": {
+        "trailing-comma": [
+            false,
+            {
+                "multiline": "always",
+                "singleline": "never"
+            }
+        ],
+        "interface-name": [
+            false,
+            "always-prefix"
+        ],
 		"indent": [true, "tabs", 4],
-		"quotemark": [true, "single"],
-		"comment-format": [false],
-		"interface-name": [false],
-		"max-line-length": [false]
-	},
-    "rulesDirectory": []
+        "array-type": false,
+        "prefer-for-of": false,
+        "member-access": false,
+        "no-console": [
+            true
+        ],
+        "forin": false,
+        "max-line-length": false,
+        "no-string-literal": false,
+        "no-use-before-declare": true,
+        "object-literal-sort-keys": false,
+        "object-literal-shorthand": false,
+        "ordered-imports": false,
+        "quotemark": [
+            true,
+            "single",
+            "avoid-escape"
+        ],
+        "variable-name": [
+            true,
+            "allow-leading-underscore",
+            "allow-pascal-case",
+            "ban-keywords",
+            "check-format"
+        ],
+        "whitespace": [
+            true,
+            "check-branch",
+            "check-decl",
+            "check-operator",
+            "check-separator",
+            "check-type"
+        ],
+        "no-floating-promises": true,
+        "typedef": [
+            true,
+            "call-signature",
+            "arrow-call-signature",
+            "parameter",
+            "arrow-parameter",
+            "property-declaration",
+            "variable-declaration",
+            "member-variable-declaration",
+            "array-destructuring"
+        ]
+    }
 }

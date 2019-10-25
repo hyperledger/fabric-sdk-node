@@ -17,7 +17,7 @@ import {
 } from '../../../src/impl/wallet/x509identity';
 
 import chai = require('chai');
-const expect = chai.expect;
+const expect: Chai.ExpectStatic = chai.expect;
 
 interface ProviderData {
 	dataVersions: { [version: string]: IdentityData };
@@ -79,12 +79,12 @@ describe('IdentityProvider', () => {
 		},
 	};
 
-	Object.keys(providers).forEach((providerName) => describe(providerName + ' common behaviour', () => {
-		const providerData = providers[providerName];
-		const provider = providerData.provider;
-		const identity = providerData.identity;
+	Object.keys(providers).forEach((providerName: string) => describe(providerName + ' common behaviour', () => {
+		const providerData: ProviderData = providers[providerName];
+		const provider: IdentityProvider = providerData.provider;
+		const identity: Identity = providerData.identity;
 
-		Object.keys(providerData.dataVersions).forEach((dataVersion) => describe(dataVersion, () => {
+		Object.keys(providerData.dataVersions).forEach((dataVersion: string) => describe(dataVersion, () => {
 			let identityData: any;
 
 			beforeEach(() => {
@@ -92,7 +92,7 @@ describe('IdentityProvider', () => {
 			});
 
 			it('Identity created from JSON', () => {
-				const result = provider.fromJson(identityData);
+				const result: Identity = provider.fromJson(identityData);
 				expect(result).to.deep.equal(identity);
 			});
 
@@ -115,8 +115,8 @@ describe('IdentityProvider', () => {
 			});
 
 			it('Identity serializes to JSON that can be used to recreate the identity', () => {
-				const json = provider.toJson(identity);
-				const result = provider.fromJson(json);
+				const json: IdentityData = provider.toJson(identity);
+				const result: Identity = provider.fromJson(json);
 
 				expect(result).to.deep.equal(identity);
 			});

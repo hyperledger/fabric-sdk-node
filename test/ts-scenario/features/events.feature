@@ -3,6 +3,7 @@
 #
 
 @events
+@gateway
 Feature: Node SDK Events
 
 	Background:
@@ -11,7 +12,7 @@ Feature: Node SDK Events
 	 	And I use the cli to create and join the channel named eventschannel on the deployed network
 		And I use the cli to update the channel with name eventschannel with config file eventschannel-anchor.tx on the deployed network
 		And I use the cli to deploy a node smart contract named events at version 1.0.0 for all organizations on channel eventschannel with endorsement policy 1ofAny and arguments ["initLedger"]
-		And I have a gateway named event_gateway with discovery set to true for user User1 using the connection profile named ccp-tls.json
+		And I have a memory backed gateway named event_gateway with discovery set to true for user User1 using the connection profile named ccp-tls.json
 
  	Scenario: Using a Contract I can listen to unfiltered contract create events emitted by instantiated chaincodes
 	 	Given I use the gateway named event_gateway to listen for unfiltered contract events of type create with a listener named createValueListener for the smart contract named events on channel eventschannel

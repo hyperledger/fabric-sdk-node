@@ -12,7 +12,7 @@ const defaultProviders: IdentityProvider[] = [
 ];
 
 function getDefaultProviders(): Map<string, IdentityProvider> {
-	const reducer = (accumulator: Map<string, IdentityProvider>, provider: IdentityProvider): Map<string, IdentityProvider> => {
+	const reducer: any = (accumulator: Map<string, IdentityProvider>, provider: IdentityProvider): Map<string, IdentityProvider> => {
 		accumulator.set(provider.type, provider);
 		return accumulator;
 	};
@@ -24,7 +24,7 @@ function getDefaultProviders(): Map<string, IdentityProvider> {
  * @memberof module:fabric-network
  */
 export class IdentityProviderRegistry {
-	private readonly providers = getDefaultProviders();
+	private readonly providers: Map<string, IdentityProvider> = getDefaultProviders();
 
 	/**
 	 * Get the provider for a given type from the registry. Throws an error if no provider for the type exists.
@@ -32,7 +32,7 @@ export class IdentityProviderRegistry {
 	 * @returns {module:fabric-network.IdentityProvider} An identity provider.
 	 */
 	public getProvider(type: string): IdentityProvider {
-		const provider = this.providers.get(type);
+		const provider: IdentityProvider | undefined = this.providers.get(type);
 		if (!provider) {
 			throw new Error('Unknown identity type: ' + type);
 		}

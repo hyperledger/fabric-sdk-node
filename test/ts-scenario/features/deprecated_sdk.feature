@@ -3,6 +3,7 @@
 #
 
 @deprecated
+@gateway
 Feature: Use the Node SDK to install/instantiate/Upgrade chaincode with the deprecated API
 
 	Background:
@@ -12,7 +13,7 @@ Feature: Use the Node SDK to install/instantiate/Upgrade chaincode with the depr
 
  	Scenario: Using the deprecated API I can install and instantate a smart contract that may subsequently be used through a Gateway
 		Given I use the deprecated sdk to deploy a node smart contract named fabcar at version 1.0.0 as fabcar for all organizations on channel deprecatedchannel with endorsement policy 1ofAny and arguments [initLedger] with the connection profile named ccp-tls.json
-	    And I have a gateway named myDeprecatedGateway with discovery set to false for user User1 using the connection profile named ccp-tls.json
+	    And I have a memory backed gateway named myDeprecatedGateway with discovery set to false for user User1 using the connection profile named ccp-tls.json
 		When I use the gateway named myDeprecatedGateway to submit a transaction with args [createCar,1001,Ariel,Atom,red,Nick] for contract fabcar instantiated on channel deprecatedchannel
 	    Then The gateway named myDeprecatedGateway has a submit type response
 	 	When I use the gateway named myDeprecatedGateway to evaluate a transaction with args [queryCar,1001] for contract fabcar instantiated on channel deprecatedchannel
@@ -20,10 +21,10 @@ Feature: Use the Node SDK to install/instantiate/Upgrade chaincode with the depr
 
 	Scenario: Using the deprecated API I can upgade a smart contract that may be subsequently used through a Gateway
 		Given I use the deprecated sdk to upgrade a node smart contract named fabcarUpgrade at version 2.0.0 as fabcar for all organizations on channel deprecatedchannel with endorsement policy 1ofAny and arguments [initLedger] with the connection profile named ccp-tls.json
-	    And I have a gateway named myDeprecatedGateway with discovery set to false for user User1 using the connection profile named ccp-tls.json
+	    And I have a memory backed gateway named myDeprecatedGateway with discovery set to false for user User1 using the connection profile named ccp-tls.json
 		When I use the gateway named myDeprecatedGateway to submit a transaction with args [createSingleCar,1002,Lotus,Elise,grey,Mark] for contract fabcar instantiated on channel deprecatedchannel
 	    Then The gateway named myDeprecatedGateway has a submit type response
 	 	When I use the gateway named myDeprecatedGateway to evaluate a transaction with args [querySingleCar,1001] for contract fabcar instantiated on channel deprecatedchannel
 	 	Then The gateway named myDeprecatedGateway has a evaluate type response matching "{\"color\":\"red\",\"docType\":\"car\",\"make\":\"Ariel\",\"model\":\"Atom\",\"owner\":\"Nick\"}"
-		 When I use the gateway named myDeprecatedGateway to evaluate a transaction with args [querySingleCar,1002] for contract fabcar instantiated on channel deprecatedchannel
+		When I use the gateway named myDeprecatedGateway to evaluate a transaction with args [querySingleCar,1002] for contract fabcar instantiated on channel deprecatedchannel
 	 	Then The gateway named myDeprecatedGateway has a evaluate type response matching "{\"color\":\"grey\",\"docType\":\"car\",\"make\":\"Lotus\",\"model\":\"Elise\",\"owner\":\"Mark\"}"

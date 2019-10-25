@@ -7,6 +7,8 @@
 // Sample query handler that will use all queryable peers within the network to evaluate transactions, with preference
 // given to peers within the same organization.
 
+// tslint:disable:typedef
+
 import {
 	Network,
 	Query,

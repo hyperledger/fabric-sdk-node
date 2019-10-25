@@ -21,7 +21,7 @@ export { HsmOptions, HsmX509Provider, HsmX509Identity } from '../lib/impl/wallet
 export { X509Identity } from '../lib/impl/wallet/x509identity';
 
 // Main fabric network classes
-//-------------------------------------------
+// -------------------------------------------
 export interface GatewayOptions {
 	wallet: Wallet;
 	identity: string;

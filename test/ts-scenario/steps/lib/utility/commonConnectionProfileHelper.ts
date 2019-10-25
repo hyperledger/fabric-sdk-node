@@ -5,13 +5,14 @@
 'use strict';
 
 import * as path from 'path';
+import { strict } from 'assert';
 
 /**
- * CommonConnectionProfile
+ * CommonConnectionProfileHelper
  *
  * Utility class for dealing with a common connection profile
  */
-export class CommonConnectionProfile {
+export class CommonConnectionProfileHelper {
 
 	protected profile: any;
 
@@ -34,9 +35,9 @@ export class CommonConnectionProfile {
 	 * @param {JSON} parent the JSON format common connection profile
 	 * @param {String} rootPath the root path to use when setting absolute
 	 */
-	public _makeJsonPathsAbsolute(parent: any, rootPath: string) {
+	public _makeJsonPathsAbsolute(parent: any, rootPath: string): void {
 		if (parent && typeof parent === 'object') {
-			Object.entries(parent).forEach(([key, value]) => {
+			Object.entries(parent).forEach(([key, value]: [string, any]) => {
 				// key is either an array index or object key
 				if (key.localeCompare('path') === 0) {
 					if (!path.isAbsolute(String(value))) {
@@ -52,7 +53,7 @@ export class CommonConnectionProfile {
 	/**
 	 * Retrieve the profile
 	 */
-	public getProfile() {
+	public getProfile(): any {
 		return this.profile;
 	}
 
@@ -60,7 +61,7 @@ export class CommonConnectionProfile {
 	 * Retrieve the channels named in the profile
 	 * @return {Object[]} an object array of all channels within the profile
 	 */
-	public getChannels() {
+	public getChannels(): any[] {
 		return this.profile.channels;
 	}
 
@@ -69,7 +70,7 @@ export class CommonConnectionProfile {
 	 * @param {String} channelName the channel of interest
 	 * @return {Object} the channel object
 	 */
-	public getChannel(channelName: string) {
+	public getChannel(channelName: string): any {
 		return this.profile.channels[channelName];
 	}
 
@@ -77,7 +78,7 @@ export class CommonConnectionProfile {
 	 * Retrieve all the organizations named in the profile
 	 * @return {Object[]} all organizations
 	 */
-	public getOrganizations() {
+	public getOrganizations(): any[] {
 		return this.profile.organizations;
 	}
 
@@ -86,7 +87,7 @@ export class CommonConnectionProfile {
 	 * @param {String} orgName the organization of interest
 	 * @return {Object} the organization object
 	 */
-	public getOrganization(orgName: string) {
+	public getOrganization(orgName: string): any {
 		return this.profile.organizations[orgName];
 	}
 
@@ -95,13 +96,13 @@ export class CommonConnectionProfile {
 	 * @param {String} channelName the channel of interest
 	 * @return {String[]} the organizations associated with a channel
 	 */
-	public getOrganizationsForChannel(channelName: string) {
-		const channelPeers = Object.keys(this.profile.channels[channelName].peers);
+	public getOrganizationsForChannel(channelName: string): Array<string> {
+		const channelPeers: string[] = Object.keys(this.profile.channels[channelName].peers);
 		const orgs: any = this.profile.organizations;
 
-		const channelOrgs = new Array();
+		const channelOrgs: Array<string> = new Array<string>();
 		for (const [orgName, org] of Object.entries<any>(orgs)) {
-			const orgPeers = org.peers;
+			const orgPeers: Array<string> = org.peers;
 
 			if (orgPeers.filter( (peerName: string) => channelPeers.includes(peerName)).length > 0) {
 				channelOrgs.push(orgName);
@@ -115,7 +116,7 @@ export class CommonConnectionProfile {
 	 * Retrieve all the orderers named in the profile
 	 * @return {Object[]} all orderers
 	 */
-	public getOrderers() {
+	public getOrderers(): any[] {
 		return this.profile.orderers;
 	}
 
@@ -124,7 +125,7 @@ export class CommonConnectionProfile {
 	 * @param {String} ordererName the name of the orderer
 	 * @return {Object} the named orderer
 	 */
-	public getOrderer(ordererName: string) {
+	public getOrderer(ordererName: string): any {
 		return this.profile.orderers[ordererName];
 	}
 
@@ -133,7 +134,7 @@ export class CommonConnectionProfile {
 	 * @param {String} channelName the channel of interest
 	 * @return {Object[]} orderers for the named channel
 	 */
-	public getOrderersForChannel(channelName: string) {
+	public getOrderersForChannel(channelName: string): any[] {
 		return this.profile.channels[channelName].orderers;
 	}
 
@@ -141,7 +142,7 @@ export class CommonConnectionProfile {
 	 * Retrieve all the certificate authorities named in the profile
 	 * @return {Object[]} all certificate authorities
 	 */
-	public getCertificateAuthorities() {
+	public getCertificateAuthorities(): any[] {
 		return this.profile.certificateAuthorities;
 	}
 
@@ -150,7 +151,7 @@ export class CommonConnectionProfile {
 	 * @param {String} caName the name of the certificate authority
 	 * @return {Object} the certificate authority
 	 */
-	public getCertificateAuthority(caName: string) {
+	public getCertificateAuthority(caName: string): any {
 		return this.profile.certificateAuthorities[caName];
 	}
 
@@ -159,7 +160,7 @@ export class CommonConnectionProfile {
 	 * @param {String} orgName the organization name
 	 * @return {Object[]} certificate authorities for the named organization
 	 */
-	public getCertificateAuthoritiesForOrg(orgName: string) {
+	public getCertificateAuthoritiesForOrg(orgName: string): any[] {
 		return this.profile.organizations[orgName].certificateAuthorities;
 	}
 
@@ -167,7 +168,7 @@ export class CommonConnectionProfile {
 	 * Retrieve all the peers named in the profile
 	 * @return {Object[]} the peers named in the profile
 	 */
-	public getPeers() {
+	public getPeers(): any[] {
 		return this.profile.peers;
 	}
 
@@ -176,7 +177,7 @@ export class CommonConnectionProfile {
 	 * @param {String} peerName the peer name
 	 * @return {Object} the peer object
 	 */
-	public getPeer(peerName: string) {
+	public getPeer(peerName: string): any {
 		return this.profile.peers[peerName];
 	}
 
@@ -185,7 +186,7 @@ export class CommonConnectionProfile {
 	 * @param {String} orgName the organization name
 	 * @return {Object[]} all peers for the named organization
 	 */
-	public getPeersForOrganization(orgName: string) {
+	public getPeersForOrganization(orgName: string): any[] {
 		return this.profile.organizations[orgName].peers;
 	}
 
@@ -194,7 +195,22 @@ export class CommonConnectionProfile {
 	 * @param {String} channelName the channel name of interest
 	 * @return {String[]} the string array of all peer for the channel
 	 */
-	public getPeersForChannel(channelName: string) {
+	public getPeersForChannel(channelName: string): string[] {
 		return this.profile.channels[channelName].peers;
+	}
+
+	/**
+	 * check if the CCP is for a TLS network
+	 */
+	public isTls(): boolean | undefined {
+		const peers: any = this.getPeers();
+		if (peers) {
+			for (const key of Object.keys(peers)) {
+				const peer: any = peers[key];
+				return (peer.url).includes('grpcs');
+			}
+		} else {
+			throw new Error('No peers listed in the CCP');
+		}
 	}
 }

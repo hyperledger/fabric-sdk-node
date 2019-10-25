@@ -173,6 +173,13 @@ declare namespace Client { // tslint:disable-line:no-namespace
 		txId?: TransactionId;
 	}
 
+	export interface GetInstalledChaincodePackageRequest {
+		target: Peer;
+		package_id: string;
+		request_timeout?: number;
+		txId?: TransactionId;
+	}
+
 	export interface QueryNamespaceDefinitionsRequest {
 		target: Peer;
 		request_timeout?: number;
@@ -184,6 +191,14 @@ declare namespace Client { // tslint:disable-line:no-namespace
 		request_timeout?: number;
 		txId?: TransactionId;
 		chaincode: Chaincode;
+	}
+
+	export interface QueryApprovalStatusResponse {
+		approvals: QueryApprovalStatusResults;
+	}
+
+	export interface QueryApprovalStatusResults {
+		[mspId: string]: boolean[];
 	}
 
 	export interface QueryInstalledChaincodeRequest {
@@ -199,9 +214,26 @@ declare namespace Client { // tslint:disable-line:no-namespace
 		txId?: TransactionId;
 	}
 
+	export interface ChannelChaincode {
+		chaincodes: ChaincodeInfo[];
+	}
+
+	export interface ChannelChaincodes {
+		[channelName: string]: ChannelChaincode;
+	}
+
 	export interface QueryInstalledChaincodeResult {
 		package_id: string;
 		label: string;
+		references: ChannelChaincodes;
+	}
+
+	export interface QueryInstalledChaincodesResult {
+		installed_chaincodes: QueryInstalledChaincodeResult[];
+	}
+
+	export interface GetInstalledChaincodePackageResult {
+		chaincode_install_package: Int8Array | Uint8Array | Int16Array | Uint16Array | Int32Array | Uint32Array;
 	}
 
 	export class Channel {
@@ -274,11 +306,13 @@ declare namespace Client { // tslint:disable-line:no-namespace
 
 		public approveChaincodeForOrg(request: ChaincodeRequest): Promise<EndorsementResults>;
 		public commitChaincode(request: ChaincodeRequest): Promise<EndorsementResults>;
+		public checkCommitReadiness(request: QueryApprovalStatusRequest): Promise<any>;
+		public getInstalledChaincodePackage(request: GetInstalledChaincodePackageRequest): Promise<GetInstalledChaincodePackageResult>;
 		public queryChaincodeDefinition(request: QueryChaincodeDefinitionRequest): Promise<Chaincode>;
 		public queryNamespaceDefinitions(request: QueryNamespaceDefinitionsRequest): Promise<object>;
 		public queryApprovalStatus(request: QueryApprovalStatusRequest): Promise<object>;
 		public queryInstalledChaincode(request: QueryInstalledChaincodeRequest): Promise<QueryInstalledChaincodeResult>;
-		public queryInstalledChaincodes(request: QueryInstalledChaincodesRequest): Promise<QueryInstalledChaincodeResult[]>;
+		public queryInstalledChaincodes(request: QueryInstalledChaincodesRequest): Promise<QueryInstalledChaincodesResult>;
 	}
 
 	export interface ChannelPeerRoles {

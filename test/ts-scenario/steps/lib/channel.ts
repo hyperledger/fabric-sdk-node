@@ -9,10 +9,10 @@ import * as AdminUtils from './utility/adminUtils';
 import * as BaseUtils from './utility/baseUtils';
 import { CommandRunner } from './utility/commandRunner';
 
-const commandRunner = CommandRunner.getInstance();
+const commandRunner: CommandRunner = CommandRunner.getInstance();
 
 // CLI verbosity in commands
-const VERBOSE_CLI = JSON.parse(Constants.CLI_VERBOSITY);
+const VERBOSE_CLI: boolean = JSON.parse(Constants.CLI_VERBOSITY);
 
 /**
  * Create a channel
@@ -20,7 +20,7 @@ const VERBOSE_CLI = JSON.parse(Constants.CLI_VERBOSITY);
  * @param {Boolean} tls Boolean true if tls network; false if not *
  * @async
  */
-export async function cli_channel_create(channelName: string, tls: boolean) {
+export async function cli_channel_create(channelName: string, tls: boolean): Promise<void> {
 	try {
 		// Use CLI container to create a channel
 		BaseUtils.logMsg(`Attempting to create channel ${channelName} of type ${tls ? 'tls' : 'non-tls'}`, undefined);
@@ -66,17 +66,11 @@ export async function cli_channel_create(channelName: string, tls: boolean) {
  * @param {Boolean} tls true if a tls network; false if not
  * @async
  */
-export async function cli_join_org_to_channel(orgName: string, channelName: string, tls: boolean) {
+export async function cli_join_org_to_channel(orgName: string, channelName: string, tls: boolean): Promise<void> {
 
 	try {
 		// Use CLI container to join org to channel
 		BaseUtils.logMsg(`Attempting to join organization ${orgName} to channel ${channelName} of type ${tls ? 'tls' : 'non-tls'}`, undefined);
-
-		// Dont join if already joined
-		if (AdminUtils.orgHasJointChannel(orgName, channelName)) {
-			BaseUtils.logMsg(`Organization ${orgName} has already joined channel ${channelName}, skipping ... `, undefined);
-			return;
-		}
 
 		let tlsOptions: string[];
 		if (tls) {
@@ -95,7 +89,6 @@ export async function cli_join_org_to_channel(orgName: string, channelName: stri
 
 		await BaseUtils.sleep(Constants.INC_SHORT);
 		BaseUtils.logMsg(`Channel ${channelName} has been joined by organization ${orgName}`, undefined);
-		AdminUtils.addOrgToJointChannel(orgName, channelName);
 	} catch (err) {
 		BaseUtils.logError('Join Channel failure: ', err);
 		return Promise.reject(err);
@@ -108,7 +101,7 @@ export async function cli_join_org_to_channel(orgName: string, channelName: stri
  * @param {String} updateTx the name of the update tx file to use
  * @param {Boolean} tls true if a tls network; false if not
  */
-export async function cli_channel_update(channelName: string, updateTx: string, tls: boolean) {
+export async function cli_channel_update(channelName: string, updateTx: string, tls: boolean): Promise<void> {
 
 	try {
 

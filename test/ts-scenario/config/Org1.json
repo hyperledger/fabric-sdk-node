@@ -55,7 +55,7 @@
 		"chaincodes":[
 		]
 	  },
-    "eventschannel":{
+	"eventschannel":{
 		"orderers":[
 		  "orderer.example.com"
 		],

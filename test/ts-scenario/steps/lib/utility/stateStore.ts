@@ -6,7 +6,7 @@
 
 export class StateStore {
 
-	public static getInstance() {
+	public static getInstance(): StateStore {
 		// Do you need arguments? Make it a regular static method instead.
 		return this.instance || (this.instance = new this());
 	}
@@ -24,7 +24,7 @@ export class StateStore {
 	 * @param name the name to use as a key
 	 * @param data the object data to store
 	 */
-	public set(name: string, data: any) {
+	public set(name: string, data: any): void {
 		this.data.set(name, data);
 	}
 
@@ -32,7 +32,7 @@ export class StateStore {
 	 * Get the data associated with the passed key
 	 * @param name the key to use
 	 */
-	public get(name: string) {
+	public get(name: string): any {
 		return this.data.get(name);
 	}
 
