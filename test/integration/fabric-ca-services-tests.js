@@ -27,7 +27,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const http = require('http');
 
-const testUtil = require('../unit/util.js');
+const testUtil = require('./util.js');
 
 
 // var keyValStorePath = testUtil.KVS;

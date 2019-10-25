@@ -19,7 +19,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const util = require('util');
 const shell = require('gulp-shell');
-const tapeUtil = require('../../test/unit/util.js');
+const tapeUtil = require('../../test/integration/util.js');
 
 // Debug level of Docker containers used in scenario tests
 process.env.DOCKER_DEBUG = 'INFO';
@@ -288,16 +288,11 @@ gulp.task('run-tape-e2e', ['docker-ready'],
 	});
 
 // Filter out tests that should not be run on specific operating systems since only the x64 CI jobs are configured with SoftHSM
-// - disable the pkcs11 (HSM) tests for s390 (non x86)
 // - may be enabled manually with an environment variable, (actually left enabled, but disable the non HSM version of the e2e test)
 function shouldRunTests(tests) {
 	if (arch.startsWith('s390')) {
-		// for now always disable the pkcs11 testing on s390
-		tests.push('!test/unit/pkcs11.js');
 		tests.push('!test/integration/network-e2e/e2e-hsm.js');
 	} else if (typeof process.env.PKCS11_TESTS === 'string' && process.env.PKCS11_TESTS.toLowerCase() === 'false') {
-		// Disable HSM tests if not doing PKCS11 testing
-		tests.push('!test/unit/pkcs11.js');
 		tests.push('!test/integration/network-e2e/e2e-hsm.js');
 	} else {
 		// default is to run the PKCS11 tests so we need to disable the non HSM version

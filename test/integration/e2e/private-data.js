@@ -18,7 +18,7 @@ const _test = require('tape-promise').default;
 const test = _test(tape);
 
 const e2eUtils = require('./e2eUtils.js');
-const testUtil = require('../../unit/util.js');
+const testUtil = require('../util.js');
 
 const version = 'v0';
 const chaincodeId = testUtil.END2END.chaincodeIdPrivateData;

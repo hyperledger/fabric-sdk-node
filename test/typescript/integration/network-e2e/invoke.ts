@@ -34,7 +34,7 @@ import {
 
 import e2eUtils = require('../../../integration/e2e/e2eUtils.js');
 import sampleEventStrategy = require('../../../integration/network-e2e/sample-transaction-event-handler');
-import testUtils = require('../../../unit/util');
+import testUtils = require('../../../integration/util.js');
 
 const test: any = tapePromise.default(tape);
 const channelName: string = testUtils.NETWORK_END2END.channel;

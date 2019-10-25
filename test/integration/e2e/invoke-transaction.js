@@ -12,7 +12,7 @@ const tape = require('tape');
 const _test = require('tape-promise').default;
 const test = _test(tape);
 const e2eUtils = require('./e2eUtils.js');
-const testUtils = require('../../unit/util');
+const testUtils = require('../util.js');
 const chaincodeId = testUtils.END2END.chaincodeId;
 
 test('\n\n***** End-to-end flow: invoke transaction to move money *****\n\n', async (t) => {

@@ -25,7 +25,7 @@ const util = require('util');
 const e2eUtils = require('./e2e/e2eUtils.js');
 const fs = require('fs');
 
-const testUtil = require('../unit/util.js');
+const testUtil = require('./util.js');
 const Client = require('fabric-client');
 const Peer = require('fabric-client/lib/Peer.js');
 const Orderer = require('fabric-client/lib/Orderer.js');

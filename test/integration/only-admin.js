@@ -15,7 +15,7 @@ const test = _test(tape);
 const fs = require('fs');
 const path = require('path');
 
-const testUtil = require('../unit/util.js');
+const testUtil = require('./util.js');
 
 // Testing will demostrate how the connetion profile configuration may hold a
 // admin user identity and it will be used for all fabric interactions.

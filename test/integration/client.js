@@ -16,7 +16,7 @@ const path = require('path');
 const fs = require('fs-extra');
 
 const Client = require('fabric-client');
-const testUtil = require('../unit/util.js');
+const testUtil = require('./util.js');
 const couchdbUtil = require('./couchdb-util.js');
 
 const tag = 'integration.client: ';

@@ -20,7 +20,7 @@ const fs = require('fs');
 const e2eUtils = require('./e2e/e2eUtils.js');
 
 const Client = require('fabric-client');
-const testUtil = require('../unit/util.js');
+const testUtil = require('./util.js');
 
 let ORGS;
 
