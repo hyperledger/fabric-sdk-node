@@ -4,9 +4,11 @@
 # SPDX-License-Identifier: Apache-2.0
 */
 const gulp = require('gulp');
-const tslint = require('gulp-tslint');
+const gulpTslint = require('gulp-tslint');
+const tslint = require('tslint');
 
 gulp.task('tslint', () => {
+	const program = tslint.Linter.createProgram('tslint.json');
 	return gulp.src([
 		'fabric-client/**/*.ts',
 		'fabric-network/**/*.ts',
@@ -16,9 +18,10 @@ gulp.task('tslint', () => {
 		'!fabric-network/node_modules/**',
 		'!fabric-client/coverage/**',
 		'!fabric-client/node_modules/**',
-	]).pipe(tslint({
-		formatter: 'prose'
-	})).pipe(tslint.report({
+	]).pipe(gulpTslint({
+		formatter: 'prose',
+		program
+	})).pipe(gulpTslint.report({
 		summarizeFailureOutput: true
 	}));
 });

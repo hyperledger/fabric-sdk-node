@@ -1,7 +1,5 @@
 {
-    "extends": [
-        "tslint:recommended"
-    ],
+    "extends": "tslint:recommended",
     "rules": {
         "trailing-comma": [
             false,
@@ -24,7 +22,6 @@
         "forin": false,
         "max-line-length": false,
         "no-string-literal": false,
-        "no-use-before-declare": true,
         "object-literal-sort-keys": false,
         "object-literal-shorthand": false,
         "ordered-imports": false,

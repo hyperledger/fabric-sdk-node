@@ -18,7 +18,7 @@ const supportedLanguageTypes: string[] = ['node', 'golang'];
 export async function sdk_chaincode_install_for_org(ccType: 'golang' | 'car' | 'java' | 'node', ccName: string,  ccVersion: string, chaincodeId: string, tls: boolean, ccp: CommonConnectionProfileHelper, orgName: string, channelName: string): Promise<void> {
 
 	if (!supportedLanguageTypes.includes(ccType)) {
-		Promise.reject(`Unsupported test ccType ${ccType}`);
+		throw new Error(`Unsupported test ccType ${ccType}`);
 	}
 
 	Client.setConfigSetting('request-timeout', Constants.INSTALL_TIMEOUT);
@@ -134,7 +134,7 @@ export async function sdk_chaincode_install_for_org(ccType: 'golang' | 'car' | '
  */
 export async function sdk_chaincode_instantiate(ccName: string, ccType: 'golang' | 'car' | 'java' | 'node', ccVersion: string, chaincodeId: string, args: string, upgrade: boolean, tls: boolean, ccp: CommonConnectionProfileHelper, orgName: string, channelName: string, policy: any): Promise<void> {
 	if (!supportedLanguageTypes.includes(ccType)) {
-		Promise.reject(`Unsupported test ccType: ${ccType}`);
+		throw new Error(`Unsupported test ccType: ${ccType}`);
 	}
 
 	Client.setConfigSetting('request-timeout', Constants.INSTANTIATE_TIMEOUT);
@@ -213,7 +213,7 @@ export async function sdk_chaincode_instantiate(ccName: string, ccType: 'golang'
 		const proposal: Client.Proposal = results[1];
 		for (const proposalResponse of proposalResponses) {
 			if (!((proposalResponse as Client.ProposalResponse).response && (proposalResponse as Client.ProposalResponse).response.status === 200)) {
-				Promise.reject(`The proposal of type ${type} was bad: ${JSON.stringify(proposalResponse)}`);
+				throw new Error(`The proposal of type ${type} was bad: ${JSON.stringify(proposalResponse)}`);
 			}
 		}
 

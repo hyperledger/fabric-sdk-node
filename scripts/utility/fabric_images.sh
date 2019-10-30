@@ -16,23 +16,26 @@ NEXUS_URL=nexus3.hyperledger.org:10001
 ORG_NAME="hyperledger/fabric"
 ARCH=$1
 : ${STABLE_VERSION:=$2}
-STABLE_TAG=$ARCH-$STABLE_VERSION
-echo "---------> STABLE_VERSION:" $STABLE_VERSION
+STABLE_TAG="${ARCH}-${STABLE_VERSION}"
+VERSION_TAG="${STABLE_VERSION%%-*}"
+echo "---------> STABLE_VERSION: ${STABLE_VERSION}"
 
 dockerTag() {
   for IMAGES in ca peer orderer ccenv baseos nodeenv javaenv tools; do
-    echo "Images: $IMAGES"
+    echo "Images: ${IMAGES}"
     echo
-    docker pull $NEXUS_URL/$ORG_NAME-$IMAGES:$STABLE_TAG
+	NEXUS_IMAGE="${NEXUS_URL}/${ORG_NAME}-${IMAGES}:${STABLE_TAG}"
+    docker pull "${NEXUS_IMAGE}"
           if [ $? != 0 ]; then
-             echo  "FAILED: Docker Pull Failed on $IMAGES"
+             echo  "FAILED: Docker Pull Failed on ${IMAGES}"
              exit 1
           fi
-    docker tag $NEXUS_URL/$ORG_NAME-$IMAGES:$STABLE_TAG $ORG_NAME-$IMAGES
-    docker tag $NEXUS_URL/$ORG_NAME-$IMAGES:$STABLE_TAG $ORG_NAME-$IMAGES:$STABLE_TAG
-    echo "$ORG_NAME-$IMAGES:$STABLE_TAG"
+	IMAGE_NAME="${ORG_NAME}-${IMAGES}"
+    docker tag "${NEXUS_IMAGE}" "${IMAGE_NAME}"
+    docker tag "${NEXUS_IMAGE}" "${IMAGE_NAME}:${VERSION_TAG}"
+    echo "${IMAGE_NAME}:${VERSION_TAG}"
     echo "Deleting Nexus docker images: $IMAGES"
-    docker rmi -f $NEXUS_URL/$ORG_NAME-$IMAGES:$STABLE_TAG
+    docker rmi -f "${NEXUS_IMAGE}"
   done
 }
 

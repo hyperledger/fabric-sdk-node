@@ -102,6 +102,6 @@ export class HsmX509Provider implements IdentityProvider {
 			username: name,
 		};
 		const user: Client.User = await client.createUser(userData);
-		client.setUserContext(user, true);
+		await client.setUserContext(user, true);
 	}
 }
