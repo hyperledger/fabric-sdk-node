@@ -10,16 +10,31 @@ import * as BaseUtils from './utility/baseUtils';
 import { CommonConnectionProfileHelper } from './utility/commonConnectionProfileHelper';
 import { StateStore } from './utility/stateStore';
 
-import { Gateway, GatewayOptions, Wallet, Wallets, Identity, Contract, Network } from 'fabric-network';
+import sampleQueryStrategy = require('../../config/handlers/sample-query-handler');
+import sampleTxnEventStrategy = require('../../config/handlers/sample-transaction-event-handler');
+
+import { DefaultEventHandlerStrategies, DefaultQueryHandlerStrategies, Gateway, GatewayOptions, Wallet, Wallets, Identity, Contract, Network, TxEventHandlerFactory, QueryHandlerFactory, EventHubManager, Transaction, TransientMap } from 'fabric-network';
 import * as fs from 'fs';
-import * as os from 'os';
 import * as path from 'path';
+import { ChannelEventHub } from 'fabric-client';
 import Client = require('fabric-client');
 
 const stateStore: StateStore = StateStore.getInstance();
 const txnTypes: string[] = ['evaluate', 'submit'];
-const txnResponseTypes: string[] = ['evaluate', 'error', 'submit'];
+const txnResponseTypes: string[] = ['evaluate', 'event', 'error', 'submit'];
 const supportedWallets: string[] = [Constants.FILE_WALLET as string, Constants.MEMORY_WALLET as string, Constants.COUCH_WALLET as string];
+
+const EventStrategies: any = {
+	MSPID_SCOPE_ALLFORTX : DefaultEventHandlerStrategies.MSPID_SCOPE_ALLFORTX,
+	MSPID_SCOPE_ANYFORTX : DefaultEventHandlerStrategies.MSPID_SCOPE_ANYFORTX,
+	NETWORK_SCOPE_ALLFORTX : DefaultEventHandlerStrategies.NETWORK_SCOPE_ALLFORTX,
+	NETWORK_SCOPE_ANYFORTX : DefaultEventHandlerStrategies.NETWORK_SCOPE_ANYFORTX,
+};
+
+const QueryStrategies: any = {
+	MSPID_SCOPE_SINGLE : DefaultQueryHandlerStrategies.MSPID_SCOPE_SINGLE,
+	MSPID_SCOPE_ROUND_ROBIN : DefaultQueryHandlerStrategies.MSPID_SCOPE_ROUND_ROBIN,
+};
 
 /**
  * Create a gateway
@@ -48,9 +63,9 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 				wallet = await Wallets.newInMemoryWallet();
 				break;
 			case Constants.FILE_WALLET:
-				const tempDir: string = path.join(os.tmpdir(), Constants.FILE_WALLET);
+				const tempDir: string = path.join(__dirname, Constants.LIB_TO_TEMP, Constants.FILE_WALLET);
 				if (fs.existsSync(tempDir)) {
-					fs.rmdirSync(tempDir);
+					BaseUtils.recursiveDirDelete(tempDir);
 				}
 				await fs.mkdirSync(tempDir);
 				wallet = await Wallets.newFileSystemWallet(tempDir);
@@ -105,17 +120,21 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 	};
 
 	await gateway.connect(ccp.getProfile(), opts);
-	addGatewayObjectToStateStore(gatewayName, gateway);
+	const gatewayObj: any = {
+		profile: ccp.getProfile(),
+		gateway,
+	};
+	addGatewayObjectToStateStore(gatewayName, gatewayObj);
 	BaseUtils.logMsg(`Gateway ${gatewayName} connected`, undefined);
 }
 
 function addGatewayObjectToStateStore(gatewayName: string, gateway: any): void {
 	let gateways: Map<string, any> = stateStore.get(Constants.GATEWAYS);
 	if (gateways) {
-		gateways.set(gatewayName, { gateway });
+		gateways.set(gatewayName, gateway);
 	} else {
 		gateways = new Map();
-		gateways.set(gatewayName, { gateway });
+		gateways.set(gatewayName, gateway);
 	}
 
 	stateStore.set(Constants.GATEWAYS, gateways);
@@ -183,7 +202,7 @@ async function identitySetup(wallet: Wallet, ccp: CommonConnectionProfileHelper,
  * @param {String} txnType the type of transaction (submit/evaluate)
  * @return {Object} resolved Promise if a submit transaction; evaluate result if not
  */
-export async function performGatewayTransaction(gatewayName: string, contractName: string, channelName: string, args: string, txnType: string): Promise<string> {
+export async function performGatewayTransaction(gatewayName: string, contractName: string, channelName: string, args: string, txnType: string): Promise<void> {
 	// What type of txn is this?
 	if (txnTypes.indexOf(txnType) === -1) {
 		throw  new Error(`Unknown transaction type ${txnType}, must be one of ${txnTypes}`);
@@ -211,18 +230,193 @@ export async function performGatewayTransaction(gatewayName: string, contractNam
 			const result: Buffer = await contract.submitTransaction(func, ...funcArgs);
 			gatewayObj.result = {type: 'submit', response: result.toString()};
 			BaseUtils.logMsg('Successfully submitted transaction [' + func + ']', undefined);
-			return result.toString();
 		} else {
 			BaseUtils.logMsg('Evaluating transaction [' + func + '] with arguments ' + args, undefined);
 			const result: Buffer = await contract.evaluateTransaction(func, ...funcArgs);
-			BaseUtils.logMsg('Successfully evaluated transaction [' + func  + '] with result [' + result + ']', undefined);
-			gatewayObj.result = {type: 'evaluate', response: result.toString()};
-			return result.toString();
+			BaseUtils.logMsg('Successfully evaluated transaction [' + func  + '] with result [' + result.toString() + ']', undefined);
+			gatewayObj.result = {type: 'evaluate', response: JSON.parse(result.toString())};
 		}
 	} catch (err) {
-		gatewayObj.result = {type: 'error', result: err.toString()};
-		BaseUtils.logError(err, undefined);
-		throw err;
+		gatewayObj.result = {type: 'error', response: err.toString()};
+		// Don't log the full error, since we might be forcing the error
+		BaseUtils.logError(err.toString(), undefined);
+	}
+}
+
+/**
+ * Perform a transaction using a handler
+ * @param gatewayName the name of the gateway to use
+ * @param ccName chaincode name to use
+ * @param channelName chanel to submit on
+ * @param args transaction arguments
+ * @param txnType the type of transaction (submit/evaluate)
+ * @param handlerOption the handler option to use
+ */
+export async function performHandledGatewayTransaction(gatewayName: string, ccName: string, channelName: string, args: string, txnType: string, handlerOption: string): Promise<void> {
+	// Split args out, we need these for later
+	const argArray: string[] = args.slice(1, -1).split(',');
+	const func: string = argArray[0];
+	const funcArgs: string[] = argArray.slice(1);
+
+	// Retrieve the base gateway
+	const gateways: Map<string, any> = stateStore.get(Constants.GATEWAYS);
+
+	if (!gateways || !gateways.has(gatewayName)) {
+		throw new Error(`Gateway named ${gatewayName} is not present in the state store ${Object.keys(gateways)}`);
+	}
+
+	const gatewayObj: any = gateways.get(gatewayName);
+	const gateway: Gateway = gatewayObj.gateway;
+
+	const currentOptions: GatewayOptions = gateway.getOptions();
+
+	// Disconnect
+	await gateway.disconnect();
+
+	// Reconnect with new options based on modifying existing with handler option
+	const submit: boolean = ( txnType.localeCompare('submit') === 0 );
+	if (submit) {
+		// add event handler options
+		if (handlerOption.localeCompare('custom') === 0) {
+			currentOptions.eventHandlerOptions = {
+				strategy: sampleTxnEventStrategy as TxEventHandlerFactory
+			};
+		} else {
+			currentOptions.eventHandlerOptions = {
+				strategy: EventStrategies[handlerOption]
+			};
+		}
+	} else {
+		// Add queryHandlerOptions
+		if (handlerOption.localeCompare('custom') === 0) {
+			currentOptions.queryHandlerOptions = {
+				strategy: sampleQueryStrategy as QueryHandlerFactory
+			};
+		} else {
+			currentOptions.queryHandlerOptions = {
+				strategy: QueryStrategies[handlerOption]
+			};
+		}
+	}
+
+	// Reconnect
+	await gateway.connect(gatewayObj.profile, currentOptions);
+
+	// Retrieve contract
+	const network: Network = await gateway.getNetwork(channelName);
+	const contract: Contract = network.getContract(ccName);
+
+	// Build a transaction
+	const transaction: Transaction = contract.createTransaction(func);
+	const transactionId: string = transaction.getTransactionID().getTransactionID();
+
+	// Submit/evaluate transaction
+	if (submit) {
+		// Create event hubs to monitor so we can test it worked
+		const org1EventHub: ChannelEventHub = await getInternalEventHubForOrg(gateway, channelName, 'Org1MSP');
+		const org2EventHub: ChannelEventHub = await getInternalEventHubForOrg(gateway, channelName, 'Org2MSP');
+
+		let org1EventsFired: any = 0;
+		let org2EventsFired: number = 0;
+		org1EventHub.registerTxEvent('all', (txId: string, code: string) => {
+			if (code === 'VALID' && txId === transactionId) {
+				org1EventsFired++;
+			}
+		}, () => {
+			// Ignore errors
+		});
+		org2EventHub.registerTxEvent('all', (txId: string, code: string) => {
+			if (code === 'VALID' && txId === transactionId) {
+				org2EventsFired++;
+			}
+		}, () => {
+			// Ignore errors
+		});
+
+		try {
+			// Split args, do not capture response
+			await transaction.submit(...funcArgs);
+			BaseUtils.logMsg(`Successfully submitted transaction [${func}] using handler [${EventStrategies[handlerOption]}]`, undefined);
+		} catch (error) {
+			gatewayObj.result = {type: 'error', response: error.toString()};
+			BaseUtils.logError(error.toString(), undefined);
+		}
+
+		// Record result on gateway object
+		const events: any = {
+			Org1: org1EventsFired,
+			Org2: org2EventsFired,
+		};
+
+		gatewayObj.result = {type: 'event', response: JSON.stringify(events)};
+
+	} else {
+		// No event hubs, just query away
+		try {
+			// Split args, capture response
+			const result: Buffer = await transaction.evaluate(...funcArgs);
+			BaseUtils.logMsg(`Successfully evaluated transaction [${func}] using handler [${QueryStrategies[handlerOption]}] with result [${result}]`, undefined);
+			gatewayObj.result = {type: 'evaluate', response: JSON.parse(result.toString())};
+		} catch (error) {
+			gatewayObj.result = {type: 'error', response: error.toString()};
+			BaseUtils.logError(error.toString(), undefined);
+		}
+	}
+}
+
+/**
+ * Perform a transaction that uses transient data
+ * @param gatewayName the gateway to use
+ * @param ccName the chaincode name
+ * @param channelName the channel to submit on
+ * @param txnArgs transaction arguments [methodName, methodArgs...]
+ * @param txnType the type of transaction (submit/evaluate)
+ */
+export async function performTransientGatewayTransaction(gatewayName: string, ccName: string, channelName: string, args: string, txnType: string): Promise<void> {
+	// Split args out, we need these for later
+	const argArray: string[] = args.slice(1, -1).split(',');
+	const func: string = argArray[0];
+	const funcArgs: string[] = argArray.slice(1);
+
+	// Retrieve the base gateway
+	const gateways: Map<string, any> = stateStore.get(Constants.GATEWAYS);
+
+	if (!gateways || !gateways.has(gatewayName)) {
+		throw new Error(`Gateway named ${gatewayName} is not present in the state store ${Object.keys(gateways)}`);
+	}
+
+	// Retrieve gateway and contract
+	const gatewayObj: any = gateways.get(gatewayName);
+	const gateway: Gateway = gatewayObj.gateway;
+	const network: Network = await gateway.getNetwork(channelName);
+	const contract: Contract = network.getContract(ccName);
+
+	// Build a transaction
+	const transaction: Transaction = contract.createTransaction(func);
+	const transactionId: string = transaction.getTransactionID().getTransactionID();
+
+	// Build Transient data
+	const transientMap: TransientMap = {};
+	let i: number = 0;
+	for (const value of funcArgs) {
+		transientMap[`key${i}`] = Buffer.from(value);
+		i++;
+	}
+
+	try {
+		const submit: boolean = ( txnType.localeCompare('submit') === 0 );
+		if (submit) {
+			const result: Buffer = await transaction.setTransient(transientMap).submit();
+			BaseUtils.logMsg(`Successfully submitted transaction [${func}] with transient data`, undefined);
+			gatewayObj.result = {type: 'submit', response: JSON.parse(result.toString())};
+		} else {
+			const result: Buffer = await transaction.setTransient(transientMap).evaluate();
+			BaseUtils.logMsg(`Successfully evaluated transaction [${func}] with transient data`, undefined);
+			gatewayObj.result = {type: 'evaluate', response: JSON.parse(result.toString())};
+		}
+	} catch (error) {
+		gatewayObj.result = {type: 'error', response: error.toString()};
+		BaseUtils.logError(error.toString(), undefined);
 	}
 }
 
@@ -282,9 +476,13 @@ export function getLastTransactionResult(gatewayName: string): any {
  * @param {String} gatewayName the gateway to get the response from
  * @param {*} msg the message to compare against
  */
-export function lastTransactionResponseCompare(gatewayName: string, msg: string): boolean {
+export function lastTransactionResponseCompare(gatewayName: string, msg: string, exactMatch: boolean): boolean {
 	const gatewayObj: any = getGatewayObject(gatewayName);
-	return (gatewayObj.result.response.localeCompare(msg) === 0);
+	if (exactMatch) {
+		return (gatewayObj.result.response.localeCompare(JSON.parse(msg)) === 0);
+	} else {
+		return gatewayObj.result.response.includes(JSON.parse(msg));
+	}
 }
 
 /**
@@ -310,4 +508,14 @@ export async function disconnectAllGateways(): Promise<void> {
 		BaseUtils.logError('disconnectAllGateways() failed with error ', err);
 		throw err;
 	}
+}
+
+async function getInternalEventHubForOrg(gateway: Gateway, channelName: string, orgMSP: string): Promise<ChannelEventHub> {
+	const network: Network = await gateway.getNetwork(channelName);
+	const channel: Client.Channel = network.getChannel();
+	const orgPeer: any = channel.getPeersForOrg(orgMSP)[0]; // Only one peer per org in the test configuration
+
+	// Using private functions to get hold of an internal event hub. Don't try this at home, kids!
+	const eventHubManager: EventHubManager = (network as any).getEventHubManager();
+	return eventHubManager.getEventHub(orgPeer);
 }

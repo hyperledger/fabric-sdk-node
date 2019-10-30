@@ -190,7 +190,7 @@ gulp.task('test-fv-scenario', shell.task('npx nyc gulp run-test-fv-scenario'));
 
 // run fv only with code coverage
 // override the global nyc configuration
-gulp.task('test-fv-only', shell.task('npx nyc --check-coverage --statements 54 --branches 43 --functions 56 --lines 54 gulp run-tape-e2e'));
+gulp.task('test-fv-only', shell.task('npx nyc --check-coverage --statements 53 --branches 42 --functions 53 --lines 53 gulp run-tape-e2e'));
 
 gulp.task('run-test-fv-scenario', (done) => {
 	const tasks = ['run-tape-e2e', 'docker-clean', 'run-test:cucumber', 'docker-clean', 'run-test:ts-cucumber'];

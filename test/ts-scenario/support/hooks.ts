@@ -10,9 +10,7 @@ import * as BaseUtils from '../steps/lib/utility/baseUtils';
 import { CommandRunner } from '../steps/lib/utility/commandRunner';
 import { StateStore } from '../steps/lib/utility/stateStore';
 
-import { After, AfterAll } from 'cucumber';
-
-// const networkUtils = require('../lib/network');
+import { AfterAll } from 'cucumber';
 
 const commandRunner: CommandRunner = CommandRunner.getInstance();
 const stateStore: StateStore = StateStore.getInstance();
@@ -27,7 +25,7 @@ AfterAll({ timeout: Constants.HUGE_TIME as number }, async () => {
 	await commandRunner.runShellCommand(undefined, 'docker rmi $(docker images dev-* -q)');
 });
 
-After({tags: '@clean-gateway', timeout: Constants.HUGE_TIME as number}, async () => {
+AfterAll({timeout: Constants.HUGE_TIME as number}, async () => {
 	// If a test fails without disconnecting gateways, then the tests will hang
 	BaseUtils.logMsg('Disconnecting from all gateways ...',  null);
 	await Gateway.disconnectAllGateways();

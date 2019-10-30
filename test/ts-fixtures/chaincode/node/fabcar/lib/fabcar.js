@@ -82,6 +82,7 @@ class FabCar extends Contract {
 	}
 
 	async queryCar(ctx, carNumber) {
+		console.info('============= START : queryCar ==========='); // eslint-disable-line
 		const carAsBytes = await ctx.stub.getState(carNumber); // get the car from chaincode state
 		if (!carAsBytes || carAsBytes.length === 0) {
 			throw new Error(`${carNumber} does not exist`);
@@ -106,6 +107,7 @@ class FabCar extends Contract {
 	}
 
 	async queryAllCars(ctx) {
+		console.info('============= START : queryAllCars ==========='); // eslint-disable-line
 		const startKey = 'CAR0';
 		const endKey = 'CAR999';
 
@@ -148,6 +150,16 @@ class FabCar extends Contract {
 
 		await ctx.stub.putState(carNumber, Buffer.from(JSON.stringify(car)));
 		console.info('============= END : changeCarOwner ==========='); // eslint-disable-line
+	}
+
+	async getTransient(ctx) {
+		console.info('============= START : getTransient ==========='); // eslint-disable-line
+		const transientMap = ctx.stub.getTransient();
+		const result = {};
+		transientMap.forEach((value, key) => {
+			result[key] = value.toString('utf8');
+		});
+		return JSON.stringify(result);
 	}
 
 }

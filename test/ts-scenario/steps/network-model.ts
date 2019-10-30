@@ -17,16 +17,17 @@ const stateStore: StateStore = StateStore.getInstance();
 
 Given(/^I have a (.+?) backed gateway named (.+?) with discovery set to (.+?) for user (.+?) using the connection profile named (.+?)$/, { timeout: Constants.STEP_MED as number }, async (walletType: string, gatewayName: string, useDiscovery: string, userName: string, ccpName: string) => {
 
-	const gateways: any = stateStore.get(Constants.GATEWAYS);
+	const gateways: Map<string, any> = stateStore.get(Constants.GATEWAYS);
 	const fabricState: any = stateStore.get(Constants.FABRIC_STATE);
 	const tls: boolean = (fabricState.type.localeCompare('tls') === 0);
 
-	if (gateways && Object.keys(gateways).includes(gatewayName)) {
+	if (gateways && gateways.has(gatewayName)) {
 		BaseUtils.logMsg(`Gateway named ${gatewayName} already exists`, undefined);
 		return;
 	} else {
 		try {
 			// Create and persist the new gateway
+			BaseUtils.logMsg(`Creating new Gateway named ${gatewayName}`, undefined);
 			const profilePath: string = path.join(__dirname, '../config', ccpName);
 			const ccp: CommonConnectionProfileHelper = new CommonConnectionProfileHelper(profilePath, true);
 			return await Gateway.createGateway(ccp, tls, userName, Constants.DEFAULT_ORG, gatewayName, JSON.parse(useDiscovery), walletType);
@@ -47,6 +48,14 @@ When(/^I use the gateway named (.+?) to (.+?) a total of (.+?) transactions with
 	}
 });
 
+When(/^I modify (.+?) to (.+?) a transaction with args (.+?) for contract (.+?) instantiated on channel (.+?) using handler option (.+?)$/, { timeout: Constants.STEP_MED as number }, async (gatewayName: string, txnType: string, txnArgs: string, ccName: string, channelName: string, handlerOption: string) => {
+	return await Gateway.performHandledGatewayTransaction(gatewayName, ccName, channelName, txnArgs, txnType, handlerOption);
+});
+
+When(/^I modify (.+?) to (.+?) a transaction with transient data using args (.+?) for contract (.+?) instantiated on channel (.+?)$/, { timeout: Constants.STEP_MED as number }, async (gatewayName: string, txnType: string, txnArgs: string, ccName: string, channelName: string) => {
+	return await Gateway.performTransientGatewayTransaction(gatewayName, ccName, channelName, txnArgs, txnType);
+});
+
 Then(/^The gateway named (.+?) has a (.+?) type response$/, { timeout: Constants.STEP_LONG as number }, async (gatewayName: string, type: string) => {
 	if (Gateway.lastTransactionTypeCompare(gatewayName, type)) {
 		return Promise.resolve();
@@ -55,9 +64,9 @@ Then(/^The gateway named (.+?) has a (.+?) type response$/, { timeout: Constants
 	}
 });
 
-Then(/^The gateway named (.+?) has a (.+?) type response matching (.+?)$/, { timeout: Constants.STEP_LONG as number }, async (gatewayName: string, type: string, expected: string) => {
+Then(/^The gateway named (.+?) has a (.+?) type response (matching|containing) (.+?)$/, { timeout: Constants.STEP_LONG as number }, async (gatewayName: string, type: string, matchType: string, expected: string) => {
 	const sameType: boolean = Gateway.lastTransactionTypeCompare(gatewayName, type);
-	const sameResponse: boolean = Gateway.lastTransactionResponseCompare(gatewayName, expected);
+	const sameResponse: boolean = Gateway.lastTransactionResponseCompare(gatewayName, expected, matchType === 'matching');
 	if (sameType && sameResponse) {
 		return Promise.resolve();
 	} else {

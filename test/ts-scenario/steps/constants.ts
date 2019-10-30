@@ -22,6 +22,7 @@ export enum Constants {
 	LIB_TO_CONFIG = '../../config',
 	LIB_TO_CHAINCODE = '../../../ts-fixtures/chaincode',
 	LIB_TO_POLICIES = '../../config/policies.json',
+	LIB_TO_TEMP = '../../../temp',
 	STEPS_TO_POLICIES= '../config/policies.json',
 	UTIL_TO_CONFIG = '../../../config',
 

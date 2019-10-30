@@ -7,6 +7,8 @@
 import { Constants } from '../../constants';
 import { StateStore } from './stateStore';
 
+import * as fs from 'fs';
+
 const stateStore: StateStore = StateStore.getInstance();
 
 /**
@@ -116,3 +118,23 @@ export function logScenarioStart(featureType: string): void {
 	logMsg('**********************************************************************************', undefined);
 	logMsg('**********************************************************************************\n\n\n', undefined);
 }
+
+export function recursiveDirDelete(dirPath: string): void {
+	let files: string[];
+	try {
+		files = fs.readdirSync(dirPath);
+	} catch (error) {
+		return;
+	}
+	if (files.length > 0) {
+		for (let i: number = 0; i < files.length; i++) {
+			const filePath: string = dirPath + '/' + files[i];
+			if (fs.statSync(filePath).isFile()) {
+				fs.unlinkSync(filePath);
+			} else {
+				recursiveDirDelete(filePath);
+			}
+		  }
+		fs.rmdirSync(dirPath);
+	}
+  }
