@@ -131,7 +131,7 @@ gulp.task('test-headless', shell.task('npx nyc --check-coverage --lines 50 --sta
 // Test to run only tape integration test
 gulp.task('test-integration', shell.task('npx nyc --check-coverage --lines 50 --statements 50 --functions 50 --branches 50 gulp run-test-integration'));
 
-// Test to run only tape integration test
+// Test to run only scenario test
 gulp.task('test-cucumber', shell.task('npx nyc gulp run-test-cucumber'));
 
 // Test to run only logger test
@@ -174,14 +174,11 @@ gulp.task('run-test-cucumber', shell.task(
 	'export HFC_LOGGING=""; npm run test:cucumber'
 ));
 
-// Main test method to run all test suites
-// - lint, unit first, then FV, then scenario
-gulp.task('run-test', (done) => {
-	const tasks = ['clean-up', 'docker-clean', 'pre-test', 'ca', 'compile', 'lint', 'run-test-mocha', 'run-tape-unit', 'run-tape-e2e', 'run-test-logger', 'docker-clean', 'run-test-cucumber'];
+// Main test to run all tests
+gulp.task('run-test-all', (done) => {
+	const tasks = ['check_license', 'test-headless', 'test-integration', 'run-test-cucumber', 'run-test-logger'];
 	runSequence(...tasks, done);
 });
-// Main test to run all tests
-gulp.task('test', shell.task('npx nyc gulp run-test'));
 
 // fabric end-to-end test
 gulp.task('run-end-to-end', (done) => {

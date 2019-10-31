@@ -26,12 +26,14 @@ function filterExcludedFiles {
 		| grep -v "\.md$" \
 		| grep -v "\.pb\.go$" \
 		| grep -v "\.yaml$" \
+		| grep -v "\.yml$" \
 		| grep -v "\.json$" \
 		| grep -v "\.gradle$" \
 		| grep -v "\.cds$" \
 		| grep -v "\.jar$" \
 		| grep -v "\.csr$" \
 		| grep -v "\ci.properties$" \
+		| grep -v "\.conf$" \
 		| sort -u`
 }
 
