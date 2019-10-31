@@ -24,6 +24,7 @@
 		"node": "^8.9.0 || ^10.15.3",
 		"npm": "^5.5.1 || ^6.4.1"
 	},
+	"types": "./types/index.d.ts",
 	"dependencies": {
 		"elliptic": "^6.2.3",
 		"js-sha3": "^0.7.0",

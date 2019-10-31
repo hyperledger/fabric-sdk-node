@@ -35,7 +35,6 @@ test
 - `fixtures` holds all the configuration files used by the integration and scenario tests
 - `integration` contains the integration test suite
 - `ts-scenario` contains the typescripts scenario test suite
-- `unit` contains the deprecated unit test suite
 
 ## Configuring and running Hardware Security Module tests
 

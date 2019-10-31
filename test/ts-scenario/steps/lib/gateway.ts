@@ -474,7 +474,8 @@ export function getLastTransactionResult(gatewayName: string): any {
 /**
  * Compare the last gateway transaction response with a passed value
  * @param {String} gatewayName the gateway to get the response from
- * @param {*} msg the message to compare against
+ * @param {String} msg the message to compare against
+ * @param {boolean} exactMatch boolean flag to indicate if an exact match is being performed
  */
 export function lastTransactionResponseCompare(gatewayName: string, msg: string, exactMatch: boolean): boolean {
 	const gatewayObj: any = getGatewayObject(gatewayName);

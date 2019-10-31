@@ -13,6 +13,27 @@
     }
   },
   "channels":{
+	  "baseapichannel":{
+		"orderers":[
+		  "orderer.example.com"
+		],
+		"peers":{
+		  "peer0.org1.example.com":{
+			"endorsingPeer":true,
+			"chaincodeQuery":true,
+			"ledgerQuery":true,
+			"eventSource":true
+		  },
+		  "peer0.org2.example.com":{
+			"endorsingPeer":true,
+			"chaincodeQuery":false,
+			"ledgerQuery":true,
+			"eventSource":false
+		  }
+		},
+		"chaincodes":[
+		]
+	  },
 	"channelopschannel":{
 		"orderers":[
 		  "orderer.example.com"

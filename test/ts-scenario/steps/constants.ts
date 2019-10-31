@@ -4,6 +4,9 @@
 
 'use strict';
 
+// State store items (just in case you don't want to look at the code)
+// - Users Map<userName: string, user: User>
+
 export enum Constants {
 	// Timeouts and steps
 	HUGE_TIME  = 1200000,
@@ -52,11 +55,12 @@ export enum Constants {
 	CLI_VERBOSITY = 'false',
 	CLI_TIMEOUT = '120s',
 
-	// Constants for network model actions
-	WALLET = 'WALLET',		// StateStore key to retrieve a wallet that contains users
-	GATEWAYS = 'GATEWAYS',	// StateStore key to retrieve a Map(gatewayName, Gateway) of gateways that may be re-used
+	// State store items
+	WALLET = 'WALLET',				// StateStore key to retrieve a wallet that contains users
+	GATEWAYS = 'GATEWAYS',			// StateStore key to retrieve a Map<gatewayName: string, GatewayObject> of gateways that may be re-used
 	LISTENERS = 'LISTENERS',
 	TRANSACTIONS = 'TRANSACTIONS',
+	CLIENTS = 'CLIENTS', 				// Map<clientName: string, { client: Client, user: User, ccp: CommonConnectionProfileHelper, clientOrg: string, channels: Map<channelName: string, channel: Channel> } >
 
 	// Wallet types
 	MEMORY_WALLET = 'memory',
@@ -88,6 +92,12 @@ export enum Constants {
 
 	// CLI Policies
 	ENDORSEMENT_POLICY_1OF_ANY = '"OR (\'Org1MSP.member\',\'Org2MSP.member\')"',
-	ENDORSEMENT_POLICY_2OF_ANY = '"AND (\'Org1MSP.member\',\'Org2MSP.member\')"'
+	ENDORSEMENT_POLICY_2OF_ANY = '"AND (\'Org1MSP.member\',\'Org2MSP.member\')"',
 
+	// Admin name
+	ADMIN_NAME = 'admin',
+	ADMIN_PW = 'adminpw',
+
+	// Default Naming
+	EVENT_HUB_DEFAULT_NAME = 'myHub',
 }

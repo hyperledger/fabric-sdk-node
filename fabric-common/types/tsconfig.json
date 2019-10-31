@@ -20,7 +20,7 @@
     }
   },
   "files": [
-      "types/index.d.ts"
+      "index.d.ts"
   ],
   "formatCodeOptions": {
     "indentSize": 4,

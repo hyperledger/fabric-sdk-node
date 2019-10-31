@@ -1,6 +1,4 @@
 /**
- * Copyright 2017 Kapil Sachdeva All Rights Reserved.
- *
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -57,7 +55,7 @@ export interface UserConfig {
 export interface ProposalResponse {
 	errors: Error[],
 	responses: EndorsementResponse[],
-	queryResponses: Buffer[]
+	queryResults: Buffer[]
 }
 
 export interface EndorsementResponse {
@@ -83,6 +81,7 @@ export class User {
 	public setRoles(roles: string[]): void;
 	public getAffiliation(): string;
 	public setAffiliation(affiliation: string): void;
+	public getEnrollmentSecret() : string;
 	public getIdentity(): IIdentity;
 	public getSigningIdentity(): ISigningIdentity;
 	public setSigningIdentity(signingIdentity: ISigningIdentity): void;
