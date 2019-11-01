@@ -4,6 +4,7 @@
 
 @deprecated
 @gateway
+@fabric_merge
 Feature: Use the Node SDK to install/instantiate/Upgrade chaincode with the deprecated API
 
 	Background:

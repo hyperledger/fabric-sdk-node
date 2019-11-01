@@ -3,6 +3,7 @@
 #
 
 @channel_operations
+@fabric_merge
 Feature: Use the channel query methods
 
 	Background:

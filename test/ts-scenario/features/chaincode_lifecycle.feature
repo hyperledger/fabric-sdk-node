@@ -3,6 +3,7 @@
 #
 
 @lifecycle
+@fabric_merge
 Feature: Use the v2.0 chaincode lifecycle process to perform lifecycle operations on all supported smart contract languages
 
 	Background:
@@ -10,7 +11,7 @@ Feature: Use the v2.0 chaincode lifecycle process to perform lifecycle operation
 		Given I deploy a tls Fabric network
 		And I use the cli to create and join the channel named lifecyclechannel on the deployed network
 
-	Scenario: Using the SDK I can run node smart contracts thorugh their lifecycle on a two org network
+	Scenario: Using the SDK I can run node smart contracts through their lifecycle on a two org network
 		Given I package a node contract at version v1 named legacyNode as organizations [Org1,Org2] with initialization required
 		When I install a packaged contract named legacyNode as organizations [Org1,Org2]
 		Then I can retrieve an installed contract package named legacyNode as organizations [Org1,Org2] on channel lifecyclechannel
@@ -25,7 +26,7 @@ Feature: Use the v2.0 chaincode lifecycle process to perform lifecycle operation
 		And I can submit function query on contract named legacyNode as organization Org1 on channel lifecyclechannel with args ["a"] returning expected result 900
 		And I can query function query on contract named legacyNode as organization Org1 on channel lifecyclechannel with args ["a"] returning expected result 900
 
-	Scenario: Using the SDK I can run Java smart contracts thorugh their lifecycle on a two org network
+	Scenario: Using the SDK I can run Java smart contracts through their lifecycle on a two org network
 		Given I package a java contract at version v1 named legacyJava as organizations [Org1,Org2] with initialization required
 		When I install a packaged contract named legacyJava as organizations [Org1,Org2]
 		Then I can retrieve an installed contract package named legacyJava as organizations [Org1,Org2] on channel lifecyclechannel
@@ -40,7 +41,7 @@ Feature: Use the v2.0 chaincode lifecycle process to perform lifecycle operation
 		And I can submit function query on contract named legacyJava as organization Org1 on channel lifecyclechannel with args ["a"] returning expected result 900
 		And I can query function query on contract named legacyJava as organization Org1 on channel lifecyclechannel with args ["a"] returning expected result 900
 
-	Scenario: Using the SDK I can run GoLang smart contracts thorugh their lifecycle on a two org network
+	Scenario: Using the SDK I can run GoLang smart contracts through their lifecycle on a two org network
 		Given I package a golang contract at version v1 named legacyGo as organizations [Org1,Org2] with initialization required
 		When I install a packaged contract named legacyGo as organizations [Org1,Org2]
 		Then I can retrieve an installed contract package named legacyGo as organizations [Org1,Org2] on channel lifecyclechannel
@@ -54,3 +55,13 @@ Feature: Use the v2.0 chaincode lifecycle process to perform lifecycle operation
 		And I can submit function move on contract named legacyGo as organization Org1 on channel lifecyclechannel with args ["a","b","100"]
 		And I can submit function query on contract named legacyGo as organization Org1 on channel lifecyclechannel with args ["a"] returning expected result 900
 		And I can query function query on contract named legacyGo as organization Org1 on channel lifecyclechannel with args ["a"] returning expected result 900
+
+	# # TODO: implement after fabric-client refactoring (https://jira.hyperledger.org/browse/FABN-1347)
+ 	# Scenario: Using the SDK I can run a GoLang smart contract using private data on a two org network
+	# 	Given I package a golang contract at version v1 named legacyGoPrivateData as organizations [Org1,Org2] with initialization required
+	# 	When I install a packaged contract named legacyGoPrivateData as organizations [Org1,Org2]
+	# 	Then I can retrieve an installed contract package named legacyGoPrivateData as organizations [Org1,Org2] on channel lifecyclechannel
+	# 	When I approve the installed contract named legacyGoPrivateData as organizations [Org1,Org2] on channel lifecyclechannel with endorsement policy 1ofAny with collections config file legacyGoPrivateData/collections_config.json
+	# 	Then I can query commit readiness for contract named legacyGoPrivateData as organizations [Org1,Org2] on channel lifecyclechannel with expected approvals status of {"Org1MSP":true,"Org2MSP":true}
+	# 	When I call commit on contract named legacyGoPrivateData as organization Org1 on channel lifecyclechannel
+	# 	Then I can query for defined contract named legacyGoPrivateData as organizations [Org1,Org2] on channel lifecyclechannel with expected result including {"init_required":true,"version":"v1", "sequence":"1", "validation_plugin": "vscc", "endorsement_plugin": "escc"}

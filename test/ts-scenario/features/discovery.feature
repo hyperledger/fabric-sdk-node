@@ -4,6 +4,7 @@
 
 @discovery
 @gateway
+@fabric_merge
 Feature: Configure Fabric using CLI and submit/evaluate using a network Gateway with discovery enabled
 
 	Background:

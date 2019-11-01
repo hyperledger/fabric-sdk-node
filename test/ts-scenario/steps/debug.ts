@@ -6,7 +6,6 @@
 
 import { Constants } from './constants';
 import * as BaseUtils from './lib/utility/baseUtils';
-import * as OPS from './channel_operations';
 import { Given, Then } from 'cucumber';
 
 Given(/^I place a scenario start message (.+?)$/, { timeout: Constants.STEP_SHORT as number }, async (featureType: string) => {

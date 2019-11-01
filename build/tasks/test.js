@@ -75,18 +75,6 @@ if (!/master/.test(release)) {
 process.env.DOCKER_IMG_TAG = dockerImageTag;
 process.env.THIRDPARTY_IMG_TAG = thirdpartyImageTag;
 
-gulp.task('pre-test', () => {
-	return gulp.src([
-		'fabric-common/lib/**/*.js',
-		'fabric-network/lib/**/*.js',
-		'fabric-client/lib/**/*.js',
-		'fabric-ca-client/lib/FabricCAClientImpl.js',
-		'fabric-ca-client/lib/helper.js',
-		'fabric-ca-client/lib/IdentityService.js',
-		'fabric-ca-client/lib/AffiliationService.js'
-	]);
-});
-
 gulp.task('clean-up', () => {
 	// some tests create temporary files or directories
 	// they are all created in the same temp folder
@@ -203,7 +191,14 @@ gulp.task('run-test-scenario', (done) => {
 });
 
 gulp.task('run-test-merge', (done) => {
-	const tasks = ['clean-up', 'docker-clean', 'pre-test',  'compile', 'run-test:cucumber', 'docker-clean', 'run-test:ts-cucumber'];
+	const tasks = ['clean-up', 'docker-clean', 'compile', 'run-test:cucumber', 'docker-clean', 'run-test:ts-cucumber'];
+	runSequence(...tasks, done);
+});
+
+// Task for fabric to run in verify/merge CI pipeline
+// Cucumber scenario tests tagged "@fabric_merge"
+gulp.task('run-test-fabric-merge', (done) => {
+	const tasks = ['clean-up', 'docker-clean', 'compile', 'run test:ts-cucumber-fabric-merge'];
 	runSequence(...tasks, done);
 });
 
@@ -215,24 +210,24 @@ gulp.task('run-test-functional', (done) => {
 // Main test method to run all test suites
 // - lint, unit first, then FV, then scenario
 gulp.task('run-test-all', (done) => {
-	const tasks = ['clean-up', 'docker-clean', 'pre-test', 'compile', 'lint', 'docs', 'test-mocha', 'test-fv-only', 'run-test-scenario'];
+	const tasks = ['clean-up', 'docker-clean', 'compile', 'lint', 'docs', 'test-mocha', 'test-fv-only', 'run-test-scenario'];
 	runSequence(...tasks, done);
 });
 // As above, without scenario
 gulp.task('run-test', (done) => {
-	const tasks = ['clean-up', 'docker-clean', 'pre-test', 'compile', 'lint', 'docs', 'test-mocha', 'test-fv-only'];
+	const tasks = ['clean-up', 'docker-clean', 'compile', 'lint', 'docs', 'test-mocha'];
 	runSequence(...tasks, done);
 });
 
 // fabric end-to-end test
 gulp.task('run-end-to-end', (done) => {
-	const tasks = ['clean-up', 'docker-clean', 'pre-test', 'compile', 'run-tape-e2e'];
+	const tasks = ['clean-up', 'docker-clean', 'compile', 'run-tape-e2e'];
 	runSequence(...tasks, done);
 });
 
 // Run all non-integration tests
 gulp.task('run-test-headless', (done) => {
-	const tasks = ['clean-up', 'pre-test', 'compile', 'lint', 'test-mocha'];
+	const tasks = ['clean-up', 'compile', 'lint', 'test-mocha'];
 	runSequence(...tasks, done);
 });
 

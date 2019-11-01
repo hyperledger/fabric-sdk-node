@@ -1,0 +1,51 @@
+[{
+    "name": "detailCol",
+    "policy": {
+      "identities": [{
+          "role": {
+            "name": "member",
+            "mspId": "Org1MSP"
+          }
+        },
+        {
+          "role": {
+            "name": "member",
+            "mspId": "Org2MSP"
+          }
+        }
+      ],
+      "policy": {
+        "1-of": [
+          {
+            "signed-by": 0
+          },
+          {
+            "signed-by": 1
+          }
+        ]
+      }
+    },
+    "requiredPeerCount": 1,
+    "maxPeerCount": 1,
+    "blockToLive": 100
+  },
+  {
+    "name": "sensitiveCol",
+    "policy": {
+      "identities": [{
+        "role": {
+          "name": "member",
+          "mspId": "Org1MSP"
+        }
+      }],
+      "policy": {
+        "1-of": [{
+          "signed-by": 0
+        }]
+      }
+    },
+    "requiredPeerCount": 0,
+    "maxPeerCount": 1,
+    "blockToLive": 100
+  }
+]

@@ -4,6 +4,7 @@
 
 @events
 @gateway
+@fabric_merge
 Feature: Node SDK Events
 
 	Background:
