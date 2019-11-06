@@ -580,10 +580,10 @@ class DiscoveryService extends ServiceAction {
 		const url = this._buildUrl(host, port);
 		logger.debug(`${method} - create a new orderer ${url}`);
 		const orderer = this.client.newCommitter(address, msp_id);
-		this.channel.addCommitter(orderer);
 		const end_point = this.client.newEndpoint(this._buildOptions(address, url, host, msp_id));
 		try {
 			await orderer.connect(end_point);
+			this.channel.addCommitter(orderer);
 		} catch (error) {
 			logger.error(`${method} - Unable to connect to the discovered orderer ${address} due to ${error}`);
 		}
@@ -611,11 +611,11 @@ class DiscoveryService extends ServiceAction {
 		const url = this._buildUrl(host_port[0], host_port[1]);
 		logger.debug(`${method} - create a new endorser ${url}`);
 		const peer = this.client.getEndorser(address, msp_id);
-		this.channel.addEndorser(peer);
 		const end_point = this.client.newEndpoint(this._buildOptions(address, url, host_port[0], msp_id));
 		try {
 			logger.debug(`${method} - about to connect to endorser ${address} url:${url}`);
 			await peer.connect(end_point);
+			this.channel.addEndorser(peer);
 			logger.debug(`${method} - connected to peer ${address} url:${url}`);
 		} catch (error) {
 			logger.error(`${method} - Unable to connect to the discovered peer ${address} due to ${error}`);

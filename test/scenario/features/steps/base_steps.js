@@ -350,7 +350,7 @@ module.exports = function () {
 					}
 
 					// check the orderers discovered for mspid
-					orderers = channel.getOrderers('OrdererMSP'); // gets all peers
+					orderers = channel.getCommitters('OrdererMSP'); // gets all peers
 					if (await orderers[0].checkConnection()) {
 						testUtil.logMsg(`Orderer ${orderers[0].name} is connected`);
 					} else {
