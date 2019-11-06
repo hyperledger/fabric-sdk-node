@@ -4,7 +4,7 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
 
 trigger:
-- master
+- release-1.4
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -26,5 +26,19 @@ steps:
 - script: npm install
   displayName: 'npm install'
 
+- script: npm run retrieve-images
+  displayName: 'Pull Docker images'
+
+- script: npx gulp install-and-generate-certs
+  displayName: 'Generate credentials'
+
 - script: npx gulp run-test-all
   displayName: 'Run tests'
+
+# - script: scripts/ci_scripts/azurePublishApiDocs.sh
+#   displayName: 'Publish API documentation'
+#   env:
+#     GITHUB_USER: 'fabric-sdk-node'
+#     GITHUB_EMAIL: 'fabricsdknode@gmail.com'
+#     GITHUB_PASSWORD: $(GITHUB_PASSWORD)
+#     PUBLISH_REPOSITORY: 'fabric-sdk-node/fabric-sdk-node'
