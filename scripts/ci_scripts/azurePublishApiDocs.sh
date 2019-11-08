@@ -5,9 +5,23 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+# Input environment variables:
+: "${GITHUB_USER:?}" # The GitHub user name for publishing
+: "${GITHUB_EMAIL:?}" # Email address of the GitHub user
+: "${GITHUB_PASSWORD:?}" # Password or token for GitHub user
+: "${PUBLISH_REPOSITORY:?}" # Qualified GitHub publish repository name (i.e. "organization/repository")
+
+readonly PROJECT_DIR=$(cd -P "$(dirname "$0")"/../.. >/dev/null 2>&1 && pwd)
+
+readonly COMMIT_HASH=$(git rev-parse HEAD)
+readonly REPOSITORY_URL="https://github.com/${PUBLISH_REPOSITORY}.git"
+readonly PUBLISH_URL="https://${GITHUB_USER}:${GITHUB_PASSWORD}@github.com/${PUBLISH_REPOSITORY}.git"
+readonly BUILD_DIR="${PROJECT_DIR}/docs/gen"
+readonly PUBLISH_DIR="${PROJECT_DIR}/$(basename "${PUBLISH_REPOSITORY}")"
+
 clonePublishRepository() {
     rm -rf "${PUBLISH_DIR}"
-    git clone "${REPOSITORY_URL}"
+    git clone "${REPOSITORY_URL}" "${PUBLISH_DIR}"
 }
 
 buildDocs() {
@@ -32,8 +46,8 @@ removePublishRootFiles() {
 
 removePublishDirectories() {
     find "${BUILD_DIR}" -type d -maxdepth 1 -depth 1 -print | while read -r subdir; do
-        sourceDir=$(basename "${subdir}")
-        targetDir="${PUBLISH_DIR}/${sourceDir}"
+        local sourceDir=$(basename "${subdir}")
+        local targetDir="${PUBLISH_DIR}/${sourceDir}"
         echo "Removing ${targetDir}"
         rm -rf "${targetDir}"
     done
@@ -46,22 +60,8 @@ publishDocs() {
     git add .
     git commit -m "Commit ${COMMIT_HASH}"
     git remote add publish "${PUBLISH_URL}"
-    git push publish master
+    # git push publish master
 }
-
-# Must be run from the repository root directory.
-
-# Input environment variables:
-: "${GITHUB_USER:?}" # The GitHub user name for publishing
-: "${GITHUB_EMAIL:?}" # Email address of the GitHub user
-: "${GITHUB_PASSWORD:?}" # Password or token for GitHub user
-: "${PUBLISH_REPOSITORY:?}" # Qualified GitHub publish repository name (i.e. "organization/repository")
-
-COMMIT_HASH=$(git rev-parse HEAD)
-REPOSITORY_URL="https://github.com/${PUBLISH_REPOSITORY}.git"
-PUBLISH_URL="https://${GITHUB_USER}:${GITHUB_PASSWORD}@github.com/${PUBLISH_REPOSITORY}.git"
-BUILD_DIR="docs/gen"
-PUBLISH_DIR=$(basename "${PUBLISH_REPOSITORY}")
 
 clonePublishRepository
 buildDocs

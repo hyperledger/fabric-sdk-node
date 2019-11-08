@@ -35,6 +35,11 @@ steps:
 - script: npx gulp run-test-all
   displayName: 'Run tests'
 
+# - script: scripts/ci_scripts/azurePublishNpmPackages.sh
+#   displayName: 'Publish npm packages'
+#   env:
+#     NPM_TOKEN: ${NPM_TOKEN}
+
 # - script: scripts/ci_scripts/azurePublishApiDocs.sh
 #   displayName: 'Publish API documentation'
 #   env:
