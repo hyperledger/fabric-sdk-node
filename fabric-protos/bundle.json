@@ -879,6 +879,32 @@
                     ]
                 },
                 {
+                    "name": "ApplicationPolicy",
+                    "syntax": "proto3",
+                    "fields": [
+                        {
+                            "rule": "optional",
+                            "type": "SignaturePolicyEnvelope",
+                            "name": "signature_policy",
+                            "id": 1,
+                            "oneof": "Type"
+                        },
+                        {
+                            "rule": "optional",
+                            "type": "string",
+                            "name": "channel_config_policy_reference",
+                            "id": 2,
+                            "oneof": "Type"
+                        }
+                    ],
+                    "oneofs": {
+                        "Type": [
+                            1,
+                            2
+                        ]
+                    }
+                },
+                {
                     "name": "CollectionConfigPackage",
                     "syntax": "proto3",
                     "fields": [
@@ -953,6 +979,12 @@
                             "type": "bool",
                             "name": "member_only_write",
                             "id": 7
+                        },
+                        {
+                            "rule": "optional",
+                            "type": "ApplicationPolicy",
+                            "name": "endorsement_policy",
+                            "id": 8
                         }
                     ]
                 },
@@ -973,36 +1005,6 @@
                             1
                         ]
                     }
-                },
-                {
-                    "name": "CollectionCriteria",
-                    "syntax": "proto3",
-                    "fields": [
-                        {
-                            "rule": "optional",
-                            "type": "string",
-                            "name": "channel",
-                            "id": 1
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "string",
-                            "name": "tx_id",
-                            "id": 2
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "string",
-                            "name": "collection",
-                            "id": 3
-                        },
-                        {
-                            "rule": "optional",
-                            "type": "string",
-                            "name": "namespace",
-                            "id": 4
-                        }
-                    ]
                 },
                 {
                     "name": "LastConfig",
@@ -1738,7 +1740,8 @@
             "fields": [],
             "syntax": "proto2",
             "options": {
-                "go_package": "github.com/hyperledger/fabric-protos-go/gossip"
+                "go_package": "github.com/hyperledger/fabric-protos-go/gossip",
+                "java_package": "org.hyperledger.fabric.protos.gossip"
             },
             "messages": [
                 {
@@ -3027,7 +3030,8 @@
             "fields": [],
             "syntax": "proto2",
             "options": {
-                "go_package": "github.com/hyperledger/fabric-protos-go/discovery"
+                "go_package": "github.com/hyperledger/fabric-protos-go/discovery",
+                "java_package": "org.hyperledger.fabric.protos.discovery"
             },
             "messages": [
                 {
@@ -4655,6 +4659,78 @@
                     ]
                 },
                 {
+                    "name": "CDSData",
+                    "syntax": "proto3",
+                    "fields": [
+                        {
+                            "rule": "optional",
+                            "type": "bytes",
+                            "name": "hash",
+                            "id": 1
+                        },
+                        {
+                            "rule": "optional",
+                            "type": "bytes",
+                            "name": "metadatahash",
+                            "id": 2
+                        }
+                    ]
+                },
+                {
+                    "name": "ChaincodeData",
+                    "syntax": "proto3",
+                    "fields": [
+                        {
+                            "rule": "optional",
+                            "type": "string",
+                            "name": "name",
+                            "id": 1
+                        },
+                        {
+                            "rule": "optional",
+                            "type": "string",
+                            "name": "version",
+                            "id": 2
+                        },
+                        {
+                            "rule": "optional",
+                            "type": "string",
+                            "name": "escc",
+                            "id": 3
+                        },
+                        {
+                            "rule": "optional",
+                            "type": "string",
+                            "name": "vscc",
+                            "id": 4
+                        },
+                        {
+                            "rule": "optional",
+                            "type": "common.SignaturePolicyEnvelope",
+                            "name": "policy",
+                            "id": 5
+                        },
+                        {
+                            "rule": "optional",
+                            "type": "bytes",
+                            "name": "data",
+                            "id": 6
+                        },
+                        {
+                            "rule": "optional",
+                            "type": "bytes",
+                            "name": "id",
+                            "id": 7
+                        },
+                        {
+                            "rule": "optional",
+                            "type": "common.SignaturePolicyEnvelope",
+                            "name": "instantiation_policy",
+                            "id": 8
+                        }
+                    ]
+                },
+                {
                     "name": "SignedProposal",
                     "syntax": "proto3",
                     "fields": [
@@ -5445,6 +5521,9 @@
                 {
                     "name": "ApplicationPolicy",
                     "syntax": "proto3",
+                    "options": {
+                        "deprecated": true
+                    },
                     "fields": [
                         {
                             "rule": "optional",
@@ -5636,6 +5715,19 @@
                     "options": {},
                     "rpc": {
                         "Register": {
+                            "request": "ChaincodeMessage",
+                            "request_stream": true,
+                            "response": "ChaincodeMessage",
+                            "response_stream": true,
+                            "options": {}
+                        }
+                    }
+                },
+                {
+                    "name": "Chaincode",
+                    "options": {},
+                    "rpc": {
+                        "Connect": {
                             "request": "ChaincodeMessage",
                             "request_stream": true,
                             "response": "ChaincodeMessage",

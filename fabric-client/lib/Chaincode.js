@@ -24,6 +24,7 @@ const Policy = require('./Policy.js');
 const CollectionConfig = require('./SideDB.js');
 const TransactionID = require('./TransactionID');
 const fabric_protos = require('fabric-protos').protos;
+const fabric_common_protos = require('fabric-protos').common;
 const lifecycle_protos = require('fabric-protos').lifecycle;
 
 /**
@@ -384,7 +385,7 @@ const Chaincode = class {
 		const method = 'setEndorsementPolicyDefinition';
 		logger.debug('%s - start', method);
 
-		const application_policy = new fabric_protos.ApplicationPolicy();
+		const application_policy = new fabric_common_protos.ApplicationPolicy();
 
 		if (typeof policy === 'string') {
 			logger.debug('%s - have a policy reference :: %s', method, policy);

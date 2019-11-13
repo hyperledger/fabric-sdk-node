@@ -22,8 +22,8 @@
     "test:network": "npm run compile && npm run coverage -- 'fabric-network/test/**/*.{js,ts}'",
     "test:protos": "npm run coverage -- 'fabric-protos/test/**/*.{js,ts}",
     "test:cucumber": "cucumber-js ./test/scenario/features/*.feature",
-	  "test:ts-cucumber": "cucumber-js ./test/ts-scenario/features/*.feature --require './test/ts-scenario/steps/**/*.ts' --require './test/ts-scenario/support/**/*.ts' --require-module ts-node/register",
-	  "test:ts-cucumber-tagged": "cucumber-js ./test/ts-scenario/features/*.feature --require './test/ts-scenario/steps/**/*.ts' --require './test/ts-scenario/support/**/*.ts' --require-module ts-node/register --tags @discovery",
+    "test:ts-cucumber": "cucumber-js ./test/ts-scenario/features/*.feature --require './test/ts-scenario/steps/**/*.ts' --require './test/ts-scenario/support/**/*.ts' --require-module ts-node/register",
+    "test:ts-cucumber-tagged": "cucumber-js ./test/ts-scenario/features/*.feature --require './test/ts-scenario/steps/**/*.ts' --require './test/ts-scenario/support/**/*.ts' --require-module ts-node/register --tags @discovery",
     "test:ts-cucumber-fabric-merge": "cucumber-js ./test/ts-scenario/features/*.feature --require './test/ts-scenario/steps/**/*.ts' --require './test/ts-scenario/support/**/*.ts' --require-module ts-node/register --tags @fabric_merge",
     "test:all": "nyc npm run unit-test:all",
     "unit-test:all": "npm run unit-test -- 'fabric-common/test/**/*.{js,ts}' && npm run unit-test -- 'fabric-ca-client/test/**/*.{js,ts}' && npm run unit-test -- 'fabric-client/test/**/*.{js,ts}' && npm run unit-test -- 'fabric-network/test/**/*.{js,ts}'",
@@ -34,7 +34,7 @@
     "retrieve-images": "./scripts/utility/fabric_images.sh amd64 2.0.0-stable"
   },
   "devDependencies": {
-    "@ampretia/x509": "^0.4.0",
+    "@ampretia/x509": "0.4.0",
     "@cloudant/cloudant": "^2.1.0",
     "@types/chai": "^4.2.1",
     "@types/chai-as-promised": "^7.1.2",
@@ -104,7 +104,8 @@
     }
   ],
   "dependencies": {
-    "fs-extra": "^6.0.1"
+    "fs-extra": "^6.0.1",
+    "x509": "^0.3.4"
   },
   "nyc": {
     "exclude": [

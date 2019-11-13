@@ -59,6 +59,9 @@ message StaticCollectionConfig {
     // write the data (if set to false, for example if you want to implement more granular
     // access logic in the chaincode)
     bool member_only_write = 7;
+    // a reference to a policy residing / managed in the config block
+    // to define the endorsement policy for this collection
+    ApplicationPolicy endorsement_policy= 8;
 }
 
 
@@ -75,14 +78,4 @@ message CollectionPolicyConfig {
         // A reference to a Policy is planned to be added later.
 //        string reference = 2;
     }
-}
-
-
-// CollectionCriteria defines an element of a private data that corresponds
-// to a certain transaction and collection
-message CollectionCriteria {
-    string channel = 1;
-    string tx_id = 2;
-    string collection = 3;
-    string namespace = 4;
 }

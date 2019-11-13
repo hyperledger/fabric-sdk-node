@@ -4,7 +4,8 @@
 
 syntax = "proto3";
 
-option go_package = "github.com/hyperledger/fabric-protos-go/discovery" ;
+option go_package = "github.com/hyperledger/fabric-protos-go/discovery";
+option java_package = "org.hyperledger.fabric.protos.discovery";
 
 package discovery;
 
