@@ -26,12 +26,6 @@ steps:
 - script: npm install
   displayName: 'npm install'
 
-- script: npm run retrieve-images
-  displayName: 'Pull Docker images'
-
-- script: npx gulp install-and-generate-certs
-  displayName: 'Generate credentials'
-
 - script: npx gulp run-test-all
   displayName: 'Run tests'
 

@@ -12,7 +12,7 @@
     "test": "nyc mocha --exclude 'test/data/**/*.js' --recursive  -t 10000"
   },
   "repository": {
-    "type": "github (read mirror)",
+    "type": "github",
     "url": "https://github.com/hyperledger/fabric-sdk-node"
   },
   "engines": {

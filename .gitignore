@@ -5,7 +5,6 @@
 coverage
 docs/gen
 node_modules/*
-package-lock.json
 npm-shrinkwrap.json
 npm-debug.log
 yarn.lock
@@ -29,6 +28,12 @@ test/fixtures/src/github.com/example_cc/junk.go
 fabric-client/.DS_Store
 fabric-client/node_modules/*
 fabric-client/.nyc_output
+fabric-client/test/data/java-contract/.gradle/*
+fabric-client/test/data/java-contract/.settings/*
+fabric-client/test/data/java-contract/build/*
+fabric-client/test/data/javaWithFabricIgnores-contract/.gradle/*
+fabric-client/test/data/javaWithFabricIgnores-contract/.settings/*
+fabric-client/test/data/javaWithFabricIgnores-contract/build/*
 
 #fabric-ca-client
 fabric-ca-client/.DS_Store
