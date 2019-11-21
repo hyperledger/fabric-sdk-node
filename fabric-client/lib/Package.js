@@ -87,12 +87,13 @@ class Package {
 	 * @param {string} options.path The directory containing the smart contract.
 	 * @param {string} options.type The type of the smart contract, one of 'golang', 'car', 'node' or 'java'.
 	 * @param {string} [options.metadataPath] The directory containing the metadata descriptors.
+	 * @param {string} options.goPath The path to be used with the golang chaincode.
 	 * @returns {Package} The smart contract package.
 	 */
-	static async fromDirectory({name, version, path, type, metadataPath}) {
+	static async fromDirectory({name, version, path, type, metadataPath, goPath}) {
 		logger.debug('Package.fromDirectory - entry - %s, %s, %s, %s', name, version, path, type);
 		Package._validateNameAndVersion(name, version);
-		const codePackage = await Packager.package(path, type, false, metadataPath);
+		const codePackage = await Packager.package(path, type, false, metadataPath, goPath);
 		logger.debug('Package.fromDirectory - code package is %s bytes', codePackage.length);
 		const fixedPath = path.split('\\').join('/'); // for windows style paths
 		const chaincodeSpec = {
