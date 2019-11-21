@@ -2,10 +2,10 @@
   "name": "fabric-common",
   "version": "1.4.5-snapshot",
   "tag": "unstable-1.4",
-  "description" : "This package encapsulates the common code used by the `fabric-ca-client`, `fabric-client` packages.",
-  "keywords" :[
-	  "blockchain",
-	  "hyperledger"
+  "description": "This package encapsulates the common code used by the `fabric-ca-client`, `fabric-client` packages.",
+  "keywords": [
+    "blockchain",
+    "hyperledger"
   ],
   "main": "index.js",
   "repository": {
@@ -24,8 +24,7 @@
   "scripts": {
     "test": "nyc mocha --exclude 'test/data/**/*.js' --recursive  -t 10000"
   },
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "mocha": "^5.2.0",
     "nyc": "^12.0.2",
