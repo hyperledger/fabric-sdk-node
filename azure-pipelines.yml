@@ -7,21 +7,21 @@ trigger:
 - release-1.4
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: 'ubuntu-18.04'
 
 variables:
-  SOFTHSM2_CONF: './test/fixtures/hsm/softhsm2.conf'
+  SOFTHSM2_CONF: "$(Build.Repository.LocalPath)/test/fixtures/hsm/softhsm2.conf"
 
 steps:
 - task: NodeTool@0
   inputs:
-    versionSpec: '8.x'
+    versionSpec: '10.x'
   displayName: 'Install Node.js'
 
 - script: |
     sudo apt-get install softhsm2
     softhsm2-util --init-token --slot 0 --label "My token 1" --pin 98765432 --so-pin 98765432
-  displayName: 'Install and configure SoftHSM'
+  displayName: 'Install SoftHSM'
 
 - script: npm install
   displayName: 'npm install'
@@ -29,15 +29,19 @@ steps:
 - script: npx gulp run-test-all
   displayName: 'Run tests'
 
-# - script: scripts/ci_scripts/azurePublishNpmPackages.sh
-#   displayName: 'Publish npm packages'
-#   env:
-#     NPM_TOKEN: ${NPM_TOKEN}
+#- script: scripts/ci_scripts/azurePublishNpmPackages.sh
+#  condition: and(succeeded(), eq(variables['Build.Reason'], 'IndividualCI'))
+#  displayName: 'Publish npm packages'
+#  env:
+#    NPM_TOKEN: $(NPM)
+#    PROJECT_DIR: "$(Build.Repository.LocalPath)"
 
-# - script: scripts/ci_scripts/azurePublishApiDocs.sh
-#   displayName: 'Publish API documentation'
-#   env:
-#     GITHUB_USER: 'fabric-sdk-node'
-#     GITHUB_EMAIL: 'fabricsdknode@gmail.com'
-#     GITHUB_PASSWORD: $(GITHUB_PASSWORD)
-#     PUBLISH_REPOSITORY: 'fabric-sdk-node/fabric-sdk-node'
+- script: scripts/ci_scripts/azurePublishApiDocs.sh
+  condition: and(succeeded(), eq(variables['Build.Reason'], 'IndividualCI'))
+  displayName: 'Publish API documentation'
+  env:
+    GITHUB_USER: 'Hyperledger Bot'
+    GITHUB_EMAIL: 'hlfdev.azp@gmail.com'
+    PUBLISH_URL: "https://$(GITHUB-PAT)@github.com/hyperledger/fabric-sdk-node.git"
+    PROJECT_DIR: "$(Build.Repository.LocalPath)"
+    STAGING_DIR: "$(Build.StagingDirectory)/gh-pages"

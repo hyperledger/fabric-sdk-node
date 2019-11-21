@@ -7,8 +7,8 @@
 
 # Input environment variables:
 : "${NPM_TOKEN:?}" # The npm publishing auth token
+: "${PROJECT_DIR:?}" # The project root directory
 
-readonly PROJECT_DIR=$(cd -P "$(dirname "$0")"/../.. >/dev/null 2>&1 && pwd)
 readonly NODE_MODULES="fabric-network fabric-common fabric-ca-client fabric-client"
 
 npmPublish() {
