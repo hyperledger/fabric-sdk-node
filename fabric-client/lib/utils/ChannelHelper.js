@@ -27,7 +27,7 @@ const _proposalProto = ProtoLoader.load(path.resolve(__dirname, '../protos/peer/
  */
 function buildTransactionProposal(chaincodeProposal, endorsements, proposalResponse) {
 
-	const header = _commonProto.Header.decode(chaincodeProposal.getHeader());
+	const header = _commonProto.Header.decode(chaincodeProposal.header);
 
 	const chaincodeEndorsedAction = new _transProto.ChaincodeEndorsedAction();
 	chaincodeEndorsedAction.setProposalResponsePayload(proposalResponse.payload);

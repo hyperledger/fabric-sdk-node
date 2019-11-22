@@ -39,7 +39,6 @@ describe('ChannelHelper', () => {
 	});
 
 	describe('#buildTransactionProposal', () => {
-		let getHeaderStub;
 		let buildTransactionProposal;
 		let ChaincodeEndorserActionStub;
 		let setProposalPayloadStub;
@@ -65,7 +64,6 @@ describe('ChannelHelper', () => {
 		});
 
 		beforeEach(() => {
-			getHeaderStub = sandbox.stub();
 			getSignatureHeaderStub = sandbox.stub();
 			headerDecodeStub = sandbox.stub().returns({getSignatureHeader: getSignatureHeaderStub});
 			revert.push(ChannelHelper.__set__('_commonProto.Header.decode', headerDecodeStub));
@@ -98,7 +96,7 @@ describe('ChannelHelper', () => {
 
 		it('should return the payload', () => {
 			const chaincodeProposal = {
-				getHeader: getHeaderStub.returns('header'),
+				header: 'header',
 				payload: 'chaincode-payload'
 			};
 			ChaincodeProposalPayloadStub.returns({toBuffer: toBufferStub, setInput: setInputStub});
@@ -112,7 +110,6 @@ describe('ChannelHelper', () => {
 			ChaincodeProposalPayloadDecodeStub.returns({input: 'input'});
 			getSignatureHeaderStub.returns('signature-header');
 			const payload = buildTransactionProposal(chaincodeProposal, endorsements, proposalReponse);
-			sinon.assert.calledWith(headerDecodeStub, 'header');
 			sinon.assert.calledWith(setProposalPayloadStub, 'payload');
 			sinon.assert.calledWith(setEndorsementsStub, endorsements);
 			sinon.assert.called(ChaincodeActionPayloadStub);
