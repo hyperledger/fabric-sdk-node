@@ -190,7 +190,7 @@ export interface WalletMixin {} // tslint:disable-line:no-empty-interface
 
 export class X509WalletMixin implements WalletMixin {
 	public static createIdentity(mspId: string, certificate: string, privateKey: string): Identity;
-	constructor();
+	constructor(library?: string, slot?: string, pin?: string, userType?: string);
 }
 
 export class HSMWalletMixin implements WalletMixin {
