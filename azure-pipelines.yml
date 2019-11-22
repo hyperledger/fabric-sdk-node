@@ -10,7 +10,9 @@ pool:
   vmImage: 'ubuntu-18.04'
 
 variables:
-  SOFTHSM2_CONF: "$(Build.Repository.LocalPath)/test/fixtures/hsm/softhsm2.conf"
+- group: credentials
+- name: SOFTHSM2_CONF
+  value: "$(Build.Repository.LocalPath)/test/fixtures/hsm/softhsm2.conf"
 
 steps:
 - task: NodeTool@0
@@ -35,12 +37,12 @@ steps:
 - script: npx gulp run-test-all
   displayName: 'Run tests'
 
-#- script: scripts/ci_scripts/azurePublishNpmPackages.sh
-#  condition: and(succeeded(), eq(variables['Build.Reason'], 'IndividualCI'))
-#  displayName: 'Publish npm packages'
-#  env:
-#    NPM_TOKEN: $(NPM)
-#    PROJECT_DIR: "$(Build.Repository.LocalPath)"
+- script: scripts/ci_scripts/azurePublishNpmPackages.sh
+  condition: and(succeeded(), eq(variables['Build.Reason'], 'IndividualCI'))
+  displayName: 'Publish npm packages'
+  env:
+    NPM_TOKEN: $(NPM)
+    PROJECT_DIR: "$(Build.Repository.LocalPath)"
 
 - script: scripts/ci_scripts/azurePublishApiDocs.sh
   condition: and(succeeded(), eq(variables['Build.Reason'], 'IndividualCI'))
@@ -51,3 +53,4 @@ steps:
     PUBLISH_URL: "https://$(GITHUB-PAT)@github.com/hyperledger/fabric-sdk-node.git"
     PROJECT_DIR: "$(Build.Repository.LocalPath)"
     STAGING_DIR: "$(Build.StagingDirectory)/gh-pages"
+    SOURCE_BRANCH: "$(Build.SourceBranchName)"

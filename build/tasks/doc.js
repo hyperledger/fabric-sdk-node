@@ -8,17 +8,9 @@ const jsdoc = require('gulp-jsdoc3');
 const fs = require('fs-extra');
 const path = require('path');
 const replace = require('gulp-replace');
-let currentBranch = process.env.GERRIT_BRANCH;
 
-if (!currentBranch) {
-	currentBranch = 'master';
-}
-let docsRoot;
-if (process.env.DOCS_ROOT) {
-	docsRoot = process.env.DOCS_ROOT;
-} else {
-	docsRoot = './docs/gen';
-}
+const currentBranch = process.env.BUILD_BRANCH || 'master';
+const docsRoot = process.env.DOCS_ROOT || './docs/gen';
 
 gulp.task('clean', () => {
 	return fs.removeSync(path.join(docsRoot, currentBranch));
@@ -58,7 +50,6 @@ gulp.task('docs-dev', ['docs'], () => {
 
 
 gulp.task('docs', ['jsdocs'], () => {
-	const relativePath = '..';
 	const packageJson = require(path.join(__dirname, '../..', 'package.json'));
 
 	// jsdocs produced
@@ -67,7 +58,6 @@ gulp.task('docs', ['jsdocs'], () => {
 	if (currentBranch === 'master') {
 		gulp.src('./docs/redirectTemplates/*.html')
 			.pipe(replace('LATEST__VERSION', packageJson.docsLatestVersion))
-			.pipe(replace('RELATIVE__PATH', relativePath))
 			.pipe(gulp.dest(docsRoot));
 	} else { // eslint-disable-next-line
 		console.log(`Not updating or routing logic, as not master branch - it is ${currentBranch}`);
