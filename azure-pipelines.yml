@@ -10,7 +10,9 @@ pool:
   vmImage: 'ubuntu-18.04'
 
 variables:
-  SOFTHSM2_CONF: "$(Build.Repository.LocalPath)/test/fixtures/hsm/softhsm2.conf"
+- group: credentials
+- name: SOFTHSM2_CONF
+  value: "$(Build.Repository.LocalPath)/test/fixtures/hsm/softhsm2.conf"
 
 steps:
 - task: NodeTool@0
