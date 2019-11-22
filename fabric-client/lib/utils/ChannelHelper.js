@@ -20,7 +20,7 @@ const fabprotos = require('fabric-protos');
  */
 function buildTransactionProposal(chaincodeProposal, endorsements, proposalResponse) {
 
-	const header = fabprotos.common.Header.decode(chaincodeProposal.getHeader());
+	const header = fabprotos.common.Header.decode(chaincodeProposal.header);
 
 	const chaincodeEndorsedAction = new fabprotos.protos.ChaincodeEndorsedAction();
 	chaincodeEndorsedAction.setProposalResponsePayload(proposalResponse.payload);
