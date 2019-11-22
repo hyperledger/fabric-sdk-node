@@ -34,7 +34,7 @@
     "retrieve-images": "./scripts/utility/fabric_images.sh amd64 2.0.0-stable"
   },
   "devDependencies": {
-    "@ampretia/x509": "0.4.0",
+    "@ampretia/x509": "0.4.7",
     "@cloudant/cloudant": "^2.1.0",
     "@types/chai": "^4.2.1",
     "@types/chai-as-promised": "^7.1.2",
@@ -59,7 +59,6 @@
     "fabric-protos": "file:./fabric-protos",
     "gulp": "^3.9.1",
     "gulp-add-src": "^1.0.0",
-    "gulp-debug": "^4.0.0",
     "gulp-eslint": "^3.0.1",
     "gulp-jsdoc3": "^2.0.0",
     "gulp-mocha": "^6.0.0",
@@ -104,8 +103,7 @@
     }
   ],
   "dependencies": {
-    "fs-extra": "^6.0.1",
-    "x509": "^0.3.4"
+    "fs-extra": "^6.0.1"
   },
   "nyc": {
     "exclude": [
