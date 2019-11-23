@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>Hyperledger Fabric SDK for node.js Tutorial: fabric-client: How to create a Hyperledger Fabric channel</title>
+
+	<!--[if lt IE 9]>
+	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link type="text/css" rel="stylesheet" href="styles/sunlight.default.css">
+
+	<link type="text/css" rel="stylesheet" href="styles/site.cosmo.css">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-default navbar-fixed-top ">
+<div class="container">
+	<div class="navbar-header">
+		<a class="navbar-brand" href="index.html">Hyperledger Fabric SDK for node.js</a>
+		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+        </button>
+	</div>
+	<div class="navbar-collapse collapse" id="topNavigation">
+		<ul class="nav navbar-nav">
+			
+			<li class="dropdown">
+				<a href="modules.list.html" class="dropdown-toggle" data-toggle="dropdown">Modules<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="module-api.html">api</a></li><li><a href="module-fabric-network.html">fabric-network</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="AffiliationService.html">AffiliationService</a></li><li><a href="BaseClient.html">BaseClient</a></li><li><a href="BasePackager.html">BasePackager</a></li><li><a href="BasicCommitHandler.html">BasicCommitHandler</a></li><li><a href="BlockDecoder.html">BlockDecoder</a></li><li><a href="CertificateAuthority.html">CertificateAuthority</a></li><li><a href="ChaincodeRegistration.html">ChaincodeRegistration</a></li><li><a href="Channel.html">Channel</a></li><li><a href="ChannelEventHub.html">ChannelEventHub</a></li><li><a href="ChannelPeer.html">ChannelPeer</a></li><li><a href="Client.html">Client</a></li><li><a href="CouchDBKeyValueStore.html">CouchDBKeyValueStore</a></li><li><a href="CryptoKeyStore.html">CryptoKeyStore</a></li><li><a href="CryptoSuite_ECDSA_AES.html">CryptoSuite_ECDSA_AES</a></li><li><a href="CryptoSuite_PKCS11.html">CryptoSuite_PKCS11</a></li><li><a href="DiscoveryEndorsementHandler.html">DiscoveryEndorsementHandler</a></li><li><a href="ECDSA_KEY.html">ECDSA_KEY</a></li><li><a href="EndorsementPolicy.html">EndorsementPolicy</a></li><li><a href="Endpoint.html">Endpoint</a></li><li><a href="event_hub_number.html">event_hub_number</a></li><li><a href="FabricCAClient.html">FabricCAClient</a></li><li><a href="FabricCAServices.html">FabricCAServices</a></li><li><a href="FileKeyValueStore.html">FileKeyValueStore</a></li><li><a href="global.html#Identity">Identity</a></li><li><a href="IdentityService.html">IdentityService</a></li><li><a href="InMemoryKVS.html">InMemoryKVS</a></li><li><a href="module.exports_module.exports.html">module.exports#module.exports</a></li><li><a href="module-api.CommitHandler.html">api.CommitHandler</a></li><li><a href="module-api.CryptoSuite.html">api.CryptoSuite</a></li><li><a href="module-api.EndorsementHandler.html">api.EndorsementHandler</a></li><li><a href="module-api.Hash.html">api.Hash</a></li><li><a href="module-api.Key.html">api.Key</a></li><li><a href="module-api.KeyValueStore.html">api.KeyValueStore</a></li><li><a href="module-fabric-network.AbstractEventHubSelectionStrategy.html">fabric-network.AbstractEventHubSelectionStrategy</a></li><li><a href="module-fabric-network.AbstractEventListener.html">fabric-network.AbstractEventListener</a></li><li><a href="module-fabric-network.BaseCheckpointer.html">fabric-network.BaseCheckpointer</a></li><li><a href="module-fabric-network.BaseWallet.html">fabric-network.BaseWallet</a></li><li><a href="module-fabric-network.CommitEventListener.html">fabric-network.CommitEventListener</a></li><li><a href="module-fabric-network.Contract.html">fabric-network.Contract</a></li><li><a href="module-fabric-network.ContractEventListener.html">fabric-network.ContractEventListener</a></li><li><a href="module-fabric-network.CouchDBWallet.html">fabric-network.CouchDBWallet</a></li><li><a href="module-fabric-network.EventHubDisconnectError.html">fabric-network.EventHubDisconnectError</a></li><li><a href="module-fabric-network.EventHubManager.html">fabric-network.EventHubManager</a></li><li><a href="module-fabric-network.FabricError.html">fabric-network.FabricError</a></li><li><a href="module-fabric-network.FileSystemCheckpointer.html">fabric-network.FileSystemCheckpointer</a></li><li><a href="module-fabric-network.FileSystemWallet.html">fabric-network.FileSystemWallet</a></li><li><a href="module-fabric-network.Gateway.html">fabric-network.Gateway</a></li><li><a href="module-fabric-network.HSMWalletMixin.html">fabric-network.HSMWalletMixin</a></li><li><a href="module-fabric-network.InMemoryWallet.html">fabric-network.InMemoryWallet</a></li><li><a href="module-fabric-network.Network.html">fabric-network.Network</a></li><li><a href="module-fabric-network.Query.html">fabric-network.Query</a></li><li><a href="module-fabric-network.RoundRobinEventHubSelectionStrategy.html">fabric-network.RoundRobinEventHubSelectionStrategy</a></li><li><a href="module-fabric-network.TimeoutError.html">fabric-network.TimeoutError</a></li><li><a href="module-fabric-network.Transaction.html">fabric-network.Transaction</a></li><li><a href="module-fabric-network.X509WalletMixin.html">fabric-network.X509WalletMixin</a></li><li><a href="MSP.html">MSP</a></li><li><a href="MSPManager.html">MSPManager</a></li><li><a href="NetworkConfig_1_0.html">NetworkConfig_1_0</a></li><li><a href="Orderer.html">Orderer</a></li><li><a href="Organization.html">Organization</a></li><li><a href="Peer.html">Peer</a></li><li><a href="PKCS11_ECDSA_KEY.html">PKCS11_ECDSA_KEY</a></li><li><a href="ProtoLoader.html">ProtoLoader</a></li><li><a href="Remote.html">Remote</a></li><li><a href="Signer.html">Signer</a></li><li><a href="SigningIdentity.html">SigningIdentity</a></li><li><a href="TransactionID.html">TransactionID</a></li><li><a href="User.html">User</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="interfaces.list.html" class="dropdown-toggle" data-toggle="dropdown">Interfaces<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="module-fabric-network.Wallet.html">fabric-network.Wallet</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="tutorials.list.html" class="dropdown-toggle" data-toggle="dropdown">Tutorials<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="tutorial-app-dev-env-setup.html">Setting up the Application Developer's Environment</a></li><li><a href="tutorial-channel-create.html">fabric-client: How to create a Hyperledger Fabric channel</a></li><li><a href="tutorial-channel-events.html">fabric-client: How to use the channel-based event service</a></li><li><a href="tutorial-discovery.html">fabric-client: How to use the discovery service</a></li><li><a href="tutorial-event-checkpointer.html">fabric-network: How to replay missed events</a></li><li><a href="tutorial-event-hub-management.html">fabric-network: How to automatically select and reconnect to event hubs</a></li><li><a href="tutorial-grpc-settings.html">fabric-client: How to set gRPC settings</a></li><li><a href="tutorial-handlers.html">fabric-client: How to use the endorsement and commit handlers</a></li><li><a href="tutorial-hsm-pkcs11.html">Testing for Hardware Security Module via PKCS#11 interface</a></li><li><a href="tutorial-listening-to-events.html">fabric-network: How to listen to events</a></li><li><a href="tutorial-logging.html">fabric-client: How to use logging</a></li><li><a href="tutorial-metadata-chaincode.html">fabric-client: How to add CouchDB indexes during chaincode installation</a></li><li><a href="tutorial-mutual-tls.html">fabric-client: How to configure mutual TLS</a></li><li><a href="tutorial-network-config.html">fabric-client: How to use a common connection profile</a></li><li><a href="tutorial-private-data.html">How to use private data</a></li><li><a href="tutorial-query-peers.html">fabric-network: How to select peers for evaluating transactions (queries)</a></li><li><a href="tutorial-sign-transaction-offline.html">Working with an offline private key</a></li><li><a href="tutorial-transaction-commit-events.html">fabric-network: How to wait for transactions to be committed to the ledger</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="global.html#CLIENT">CLIENT</a></li><li><a href="global.html#HFAFFILIATIONMGR">HFAFFILIATIONMGR</a></li><li><a href="global.html#HFGENCRL">HFGENCRL</a></li><li><a href="global.html#HFINTERMEDIATECA">HFINTERMEDIATECA</a></li><li><a href="global.html#HFREGISTRARATTRIBUTES">HFREGISTRARATTRIBUTES</a></li><li><a href="global.html#HFREGISTRARDELEGATEROLES">HFREGISTRARDELEGATEROLES</a></li><li><a href="global.html#HFREGISTRARROLES">HFREGISTRARROLES</a></li><li><a href="global.html#HFREVOKER">HFREVOKER</a></li><li><a href="global.html#loadConfigGroup">loadConfigGroup</a></li><li><a href="global.html#loadConfigValue">loadConfigValue</a></li><li><a href="global.html#ORDERER">ORDERER</a></li><li><a href="global.html#package">package</a></li><li><a href="global.html#PEER">PEER</a></li><li><a href="global.html#toEnvelope">toEnvelope</a></li><li><a href="global.html#USER">USER</a></li>
+				</ul>
+			</li>
+			
+		</ul>
+        
+            <div class="col-sm-3 col-md-3">
+                <form class="navbar-form" role="search">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search" name="q" id="search-input">
+                        <div class="input-group-btn">
+                            <button class="btn btn-default" id="search-submit"><i class="glyphicon glyphicon-search"></i></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        
+	</div>
+
+</div>
+</div>
+
+
+<div class="container" id="toc-content">
+<div class="row">
+
+	
+	<div class="col-md-12">
+	
+		<div id="main">
+			<section class="tutorial-section">
+
+<header>
+    
+
+    <h2>fabric-client: How to create a Hyperledger Fabric channel</h2>
+</header>
+
+<article>
+    <p>This tutorial illustrates the creation of a Hyperledger Fabric channel using
+the Node.js fabric-client SDK. It shows how to use an initial (default)
+channel definition and how to start with that definition to build a
+custom definition. The process to create a network and channels
+also involves creating and working with cryptographic material,
+this will not be discussed here.</p>
+<p>For more information on:</p>
+<ul>
+<li>getting started with Hyperledger Fabric see
+<a href="http://hyperledger-fabric.readthedocs.io/en/latest/build_network.html">Building your first network</a>.</li>
+<li>the configuration of a channel in Hyperledger Fabric and the internal
+process of creating and updating see
+<a href="http://hyperledger-fabric.readthedocs.io/en/latest/configtx.html">Hyperledger Fabric channel configuration</a></li>
+<li>cryptographic generation see
+<a href="http://hyperledger-fabric.readthedocs.io/en/latest/build_network.html#crypto-generator">cryptogen</a></li>
+<li>configuration transaction generator see
+<a href="http://hyperledger-fabric.readthedocs.io/en/latest/build_network.html#configuration-transaction-generator">configtxgen</a></li>
+<li>configuration translation tool see
+<a href="https://github.com/hyperledger/fabric/tree/master/examples/configtxupdate">configtxlator</a></li>
+</ul>
+<p>The following assumes an understanding of the Hyperledger Fabric network
+(orderers and peers),
+<a href="https://developers.google.com/protocol-buffers/">protobuf</a>,
+and of Node application development, including the use of the
+Javascript <code>Promise</code>.</p>
+<p>The examples shown below are based on the <code>balance-transfer</code> sample application. see <a href="https://github.com/hyperledger/fabric-samples/tree/master/balance-transfer">Hyperledger Fabric Samples</a></p>
+<h3>steps of a channel create:</h3>
+<ul>
+<li>run the configtxgen tool to generate a genesis block</li>
+<li>run the configtxgen tool to generate an initial binary
+configuration definition</li>
+<li>get a sign-able channel definition in one of two ways
+<ol>
+<li>use the initial binary channel configuration definition</li>
+</ol>
+<ul>
+<li>use the fabric-client SDK to extract the sign-able channel definition
+from the initial binary channel configuration definition</li>
+</ul>
+<ol start="2">
+<li>build a custom definition</li>
+</ol>
+<ul>
+<li>use the configtxlator to convert the initial binary channel
+configuration definition to readable text</li>
+<li>edit the readable text
+<a href="http://hyperledger-fabric.readthedocs.io/en/latest/configtx.html">more info</a></li>
+<li>use the configtxlator to convert the edited text to a
+sign-able channel definition</li>
+</ul>
+</li>
+<li>use the fabric-client SDK to sign the sign-able channel definition</li>
+<li>use the fabric-client SDK to send the signatures and the
+sign-able channel definition
+to the orderer</li>
+<li>use the fabric-client SDK to have the peer join the channel</li>
+<li>then new channel may be used</li>
+</ul>
+<h2>Use the initial definition to build a sign-able channel definition</h2>
+<p>The initial binary channel configuration definition generated by the
+<a href="http://hyperledger-fabric.readthedocs.io/en/latest/configtx.html">configtxgen tool</a>
+is a binary file containing the Hyperledger Fabric configuration protobuf
+<code>common.Envelope</code> element. Inside this element is the <code>common.ConfigUpdate</code>
+protobuf element. This configuration element is the one that must be signed.
+A profile element in the <code>configtx.yaml</code> is the source for the initial binary channel
+configuration definition created by the configtxgen tool.</p>
+<pre class="prettyprint source"><code>../../../bin/configtxgen -channelID mychannel -outputCreateChannelTx mychannel.tx -profile TwoOrgsChannel
+</code></pre>
+<p>Have the fabric-client SDK extract the config update element from the
+<code>mychannel.tx</code> file</p>
+<pre class="prettyprint source"><code>// first read in the file, this gives us a binary config envelope
+let envelope_bytes = fs.readFileSync(path.join(__dirname, 'fabric-samples/balance-transfer/artifacts/channel/mychannel.tx'));
+// have the nodeSDK extract out the config update
+var config_update = client.extractChannelConfig(envelope_bytes);
+</code></pre>
+<p>The binary config_update may now be used in the signing process and sent to the
+orderer for channel creation.</p>
+<p>You may ask why is a <code>common.ConfigUpdate</code> used for a create. This makes the
+process of create and update the same. The create of a new channel is a delta
+on what is defined in the system channel and an update is a delta on what is
+defined in the channel. The <code>common.ConfigUpdate</code> object submitted will only
+contain the changes for both a create and an update.</p>
+<h2>Creating a custom sign-able channel definition</h2>
+<p>The easiest way to get started with creating a custom channel configuration
+is to have the configtxlator convert an existing binary that has been or could
+be used to create a new channel to human readable JSON. There are many elements
+of the configuration and it would be very difficult to start with nothing.
+Using the same configtx.yaml file used to generate your Hyperledger Fabric
+network, use the configtxgen tool to create a initial binary
+configuration definition for a new channel.
+Then by sending that binary to the configtxlator to convert it to JSON, you
+will be able to see the layout and have a starting point. That JSON could also
+be used as a template for creating other new channels on your network.
+A new channel will inherit settings from the system channel for settings not
+defined in the new channel configuration. Organizations that will be on the
+new channel must be defined in a consortium on the system channel. Therefore
+having the readable definition of the system channel of your network would be
+helpful when creating a new channel. Send the <code>genesis.block</code> that was used
+to start the Hyperledger Fabric network to the configtxlator to get a
+JSON file to be used as a reference.</p>
+<p>Use the configtxgen tool to produce the binary config files. From the
+sample directory <code>fabric-samples/balance-transfer/artifacts/channel</code>.</p>
+<pre>
+export FABRIC_CFG_PATH=$PWD
+../../../bin/configtxgen -outputBlock genesis.block -profile TwoOrgsOrdererGenesis
+../../../bin/configtxgen -channelID mychannel -outputCreateChannelTx mychannel.tx -profile TwoOrgsChannel
+</pre>
+<p>Send the two binary files to the configtxlator service. Since this step is done
+only once and does not require a Node.js application, we will use cURL to
+simplify and speed up getting the results. Notice that configtxlator service
+path has <code>decode</code> (convert from binary to JSON). The path must also include
+the type of object of the binary, in the first case, it is a <code>common.Block</code>.
+The &quot;decode&quot; or &quot;encode&quot; may be done for any of the protobuf <code>message</code> object
+types found in the <code>fabric-client\lib\protos</code> directory protobuf files.
+First start the configtxlator service, from the <code>fabric-samples/bin</code> directory</p>
+<pre class="prettyprint source"><code>./configtxlator start
+</code></pre>
+<p>Then</p>
+<pre class="prettyprint source"><code>curl -X POST --data-binary @genesis.block http://127.0.0.1:7059/protolator/decode/common.Block > genesis.json
+curl -X POST --data-binary @mychannel.tx http://127.0.0.1:7059/protolator/decode/common.Envelope > mychannel.json
+</code></pre>
+<p>The results of decoding the file <code>mychannel.tx</code> which is a <code>common.Envelope</code>
+produced by the configtxgen tool contains a <code>common.ConfigUpdate</code> object.
+This object has the name &quot;config_update&quot; within the &quot;payload.data&quot; JSON object.
+This is the object that is needed as the source of the template to be used for
+creating new channels. The <code>common.ConfigUpdate</code> is the object that will be
+signed by all organizations and submitted to the orderer to create a
+new channel.</p>
+<p>The following is the extracted JSON &quot;config_update&quot; (<code>common.ConfigUpdate</code>)
+object from the decode of the &quot;TwoOrgsChannel&quot; channel create
+binary generated above.</p>
+<pre class="prettyprint source"><code>{
+  &quot;channel_id&quot;: &quot;mychannel&quot;,
+  &quot;read_set&quot;: {
+    &quot;groups&quot;: {
+      &quot;Application&quot;: {
+        &quot;groups&quot;: {
+          &quot;Org1MSP&quot;: {}
+        }
+      }
+    },
+    &quot;values&quot;: {
+      &quot;Consortium&quot;: {
+        &quot;value&quot;: {
+          &quot;name&quot;: &quot;SampleConsortium&quot;
+        }
+      }
+    }
+  },
+  &quot;write_set&quot;: {
+    &quot;groups&quot;: {
+      &quot;Application&quot;: {
+        &quot;groups&quot;: {
+          &quot;Org1MSP&quot;: {}
+        },
+        &quot;mod_policy&quot;: &quot;Admins&quot;,
+        &quot;policies&quot;: {
+          &quot;Admins&quot;: {
+            &quot;policy&quot;: {
+              &quot;type&quot;: 3,
+              &quot;value&quot;: {
+                &quot;rule&quot;: &quot;MAJORITY&quot;,
+                &quot;sub_policy&quot;: &quot;Admins&quot;
+              }
+            }
+          },
+          &quot;Readers&quot;: {
+            &quot;policy&quot;: {
+              &quot;type&quot;: 3,
+              &quot;value&quot;: {
+                &quot;sub_policy&quot;: &quot;Readers&quot;
+              }
+            }
+          },
+          &quot;Writers&quot;: {
+            &quot;policy&quot;: {
+              &quot;type&quot;: 3,
+              &quot;value&quot;: {
+                &quot;sub_policy&quot;: &quot;Writers&quot;
+              }
+            }
+          }
+        },
+        &quot;version&quot;: &quot;1&quot;
+      }
+    },
+    &quot;values&quot;: {
+      &quot;Consortium&quot;: {
+        &quot;value&quot;: {
+          &quot;name&quot;: &quot;SampleConsortium&quot;
+        }
+      }
+    }
+  }
+}
+</code></pre>
+<p>Note that the <code>Consortium</code> name used must exist on the system channel.
+All organizations that you wish to add to the new channel must be defined
+under in the <code>Consortium</code> section with that name on the system channel.
+Use the decoded genesis block to verify all values, for example by looking
+in the <code>genesis.json</code> file generated above. To add an organizations to the
+channel, they must be placed under the <code>groups</code> section under the
+<code>Applications</code> section as shown above. See that <code>Org1MSP</code> is a property of
+<code>Applications.groups</code> section. In this example all of the settings for the
+organization <code>Org1MSP</code> will be inherited from the system channel (notice
+the empty object &quot;{}&quot; for this organization's properties). To see the
+current settings for this organization look within the <code>SampleConsortium</code>
+section under the <code>Consortium</code> section of the system channel (the genesis
+block of the system channel).</p>
+<p>Once you have a JSON configuration representing your channel, send it the
+<code>configtxlator</code> to be encoded into a configuration binary. The following
+example of sending a REST request to the <code>configtxlator</code> uses the Node.js
+package <code>superagent</code> because of the ease of use for HTTP requests.</p>
+<pre class="prettyprint source"><code>var response = superagent.post('http://127.0.0.1:7059/protolator/encode/common.ConfigUpdate',
+  config_json.toString())
+  .buffer()
+  .end((err, res) => {
+    if(err) {
+      logger.error(err);
+      return;
+    }
+    config_proto = res.body;
+  });
+</code></pre>
+<h2>Signing and submitting the channel update</h2>
+<p>The binary configuration must be signed by all organizations. The application
+will have to store the binary configuration and have it available to be signed
+along with storing all the signatures as it collects them. Then once the
+signing is complete, the application will send the binary configuration and
+all the signatures to the orderer using the fabric-client
+SDK API <code>createChannel()</code>.</p>
+<p>First the signing, assuming the <code>client</code> fabric-client SDK object has
+a valid user in a required organization</p>
+<pre class="prettyprint source"><code>var signature = client.signChannelConfig(config_proto);
+signatures.push(signature);
+</code></pre>
+<p>Now it is time for the channel create, assuming that the <code>signatures</code> object
+is an array of <code>common.ConfigSignature</code> returned
+by the <code>client.signChannelConfig()</code> method.</p>
+<p>Note: The orderer must be started with the <code>genesis.block</code> that was generated
+from the same configuration file as the initial binary channel
+configuration definition</p>
+<pre class="prettyprint source"><code>// create an orderer object to represent the orderer of the network
+var orderer = client.newOrderer(url,opts);
+
+// have the SDK generate a transaction id
+let tx_id = client.newTransactionID();
+
+request = {
+  config: config_proto, //the binary config
+  signatures : signatures, // the collected signatures
+  name : 'mychannel', // the channel name
+  orderer : orderer, //the orderer from above
+  txId  : tx_id //the generated transaction id
+};
+
+// this call will return a Promise
+client.createChannel(request)
+</code></pre>
+<p>The <code>createChannel</code> API returns a <code>Promise</code> to return the status of the submit.
+The channel create will take place asynchronously by the orderer.</p>
+<p>After a small delay of a few seconds the channel will have been created by the
+orderer and may now be joined by the peers. Issue the following to the peers
+that are required on the channel. This is a two step process of first getting
+the genesis block of the channel and then sending it to the peer. In the
+following example the genesis block was retrieved from the orderer,
+but could have also been loaded from a file.</p>
+<pre class="prettyprint source"><code>// set the channel up with network endpoints
+var orderer  = client.newOrderer(orderer_url,orderer_opts);
+channel.addOrderer(orderer);
+var peer = client.newPeer(peer_url,peer_opts);
+channel.addPeer(peer);
+
+tx_id = client.newTransactionID();
+let g_request = {
+  txId : 	tx_id
+};
+
+// get the genesis block from the orderer
+channel.getGenesisBlock(g_request).then((block) =>{
+  genesis_block = block;
+  tx_id = client.newTransactionID();
+  let j_request = {
+    targets : targets,
+    block : genesis_block,
+    txId : 	tx_id
+  };
+
+  // send genesis block to the peer
+  return channel.joinChannel(j_request);
+}).then((results) =>{
+  if(results && results.response && results.response.status == 200) {
+    // join successful
+  } else {
+    // not good
+  }
+});
+</code></pre>
+<p><a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.</p>
+</article>
+
+</section>
+
+		</div>
+	</div>
+
+	<div class="clearfix"></div>
+
+	
+
+</div>
+</div>
+
+
+    <div class="modal fade" id="searchResults">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Search results</h4>
+          </div>
+          <div class="modal-body"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div>
+
+
+<footer>
+
+
+<span class="jsdoc-message">
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a>
+	
+		on 2019-11-23T01:37:50+00:00
+	
+	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
+</span>
+</footer>
+
+<script src="scripts/docstrap.lib.js"></script>
+<script src="scripts/toc.js"></script>
+
+    <script type="text/javascript" src="scripts/fulltext-search-ui.js"></script>
+
+
+<script>
+$( function () {
+	$( "[id*='$']" ).each( function () {
+		var $this = $( this );
+
+		$this.attr( "id", $this.attr( "id" ).replace( "$", "__" ) );
+	} );
+
+	$( ".tutorial-section pre, .readme-section pre, pre.prettyprint.source" ).each( function () {
+		var $this = $( this );
+
+		var example = $this.find( "code" );
+		exampleText = example.html();
+		var lang = /{@lang (.*?)}/.exec( exampleText );
+		if ( lang && lang[1] ) {
+			exampleText = exampleText.replace( lang[0], "" );
+			example.html( exampleText );
+			lang = lang[1];
+		} else {
+			var langClassMatch = example.parent()[0].className.match(/lang\-(\S+)/);
+			lang = langClassMatch ? langClassMatch[1] : "javascript";
+		}
+
+		if ( lang ) {
+
+			$this
+			.addClass( "sunlight-highlight-" + lang )
+			.addClass( "linenums" )
+			.html( example.html() );
+
+		}
+	} );
+
+	Sunlight.highlightAll( {
+		lineNumbers : false,
+		showMenu : true,
+		enableDoclinks : true
+	} );
+
+	$.catchAnchorLinks( {
+        navbarOffset: 10
+	} );
+	$( "#toc" ).toc( {
+		anchorName  : function ( i, heading, prefix ) {
+			return $( heading ).attr( "id" ) || ( prefix + i );
+		},
+		selectors   : "#toc-content h1,#toc-content h2,#toc-content h3,#toc-content h4",
+		showAndHide : false,
+		smoothScrolling: true
+	} );
+
+	$( "#main span[id^='toc']" ).addClass( "toc-shim" );
+	$( '.dropdown-toggle' ).dropdown();
+
+    $( "table" ).each( function () {
+      var $this = $( this );
+      $this.addClass('table');
+    } );
+
+} );
+</script>
+
+
+
+<!--Navigation and Symbol Display-->
+
+
+<!--Google Analytics-->
+
+
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            SearcherDisplay.init();
+        });
+    </script>
+
+
+</body>
+</html>
