@@ -12,6 +12,7 @@
 : "${PROJECT_DIR:?}" # Root directory for the Git project
 : "${STAGING_DIR:?}" # Directory used to store content to publish to GitHub Pages
 
+readonly CURRENT_BRANCH=$(git branch --show-current)
 readonly COMMIT_HASH=$(git rev-parse HEAD)
 readonly BUILD_DIR="${PROJECT_DIR}/docs/gen"
 readonly DOCS_BRANCH='gh-pages'
@@ -19,7 +20,7 @@ readonly DOCS_BRANCH='gh-pages'
 prepareStaging() {
     echo "Preparing staging directory: ${STAGING_DIR}"
     rm -rf "${STAGING_DIR}"
-	rsync -r --exclude-from=${PROJECT_DIR}/.gitignore "${PROJECT_DIR}/" "${STAGING_DIR}"
+	rsync -r --exclude-from="${PROJECT_DIR}/.gitignore" "${PROJECT_DIR}/" "${STAGING_DIR}"
     (cd "${STAGING_DIR}" && _stagingGitSetUp)
 }
 
@@ -36,13 +37,13 @@ _stagingGitSetUp() {
 buildDocs() {
     echo 'Building documentation'
     rm -rf "${BUILD_DIR}"
-    npx gulp docs
+	BUILD_BRANCH="${CURRENT_BRANCH}" DOCS_ROOT="${BUILD_DIR}" npx gulp docs
 }
 
 copyToStaging() {
     echo "Copying built documentation from ${BUILD_DIR} to ${STAGING_DIR}"
     cleanStaging
-    cp -r "${BUILD_DIR}"/* "${STAGING_DIR}"
+    rsync -r "${BUILD_DIR}/" "${STAGING_DIR}"
 }
 
 cleanStaging() {

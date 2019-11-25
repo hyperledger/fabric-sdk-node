@@ -19,17 +19,9 @@ const jsdoc = require('gulp-jsdoc3');
 const fs = require('fs-extra');
 const path = require('path');
 const replace = require('gulp-replace');
-let currentBranch = process.env.GERRIT_BRANCH;
 
-if (!currentBranch) {
-	currentBranch = 'master';
-}
-let docsRoot;
-if (process.env.DOCS_ROOT) {
-	docsRoot = process.env.DOCS_ROOT;
-} else {
-	docsRoot = './docs/gen';
-}
+const currentBranch = process.env.BUILD_BRANCH || 'master';
+const docsRoot = process.env.DOCS_ROOT || './docs/gen';
 
 gulp.task('clean', () => {
 	return fs.removeSync(path.join(docsRoot, currentBranch));
