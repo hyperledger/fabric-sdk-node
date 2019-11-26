@@ -47,3 +47,4 @@ steps:
     PUBLISH_URL: "https://$(GITHUB-PAT)@github.com/hyperledger/fabric-sdk-node.git"
     PROJECT_DIR: "$(Build.Repository.LocalPath)"
     STAGING_DIR: "$(Build.StagingDirectory)/gh-pages"
+    SOURCE_BRANCH: "$(Build.SourceBranchName)"
