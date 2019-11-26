@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>Hyperledger Fabric SDK for node.js Tutorial: fabric-client: How to use the discovery service</title>
+
+	<!--[if lt IE 9]>
+	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link type="text/css" rel="stylesheet" href="styles/sunlight.default.css">
+
+	<link type="text/css" rel="stylesheet" href="styles/site.cosmo.css">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-default navbar-fixed-top ">
+<div class="container">
+	<div class="navbar-header">
+		<a class="navbar-brand" href="index.html">Hyperledger Fabric SDK for node.js</a>
+		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+        </button>
+	</div>
+	<div class="navbar-collapse collapse" id="topNavigation">
+		<ul class="nav navbar-nav">
+			
+			<li class="dropdown">
+				<a href="modules.list.html" class="dropdown-toggle" data-toggle="dropdown">Modules<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="module-api.html">api</a></li><li><a href="module-fabric-network.html">fabric-network</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="AffiliationService.html">AffiliationService</a></li><li><a href="BaseClient.html">BaseClient</a></li><li><a href="BasePackager.html">BasePackager</a></li><li><a href="BasicCommitHandler.html">BasicCommitHandler</a></li><li><a href="BlockDecoder.html">BlockDecoder</a></li><li><a href="CertificateAuthority.html">CertificateAuthority</a></li><li><a href="ChaincodeRegistration.html">ChaincodeRegistration</a></li><li><a href="Channel.html">Channel</a></li><li><a href="ChannelEventHub.html">ChannelEventHub</a></li><li><a href="ChannelPeer.html">ChannelPeer</a></li><li><a href="Client.html">Client</a></li><li><a href="CouchDBKeyValueStore.html">CouchDBKeyValueStore</a></li><li><a href="CryptoKeyStore.html">CryptoKeyStore</a></li><li><a href="CryptoSuite_ECDSA_AES.html">CryptoSuite_ECDSA_AES</a></li><li><a href="CryptoSuite_PKCS11.html">CryptoSuite_PKCS11</a></li><li><a href="DiscoveryEndorsementHandler.html">DiscoveryEndorsementHandler</a></li><li><a href="ECDSA_KEY.html">ECDSA_KEY</a></li><li><a href="EndorsementPolicy.html">EndorsementPolicy</a></li><li><a href="Endpoint.html">Endpoint</a></li><li><a href="event_hub_number.html">event_hub_number</a></li><li><a href="FabricCAClient.html">FabricCAClient</a></li><li><a href="FabricCAServices.html">FabricCAServices</a></li><li><a href="FileKeyValueStore.html">FileKeyValueStore</a></li><li><a href="global.html#Identity">Identity</a></li><li><a href="IdentityService.html">IdentityService</a></li><li><a href="InMemoryKVS.html">InMemoryKVS</a></li><li><a href="module.exports_module.exports.html">module.exports#module.exports</a></li><li><a href="module-api.CommitHandler.html">api.CommitHandler</a></li><li><a href="module-api.CryptoSuite.html">api.CryptoSuite</a></li><li><a href="module-api.EndorsementHandler.html">api.EndorsementHandler</a></li><li><a href="module-api.Hash.html">api.Hash</a></li><li><a href="module-api.Key.html">api.Key</a></li><li><a href="module-api.KeyValueStore.html">api.KeyValueStore</a></li><li><a href="module-fabric-network.AbstractEventHubSelectionStrategy.html">fabric-network.AbstractEventHubSelectionStrategy</a></li><li><a href="module-fabric-network.AbstractEventListener.html">fabric-network.AbstractEventListener</a></li><li><a href="module-fabric-network.BaseCheckpointer.html">fabric-network.BaseCheckpointer</a></li><li><a href="module-fabric-network.BaseWallet.html">fabric-network.BaseWallet</a></li><li><a href="module-fabric-network.CommitEventListener.html">fabric-network.CommitEventListener</a></li><li><a href="module-fabric-network.Contract.html">fabric-network.Contract</a></li><li><a href="module-fabric-network.ContractEventListener.html">fabric-network.ContractEventListener</a></li><li><a href="module-fabric-network.CouchDBWallet.html">fabric-network.CouchDBWallet</a></li><li><a href="module-fabric-network.EventHubDisconnectError.html">fabric-network.EventHubDisconnectError</a></li><li><a href="module-fabric-network.EventHubManager.html">fabric-network.EventHubManager</a></li><li><a href="module-fabric-network.FabricError.html">fabric-network.FabricError</a></li><li><a href="module-fabric-network.FileSystemCheckpointer.html">fabric-network.FileSystemCheckpointer</a></li><li><a href="module-fabric-network.FileSystemWallet.html">fabric-network.FileSystemWallet</a></li><li><a href="module-fabric-network.Gateway.html">fabric-network.Gateway</a></li><li><a href="module-fabric-network.HSMWalletMixin.html">fabric-network.HSMWalletMixin</a></li><li><a href="module-fabric-network.InMemoryWallet.html">fabric-network.InMemoryWallet</a></li><li><a href="module-fabric-network.Network.html">fabric-network.Network</a></li><li><a href="module-fabric-network.Query.html">fabric-network.Query</a></li><li><a href="module-fabric-network.RoundRobinEventHubSelectionStrategy.html">fabric-network.RoundRobinEventHubSelectionStrategy</a></li><li><a href="module-fabric-network.TimeoutError.html">fabric-network.TimeoutError</a></li><li><a href="module-fabric-network.Transaction.html">fabric-network.Transaction</a></li><li><a href="module-fabric-network.X509WalletMixin.html">fabric-network.X509WalletMixin</a></li><li><a href="MSP.html">MSP</a></li><li><a href="MSPManager.html">MSPManager</a></li><li><a href="NetworkConfig_1_0.html">NetworkConfig_1_0</a></li><li><a href="Orderer.html">Orderer</a></li><li><a href="Organization.html">Organization</a></li><li><a href="Peer.html">Peer</a></li><li><a href="PKCS11_ECDSA_KEY.html">PKCS11_ECDSA_KEY</a></li><li><a href="ProtoLoader.html">ProtoLoader</a></li><li><a href="Remote.html">Remote</a></li><li><a href="Signer.html">Signer</a></li><li><a href="SigningIdentity.html">SigningIdentity</a></li><li><a href="TransactionID.html">TransactionID</a></li><li><a href="User.html">User</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="interfaces.list.html" class="dropdown-toggle" data-toggle="dropdown">Interfaces<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="module-fabric-network.Wallet.html">fabric-network.Wallet</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="tutorials.list.html" class="dropdown-toggle" data-toggle="dropdown">Tutorials<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="tutorial-app-dev-env-setup.html">Setting up the Application Developer's Environment</a></li><li><a href="tutorial-channel-create.html">fabric-client: How to create a Hyperledger Fabric channel</a></li><li><a href="tutorial-channel-events.html">fabric-client: How to use the channel-based event service</a></li><li><a href="tutorial-discovery.html">fabric-client: How to use the discovery service</a></li><li><a href="tutorial-event-checkpointer.html">fabric-network: How to replay missed events</a></li><li><a href="tutorial-event-hub-management.html">fabric-network: How to automatically select and reconnect to event hubs</a></li><li><a href="tutorial-grpc-settings.html">fabric-client: How to set gRPC settings</a></li><li><a href="tutorial-handlers.html">fabric-client: How to use the endorsement and commit handlers</a></li><li><a href="tutorial-hsm-pkcs11.html">Testing for Hardware Security Module via PKCS#11 interface</a></li><li><a href="tutorial-listening-to-events.html">fabric-network: How to listen to events</a></li><li><a href="tutorial-logging.html">fabric-client: How to use logging</a></li><li><a href="tutorial-metadata-chaincode.html">fabric-client: How to add CouchDB indexes during chaincode installation</a></li><li><a href="tutorial-mutual-tls.html">fabric-client: How to configure mutual TLS</a></li><li><a href="tutorial-network-config.html">fabric-client: How to use a common connection profile</a></li><li><a href="tutorial-private-data.html">How to use private data</a></li><li><a href="tutorial-query-peers.html">fabric-network: How to select peers for evaluating transactions (queries)</a></li><li><a href="tutorial-sign-transaction-offline.html">Working with an offline private key</a></li><li><a href="tutorial-transaction-commit-events.html">fabric-network: How to wait for transactions to be committed to the ledger</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="global.html#CLIENT">CLIENT</a></li><li><a href="global.html#HFAFFILIATIONMGR">HFAFFILIATIONMGR</a></li><li><a href="global.html#HFGENCRL">HFGENCRL</a></li><li><a href="global.html#HFINTERMEDIATECA">HFINTERMEDIATECA</a></li><li><a href="global.html#HFREGISTRARATTRIBUTES">HFREGISTRARATTRIBUTES</a></li><li><a href="global.html#HFREGISTRARDELEGATEROLES">HFREGISTRARDELEGATEROLES</a></li><li><a href="global.html#HFREGISTRARROLES">HFREGISTRARROLES</a></li><li><a href="global.html#HFREVOKER">HFREVOKER</a></li><li><a href="global.html#loadConfigGroup">loadConfigGroup</a></li><li><a href="global.html#loadConfigValue">loadConfigValue</a></li><li><a href="global.html#ORDERER">ORDERER</a></li><li><a href="global.html#package">package</a></li><li><a href="global.html#PEER">PEER</a></li><li><a href="global.html#toEnvelope">toEnvelope</a></li><li><a href="global.html#USER">USER</a></li>
+				</ul>
+			</li>
+			
+		</ul>
+        
+            <div class="col-sm-3 col-md-3">
+                <form class="navbar-form" role="search">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search" name="q" id="search-input">
+                        <div class="input-group-btn">
+                            <button class="btn btn-default" id="search-submit"><i class="glyphicon glyphicon-search"></i></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        
+	</div>
+
+</div>
+</div>
+
+
+<div class="container" id="toc-content">
+<div class="row">
+
+	
+	<div class="col-md-12">
+	
+		<div id="main">
+			<section class="tutorial-section">
+
+<header>
+    
+
+    <h2>fabric-client: How to use the discovery service</h2>
+</header>
+
+<article>
+    <p>This tutorial illustrates the use of the service discovery by the Hyperledger Fabric Node.js Client as of 1.2.</p>
+<p>For more information on:</p>
+<ul>
+<li>getting started with Hyperledger Fabric see
+<a href="http://hyperledger-fabric.readthedocs.io/en/latest/build_network.html">Building your first network</a>.</li>
+<li>the configuration of a channel in Hyperledger Fabric and the internal
+process of creating and updating see
+<a href="http://hyperledger-fabric.readthedocs.io/en/latest/configtx.html">Hyperledger Fabric channel configuration</a></li>
+<li><a href="https://hyperledger-fabric.readthedocs.io/en/latest/discovery-overview.html">Service Discovery</a></li>
+</ul>
+<p>The following assumes an understanding of the Hyperledger Fabric network
+(orderers and peers),
+and of Node application development, including the use of the
+Javascript <code>promise</code> and <code>async await</code>.</p>
+<h3>Overview</h3>
+<p>The service discovery provided by the Hyperledger Fabric helps an application to
+understand the current view of the network. The service discovery also has insight
+into the endorsement policy of chaincodes and is able to provide various list of
+peers that are currently active on the network that could be used to endorse a
+proposal.
+To use the service the application will have to connect with just one peer.</p>
+<h4>Modified API's that will use the service discovery</h4>
+<ul>
+<li><code>channel.initialize()</code> - This method has been enhanced by adding an option to
+query a peer using the new service discovery to initialize the channel object.
+This method may be call at anytime to reinitialize the channel. When using discovery,
+this may be used to assign a new target peer providing the discovery service.
+The initialize() method is also required to instantiate the handlers, by default
+the handlers shipped with the fabric-client are designed to use the discovery
+results.</li>
+<li><code>channel.sendTransactionProposal()</code> - This method has been enhanced to use the
+discovered peers to send the endorsement proposal.</li>
+<li><code>channel.sendTransaction()</code> - This method has been enhanced to use the discovered
+orderers to send the signed endorsements.</li>
+</ul>
+<h4>New API's that will use service discovery</h4>
+<ul>
+<li><code>channel.refresh()</code> - The channel will be refreshed with new service discovery
+results, add new peers, orderers, and MSPs. The call will use the service discovery
+settings as provided on the <code>channel.initialize()</code> call. If a new peer is required
+for the refresh of discovery results then call the <code>channel.initialize()</code> with a new
+target peer rather then calling refresh().</li>
+<li><code>channel.getDiscoveryResults()</code> - The channel will cache the results of the last query
+made to the service discovery and make the results available. The call will use
+the <code>discovery-cache-life</code> setting to determine if the results should be refreshed.
+if the results need to be refreshed, the <code>channel.refresh()</code> will be called
+internally to fetch new service discovery results. The call is used by the
+<code>DiscoveryEndorsementHandler</code> as it starts to determine the target peers.</li>
+<li><code>client.queryPeers()</code> - A client object will be able to query a target peer
+using the discovery service to provide a list of peer endpoints and associated
+organizations active on the network at the time of the query. see <a href="Client.html#queryPeers">Client#queryPeers</a></li>
+</ul>
+<h4>New configuration settings</h4>
+<ul>
+<li><code>initialize-with-discovery</code> - boolean - When the applications calls for the
+channel to be initialized, service discovery will be used. (default false)</li>
+<li><code>discovery-cache-life</code> - integer (time in milliseconds) - The amount of time the
+service discovery results are considered valid. (default 300000 - 5 minutes)</li>
+<li><code>override-discovery-protocol</code> - string - Override the protocol to use when
+building URL's for the discovered endpoints. The Discovery Service only provides
+host:port. By default, if you connect to the Discovery Service without TLS (grpc://),
+then all discovered endpoints will be connected to without TLS. If you connect to
+the Discovery Service with TLS (grpcs://), then all discovered endpoints will be
+connected to with TLS. You can use this configuration setting to force either grpc
+or grpcs for all discovered endpoints, regardless of how you connected to the
+Discovery Service. Please note that it is highly recommended not to connect to the
+Discovery Service or any discovered endpoints without TLS (grpc://), as all information
+will be sent over plaintext, un-encrypted.</li>
+<li><code>endorsement-handler</code> - string - The path to the endorsement handler. Allows for a
+custom handler to be used. This handler is used in the <code>sendTransactionProposal</code>
+method to determine the target peers and how to send the proposal.
+(default 'fabric-client/lib/impl/DiscoveryEndorsementHandler.js')</li>
+<li><code>commit-handler</code> - string - The path to the commit handler. Allows for
+a custom handler to be used. This handler is used in the <code>sendTransaction</code> method
+to determine the orderers and how to send the transaction to be committed.
+(default 'fabric-client/lib/impl/BasicCommitHandler.js')</li>
+</ul>
+<h4>How the <code>DiscoveryEndorsementHandler</code> works</h4>
+<p>The <code>sendTransactionProposal</code> will use the peers included in the &quot;targets&quot; to
+endorse the proposal. If there is no &quot;targets&quot; parameter, the endorsement request
+will be handled by the endorsement handler.
+The default handler that comes with the fabric-client is designed to use the
+results from the fabric discovery service. The peer that is assigned as the
+target during channel initialization will be the peer that is sent the
+discovery service request.
+The discovery service results will be based on the chaincode of the endorsement
+or based on an endorsement hint (<code>endorsementHint</code>) included in the endorsement
+request. The hint may include one or more chaincodes and each chaincode may
+include one or more associated collection names. Results will be refreshed using
+the <code>discovery-cache-life</code> system setting. By default the cache life is
+5 minutes. This may be changed easily by using the following.</p>
+<pre class="prettyprint source"><code>Client.setConfigSetting('discover-cache-life', &lt;milliseconds>);
+</code></pre>
+<p>If there are no service discovery results, the handler will send the
+endorsement request to the peers that have been assigned to the channel with
+the <code>endorsingPeer</code> role (a peer that has nor been assigned a role will default
+to having that role, this means that a role must be explicitly turned off).</p>
+<p>When the handler processes the discovery service results it assumes that all
+peers referenced have a peer instance object created and assigned to the channel
+instance object. The channel instance will build the required peer instances to
+support endorsements when it processes the discovery service results before
+passing the results to the handler. The channel will not build new peer instances
+if the peer is already assigned to the channel either by the application or by a
+previous discovery service request.</p>
+<p>The default 'DiscoveryEndorsementHandler' takes optional parameters that allow
+the application to specify peers or organizations that will be preferred,
+ignored or required. The discovery service results will include groups of peers
+and layouts that specify how many peers from each group it will take to satisfy
+the endorsement policy of the proposal's chaincode or the endorsement policies
+of the endorsement hint.
+Each group will be modified using the parameters of the endorsement call.
+The handler will first remove peers that are not required or should be ignored.
+Then the group list will be sorted by ledger height or randomized.
+Finally preferred peers will be moved to the top of the group list.
+The handler will randomly select a layout to make the endorsement.
+The handler looks at each group in the layout and selects the number
+peers specified by that group in the layout. The number of peers is the
+number of endorsements needed to satisfy the endorsement policy.
+Peers will be selected starting at the top of the modified group list
+to be sent an endorsement request.
+If any of the requests fail, the handler will select the next available peer
+from the modified group list. If the number of successful endorsements reaches
+the number of peers called out for each group in the layout, the handler
+will successfully return the endorsements.
+If there are not enough successful endorsements, the handler will
+select another random layout and try again or return an error indicating
+that it was unable to complete successfully. The error will include
+the responses from all peers.</p>
+<p>Note: The default handler does not remember the results of the previous call.
+Peers that may have failed will be tried again. With randomizing and
+refreshing of the discovery service results, the order of how peers are
+selected will likely change on every request.</p>
+<p>Note: If the above behavior does not meet the needs of your organization a
+custom handler may be used.</p>
+<h4>How the <code>BasicCommitHandler</code> works</h4>
+<p>The default handler that comes with the fabric-client will send to one orderer at
+a time until it receives a successful submission of the transaction. Sending
+a transaction (a set of endorsements) to an orderer does not mean that the transaction
+will be committed, it means that the request was built properly and that the
+sender has the authority to send the request. The response from the orderer
+will indicate that the orderer has accepted the request. The <code>sendTransaction</code>
+has an optional parameter <code>orderer</code> that indicates the orderer to send the
+transaction. The handler will use the orderer as specified with the <code>orderer</code>
+parameter and not send to any other orderers. If no orderer is specified the handler
+will get the list of orderers assigned to the channel. These orderers may have
+been assigned manually to the channel with a <code>channel.addOrderer()</code> call or
+assigned automatically when using the service discovery.</p>
+<h3>To Initialize</h3>
+<p>By default the fabric-client will not use the service discovery. To enable the
+use of the service, set the config setting to true or use the <code>discover</code> parameter
+on the <code>initialize()</code> call.</p>
+<p>note: <a href="Channel.html#initialize">Channel#initialize</a> must be run to both enable discovery and to
+startup the handlers.</p>
+<pre class="prettyprint source"><code>Client.setConfigSetting('initialize-with-discovery', true);
+--or--
+Client.addConfigFile('/path/to/config.json');
+// the json file contains the following line
+//&quot;initialize-with-discovery&quot;: true
+
+//--or--
+
+await channel.initialize({discover:true});
+</code></pre>
+<p>To use the service discovery on the <code>initialize()</code>, a channel must have at
+least one peer assigned with the <code>discovery</code> role or a target must be provided on
+the call. Peers may be assigned automatically by loading a connection profile
+or they may have been added manually with the <code>channel.addPeer()</code>.</p>
+<pre class="prettyprint source"><code>await channel.initialize({
+	discover: true,
+	target: peer
+});
+
+//--or--
+
+await channel.initialize({
+	discover: true,
+	target: 'peer2.org2.example.com' //peer defined in the connection profile
+});
+
+//--or--
+
+// no target specified, using the first peer with the discover role
+// peer was added to the channel either by the 'addPeer' or when using
+// a connection profile
+await channel.initialize({
+	discover: true
+});
+</code></pre>
+<p>The return results of initialization with service discovery will be the MSP configurations,
+the peers, the orderers, and the endorsing plans for all chaincodes on the
+channel in JSON format. The results are stored and cached internally and the caller
+does not have to do anything with the results, they are provided only for reference.</p>
+<p>The initialize call also allows for changing the endorsement handler by specifying
+a path to a custom endorsement handler. The handler may be changed independently
+of using the service discovery. The default endorsement handler however does use
+discovery service results to determine the endorsing peers.</p>
+<pre class="prettyprint source"><code>await channel.initialize({
+	endorsementHandler: '/path/to/my/handler.js'
+});
+</code></pre>
+<p>When the fabric network is running in a docker-compose and the node.js application
+is running outside of the docker containers, it will be necessary to modify the
+addresses returned from the service discovery. The service discovery sees the
+addresses of the peers and orderers as host names and ports, however the node.js
+application running outside of docker will only know the endpoints as <code>localhost</code>
+and port. In the docker-compose file, notice how Docker is mapping the port addresses,
+these must be same when using service discovery. Using <code>- 7061:7051</code> will not
+work as the fabric-client does not have visibility into the docker-compose file.</p>
+<p>Notice in the following definition of a peer from a docker-compose file.
+The port number is the same and has been defined along with the
+host name <code>peer0.org1.example.com:7051</code> for the peer and gossip settings.
+The node.js fabric-client application running outside of of the docker
+containers will use <code>localhost:7051</code>.</p>
+<pre class="prettyprint source"><code>peer0.org1.example.com:
+  container_name: peer0.org1.example.com
+  image: hyperledger/fabric-peer
+  environment:
+	- CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+	- CORE_PEER_ID=peer0.org1.example.com
+	- CORE_PEER_ADDRESS=peer0.org1.example.com:7051
+	- CORE_PEER_LISTENADDRESS=peer0.org1.example.com:7051
+	- CORE_PEER_GOSSIP_ENDPOINT=peer0.org1.example.com:7051
+	- CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org1.example.com:7051
+	- FABRIC_LOGGING_SPEC=debug
+	## the following setting redirects chaincode container logs to the peer container logs
+	- CORE_VM_DOCKER_ATTACHSTDOUT=true
+	- CORE_PEER_LOCALMSPID=Org1MSP
+	- CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/msp/peer
+	##
+	- CORE_PEER_TLS_ENABLED=true
+	- CORE_PEER_TLS_CLIENTAUTHREQUIRED=true
+	- CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/msp/peer/tls/key.pem
+	- CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/msp/peer/tls/cert.pem
+	- CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/msp/peer/cacerts/org1.example.com-cert.pem
+	- CORE_PEER_TLS_CLIENTROOTCAS_FILES=/etc/hyperledger/msp/peer/cacerts/org1.example.com-cert.pem
+	# # the following setting starts chaincode containers on the same
+	# # bridge network as the peers
+	# # https://docs.docker.com/compose/networking/
+	- CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fixtures_default
+  working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+  command: peer node start
+  ports:
+	- 7051:7051
+  volumes:
+	  - /var/run/:/host/var/run/
+	  - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/:/etc/hyperledger/msp/peer
+  depends_on:
+	- orderer.example.com
+</code></pre>
+<p>The <code>channel.initialize()</code> call as new parameter to indicate that the hostname
+mapping to localhost should be done. Use the <code>asLocalhost</code> with true or false,
+the default is false.</p>
+<pre class="prettyprint source"><code>await channel.initialize({discover:true, asLocalhost:true})
+</code></pre>
+<h5>Using peers added manually to the channel:</h5>
+<p>Only one peer will now be required to be added to the channel when the applications
+programmatically  adds the peers and orderers to build a channel instance.
+The peer must have the role <code>discover</code>. As with all roles, if the role
+is not defined and set to false, the peer will have that role on the channel by
+default.</p>
+<pre class="prettyprint source"><code>const channel = client.newChannel('mychannel');
+const peer = client.newPeer(....);
+channel.addPeer(peer);
+await channel.initialize({discover:true});
+</code></pre>
+<p>When the channel is initialized using service discovery and peers and orderers are added
+to the channel, a peer with the address that was used for service discovery
+will likely be on the list of discovered peers. A peer with the address used for
+service discovery will not be added again to the channel as a peer with that address
+has already been assigned to the channel.</p>
+<p>The name a peer will be known by may be set by using the <code>name</code> setting when
+creating the peer.</p>
+<pre class="prettyprint source"><code>const peer = client.newPeer(url, {name: 'peer0', ...});
+</code></pre>
+<p>The default name of a peer will be the host name and port if the name parameter
+is not provided or for peers added by service discovery.</p>
+<pre class="prettyprint source"><code>peer0.org1.example.com:7051
+</code></pre>
+<h5>Using a peer not added to the channel:</h5>
+<p>To use the service discovery a peer is required. The application
+may define a peer and pass it on the initialize call. The peer does not
+have to be added to the channel instance.</p>
+<pre class="prettyprint source"><code>const channel = client.newChannel('mychannel');
+const peer = client.newPeer(....);
+await channel.initialize({discover:true, target:peer});
+</code></pre>
+<p>When the channel is initialized using service discovery and peers and orderers
+are added to the channel, a peer with the address that was used for service
+discovery will likely be on the list of discovered peers. A peer instance with
+the address used for service discovery will be added to the channel with the
+same address as the peer instance used for service discovery because the peer
+instance used on the initialize call is not added to the channel, it is only
+used on the initialize call.</p>
+<p>If the application chooses to use no longer use the peer on the initialize
+call or the peer that was automatically assigned call the <code>channel.initialize()</code>
+again and provide a peer instance or name. This new peer will be used going
+forward for service discovery calls.</p>
+<h5>Using connection profile:</h5>
+<p>When using a connection profile, all the peers and orderers on the network will no
+longer need to be provided. Just one peer will be required and assigned to the
+channel. The peer must have the role <code>discover</code>. As with all roles, if the role
+is not defined and set to false, the peer will have that role on the channel by
+default.</p>
+<p>The following example shows a peer that is going to be used primarily for service discovery.</p>
+<pre class="prettyprint source"><code>channels:
+  mychannel:
+    peers:
+      peer1.org2.example.com:
+        endorsingPeer: false
+        chaincodeQuery: false
+        ledgerQuery: true
+        eventSource: false
+        discover: true
+    peer2.org2.example.com:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: false
+        discover: false
+
+peers:
+  peer1.org2.example.com:
+    url: grpcs://localhost:8051
+    grpcOptions:
+      ssl-target-name-override: peer1.org2.example.com
+    tlsCACerts:
+      path: test/fixtures/channel/c...
+  peer2.org2.example.com:
+    url: grpcs://localhost:8052
+    grpcOptions:
+      ssl-target-name-override: peer2.org2.example.com
+    tlsCACerts:
+      path: test/fixtures/channel/c...
+</code></pre>
+<p>When a channel is created using the <code>client.getChannel()</code> after the client
+instance has loaded a connection profile, the fabric-client will create peers
+and assign them to the channel.
+The peers and orderers will inherent the connection options as assigned to
+the client instance. see <a href="Client.html#addConnectionOptions">Client#addConnectionOptions</a>
+Peers with the the <code>discover</code> role will be used
+when the <code>channel.initialize()</code> is called and no peer is passed as a target.</p>
+<pre class="prettyprint source"><code>const client = Client.loadFromConfig(...);
+const channel = client.getChannel('mychannel');
+await channel.initialize({discover:true, asLocalhost:true};
+</code></pre>
+<p>If the initialize fails because the peer with the <code>discover</code> role is not online,
+the application may select another peer.</p>
+<pre class="prettyprint source"><code>await channel.initialize({discover:true, target:'peer2.org2.example.com'});
+</code></pre>
+<p>When the application passes a peer name or a peer instance to the initialize call,
+that peer will be used and the <code>discover</code> role will not be checked.</p>
+<p>The name a peer will be known by is the name used in the yaml file.</p>
+<pre class="prettyprint source"><code>peer1.org2.example.com:port
+</code></pre>
+<p>The name of a peer will be the host name and port for peers added by the
+service discovery.</p>
+<pre class="prettyprint source"><code>peer0.org1.example.com:7051
+</code></pre>
+<h3>To Endorse</h3>
+<p>As discussed above, the <code>channel.sendTransactionProposal()</code> will now use a pluggable
+handler. The fabric-client will come with a handler that will use service discovery.
+By default the <code>endorsement-handler</code> configuration setting will point to the
+<code>DiscoveryEndorsementHandler</code>.  If the channel has been initialized using the
+service discovery and there are no targets define on the <code>sendTransactionProposal</code>
+call, the handler will use the service discovery results based on the chaincode
+of the proposal request to determine the target peers
+to perform the endorsements.</p>
+<pre class="prettyprint source"><code>const tx_id = client.newTransactionID();
+const request = {
+	chaincodeId : 'example',
+	fcn: 'move',
+	args: ['a', 'b','100'],
+	txId: tx_id
+};
+await channel.sendTransactionProposal(request);
+</code></pre>
+<p>If the endorsement will require one or more chaincode to chaincode calls and/or
+be over a collection or two, then the endorsement proposal request must include the
+parameter &quot;endorsement_hint&quot;. This will assist the discovery service in putting
+together an endorsement plan based on all the endorsement policies of chaincodes
+and collections involved and the active peers on the network.
+The following example shows a chaincode to chaincode call over collections.
+Notice how the chaincode that starts the endorsement must also still be included
+as the &quot;chaincodeId&quot; of the endorsement request.</p>
+<pre class="prettyprint source"><code>const hint = { chaincodes: [
+	{
+		name: &quot;my_chaincode1&quot;,
+		collection_names: [&quot;my_collection1&quot;, &quot;my_collection2&quot;]
+	},
+	{
+		name: &quot;my_chaincode2&quot;,
+		collection_names: [&quot;my_collection1&quot;, &quot;my_collection2&quot;]
+	}
+]};
+
+const tx_id = client.newTransactionID();
+const request = {
+	chaincodeId : 'my_chaincode1',
+	fcn: 'move',
+	args: ['a', 'b','100'],
+	txId: tx_id,
+	endorsement_hint: hint
+};
+await channel.sendTransactionProposal(request);
+</code></pre>
+<p>The application is able to have specific peers or peers in a specified
+organization chosen before other peers or not be chosen at all for endorsements.</p>
+<ul>
+<li><code>required</code>: An array of strings that represent the names of peers.
+Peers named on this list and in the endorsement plan will be the only
+peers to be sent the endorsement request. Other peers found in the endorsement
+plan will not be used.</li>
+<li><code>preferred</code>: An array of strings that represent the names of peers that should
+be given priority by the endorsement handler if their ledger height is up to date.</li>
+<li><code>ignored</code>: An array of strings that represent the names of peers that should be
+ignored by the endorsement handler.</li>
+<li><code>requiredOrgs</code>: An array of strings that represent the names of organizations.
+Peers found in the endorsement plan that are in these organizations will be
+the only peers to be sent the endorsement request. Other peers found in the
+endorsement plan will not be used.</li>
+<li><code>preferredOrgs</code>: An array of strings that represent the MSP ids of organizations
+that should be given priority by the endorsement handler if their ledger height is
+up to date.</li>
+<li><code>ignoredOrgs</code>: An array of strings that represent the MSP ids of organizations
+that should be ignored by the endorsement handler.</li>
+<li><code>preferredHeightGap</code>: An integer representing the maximum difference in the
+ledger height of a peer and the highest ledger height found in a group of peers.
+A peer will be given priority if it's ledger height is within this range.
+There is no default, if this value is not provided the ledger height of the peer
+will not be considered when being added a peer to the preferred list.</li>
+<li><code>sort</code>: A string value that indicates how the peers within groups should
+be chosen. There are two sorts available:
+<br>&quot;<code>ledgerHeight</code>&quot;, sort the peers descending by the number of blocks
+on the channel ledger.
+<br>&quot;<code>random</code>&quot;, sort the peers randomly from the list, the
+preferred peers will be added randomly first then the others will be
+added randomly.
+<br>The default is to sort by ledger height.</li>
+</ul>
+<p>For example when the handler gets the following request and has an endorsement
+plan with 'peer3' ledger height of 2000 and 'peer1' ledger height of 1990.
+Notice that the gap is 10, this gap is too large and 'peer1' will not be given
+priority.</p>
+<pre class="prettyprint source"><code>const request = {
+	chaincodeId : 'example',
+	fcn: 'move',
+	args: ['a', 'b','100'],
+	txId: tx_id,
+	preferred: ['peer0', 'peer1.org1.example.com:8051'],
+	preferredHeightGap: 5,
+	ignored: ['peer1', 'peer2.org2.example.com:8054']
+}
+</code></pre>
+<p>For example when the handler gets the following request and has an endorsement
+plan with 'peer3' in 'Org3MSP'  ledger height of 2000 and 'peer1' in 'Org1MSP'
+ledger height of 1990. Notice that the difference is 10, this gap is too large and
+'peer1' will not be given priority.</p>
+<pre class="prettyprint source"><code>const request = {
+	chaincodeId : 'example',
+	fcn: 'move',
+	args: ['a', 'b','100'],
+	txId: tx_id,
+	preferredOrgs: ['Org1MSP', 'Org3MSP'],
+	preferredHeightGap: 5,
+	ignored: ['Org4MSP']
+}
+</code></pre>
+<p>When the application only knows about organizations and
+will not know about specific peers it may use the 'requiredOrgs',
+'preferredOrgs', and/or 'ignoredOrgs' request parameters.
+For example if the application knows that the transaction is between two
+organizations, it may require that only these two endorse the proposal.</p>
+<pre class="prettyprint source"><code>const request = {
+	chaincodeId : 'example',
+	fcn: 'move',
+	args: ['a', 'b','100'],
+	txId: tx_id,
+	requiredOrgs: ['Org2MSP', 'Org3MSP']
+}
+</code></pre>
+<h3>To Commit</h3>
+<p>As discussed above, the <code>channel.sendTransaction()</code> will now use a pluggable
+handler. The fabric-client will come with a handler that will use all orderers
+added to the channel. By default the <code>commit-handler</code> configuration setting
+will point to the <code>BasicCommitHandler</code>. This handler will send the transaction
+to each orderer, one at a time, that has been assigned to the channel until it
+gets a <code>SUCCESS</code> response or until the list is exhausted. The orderers may been
+added manually, due to a service discovery initialization or combination of the two.
+If an orderer is specified on the call, only that orderer will be used.</p>
+<p><a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.</p>
+</article>
+
+</section>
+
+		</div>
+	</div>
+
+	<div class="clearfix"></div>
+
+	
+
+</div>
+</div>
+
+
+    <div class="modal fade" id="searchResults">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Search results</h4>
+          </div>
+          <div class="modal-body"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div>
+
+
+<footer>
+
+
+<span class="jsdoc-message">
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a>
+	
+		on 2019-11-26T13:52:29+00:00
+	
+	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
+</span>
+</footer>
+
+<script src="scripts/docstrap.lib.js"></script>
+<script src="scripts/toc.js"></script>
+
+    <script type="text/javascript" src="scripts/fulltext-search-ui.js"></script>
+
+
+<script>
+$( function () {
+	$( "[id*='$']" ).each( function () {
+		var $this = $( this );
+
+		$this.attr( "id", $this.attr( "id" ).replace( "$", "__" ) );
+	} );
+
+	$( ".tutorial-section pre, .readme-section pre, pre.prettyprint.source" ).each( function () {
+		var $this = $( this );
+
+		var example = $this.find( "code" );
+		exampleText = example.html();
+		var lang = /{@lang (.*?)}/.exec( exampleText );
+		if ( lang && lang[1] ) {
+			exampleText = exampleText.replace( lang[0], "" );
+			example.html( exampleText );
+			lang = lang[1];
+		} else {
+			var langClassMatch = example.parent()[0].className.match(/lang\-(\S+)/);
+			lang = langClassMatch ? langClassMatch[1] : "javascript";
+		}
+
+		if ( lang ) {
+
+			$this
+			.addClass( "sunlight-highlight-" + lang )
+			.addClass( "linenums" )
+			.html( example.html() );
+
+		}
+	} );
+
+	Sunlight.highlightAll( {
+		lineNumbers : false,
+		showMenu : true,
+		enableDoclinks : true
+	} );
+
+	$.catchAnchorLinks( {
+        navbarOffset: 10
+	} );
+	$( "#toc" ).toc( {
+		anchorName  : function ( i, heading, prefix ) {
+			return $( heading ).attr( "id" ) || ( prefix + i );
+		},
+		selectors   : "#toc-content h1,#toc-content h2,#toc-content h3,#toc-content h4",
+		showAndHide : false,
+		smoothScrolling: true
+	} );
+
+	$( "#main span[id^='toc']" ).addClass( "toc-shim" );
+	$( '.dropdown-toggle' ).dropdown();
+
+    $( "table" ).each( function () {
+      var $this = $( this );
+      $this.addClass('table');
+    } );
+
+} );
+</script>
+
+
+
+<!--Navigation and Symbol Display-->
+
+
+<!--Google Analytics-->
+
+
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            SearcherDisplay.init();
+        });
+    </script>
+
+
+</body>
+</html>
