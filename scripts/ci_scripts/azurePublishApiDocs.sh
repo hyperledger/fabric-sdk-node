@@ -1,9 +1,11 @@
-#!/bin/bash -e
+#!/bin/bash
 #
 # Copyright IBM Corp All Rights Reserved
 #
 # SPDX-License-Identifier: Apache-2.0
 #
+
+set -e -o pipefail
 
 # Input environment variables:
 : "${GITHUB_USER:?}" # The GitHub user name for publishing
@@ -11,8 +13,8 @@
 : "${PUBLISH_URL:?}" # Git URL used to push published content
 : "${PROJECT_DIR:?}" # Root directory for the Git project
 : "${STAGING_DIR:?}" # Directory used to store content to publish to GitHub Pages
+: "${SOURCE_BRANCH:?}" # Source code branch name
 
-readonly CURRENT_BRANCH=$(git branch --show-current)
 readonly COMMIT_HASH=$(git rev-parse HEAD)
 readonly BUILD_DIR="${PROJECT_DIR}/docs/gen"
 readonly DOCS_BRANCH='gh-pages'
@@ -35,9 +37,9 @@ _stagingGitSetUp() {
 }
 
 buildDocs() {
-    echo 'Building documentation'
+    echo "Building documentation for ${SOURCE_BRANCH} branch in ${BUILD_DIR}"
     rm -rf "${BUILD_DIR}"
-	BUILD_BRANCH="${CURRENT_BRANCH}" DOCS_ROOT="${BUILD_DIR}" npx gulp docs
+	BUILD_BRANCH="${SOURCE_BRANCH}" DOCS_ROOT="${BUILD_DIR}" npx gulp docs
 }
 
 copyToStaging() {
@@ -49,7 +51,7 @@ copyToStaging() {
 cleanStaging() {
     local releaseDir targetDir
     # Remove release sub-directories that have been re-built
-    find "${BUILD_DIR}" -type d -maxdepth 1 -depth 1 -print | while read -r subdir; do
+    find "${BUILD_DIR}" -type d -maxdepth 1 -mindepth 1 -print | while read -r subdir; do
         releaseDir=$(basename "${subdir}")
         targetDir="${STAGING_DIR}/${releaseDir}"
         echo "Removing ${targetDir}"
