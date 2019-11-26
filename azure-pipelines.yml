@@ -31,12 +31,12 @@ steps:
 - script: npx gulp run-test-all
   displayName: 'Run tests'
 
-#- script: scripts/ci_scripts/azurePublishNpmPackages.sh
-#  condition: and(succeeded(), eq(variables['Build.Reason'], 'IndividualCI'))
-#  displayName: 'Publish npm packages'
-#  env:
-#    NPM_TOKEN: $(NPM)
-#    PROJECT_DIR: "$(Build.Repository.LocalPath)"
+- script: scripts/ci_scripts/azurePublishNpmPackages.sh
+  condition: and(succeeded(), eq(variables['Build.Reason'], 'IndividualCI'))
+  displayName: 'Publish npm packages'
+  env:
+    NPM_TOKEN: "$(NPM)"
+    PROJECT_DIR: "$(Build.Repository.LocalPath)"
 
 - script: scripts/ci_scripts/azurePublishApiDocs.sh
   condition: and(succeeded(), eq(variables['Build.Reason'], 'IndividualCI'))
