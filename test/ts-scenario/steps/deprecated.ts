@@ -34,7 +34,7 @@ Given(/^I use the deprecated sdk to (.+?) a (.+?) smart contract named (.+?) at 
 		for (const orgName of Object.keys(ccp.getOrganizations())) {
 			const isInstalled: boolean = await AdminUtils.isOrgChaincodeInstalled(orgName, ccp, ccName, ccVersion);
 			if (isInstalled) {
-				BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} has already been installed on the peers for organization ${orgName}`, undefined);
+				BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} has already been installed on the peers for organization ${orgName}`);
 			} else {
 				await Deprecated.sdk_chaincode_install_for_org(ccType, ccName, ccVersion, ccId, tls, ccp, orgName, channelName);
 			}
@@ -43,7 +43,7 @@ Given(/^I use the deprecated sdk to (.+?) a (.+?) smart contract named (.+?) at 
 		// Instantiate
 		const isInstantiated: boolean = await AdminUtils.isChaincodeInstantiatedOnChannel(Object.keys(ccp.getOrganizations())[0], ccp, channelName, ccName, ccVersion);
 		if (isInstantiated) {
-			BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} has already been instantiated on channel ${channelName} `, undefined);
+			BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} has already been instantiated on channel ${channelName} `);
 		} else {
 			await Deprecated.sdk_chaincode_instantiate(ccName, ccType, ccVersion, ccId, initArgs, isUpgrade, tls, ccp, Constants.DEFAULT_ORG, channelName, policy);
 		}

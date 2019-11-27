@@ -22,9 +22,9 @@ export async function createAdminClient(clientName: string, ccp: CommonConnectio
 	const clientMap: Map<string, any> | undefined = stateStore.get(Constants.CLIENTS);
 
 	if (clientMap && clientMap.has(clientName)) {
-		BaseUtils.logMsg(`Client named ${clientName} already exists`, undefined);
+		BaseUtils.logMsg(`Client named ${clientName} already exists`);
 	} else {
-		BaseUtils.logMsg(`Creating client named ${clientName} for organization ${clientOrg}`, undefined);
+		BaseUtils.logMsg(`Creating client named ${clientName} for organization ${clientOrg}`);
 
 		// Get a user
 		const user: User = createAdminUserForOrg(ccp, clientOrg);
@@ -42,7 +42,7 @@ export async function createAdminClient(clientName: string, ccp: CommonConnectio
 			map.set(clientName, { client, user, ccp, clientOrg });
 			stateStore.set(Constants.CLIENTS, map);
 		}
-		BaseUtils.logMsg(`Created client named ${clientName} and persisted in state store`, undefined);
+		BaseUtils.logMsg(`Created client named ${clientName} and persisted in state store`);
 	}
 }
 
@@ -50,7 +50,7 @@ export function createChannelWithClient(clientName: string, channelName: string)
 	const clientObject: any = retrieveClientObject(clientName);
 	// Does this client have a channel associated?
 	if (clientObject.channels && clientObject.channels.has(channelName)) {
-		BaseUtils.logMsg(`Client channel named ${channelName} already exists`, undefined);
+		BaseUtils.logMsg(`Client channel named ${channelName} already exists`);
 	} else {
 		// Build channel and append to client channels map
 		const channel: Channel = (clientObject.client as Client).newChannel(channelName);
@@ -62,7 +62,7 @@ export function createChannelWithClient(clientName: string, channelName: string)
 			channelMap.set(channelName, channel);
 			clientObject.channels = channelMap;
 		}
-		BaseUtils.logMsg(`Channel ${channelName} has been persisted with client ${clientName}`, undefined);
+		BaseUtils.logMsg(`Channel ${channelName} has been persisted with client ${clientName}`);
 	}
 }
 
@@ -72,7 +72,7 @@ export function retrieveClientObject(clientName: string): any {
 		return clientMap.get(clientName);
 	} else {
 		const msg: string = `Required client named ${clientName} does not exist`;
-		BaseUtils.logMsg(msg, undefined);
+		BaseUtils.logMsg(msg);
 		throw new Error(msg);
 	}
 }
@@ -124,7 +124,7 @@ export async function buildChannelRequest(requestName: string, contractName: str
 
 			const connectionOk: boolean = await peer.checkConnection();
 			if (connectionOk) {
-				BaseUtils.logMsg('Peer checkConnection test successfully', undefined);
+				BaseUtils.logMsg('Peer checkConnection test successfully');
 			} else {
 				BaseUtils.logAndThrow('Peer checkConnection test failed');
 			}
@@ -192,7 +192,7 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 			const endorsementResponse: ProposalResponse = await endorsement.send(endorsementRequest);
 			if (endorsementResponse.errors) {
 				for (const error of endorsementResponse.errors) {
-					BaseUtils.logMsg(`Failed to get endorsement : ${error.message}`, undefined);
+					BaseUtils.logMsg(`Failed to get endorsement : ${error.message}`);
 				}
 				throw Error('failed endorsement');
 			}
@@ -201,13 +201,13 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 			try {
 				await eventer.connect(endpoints[0], {});
 				if (await eventer.checkConnection()) {
-					BaseUtils.logMsg('Eventer checkConnection test successfully', undefined);
+					BaseUtils.logMsg('Eventer checkConnection test successfully');
 				} else {
 					BaseUtils.logAndThrow('Eventer checkConnection test failed');
 				}
 			} catch (error) {
-				BaseUtils.logError(`Failed to connect to channel event hub ${eventer.toString()}`, undefined);
-				BaseUtils.logError(`Failed to connect ${error.stack}`, undefined);
+				BaseUtils.logError(`Failed to connect to channel event hub ${eventer.toString()}`);
+				BaseUtils.logError(`Failed to connect ${error.stack}`);
 				throw error;
 			}
 
@@ -307,7 +307,7 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 			}
 			orderer.disconnect();
 			eventer.disconnect();
-			BaseUtils.logMsg(`Disconnected all endpoints for client object ${clientName} and request ${requestName}`, undefined);
+			BaseUtils.logMsg(`Disconnected all endpoints for client object ${clientName} and request ${requestName}`);
 		}
 	} else {
 		BaseUtils.logAndThrow(`Request named ${requestName} does not exits on client object for client ${clientName}`);
@@ -350,7 +350,7 @@ export async function submitChannelRequest(clientName: string, channelName: stri
 
 			const connectionOk: boolean = await peer.checkConnection();
 			if (connectionOk) {
-				BaseUtils.logMsg('Peer checkConnection test successfully', undefined);
+				BaseUtils.logMsg('Peer checkConnection test successfully');
 			} else {
 				BaseUtils.logAndThrow('Peer checkConnection test failed');
 			}
@@ -382,7 +382,7 @@ export async function submitChannelRequest(clientName: string, channelName: stri
 
 				if (queryResponse.errors) {
 					// failure
-					BaseUtils.logMsg(`Query failure detected`, undefined);
+					BaseUtils.logMsg(`Query failure detected`);
 					queryObject.results = {
 						general: JSON.stringify({
 							result: 'FAILURE'
@@ -395,7 +395,7 @@ export async function submitChannelRequest(clientName: string, channelName: stri
 					}
 				} else {
 					// Success
-					BaseUtils.logMsg(`Query success detected`, undefined);
+					BaseUtils.logMsg(`Query success detected`);
 					queryObject.results = {
 						general: JSON.stringify({
 							result: 'SUCCESS'

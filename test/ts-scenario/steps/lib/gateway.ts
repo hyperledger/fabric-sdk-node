@@ -57,7 +57,7 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 	const myWalletReference: string = `${Constants.WALLET}_walletType`;
 	let wallet: Wallet = stateStore.get(myWalletReference);
 	if (!wallet) {
-		BaseUtils.logMsg(`Creating wallet of type ${walletType}`, undefined);
+		BaseUtils.logMsg(`Creating wallet of type ${walletType}`);
 		switch (walletType) {
 			case Constants.MEMORY_WALLET:
 				wallet = await Wallets.newInMemoryWallet();
@@ -87,7 +87,7 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 
 	if (userIdentity) {
 		// We have an identity to use
-		BaseUtils.logMsg(`Identity ${userId} already exists in wallet and will be used`, undefined);
+		BaseUtils.logMsg(`Identity ${userId} already exists in wallet and will be used`);
 	} else {
 		await identitySetup(wallet, ccp, orgName, userName);
 
@@ -125,7 +125,7 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 		gateway,
 	};
 	addGatewayObjectToStateStore(gatewayName, gatewayObj);
-	BaseUtils.logMsg(`Gateway ${gatewayName} connected`, undefined);
+	BaseUtils.logMsg(`Gateway ${gatewayName} connected`);
 }
 
 function addGatewayObjectToStateStore(gatewayName: string, gateway: any): void {
@@ -189,7 +189,7 @@ async function identitySetup(wallet: Wallet, ccp: CommonConnectionProfileHelper,
 		type: 'X.509',
 	};
 
-	BaseUtils.logMsg(`Adding identity for ${identityName} to wallet`, undefined);
+	BaseUtils.logMsg(`Adding identity for ${identityName} to wallet`);
 	await wallet.put(identityName, identity);
 }
 
@@ -226,20 +226,20 @@ export async function performGatewayTransaction(gatewayName: string, contractNam
 	const funcArgs: string[] = argArray.slice(1);
 	try {
 		if (submit) {
-			BaseUtils.logMsg('Submitting transaction [' + func + '] with arguments ' + args, undefined);
+			BaseUtils.logMsg('Submitting transaction [' + func + '] with arguments ' + args);
 			const result: Buffer = await contract.submitTransaction(func, ...funcArgs);
 			gatewayObj.result = {type: 'submit', response: result.toString()};
-			BaseUtils.logMsg('Successfully submitted transaction [' + func + ']', undefined);
+			BaseUtils.logMsg('Successfully submitted transaction [' + func + ']');
 		} else {
-			BaseUtils.logMsg('Evaluating transaction [' + func + '] with arguments ' + args, undefined);
+			BaseUtils.logMsg('Evaluating transaction [' + func + '] with arguments ' + args);
 			const result: Buffer = await contract.evaluateTransaction(func, ...funcArgs);
-			BaseUtils.logMsg('Successfully evaluated transaction [' + func  + '] with result [' + result.toString() + ']', undefined);
+			BaseUtils.logMsg('Successfully evaluated transaction [' + func  + '] with result [' + result.toString() + ']');
 			gatewayObj.result = {type: 'evaluate', response: JSON.parse(result.toString())};
 		}
 	} catch (err) {
 		gatewayObj.result = {type: 'error', response: err.toString()};
 		// Don't log the full error, since we might be forcing the error
-		BaseUtils.logError(err.toString(), undefined);
+		BaseUtils.logError(err.toString());
 	}
 }
 
@@ -336,10 +336,10 @@ export async function performHandledGatewayTransaction(gatewayName: string, ccNa
 		try {
 			// Split args, do not capture response
 			await transaction.submit(...funcArgs);
-			BaseUtils.logMsg(`Successfully submitted transaction [${func}] using handler [${EventStrategies[handlerOption]}]`, undefined);
+			BaseUtils.logMsg(`Successfully submitted transaction [${func}] using handler [${EventStrategies[handlerOption]}]`);
 		} catch (error) {
 			gatewayObj.result = {type: 'error', response: error.toString()};
-			BaseUtils.logError(error.toString(), undefined);
+			BaseUtils.logError(error.toString());
 		}
 
 		// Record result on gateway object
@@ -355,11 +355,11 @@ export async function performHandledGatewayTransaction(gatewayName: string, ccNa
 		try {
 			// Split args, capture response
 			const result: Buffer = await transaction.evaluate(...funcArgs);
-			BaseUtils.logMsg(`Successfully evaluated transaction [${func}] using handler [${QueryStrategies[handlerOption]}] with result [${result}]`, undefined);
+			BaseUtils.logMsg(`Successfully evaluated transaction [${func}] using handler [${QueryStrategies[handlerOption]}] with result [${result}]`);
 			gatewayObj.result = {type: 'evaluate', response: JSON.parse(result.toString())};
 		} catch (error) {
 			gatewayObj.result = {type: 'error', response: error.toString()};
-			BaseUtils.logError(error.toString(), undefined);
+			BaseUtils.logError(error.toString());
 		}
 	}
 }
@@ -407,16 +407,16 @@ export async function performTransientGatewayTransaction(gatewayName: string, cc
 		const submit: boolean = ( txnType.localeCompare('submit') === 0 );
 		if (submit) {
 			const result: Buffer = await transaction.setTransient(transientMap).submit();
-			BaseUtils.logMsg(`Successfully submitted transaction [${func}] with transient data`, undefined);
+			BaseUtils.logMsg(`Successfully submitted transaction [${func}] with transient data`);
 			gatewayObj.result = {type: 'submit', response: JSON.parse(result.toString())};
 		} else {
 			const result: Buffer = await transaction.setTransient(transientMap).evaluate();
-			BaseUtils.logMsg(`Successfully evaluated transaction [${func}] with transient data`, undefined);
+			BaseUtils.logMsg(`Successfully evaluated transaction [${func}] with transient data`);
 			gatewayObj.result = {type: 'evaluate', response: JSON.parse(result.toString())};
 		}
 	} catch (error) {
 		gatewayObj.result = {type: 'error', response: error.toString()};
-		BaseUtils.logError(error.toString(), undefined);
+		BaseUtils.logError(error.toString());
 	}
 }
 
@@ -429,7 +429,7 @@ export async function performTransientGatewayTransaction(gatewayName: string, cc
  */
 export async function retrieveContractFromGateway(gateway: Gateway, channelName: string, contractId: string): Promise<Contract> {
 	try {
-		BaseUtils.logMsg(`Retrieving contract from channel ${channelName}`, undefined);
+		BaseUtils.logMsg(`Retrieving contract from channel ${channelName}`);
 		const network: Network = await gateway.getNetwork(channelName);
 		const contract: Contract = network.getContract(contractId);
 		return contract;

@@ -46,7 +46,7 @@ export async function createContractListener(gatewayName: string, channelName: s
 			BaseUtils.logMsg('-> Detected a contract event error', err);
 			throw err;
 		} else {
-			BaseUtils.logMsg(`-> Received a contract event for listener [${listenerName}] of type ${eventName}`, undefined);
+			BaseUtils.logMsg(`-> Received a contract event for listener [${listenerName}] of type ${eventName}`);
 		}
 
 		if (!filtered) {
@@ -222,7 +222,7 @@ export async function checkListenerCallNumber(listenerName: string, compareNumbe
 				BaseUtils.logAndThrow(msg);
 			} else {
 				const msg: string = `Verified that the listener was called exactly ${compareNumber} times`;
-				BaseUtils.logMsg(msg, undefined);
+				BaseUtils.logMsg(msg);
 			}
 			break;
 		case Constants.GREATER_THAN:
@@ -230,7 +230,7 @@ export async function checkListenerCallNumber(listenerName: string, compareNumbe
 				throw new Error(`Expected ${listenerName} to be called a minimum ${compareNumber} times, but called ${gatewayListenerCalls} times`);
 			} else {
 				const msg: string = `Verified that the listener was called at least ${compareNumber} times`;
-				BaseUtils.logMsg(msg, undefined);
+				BaseUtils.logMsg(msg);
 			}
 			break;
 		case Constants.LESS_THAN:
@@ -238,7 +238,7 @@ export async function checkListenerCallNumber(listenerName: string, compareNumbe
 					throw new Error(`Expected ${listenerName} to be called a maximum ${compareNumber} times, but called ${gatewayListenerCalls} times`);
 				} else {
 					const msg: string = `Verified that the listener was called a maximum ${compareNumber} times`;
-					BaseUtils.logMsg(msg, undefined);
+					BaseUtils.logMsg(msg);
 				}
 				break;
 		default:

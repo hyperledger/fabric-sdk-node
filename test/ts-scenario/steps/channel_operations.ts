@@ -30,7 +30,7 @@ When(/^I perform a (.+?) operation on channel (.+?) with (.+?) the response (inc
 	const response: any = await AdminUtils.performChannelQueryOperation(queryOperation, channelName, orgName, ccp, undefined);
 
 	// check response
-	BaseUtils.logMsg(`Recursively checking response object from ${queryOperation}`, undefined);
+	BaseUtils.logMsg(`Recursively checking response object from ${queryOperation}`);
 	validateObjectKeyMatch(JSON.parse(expectedResponse), response, compareType);
 
 });
@@ -47,7 +47,7 @@ When(/^I perform a (.+?) operation with arguments (.+?) on channel (.+?) with (.
 	const response: any = await AdminUtils.performChannelQueryOperation(queryOperation, channelName, orgName, ccp, JSON.parse(args));
 
 	// check response
-	BaseUtils.logMsg(`Recursively checking response object from ${queryOperation}`, undefined);
+	BaseUtils.logMsg(`Recursively checking response object from ${queryOperation}`);
 	validateObjectKeyMatch(JSON.parse(expectedResponse), response, compareType);
 });
 
@@ -85,7 +85,7 @@ function validateObjectKeyMatch(expected: any, actual: any, compareType: 'includ
 			for (const key of Object.keys(expected)) {
 				if (actual.hasOwnProperty(key)) {
 					// recursive call to scan property
-					BaseUtils.logMsg(`->Recursively checking response key ${key}`, undefined);
+					BaseUtils.logMsg(`->Recursively checking response key ${key}`);
 					return validateObjectKeyMatch(expected[key], actual[key], compareType);
 				} else {
 					BaseUtils.logAndThrow(`-->Missing key in response expected field ${key} to be present in ${{actual}}`);
@@ -99,18 +99,18 @@ function validateObjectKeyMatch(expected: any, actual: any, compareType: 'includ
 				if (expected !== actual) {
 					BaseUtils.logAndThrow(`-->Mismatched items expected ${expected} but found ${actual}`);
 				} else {
-					BaseUtils.logMsg(`-->Confirmed match of expected key value ${actual}`, undefined);
+					BaseUtils.logMsg(`-->Confirmed match of expected key value ${actual}`);
 				}
 				break;
 			case 'includes':
 				if (expected !== actual) {
 					return false;
 				} else {
-					BaseUtils.logMsg(`-->Confirmed existence of required 'include' key with value ${actual}`, undefined);
+					BaseUtils.logMsg(`-->Confirmed existence of required 'include' key with value ${actual}`);
 					return true;
 				}
 			case 'mirrors':
-				BaseUtils.logMsg(`-->Confirmed existence of required 'mirror' key name and presence of a value`, undefined);
+				BaseUtils.logMsg(`-->Confirmed existence of required 'mirror' key name and presence of a value`);
 				break;
 			default:
 				throw new Error(`Unconditioned switch type ${compareType} passed to validate match`);

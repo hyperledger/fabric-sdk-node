@@ -38,7 +38,7 @@ Given(/^I use the cli to create and join the channel named (.+?) on the deployed
 		for (const orgName of orgNames) {
 			const alreadyJoined: boolean = await AdminUtils.isOrgChannelJoined(orgName, ccp, channelName);
 			if (alreadyJoined) {
-				BaseUtils.logMsg(`Organization ${orgName} has already joined channel ${channelName}, skipping ... `, undefined);
+				BaseUtils.logMsg(`Organization ${orgName} has already joined channel ${channelName}, skipping ... `);
 			} else {
 				await Channel.cli_join_org_to_channel(orgName.toLowerCase(), channelName, (fabricState.type.localeCompare('tls') === 0));
 			}
@@ -80,7 +80,7 @@ Given(/^I use the cli to deploy a (.+?) smart contract named (.+?) at version (.
 		for (const orgName of orgNames) {
 			const isInstalled: boolean = await AdminUtils.isOrgChaincodeInstalled(orgName, ccp, ccName, ccVersion);
 			if (isInstalled) {
-				BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} has already been installed on the peers for organization ${orgName}`, undefined);
+				BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} has already been installed on the peers for organization ${orgName}`);
 			} else {
 				await Contract.cli_chaincode_install_for_org(ccType, ccName, ccVersion, orgName.toLowerCase());
 			}
@@ -89,7 +89,7 @@ Given(/^I use the cli to deploy a (.+?) smart contract named (.+?) at version (.
 		// Instantiate
 		const isInstantiated: boolean = await AdminUtils.isChaincodeInstantiatedOnChannel(Object.keys(ccp.getOrganizations())[0], ccp, channelName, ccName, ccVersion);
 		if (isInstantiated) {
-			BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} has already been instantiated on channel ${channelName} `, undefined);
+			BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} has already been instantiated on channel ${channelName} `);
 		} else {
 			await Contract.cli_chaincode_instantiate(ccType, ccName, ccVersion, initArgs, channelName, policy, (fabricState.type.localeCompare('tls') === 0));
 		}
@@ -111,7 +111,7 @@ Given(/^I use the cli to lifecycle deploy a (.+?) smart contract named (.+?) at 
 		// Skip if already committed on channel
 		const isCommitted: boolean = await AdminUtils.isOrgChaincodeLifecycleCommittedOnChannel(Object.keys(ccp.getOrganizations())[0], ccp, ccName, ccReference, channelName);
 		if (isCommitted) {
-			BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} has already been committed on channel ${channelName} as ${ccReference} `, undefined);
+			BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} has already been committed on channel ${channelName} as ${ccReference} `);
 		} else {
 			// Package on each org
 			for (const orgName of orgNames) {
@@ -122,7 +122,7 @@ Given(/^I use the cli to lifecycle deploy a (.+?) smart contract named (.+?) at 
 			for (const orgName of orgNames) {
 				const isInstalled: boolean = await AdminUtils.isOrgChaincodeLifecycleInstalledOnChannel(orgName, ccp, ccName, channelName);
 				if (isInstalled) {
-					BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} has already been lifecycle installed on the peers for organization ${orgName}`, undefined);
+					BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} has already been lifecycle installed on the peers for organization ${orgName}`);
 				} else {
 					await Contract.cli_lifecycle_chaincode_install(ccName, orgName.toLowerCase());
 				}

@@ -22,12 +22,12 @@ Given(/^I have a (.+?) backed gateway named (.+?) with discovery set to (.+?) fo
 	const tls: boolean = (fabricState.type.localeCompare('tls') === 0);
 
 	if (gateways && gateways.has(gatewayName)) {
-		BaseUtils.logMsg(`Gateway named ${gatewayName} already exists`, undefined);
+		BaseUtils.logMsg(`Gateway named ${gatewayName} already exists`);
 		return;
 	} else {
 		try {
 			// Create and persist the new gateway
-			BaseUtils.logMsg(`Creating new Gateway named ${gatewayName}`, undefined);
+			BaseUtils.logMsg(`Creating new Gateway named ${gatewayName}`);
 			const profilePath: string = path.join(__dirname, '../config', ccpName);
 			const ccp: CommonConnectionProfileHelper = new CommonConnectionProfileHelper(profilePath, true);
 			return await Gateway.createGateway(ccp, tls, userName, Constants.DEFAULT_ORG, gatewayName, JSON.parse(useDiscovery), walletType);
