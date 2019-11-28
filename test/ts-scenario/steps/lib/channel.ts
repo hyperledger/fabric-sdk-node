@@ -23,11 +23,11 @@ const VERBOSE_CLI: boolean = JSON.parse(Constants.CLI_VERBOSITY);
 export async function cli_channel_create(channelName: string, tls: boolean): Promise<void> {
 	try {
 		// Use CLI container to create a channel
-		BaseUtils.logMsg(`Attempting to create channel ${channelName} of type ${tls ? 'tls' : 'non-tls'}`, undefined);
+		BaseUtils.logMsg(`Attempting to create channel ${channelName} of type ${tls ? 'tls' : 'non-tls'}`);
 
 		// Do not create already existing channels
 		if (AdminUtils.isChannelCreated(channelName)) {
-			BaseUtils.logMsg(`Channel ${channelName} already exists, skipping creation`, undefined);
+			BaseUtils.logMsg(`Channel ${channelName} already exists, skipping creation`);
 			return;
 		}
 
@@ -51,7 +51,7 @@ export async function cli_channel_create(channelName: string, tls: boolean): Pro
 		await commandRunner.runShellCommand(true, createChannelCommand.join(' '), VERBOSE_CLI);
 		await BaseUtils.sleep(Constants.INC_SHORT);
 
-		BaseUtils.logMsg(`Channel ${channelName} has been created`, undefined);
+		BaseUtils.logMsg(`Channel ${channelName} has been created`);
 		AdminUtils.addToCreatedChannels(channelName);
 	} catch (err) {
 		BaseUtils.logError(`Failed to create channel ${channelName}`, err);
@@ -70,7 +70,7 @@ export async function cli_join_org_to_channel(orgName: string, channelName: stri
 
 	try {
 		// Use CLI container to join org to channel
-		BaseUtils.logMsg(`Attempting to join organization ${orgName} to channel ${channelName} of type ${tls ? 'tls' : 'non-tls'}`, undefined);
+		BaseUtils.logMsg(`Attempting to join organization ${orgName} to channel ${channelName} of type ${tls ? 'tls' : 'non-tls'}`);
 
 		let tlsOptions: string[];
 		if (tls) {
@@ -88,7 +88,7 @@ export async function cli_join_org_to_channel(orgName: string, channelName: stri
 		await commandRunner.runShellCommand(true, joinChannelCommand.join(' '), VERBOSE_CLI);
 
 		await BaseUtils.sleep(Constants.INC_SHORT);
-		BaseUtils.logMsg(`Channel ${channelName} has been joined by organization ${orgName}`, undefined);
+		BaseUtils.logMsg(`Channel ${channelName} has been joined by organization ${orgName}`);
 	} catch (err) {
 		BaseUtils.logError('Join Channel failure: ', err);
 		return Promise.reject(err);
@@ -106,10 +106,10 @@ export async function cli_channel_update(channelName: string, updateTx: string, 
 	try {
 
 		if (AdminUtils.channelHasBeenUpdated(channelName, updateTx)) {
-			BaseUtils.logMsg(`Channel ${channelName} has already been updated, skipping ...`, undefined);
+			BaseUtils.logMsg(`Channel ${channelName} has already been updated, skipping ...`);
 		} else {
 			// Use CLI container to update channel
-			BaseUtils.logMsg(`Using default CLI container ${Constants.DEFAULT_CLI_CONTAINER} to update channel ${channelName} of type ${tls ? 'tls' : 'non-tls'} with updateTx ${updateTx}`, undefined);
+			BaseUtils.logMsg(`Using default CLI container ${Constants.DEFAULT_CLI_CONTAINER} to update channel ${channelName} of type ${tls ? 'tls' : 'non-tls'} with updateTx ${updateTx}`);
 
 			let tlsOptions: string[];
 			if (tls) {
@@ -130,7 +130,7 @@ export async function cli_channel_update(channelName: string, updateTx: string, 
 			await BaseUtils.sleep(Constants.INC_SHORT);
 
 			AdminUtils.addToUpdatedChannel(channelName, updateTx);
-			BaseUtils.logMsg(`Channel ${channelName} has been updated`, undefined);
+			BaseUtils.logMsg(`Channel ${channelName} has been updated`);
 		}
 	} catch (err) {
 		BaseUtils.logError('Failed to update channels: ', (err.stack ? err.stack : err));

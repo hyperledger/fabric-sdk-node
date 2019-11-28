@@ -85,7 +85,7 @@ export async function sdk_chaincode_install_for_org(ccType: 'golang' | 'car' | '
 			targets,
 		};
 
-		BaseUtils.logMsg(`Using deprecated API to install chaincode with ID ${chaincodeId}@${ccVersion} on organization ${orgName} peers [${ccp.getPeersForOrganization(orgName).toString()}] ...`, undefined);
+		BaseUtils.logMsg(`Using deprecated API to install chaincode with ID ${chaincodeId}@${ccVersion} on organization ${orgName} peers [${ccp.getPeersForOrganization(orgName).toString()}] ...`);
 
 		const results: Client.ProposalResponseObject = await client.installChaincode(request as any);
 
@@ -108,7 +108,7 @@ export async function sdk_chaincode_install_for_org(ccType: 'golang' | 'car' | '
 		if (!proposalResponsesValid) {
 			throw new Error(`Failed to send install Proposal or receive valid response when using deprecated API: ${JSON.stringify(errors)}`);
 		} else {
-			BaseUtils.logMsg(`Successfully installed chaincode with ID ${chaincodeId}@${ccVersion} using deprecated API`, undefined);
+			BaseUtils.logMsg(`Successfully installed chaincode with ID ${chaincodeId}@${ccVersion} using deprecated API`);
 			return await BaseUtils.sleep(Constants.INC_SHORT);
 		}
 	} catch (err) {
@@ -173,7 +173,7 @@ export async function sdk_chaincode_instantiate(ccName: string, ccType: 'golang'
 	);
 
 	try {
-		BaseUtils.logMsg(`Using deprecated API to perform ${type} transaction on chaincode with ID ${chaincodeId}@${ccVersion} as organization ${orgName} ...`, undefined);
+		BaseUtils.logMsg(`Using deprecated API to perform ${type} transaction on chaincode with ID ${chaincodeId}@${ccVersion} as organization ${orgName} ...`);
 		// set user to send install chaincode requests
 		await AdminUtils.getSubmitter(client, true /* get peer org admin */, orgName, ccp);
 
@@ -234,7 +234,7 @@ export async function sdk_chaincode_instantiate(ccName: string, ccType: 'golang'
 					clearTimeout(handle);
 					if (code !== 'VALID') {
 						const msg: string = `The chaincode ${type} transaction was invalid, code = ${code}`;
-						BaseUtils.logError(msg, undefined);
+						BaseUtils.logError(msg);
 						reject(msg);
 					} else {
 						resolve();
@@ -242,7 +242,7 @@ export async function sdk_chaincode_instantiate(ccName: string, ccType: 'golang'
 				}, (err: Error) => {
 					clearTimeout(handle);
 					const msg: string = `There was a problem with the ${type} transaction event: ${JSON.stringify(err)}`;
-					BaseUtils.logError(msg, undefined);
+					BaseUtils.logError(msg);
 					reject(msg);
 				}, {
 					disconnect: true,
@@ -254,11 +254,11 @@ export async function sdk_chaincode_instantiate(ccName: string, ccType: 'golang'
 
 		const eventResults: any[] = await Promise.all(eventPromises) ;
 		if (eventResults && !(eventResults[0] instanceof Error) && (eventResults[0].status === 'SUCCESS')) {
-			BaseUtils.logMsg(`Successfully performed ${type} transaction on chaincode with ID ${chaincodeId}@${ccVersion} using deprecated API`, undefined);
+			BaseUtils.logMsg(`Successfully performed ${type} transaction on chaincode with ID ${chaincodeId}@${ccVersion} using deprecated API`);
 			return await BaseUtils.sleep(Constants.INC_SHORT);
 		} else {
 			const msg: string = `Failed to order the ${type} transaction using deprecated API. Error code: ${eventResults[0].status}`;
-			BaseUtils.logError(msg, undefined);
+			BaseUtils.logError(msg);
 			throw new Error(msg);
 		}
 	} catch (err) {

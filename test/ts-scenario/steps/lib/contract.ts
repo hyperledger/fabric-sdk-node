@@ -29,7 +29,7 @@ export async function cli_chaincode_install_for_org(ccType: string, ccName: stri
 
 	try {
 		// Use CLI container to install smart contract (no TLS options required)
-		BaseUtils.logMsg(`Attempting to install smart contract ${persistName} for organization ${orgName} using the CLI`, undefined);
+		BaseUtils.logMsg(`Attempting to install smart contract ${persistName} for organization ${orgName} using the CLI`);
 
 		const ccPath: string = path.join('/', 'opt', 'gopath', 'src', 'github.com', 'chaincode', ccType, ccName);
 		let installCommand: string[];
@@ -44,7 +44,7 @@ export async function cli_chaincode_install_for_org(ccType: string, ccName: stri
 
 		await commandRunner.runShellCommand(true, installCommand.join(' '), VERBOSE_CLI);
 		await BaseUtils.sleep(Constants.INC_SHORT);
-		BaseUtils.logMsg(`Smart contract ${persistName} has been installed for organization ${orgName} using the CLI`, undefined);
+		BaseUtils.logMsg(`Smart contract ${persistName} has been installed for organization ${orgName} using the CLI`);
 	} catch (err) {
 		BaseUtils.logError(`Failed to install smart contract ${ccName} using the CLI`, err);
 		return Promise.reject(err);
@@ -65,7 +65,7 @@ export async function cli_chaincode_instantiate(ccType: string, ccName: string, 
 	try {
 		// Use CLI container to instantiate smart contract
 		const persistName: string = `${ccName}@${ccVersion}`;
-		BaseUtils.logMsg(`Attempting to instantiate smart contract ${persistName} on channel ${channelName} with args ${initArgs} using default container ${Constants.DEFAULT_CLI_CONTAINER}`, undefined);
+		BaseUtils.logMsg(`Attempting to instantiate smart contract ${persistName} on channel ${channelName} with args ${initArgs} using default container ${Constants.DEFAULT_CLI_CONTAINER}`);
 
 		let tlsOptions: string[];
 		if (tls) {
@@ -115,12 +115,12 @@ export async function cli_chaincode_instantiate(ccType: string, ccName: string, 
 			if (response.includes(`Name: ${ccName}, Version: ${ccVersion}`)) {
 				deployed = true;
 			} else {
-				BaseUtils.logMsg('Awaiting smart contract instantiation ...', undefined);
+				BaseUtils.logMsg('Awaiting smart contract instantiation ...');
 				await BaseUtils.sleep(Constants.INC_SHORT);
 			}
 		}
 		clearTimeout(timeoutId);
-		BaseUtils.logMsg(`Smart contract ${ccName} has been instantiated on channel ${channelName} using the CLI`, undefined);
+		BaseUtils.logMsg(`Smart contract ${ccName} has been instantiated on channel ${channelName} using the CLI`);
 	} catch (err) {
 		BaseUtils.logError(`Failed to instantiate smart contract ${ccName} on channel ${channelName} using the CLI`, err);
 		return Promise.reject(err);
@@ -177,7 +177,7 @@ export async function retrievePackageIdForLabelOnOrg(label: string, orgName: str
 
 	// if it is not found in the above, throw
 	const msg: string = `Unable to find packageId for contract label ${label}`;
-	BaseUtils.logMsg(msg, undefined);
+	BaseUtils.logMsg(msg);
 	throw new Error(msg);
 }
 
@@ -191,7 +191,7 @@ export async function cli_lifecycle_chaincode_package(ccType: string, ccName: st
 
 	try {
 		// Use CLI container to package smart contract (no TLS options required)
-		BaseUtils.logMsg(`Attempting lifecyle package of smart contract ${ccName} for organization ${orgName} using the CLI`, undefined);
+		BaseUtils.logMsg(`Attempting lifecyle package of smart contract ${ccName} for organization ${orgName} using the CLI`);
 
 		const ccPath: string = path.join('/', 'opt', 'gopath', 'src', 'github.com', 'chaincode', ccType, ccName);
 		let packageCommand: string[];
@@ -205,7 +205,7 @@ export async function cli_lifecycle_chaincode_package(ccType: string, ccName: st
 
 		await commandRunner.runShellCommand(true, packageCommand.join(' '), VERBOSE_CLI);
 		await BaseUtils.sleep(Constants.INC_SHORT);
-		BaseUtils.logMsg(`Smart contract ${ccName} has been packaged for organization ${orgName} using the CLI`, undefined);
+		BaseUtils.logMsg(`Smart contract ${ccName} has been packaged for organization ${orgName} using the CLI`);
 	} catch (err) {
 		BaseUtils.logError(`Failed to package smart contract ${ccName} using the CLI`, err);
 		return Promise.reject(err);
@@ -220,7 +220,7 @@ export async function cli_lifecycle_chaincode_package(ccType: string, ccName: st
 export async function cli_lifecycle_chaincode_install(packageName: string, orgName: string): Promise<void> {
 	try {
 		// Use CLI container to package smart contract (no TLS options required)
-		BaseUtils.logMsg(`Attempting lifecycle install of smart contract package ${packageName} for organization ${orgName} using the CLI`, undefined);
+		BaseUtils.logMsg(`Attempting lifecycle install of smart contract package ${packageName} for organization ${orgName} using the CLI`);
 
 		let installCommand: string[];
 		installCommand = [
@@ -231,7 +231,7 @@ export async function cli_lifecycle_chaincode_install(packageName: string, orgNa
 
 		await commandRunner.runShellCommand(true, installCommand.join(' '), VERBOSE_CLI);
 		await BaseUtils.sleep(Constants.INC_SHORT);
-		BaseUtils.logMsg(`Smart contract package ${packageName} has been installed for organization ${orgName} using the CLI`, undefined);
+		BaseUtils.logMsg(`Smart contract package ${packageName} has been installed for organization ${orgName} using the CLI`);
 	} catch (err) {
 		BaseUtils.logError(`Failed to install smart contract package ${packageName} using the CLI`, err);
 		return Promise.reject(err);
@@ -251,7 +251,7 @@ export async function cli_lifecycle_chaincode_install(packageName: string, orgNa
 export async function cli_lifecycle_chaincode_approve(ccReference: string, ccVersion: string, orgName: string, channelName: string, packageId: string, sequence: string, tls: boolean): Promise<void> {
 	try {
 		// Use CLI container to package smart contract
-		BaseUtils.logMsg(`Attempting lifecycle approve of smart contract with reference ${ccReference} for organization ${orgName} using the CLI`, undefined);
+		BaseUtils.logMsg(`Attempting lifecycle approve of smart contract with reference ${ccReference} for organization ${orgName} using the CLI`);
 
 		let approveCommand: string[];
 		approveCommand = [
@@ -270,7 +270,7 @@ export async function cli_lifecycle_chaincode_approve(ccReference: string, ccVer
 
 		await commandRunner.runShellCommand(true, approveCommand.join(' '), VERBOSE_CLI);
 		await BaseUtils.sleep(Constants.INC_SHORT);
-		BaseUtils.logMsg(`Smart contract with reference ${ccReference} has been approved for organization ${orgName} using the CLI`, undefined);
+		BaseUtils.logMsg(`Smart contract with reference ${ccReference} has been approved for organization ${orgName} using the CLI`);
 	} catch (err) {
 		BaseUtils.logError(`Failed to approve smart contract with reference ${ccReference} using the CLI`, err);
 		return Promise.reject(err);
@@ -290,7 +290,7 @@ export async function cli_lifecycle_chaincode_approve(ccReference: string, ccVer
 export async function cli_lifecycle_chaincode_commit(ccReference: string, ccVersion: string, orgName: string, channelName: string, ccp: CommonConnectionProfileHelper, sequence: string, tls: boolean): Promise<void> {
 	try {
 		// Use CLI container to commit smart contract
-		BaseUtils.logMsg(`Attempting lifecycle commit of smart contract with reference ${ccReference} for organization ${orgName} using the CLI`, undefined);
+		BaseUtils.logMsg(`Attempting lifecycle commit of smart contract with reference ${ccReference} for organization ${orgName} using the CLI`);
 
 		const ordererName: string = ccp.getOrderersForChannel(channelName)[0];
 		const ordererUrl: string = ccp.getOrderer(ordererName).url;
@@ -318,7 +318,7 @@ export async function cli_lifecycle_chaincode_commit(ccReference: string, ccVers
 
 		await commandRunner.runShellCommand(true, commitCommand.join(' '), VERBOSE_CLI);
 		await BaseUtils.sleep(Constants.INC_SHORT);
-		BaseUtils.logMsg(`Smart contract with reference ${ccReference} has been committed for organization ${orgName} using the CLI`, undefined);
+		BaseUtils.logMsg(`Smart contract with reference ${ccReference} has been committed for organization ${orgName} using the CLI`);
 	} catch (err) {
 		BaseUtils.logError(`Failed to commit smart contract with reference ${ccReference} using the CLI`, err);
 		return Promise.reject(err);

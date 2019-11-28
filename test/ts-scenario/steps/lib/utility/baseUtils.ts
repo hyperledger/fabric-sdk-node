@@ -19,28 +19,28 @@ export function sleep(ms: number): Promise<void> {
 	return new Promise((resolve: any): any => setTimeout(resolve, ms));
 }
 
-export function logMsg(msg: string, obj: any): void {
-	if (obj) {
-		// tslint:disable-next-line:no-console
-		console.log(msg, obj);
-	} else {
+export function logMsg(msg: string, obj?: any): void {
+	if (typeof obj === 'undefined') {
 		// tslint:disable-next-line:no-console
 		console.log(msg);
+	} else {
+		// tslint:disable-next-line:no-console
+		console.log(msg, obj);
 	}
 }
 
-export function logError(msg: string, obj: any): void {
-	if (obj) {
-		// tslint:disable-next-line:no-console
-		console.error(msg, obj);
-	} else {
+export function logError(msg: string, obj?: any): void {
+	if (typeof obj === 'undefined') {
 		// tslint:disable-next-line:no-console
 		console.error(msg);
+	} else {
+		// tslint:disable-next-line:no-console
+		console.error(msg, obj);
 	}
 }
 
 export function logAndThrow(msg: any): Error {
-	logError(msg, undefined);
+	logError(msg);
 	if (msg instanceof Error) {
 		throw msg;
 	} else {
@@ -54,7 +54,7 @@ export function checkString(actual: string, expected: string, enableThrow: boole
 		if (enableThrow) {
 			logAndThrow(msg);
 		} else {
-			logError(msg, undefined);
+			logError(msg);
 		}
 	}
 }
@@ -65,7 +65,7 @@ export function checkProperty(object: any, expectedProperty: string, enableThrow
 		if (enableThrow) {
 			logAndThrow(msg);
 		} else {
-			logError(msg, undefined);
+			logError(msg);
 		}
 	}
 }
@@ -76,7 +76,7 @@ export function checkSizeEquality(item0: number, item1: number, greaterThan: boo
 		if (enableThrow) {
 			logAndThrow(msg);
 		} else {
-			logError(msg, undefined);
+			logError(msg);
 		}
 	}
 
@@ -85,7 +85,7 @@ export function checkSizeEquality(item0: number, item1: number, greaterThan: boo
 		if (enableThrow) {
 			logAndThrow(msg);
 		} else {
-			logError(msg, undefined);
+			logError(msg);
 		}
 	}
 }
@@ -112,11 +112,11 @@ export function logScenarioStart(featureType: string): void {
 		stateStore.set(Constants.FEATURES, features);
 	}
 
-	logMsg('\n\n\n**********************************************************************************', undefined);
-	logMsg('**********************************************************************************', undefined);
-	logMsg(`****** ${featureType} Scenario ${counter} ******`, undefined);
-	logMsg('**********************************************************************************', undefined);
-	logMsg('**********************************************************************************\n\n\n', undefined);
+	logMsg('\n\n\n**********************************************************************************');
+	logMsg('**********************************************************************************');
+	logMsg(`****** ${featureType} Scenario ${counter} ******`);
+	logMsg('**********************************************************************************');
+	logMsg('**********************************************************************************\n\n\n');
 }
 
 export function recursiveDirDelete(dirPath: string): void {

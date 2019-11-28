@@ -194,7 +194,7 @@ export async function assignOrgAdmin(client: Client, orgName: string, ccp: Commo
  * @param chaincodeVersion the version of the contract
  */
 export async function isOrgChaincodeInstalled(orgName: string, ccp: CommonConnectionProfileHelper, chaincodeName: string, chaincodeVersion: string): Promise<boolean> {
-	BaseUtils.logMsg(`Checking if smart contract ${chaincodeName} at version ${chaincodeVersion} has been installed`, undefined);
+	BaseUtils.logMsg(`Checking if smart contract ${chaincodeName} at version ${chaincodeVersion} has been installed`);
 	const clientPath: string = path.join(__dirname, Constants.UTIL_TO_CONFIG, orgName + '.json');
 	const orgClient: Client = await Client.loadFromConfig(clientPath);
 
@@ -204,7 +204,7 @@ export async function isOrgChaincodeInstalled(orgName: string, ccp: CommonConnec
 	// Get the first target peer for our org
 	const peer: Client.Peer = orgClient.getPeersForOrg(orgName + 'MSP')[0];
 
-	BaseUtils.logMsg(`Querying peer ${peer.getName()} for known chaincode`, undefined);
+	BaseUtils.logMsg(`Querying peer ${peer.getName()} for known chaincode`);
 	const message: Client.ChaincodeQueryResponse = await orgClient.queryInstalledChaincodes(peer, true);
 
 	// loop over message array if present
@@ -220,7 +220,7 @@ export async function isOrgChaincodeInstalled(orgName: string, ccp: CommonConnec
 }
 
 export async function isOrgChaincodeLifecycleInstalledOnChannel(orgName: string, ccp: CommonConnectionProfileHelper, chaincodeName: string, channelName: string): Promise<boolean> {
-	BaseUtils.logMsg(`Checking if smart contract ${chaincodeName} has been installed`, undefined);
+	BaseUtils.logMsg(`Checking if smart contract ${chaincodeName} has been installed`);
 	const clientPath: string = path.join(__dirname, Constants.UTIL_TO_CONFIG, orgName + '.json');
 	const orgClient: Client = await Client.loadFromConfig(clientPath);
 
@@ -231,7 +231,7 @@ export async function isOrgChaincodeLifecycleInstalledOnChannel(orgName: string,
 	const channel: Client.Channel = orgClient.getChannel(channelName);
 	const peer: Client.Peer = orgClient.getPeersForOrg(orgName + 'MSP')[0];
 
-	BaseUtils.logMsg(`Querying peer ${peer.getName()} for known chaincode`, undefined);
+	BaseUtils.logMsg(`Querying peer ${peer.getName()} for known chaincode`);
 	const installedRequests: Client.QueryInstalledChaincodesRequest = {
 		target: peer,
 		txId: orgClient.newTransactionID(true),
@@ -251,7 +251,7 @@ export async function isOrgChaincodeLifecycleInstalledOnChannel(orgName: string,
 }
 
 export async function isOrgChaincodeLifecycleCommittedOnChannel(orgName: string, ccp: CommonConnectionProfileHelper, chaincodeName: string, deployedAs: string, channelName: string): Promise<boolean> {
-	BaseUtils.logMsg(`Checking if smart contract has been committed to channel ${channelName} as ${deployedAs}`, undefined);
+	BaseUtils.logMsg(`Checking if smart contract has been committed to channel ${channelName} as ${deployedAs}`);
 	const clientPath: string = path.join(__dirname, Constants.UTIL_TO_CONFIG, orgName + '.json');
 	const orgClient: Client = await Client.loadFromConfig(clientPath);
 
@@ -262,7 +262,7 @@ export async function isOrgChaincodeLifecycleCommittedOnChannel(orgName: string,
 	const channel: Client.Channel = orgClient.getChannel(channelName);
 	const peer: Client.Peer = orgClient.getPeersForOrg(orgName + 'MSP')[0];
 
-	BaseUtils.logMsg(`Querying peer ${peer.getName()} for known chaincode`, undefined);
+	BaseUtils.logMsg(`Querying peer ${peer.getName()} for known chaincode`);
 	const installedRequests: Client.QueryInstalledChaincodesRequest = {
 		target: peer,
 		txId: orgClient.newTransactionID(true),
@@ -296,7 +296,7 @@ export async function isOrgChaincodeLifecycleCommittedOnChannel(orgName: string,
  * @param chaincodeVersion the version of the contract
  */
 export async function isChaincodeInstantiatedOnChannel(orgName: string, ccp: CommonConnectionProfileHelper, channelName: string, chaincodeName: string, chaincodeVersion: string): Promise<boolean> {
-	BaseUtils.logMsg(`Checking if smart contract ${chaincodeName} has been instantiated on channel ${channelName}`, undefined);
+	BaseUtils.logMsg(`Checking if smart contract ${chaincodeName} has been instantiated on channel ${channelName}`);
 	const clientPath: string = path.join(__dirname, Constants.UTIL_TO_CONFIG, orgName + '.json');
 	const orgClient: Client = await Client.loadFromConfig(clientPath);
 
@@ -307,7 +307,7 @@ export async function isChaincodeInstantiatedOnChannel(orgName: string, ccp: Com
 	const channel: Client.Channel = orgClient.getChannel(channelName);
 	const peer: Client.Peer = orgClient.getPeersForOrg(orgName + 'MSP')[0];
 
-	BaseUtils.logMsg(`Querying channel ${channel.getName()} for instantiated chaincode`, undefined);
+	BaseUtils.logMsg(`Querying channel ${channel.getName()} for instantiated chaincode`);
 	const message: Client.ChaincodeQueryResponse = await channel.queryInstantiatedChaincodes(peer, true);
 
 	// loop over message array if present
@@ -333,7 +333,7 @@ export async function performChannelQueryOperation(queryOperation: string, chann
 	const channel: Client.Channel = orgClient.getChannel(channelName);
 	const peer: Client.Peer = orgClient.getPeersForOrg(orgName + 'MSP')[0];
 
-	BaseUtils.logMsg(`Performing query operation ${queryOperation} on channel ${channel.getName()}`, undefined);
+	BaseUtils.logMsg(`Performing query operation ${queryOperation} on channel ${channel.getName()}`);
 
 	switch (queryOperation) {
 		case 'queryInfo':
@@ -420,7 +420,7 @@ export async function isOrgChannelJoined(orgName: string, ccp: CommonConnectionP
 	// Get the first target peer for our org
 	const peer: Client.Peer = orgClient.getPeersForOrg(orgName + 'MSP')[0];
 
-	BaseUtils.logMsg(`Querying peer ${peer.getName()} for known channels`, undefined);
+	BaseUtils.logMsg(`Querying peer ${peer.getName()} for known channels`);
 	const message: Client.ChannelQueryResponse = await orgClient.queryChannels(peer, true);
 
 	// loop over message array if present

@@ -45,17 +45,6 @@
             "check-separator",
             "check-type"
         ],
-        "no-floating-promises": true,
-        "typedef": [
-            true,
-            "call-signature",
-            "arrow-call-signature",
-            "parameter",
-            "arrow-parameter",
-            "property-declaration",
-            "variable-declaration",
-            "member-variable-declaration",
-            "array-destructuring"
-        ]
+        "no-floating-promises": true
     }
 }
