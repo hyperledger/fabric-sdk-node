@@ -195,7 +195,7 @@ describe('AbstractEventListener', () => {
 			sinon.assert.notCalled(eventHub.disconnect);
 		});
 
-		it('should set replay to false if startBlock is set', async () => {
+		it('should allow replay if startBlock is set', async () => {
 			const eventHub = sandbox.createStubInstance(ChannelEventHub);
 			eventHub.isconnected.returns(true);
 			eventHub.isFiltered.returns(false);
@@ -203,15 +203,27 @@ describe('AbstractEventListener', () => {
 			testListener.options.replay = true;
 			testListener.clientOptions.startBlock = 0;
 			await testListener.register();
-			expect(testListener.options.replay).to.be.false;
+			expect(testListener.options.replay).to.be.true;
 		});
 
-		it('should set replay to false if endBlock is set', async () => {
+		it('should allow replay if endBlock is set', async () => {
 			const eventHub = sandbox.createStubInstance(ChannelEventHub);
 			eventHub.isconnected.returns(true);
 			eventHub.isFiltered.returns(false);
 			testListener.eventHub = eventHub;
 			testListener.options.replay = true;
+			testListener.clientOptions.endBlock = 10;
+			await testListener.register();
+			expect(testListener.options.replay).to.be.true;
+		});
+
+		it('should not allow replay if both start and end block are set', async () => {
+			const eventHub = sandbox.createStubInstance(ChannelEventHub);
+			eventHub.isconnected.returns(true);
+			eventHub.isFiltered.returns(false);
+			testListener.eventHub = eventHub;
+			testListener.options.replay = true;
+			testListener.clientOptions.startBlock = 0;
 			testListener.clientOptions.endBlock = 10;
 			await testListener.register();
 			expect(testListener.options.replay).to.be.false;
