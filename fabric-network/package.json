@@ -61,7 +61,7 @@
     "check-coverage": true,
     "statements": 94,
     "branches": 95,
-    "functions":89,
+    "functions": 89,
     "lines": 94
   },
   "license": "Apache-2.0",
