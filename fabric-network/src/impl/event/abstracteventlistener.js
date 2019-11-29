@@ -45,6 +45,10 @@ class AbstractEventListener {
 		this.options = options;
 		this.clientOptions = {}; // fabric-client ChannelEventHub options
 
+		if (this.options.hasOwnProperty('unregister')) {
+			this.clientOptions.unregister = this.options.unregister;
+		}
+
 		if (this.options.startBlock !== undefined && this.options.startBlock !== null) {
 			this.clientOptions.startBlock = Number(this.options.startBlock);
 			delete this.options.startBlock;
@@ -110,7 +114,7 @@ class AbstractEventListener {
 				logger.error('Opted to use checkpointing without defining a checkpointer');
 			}
 			if ((this.clientOptions.startBlock !== null) && (this.clientOptions.startBlock !== undefined) ||
-			(this.clientOptions.endBlock !== null) && (this.clientOptions.endBlock !== undefined)) {
+				(this.clientOptions.endBlock !== null) && (this.clientOptions.endBlock !== undefined)) {
 				logger.debug('startBlock and/or endBlock were given. Disabling event replay');
 				this.options.replay = false;
 			}
@@ -225,7 +229,7 @@ class AbstractEventListener {
 		}
 
 		const useCheckpointing = this.useEventReplay() && this.checkpointer instanceof BaseCheckpointer ||
-									(this.clientOptions.startBlock || this.clientOptions.endBlock);
+			(this.clientOptions.startBlock || this.clientOptions.endBlock);
 
 		if (useCheckpointing && !this.options.fixedEventHub) {
 			this.eventHub = this.getEventHubManager().getReplayEventHub();
