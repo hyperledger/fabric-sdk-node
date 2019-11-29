@@ -16,10 +16,10 @@
 const fs = require('fs-extra');
 const klaw = require('klaw');
 const path = require('path');
-const sbuf = require('stream-buffers');
 const {Utils: utils} = require('fabric-common');
 
 const BasePackager = require('./BasePackager');
+const BufferStream = require('./BufferStream');
 
 const logger = utils.getLogger('packager/Golang.js');
 
@@ -71,9 +71,9 @@ class GolangPackager extends BasePackager {
 			descriptors = srcDescriptors.concat(metaDescriptors);
 		}
 
-		const buffer = new sbuf.WritableStreamBuffer();
-		await super.generateTarGz(descriptors, buffer);
-		return buffer.getContents();
+		const stream = new BufferStream();
+		await super.generateTarGz(descriptors, stream);
+		return stream.toBuffer();
 	}
 
 	/**
