@@ -90,7 +90,7 @@ HFC defines the following abstract classes for application developers to supply 
 
 ### Continuous Integration
 
-Please have a look at [Continuous Integration Process](docs/sdk-node-ci.md)
+Our Continuous Integration is run using [Azure Pipelines](https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_build). Builds are automatically triggered on opening pull requests.
 
 ### Contributing
 
