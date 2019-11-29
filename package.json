@@ -6,8 +6,8 @@
   "docsLatestVersion": "release-1.4",
   "main": "index.js",
   "repository": {
-    "type": "gerrit",
-    "url": "https://gerrit.hyperledger.org/r/#/admin/projects/fabric-sdk-node"
+    "type": "git",
+    "url": "https://github.com/hyperledger/fabric-sdk-node"
   },
   "homepage": "https://www.hyperledger.org/projects/fabric",
   "author": {
