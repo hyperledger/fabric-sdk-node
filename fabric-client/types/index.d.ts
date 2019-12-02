@@ -568,17 +568,35 @@ declare namespace Client { // tslint:disable-line:no-namespace
 
 	export type ChaincodeInstallRequestv1 = ChaincodePackageInstallRequest | ChaincodePathInstallRequest;
 
+	export interface CollectionConfig {
+		name: string;
+		policy: {
+			identities: any[];
+			policy: any;
+		};
+		requiredPeerCount: number;
+		maxPeerCount: number;
+		blockToLive?: number;
+		memberOnlyRead?: boolean;
+	}
+
+	export type CollectionsConfig = CollectionConfig[];
+
+	export interface EndorsementPolicy {
+		identities: any[];
+		policy: any;
+	}
 	export interface ChaincodeInstantiateUpgradeRequest {
 		targets?: Peer[] | string[];
 		chaincodeType?: ChaincodeType;
 		chaincodeId: string;
 		chaincodeVersion: string;
 		txId: TransactionId;
-		'collections-config'?: string;
+		'collections-config'?: string | CollectionsConfig;
 		transientMap?: TransientMap;
 		fcn?: string;
 		args?: string[];
-		'endorsement-policy'?: any;
+		'endorsement-policy'?: EndorsementPolicy;
 	}
 
 	export interface ChaincodeInvokeRequest {
