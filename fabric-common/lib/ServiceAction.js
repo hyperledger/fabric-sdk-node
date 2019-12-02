@@ -13,14 +13,14 @@ const fabprotos = require('fabric-protos');
 
 /**
  * @classdesc
- * This is an abstract class that represents an action on a fabric service.
+ * This is an base class that represents an action on a fabric service.
  *
  * @class
  */
 const ServiceAction = class {
 
 	/**
-	 * Construct a ServiceAction abstract object.
+	 * Construct a ServiceAction base object.
 	 *
 	 * @returns {ServiceAction} The ServiceAction instance.
 	 */

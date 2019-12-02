@@ -21,6 +21,7 @@ class ServiceEndpoint {
 		this.mspid = mspid;
 		this.client = client;
 		this.connected = false;
+		this.connectAttempted = false;
 		this.endpoint = null;
 		this.service = null;
 		this.serviceClass = null;
@@ -28,16 +29,61 @@ class ServiceEndpoint {
 	}
 
 	/**
-	 * Connects to a ServiceEndpoint with the given url and opts.
-	 * If a connect exist an error will be thrown. The application must
-	 * disconnect the connection before re-connecting to the service.
+	 * Use this method to give this service endpoint an endpoint and
+	 * options that it may connect to at a later time. Use the {@link ServiceEndpoint#connect}
+	 * method without a endpoint or options to connect using the setting provided here.
 	 *
 	 * @param {Endpoint} endpoint - Service connection options including the url.
 	 * @param {ConnectionOptions} options - Any specific options for this instance
 	 *  of the connection to the peer. These will override options from the
 	 *  endpoint service connection options.
 	 */
-	async connect(endpoint = checkParameter('endpoint'), options = {}) {
+	setEndpoint(endpoint = checkParameter('endpoint'), options = {}) {
+		const method = `setEndpoint[${this.type}-${this.name}]`;
+		logger.debug(`${method} - start `);
+
+		this.endpoint = endpoint;
+		this.options = Object.assign({}, endpoint.options, options);
+		logger.debug(`${method} - connect may be run`);
+	}
+
+	/**
+	 * Check that this ServiceEndpoint is connected and has been assigned
+	 * an endpoint so that it could be connected. If a previous attempt
+	 * to conntect has been tried unsuccessfully it will be considered
+	 * not to be connectable.
+	 */
+	isConnectable() {
+		const method = `isConnectable[${this.type}-${this.name}]`;
+		logger.debug(`${method} - start `);
+
+		let result = false;
+		if (this.connected) {
+			logger.debug(`${method} - this servive endpoint has been connected`);
+			result = true;
+		} else if (this.endpoint && !this.connectAttempted) {
+			logger.debug(`${method} - this service endpoint has been assigned an endpoint, connect may be run`);
+			result = true;
+		}
+
+		return result;
+	}
+
+	/**
+	 * Connects this ServiceEndpoint with the given url and opts.
+	 * If a connect exist an error will be thrown. The application must
+	 * disconnect the connection before re-connecting to the service.
+	 *
+	 * @param {Endpoint} [endpoint] - Service connection options including the url.
+	 * When an endpoint is not provided, the setEndpoint() must have been called
+	 * previously. If  setEndpoint was previously call and a endpoint is provided
+	 * here then it will replace the existing endpoint.
+	 * @param {ConnectionOptions} [options] - Any specific options for this instance
+	 *  of the connection to the peer. These will override options from the
+	 *  endpoint service connection options. Endpoint options and option provided
+	 *  here will replace options from the setEndpoint() if previously called.
+	 */
+	async connect(endpoint, options = {}) {
 		const method = `connect[${this.type}-${this.name}]`;
 		logger.debug(`${method} - start `);
 
@@ -48,18 +94,26 @@ class ServiceEndpoint {
 		}
 
 		if (this.service) {
-			const message = `This service endpoint ${this.name}-${this.endpoint.url} has an active service connection`;
+			const message = `This service endpoint ${this.name}-${this.endpoint.url} has an active grpc service connection`;
 			logger.error(message);
 			throw Error(message);
 		}
 
-		this.endpoint = endpoint;
-		this.options = Object.assign({}, endpoint.options, options);
+		if (!endpoint && !this.endpoint) {
+			checkParameter('endpoint');
+		}
 
-		logger.debug(`${method} - endorser service does not exist, will create service for this peer ${this.name}`);
+		if (endpoint) {
+			this.endpoint = endpoint;
+		}
+
+		this.options = Object.assign({}, this.endpoint.options, options);
+
+		this.connectAttempted = true;
+		logger.debug(`${method} - create the grpc service for ${this.name}`);
 		this.service = new this.serviceClass(this.endpoint.addr, this.endpoint.creds, this.options);
 		await this.waitForReady(this.service);
-		logger.debug(`${method} - completed the waitForReady for this peer ${this.name}`);
+		logger.debug(`${method} - completed the waitForReady for ${this.name}`);
 	}
 
 	/**
@@ -70,7 +124,7 @@ class ServiceEndpoint {
 		logger.debug(`${method} - start `);
 
 		if (this.service) {
-			logger.debug(`${method} ${this.type} ${this.name} - closing service connection ${this.endpoint.addr}`);
+			logger.debug(`${method} ${this.type} ${this.name} - closing grpc service connection ${this.endpoint.addr}`);
 			this.service.close();
 			this.service = null;
 			this.connected = false;
@@ -128,19 +182,18 @@ class ServiceEndpoint {
 	/*
 	 * Get this remote endpoints characteristics
 	 */
-	getCharacteristics() {
-		const characteristics = {
-			type: this.type,
-			name: this.name,
-			url: this.endpoint ? this.endpoint.url : '',
-			options: this.endpoint ? this.endpoint.options : {}
-		};
-		// remove private key
-		if (characteristics.options.clientKey) {
-			delete characteristics.options.clientKey;
-		}
+	getCharacteristics(results) {
+		results.connection = {};
+		results.connection.type = this.type;
+		results.connection.name = this.name;
+		results.connection.url = this.endpoint ? this.endpoint.url : '';
+		results.connection.options = this.endpoint ? this.endpoint.options : {};
+		results.peer = this.name;
 
-		return characteristics;
+		// remove private key
+		if (results.connection.options.clientKey) {
+			delete results.connection.options.clientKey;
+		}
 	}
 
 	/**

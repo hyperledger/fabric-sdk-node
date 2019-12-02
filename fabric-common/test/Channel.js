@@ -95,33 +95,33 @@ describe('Channel', () => {
 		it('should require a chaincode name', () => {
 			(() => {
 				channel.newEndorsement();
-			}).should.throw('Missing chaincodeName parameter');
+			}).should.throw('Missing chaincodeId parameter');
 		});
 
 		it('should be able to create an endorsement', () => {
-			channel.newEndorsement('chaincodename');
+			channel.newEndorsement('chaincodeId');
 		});
 	});
 	describe('#newQuery', () => {
 		it('should require a chaincode name', () => {
 			(() => {
 				channel.newQuery();
-			}).should.throw('Missing chaincodeName parameter');
+			}).should.throw('Missing chaincodeId parameter');
 		});
 
 		it('should be able to create a query', () => {
-			channel.newQuery('chaincodename');
+			channel.newQuery('chaincodeId');
 		});
 	});
 	describe('#newCommit', () => {
 		it('should require a chaincode name', () => {
 			(() => {
 				channel.newCommit();
-			}).should.throw('Missing chaincodeName parameter');
+			}).should.throw('Missing chaincodeId parameter');
 		});
 
 		it('should be able to create a commit', () => {
-			channel.newCommit('chaincodename');
+			channel.newCommit('chaincodeId');
 		});
 	});
 	describe('#newEventService', () => {

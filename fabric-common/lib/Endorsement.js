@@ -25,13 +25,13 @@ class Endorsement extends Proposal {
 	/**
 	 * Construct a Proposal object.
 	 *
-	 * @param {string} chaincodeName - The chaincode this proposal will execute
+	 * @param {string} chaincodeId - The chaincode this proposal will execute
 	 * @param {Channel} channel - The channel of this proposal
 	 * @returns {Proposal} The Proposal instance.
 	 */
-	constructor(chaincodeName = checkParameter('chaincodeName'), channel = checkParameter('channel')) {
-		super(chaincodeName, channel);
-		const method = `constructor[${chaincodeName}]`;
+	constructor(chaincodeId = checkParameter('chaincodeId'), channel = checkParameter('channel')) {
+		super(chaincodeId, channel);
+		const method = `constructor[${chaincodeId}]`;
 		logger.debug('%s - start', method);
 		this.type = TYPE;
 	}
@@ -43,7 +43,7 @@ class Endorsement extends Proposal {
 		const method = `newCommit[${this.name}]`;
 		logger.debug(`${method} - start`);
 
-		return new Commit(this.chaincodeName, this.channel, this);
+		return new Commit(this.chaincodeId, this.channel, this);
 	}
 
 	/**
@@ -51,7 +51,7 @@ class Endorsement extends Proposal {
 	 */
 	toString() {
 
-		return `Endorsement: {chaincodeName: ${this.chaincodeName}, channel: ${this.channel.name}}`;
+		return `Endorsement: {chaincodeId: ${this.chaincodeId}, channel: ${this.channel.name}}`;
 	}
 }
 

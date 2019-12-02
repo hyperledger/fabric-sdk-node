@@ -14,7 +14,7 @@ const ServiceAction = require('./ServiceAction.js');
 
 /**
  * @classdesc
- * This is an abstract class represents a Proposal definition and the
+ * This is an base class represents a Proposal definition and the
  * base for actions on a proposal.
  * This class allows an application to contain all proposal attributes and
  * artifacts in one place during runtime. Use the {@link Endorsement}
@@ -27,16 +27,16 @@ class Proposal extends ServiceAction {
 	/**
 	 * Construct a Proposal object.
 	 *
-	 * @param {string} chaincodeName - The chaincode this proposal will execute
+	 * @param {string} chaincodeId - The chaincode this proposal will execute
 	 * @param {Channel} channel - The channel of this proposal
 	 * @returns {Proposal} The Proposal instance.
 	 */
-	constructor(chaincodeName = checkParameter('chaincodeName'), channel = checkParameter('channel')) {
-		super(chaincodeName);
-		logger.debug(`${TYPE}.constructor[${chaincodeName}] - start `);
+	constructor(chaincodeId = checkParameter('chaincodeId'), channel = checkParameter('channel')) {
+		super(chaincodeId);
+		logger.debug(`${TYPE}.constructor[${chaincodeId}] - start `);
 		this.type = TYPE;
 
-		this.chaincodeName = chaincodeName;
+		this.chaincodeId = chaincodeId;
 		this.channel = channel;
 		this.collectionsInterest = [];
 		this.chaincodesCollectionsInterest = [];
@@ -48,7 +48,7 @@ class Proposal extends ServiceAction {
 	 * @returns {string} The transaction ID of the proposal
 	 */
 	getTransactionId() {
-		const method = `getTransactionId[${this.chaincodeName}]`;
+		const method = `getTransactionId[${this.chaincodeId}]`;
 		logger.debug('%s - start', method);
 		if (!this._action || !this._action.transactionId) {
 			throw Error('The proposal has not been built');
@@ -72,13 +72,13 @@ class Proposal extends ServiceAction {
 	 *    ]
 	 */
 	buildProposalInterest() {
-		const method = `buildProposalInterest[${this.chaincodeName}]`;
+		const method = `buildProposalInterest[${this.chaincodeId}]`;
 		logger.debug('%s - start', method);
 
 		let interest = [];
 		const chaincode = {};
 		interest.push(chaincode);
-		chaincode.name = this.chaincodeName;
+		chaincode.name = this.chaincodeId;
 		if (this.collectionsInterest.length > 0) {
 			chaincode.collectionNames = this.collectionsInterest;
 		}
@@ -96,7 +96,7 @@ class Proposal extends ServiceAction {
 	 * @param {string} collectionName - collection name
 	 */
 	addCollectionInterest(collectionName) {
-		const method = `addCollectionInterest[${this.chaincodeName}]`;
+		const method = `addCollectionInterest[${this.chaincodeId}]`;
 		logger.debug('%s - start', method);
 		if (typeof collectionName === 'string') {
 			this.collectionsInterest.push(collectionName);
@@ -111,21 +111,21 @@ class Proposal extends ServiceAction {
 	 * Use this method to add a chaincode name and collection names
 	 * that this proposal's chaincode will call. These will be used
 	 * to build a Discovery interest. {@link Proposal#buildProposalInterest}
-	 * @param {string} chaincodeName - chaincode name
+	 * @param {string} chaincodeId - chaincode name
 	 * @param  {...string} collectionNames - one or more collection names
 	 */
-	addChaincodeCollectionsInterest(chaincodeName, ...collectionNames) {
-		const method = `addChaincodeCollectionsInterest[${this.chaincodeName}]`;
+	addChaincodeCollectionsInterest(chaincodeId, ...collectionNames) {
+		const method = `addChaincodeCollectionsInterest[${this.chaincodeId}]`;
 		logger.debug('%s - start', method);
-		if (typeof chaincodeName === 'string') {
+		if (typeof chaincodeId === 'string') {
 			const added_chaincode = {};
-			added_chaincode.name = chaincodeName;
+			added_chaincode.name = chaincodeId;
 			if (collectionNames && collectionNames.length > 0) {
 				added_chaincode.collectionNames = collectionNames;
 			}
 			this.chaincodesCollectionsInterest.push(added_chaincode);
 		} else {
-			throw Error('Invalid chaincodeName parameter');
+			throw Error('Invalid chaincodeId parameter');
 		}
 
 		return this;
@@ -160,7 +160,7 @@ class Proposal extends ServiceAction {
 	 * @param {BuildProposalRequest} request - The proposals values of the request.
 	 */
 	build(idContext = checkParameter('idContext'), request = {}) {
-		const method = `build[${this.chaincodeName}][${this.type}]`;
+		const method = `build[${this.chaincodeId}][${this.type}]`;
 		logger.debug('%s - start', method);
 
 		const {fcn,  args = [], transientMap, init} = request;
@@ -184,25 +184,28 @@ class Proposal extends ServiceAction {
 		if (fcn) {
 			this._action.fcn = fcn;
 			this._action.args.push(Buffer.from(this._action.fcn, 'utf8'));
-			logger.debug('%s - adding function arg:%s', method, this._action.fcn);
+			logger.debug('%s - adding function %s', method, this._action.fcn);
 		} else {
-			logger.debug('%s - not adding a function arg:%s', method);
+			logger.debug('%s - not adding function', method);
 		}
 
 		for (let i = 0; i < args.length; i++) {
 			logger.debug('%s - adding arg %s', method, args[i]);
-			if (typeof args[i] === 'string') {
-				this._action.args.push(Buffer.from(args[i], 'utf8'));
+			let arg;
+			if (args[i] instanceof Buffer) {
+				arg = args[i];
 			} else {
-				this._action.args.push(args[i]);
+				const arg_as_string = args[i].toString();
+				arg = Buffer.from(arg_as_string, 'utf8');
 			}
+			this._action.args.push(arg);
 		}
 
-		logger.debug('%s - chaincode ID:%s', method, this._action.chaincodeName);
+		logger.debug('%s - chaincode ID:%s', method, this.chaincodeId);
 		const chaincodeSpec = new fabprotos.protos.ChaincodeSpec();
 		chaincodeSpec.setType(fabprotos.protos.ChaincodeSpec.Type.GOLANG);
 		const chaincode_id = new fabprotos.protos.ChaincodeID();
-		chaincode_id.setName(this.chaincodeName);
+		chaincode_id.setName(this.chaincodeId);
 		chaincodeSpec.setChaincodeId(chaincode_id);
 		const input = new fabprotos.protos.ChaincodeInput();
 		input.setArgs(this._action.args);
@@ -213,7 +216,7 @@ class Proposal extends ServiceAction {
 
 		const channelHeader = this.channel.buildChannelHeader(
 			fabprotos.common.HeaderType.ENDORSER_TRANSACTION,
-			this.chaincodeName,
+			this.chaincodeId,
 			this._action.transactionId
 		);
 
@@ -320,9 +323,10 @@ message Endorsement {
 	 * @returns {ProposalResponse} The results of sending
 	 */
 	async send(request = {}) {
-		const method = `send[${this.chaincodeName}]`;
+		const method = `send[${this.chaincodeId}]`;
 		logger.debug('%s - start', method);
 		const {handler, targets, requestTimeout} = request;
+		logger.debug('%s - requestTimeout %s', method, requestTimeout);
 		const signedEnvelope = this.getSignedProposal();
 		this._proposalResponses = [];
 		this._proposalErrors = [];
@@ -419,7 +423,7 @@ message Endorsement {
 	 * the signature are valid, false otherwise.
 	 */
 	verifyProposalResponse(proposalResponse = checkParameter('proposalResponse')) {
-		const method = `verifyProposalResponse[${this.chaincodeName}]`;
+		const method = `verifyProposalResponse[${this.chaincodeId}]`;
 		logger.debug('%s - start', method);
 
 		if (proposalResponse instanceof Error) {
@@ -496,7 +500,7 @@ message Endorsement {
 	 * @returns {boolean} True when all proposals compare equally, false otherwise.
 	 */
 	compareProposalResponseResults(proposalResponses = checkParameter('proposalResponses')) {
-		const method = `compareProposalResponseResults[${this.chaincodeName}]`;
+		const method = `compareProposalResponseResults[${this.chaincodeId}]`;
 		logger.debug('%s - start', method);
 
 		if (!Array.isArray(proposalResponses)) {
@@ -531,7 +535,7 @@ message Endorsement {
 	 */
 	toString() {
 
-		return `Proposal: {chaincodeName: ${this.chaincodeName}, channel: ${this.channel.name}}`;
+		return `Proposal: {chaincodeId: ${this.chaincodeId}, channel: ${this.channel.name}}`;
 	}
 }
 

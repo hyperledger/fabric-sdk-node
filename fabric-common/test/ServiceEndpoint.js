@@ -46,15 +46,19 @@ describe('ServiceEndpoint', () => {
 
 	describe('#connect', () => {
 		it('should reject if no endpoint', async () => {
-			await serviceEndpoint.connect().should.be.rejectedWith(/Missing endpoint parameter/);
+			serviceEndpoint.connected = false;
+			serviceEndpoint.service = null;
+			serviceEndpoint.endpoint = null;
+			await serviceEndpoint.connect().should.be.rejectedWith('Missing endpoint parameter');
 		});
 
 		it('should reject if connected', async () => {
+
 			await serviceEndpoint.connect('send').should.be.rejectedWith(/is connected/);
 		});
 		it('should reject if service exist', async () => {
 			serviceEndpoint.connected = false;
-			await serviceEndpoint.connect('send').should.be.rejectedWith(/has an active service connection/);
+			await serviceEndpoint.connect('send').should.be.rejectedWith('This service endpoint myserviceEndpoint-grpc://host:2700 has an active grpc service connection');
 		});
 		it('should reject if timeout', async () => {
 			serviceEndpoint.endpoint = null;
@@ -138,28 +142,30 @@ describe('ServiceEndpoint', () => {
 
 	describe('#getCharacteristics', () => {
 		it('should get a good characteristics object', async () => {
-			const characteristics = serviceEndpoint.getCharacteristics();
-			characteristics.type.should.be.equal('ServiceEndpoint');
-			characteristics.name.should.be.equal('myserviceEndpoint');
-			characteristics.url.should.be.equal('grpc://host:2700');
+			const something = sinon.stub();
+			serviceEndpoint.getCharacteristics(something);
+			something.connection.type.should.be.equal('ServiceEndpoint');
+			something.connection.name.should.be.equal('myserviceEndpoint');
+			something.connection.url.should.be.equal('grpc://host:2700');
+			something.peer.should.be.equal('myserviceEndpoint');
 		});
 		it('should get a good characteristics object without endpoint', async () => {
 			serviceEndpoint.endpoint = null;
-			const characteristics = serviceEndpoint.getCharacteristics();
-			characteristics.type.should.be.equal('ServiceEndpoint');
-			characteristics.name.should.be.equal('myserviceEndpoint');
-			characteristics.url.should.be.equal('');
-			characteristics.options.should.be.deep.equal({});
+			const something = sinon.stub();
+			serviceEndpoint.getCharacteristics(something);
+			something.connection.type.should.be.equal('ServiceEndpoint');
+			something.connection.name.should.be.equal('myserviceEndpoint');
+			something.connection.url.should.be.equal('');
+			something.connection.options.should.be.deep.equal({});
+			something.peer.should.be.equal('myserviceEndpoint');
 		});
 		it('should get a good characteristics object without clientKey', async () => {
 			serviceEndpoint.endpoint.options.clientKey = 'clientKey';
 			serviceEndpoint.endpoint.options.clientCert = 'clientCert';
-			const characteristics = serviceEndpoint.getCharacteristics();
-			characteristics.type.should.be.equal('ServiceEndpoint');
-			characteristics.name.should.be.equal('myserviceEndpoint');
-			characteristics.url.should.be.equal('grpc://host:2700');
-			characteristics.options.clientCert.should.be.equal('clientCert');
-			should.equal(characteristics.options.clientKey, undefined);
+			const something = sinon.stub();
+			serviceEndpoint.getCharacteristics(something);
+			something.connection.options.clientCert.should.be.equal('clientCert');
+			should.equal(something.connection.options.clientKey, undefined);
 		});
 	});
 

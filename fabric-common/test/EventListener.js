@@ -19,55 +19,60 @@ describe('EventListener', () => {
 		it('should require a listenerType', () => {
 			(() => {
 				new EventListener();
+			}).should.throw('Missing eventService parameter');
+		});
+		it('should require a listenerType', () => {
+			(() => {
+				new EventListener('eventService');
 			}).should.throw('Missing listenerType parameter');
 		});
 		it('should require a callback', () => {
 			(() => {
-				new EventListener('block');
+				new EventListener('eventService', 'block');
 			}).should.throw('Missing callback parameter');
 		});
 		it('should require an event', () => {
 			(() => {
-				new EventListener('tx', {});
+				new EventListener('eventService', 'tx', {});
 			}).should.throw('Missing event parameter');
 		});
 		it('should require an event', () => {
 			(() => {
-				new EventListener('chaincode', {});
+				new EventListener('eventService', 'chaincode', {});
 			}).should.throw('Missing event parameter');
 		});
 		it('should default block listener', () => {
-			const el = new EventListener('block', {});
+			const el = new EventListener('eventService', 'block', {});
 			el.type.should.equal('EventListener');
 			el.unregister.should.be.false;
 		});
 		it('should default tx listener', () => {
-			const el = new EventListener('tx', {}, {}, 'txid');
+			const el = new EventListener('eventService', 'tx', {}, {}, 'txid');
 			el.type.should.equal('EventListener');
 			el.unregister.should.be.true;
 		});
 		it('should default chaincode listener', () => {
-			const el = new EventListener('chaincode', {}, {}, 'event');
+			const el = new EventListener('eventService', 'chaincode', {}, {}, 'event');
 			el.type.should.equal('EventListener');
 			el.unregister.should.be.false;
 		});
 		it('should with option block listener', () => {
-			const el = new EventListener('block', {}, {unregister: true});
+			const el = new EventListener('eventService', 'block', {}, {unregister: true});
 			el.type.should.equal('EventListener');
 			el.unregister.should.be.true;
 		});
 		it('should with option tx listener', () => {
-			const el = new EventListener('tx', {}, {unregister: false}, 'txid');
+			const el = new EventListener('eventService', 'tx', {}, {unregister: false}, 'txid');
 			el.type.should.equal('EventListener');
 			el.unregister.should.be.false;
 		});
 		it('should with option chaincode listener', () => {
-			const el = new EventListener('chaincode', {}, {unregister: true}, 'event');
+			const el = new EventListener('eventService', 'chaincode', {}, {unregister: true}, 'event');
 			el.type.should.equal('EventListener');
 			el.unregister.should.be.true;
 		});
 		it('should set start and end of block listener', () => {
-			const el = new EventListener('block', {}, {startBlock: 33, endBlock: 44});
+			const el = new EventListener('eventService', 'block', {}, {startBlock: 33, endBlock: 44});
 			el.type.should.equal('EventListener');
 			el.unregister.should.be.false;
 			el.startBlock.should.be.deep.equal(convertToLong(33));
@@ -85,7 +90,7 @@ describe('EventListener', () => {
 			let blockNumber = convertToLong(14);
 			let transactionId = '1';
 			let transactionStatus = 'invalid';
-			const eventListener = new EventListener('tx', (error, event) => {
+			const eventListener = new EventListener('eventService', 'tx', (error, event) => {
 				blockNumber = event.blockNumber;
 				transactionId = event.transactionId;
 				transactionStatus = event.transactionStatus;
@@ -112,7 +117,7 @@ describe('EventListener', () => {
 			let blockNumber = convertToLong(9);
 			let transactionId = '9';
 			let transactionStatus = 'invalid';
-			const eventListener = new EventListener('tx', (error, event) => {
+			const eventListener = new EventListener('eventService', 'tx', (error, event) => {
 				blockNumber = event.blockNumber;
 				transactionId = event.transactionId;
 				transactionStatus = event.transactionStatus;
@@ -139,7 +144,7 @@ describe('EventListener', () => {
 			let blockNumber = convertToLong(9);
 			let transactionId = '9';
 			let transactionStatus = 'invalid';
-			const eventListener = new EventListener('tx', (error, event) => {
+			const eventListener = new EventListener('eventService', 'tx', (error, event) => {
 				blockNumber = event.blockNumber;
 				transactionId = event.transactionId;
 				transactionStatus = event.transactionStatus;
@@ -159,7 +164,7 @@ describe('EventListener', () => {
 
 		it('call the onEvent with an error', () => {
 			let called_with_error = false;
-			const eventListener = new EventListener('tx', (error, event) => {
+			const eventListener = new EventListener('eventService', 'tx', (error, event) => {
 				called_with_error = true;
 			}, null, '12345');
 
@@ -169,7 +174,7 @@ describe('EventListener', () => {
 
 		it('have the callback throw an error', () => {
 			let called_with_error = false;
-			const eventListener = new EventListener('tx', (error, event) => {
+			const eventListener = new EventListener('eventService', 'tx', (error, event) => {
 				called_with_error = true;
 				throw Error('callback error');
 			}, null, '12345');
@@ -186,14 +191,14 @@ describe('EventListener', () => {
 
 	describe('#toString', () => {
 		it('should return string', () => {
-			const eventListener = new EventListener('tx', {}, {}, '1AB34');
+			const eventListener = new EventListener('eventService', 'tx', {}, {}, '1AB34');
 			const string = eventListener.toString();
 			should.equal(string,
 				'EventListener: { listenerType: tx, startBlock: null, endBlock: null, unregister: true, event: 1AB34}');
 		});
 
 		it('should return string', () => {
-			const eventListener = new EventListener('chaincode', {}, {}, 'event');
+			const eventListener = new EventListener('eventService', 'chaincode', {}, {}, 'event');
 			const string = eventListener.toString();
 			should.equal(string,
 				'EventListener: { listenerType: chaincode, startBlock: null, endBlock: null, unregister: false, event: event}');

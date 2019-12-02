@@ -61,7 +61,7 @@ class Endorser extends ServiceEndpoint {
 	 */
 	sendProposal(signedProposal, timeout) {
 		const method = `sendProposal[${this.name}]`;
-		logger.debug(`${method} - Start ----${this.name} ${this.endpoint.url}`);
+		logger.debug(`${method} - Start ----${this.name} ${this.endpoint.url} timeout:${timeout}`);
 
 		return new Promise((resolve, reject) => {
 			if (!signedProposal) {
@@ -77,7 +77,9 @@ class Endorser extends ServiceEndpoint {
 			const send_timeout = setTimeout(() => {
 				clearTimeout(send_timeout);
 				logger.error(`${method} - ${this.name} timed out after:${rto}`);
-				return reject(new Error('REQUEST TIMEOUT'));
+				const return_error = new Error('REQUEST TIMEOUT');
+				this.getCharacteristics(return_error);
+				return reject(return_error);
 			}, rto);
 
 			this.service.processProposal(signedProposal, (err, proposalResponse) => {
@@ -85,28 +87,28 @@ class Endorser extends ServiceEndpoint {
 				if (err) {
 					logger.error(`${method} - Received error response from: ${this.endpoint.url} error: ${err}`);
 					if (err instanceof Error) {
-						err.connection = this.getCharacteristics();
+						this.getCharacteristics(err);
 						reject(err);
 					} else {
 						const out_error = new Error(err);
-						out_error.connection = this.getCharacteristics();
+						this.getCharacteristics(out_error);
 						reject(out_error);
 					}
 				} else {
 					if (proposalResponse) {
 						logger.debug(`${method} - Received proposal response from peer "${this.endpoint.url}": status - ${proposalResponse.response && proposalResponse.response.status}`);
 						if (proposalResponse.response && proposalResponse.response.status) {
-							proposalResponse.connection = this.getCharacteristics();
+							this.getCharacteristics(proposalResponse);
 							resolve(proposalResponse);
 						} else {
 							const return_error = new Error(`GRPC service failed to get a proper response from the peer "${this.endpoint.url}".`);
-							return_error.connection = this.getCharacteristics();
+							this.getCharacteristics(return_error);
 							logger.error(`${method} - rejecting with:${return_error}`);
 							reject(return_error);
 						}
 					} else {
 						const return_error = new Error(`GRPC service got a null or undefined response from the peer "${this.endpoint.url}".`);
-						return_error.connection = this.getCharacteristics();
+						this.getCharacteristics(return_error);
 						logger.error(`${method} - rejecting with:${return_error}`);
 						reject(return_error);
 					}

@@ -48,7 +48,7 @@ describe('Proposal', () => {
 		it('should require a name', () => {
 			(() => {
 				new Proposal();
-			}).should.throw('Missing chaincodeName parameter');
+			}).should.throw('Missing chaincodeId parameter');
 		});
 		it('should require a Channel', () => {
 			(() => {
@@ -132,7 +132,7 @@ describe('Proposal', () => {
 		it('should require a string chaincode name', () => {
 			(() => {
 				proposal.addChaincodeCollectionsInterest({});
-			}).should.throw('Invalid chaincodeName parameter');
+			}).should.throw('Invalid chaincodeId parameter');
 		});
 	});
 
@@ -371,7 +371,7 @@ describe('Proposal', () => {
 	describe('#toString', () => {
 		it('should return string', () => {
 			const string = proposal.toString();
-			should.equal(string, 'Proposal: {chaincodeName: chaincode, channel: mychannel}');
+			should.equal(string, 'Proposal: {chaincodeId: chaincode, channel: mychannel}');
 		});
 	});
 });

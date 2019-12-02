@@ -149,22 +149,22 @@ export class ServiceAction {
 }
 
 export class Commit extends Proposal{
-	constructor(chaincodeName: string, channel: Channel, endorsement: Endorsement);
+	constructor(chaincodeId: string, channel: Channel, endorsement: Endorsement);
 	public build(idContext: IdentityContext, request: any): Buffer;
 	public send(request: any): Promise<any>;
 }
 
 export class Endorsement extends Proposal{
-	constructor(chaincodeName: string, channel: Channel);
+	constructor(chaincodeId: string, channel: Channel);
 	public newCommit(): Commit;
 }
 
 export class Query extends Proposal{
-	constructor(chaincodeName: string, channel: Channel);
+	constructor(chaincodeId: string, channel: Channel);
 }
 
 export class Proposal extends ServiceAction{
-	constructor(chaincodeName: string, channel: Channel);
+	constructor(chaincodeId: string, channel: Channel);
 	public getTransactionId(): string;
 	public buildProposalInterest(): any;
 	public addCollectionInterest(collectionName: string): Proposal;
@@ -176,7 +176,7 @@ export class Proposal extends ServiceAction{
 }
 
 export class DiscoveryService extends ServiceAction{
-	constructor(chaincodeName: string, channel: Channel);
+	constructor(chaincodeId: string, channel: Channel);
 	public setDiscoverer(discoverer: Discoverer): DiscoveryService;
 	public newHandler(): DiscoveryHandler;
 	public build(idContext: IdentityContext, request: any): Buffer;
@@ -188,6 +188,7 @@ export class DiscoveryService extends ServiceAction{
 export class EventListener {
 	constructor(listenerType: string, callback: any, options: any, event: string);
 	onEvent(error: Error, event: any): void;
+	unregister(): void;
 }
 
 export interface EventCallback {
@@ -223,7 +224,7 @@ export interface ChaincodeEvent {
 export class EventService extends ServiceAction{
 	public startBlock: Long | string;
 	public endBlock: Long | string;
-	constructor(chaincodeName: string, channel: Channel);
+	constructor(chaincodeId: string, channel: Channel);
 	public setEventer(discoverer: Eventer): EventService;
 	public getLastBlockNumber(): Long;
 	public close(): void;
@@ -273,9 +274,9 @@ export class Channel {
 	constructor(name: string, client: Client);
 	public close(): void;
 
-	public newEndorsement(chaincodeName: string): Endorsement;
-	public newQuery(chaincodeName: string): Query;
-	public newCommit(chaincodeName: string): Commit;
+	public newEndorsement(chaincodeId: string): Endorsement;
+	public newQuery(chaincodeId: string): Query;
+	public newCommit(chaincodeId: string): Commit;
 	public newEventService(name: string): EventService;
 	public newDiscoveryService(name: string): DiscoveryService;
 
