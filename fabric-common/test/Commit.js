@@ -47,10 +47,10 @@ describe('Commit', () => {
 	});
 
 	describe('#constructor', () => {
-		it('should require a chaincodeName', () => {
+		it('should require a chaincodeId', () => {
 			(() => {
 				new Commit();
-			}).should.throw('Missing chaincodeName parameter');
+			}).should.throw('Missing chaincodeId parameter');
 		});
 		it('should require a Channel', () => {
 			(() => {
@@ -150,7 +150,7 @@ describe('Commit', () => {
 	describe('#toString', () => {
 		it('should return string', () => {
 			const string = commit.toString();
-			should.equal(string, 'Commit: {chaincodeName: chaincode, channel: mychannel}');
+			should.equal(string, 'Commit: {chaincodeId: chaincode, channel: mychannel}');
 		});
 	});
 });

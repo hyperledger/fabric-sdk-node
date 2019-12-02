@@ -168,6 +168,11 @@ describe('DiscoveryService', () => {
 				discovery.setTargets(discoverer);
 			}).should.throw('targets parameter is not an array');
 		});
+		it('should require targets when array is empty', () => {
+			(() => {
+				discovery.setTargets([]);
+			}).should.throw('No targets provided');
+		});
 		it('should throw when target not connected', () => {
 			(() => {
 				discovery.setTargets([discoverer]);
@@ -442,7 +447,7 @@ describe('DiscoveryService', () => {
 			discovery._current_target = endorser;
 			endorser.endpoint = endpoint;
 			const results = discovery._buildUrl('hostname', 1000);
-			should.equal(results, 'grpc://hostname:1000');
+			should.equal(results, 'grpcs://hostname:1000');
 		});
 		it('should handle override setting', () => {
 			Client.setConfigSetting('discovery-override-protocol', 'grpcs');

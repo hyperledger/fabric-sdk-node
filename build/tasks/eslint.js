@@ -26,6 +26,7 @@ gulp.task('eslint', () => {
 		'!fabric-common/coverage/**',
 		'!node_modules/**',
 		'!fabric-protos/**',
+		'!test/typescript/**/*.js',
 	]).pipe(eslint())
 		.pipe(eslint.format())
 		.pipe(eslint.failAfterError());

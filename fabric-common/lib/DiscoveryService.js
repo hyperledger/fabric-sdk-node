@@ -45,7 +45,7 @@ class DiscoveryService extends ServiceAction {
 		this.discoveryResults = null;
 		this.asLocalhost = false;
 
-		this._current_target = null;
+		this.currentTarget = null;
 		this.targets = null; // will be used when targets are not provided
 
 	}
@@ -63,6 +63,10 @@ class DiscoveryService extends ServiceAction {
 
 		if (!Array.isArray(targets)) {
 			throw Error('targets parameter is not an array');
+		}
+
+		if (targets.length < 1) {
+			throw Error('No targets provided');
 		}
 
 		for (const discoverer of targets) {
@@ -286,7 +290,7 @@ class DiscoveryService extends ServiceAction {
 			logger.debug(`${method} - about to discover on ${target.endpoint.url}`);
 			try {
 				response = await target.sendDiscovery(signedEnvelope, this.requestTimeout);
-				this._current_target = target;
+				this.currentTarget = target;
 				break;
 			} catch (error) {
 				response = error;
@@ -610,7 +614,7 @@ class DiscoveryService extends ServiceAction {
 		const host_port = address.split(':');
 		const url = this._buildUrl(host_port[0], host_port[1]);
 		logger.debug(`${method} - create a new endorser ${url}`);
-		const peer = this.client.getEndorser(address, msp_id);
+		const peer = this.client.newEndorser(address);
 		const end_point = this.client.newEndpoint(this._buildOptions(address, url, host_port[0], msp_id));
 		try {
 			logger.debug(`${method} - about to connect to endorser ${address} url:${url}`);
@@ -638,8 +642,8 @@ class DiscoveryService extends ServiceAction {
 		// discovery should also use TLS.
 		let protocol = null;
 		let isTLS = true;
-		if (this._current_target) {
-			isTLS = this._current_target.endpoint.isTLS();
+		if (this.currentTarget) {
+			isTLS = this.currentTarget.endpoint.isTLS();
 		}
 		protocol = isTLS ? 'grpcs' : 'grpc';
 		// but if not, use the following to override

@@ -26,13 +26,13 @@ class Commit extends Proposal {
 	/**
 	 * Construct a Proposal object.
 	 *
-	 * @param {string} chaincodeName - The chaincode this proposal will execute
+	 * @param {string} chaincodeId - The chaincode this proposal will execute
 	 * @param {Channel} channel - The channel of this proposal
 	 * @returns {Proposal} The Proposal instance.
 	 */
-	constructor(chaincodeName = checkParameter('chaincodeName'), channel = checkParameter('channel'), endorsement) {
-		super(chaincodeName, channel);
-		const method = `constructor[${chaincodeName}]`;
+	constructor(chaincodeId = checkParameter('chaincodeId'), channel = checkParameter('channel'), endorsement) {
+		super(chaincodeId, channel);
+		const method = `constructor[${chaincodeId}]`;
 		logger.debug('%s - start', method);
 		this.type = TYPE;
 		this._endorsement = endorsement;
@@ -53,7 +53,7 @@ class Commit extends Proposal {
 	 * @returns {byte[]} The commits payload bytes to be signed.
 	 */
 	build(idContext = checkParameter('idContext'), request = {}) {
-		const method = `build[${this.chaincodeName}]`;
+		const method = `build[${this.chaincodeId}]`;
 		logger.debug('%s - start - %s', method, idContext.name);
 
 		if (request.endorsement) {
@@ -144,7 +144,7 @@ class Commit extends Proposal {
 	 * @returns commit results
 	 */
 	async send(request = {}) {
-		const method = `send[${this.chaincodeName}]`;
+		const method = `send[${this.chaincodeId}]`;
 		logger.debug('%s - start', method);
 
 		const {handler, targets, requestTimeout} = request;
@@ -152,12 +152,12 @@ class Commit extends Proposal {
 		const envelope = this.getSignedEnvelope();
 
 		if (handler) {
-			logger.debug('%s - calling the handler');
+			logger.debug('%s - calling the handler', method);
 			const result = await handler.commit(envelope, request);
 
 			return result;
 		} else if (targets) {
-			logger.debug('%s - sending to the targets');
+			logger.debug('%s - sending to the targets', method);
 			const committers = this.channel.getTargetCommitters(targets);
 			let bad_result = {};
 			bad_result.status = 'UNKNOWN';
@@ -173,7 +173,7 @@ class Commit extends Proposal {
 
 			return bad_result;
 		} else {
-			throw Error('Missing targets parameter');
+			throw checkParameter('targets');
 		}
 	}
 
@@ -182,7 +182,7 @@ class Commit extends Proposal {
 	 */
 	toString() {
 
-		return `Commit: {chaincodeName: ${this.chaincodeName}, channel: ${this.channel.name}}`;
+		return `Commit: {chaincodeId: ${this.chaincodeId}, channel: ${this.channel.name}}`;
 	}
 }
 

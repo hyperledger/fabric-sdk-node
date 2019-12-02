@@ -11,14 +11,14 @@ const logger = getLogger(TYPE);
 
 /**
  * @classdesc
- * This is an abstract class that represents an action on a fabric service.
+ * This is an base class that represents an action on a fabric service.
  *
  * @class
  */
 const ServiceHandler = class {
 
 	/**
-	 * Construct a ServiceHandler abstract object.
+	 * Construct a ServiceHandler base object.
 	 *
 	 * @returns {ServiceHandler} The ServiceHandler instance.
 	 */

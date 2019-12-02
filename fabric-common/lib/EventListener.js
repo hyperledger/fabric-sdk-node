@@ -23,6 +23,7 @@ class EventListener {
 	/*
 	 * Constructs a Event Listener
 	 *
+	 * @param {EventService} eventService - The EventService where this listener is registered
 	 * @param {string} listenerType - a string to indicate the type of event registration
 	 *  "block", "tx", or "chaincode".
 	 * @param {function} callback - Callback for event matches
@@ -43,7 +44,8 @@ class EventListener {
 	 * @param {string} [chaincodeId] - optional - used to isolate chaincode events
 	 *  to a specific chaincode.
 	 */
-	constructor(listenerType = checkParameter('listenerType'), callback = checkParameter('callback'), options, event, chaincodeId) {
+	constructor(eventService = checkParameter('eventService'), listenerType = checkParameter('listenerType'), callback = checkParameter('callback'), options, event, chaincodeId) {
+		this.eventService = eventService;
 		this.type = TYPE;
 		this.listenerType = listenerType;
 		if (listenerType === EventListener.TX && !event) {
@@ -95,6 +97,13 @@ class EventListener {
 		} catch (err) {
 			logger.error('Event notification callback failed', err);
 		}
+	}
+
+	/**
+	 * Convenience method to for users to unregister this listener
+	 */
+	unregisterEventListener() {
+		this.eventService.unregisterEventListener(this);
 	}
 
 	toString() {
