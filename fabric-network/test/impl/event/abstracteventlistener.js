@@ -101,6 +101,15 @@ describe('AbstractEventListener', () => {
 			expect(listener.options).to.deep.equal({eventHubConnectTimeout: 30000, eventHubConnectWait: 1000});
 			expect(listener.clientOptions).to.deep.equal({startBlock: 0, endBlock: 10});
 		});
+
+		it('should set unregister in clientOptions if set on the listener', () => {
+			const callback = (err) => {};
+			const listener = new AbstractEventListener(network, 'testlistener', callback, {unregister: true});
+			expect(listener.options).to.deep.equal({eventHubConnectTimeout: 30000, eventHubConnectWait: 1000, unregister: true});
+			expect(listener.clientOptions).to.deep.equal({
+				unregister: true
+			});
+		});
 	});
 
 	describe('#register', () => {
@@ -135,7 +144,7 @@ describe('AbstractEventListener', () => {
 			expect(testListener.eventHub).to.be.null;
 		});
 
-		it('should return undefined and log when no peers are available', async() => {
+		it('should return undefined and log when no peers are available', async () => {
 			eventHubManagerStub.getPeers.returns([]);
 			await testListener.register();
 		});
