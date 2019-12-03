@@ -24,14 +24,14 @@ class Query extends Proposal {
 	/**
 	 * Construct a Proposal object.
 	 *
-	 * @param {string} chaincodeName - The chaincode this proposal will execute
+	 * @param {string} chaincodeId - The chaincode this proposal will execute
 	 * @param {Channel} channel - The channel of this proposal
 	 * @returns {Proposal} The Proposal instance.
 	 */
-	constructor(chaincodeName = checkParameter('chaincodeName'), channel = checkParameter('channel')) {
-		super(chaincodeName, channel);
+	constructor(chaincodeId = checkParameter('chaincodeId'), channel = checkParameter('channel')) {
+		super(chaincodeId, channel);
 
-		const method = `constructor[${chaincodeName}]`;
+		const method = `constructor[${chaincodeId}]`;
 		logger.debug('%s - start', method);
 		this.type = TYPE;
 	}
@@ -41,7 +41,7 @@ class Query extends Proposal {
 	 */
 	toString() {
 
-		return `Query: {chaincodeName: ${this.chaincodeName}, channel: ${this.channel.name}}`;
+		return `Query: {chaincodeId: ${this.chaincodeId}, channel: ${this.channel.name}}`;
 	}
 }
 

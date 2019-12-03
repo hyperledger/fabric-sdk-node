@@ -155,6 +155,7 @@ module.exports = function () {
 							if (error) {
 								testUtil.logError(`Failed to receive transaction event for ${endorsement.getTransactionId()}`);
 								reject(error);
+								return;
 							}
 							testUtil.logMsg(`Successfully received the transaction event for ${event.transactionId} with status of ${event.status} in block number ${event.blockNumber}`);
 							resolve('Commit success');
@@ -439,7 +440,7 @@ module.exports = function () {
 					const found_peers = channel.getEndorsers('Org1MSP');
 					for (const found_peer of found_peers) {
 						const eventer = client.newEventer(found_peer.name + '-eventer');
-						eventer.connect(found_peer.endpoint);
+						await eventer.connect(found_peer.endpoint);
 						eventers.push(eventer);
 						testUtil.logMsg(`Successfully created an event hub based on a discovered peer: ${eventer.name}`);
 					}
@@ -453,7 +454,7 @@ module.exports = function () {
 						const handle = setTimeout(() => {
 							reject(new Error('Test application has timed out waiting for tx event'));
 							// may want to close the event hub or unregister the tx event listener
-						}, 10000);
+						}, 20000);
 
 						event_service.registerTransactionListener(
 							endorsement.getTransactionId(),
@@ -461,6 +462,7 @@ module.exports = function () {
 								clearTimeout(handle);
 								if (error) {
 									reject(error);
+									return;
 								}
 								testUtil.logMsg(`Successfully received the transaction event for ${event.transactionId} with status of ${event.status} in block number ${event.blockNumber}`);
 								resolve(`Success ${event.transactionId}`);
@@ -823,6 +825,7 @@ module.exports = function () {
 							if (error) {
 								testUtil.logError(`Failed to receive transaction event for ${endorsement.getTransactionId()}`);
 								reject(error);
+								return;
 							}
 							// all chaincode events matches from this block
 							// will be in an array for this listener

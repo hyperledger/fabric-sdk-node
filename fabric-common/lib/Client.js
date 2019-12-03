@@ -222,7 +222,7 @@ const Client = class {
 
 	/**
 	 * Will return an array of {@link Endorser} instances that have been
-	 * assigned to this channel instance. Include a MSPID to only return endorsers
+	 * created by this client instance. Include a MSPID to only return endorsers
 	 * in a specific organization.
 	 *
 	 * @param {string} [mspid] - Optional. The mspid of the endorsers to return

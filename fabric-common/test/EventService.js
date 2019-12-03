@@ -176,13 +176,26 @@ describe('EventService', () => {
 				eventService.setTargets(eventer);
 			}).should.throw('targets parameter is not an array');
 		});
+		it('should require targets as an empty array', () => {
+			(() => {
+				eventService.setTargets([]);
+			}).should.throw('No targets provided');
+		});
 		it('should throw when target not connected', () => {
 			(() => {
+				eventer.isConnectable = sinon.stub().returns(false);
 				eventService.setTargets([eventer]);
-			}).should.throw('Eventer eventer1 is not connected');
+			}).should.throw('Eventer eventer1 is not connectable');
 		});
 		it('should handle connected target', () => {
 			eventer.connected = true;
+			eventService.setTargets([eventer]);
+			should.equal(eventService.targets[0].type, 'Eventer');
+			should.equal(eventService.targets[0].name, 'eventer1');
+		});
+		it('should handle connectable target', () => {
+			eventer.connected = false;
+			eventer.isConnectable = sinon.stub().returns(true);
 			eventService.setTargets([eventer]);
 			should.equal(eventService.targets[0].type, 'Eventer');
 			should.equal(eventService.targets[0].name, 'eventer1');
@@ -379,8 +392,26 @@ describe('EventService', () => {
 		it('throws if targets is missing', async () => {
 			await eventService.send().should.be.rejectedWith('Missing targets parameter');
 		});
+		it('throws if eventer stream is running', async () => {
+			const eventer1 = client.newEventer('eventer1');
+			eventer1.stream = sinon.stub();
+			eventService._payload =  Buffer.from('payload');
+			eventService._signature = Buffer.from('signature');
+			await eventService.send({targets: [eventer1]}).should.be.rejectedWith('Event service eventer1 is currently listening');
+		});
+		it('throws if eventer is not connected', async () => {
+			const eventer1 = client.newEventer('eventer1');
+			eventer1.isConnectable = sinon.stub().returns(false);
+			eventer1.checkConnection = sinon.stub().returns(false);
+			eventService._payload =  Buffer.from('payload');
+			eventService._signature = Buffer.from('signature');
+			await eventService.send({targets: [eventer1]}).should.be.rejectedWith('Event service eventer1 is not connected');
+		});
 		it('runs ok', async () => {
 			const eventer1 = client.newEventer('eventer1');
+			eventer1.isConnectable = sinon.stub().returns(true);
+			eventer1.connect = sinon.stub().resolves(true);
+			eventer1.checkConnection = sinon.stub().resolves(true);
 			sinon.stub(eventService, '_startService').resolves(eventer1);
 			eventService._payload =  Buffer.from('payload');
 			eventService._signature = Buffer.from('signature');
@@ -397,12 +428,15 @@ describe('EventService', () => {
 			sinon.stub(eventService, '_startService').rejects(Error('failed'));
 			eventService._payload =  Buffer.from('payload');
 			eventService._signature = Buffer.from('signature');
+			eventer1.isConnectable = sinon.stub().returns(true);
+			eventer1.connect = sinon.stub().resolves(true);
+			eventer1.checkConnection = sinon.stub().resolves(true);
 			await eventService.send({targets: [eventer1]}).should.be.rejectedWith('failed');
 			sinon.assert.calledWith(FakeLogger.error, '%s - Starting stream to %s failed');
 		});
 	});
 
-	describe('#_send', () => {
+	describe('#_startService', () => {
 		let eventProtoDeliverStub;
 		let deliverFilteredStub;
 		let deliverStub;
@@ -424,17 +458,6 @@ describe('EventService', () => {
 			revert.push(EventService.__set__('fabprotos.protos.Deliver', eventProtoDeliverStub));
 
 			eventService = new EventService('myhub', channel);
-		});
-
-		it('throws if eventer stream is running', async () => {
-			const eventer1 = client.newEventer('eventer1');
-			eventer1.stream = sinon.stub();
-			await eventService._startService(eventer1).should.be.rejectedWith('Event service eventer1 is currently listening');
-		});
-		it('throws if eventer is not connected', async () => {
-			const eventer1 = client.newEventer('eventer1');
-			eventer1.checkConnection = sinon.stub().returns(false);
-			await eventService._startService(eventer1).should.be.rejectedWith('Event service eventer1 is not connected');
 		});
 		it('throws timeout on stream', async () => {
 			const eventer1 = client.newEventer('eventer1');
@@ -664,14 +687,14 @@ describe('EventService', () => {
 		});
 	});
 
-	describe('#isListening', () => {
+	describe('#hasListeners', () => {
 		it('should return true', () => {
 			eventService._eventListenerRegistrations.set('something', 'else');
-			const results = eventService.isListening();
+			const results = eventService.hasListeners();
 			results.should.be.true;
 		});
 		it('should return false', () => {
-			const results = eventService.isListening();
+			const results = eventService.hasListeners();
 			results.should.be.false;
 		});
 	});
@@ -727,13 +750,16 @@ describe('EventService', () => {
 				eventService.unregisterEventListener();
 			}).should.throw(/Missing eventListener parameter/);
 		});
-		it('should throw if eventListener not given', () => {
+		it('should throw if eventListener not found', () => {
 			(() => {
 				eventService.unregisterEventListener('bad');
 			}).should.throw(/eventListener not found/);
 		});
-		it('should run when not found', () => {
-			const eventListener = new EventListener('block', sinon.stub());
+		it('should not throw if eventListener not found', () => {
+			eventService.unregisterEventListener('bad', true);
+		});
+		it('should run when found', () => {
+			const eventListener = new EventListener('eventService', 'block', sinon.stub());
 			const registrations = new Map();
 			registrations.set(eventListener, eventListener);
 			eventService._eventListenerRegistrations = registrations;
@@ -743,13 +769,13 @@ describe('EventService', () => {
 		});
 		it('should set the have flags', () => {
 			const registrations = new Map();
-			const eventListener = new EventListener('block', sinon.stub());
+			const eventListener = new EventListener('eventService', 'block', sinon.stub());
 			registrations.set(eventListener, eventListener);
-			const eventListener1 = new EventListener('block', sinon.stub());
+			const eventListener1 = new EventListener('eventService', 'block', sinon.stub());
 			registrations.set(eventListener1, eventListener1);
-			const eventListener2 = new EventListener('tx', sinon.stub(), null, 'txid');
+			const eventListener2 = new EventListener('eventService', 'tx', sinon.stub(), null, 'txid');
 			registrations.set(eventListener2, eventListener2);
-			const eventListener3 = new EventListener('chaincode', sinon.stub(), null, 'eventname', 'chaincode');
+			const eventListener3 = new EventListener('eventService', 'chaincode', sinon.stub(), null, 'eventname', 'chaincode');
 			registrations.set(eventListener3, eventListener3);
 			eventService._eventListenerRegistrations = registrations;
 			const results = eventService.unregisterEventListener(eventListener);
@@ -1119,6 +1145,20 @@ describe('EventService', () => {
 			eventService.registerChaincodeListener('chaincode1', 'event1', sinon.stub(), {unregister: true});
 			eventService._queueChaincodeEvent(chaincode_event, 1, 'tx1', 'valid', new Map());
 			sinon.assert.calledWith(FakeLogger.debug, '_queueChaincodeEvent[myhub] - queuing chaincode event: event1');
+		});
+	});
+
+	describe('#getTransactionListener', () => {
+		it('should not find listener', () => {
+			eventService.registerTransactionListener('tx1', sinon.stub());
+			const listener = eventService.getTransactionListener('tx2');
+			should.equal(listener, null);
+		});
+
+		it('should find listener', () => {
+			const tx1 = eventService.registerTransactionListener('tx1', sinon.stub());
+			const listener = eventService.getTransactionListener('tx1');
+			should.equal(listener, tx1);
 		});
 	});
 });

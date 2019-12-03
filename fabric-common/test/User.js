@@ -99,7 +99,7 @@ describe('User', () => {
 	});
 
 	describe('#fromString', () => {
-		it('should require a chaincodeName', async () => {
+		it('should require a chaincodeId', async () => {
 			const user = User.createUser('user', 'password', 'mspid', cert, key);
 			const string = user.toString();
 			const f_user = new User('fake');
