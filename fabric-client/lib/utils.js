@@ -455,6 +455,15 @@ module.exports.checkAndAddConfigSetting = (option_name, default_value, options) 
 	return return_options;
 };
 
+module.exports.byteToNormalizedPEM = (buffer_array, encoding) => {
+	let result = module.exports.convertBytetoString(buffer_array, encoding);
+	if (result) {
+		result = module.exports.normalizeX509(result);
+	}
+
+	return result;
+};
+
 /*
  * Make sure there's a start line with '-----BEGIN CERTIFICATE-----'
  * and end line with '-----END CERTIFICATE-----', so as to be compliant
