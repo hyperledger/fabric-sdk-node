@@ -113,7 +113,7 @@ function joinChannel(org, defaultChannelName, t) {
 			t.pass('Successfully enrolled org (join_channel):' + org + ' \'admin\'');
 
 			for (const key in ORGS[org]) {
-				if (ORGS[org].hasOwnProperty(key)) {
+				if (Object.prototype.hasOwnProperty.call(ORGS[org], key)) {
 					if (key.indexOf('peer') === 0) {
 						data = fs.readFileSync(path.join(__dirname, ORGS[org][key].tls_cacerts));
 						targets.push(

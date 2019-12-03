@@ -230,9 +230,7 @@ class DiscoveryEndorsementHandler extends EndorsementHandler {
 		if (results.success) {
 			results.endorsements = await this._execute_endorsements(endorsers);
 			for (const endorsement of results.endorsements) {
-				if (endorsement instanceof Error) {
-					results.success = false;
-				} else if (typeof endorsement.success === 'boolean' && endorsement.success === false) {
+				if (endorsement instanceof Error || (typeof endorsement.success === 'boolean' && endorsement.success === false)) {
 					results.success = false;
 				}
 			}
@@ -267,6 +265,7 @@ class DiscoveryEndorsementHandler extends EndorsementHandler {
 		logger.debug('%s - start', method);
 		let error = null;
 		const self = this;
+		// eslint-disable-next-line no-async-promise-executor
 		return new Promise(async (resolve) => {
 			for (const peer_info of group.peers) {
 				const previous_endorsement = endorsement_plan.endorsements[peer_info.name];
@@ -287,6 +286,7 @@ class DiscoveryEndorsementHandler extends EndorsementHandler {
 						try {
 							const endorsement = await peer.sendProposal(proposal, timeout);
 							// save this endorsement results in case we try this peer again
+							// eslint-disable-next-line require-atomic-updates
 							endorsement_plan.endorsements[peer_info.name] = {endorsement, success: true};
 							logger.debug('%s - endorsement completed to %s - %s', method, peer_info.name, endorsement.response.status);
 							resolve(endorsement);

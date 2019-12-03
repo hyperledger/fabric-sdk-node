@@ -86,7 +86,7 @@ class Eventer extends ServiceEndpoint {
 		logger.debug(`${method} - end`);
 	}
 
-		/**
+	/**
 	 * Check the connection status
 	 */
 	async checkConnection() {

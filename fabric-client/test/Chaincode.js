@@ -31,7 +31,7 @@ const lifecycle_protos = require('fabric-protos').lifecycle;
 
 function propertiesToBeEqual(obj, properties, value) {
 	properties.forEach((prop) => {
-		if (obj.hasOwnProperty(prop)) {
+		if (Object.prototype.hasOwnProperty.call(obj, prop)) {
 			should.equal(obj[prop], value);
 		} else {
 			should.fail();
@@ -45,7 +45,7 @@ function propertiesToBeNull(obj, properties) {
 
 function propertiesToBeInstanceOf(obj, properties, clazz) {
 	properties.forEach((prop) => {
-		if (obj.hasOwnProperty(prop)) {
+		if (Object.prototype.hasOwnProperty.call(obj, prop)) {
 			obj[prop].should.be.instanceof(clazz);
 		} else {
 			should.fail();

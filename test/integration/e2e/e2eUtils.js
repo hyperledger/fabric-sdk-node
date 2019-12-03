@@ -94,7 +94,7 @@ function installChaincodeWithId(org, chaincode_id, chaincode_path, metadata_path
 
 			const targets = [];
 			for (const key in ORGS[org]) {
-				if (ORGS[org].hasOwnProperty(key)) {
+				if (Object.prototype.hasOwnProperty.call(ORGS[org], key)) {
 					if (key.indexOf('peer') === 0) {
 						const newData = fs.readFileSync(path.join(__dirname, ORGS[org][key].tls_cacerts));
 						const peer = client.newPeer(
@@ -233,7 +233,7 @@ function instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, versi
 			);
 
 			for (const org in ORGS) {
-				if (ORGS[org].hasOwnProperty('peer1')) {
+				if (Object.prototype.hasOwnProperty.call(ORGS[org], 'peer1')) {
 					const key = 'peer1';
 					const newData = fs.readFileSync(path.join(__dirname, ORGS[org][key].tls_cacerts));
 					logger.debug(' create new peer %s', ORGS[org][key].requests);
@@ -528,7 +528,7 @@ function invokeChaincode(userOrg, version, chaincodeId, t, useStore, fcn, args, 
 			// set up the channel to use each org's 'peer1' for
 			// both requests and events
 			for (const key in ORGS) {
-				if (ORGS.hasOwnProperty(key) && typeof ORGS[key].peer1 !== 'undefined') {
+				if (Object.prototype.hasOwnProperty.call(ORGS, key) && typeof ORGS[key].peer1 !== 'undefined') {
 					const newData = fs.readFileSync(path.join(__dirname, ORGS[key].peer1.tls_cacerts));
 					const peer = client.newPeer(
 						ORGS[key].peer1.requests,
@@ -830,7 +830,7 @@ function queryChaincode(org, version, targets, fcn, args, value, chaincodeId, t,
 			// set up the channel to use each org's 'peer1' for
 			// both requests and events
 			for (const key in ORGS) {
-				if (ORGS.hasOwnProperty(key) && typeof ORGS[key].peer1 !== 'undefined') {
+				if (Object.prototype.hasOwnProperty.call(ORGS, key) && typeof ORGS[key].peer1 !== 'undefined') {
 					const data = fs.readFileSync(path.join(__dirname, ORGS[key].peer1.tls_cacerts));
 					const peer = client.newPeer(
 						ORGS[key].peer1.requests,
@@ -1102,13 +1102,9 @@ async function getCollectionsConfig(t, org, chaincodeId, channel_name) {
 			target: peer
 		};
 
-		try {
-			const resp = await channel.queryCollectionsConfig(request);
-			t.pass('Successfully retrieved collections config from peer');
-			return resp;
-		} catch (error) {
-			throw error;
-		}
+		const resp = await channel.queryCollectionsConfig(request);
+		t.pass('Successfully retrieved collections config from peer');
+		return resp;
 	} catch (error) {
 		t.fail(error.message);
 		throw error;

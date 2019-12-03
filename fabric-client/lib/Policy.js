@@ -76,7 +76,7 @@ const EndorsementPolicy = class {
 			const signedBys = [];
 			let index = 0;
 			for (const name in msps) {
-				if (msps.hasOwnProperty(name)) {
+				if (Object.prototype.hasOwnProperty.call(msps, name)) {
 					const onePrn = new fabprotos.common.MSPPrincipal();
 					onePrn.setPrincipalClassification(fabprotos.common.MSPPrincipal.Classification.ROLE);
 
@@ -172,7 +172,7 @@ function buildPrincipal(identity) {
 function getIdentityType(obj) {
 	const invalidTypes = [];
 	for (const key in obj) {
-		if (obj.hasOwnProperty(key)) {
+		if (Object.prototype.hasOwnProperty.call(obj, key)) {
 			if (key === IDENTITY_TYPE.Role || key === IDENTITY_TYPE.OrganizationUnit || key === IDENTITY_TYPE.Identity) {
 				return key;
 			} else {
@@ -192,7 +192,7 @@ function getIdentityType(obj) {
 function getPolicyType(spec) {
 	const invalidTypes = [];
 	for (const key in spec) {
-		if (spec.hasOwnProperty(key)) {
+		if (Object.prototype.hasOwnProperty.call(spec, key)) {
 			// each policy spec has exactly one property of one of these two forms: 'n-of' or 'signed-by'
 			if (key === 'signed-by' || key.match(/^\d+-of$/)) {
 				return key;

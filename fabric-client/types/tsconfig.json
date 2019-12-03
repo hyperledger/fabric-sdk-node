@@ -23,6 +23,9 @@
       "index.d.ts",
       "base.d.ts"
   ],
+  "exclude": [
+    "test/data/**"
+  ],
   "formatCodeOptions": {
     "indentSize": 4,
     "tabSize": 4

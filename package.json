@@ -6,8 +6,8 @@
   "docsLatestVersion": "release-1.4",
   "main": "index.js",
   "repository": {
-		"type": "git",
-		"url": "https://github.com/hyperledger/fabric-sdk-node"
+    "type": "git",
+    "url": "https://github.com/hyperledger/fabric-sdk-node"
   },
   "homepage": "https://www.hyperledger.org/projects/fabric",
   "author": {
@@ -31,7 +31,9 @@
     "compile": "tsc --project fabric-network/tsconfig-declaration.json && tsc --project fabric-network/tsconfig.json",
     "compile:w": "tsc --project fabric-network --watch",
     "coverage": "nyc npm run unit-test",
-    "retrieve-images": "./scripts/utility/fabric_images.sh amd64 2.0.0-stable"
+    "retrieve-images": "./scripts/utility/fabric_images.sh amd64 2.0.0-stable",
+    "eslint": "eslint fabric-network/ fabric-client/ fabric-ca-client/lib/ fabric-common/ test/",
+    "tslint": "tslint -t prose -p fabric-client/types/tsconfig.json 'fabric-client/**/*.ts' && tslint -t prose 'test/**/*.ts' && tslint -t prose -p fabric-network/tsconfig.json 'fabric-network/**/*.ts' "
   },
   "devDependencies": {
     "@ampretia/x509": "0.4.7",
