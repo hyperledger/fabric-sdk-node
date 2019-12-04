@@ -11,6 +11,7 @@ pool:
 
 variables:
 - group: credentials
+- group: npm
 - name: SOFTHSM2_CONF
   value: "$(Build.Repository.LocalPath)/test/fixtures/hsm/softhsm2.conf"
 
