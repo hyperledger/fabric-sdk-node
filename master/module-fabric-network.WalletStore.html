@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Hyperledger Fabric SDK for node.js Class: CommitEventListener</title>
+	<title>Hyperledger Fabric SDK for node.js Interface: WalletStore</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -93,18 +93,16 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Class: CommitEventListener</h1>
+	<h1 class="page-title">Interface: WalletStore</h1>
 <section>
 
 <header>
     
         <h2>
-            <span class="ancestors"><a href="module-fabric-network.html">fabric-network</a>~</span>
+            <span class="ancestors"><a href="module-fabric-network.html">fabric-network</a>.</span>
         
-        CommitEventListener
+        WalletStore
         </h2>
-        
-            <div class="class-description">The Commit Event Listener handles transaction commit events</div>
         
     
 </header>
@@ -114,14 +112,82 @@
     <div class="container-overview">
     
         
+            <div class="description">Interface for store implementation that provide backing storage for identities in a <a href="module-fabric-network.Wallet.html">Wallet</a>.</div>
+        
+
+        
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        <dl>
+            
 <hr>
 <dt>
-    <h4 class="name" id="CommitEventListener"><span class="type-signature"></span>new CommitEventListener(network, transactionId, eventCallback, options)</h4>
+    <h4 class="name" id="delete"><span class="type-signature">&lt;async> </span>delete(label)</h4>
     
     
 </dt>
 <dd>
 
+    
+    <div class="description">
+        Delete data associated with a given label.
+    </div>
     
 
     
@@ -155,31 +221,7 @@
 
         <tr>
             
-                <td class="name"><code>network</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="module-fabric-network.Network.html">module:fabric-network.Network</a></span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The fabric network</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>transactionId</code></td>
+                <td class="name"><code>label</code></td>
             
 
             <td class="type">
@@ -196,56 +238,7 @@
 
             
 
-            <td class="description last">the transaction id being listened to</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>eventCallback</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The event callback called when a transaction is committed.
-It has signature (err, transactionId, status, blockNumber)</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>options</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">module:fabric-network.Network~ListenerOptions</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
+            <td class="description last">A label identifying stored data.</td>
         </tr>
 
     
@@ -305,12 +298,142 @@ It has signature (err, transactionId, status, blockNumber)</td>
     
 
     
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise.&lt;void></span>
+
+
+
+    </dd>
+</dl>
+
+
+        
 
     
 </dd>
 
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="get"><span class="type-signature">&lt;async> </span>get(label)</h4>
     
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Get data associated with a given label.
     </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>label</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A label identifying stored data.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
 
     
 
@@ -323,7 +446,309 @@ It has signature (err, transactionId, status, blockNumber)</td>
     
 
     
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    Stored data as a Buffer if it exists; otherwise undefined.
+</div>
 
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise.&lt;(Buffer|undefined)></span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="list"><span class="type-signature">&lt;async> </span>list()</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        List the labels for all stored data.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    A list of labels.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise.&lt;Array.&lt;string>></span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="put"><span class="type-signature">&lt;async> </span>put(label, data)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Put data associated with a given label.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>label</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A label identifying stored data.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>data</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Buffer</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Data to store.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise.&lt;void></span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        </dl>
     
 
     

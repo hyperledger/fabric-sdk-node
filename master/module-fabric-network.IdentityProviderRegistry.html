@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Hyperledger Fabric SDK for node.js Class: CommitEventListener</title>
+	<title>Hyperledger Fabric SDK for node.js Class: IdentityProviderRegistry</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -93,7 +93,7 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Class: CommitEventListener</h1>
+	<h1 class="page-title">Class: IdentityProviderRegistry</h1>
 <section>
 
 <header>
@@ -101,10 +101,10 @@
         <h2>
             <span class="ancestors"><a href="module-fabric-network.html">fabric-network</a>~</span>
         
-        CommitEventListener
+        IdentityProviderRegistry
         </h2>
         
-            <div class="class-description">The Commit Event Listener handles transaction commit events</div>
+            <div class="class-description">Registry of identity providers for use by a wallet.</div>
         
     
 </header>
@@ -116,7 +116,7 @@
         
 <hr>
 <dt>
-    <h4 class="name" id="CommitEventListener"><span class="type-signature"></span>new CommitEventListener(network, transactionId, eventCallback, options)</h4>
+    <h4 class="name" id="IdentityProviderRegistry"><span class="type-signature"></span>new IdentityProviderRegistry()</h4>
     
     
 </dt>
@@ -129,129 +129,6 @@
     
 
     
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>network</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="module-fabric-network.Network.html">module:fabric-network.Network</a></span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The fabric network</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>transactionId</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the transaction id being listened to</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>eventCallback</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The event callback called when a transaction is committed.
-It has signature (err, transactionId, status, blockNumber)</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>options</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">module:fabric-network.Network~ListenerOptions</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
     
 
     
@@ -324,6 +201,290 @@ It has signature (err, transactionId, status, blockNumber)</td>
 
     
 
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        <dl>
+            
+<hr>
+<dt>
+    <h4 class="name" id="addProvider"><span class="type-signature"></span>addProvider(provider)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Add a provider to the registry.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>provider</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-fabric-network.html#.IdentityProvider">module:fabric-network.IdentityProvider</a></span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Identity provider.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="getProvider"><span class="type-signature"></span>getProvider(type)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Get the provider for a given type from the registry. Throws an error if no provider for the type exists.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>type</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Identity type identifier.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    An identity provider.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="module-fabric-network.html#.IdentityProvider">module:fabric-network.IdentityProvider</a></span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        </dl>
     
 
     

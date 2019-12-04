@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Hyperledger Fabric SDK for node.js Class: CommitEventListener</title>
+	<title>Hyperledger Fabric SDK for node.js Tutorial: fabric-network: Using wallets to manage identities</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -88,263 +88,104 @@
 <div class="row">
 
 	
-	<div class="col-md-8">
+	<div class="col-md-12">
 	
 		<div id="main">
-			
-
-	<h1 class="page-title">Class: CommitEventListener</h1>
-<section>
+			<section class="tutorial-section">
 
 <header>
     
-        <h2>
-            <span class="ancestors"><a href="module-fabric-network.html">fabric-network</a>~</span>
-        
-        CommitEventListener
-        </h2>
-        
-            <div class="class-description">The Commit Event Listener handles transaction commit events</div>
-        
-    
+
+    <h2>fabric-network: Using wallets to manage identities</h2>
 </header>
 
-
 <article>
-    <div class="container-overview">
-    
-        
-<hr>
-<dt>
-    <h4 class="name" id="CommitEventListener"><span class="type-signature"></span>new CommitEventListener(network, transactionId, eventCallback, options)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>network</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="module-fabric-network.Network.html">module:fabric-network.Network</a></span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The fabric network</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>transactionId</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the transaction id being listened to</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>eventCallback</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The event callback called when a transaction is committed.
-It has signature (err, transactionId, status, blockNumber)</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>options</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">module:fabric-network.Network~ListenerOptions</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-    
-    </div>
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
+    <p>This tutorial describes how to use wallets to manage identities used to connect to a Hyperledger Fabric
+network.</p>
+<h2>Overview</h2>
+<p>A wallet provides an interface for storing and accessing identity information, backed by a persistent (or
+non-persistent) store of your choice. Identity information stored in a wallet can be used to connect to a Hyperledger
+Fabric network.</p>
+<h2>Creating a wallet</h2>
+<p>A wallet is backed by a wallet store, which is responsible only for storing and retrieving data. Several different
+store implementations are provided for convenience:</p>
+<ul>
+<li><strong>In-memory</strong>: Non-persistent store. Useful for testing.</li>
+<li><strong>File system</strong>: Stores identity information in a directory on the local file system.</li>
+<li><strong>CouchDB</strong>: Stores identity information in a CouchDB database.</li>
+</ul>
+<p>Wallets using default store implementations are created using static factory functions on the <code>Wallets</code> class, for
+example:</p>
+<pre class="prettyprint source lang-javascript"><code>const wallet = await Wallets.newFileSystemWallet('/path/to/wallet/directory');
+</code></pre>
+<p>You can write your own custom wallet store to suit your deployment environment by implementing the <code>WalletStore</code>
+interface. A wallet backed by a custom wallet store implementation is created as follows:</p>
+<pre class="prettyprint source lang-javascript"><code>const walletStore = new MyCustomWalletStore();
+const wallet = new Wallet(walletStore);
+</code></pre>
+<h2>Storing identity information in a wallet</h2>
+<p>An identity is a set of information and credentials required to connect to a Hyperledger Fabric network. This
+information is described as a simple JavaScript object using a well-defined format, including the Member Services
+Provider associated with the user and a type identifier that indicates the type of credentials contained in the
+identity. Two identity types are supported by default:</p>
+<ul>
+<li><strong>X.509</strong>: X.509 certificate and private key in PEM format.</li>
+<li><strong>HSM-X.509</strong>: X.509 certificate in PEM format, with the private key stored in a Hardware Security Module.</li>
+</ul>
+<p>Once an identity object has been created from credentials supplied to you by your administrator or certificate
+authority, it can be stored and retreived from a wallet using an arbitrary label to locate the identity within the
+wallet, for example:</p>
+<pre class="prettyprint source lang-javascript"><code>const identity: X509Identity = {
+    credentials: {
+        certificate: 'PEM format certificate string',
+        privateKey: 'PEM format private key string',
+    },
+    mspId: 'wonderland',
+    type: 'X.509',
+};
+await wallet.put('alice', identity);
+</code></pre>
+<p>Note that a wallet may contain identities of varying types so, in TypeScript, indentity information retrieved from the
+wallet is typed as <code>Identity</code> (or <code>undefined</code> if the identity does not exist in the wallet) and will need to be cast to
+its specific subtype to access type-specific information, for example:</p>
+<pre class="prettyprint source lang-javascript"><code>const identity = await wallet.get('alice');
+if (identity && identity.type === 'X.509') {
+	const privateKey = (identity as X509Identity).credentials.privateKey;
+}
+</code></pre>
+<h2>Using a Hardware Security Module</h2>
+<p>The SDK uses the <a href="https://en.wikipedia.org/wiki/PKCS_11">PKCS #11</a> interface to make use of Hardware Security Module
+(HSM) devices for key management. Identities using an HSM-managed private key are similar to an X.509 identity but
+with the private key omitted. However, in order to use HSM-managed identities the containing wallet must be configured
+with details of the HSM that holds the private key. This is achieved by registering an <code>IdentityProvider</code> with the
+wallet, for example:</p>
+<pre class="prettyprint source lang-javascript"><code>const hsmProvider = new HsmX509Provider({
+    lib: '/path/to/hsm-specific/pkcs11/library',
+    pin: '1234567890',
+    slot: 0,
+});
+wallet.getProviderRegistry().addProvider(hsmProvider);
+</code></pre>
+<p>Once the wallet has been configured with details of the HSM, HSM-managed identities can be stored and retreived from
+the wallet as normal, for example:</p>
+<pre class="prettyprint source lang-javascript"><code>const identity: HsmX509Identity = {
+    credentials: {
+        certificate: 'PEM format certificate string',
+    },
+    mspId: 'org1',
+    type: 'HSM-X.509',
+};
+await wallet.put('bob', identity);
+</code></pre>
 </article>
 
 </section>
-
-
-
 
 		</div>
 	</div>
 
 	<div class="clearfix"></div>
 
-	
-		<div class="col-md-3">
-			<div id="toc" class="col-md-3 hidden-xs hidden-sm hidden-md"></div>
-		</div>
 	
 
 </div>

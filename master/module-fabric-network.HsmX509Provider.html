@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Hyperledger Fabric SDK for node.js Class: CommitEventListener</title>
+	<title>Hyperledger Fabric SDK for node.js Class: HsmX509Provider</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -93,7 +93,7 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Class: CommitEventListener</h1>
+	<h1 class="page-title">Class: HsmX509Provider</h1>
 <section>
 
 <header>
@@ -101,10 +101,10 @@
         <h2>
             <span class="ancestors"><a href="module-fabric-network.html">fabric-network</a>~</span>
         
-        CommitEventListener
+        HsmX509Provider
         </h2>
         
-            <div class="class-description">The Commit Event Listener handles transaction commit events</div>
+            <div class="class-description">Identity provider to handle X.509 identities where the private key is stored in a hardware security module.</div>
         
     
 </header>
@@ -116,12 +116,16 @@
         
 <hr>
 <dt>
-    <h4 class="name" id="CommitEventListener"><span class="type-signature"></span>new CommitEventListener(network, transactionId, eventCallback, options)</h4>
+    <h4 class="name" id="HsmX509Provider"><span class="type-signature"></span>new HsmX509Provider( [options])</h4>
     
     
 </dt>
 <dd>
 
+    
+    <div class="description">
+        Create a provider instance.
+    </div>
     
 
     
@@ -143,7 +147,11 @@
         <th>Type</th>
 
         
+        <th>Argument</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -155,86 +163,13 @@
 
         <tr>
             
-                <td class="name"><code>network</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="module-fabric-network.Network.html">module:fabric-network.Network</a></span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The fabric network</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>transactionId</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">the transaction id being listened to</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>eventCallback</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The event callback called when a transaction is committed.
-It has signature (err, transactionId, status, blockNumber)</td>
-        </tr>
-
-    
-
-        <tr>
-            
                 <td class="name"><code>options</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">module:fabric-network.Network~ListenerOptions</span>
+<span class="param-type"><a href="module-fabric-network.html#.HsmOptions">module:fabric-network.HsmOptions</a></span>
 
 
 
@@ -242,10 +177,27 @@ It has signature (err, transactionId, status, blockNumber)</td>
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
 
+                
+
+                
+                </td>
             
 
-            <td class="description last"></td>
+            
+                <td class="default">
+                
+                    {}
+                
+                </td>
+            
+
+            <td class="description last">Options specifying how to connect to the HSM. Mandatory
+unless this information is provided through external configuration.</td>
         </tr>
 
     
@@ -268,6 +220,13 @@ It has signature (err, transactionId, status, blockNumber)</td>
 
     
 
+    
+    <dt class="implements">Implements:</dt>
+    <dd class="implements"><ul>
+        
+            <li><a href="module-fabric-network.html#.IdentityProvider">module:fabric-network.IdentityProvider</a></li>
+        
+    </ul></dd>
     
 
     
