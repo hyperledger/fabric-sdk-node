@@ -18,6 +18,7 @@ const path = require('path');
 
 const testUtil = require('../util.js');
 const e2eUtils = require('./e2eUtils.js');
+const util = require('util');
 
 
 const channel_name = process.env.channel ? process.env.channel : 'mychannel';
@@ -26,7 +27,7 @@ const channel_name = process.env.channel ? process.env.channel : 'mychannel';
 //
 // Attempt to send a request to the orderer with the createChannel method
 //
-test('\n\n***** SDK Built config update  create flow  *****\n\n', async (t) => {
+test('\n\n***** SDK Built config update create flow *****\n\n', async (t) => {
 	testUtil.resetDefaults();
 	Client.addConfigFile(path.join(__dirname, './config.json'));
 	const ORGS = Client.getConfigSetting('test-network');
@@ -150,13 +151,13 @@ test('\n\n***** SDK Built config update  create flow  *****\n\n', async (t) => {
 	const result = await client.createChannel(request);
 
 	logger.debug('\n***\n completed the create \n***\n', result);
-	t.pass('Successfully created the channel.');
+
 	if (result.status && result.status === 'SUCCESS') {
-		await e2eUtils.sleep(5000);
-		t.pass('Successfully waited to make sure new channel was created.');
+		await e2eUtils.sleep(10000);
+		t.pass(util.format('Successfully waited and new channel "%s" was created.', channel_name));
+		t.pass('Successfully created the channel.');
 	} else {
-		t.fail('Failed to create the channel. ');
-		throw new Error('Failed');
+		t.fail(util.format('Failed to create the channel, with result:', result));
 	}
 	t.end();
 

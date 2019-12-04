@@ -2,7 +2,7 @@
 
 This test suite is intended to provide high level test coverage from a scenario perspective, and tests herein represent those at the top of the test pyramid. Consequently, these test should be added to with due consideration and should encapsulate the completion of a high level user task; for more fine grained testing, the FV or unit test frameworks should be used.
 
-The test suite uses the docker network and crypto files from within `/test/ts-fixtures`. If crypto material does not exist, which is the case if you have recently cloned the repository, it is necessary to run the `install-and-generate-certs` gulp task prior to running the tests.
+The test suite uses the docker network and crypto files from within `/test/ts-fixtures`. If crypto material does not exist, which is the case if you have recently cloned the repository, it is necessary to run the `installAndGenerateCerts` or `installAndGenerateCertsMac` npm task prior to running the tests.
 
 ## Structure
 
@@ -52,10 +52,7 @@ ts-scenario
 
 
 ## Running the Tests
-The tests are run at a high level within the `/build` directory using the main `test.js` gulp file, or the npm script:
-- To run the test using gulp, issue the command `gulp run-test:ts-cucumber`. 
-- To run the test using npm script, issue the command `npm run test:ts-cucumber`. 
-Both commands will run all feature files located within `/test/ts-scenario/features`.
+To run the tests, issue the command `npm run test:ts-cucumber`, which will run all feature files located within `/test/ts-scenario/features`.
 
 It is possible to run a single feature file by using the command `npm run test:ts-cucumber-tagged`. It is important to modify the `package.json` file to make sure the correct tag is being run if you want to do this.
 

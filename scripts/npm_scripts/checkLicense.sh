@@ -9,7 +9,6 @@ function filterExcludedFiles {
   CHECK=`echo "$CHECK" \
 		| grep -v "^\.git/" \
 		| grep -v "^\.noignore/" \
-		| grep -v "^\.build/" \
 		| grep -v "^vendor/" \
 		| grep -v "test/fixtures/" \
 		| grep -v "^LICENSE$" \
@@ -26,6 +25,7 @@ function filterExcludedFiles {
 		| grep -v "\.md$" \
 		| grep -v "\.pb\.go$" \
 		| grep -v "\.yaml$" \
+		| grep -v "\.yml$" \
 		| grep -v "\.json$" \
 		| grep -v "\.gradle$" \
 		| grep -v "\.cds$" \

@@ -34,7 +34,7 @@ test('\n\n **** E R R O R  T E S T I N G : instantiate call fails with non-exist
 	};
 
 	const error_snip = 'cannot get package for chaincode';
-	instantiateChaincodeForError(request, error_snip, t);
+	return instantiateChaincodeForError(request, error_snip, t);
 });
 
 test('\n\n **** E R R O R  T E S T I N G : instantiate call fails with non-existent Chaincode name', (t) => {
@@ -47,7 +47,7 @@ test('\n\n **** E R R O R  T E S T I N G : instantiate call fails with non-exist
 	};
 
 	const error_snip = 'cannot get package for chaincode';
-	instantiateChaincodeForError(request, error_snip, t);
+	return instantiateChaincodeForError(request, error_snip, t);
 });
 
 test('\n\n***** End-to-end flow: instantiate chaincode *****\n\n', (t) => {
@@ -82,7 +82,7 @@ test('\n\n **** E R R O R  T E S T I N G : instantiate call fails by instantiati
 	};
 
 	const error_snip = 'already exists';
-	instantiateChaincodeForError(request, error_snip, t);
+	return instantiateChaincodeForError(request, error_snip, t);
 });
 
 function instantiateChaincodeForError(request, error_snip, t) {
@@ -102,7 +102,7 @@ function instantiateChaincodeForError(request, error_snip, t) {
 	const orgName = ORGS[userOrg].name;
 	let tlsInfo = null;
 
-	e2eUtils.tlsEnroll(userOrg)
+	return e2eUtils.tlsEnroll(userOrg)
 		.then((enrollment) => {
 			t.pass('Successfully retrieved TLS certificate');
 			tlsInfo = enrollment;
@@ -155,7 +155,7 @@ function instantiateChaincodeForError(request, error_snip, t) {
 			request.txId = client.newTransactionID();
 			return channel.sendInstantiateProposal(request);
 		}, (err) => {
-			t.fail(util.format('Failed to initialize the channel. %s', err.stack ? err.stack : err));
+			t.fail(util.format('Failed to initialize the channel: %s, %s', channel_name, err.stack ? err.stack : err));
 			throw new Error('Failed to initialize the channel');
 		}).then((results) => {
 			testUtil.checkResults(results, error_snip, t);

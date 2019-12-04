@@ -58,10 +58,10 @@
 		],
 		"cache": true,
 		"check-coverage": true,
-		"statements": 42,
-		"branches": 22,
-		"functions": 42,
-		"lines": 42
+		"statements": 87,
+		"branches": 76,
+		"functions": 85,
+		"lines": 87
 	},
 	"license": "Apache-2.0",
 	"licenses": [

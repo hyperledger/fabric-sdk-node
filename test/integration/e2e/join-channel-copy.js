@@ -28,8 +28,9 @@ const channelName = process.env.channel ? process.env.channel : testUtil.END2END
 
 //
 // Attempt to send a request to the orderer with the createChannel method
-//
-test('\n\n***** End-to-end flow: join channel *****\n\n', (t) => {
+// This file is a copy of test/integration/e2e/join-channel.js
+// This is required by scripts/npm_scripts/runTape.sh, which needs to call these join-channel.js tests for a second time
+test('\n\n***** End-to-end flow: join channel, second call *****\n\n', (t) => {
 	Client.addConfigFile(path.join(__dirname, './config.json'));
 	ORGS = Client.getConfigSetting('test-network');
 
