@@ -32,7 +32,7 @@ describe('Query', () => {
 		it('should require a name', () => {
 			(() => {
 				new Query();
-			}).should.throw('Missing chaincodeName parameter');
+			}).should.throw('Missing chaincodeId parameter');
 		});
 		it('should require a Channel', () => {
 			(() => {
@@ -48,7 +48,7 @@ describe('Query', () => {
 	describe('#toString', () => {
 		it('should return string', () => {
 			const string = endorsement.toString();
-			should.equal(string, 'Query: {chaincodeName: chaincode, channel: mychannel}');
+			should.equal(string, 'Query: {chaincodeId: chaincode, channel: mychannel}');
 		});
 	});
 });

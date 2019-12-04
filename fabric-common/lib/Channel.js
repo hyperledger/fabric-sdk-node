@@ -82,60 +82,62 @@ const Channel = class {
 
 	/**
 	 * Gets an Endorsement instance for this channel.
-	 * @param {string} chaincodeName
+	 * @param {string} chaincodeId
 	 */
-	newEndorsement(chaincodeName = checkParameter('chaincodeName')) {
+	newEndorsement(chaincodeId = checkParameter('chaincodeId')) {
 		const method = `newEndorsement[${this.name}]`;
 		logger.debug(`${method} - start`);
 
-		return new Endorsement(chaincodeName, this);
+		return new Endorsement(chaincodeId, this);
 	}
 
 	/**
 	 * Gets a Query instance for this channel.
-	 * @param {string} chaincodeName
+	 * @param {string} chaincodeId
 	 */
-	newQuery(chaincodeName = checkParameter('chaincodeName')) {
+	newQuery(chaincodeId = checkParameter('chaincodeId')) {
 		const method = `newQuery[${this.name}]`;
 		logger.debug(`${method} - start`);
 
-		return new Query(chaincodeName, this);
+		return new Query(chaincodeId, this);
 	}
 
 	/**
 	 * Gets a Commit instance for this channel.
-	 * @param {string} chaincodeName
+	 * @param {string} chaincodeId
 	 */
-	newCommit(chaincodeName = checkParameter('chaincodeName')) {
+	newCommit(chaincodeId = checkParameter('chaincodeId')) {
 		const method = `newCommit[${this.name}]`;
 		logger.debug(`${method} - start`);
 
-		return new Commit(chaincodeName, this);
+		return new Commit(chaincodeId, this);
 	}
 
 	/**
-	 * Returns a new {@link EventService} object on each call.
+	 * Returns a new {@link EventService} instance
 	 *
-	 * @param {string} name - The name for this EventService
-	 * @returns {EventService} The EventService instance
+	 * @param {string} name - The name of this event service.
 	 */
 	newEventService(name = checkParameter('name')) {
 		const method = `newEventService[${this.name}]`;
 		logger.debug(`${method} - start`);
-		return new EventService(name, this);
+
+		const eventService = new EventService(name, this);
+
+		return eventService;
 	}
 
 	/**
-	 * Returns a {@link DiscoveryService} instance with the given name.
-	 * Will return a new instance.
+	 * Returns a new {@link DiscoveryService} instance
 	 *
-	 * @param {string} name The name of this discovery instance.
-	 * @returns {DiscoveryService} The discovery instance.
+	 * @param {string} name - The name of this discovery service.
 	 */
 	newDiscoveryService(name = checkParameter('name')) {
-		const method = `newDiscovery[${this.name}]`;
-		logger.debug(`${method} - start - create new DiscoveryService name:${name} for channel:${this.name}`);
-		return new DiscoveryService(name, this);
+		const method = `newDiscoveryService[${this.name}]`;
+		logger.debug(`${method} - start`);
+		const discoveryService = new DiscoveryService(name, this);
+
+		return discoveryService;
 	}
 
 	/**
