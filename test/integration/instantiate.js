@@ -128,7 +128,7 @@ function instantiateChaincodeForError(request, error_snip, t) {
 
 			const targets = [];
 			for (const org in ORGS) {
-				if (ORGS[org].hasOwnProperty('peer1')) {
+				if (Object.prototype.hasOwnProperty.call(ORGS[org], 'peer1')) {
 					const key = 'peer1';
 					data = fs.readFileSync(path.join(__dirname, '/test', ORGS[org][key].tls_cacerts));
 					logger.debug(' create new peer %s', ORGS[org][key].requests);

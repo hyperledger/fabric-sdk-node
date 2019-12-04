@@ -222,6 +222,7 @@ async function join_channel(ccp, tls, channelName, orgName) {
 		genesis_block = block;
 
 		// get the peer org's admin required to send join channel requests
+		// eslint-disable-next-line require-atomic-updates
 		client._userContext = null;
 
 		await testUtil.getSubmitter(client, true /* get peer org admin */, orgName, ccp);

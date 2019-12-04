@@ -182,7 +182,7 @@ describe('Network', () => {
 			mockClient.getPeersForOrg.returns([]);
 			mockClient.getMspid.returns('myMSP');
 			return network._initializeInternalChannel({enabled:true, asLocalhost: true})
-				.should.be.rejectedWith(/No peers defined for MSP \'myMSP\' to discover from/);
+				.should.be.rejectedWith(/No peers defined for MSP 'myMSP' to discover from/);
 		});
 
 	});

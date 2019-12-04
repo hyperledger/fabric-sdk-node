@@ -38,7 +38,7 @@
             }
         ],
 		"no-console": ["warn"],
-		"no-mixed-spaces-and-tabs": ["error"],
+        "no-mixed-spaces-and-tabs": ["error"],
         "no-shadow": ["error"],
         "no-throw-literal": ["error"],
         "no-trailing-spaces": ["error"],

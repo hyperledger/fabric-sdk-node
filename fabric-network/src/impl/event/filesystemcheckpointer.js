@@ -61,7 +61,7 @@ class FileSystemCheckpointer extends BaseCheckpointer {
 		let checkpoint;
 		if (hasExpectedTotal) {
 			fullCheckpoint = await this.load();
-			if (fullCheckpoint.hasOwnProperty('blockNumber')) {
+			if (Object.prototype.hasOwnProperty.call(fullCheckpoint, 'blockNumber')) {
 				fullCheckpoint = {[fullCheckpoint.blockNumber]: fullCheckpoint};
 			}
 			checkpoint = fullCheckpoint[blockNumber] || {blockNumber: blockNumber, transactionIds: [], expectedTotal};
@@ -116,13 +116,13 @@ class FileSystemCheckpointer extends BaseCheckpointer {
 	async loadLatestCheckpoint() {
 		const checkpoint = await this.load();
 		const orderedBlockNumbers = Object.keys(checkpoint).sort();
-		if (checkpoint.hasOwnProperty('blockNumber') || orderedBlockNumbers.length === 0) {
+		if (Object.prototype.hasOwnProperty.call(checkpoint, 'blockNumber') || orderedBlockNumbers.length === 0) {
 			return checkpoint;
 		} else {
 			// Sort checkpoints in ascending order
 			for (const blockNumber of orderedBlockNumbers) {
 				const blockCheckpoint = checkpoint[blockNumber];
-				if (!blockCheckpoint.hasOwnProperty('expectedNumber')) {
+				if (!Object.prototype.hasOwnProperty.call(blockCheckpoint, 'expectedNumber')) {
 					continue;
 				} else if (Number(blockCheckpoint.expectedNumber) > blockCheckpoint.transactionIds.length) {
 					return blockCheckpoint;
@@ -141,7 +141,7 @@ class FileSystemCheckpointer extends BaseCheckpointer {
 	}
 
 	_prune(checkpoint) {
-		if (!checkpoint.hasOwnProperty('blockNumber')) {
+		if (!Object.prototype.hasOwnProperty.call(checkpoint, 'blockNumber')) {
 			checkpoint = Object.values(checkpoint).sort((a, b) => {
 				return b.blockNumber - a.blockNumber;
 			});

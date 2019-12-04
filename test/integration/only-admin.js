@@ -80,8 +80,9 @@ async function manually(t, client) {
 		await sys_channel.getChannelConfigFromOrderer();
 		t.pass('Successfully got the config envelope by using the admin identity');
 
+		// eslint-disable-next-line require-atomic-updates
 		client._adminSigningIdentity = null; // remove the admin assigned above
-		client._userContext = null;
+		client._userContext = null; // eslint-disable-line require-atomic-updates
 
 		// this will create the user and also assign it to client instance
 		// as a userContext

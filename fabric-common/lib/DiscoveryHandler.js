@@ -309,6 +309,7 @@ class DiscoveryHandler extends ServiceHandler {
 		const method = '_build_endorse_group_member >> ' + group_name + ':' + endorser_process_index;
 		logger.debug('%s - start', method);
 
+		// eslint-disable-next-line no-async-promise-executor
 		return new Promise(async (resolve) => {
 			let endorsement = null;
 			for (const peer_info of group.peers) {
@@ -332,6 +333,7 @@ class DiscoveryHandler extends ServiceHandler {
 								logger.error('%s - error on endorsement to %s error %s', method, peer_info.name, error);
 							}
 							// save this endorsement results in case we try this peer again
+							// eslint-disable-next-line require-atomic-updates
 							endorsement_plan.endorsements[peer_info.name] = endorsement;
 						} else {
 							logger.debug('%s - peer %s not assigned to this channel', method, peer_info.name);

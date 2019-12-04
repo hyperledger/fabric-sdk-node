@@ -450,13 +450,9 @@ const CryptoKeyStore = function (KVSImplClass, opts) {
 		if (this._store === null) {
 			this.logger.debug(util.format('This class requires a CryptoKeyStore to save keys, using the store: %j', this._storeConfig));
 
-			try {
-				this._store = await CKS(this._storeConfig.superClass, this._storeConfig.opts);
-				await this._store.initialize();
-				return this._store;
-			} catch (err) {
-				throw err;
-			}
+			this._store = await CKS(this._storeConfig.superClass, this._storeConfig.opts);
+			await this._store.initialize();
+			return this._store;
 		} else {
 			this.logger.debug('_getKeyStore returning store');
 			return this._store;

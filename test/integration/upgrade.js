@@ -61,7 +61,7 @@ test('\n\n **** E R R O R  T E S T I N G on upgrade call', async (t) => {
 
 	const targets = [];
 	for (const key in ORGS[org]) {
-		if (ORGS[org].hasOwnProperty(key)) {
+		if (Object.prototype.hasOwnProperty.call(ORGS[org], key)) {
 			if (key.indexOf('peer1') === 0) {
 				data = fs.readFileSync(path.join(__dirname, '/test', ORGS[org][key].tls_cacerts));
 				const peer = client.newPeer(
