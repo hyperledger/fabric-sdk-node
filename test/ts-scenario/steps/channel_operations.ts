@@ -83,7 +83,7 @@ function validateObjectKeyMatch(expected: any, actual: any, compareType: 'includ
 			}
 		} else {
 			for (const key of Object.keys(expected)) {
-				if (actual.hasOwnProperty(key)) {
+				if (Object.prototype.hasOwnProperty.call(actual, key)) {
 					// recursive call to scan property
 					BaseUtils.logMsg(`->Recursively checking response key ${key}`);
 					return validateObjectKeyMatch(expected[key], actual[key], compareType);

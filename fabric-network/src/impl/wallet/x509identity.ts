@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import * as Client from 'fabric-client';
+import { ICryptoSuite, ICryptoKey, User } from 'fabric-common';
 
 import { Identity } from './identity';
 import { IdentityData } from './identitydata';
@@ -64,17 +64,15 @@ export class X509Provider implements IdentityProvider {
 		return data;
 	}
 
-	public async setUserContext(client: Client, identity: X509Identity, name: string): Promise<void> {
-		const userData: Client.UserOpts = {
-			cryptoContent: {
-				privateKeyPEM: identity.credentials.privateKey,
-				signedCertPEM: identity.credentials.certificate,
-			},
-			mspid: identity.mspId,
-			skipPersistence: true,
-			username: name,
-		};
-		const user: Client.User = await client.createUser(userData);
-		await client.setUserContext(user, true);
+	public async getUserContext(identity: X509Identity, name: string): Promise<User> {
+		const cryptoSuite: ICryptoSuite = User.newCryptoSuite();
+
+		const user: User = new User(name);
+		user.setCryptoSuite(cryptoSuite);
+
+		const importedKey: ICryptoKey = cryptoSuite.createKeyFromRaw(identity.credentials.privateKey.toString());
+		await user.setEnrollment(importedKey, identity.credentials.certificate.toString(), identity.mspId, true);
+
+		return user;
 	}
 }

@@ -275,7 +275,7 @@ class DiscoveryService extends ServiceAction {
 		}
 		this.refreshAge = refreshAge;
 		this.requestTimeout = requestTimeout;
-		if (targets) {
+		if (targets && Array.isArray(targets) && targets.length > 0)  {
 			this.targets = targets;
 		} else if (this.targets) {
 			logger.debug('%s - using preassigned targets', method);
@@ -340,6 +340,7 @@ class DiscoveryService extends ServiceAction {
 				return this.discoveryResults;
 			}
 		} else {
+			logger.error('%s - no discovery results', method);
 			throw new Error('DiscoveryService has failed to return results');
 		}
 	}

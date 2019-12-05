@@ -20,6 +20,45 @@ const default_unregister = {
  * an event registration callback and settings.
  */
 class EventListener {
+/**
+	 * @typedef {Object} RegistrationOpts
+	 * @property {integer} startBlock - Optional - The starting block number
+	 * for event checking. When included, the peer's event service
+	 * will be asked to start sending blocks from this block number.
+	 * This is how to resume or replay missed blocks that were added
+	 * to the ledger.
+	 * Default is the latest block on the ledger.
+	 * @property {integer | 'newest'} endBlock - Optional - The ending block number
+	 * for event checking. The value 'newest' indicates that the endBlock
+	 * will be calculated by the peer's event service as the newest block
+	 * on the ledger at the time of registration.
+	 * This allows the application to replay up to the latest block on
+	 * the ledger and then the listener will stop and be notified by the
+	 * callback.
+	 * When included, the peer's event service
+	 * will be asked to stop sending blocks once this block is delivered.
+	 * This is how to replay missed blocks that were added
+	 * to the ledger. When a startBlock is not included, the endBlock
+	 * must be equal to or larger than the current channel block height.
+	 * @property {boolean} unregister - Optional - This options setting indicates
+	 * the registration should be removed (unregister) when the event
+	 * is seen. When the application is using a timeout to wait a
+	 * specified amount of time for the transaction to be seen, the timeout
+	 * processing should included the manual 'unregister' of the transaction
+	 * event listener to avoid the event callbacks being called unexpectedly.
+	 * The default for this setting is different for the different types of
+	 * event listeners. For block listeners the default is true, however
+	 * the event listener is assumed to have seen the final event only if
+	 * the end_block was set as a option and that end_block was seen by the
+	 * the listener. For transaction listeners the default is true and the
+	 * listener will be unregistered when a transaction with the id is
+	 * seen by this listener. For chaincode listeners the default will be
+	 * false as the match filter might be intended for many transactions
+	 * rather than a specific transaction or block as in the other listeners.
+	 * For all listeners if not set and the endBlock has been set, the listener
+	 * will be automatically unregistered.
+	 */
+
 	/*
 	 * Constructs a Event Listener
 	 *
@@ -28,8 +67,6 @@ class EventListener {
 	 *  "block", "tx", or "chaincode".
 	 * @param {function} callback - Callback for event matches
 	 * @param {RegistrationOpts} options - event registration options
-	 * @param {boolean} default_unregister - the default value for the unregister
-	 *  setting if not option setting is set by the user
 	 * @param {any} event
 	 *  <br>- When this listener is of type "block" then this field is not used.
 	 *  <br>- When this listener is of type "chaincode" then this

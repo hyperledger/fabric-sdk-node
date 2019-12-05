@@ -1,14 +1,13 @@
 /**
- * Copyright 2018 IBM All Rights Reserved.
+ * Copyright 2018, 2019 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
 /* tslint:disable:max-classes-per-file */
 
-import * as Client from 'fabric-client';
-
 import { Wallet } from '../lib/impl/wallet/wallet';
+import { ChaincodeEvent, Channel, Client, Endorser, EventService, IdentityContext, ProposalResponse, Query, User } from 'fabric-common';
 
 export { Wallet };
 export { Wallets } from '../lib/impl/wallet/wallets';
@@ -27,35 +26,29 @@ export interface GatewayOptions {
 	identity: string;
 	clientTlsIdentity?: string;
 	discovery?: DiscoveryOptions;
-	eventHandlerOptions?: DefaultEventHandlerOptions;
-	queryHandlerOptions?: DefaultQueryHandlerOptions;
-	checkpointer?: CheckpointerOptions;
-}
-
-export interface CheckpointerOptions {
-	factory: CheckpointerFactory;
-	options: object;
+	transaction?: TransactionOptions;
+	query?: QueryOptions;
 }
 
 export interface EventListenerOptions {
-	checkpointer?: CheckpointerOptions;
+	checkpointer?: BaseCheckpointer;
 	replay?: boolean;
 	filtered?: boolean;
+	privateData?: boolean;
 	unregister?: boolean;
 	startBlock?: number;
 	endBlock?: number;
-	asArray?: boolean;
-	eventHubConnectWait?: number;
-	eventHubConnectTimeout?: number;
 }
 
 export interface DiscoveryOptions {
 	asLocalhost?: boolean;
 	enabled?: boolean;
+	maxAge?: number;
 }
 
-export interface DefaultEventHandlerOptions {
+export interface TransactionOptions {
 	commitTimeout?: number;
+	endorseTimeout?: number;
 	strategy?: TxEventHandlerFactory | null;
 }
 
@@ -74,11 +67,12 @@ export interface TxEventHandler {
 	cancelListening(): void;
 }
 
-export interface DefaultQueryHandlerOptions {
+export interface QueryOptions {
 	strategy?: QueryHandlerFactory;
+	timeout?: number;
 }
 
-export class DefaultQueryHandlerStrategies {
+export class QueryHandlerStrategies {
 	public static MSPID_SCOPE_ROUND_ROBIN: QueryHandlerFactory;
 	public static MSPID_SCOPE_SINGLE: QueryHandlerFactory;
 }
@@ -89,51 +83,47 @@ export interface QueryHandler {
 	evaluate(query: Query): Promise<Buffer>;
 }
 
-export interface Query {
-	evaluate(peers: Client.ChannelPeer[]): Promise<QueryResults>;
-}
-
 export interface QueryResults {
-	[peerName: string]: Buffer | Client.ProposalErrorResponse;
+	[peerName: string]: Buffer | ProposalResponse;
 }
 
 export class Gateway {
 	constructor();
+	public client: Client;
 	public connect(config: Client | string | object, options: GatewayOptions): Promise<void>;
 	public disconnect(): void;
-	public getClient(): Client;
-	public getCurrentIdentity(): Client.User;
 	public getNetwork(channelName: string): Promise<Network>;
 	public getOptions(): GatewayOptions;
+	public identityContext: IdentityContext;
 }
 
-export interface Network {
-	getChannel(): Client.Channel;
+export class Network {
+	public channel: Channel;
+	public mspid: string;
 	getContract(chaincodeId: string, name?: string): Contract;
-	addBlockListener(listenerName: string, callback: (error: Error, block?: Client.Block | Client.FilteredBlock) => Promise<any>, options?: EventListenerOptions): Promise<BlockEventListener>;
-	addCommitListener(transactionId: string, callback: (error: Error, transactionId?: string, status?: string, blockNumber?: string) => Promise<any>, options?: EventListenerOptions): Promise<CommitEventListener>;
+	addBlockListener(callback: (error: Error, blockNumber: string, block: any) => Promise<any>, options?: EventListenerOptions): Promise<BlockEventListener>;
+	addCommitListener(callback: (error: Error, blockNumber: string, transactionId: string, status: string) => Promise<any>, options?: EventListenerOptions): Promise<CommitEventListener>;
 	unregisterAllEventListeners(): void;
 }
 
-export interface Contract {
+export class Contract {
 	createTransaction(name: string): Transaction;
 	evaluateTransaction(name: string, ...args: string[]): Promise<Buffer>;
 	submitTransaction(name: string, ...args: string[]): Promise<Buffer>;
-	addContractListener(listenerName: string, eventName: string, callback: (error: Error, event?: {[key: string]: any} | Array<{[key: string]: any}>, blockNumber?: string, transactionId?: string, status?: string) => Promise<any>, options?: EventListenerOptions): Promise<ContractEventListener>;
+	addContractListener(eventName: string, callback: (error: Error, blockNumber: string, chaincodeEvents: Array<ChaincodeEvent>) => Promise<any>, options?: EventListenerOptions): Promise<ContractEventListener>;
 }
 
 export interface TransientMap {
 	[key: string]: Buffer;
 }
-export interface Transaction {
+export class Transaction {
 	evaluate(...args: string[]): Promise<Buffer>;
 	getName(): string;
-	getTransactionID(): Client.TransactionId;
 	getNetwork(): Network;
-	setEndorsingPeers(peers: Client.ChannelPeer[]): this;
+	setEndorsingPeers(peers: Endorser[]): this;
 	setTransient(transientMap: TransientMap): this;
 	submit(...args: string[]): Promise<Buffer>;
-	addCommitListener(callback: (error: Error, transactionId?: string, status?: string, blockNumber?: string) => Promise<any>, options?: object, eventHub?: Client.ChannelEventHub): Promise<CommitEventListener>;
+	transactionId: string;
 }
 
 export interface FabricError extends Error {
@@ -143,36 +133,34 @@ export interface FabricError extends Error {
 
 export interface TimeoutError extends FabricError {} // tslint:disable-line:no-empty-interface
 
-export interface Checkpoint {
-	blockNumber: number;
-	transactionIds: string[];
-}
-
 export class BaseCheckpointer {
-	public setChaincodeId(chaincodeId: string): void;
-	public loadLatestCheckpoint(): Promise<Checkpoint>;
+	constructor(options: any);
+	public check(blockNumber: string): Promise<boolean>;
+	public getStartBlock(): Promise<string>;
+	public initialize(): Promise<void>;
+	public prune(): Promise<void>;
+	public save(blockNumber: string): Promise<void>;
 }
 
 export class FileSystemCheckpointer extends BaseCheckpointer {
-	constructor(channelName: string, listenerName: string, options: any);
+	constructor(options: any);
+	public check(blockNumber: string): Promise<boolean>;
+	public getStartBlock(): Promise<string>;
 	public initialize(): Promise<void>;
-	public save(transactionId: string, blockNumber: string): Promise<void>;
-	public load(): Promise<Checkpoint | {[blockNumber: string]: Checkpoint}>;
+	public prune(): Promise<void>;
+	public save(blockNumber: string): Promise<void>;
 }
 
-export type CheckpointerFactory = (channelName: string, listenerName: string, options: object) => BaseCheckpointer;
-
-export class EventHubManager {
+export class EventServiceManager {
 	constructor();
-	public getEventHub(peer: Client.Peer): Client.ChannelEventHub;
-	public getEventHubs(peers: Client.Peer[]): Client.ChannelEventHub[];
-	public getReplayEventHub(peer: Client.Peer): Client.ChannelEventHub;
-	public getReplayEventHubs(peers: Client.Peer[]): Client.ChannelEventHub[];
+	public getEventService(peer: Endorser): EventService;
+	public getEventServices(peers: Endorser[]): EventService[];
+	public getReplayEventService(peer: Endorser): EventService;
+	public getReplayEventServices(peers: Endorser[]): EventService[];
 }
 
 export class CommitEventListener {
 	public register(): void;
-	public setEventHub(eventHub: Client.ChannelEventHub, isFixed?: boolean): void;
 	public unregister(): void;
 }
 
@@ -184,18 +172,4 @@ export class ContractEventListener {
 export class BlockEventListener {
 	public register(): void;
 	public unregister(): void;
-}
-
-// Alias for AbstractEventHubSelectionStrategy
-export interface BaseEventHubSelectionStrategy {
-	getNextPeer(): Client.Peer;
-	updateEventHubAvailability(deadPeer: Client.Peer): void;
-}
-export interface AbstractEventHubSelectionStrategy {
-	getNextPeer(): Client.Peer;
-	updateEventHubAvailability(deadPeer: Client.Peer): void;
-}
-
-export class DefaultEventHubSelectionStrategies {
-	public static MSPID_SCOPE_ROUND_ROBIN: AbstractEventHubSelectionStrategy;
 }

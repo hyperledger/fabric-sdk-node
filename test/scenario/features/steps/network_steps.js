@@ -77,10 +77,10 @@ module.exports = function () {
 
 	this.Then(/^I use the gateway named (.+?) to submit (.+?) transactions with args (.+?) for chaincode (.+?) instantiated on fabric channel (.+?) disconnecting the event hub on listener (.+?) every (.+?) transactions$/, {timeout: testUtil.TIMEOUTS.LONG_STEP}, async (gatewayName, numTransactions, args, ccName, channelName, listenerName, disconnects) => {
 		const listener = network_util.getListenerInfo(listenerName).listener;
-		const eventHub = listener.eventHub;
+		const eventService = listener.eventService;
 		for (let i = 0; i < numTransactions; i++) {
 			if (i % disconnects === 0) {
-				eventHub.disconnect();
+				eventService.disconnect();
 			}
 			await network_util.performGatewayTransaction(gatewayName, ccName, channelName, args, true);
 		}

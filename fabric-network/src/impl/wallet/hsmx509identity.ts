@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import * as Client from 'fabric-client';
+import { ICryptoSuite, ICryptoKey, User } from 'fabric-common';
 
 import { Identity } from './identity';
 import { IdentityData } from './identitydata';
@@ -85,23 +85,15 @@ export class HsmX509Provider implements IdentityProvider {
 		return data;
 	}
 
-	public async setUserContext(client: Client, identity: HsmX509Identity, name: string): Promise<void> {
-		const cryptoSuite: Client.ICryptoSuite = Client.newCryptoSuite(this.options);
-		client.setCryptoSuite(cryptoSuite);
+	public async getUserContext(identity: HsmX509Identity, name: string): Promise<User> {
+		const cryptoSuite: ICryptoSuite = User.newCryptoSuite(this.options);
+		const user: User = new User(name);
+		user.setCryptoSuite(cryptoSuite);
 
-		const publicKey: Client.ICryptoKey = await cryptoSuite.importKey(identity.credentials.certificate);
-		const privateKeyObj: Client.ICryptoKey = await cryptoSuite.getKey(publicKey.getSKI());
+		const publicKey: ICryptoKey = await cryptoSuite.importKey(identity.credentials.certificate);
+		const privateKeyObj: ICryptoKey = await cryptoSuite.getKey(publicKey.getSKI());
+		await user.setEnrollment(privateKeyObj, identity.credentials.certificate.toString(), identity.mspId, true);
 
-		const userData: Client.UserOpts = {
-			cryptoContent: {
-				privateKeyObj,
-				signedCertPEM: identity.credentials.certificate,
-			},
-			mspid: identity.mspId,
-			skipPersistence: true,
-			username: name,
-		};
-		const user: Client.User = await client.createUser(userData);
-		await client.setUserContext(user, true);
+		return user;
 	}
 }

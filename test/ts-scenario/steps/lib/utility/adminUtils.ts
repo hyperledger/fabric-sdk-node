@@ -274,7 +274,7 @@ export async function isOrgChaincodeLifecycleCommittedOnChannel(orgName: string,
 	for (const chaincode of message.installed_chaincodes) {
 		if (chaincode.label.localeCompare(chaincodeName) === 0) {
 			// check references for the deployed version on the channel
-			if (chaincode.references.hasOwnProperty(channelName)) {
+			if (Object.prototype.hasOwnProperty.call(chaincode.references, channelName)) {
 				for (const reference of chaincode.references[channelName].chaincodes) {
 					if (reference.name.localeCompare(deployedAs) === 0) {
 						hasCommitted = true;
@@ -348,7 +348,7 @@ export async function performChannelQueryOperation(queryOperation: string, chann
 				txId: orgClient.newTransactionID(true),
 			};
 			const chaincodes: Client.QueryInstalledChaincodesResult = await channel.queryInstalledChaincodes(request);
-			if ( (chaincodes.hasOwnProperty('installed_chaincodes')) &&  (chaincodes.installed_chaincodes.length !== 0) ) {
+			if ( (Object.prototype.hasOwnProperty.call(chaincodes, 'installed_chaincodes')) &&  (chaincodes.installed_chaincodes.length !== 0) ) {
 				for (const chaincode of chaincodes.installed_chaincodes) {
 					if (chaincode.label.localeCompare(args.contract) === 0) {
 						packageId = chaincode.package_id;

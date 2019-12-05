@@ -60,7 +60,7 @@ export interface ProposalResponse {
 
 export interface EndorsementResponse {
 	response: {
-		status: string,
+		status: Number,
 		message: string,
 		payload: Buffer
 	},
@@ -151,7 +151,7 @@ export class ServiceAction {
 export class Commit extends Proposal{
 	constructor(chaincodeName: string, channel: Channel, endorsement: Endorsement);
 	public build(idContext: IdentityContext, request: any): Buffer;
-	public send(request: any): Promise<any>;
+	public send(request: any, options: any): Promise<any>;
 }
 
 export class Endorsement extends Proposal{
@@ -170,7 +170,7 @@ export class Proposal extends ServiceAction{
 	public addCollectionInterest(collectionName: string): Proposal;
 	public addChaincodeCollectionsInterest(collectionName: string, collectionNames: string[]): Proposal;
 	public build(idContext: IdentityContext, request: any): Buffer;
-	public send(request: any): Promise<ProposalResponse>;
+	public send(request: any, options: any): Promise<ProposalResponse>;
 	public verifyProposalResponse(proposalResponse?: any): boolean;
 	public compareProposalResponseResults(proposalResponses: any[]): boolean;
 }

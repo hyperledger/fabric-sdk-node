@@ -38,6 +38,9 @@ const CHAINCODE = EventListener.CHAINCODE; // for chaincode event type event lis
 const FULL_BLOCK = 'full'; // to receive full blocks
 const FILTERED_BLOCK = 'filtered'; // to receive filtered blocks
 const PRIVATE_BLOCK = 'private'; // to receive full blocks and private data
+
+let count = 1;
+let streamCount = 1;
 /**
  * EventService is used to monitor for new blocks on a peer's ledger.
  * The class allows the user to register a listener to be notified when a
@@ -90,6 +93,8 @@ class EventService extends ServiceAction {
 		// will be set during the .build call
 		this.blockType = null;
 		this.replay = false;
+
+		this.myNumber = count++;
 	}
 
 	/**
@@ -100,7 +105,7 @@ class EventService extends ServiceAction {
 	 *  be used when no targets are provided on the send.
 	 */
 	setTargets(targets = checkParameter('targets')) {
-		const method = `setTargets[${this.name}]`;
+		const method = `setTargets[${this.name}] - #${this.myNumber}`;
 		logger.debug('%s - start', method);
 
 		if (!Array.isArray(targets)) {
@@ -139,8 +144,8 @@ class EventService extends ServiceAction {
 	 * Will close all event listeners and send an Error to all active listeners.
 	 */
 	close() {
-		const method = `close[${this.name}]`;
-		logger.debug(`${method} - start - hub`);
+		const method = `close[${this.name}] - #${this.myNumber}`;
+		logger.debug('%s - start - hub', method);
 		this._close(new Error('EventService has been shutdown by "close()" call'));
 	}
 
@@ -151,22 +156,23 @@ class EventService extends ServiceAction {
 	 * all listeners on the event callback.
 	 */
 	_close(reason_error = checkParameter('reason_error')) {
-		const method = `_close[${this.name}]`;
-		logger.debug(`${method} - start - called due to:: ${reason_error.message}`);
+		const method = `_close[${this.name}] - #${this.myNumber}`;
+		logger.debug('%s - start - called due to:: %s', method, reason_error.message);
 
 		if (this._close_running) {
-			logger.debug(`${method} - close is running - exiting`);
+			logger.debug('%s - close is running - exiting', method);
 			return;
 		}
 		this._close_running = true;
 		this._closeAllCallbacks(reason_error);
 		if (this._current_eventer) {
 			this._current_eventer.disconnect();
+			logger.debug('%s - closing stream %s', method, this.currentStreamNumber);
 			this._current_eventer = null;
 		}
 		this._close_running = false;
 
-		logger.debug(`${method} - end`);
+		logger.debug('%s - end', method);
 	}
 
 	/**
@@ -215,7 +221,7 @@ class EventService extends ServiceAction {
 	 *  signed.
 	 */
 	build(idContext = checkParameter('idContext'), options = {}) {
-		const method = `buildRequest[${this.name}]`;
+		const method = `buildRequest[${this.name}] - #${this.myNumber}`;
 		logger.debug(`${method} - start`);
 
 		const {startBlock, endBlock, blockType = FILTERED_BLOCK} = options;
@@ -330,8 +336,8 @@ class EventService extends ServiceAction {
 	 *  stream to the event service.
 	 */
 	async send(request = {}) {
-		const method = `send[${this.name}]`;
-		logger.debug(`${method} - start`);
+		const method = `send[${this.name}] - #${this.myNumber}`;
+		logger.debug('%s - start', method);
 
 		const {targets, requestTimeout} = request;
 		if (targets && Array.isArray(targets) && targets.length > 0) {
@@ -387,13 +393,14 @@ class EventService extends ServiceAction {
 	 * to a specific target's gRPC stream
 	 */
 	_startService(eventer, envelope, requestTimeout) {
-		const method = `_startService[${this.name}]`;
+		const method = `_startService[${this.name}] - #${this.myNumber}`;
+		logger.debug('%s - start', method);
 
 		return new Promise((resolve, reject) => {
 			if (!requestTimeout) {
 				requestTimeout = eventer.endpoint.options.requestTimeout;
 			}
-			logger.debug('%a - setup timer %s', method, requestTimeout);
+			logger.debug('%s - setup timer %s', method, requestTimeout);
 
 			logger.debug('%s - create stream setup timeout', method);
 			const connection_setup_timeout = setTimeout(() => {
@@ -408,11 +415,13 @@ class EventService extends ServiceAction {
 			// to check at times to be sure we are working with the
 			// correct one if the target gets restarted
 			const stream = eventer.stream;
+			const mystreamCount = streamCount++;
+			this.currentStreamNumber = mystreamCount;
 
 			logger.debug('%s - create stream listening callbacks - onData, onEnd, onStatus, onError', method);
 
 			eventer.stream.on('data', (deliverResponse) => {
-				logger.debug(`on.data - peer:${eventer.endpoint.url}`);
+				logger.debug(`on.data - peer:${eventer.endpoint.url} - ${mystreamCount}`);
 				if (stream !== eventer.stream) {
 					logger.debug('on.data - incoming block was from a cancelled stream');
 					return;
@@ -420,7 +429,7 @@ class EventService extends ServiceAction {
 
 				clearTimeout(connection_setup_timeout);
 
-				logger.debug('%s - resolve the promise', method);
+				logger.debug('on.data - resolve the promise');
 				resolve(eventer);
 
 				if (deliverResponse.Type === 'block' || deliverResponse.Type === 'filtered_block' || deliverResponse.Type === 'private_data') {
@@ -431,14 +440,17 @@ class EventService extends ServiceAction {
 						let private_data = null;
 						let block_num = null;
 						if (deliverResponse.Type === 'block') {
+							logger.debug('on.data - have full block data');
 							full_block = BlockDecoder.decodeBlock(deliverResponse.block);
 							block = full_block;
 							block_num = convertToLong(block.header.number);
 						} else if (deliverResponse.Type === 'filtered_block') {
+							logger.debug('on.data - have filtered block data');
 							block = JSON.parse(JSON.stringify(deliverResponse.filtered_block));
 							filtered_block = block;
 							block_num = convertToLong(block.number);
 						} else if (deliverResponse.Type === 'private_data') {
+							logger.debug('on.data - have private full block data');
 							full_block = JSON.parse(JSON.stringify(deliverResponse.filtered_block));
 							block = full_block;
 							private_data = block; // FIX ME get the private data
@@ -462,8 +474,8 @@ class EventService extends ServiceAction {
 							}
 						}
 					} catch (error) {
-						logger.error(`${method} EventService - ::${error.stack ? error.stack : error}`);
-						logger.error(`${method} EventService has detected an error ${error.toString()}`);
+						logger.error('%s EventService - ::%s', method, error.stack);
+						logger.error('%s EventService has detected an error %s', method, error);
 						// report error to all callbacks and shutdown this EventService
 						this._close(error);
 					}
@@ -493,11 +505,11 @@ class EventService extends ServiceAction {
 			});
 
 			eventer.stream.on('status', (response) => {
-				logger.debug('on status - status received: %j  peer:%s', response, eventer.endpoint.url);
+				logger.debug('on status - status received: %j  peer:%s - %s', response, eventer.endpoint.url, mystreamCount);
 			});
 
 			eventer.stream.on('end', () => {
-				logger.debug('on.end - peer:%s', eventer.endpoint.url);
+				logger.debug('on.end - peer:%s - %', eventer.endpoint.url, mystreamCount);
 				if (stream !== eventer.stream) {
 					logger.debug('on.data - incoming message was from a cancelled stream');
 					return;
@@ -524,7 +536,7 @@ class EventService extends ServiceAction {
 			});
 
 			eventer.stream.on('error', (err) => {
-				logger.debug('on.error - block peer:%s', eventer.endpoint.url);
+				logger.debug('on.error - block peer:%s - %s', eventer.endpoint.url, mystreamCount);
 				if (stream !== eventer.stream) {
 					logger.debug('%s - on.error - incoming error was from a cancelled stream - %s', method, err);
 					return;
@@ -574,8 +586,8 @@ class EventService extends ServiceAction {
 	 * connected and active.
 	 */
 	isStarted() {
-		const method = `isStarted[${this.name}]`;
-		logger.debug(`${method} - start`);
+		const method = `isStarted[${this.name}]  - #${this.myNumber}`;
+		logger.debug('%s - start', method);
 
 		if (this._current_eventer && this._current_eventer.isStreamReady()) {
 			return true;
@@ -589,8 +601,8 @@ class EventService extends ServiceAction {
 	 * {@link EventListener} assigned and waiting for an event.
 	 */
 	hasListeners() {
-		const method = `hasListeners[${this.name}]`;
-		logger.debug(`${method} - start`);
+		const method = `hasListeners[${this.name}] - #${this.myNumber}`;
+		logger.debug('%s - start', method);
 
 		if (this._eventListenerRegistrations.size > 0) {
 			return true;
@@ -605,14 +617,20 @@ class EventService extends ServiceAction {
 	 * Sends an error to all registered event callbacks
 	 */
 	_closeAllCallbacks(err) {
-		const method = `_closeAllCallbacks[${this.name}]`;
-		logger.debug(`${method} - start`);
+		const method = `_closeAllCallbacks[${this.name}] - #${this.myNumber}`;
+		logger.debug('%s - start', method);
 
 		logger.debug('%s - event registrations %s', method, this._eventListenerRegistrations.size);
 		for (const event_reg of this._eventListenerRegistrations.values()) {
-			logger.debug('%s - closing event registration:%s', method, event_reg);
-			event_reg.onEvent(err);
+			logger.debug('%s - tell listener of the error:%s', method, event_reg);
+			try {
+				event_reg.onEvent(err);
+			} catch (error) {
+				logger.error('%s - %s', method, error);
+			}
 		}
+
+		logger.debug('%s - clear out the listener list', method);
 		this._eventListenerRegistrations.clear();
 
 		// all done
@@ -679,8 +697,8 @@ class EventService extends ServiceAction {
 	 *  will be thrown when not included or false
 	 */
 	unregisterEventListener(eventListener = checkParameter('eventListener'), notThrow) {
-		const method = `unregisterEventListener[${this.name}]`;
-		logger.debug(`${method} - start - eventListener:${eventListener}`);
+		const method = `unregisterEventListener[${this.name}] - #${this.myNumber}`;
+		logger.debug('%s - start - eventListener:%s', method, eventListener);
 		if (this._eventListenerRegistrations.has(eventListener)) {
 			this._eventListenerRegistrations.delete(eventListener);
 		} else {
@@ -739,8 +757,8 @@ class EventService extends ServiceAction {
 	 *  remove this registration using {@link EventService#unregisterEvent})
 	 */
 	registerChaincodeListener(chaincodeId = checkParameter('chaincodeId'), eventName = checkParameter('eventName'), callback = checkParameter('callback'), options) {
-		const method = `registerChaincodeListener[${this.name}]`;
-		logger.debug(`${method} - start`);
+		const method = `registerChaincodeListener[${this.name}] - #${this.myNumber}`;
+		logger.debug('%s - start', method);
 
 		const event_name = new RegExp(eventName);
 		const event_reg = new EventListener(this, CHAINCODE, callback, options, event_name, chaincodeId);
@@ -776,8 +794,8 @@ class EventService extends ServiceAction {
 	 *  remove this registration using {@link EventService#unregisterEvent})
 	 */
 	registerBlockListener(callback = checkParameter('callback'), options) {
-		const method = `registerBlockListener[${this.name}]`;
-		logger.debug(`${method} - start`);
+		const method = `registerBlockListener[${this.name}] - #${this.myNumber}`;
+		logger.debug('%s - start', method);
 
 		const event_reg = new EventListener(this, BLOCK, callback, options, null);
 		this._eventListenerRegistrations.set(event_reg, event_reg);
@@ -813,15 +831,15 @@ class EventService extends ServiceAction {
 	 *  remove this registration using {@link EventService#unregisterEvent})
 	 */
 	registerTransactionListener(txid = checkParameter('txid'), callback = checkParameter('callback'), options) {
-		const method = `registerTransactionListener[${this.name}]`;
-		logger.debug(`${method} start - txid:${txid}`);
+		const method = `registerTransactionListener[${this.name}] - #${this.myNumber}`;
+		logger.debug('%s start - txid:%s', method, txid);
 
 		const send_options = Object.assign({}, options);
 		let _txid = txid;
 		// special case with 'all' transaction match
 		// need to not unregister automatically
 		if (txid.toLowerCase() === ALL) {
-			logger.debug('%s - listening for all transactions');
+			logger.debug('%s - listening for all transactions', method);
 			_txid = ALL;
 			if (typeof send_options.unregister === 'boolean') {
 				logger.debug('%s - unregister options is %s', method, send_options.unregister);
@@ -845,7 +863,7 @@ class EventService extends ServiceAction {
 	 * @return {EventListener} The EventListener for the transaction ID provided
 	 */
 	getTransactionListener(txid = checkParameter('txid')) {
-		const method = `getTransactionListener[${this.name}]`;
+		const method = `getTransactionListener[${this.name}] - #${this.myNumber}`;
 		logger.debug('%s - start', method);
 		let result = null;
 
@@ -869,16 +887,23 @@ class EventService extends ServiceAction {
 	 * blocknum
 	 */
 	_processEndBlock(block_num = checkParameter('block_num')) {
-		const method = `_processEndBlock[${this.name}]`;
-		logger.debug(`${method} - start`);
+		const method = `_processEndBlock[${this.name}] - #${this.myNumber}`;
+		logger.debug('%s - start', method);
 
 		for (const listener of this._eventListenerRegistrations.values()) {
 			if (listener.endBlock) {
 				if (listener.endBlock.equals(block_num)) {
+					logger.debug('%s - listener endblock seen %s', method, block_num.toString());
 					const event = new EventInfo(this);
 					event.endBlockReceived = true;
 					event.blockNumber = block_num;
-					listener.onEvent(null, event);
+
+					try {
+						listener.onEvent(null, event);
+					} catch (error) {
+						logger.error('%s - %s', method, error);
+					}
+
 					this.unregisterEventListener(listener, true);
 					logger.debug('%s - automatically unregister %s, end block: %s has been seen', method, listener, block_num);
 				} else {
@@ -897,27 +922,43 @@ class EventService extends ServiceAction {
 	 * @param {Object} block protobuf object
 	 */
 	_processBlockEvents(full, filtered, private_data, block_num) {
-		const method = `_processBlockEvents[${this.name}]`;
-		logger.debug(`${method} - start`);
+		const method = `_processBlockEvents[${this.name}] - #${this.myNumber}`;
+		logger.debug('%s - start - %s', method, this.blockType);
+
+		if (full) {
+			logger.debug('%s - have full block', method);
+		} else if (filtered) {
+			logger.debug('%s - have filtered block', method);
+		} else {
+			logger.debug('%s - missing block data', method);
+		}
+
+		if (private_data) {
+			logger.debug('%s - have private data', method);
+		}
 
 		if (!this._haveBlockListeners) {
-			logger.debug(`${method} - no block listeners`);
+			logger.debug('%s - no block listeners', method);
 			return;
 		}
 		for (const block_reg of this._eventListenerRegistrations.values()) {
 			if (block_reg.listenerType === BLOCK) {
-				logger.debug(`${method} - calling block listener callback`);
+				logger.debug('%s - calling block listener callback', method);
 				const event = new EventInfo(this);
 				event.block = full;
 				event.filteredBlock = filtered;
 				event.privateData = private_data;
 				event.blockNumber = block_num;
 
-				block_reg.onEvent(null, event);
+				try {
+					block_reg.onEvent(null, event);
+				} catch (error) {
+					logger.error('%s - %s', method, error);
+				}
 
 				// check to see if we should automatically unregister
 				if (block_reg.unregister) {
-					logger.debug(`${method} - automatically unregister block listener for ${block_reg}`);
+					logger.debug('%s - automatically unregister block listener for %s', method, block_reg);
 					this.unregisterEventListener(block_reg, true);
 				}
 			}
@@ -929,16 +970,16 @@ class EventService extends ServiceAction {
 	 * @param {Object} block protobuf object which might contain transactions
 	 */
 	_processTxEvents(full_block, filtered_block) {
-		const method = `_processTxEvents[${this.name}]`;
-		logger.debug(`${method} - start`);
+		const method = `_processTxEvents[${this.name}] - #${this.myNumber}`;
+		logger.debug('%s - start', method);
 
 		if (!this._haveTxListeners) {
-			logger.debug(`${method} - no tx listeners`);
+			logger.debug('%s - no tx listeners', method);
 			return;
 		}
 
 		if (filtered_block) {
-			logger.debug(`${method} filtered block number=${filtered_block.number}`);
+			logger.debug('%s filtered block number=%s', method, filtered_block.number);
 			if (filtered_block.filtered_transactions) {
 				for (const filtered_transaction of filtered_block.filtered_transactions) {
 					this._callTransactionListener(filtered_transaction.txid,
@@ -947,7 +988,7 @@ class EventService extends ServiceAction {
 				}
 			}
 		} else {
-			logger.debug(`${method} full block number=${full_block.header.number}`);
+			logger.debug('%s full block number=%s', method, full_block.header.number);
 			const txStatusCodes = full_block.metadata.metadata[fabprotos.common.BlockMetadataIndex.TRANSACTIONS_FILTER];
 			for (let index = 0; index < full_block.data.data.length; index++) {
 				const channel_header = full_block.data.data[index].payload.header.channel_header;
@@ -960,25 +1001,29 @@ class EventService extends ServiceAction {
 
 	/* internal utility method */
 	_callTransactionListener(tx_id, val_code, block_num) {
-		const method = `_callTransactionListener[${this.name}]`;
-		logger.debug(`${method} - start`);
+		const method = `_callTransactionListener[${this.name}] - #${this.myNumber}`;
+		logger.debug('%s - start', method);
 
 		for (const trans_reg of this._eventListenerRegistrations.values()) {
 			// check each listener to see if this transaction ID matches
 			if (trans_reg.listenerType === TX) {
 				if (trans_reg.event === tx_id || trans_reg.event === ALL) {
-					logger.debug(`${method} - about to call the transaction call back with code=${val_code} tx=${tx_id}`);
+					logger.debug('%s - about to call the transaction call back with code=%s tx=%s', method, val_code, tx_id);
 					const status = convertValidationCode(val_code);
 					const event = new EventInfo(this);
 					event.blockNumber = block_num;
 					event.transactionId = tx_id;
 					event.status = status;
 
-					trans_reg.onEvent(null, event);
+					try {
+						trans_reg.onEvent(null, event);
+					} catch (error) {
+						logger.error('%s - %s', method, error);
+					}
 
 					// check to see if we should automatically unregister
 					if (trans_reg.unregister) {
-						logger.debug(`${method} - automatically unregister tx listener for ${tx_id}`);
+						logger.debug('%s - automatically unregister tx listener for %s', method, tx_id);
 						this.unregisterEventListener(trans_reg, true);
 					}
 				} else {
@@ -993,11 +1038,11 @@ class EventService extends ServiceAction {
 	 * @param {Object} block protobuf object which might contain the chaincode event from the fabric
 	 */
 	_processChaincodeEvents(full_block, filtered_block) {
-		const method = `_processChaincodeEvents[${this.name}]`;
-		logger.debug(`${method} - start`);
+		const method = `_processChaincodeEvents[${this.name}] - #${this.myNumber}`;
+		logger.debug('%s - start', method);
 
 		if (!this._haveChaincodeListeners) {
-			logger.debug(`${method} - no registered chaincode event "listeners"`);
+			logger.debug('%s - no registered chaincode event "listeners"', method);
 			return;
 		}
 		const all_events = new Map();
@@ -1007,7 +1052,7 @@ class EventService extends ServiceAction {
 					if (filtered_transaction.transaction_actions) {
 						if (filtered_transaction.transaction_actions.chaincode_actions) {
 							for (const chaincode_action of filtered_transaction.transaction_actions.chaincode_actions) {
-								logger.debug(`${method} - filtered block chaincode_event ${chaincode_action}`);
+								logger.debug('%s - filtered block chaincode_event %s', method, chaincode_action);
 								// need to remove the payload since with filtered blocks it
 								// has an empty byte array value which is not the real value
 								// we do not want the listener to think that is the value
@@ -1024,7 +1069,7 @@ class EventService extends ServiceAction {
 			}
 		} else {
 			for (let index = 0; index < full_block.data.data.length; index++) {
-				logger.debug(`${method} - trans index=${index}`);
+				logger.debug('%s - trans index=%s', method, index);
 				try {
 					const env = full_block.data.data[index];
 					const channel_header = env.payload.header.channel_header;
@@ -1033,7 +1078,7 @@ class EventService extends ServiceAction {
 						if (tx && tx.actions) {
 							for (const {payload} of tx.actions) {
 								const chaincode_event = payload.action.proposal_response_payload.extension.events;
-								logger.debug(`${method} - full block chaincode_event ${chaincode_event}`);
+								logger.debug('%s - full block chaincode_event %s', method, chaincode_event);
 
 								const txStatusCodes = full_block.metadata.metadata[fabprotos.common.BlockMetadataIndex.TRANSACTIONS_FILTER];
 								const channelHeader = full_block.data.data[index].payload.header.channel_header;
@@ -1047,13 +1092,13 @@ class EventService extends ServiceAction {
 									all_events);
 							}
 						} else {
-							logger.debug(`${method} - no transactions or transaction actions`);
+							logger.debug('%s - no transactions or transaction actions', method);
 						}
 					} else {
-						logger.debug(`${method} - full_block is not endorser transaction type`);
+						logger.debug('%s - full_block is not endorser transaction type', method);
 					}
 				} catch (err) {
-					logger.error(`${method} - Error with chaincode event processing :: ${err}`);
+					logger.error('%s - Error with chaincode event processing :: %s', method, err);
 				}
 			}
 		}
@@ -1061,11 +1106,16 @@ class EventService extends ServiceAction {
 		// send all events for each listener
 		for (const [chaincode_reg, event] of all_events.entries()) {
 			logger.debug('%s - calling callback - %s', method, chaincode_reg.event);
-			chaincode_reg.onEvent(null, event);
+
+			try {
+				chaincode_reg.onEvent(null, event);
+			} catch (error) {
+				logger.error('%s - %s', method, error);
+			}
 
 			// see if we should automatically unregister this event listener
 			if (chaincode_reg.unregister) {
-				logger.debug(`${method} - automatically unregister chaincode event listener setting`);
+				logger.debug('%s - automatically unregister chaincode event listener setting', method);
 				this.unregisterEventListener(chaincode_reg, true);
 			}
 		}
@@ -1074,12 +1124,12 @@ class EventService extends ServiceAction {
 	}
 
 	_queueChaincodeEvent(chaincode_event, block_num, tx_id, val_code, all_events) {
-		const method = `_queueChaincodeEvent[${this.name}]`;
-		logger.debug(`${method} - start - chaincode_event ${chaincode_event}`);
+		const method = `_queueChaincodeEvent[${this.name}] - #${this.myNumber}`;
+		logger.debug('%s - start - chaincode_event %s', method, chaincode_event);
 
 		const tx_status = convertValidationCode(val_code);
 
-		logger.debug(`${method} - txid=${tx_id}  val_code=${tx_status}`);
+		logger.debug('%s - txid=%s  val_code=%s', method, tx_id, tx_status);
 
 		for (const chaincode_reg of this._eventListenerRegistrations.values()) {
 			// check each listener to see if this chaincode event matches
@@ -1087,7 +1137,7 @@ class EventService extends ServiceAction {
 				chaincode_reg.chaincodeId === chaincode_event.chaincode_id &&
 				chaincode_reg.event.test(chaincode_event.event_name)) {
 				// we have a match - save it to be sent later
-				logger.debug(`${method} - queuing chaincode event: ${chaincode_event.event_name}`);
+				logger.debug('%s - queuing chaincode event: %s', method, chaincode_event.event_name);
 				let event = all_events.get(chaincode_reg);
 				if (!event) {
 					event = new EventInfo(this);
@@ -1097,12 +1147,13 @@ class EventService extends ServiceAction {
 				}
 				event.chaincodeEvents.push(new ChaincodeEvent(
 					chaincode_event.chaincode_id,
-					tx_id, tx_status,
+					tx_id,
+					tx_status,
 					chaincode_event.event_name,
 					chaincode_event.payload
 				));
 			} else {
-				logger.debug(`${method} - NOT queuing chaincode event: ${chaincode_event.event_name}`);
+				logger.debug('%s - NOT queuing chaincode event: %s', method, chaincode_event. event_name);
 			}
 		}
 	}
@@ -1168,8 +1219,8 @@ class EventInfo {
 	/**
 	 * Constructs a {@link EventInfo} object that contains all information about an Event.
 	 */
-	constructor(eventHub) {
-		this.eventHub = eventHub;
+	constructor(eventService) {
+		this.eventService = eventService;
 		this.blockNumber;
 		this.transactionId;
 		this.transactionStatus;

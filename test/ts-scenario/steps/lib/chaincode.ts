@@ -211,7 +211,7 @@ export async function approveInstalledContractForOrg(orgName: string, contractNa
 					if (response.response.status === 200) {
 						BaseUtils.logMsg(`Chaincode approve - Good peer response status :: ${response.response.status}`);
 					} else {
-						BaseUtils.logAndThrow(`Chaincode approve - Problem with the chaincode approval :: ${response.status} ${response.message}`);
+						BaseUtils.logAndThrow(`Chaincode approve - Problem with the chaincode approval :: ${response.response.status} ${response.response.message}`);
 					}
 				} else {
 					BaseUtils.logAndThrow('Chaincode approve - Problem with the chaincode approval no response(s) returned');
@@ -253,10 +253,10 @@ export async function queryCommitReadinessAsOrgOnChannel(orgName: string, contra
 	try {
 		BaseUtils.logMsg(`About to checkCommitReadiness on channel ${channelName} for org ${orgName}`);
 		const results: Client.QueryApprovalStatusResponse = await channel.checkCommitReadiness(request);
-		if (typeof results === 'object' && results.hasOwnProperty('approvals')) {
+		if (typeof results === 'object' && Object.prototype.hasOwnProperty.call(results, 'approvals')) {
 			const approvals: Client.QueryApprovalStatusResults = results.approvals;
 			for (const key of Object.keys(expectedStatus)) {
-				if (!approvals.hasOwnProperty(key)) {
+				if (!Object.prototype.hasOwnProperty.call(approvals, key)) {
 					BaseUtils.logAndThrow(`Missing approval response for ${key}`);
 				}
 				if (results.approvals[key] !== expectedStatus[key]) {
@@ -302,7 +302,7 @@ export async function retrieveContractPackageAsOrgOnChannel(orgName: string, con
 		throw error;
 	}
 
-	if (result && result.hasOwnProperty('chaincode_install_package')) {
+	if (result && Object.prototype.hasOwnProperty.call(result, 'chaincode_install_package')) {
 		BaseUtils.logMsg('Successfully retrieved chaincode_install_package');
 		return result;
 	} else {
@@ -339,7 +339,7 @@ export async function queryForDefinedContractAsOrgOnChannel(orgName: string, con
 		// We might want to actually check what is in the response result
 		if (expected && result) {
 			for (const key of Object.keys(expected)) {
-				if (!result.hasOwnProperty(key)) {
+				if (!Object.prototype.hasOwnProperty.call(result, key)) {
 					BaseUtils.logAndThrow(`Missing approval response for ${key}`);
 				}
 				if (result[key] !== expected[key]) {
@@ -393,7 +393,7 @@ export async function performContractCommitWithOrgOnChannel(contractName: string
 					if (response.response.status === 200) {
 						BaseUtils.logMsg(`Valid response status: ${response.response.status}`);
 					} else {
-						BaseUtils.logAndThrow(`Problem with the chaincode commit :: status: ${response.status} message: ${response.message}`);
+						BaseUtils.logAndThrow(`Problem with the chaincode commit :: status: ${response.response.status} message: ${response.response.message}`);
 					}
 				} else {
 					BaseUtils.logAndThrow('Problem with the chaincode commit no response returned');
@@ -483,7 +483,7 @@ async function submitChannelRequest(channel: Client.Channel, request: any, expec
 				if (response.response.status === 200) {
 					BaseUtils.logMsg(` - Good peer response ${response.response.status}`);
 				} else {
-					BaseUtils.logAndThrow(`Problem with the chaincode invoke :: status: ${response.status} message: ${response.message}`);
+					BaseUtils.logAndThrow(`Problem with the chaincode invoke :: status: ${response.response.status} message: ${response.response.message}`);
 				}
 			} else {
 				BaseUtils.logAndThrow('Problem with the chaincode invoke no response returned');

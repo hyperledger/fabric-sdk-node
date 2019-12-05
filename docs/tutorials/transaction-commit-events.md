@@ -28,7 +28,7 @@ being queried.
 
 The SDK provides several selectable strategies for how it should wait for
 commit events following a transaction invocation. The available strategies
-are defined in `DefaultEventHandlerStrategies`. The desired strategy is
+are defined in `EventHandlerStrategies`. The desired strategy is
 (optionally) specified as an argument to `connect()` on the `Gateway`, and
 is used for all transaction invocations on Contracts obtained from that
 Gateway instance.
@@ -37,11 +37,11 @@ If no event handling strategy is specified, `MSPID_SCOPE_ALLFORTX` is used
 by default.
 
 ```javascript
-const { Gateway, DefaultEventHandlerStrategies } = require('fabric-network');
+const { Gateway, EventHandlerStrategies } = require('fabric-network');
 
 const connectOptions = {
-    eventHandlerOptions: {
-        strategy: DefaultEventHandlerStrategies.MSPID_SCOPE_ALLFORTX
+    transaction: {
+        strategy: EventHandlerStrategies.MSPID_SCOPE_ALLFORTX
     }
 }
 
@@ -52,7 +52,7 @@ await gateway.connect(connectionProfile, connectOptions);
 Specifying `null` as the event handling strategy will cause transaction
 invocations to return immediately after successfully sending the endorsed
 transaction to the orderer. It will not wait for any commit events to be
-received from peers.  For more details on *Event Handling Options*, see [DefaultEventHandlerOptions](module-fabric-network.Gateway.html#~DefaultEventHandlerOptions__anchor).
+received from peers.  For more details on *Event Handling Options*, see [TransactionOptions](module-fabric-network.Gateway.html#~TransactionOptions__anchor).
 
 ### Plug-in event handlers
 
@@ -61,20 +61,19 @@ strategies, it is possible to implement your own event handling. This is
 achieved by specifying your own factory function as the event handling
 strategy. The factory function should return a *transaction event handler*
 object and take two parameters:
-1. Transaction:  `Transaction`
-2. Blockchain network: `Network`
+1. transaction:  `Transaction`
+2. options: `any`
 
-The Network provides access to peers and event hubs from which events should
-be recieved.
+From the Transaction instance get the Network instance to provides access to peers and event services from which events will be recieved.
 
 ```javascript
-function createTransactionEventHandler(transaction, network) {
+function createTransactionEventHandler(transaction, options) {
     /* Your implementation here */
-    return new MyTransactionEventHandler(transaction, eventHubs);
+    return new MyTransactionEventHandler(transaction, options);
 }
 
 const connectOptions = {
-    eventHandlerOptions: {
+    transaction: {
         strategy: createTransactionEventhandler
     }
  }
@@ -83,10 +82,9 @@ const gateway = new Gateway();
 await gateway.connect(connectionProfile, connectOptions);
 ```
 
-For more details on *Event Handling Options*, see [DefaultEventHandlerOptions](module-fabric-network.Gateway.html#~DefaultEventHandlerOptions__anchor).
+For more details on *Event Handling Options*, see [TransactionOptions](module-fabric-network.Gateway.html#~TransactionOptions__anchor).
 
-The *transaction event handler* object returned must implement the following
-lifecycle functions.
+The *transaction event handler* object returned must implement the following functions.
 
 ```javascript
 class MyTransactionEventHandler {

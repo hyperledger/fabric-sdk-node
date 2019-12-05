@@ -28,8 +28,7 @@ class IDManager {
 	async registerUser(userID, issuerWallet, issuerId, options = {}) {
 		const identity = await issuerWallet.get(issuerId);
 		const provider = issuerWallet.getProviderRegistry().getProvider(identity.type);
-		await provider.setUserContext(this.defaultClient, identity, issuerId);
-		const user = await this.defaultClient.getUserContext();
+		const user = await provider.getUserContext(identity, issuerId);
 
 		const registerRequest = {
 			enrollmentID: userID,

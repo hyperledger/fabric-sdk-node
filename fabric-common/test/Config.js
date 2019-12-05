@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+const nconf = require('nconf');
 const rewire = require('rewire');
 const Config = require('../lib/Config');
 const ConfigRewire = rewire('../lib/Config');
-const nconf = require('nconf');
 
 const sinon = require('sinon');
 const chai = require('chai');

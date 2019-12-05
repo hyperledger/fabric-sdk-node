@@ -1,12 +1,12 @@
 /**
- * Copyright 2018 IBM All Rights Reserved.
+ * Copyright 2018, 2019 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
 'use strict';
 
-const AbstractEventStrategy = require('fabric-network/lib/impl/event/abstracteventstrategy');
+const BaseEventStrategy = require('fabric-network/lib/impl/event/baseeventstrategy');
 
 const logger = require('fabric-network/lib/logger').getLogger('AllForTxStrategy');
 
@@ -20,19 +20,23 @@ const logger = require('fabric-network/lib/logger').getLogger('AllForTxStrategy'
  * @private
  * @class
  */
-class AllForTxStrategy extends AbstractEventStrategy {
+class AllForTxStrategy extends BaseEventStrategy {
 	/**
 	 * @inheritdoc
 	 */
 	checkCompletion(counts, successFn, failFn) {
-		logger.debug('checkCompletion:', counts);
+		const method = 'checkCompletion';
+		logger.debug('%s:%j', method, counts);
 		const isAllResponsesReceived = (counts.success + counts.fail === counts.expected);
 		if (isAllResponsesReceived) {
 			if (counts.success > 0) {
+				logger.debug('%s - success', method);
 				successFn();
 			} else {
 				failFn(new Error('No successful events received'));
 			}
+		} else {
+			logger.debug('%s: not complete', method);
 		}
 	}
 }

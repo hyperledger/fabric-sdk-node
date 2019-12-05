@@ -405,7 +405,7 @@ const Channel = class {
 
 	static _getServiceEndpoints(remotes, type, mspid) {
 		const method = '_getServiceEndpoints';
-		logger.debug(`${method} - start`);
+		logger.debug(`${method} - start - ${mspid}`);
 		const results = [];
 		for (const remote of remotes) {
 			if (mspid) {
@@ -413,7 +413,7 @@ const Channel = class {
 					results.push(remote);
 					logger.debug(`${method} - ${type} mspid matched, added ${remote.name}`);
 				} else {
-					logger.debug(`${method} - ${type} not added ${remote.name}`);
+					logger.debug(`${method} - ${type} mpsid not matched, not added ${remote.name} - ${remote.mspid}`);
 				}
 			} else {
 				results.push(remote);

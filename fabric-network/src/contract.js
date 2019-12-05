@@ -1,5 +1,5 @@
 /**
- * Copyright 2018 IBM All Rights Reserved.
+ * Copyright 2018, 2019 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -48,70 +48,18 @@ function verifyNamespace(namespace) {
  * @hideconstructor
  */
 class Contract {
-	constructor(network, chaincodeId, gateway, checkpointer, namespace) {
-		logger.debug('in Contract constructor');
+	constructor(network, chaincodeId, namespace, collections) {
+		const method = `constructor[${namespace}]`;
+		logger.debug('%s - start', method);
 
 		verifyNamespace(namespace);
 
 		this.network = network;
-		this.channel = network.getChannel();
 		this.chaincodeId = chaincodeId;
-		this.gateway = gateway;
+		this.collections = collections;
+		this.gateway = network.gateway;
 		this.namespace = namespace;
-		this.checkpointer = checkpointer;
-	}
-
-	/**
-	 * Get the parent network on which this contract exists.
-	 * @private
-	 * @returns {Network} A network.
-	 */
-	getNetwork() {
-		return this.network;
-	}
-
-	/**
-	 * Create a new transaction ID.
-	 * @private
-	 * @returns {module:fabric-client.TransactionID} Transaction ID.
-	 */
-	createTransactionID() {
-		return this.gateway.getClient().newTransactionID();
-	}
-
-	/**
-	 * Get the chaincode ID of this contract.
-	 * @private
-	 * @returns {String} Chaincode ID.
-	 */
-	getChaincodeId() {
-		return this.chaincodeId;
-	}
-
-	getCheckpointer(options) {
-		if (options) {
-			if (typeof options.checkpointer === 'undefined') {
-				return this.checkpointer;
-			} else if (Object.prototype.hasOwnProperty.call(options, 'checkpointer') && typeof options.checkpointer.factory === 'function') {
-				return options.checkpointer;
-			} else if (options.checkpointer === false) {
-				return null;
-			}
-		}
-		return this.checkpointer;
-	}
-
-	getEventHubSelectionStrategy() {
-		return this.network.eventHubSelectionStrategy;
-	}
-
-	/**
-	 * Get event handler options specified by the user when creating the gateway.
-	 * @private
-	 * @returns {Object} Event handler options.
-	 */
-	getEventHandlerOptions() {
-		return this.gateway.getOptions().eventHandlerOptions;
+		this.discoveryService = null;
 	}
 
 	/**
@@ -124,14 +72,8 @@ class Contract {
      */
 	createTransaction(name) {
 		verifyTransactionName(name);
-
 		const qualifiedName = this._getQualifiedName(name);
 		const transaction = new Transaction(this, qualifiedName);
-
-		const eventHandlerStrategy = this.getEventHandlerOptions().strategy;
-		if (eventHandlerStrategy) {
-			transaction.setEventHandlerStrategy(eventHandlerStrategy);
-		}
 
 		return transaction;
 	}
@@ -174,27 +116,87 @@ class Contract {
 
 	/**
 	 * Create a commit event listener for this transaction.
-	 * @param {string} listenerName The name of the listener
 	 * @param {Function} callback - This callback will be triggered when
-	 *		a transaction commit event is emitted. It takes parameters
-	 * 		of error, event payload, block number, transaction ID and status
-	 * @param {module:fabric-network.Network~ListenerOptions} [options] - Optional. Options on
-	 * 		registrations allowing start and end block numbers.
-	 * @param {ChannelEventHub} [eventHub] - Optional. Used to override the event hub selection
-	 * @returns {module:fabric-network~CommitEventListener}
+	 * a transaction commit event is emitted. It takes parameters
+	 * of Error, Long, ChaincodeEvent[].
+	 * NOTE: All contract events contained within the block that match the
+	 * eventName will be provided at one time to the callback.
+	 * @param {module:fabric-network.Network~EventListenerOptions} [options] - Optional. Options on
+	 * registrations allowing start and end block numbers and an application event checkpointer
+	 * @param {EventService} [eventService] - Optional. Used to override the event service selection
+	 * @returns {module:fabric-network~ContractEventListener}
 	 * @async
 	 */
-	async addContractListener(listenerName, eventName, callback, options) {
-		if (!options) {
-			options = {};
+	async addContractListener(eventName, callback, options = {}, eventService) {
+		const listener = new ContractEventListener(this, eventName, callback, options);
+		if (eventService) {
+			listener.eventService = eventService;
 		}
-		options.replay = options.replay ? true : false;
-		options.checkpointer = this.getCheckpointer(options);
-		const listener = new ContractEventListener(this, listenerName, eventName, callback, options);
-		const network = this.getNetwork();
-		network._checkListenerNameIsUnique(listener.listenerName);
+		this.network.saveListener(listener, listener);
 		await listener.register();
+
 		return listener;
+	}
+
+	/*
+	 * Internal use
+	 * Use this method to get the DiscoveryHandler to get the endorsements
+	 * needed to commit a transaction.
+	 * The first time this method is called, this contract's DiscoveryService
+	 * instance will be setup.
+	 * The service will make a discovery request to the same
+	 * target as that used by the Network. The request will include this contract's
+	 * chaincode ID and collection names. This will enable the peer's discovery
+	 * service to generate an endorsement plan based on the chaincode's
+	 * endorsement policy, the collection configuration, and the current active
+	 * peers.
+	 * Note: It is assumed that the chaincode ID and collection names will not
+	 * change on successive calls. The contract's DiscoveryService will use the
+	 * "refreshAge" discovery option after the first call to determine if the
+	 * endorsement plan should be refreshed by a new call to the peer's
+	 * discovery service.
+	 * @param {Endorsement} endorsement instance
+	 * @return {DiscoveryHandler} The handler that will work with the discovery
+	 * endorsement plan to send a proposal to be endorsed to the peers as described
+	 * in the plan.
+	 */
+	async getDiscoveryHandler(endorsement) {
+		const method = `getDiscoveryHandler[${this._name}]`;
+		logger.debug('%s - start', method);
+		// if the network is using discovery, then this contract will too
+		if (this.network.discoveryService) {
+			// check if we have initialized this contract's discovery
+			if (!this.discoveryService) {
+				logger.debug('%s - setting up contract discovery', method);
+
+				this.discoveryService = this.network.channel.newDiscoveryService(this.chaincodeId);
+
+				const targets = this.network.discoveryService.targets;
+				const idx = this.network.gateway.identityContext;
+				const asLocalhost = this.network.gateway.getOptions().discovery.asLocalhost;
+				// this will tell discovery to build a plan based on the chaincode id
+				// and collections names of this contract that the endorsement must
+				// have been assigned.
+				const interest = endorsement.buildProposalInterest();
+
+				this.discoveryService.build(idx, {interest});
+				this.discoveryService.sign(idx);
+
+				// go get the endorsement plan from the peer's discovery service
+				// to be ready to be used by the transaction's submit
+				await this.discoveryService.send({asLocalhost, targets});
+				logger.debug('%s - endorsement plan retrieved', method);
+			}
+
+			// The handler will have access to the endorsement plan fetched
+			// by the parent DiscoveryService instance.
+			logger.debug('%s - returning a new discovery service handler', method);
+			return this.discoveryService.newHandler();
+		} else {
+
+			logger.debug('%s - not using discovery - return null handler', method);
+			return null;
+		}
 	}
 
 }

@@ -1,12 +1,12 @@
 /**
- * Copyright 2018 IBM All Rights Reserved.
+ * Copyright 2019 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
 'use strict';
 
-const logger = require('fabric-network/lib/logger').getLogger('AbstractStrategy');
+const logger = require('fabric-network/lib/logger').getLogger('BaseEventStrategy');
 
 /**
  * Event handling strategy base class that keeps counts of success and fail events to allow
@@ -18,33 +18,33 @@ const logger = require('fabric-network/lib/logger').getLogger('AbstractStrategy'
  * @private
  * @class
  */
-class AbstractEventStrategy {
+class BaseEventStrategy {
 	/**
 	 * Constructor.
-	 * @param {ChannelEventHub[]} eventHubs Event hubs for which to process events.
+	 * @param {EventService[]} eventServices - Event services for which to process events.
 	 */
-	constructor(eventHubs) {
-		if (eventHubs.length < 1) {
-			const message = 'No event hubs for strategy';
+	constructor(eventServices) {
+		if (!eventServices || !Array.isArray(eventServices)  || eventServices.length < 1) {
+			const message = 'No event services for strategy';
 			logger.error('constructor:', message);
 			throw new Error(message);
 		}
 
-		this.eventHubs = eventHubs;
+		this.eventServices = eventServices;
 		this.counts = {
 			success: 0,
 			fail: 0,
-			expected: eventHubs.length
+			expected: eventServices.length
 		};
 	}
 
 	/**
-	 * Called by event handler to obtain the event hubs to which it should listen. Gives an opportunity for
+	 * Called by event handler to obtain the event services to which it should listen. Gives an opportunity for
 	 * the strategy to store information on the events it expects to receive for later use in event handling.
-	 * @returns {ChannelEventHubs[]} Event hubs.
+	 * @returns {EventService[]} Event services.
 	 */
-	getEventHubs() {
-		return this.eventHubs;
+	getEventServices() {
+		return this.eventServices;
 	}
 
 	/**
@@ -70,7 +70,7 @@ class AbstractEventStrategy {
 	 * @typedef {Object} EventCount
 	 * @property {Number} success Number of successful events received.
 	 * @property {Number} fail Number of errors received.
-	 * @property {Number} expected Number of event hubs for which response events (or errors) are expected.
+	 * @property {Number} expected Number of event services for which response events (or errors) are expected.
 	 */
 
 	/**
@@ -81,8 +81,8 @@ class AbstractEventStrategy {
 	 * @param {Function} failFn Callback function to invoke if the strategy fails.
 	 */
 	checkCompletion(counts, successFn, failFn) { // eslint-disable-line no-unused-vars
-		throw new Error('AbstractEventStrategy.checkCompletion() not implemented');
+		throw new Error('BaseEventStrategy.checkCompletion() not implemented');
 	}
 }
 
-module.exports = AbstractEventStrategy;
+module.exports = BaseEventStrategy;
