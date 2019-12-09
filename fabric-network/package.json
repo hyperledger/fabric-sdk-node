@@ -1,5 +1,5 @@
 {
-  "name": "fabric-network",
+  "name": "@hyperledger/fabric-network",
   "description": "SDK for writing node.js applications to interact with Hyperledger Fabric. This package encapsulates the APIs to connect to a Fabric network, submit transactions and perform queries against the ledger.",
   "keywords": [
     "hyperledger",

@@ -1,5 +1,5 @@
 {
-  "name": "fabric-protos",
+  "name": "@hyperledger/fabric-protos",
   "version": "2.0.0-snapshot",
   "tag": "unstable",
   "description": "Protocol Buffer files and generated JavaScript classes for Hyperledger Fabric",

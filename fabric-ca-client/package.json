@@ -1,5 +1,5 @@
 {
-  "name": "fabric-ca-client",
+  "name": "@hyperledger/fabric-ca-client",
   "description": "SDK for writing node.js applications to interact with Hyperledger Fabric. This package encapsulates the APIs to interact with the Fabric CA to manage user certificates lifecycle such as register, enroll, renew and revoke.",
   "keywords": [
     "hyperledger",
