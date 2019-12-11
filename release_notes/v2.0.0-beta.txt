@@ -1,0 +1,46 @@
+Release Notes
+-------------
+The largest change you'll see is an improved lifecycle for managing chaincode
+that supports both centralized and decentralized governance models.
+The decentralized chaincode governance model enables organizations to come to
+agreement on a chaincode before it is made available for interacting with the
+ledger. Specifically, a sufficient number of organizations must approve the
+definition of a chaincode before it becomes active, as defined by configurable
+policies on a Fabric channel.
+https://fabric-sdk-node.github.io/master/tutorial-chaincode-lifecycle.html
+
+
+Bug fixes and documentation improvements.
+
+Breaking Changes
+---------------------
+
+CR https://gerrit.hyperledger.org/r/#/c/29360/ delivers breaking changes to the key-value stores and Cryptosuite classes:
+ - Key-value stores no longer initialize the store within the constructor; there is a seperate (async) `initialize` method that contains the initialize logic.
+ - Cryptosuite interface is now strictly followed. The `generateKey` method within implementations no longer accepts `ephemeral: true` as an option; the `generateEphemeralKey` method should be used to retrive an ephemeral key.
+
+The 'fabric-client' package transaction based API's will be replace by 'fabric-common'.
+'fabric-network' will be refactored to use the new API's of fabric-common.
+The 'fabric-client' package chaincode administrative based API's will be replaced by a new
+package 'fabric-admin' to be published in the new future.
+The 'fabric-client' package channel administrative based API's will not be replaced,
+use the Hyperledger Fabric command line feature for those actions.
+
+'fabric-client' package will be removed from v2 of the Fabric node.js SDK.
+
+Known Vulnerabilities
+---------------------
+none
+
+
+Resolved Vulnerabilities
+------------------------
+none
+
+
+Known Issues & Workarounds
+--------------------------
+
+
+Change Log
+----------
