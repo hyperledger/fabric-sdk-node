@@ -9,7 +9,7 @@ import { IdentityData } from './identitydata';
 import { IdentityProviderRegistry } from './identityproviderregistry';
 import { WalletStore } from './walletstore';
 
-const encoding: 'utf8' = 'utf8';
+const encoding = 'utf8';
 
 /**
  * Stores identity information for use when connecting a Gateway. The wallet is backed by a store that handles
@@ -18,7 +18,7 @@ const encoding: 'utf8' = 'utf8';
  * @memberof module:fabric-network
  */
 export class Wallet {
-	private readonly providerRegistry: IdentityProviderRegistry = new IdentityProviderRegistry();
+	private readonly providerRegistry = new IdentityProviderRegistry();
 	private readonly store: WalletStore;
 
 	/**
@@ -37,9 +37,9 @@ export class Wallet {
 	 * @returns {Promise<void>}
 	 */
 	public async put(label: string, identity: Identity): Promise<void> {
-		const json: IdentityData = this.providerRegistry.getProvider(identity.type).toJson(identity);
-		const jsonString: string = JSON.stringify(json);
-		const buffer: Buffer = Buffer.from(jsonString, encoding) as Buffer;
+		const json = this.providerRegistry.getProvider(identity.type).toJson(identity);
+		const jsonString = JSON.stringify(json);
+		const buffer = Buffer.from(jsonString, encoding) as Buffer;
 		await this.store.put(label, buffer);
 	}
 
@@ -49,13 +49,13 @@ export class Wallet {
 	 * @returns {Promise<module:fabric-network.Identity|undefined>} An identity if it exists; otherwise undefined.
 	 */
 	public async get(label: string): Promise<Identity|undefined> {
-		const buffer: Buffer | undefined = await this.store.get(label);
+		const buffer = await this.store.get(label);
 		if (!buffer) {
 			return undefined;
 		}
 
-		const jsonString: string = buffer.toString(encoding);
-		const json: IdentityData = JSON.parse(jsonString);
+		const jsonString = buffer.toString(encoding);
+		const json = JSON.parse(jsonString);
 		return this.providerRegistry.getProvider(json.type).fromJson(json);
 	}
 
@@ -68,12 +68,12 @@ export class Wallet {
 	}
 
 	/**
-	 * Delete an identity from the wallet.
+	 * Remove an identity from the wallet.
 	 * @param label Label used to identify the identity within the wallet.
 	 * @returns {Promise<void>}
 	 */
-	public async delete(label: string): Promise<void> {
-		await this.store.delete(label);
+	public async remove(label: string): Promise<void> {
+		await this.store.remove(label);
 	}
 
 	/**

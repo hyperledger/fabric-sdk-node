@@ -22,7 +22,7 @@ export class Wallets {
 	 * @returns {Promise<module:fabric-network.Wallet>} A wallet.
 	 */
 	public static async newInMemoryWallet(): Promise<Wallet> {
-		const store: InMemoryWalletStore = new InMemoryWalletStore();
+		const store = new InMemoryWalletStore();
 		return new Wallet(store);
 	}
 
@@ -32,7 +32,7 @@ export class Wallets {
 	 * @returns {Promise<module:fabric-network.Wallet>} A wallet.
 	 */
 	public static async newFileSystemWallet(directory: string): Promise<Wallet> {
-		const store: FileSystemWalletStore = await FileSystemWalletStore.newInstance(directory);
+		const store = await FileSystemWalletStore.newInstance(directory);
 		return new Wallet(store);
 	}
 
@@ -43,7 +43,7 @@ export class Wallets {
 	 * @returns {Promise<module:fabric-network.Wallet>} A wallet.
 	 */
 	public static async newCouchDBWallet(config: string | nano.Configuration, dbName: string = 'wallet'): Promise<Wallet> {
-		const store: CouchDBWalletStore = await CouchDBWalletStore.newInstance(config, dbName);
+		const store = await CouchDBWalletStore.newInstance(config, dbName);
 		return new Wallet(store);
 	}
 }

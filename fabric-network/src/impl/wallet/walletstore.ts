@@ -5,8 +5,8 @@
  */
 
 export interface WalletStore {
-	delete(label: string): Promise<void>;
 	get(label: string): Promise<Buffer | undefined>;
 	list(): Promise<string[]>;
 	put(label: string, data: Buffer): Promise<void>;
+	remove(label: string): Promise<void>;
 }

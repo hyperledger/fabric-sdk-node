@@ -11,9 +11,8 @@ import { X509Identity } from '../../../src/impl/wallet/x509identity';
 
 import chai = require('chai');
 import chaiAsPromised = require('chai-as-promised');
-import { InMemoryWalletStore } from '../../../src/impl/wallet/inmemorywalletstore';
 chai.use(chaiAsPromised);
-const expect: Chai.ExpectStatic = chai.expect;
+const expect = chai.expect;
 
 // tslint:disable: no-unused-expression
 
@@ -27,60 +26,60 @@ describe('Wallet', () => {
 		type: 'X.509',
 	};
 
-	const newWallet: any = async (): Promise<Wallet> => {
+	const newWallet = async (): Promise<Wallet> => {
 		return await Wallets.newInMemoryWallet();
 	};
 
 	it('List returns empty array for an empty wallet', async () => {
-		const wallet: Wallet = await newWallet();
-		const result: string[] = await wallet.list();
+		const wallet = await newWallet();
+		const result = await wallet.list();
 		expect(result).to.be.empty;
 	});
 
 	it('List returns added identity', async () => {
-		const wallet: Wallet = await newWallet();
-		const label: string = 'myId';
+		const wallet = await newWallet();
+		const label = 'myId';
 
 		await wallet.put(label, identity);
-		const result: string[] = await wallet.list();
+		const result = await wallet.list();
 
 		expect(result).to.have.members([label]);
 	});
 
-	it('List does not return deleted identities', async () => {
-		const wallet: Wallet = await newWallet();
-		const label: string = 'myId';
+	it('List does not return removed identities', async () => {
+		const wallet = await newWallet();
+		const label = 'myId';
 
 		await wallet.put(label, identity);
-		await wallet.delete(label);
-		const result: string[] = await wallet.list();
+		await wallet.remove(label);
+		const result = await wallet.list();
 
 		expect(result).to.be.empty;
 	});
 
 	it('Returns undefined when getting an identity that does not exist', async () => {
-		const wallet: Wallet = await newWallet();
-		const result: Identity | undefined = await wallet.get('NO');
+		const wallet = await newWallet();
+		const result = await wallet.get('NO');
 		expect(result).to.be.undefined;
 	});
 
-	it('Returns undefined when getting a deleted identity', async () => {
-		const wallet: Wallet = await newWallet();
-		const label: string = 'myId';
+	it('Returns undefined when getting a removed identity', async () => {
+		const wallet = await newWallet();
+		const label = 'myId';
 
 		await wallet.put(label, identity);
-		await wallet.delete(label);
-		const result: Identity | undefined = await wallet.get(label);
+		await wallet.remove(label);
+		const result = await wallet.get(label);
 
 		expect(result).to.be.undefined;
 	});
 
 	it('Get previously added identity', async () => {
-		const wallet: Wallet = await newWallet();
-		const label: string = 'myId';
+		const wallet = await newWallet();
+		const label = 'myId';
 
 		await wallet.put(label, identity);
-		const result: Identity | undefined = await wallet.get(label);
+		const result = await wallet.get(label);
 
 		expect(result).to.deep.equal(identity);
 	});
@@ -91,8 +90,8 @@ describe('Wallet', () => {
 			type: 'BAD_TYPE',
 		};
 
-		const wallet: Wallet = await newWallet();
-		const promise: Promise<void> = wallet.put('label', badIdentity);
+		const wallet = await newWallet();
+		const promise = wallet.put('label', badIdentity);
 
 		expect(promise).to.be.rejectedWith(badIdentity.type);
 	});

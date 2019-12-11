@@ -110,13 +110,13 @@
  */
 
 /**
- * Interface for store implementation that provide backing storage for identities in a [Wallet]{@link module:fabric-network.Wallet}.
+ * Interface for store implementations that provide backing storage for identities in a [Wallet]{@link module:fabric-network.Wallet}.
  * @interface WalletStore
  * @memberof module:fabric-network
  */
 /**
- * Delete data associated with a given label.
- * @function module:fabric-network.WalletStore#delete
+ * Remove data associated with a given label.
+ * @function module:fabric-network.WalletStore#remove
  * @async
  * @param {string} label A label identifying stored data.
  * @returns {Promise<void>}
