@@ -10,7 +10,6 @@ import path = require('path');
 import util = require('util');
 
 import rawRimraf = require('rimraf');
-// tslint:disable-next-line:typedef
 const rimraf = util.promisify(rawRimraf);
 
 import { FileSystemWalletStore } from '../../../src/impl/wallet/filesystemwalletstore';
@@ -18,10 +17,10 @@ import { InMemoryWalletStore } from '../../../src/impl/wallet/inmemorywalletstor
 import { WalletStore } from '../../../src/impl/wallet/walletstore';
 
 import chai = require('chai');
-const expect: Chai.ExpectStatic = chai.expect;
+const expect = chai.expect;
 
 async function createTempDir(): Promise<string> {
-	const prefix: string = path.join(os.tmpdir(), 'fabric-network-test-');
+	const prefix = path.join(os.tmpdir(), 'fabric-network-test-');
 	return await fs.mkdtemp(prefix);
 }
 
@@ -30,11 +29,11 @@ async function createTempDir(): Promise<string> {
 describe('WalletStore', () => {
 	let tmpDir: string|undefined;
 	const stores: { [k: string]: () => Promise<WalletStore> } = {
-		FileSystemWalletStore: async (): Promise<FileSystemWalletStore> => {
+		FileSystemWalletStore: async () => {
 			tmpDir = await createTempDir();
 			return await FileSystemWalletStore.newInstance(tmpDir);
 		},
-		InMemoryWalletStore: async (): Promise<WalletStore> => new InMemoryWalletStore(),
+		InMemoryWalletStore: async () => new InMemoryWalletStore(),
 	};
 
 	async function deleteTmpDir(): Promise<void> {
@@ -45,10 +44,10 @@ describe('WalletStore', () => {
 	}
 
 	describe('Common', () => {
-		Object.keys(stores).forEach((name: string) => {
+		Object.keys(stores).forEach((name) => {
 			describe(name, () => {
 				let store: WalletStore;
-				const data: Buffer = Buffer.from('DATA');
+				const data = Buffer.from('DATA');
 
 				beforeEach(async () => {
 					store = await stores[name]();
@@ -59,49 +58,49 @@ describe('WalletStore', () => {
 				});
 
 				it('Empty wallet contains no labels', async () => {
-					const result: string[] = await store.list();
+					const result = await store.list();
 					expect(result).to.be.empty;
 				});
 
 				it('Labels include added identities', async () => {
-					const label: string = 'label';
+					const label = 'label';
 
 					await store.put(label, data);
-					const result: string[] = await store.list();
+					const result = await store.list();
 
 					expect(result).to.have.members([label]);
 				});
 
-				it('Labels do not include deleted identities', async () => {
-					const label: string = 'label';
+				it('Labels do not include removed identities', async () => {
+					const label = 'label';
 
 					await store.put(label, data);
-					await store.delete(label);
-					const result: string[] = await store.list();
+					await store.remove(label);
+					const result = await store.list();
 
 					expect(result).to.be.empty;
 				});
 
 				it('Get returns undefined for identity that does not exist', async () => {
-					const result: Buffer | undefined = await store.get('MISSING');
+					const result = await store.get('MISSING');
 					expect(result).to.be.undefined;
 				});
 
-				it('Get returns undefined for deleted identity', async () => {
-					const label: string = 'label';
+				it('Get returns undefined for removed identity', async () => {
+					const label = 'label';
 
 					await store.put(label, data);
-					await store.delete(label);
-					const result: Buffer | undefined = await store.get(label);
+					await store.remove(label);
+					const result = await store.get(label);
 
 					expect(result).to.be.undefined;
 				});
 
 				it('Get an imported identity', async () => {
-					const label: string = 'label';
+					const label = 'label';
 
 					await store.put(label, data);
-					const result: Buffer | undefined = await store.get(label);
+					const result = await store.get(label);
 
 					expect(result).to.exist;
 					expect(result ? result.toString() : '').to.equal(data.toString());
@@ -112,27 +111,27 @@ describe('WalletStore', () => {
 
 	describe('FileSystemWalletStore', () => {
 		it('Does not list non-identity files', async () => {
-			const store: WalletStore = await stores.FileSystemWalletStore();
+			const store = await stores.FileSystemWalletStore();
 			if (!tmpDir) {
 				throw new Error('tmpDir not set');
 			}
-			const file: string = path.join(tmpDir, 'BAD_FILE');
+			const file = path.join(tmpDir, 'BAD_FILE');
 			await fs.writeFile(file, Buffer.from(''));
 
-			const result: string[] = await store.list();
+			const result = await store.list();
 
 			expect(result).to.be.empty;
 		});
 
 		it('Creates store directory if does not exist', async () => {
-			const label: string = 'label';
-			const data: Buffer = Buffer.from('DATA');
+			const label = 'label';
+			const data = Buffer.from('DATA');
 			tmpDir = await createTempDir();
 			await rimraf(tmpDir);
 
-			const store: FileSystemWalletStore = await FileSystemWalletStore.newInstance(tmpDir);
+			const store = await FileSystemWalletStore.newInstance(tmpDir);
 			await store.put(label, data);
-			const result: Buffer | undefined = await store.get(label);
+			const result = await store.get(label);
 
 			expect(result).to.exist;
 			expect(result ? result.toString() : '').to.equal(data.toString());

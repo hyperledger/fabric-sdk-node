@@ -9,7 +9,7 @@ import { WalletStore } from './walletstore';
 export class InMemoryWalletStore implements WalletStore {
 	private readonly map: Map<string, Buffer> = new Map();
 
-	public async delete(label: string): Promise<void> {
+	public async remove(label: string): Promise<void> {
 		this.map.delete(label);
 	}
 
