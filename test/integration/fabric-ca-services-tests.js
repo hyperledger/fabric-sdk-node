@@ -9,8 +9,7 @@
 // ---------------------- IMPORTANT ----------------------------
 // this test is meant to test the fabric-ca-client
 // package ALONE! do not require anything from the fabric-client
-// package. If anything is required but missing, add them to
-// the fabric-ca-client package by editing build/tasks/ca.js
+// package.
 // ///////////////////////////////////////////////////////////////
 
 const {Utils: utils, Signer, SigningIdentity, User} = require('fabric-common');
@@ -452,8 +451,8 @@ function getFabricCAService() {
 	ORGS = FabricCAServices.getConfigSetting('test-network');
 	fabricCAEndpoint = ORGS[userOrg].ca.url;
 
-	FabricCAServices.getConfigSetting('crypto-keysize', '256');// force for gulp test
-	FabricCAServices.setConfigSetting('crypto-hash-algo', 'SHA2');// force for gulp test
+	FabricCAServices.getConfigSetting('crypto-keysize', '256');// force for npm test
+	FabricCAServices.setConfigSetting('crypto-hash-algo', 'SHA2');// force for npm test
 
 	return new FabricCAServices(fabricCAEndpoint, tlsOptions, ORGS[userOrg].ca.name);
 }

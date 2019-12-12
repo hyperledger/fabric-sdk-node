@@ -1,3 +1,2 @@
-All crypto material here is generated via the contained shell scripts files and orchestrated by the parent gulp files `/build/tasks/certs.js`, please use the gulp files to create any required certificates by:
-- Obtain crypto-gen binaries (`gulp get-crypto-binaries`)
-- Generate the crypto material required for tests (`gulp generate-test-certs`)
+All crypto material here is generated via the contained shell scripts files and orchestrated by npm scripts, please use the following to create any required certificates:
+- Obtain crypto-gen binaries and generate the crypto material required for tests (`npm installAndGenerateCerts` or `npm installAndGenerateCertsMac`)

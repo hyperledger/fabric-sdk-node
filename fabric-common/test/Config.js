@@ -40,18 +40,23 @@ describe('Config', () => {
 			mapSettingsStub = sandbox.stub();
 			revert.push(ConfigRewire.__set__('Config.prototype.mapSettings', mapSettingsStub));
 			revert.push(ConfigRewire.__set__('nconf', nconf));
-			revert.push(ConfigRewire.__set__('process.env', 'env'));
+			process.env.property = 'test-property';
 		});
 
 		it('should call nconf, Config.mapSettings and set the correct properties', () => {
 			const config = new ConfigRewire();
-			sinon.assert.calledWith(mapSettingsStub, nconf.stores.mapenv, 'env');
+			sinon.assert.calledWith(mapSettingsStub, nconf.stores.mapenv, sinon.match.hasOwn('property', 'test-property'));
 			sinon.assert.calledWith(nconf.use, 'memory');
 			sinon.assert.called(nconf.argv);
 			sinon.assert.called(nconf.env);
 			sinon.assert.calledWith(nconf.use, 'mapenv', {type: 'memory'});
 			config._fileStores.should.deep.equal([]);
 			config._config.should.deep.equal(nconf);
+		});
+
+		afterEach(() => {
+			// Unset process.env.property
+			process.env.property = undefined;
 		});
 	});
 

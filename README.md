@@ -13,40 +13,29 @@ This project publishes the following npm packages:
 To build and test, the following pre-requisites must be installed first:
 * node runtime LTS version 10
 * npm tool version 6 or higher
-* gulp command (must be installed globally with `npm install -g gulp`)
-* docker (not required if you only want to run the headless tests with `npm test`, see below)
-
+* docker (only required for running integration tests, see below)
 
 ### Run unit tests
 Clone the project and launch the following commands to install the dependencies and perform various tasks.
 
 In the project root folder:
 * Install all dependancies via `npm install`
-* Optionally, to generate API docs via `gulp docs`
+* Optionally, to generate API docs via `npm run docs`
 * To generate the required crypto material used by the tests, use one of the following patform specific commands:
-  * For Linux `gulp install-and-generate-certs`
-  * For mac `gulp install-and-generate-certs-mac`
-  * For s390 `gulp install-and-generate-certs-s390`
-* To run the headless tests that do not require any additional set up use `npm test` or `gulp test-headless`
+  * For Linux `npm run installAndGenerateCerts`
+  * For mac `npm run installAndGenerateCertsMac`
+* To run the unit tests that do not require any additional set up, use `npm run testHeadless`
 
 ### Run Integration Tests
-Integration tests run on the master branch require the most recent stable Fabric images, which are hosted on Nexus. A utility script is provided to retrieve non-published docker images, which may be run using the command `npm run retrieve-images`
+Integration tests run on the master branch require the most recent stable Fabric images, which are hosted on Nexus. A utility script is provided to retrieve non-published docker images, which may be run using the command `npm run retrieveImages`
 
 Now you are ready to run the integration tests. It is advisable to clear out any previous key value stores that may have cached user enrollment certificates using the command (`rm -rf /tmp/hfc-*`, `rm -rf ~/.hfc-key-store`) prior to testing in isolation.
 
 We have functional and scenario based tests that may be run via the following commands:
-  * end to end (tape) tests may be run via `gulp run-test-functional`
-  * scenario (cucumber) tests may be run via `gulp run-test-scenario`
-  * You may run both integration test styles using `gulp run-test-fv-scenario`
-  * All tests (unit and integration) may be run using the command `gulp run-test-all`
-  * It is possible to run tests individually, though at the moment the functional integration tests are not isolated, meaning that there is a sequencing requirement. For instance, one of the e2e tests under `test/integration/e2e.js` may be run in the sequence
-    * `node test/integration/e2e/create-channel.js`
-    * `node test/integration/e2e/join-channel.js`
-    * `node test/integration/e2e/updateAnchorPeers.js`
-    * `node test/integration/e2e/install-chaincode.js`
-    * `node test/integration/e2e/instantiate-chaincode.js`
-    * `node test/integration/e2e/invoke-transaction.js`
-    * `node test/integration/e2e/query.js`
+  * end to end (tape) tests may be run via `npm run tapeIntegration`
+  * scenario (cucumber) tests may be run via `npm run cucumberScenario`
+  * You may run both integration test styles using `npm run tapeAndCucumber`
+  * All tests (unit and integration) may be run using the command `npm test`
 
 ### Special Tests for Hardware Security Module support via PKCS #11 interface
 

@@ -26,8 +26,8 @@ test('\n\n ** FabricCAServices - CertificateService Test **\n\n', async (t) => {
 
 		const fabricCAEndpoint1 = ORGS[userOrg1].ca.url;
 		const fabricCAEndpoint2 = ORGS[userOrg2].ca.url;
-		FabricCAServices.getConfigSetting('crypto-keysize', '256'); // force for gulp test
-		FabricCAServices.setConfigSetting('crypto-hash-algo', 'SHA2'); // force for gulp test
+		FabricCAServices.getConfigSetting('crypto-keysize', '256'); // force for npm test
+		FabricCAServices.setConfigSetting('crypto-hash-algo', 'SHA2'); // force for npm test
 
 		const caService1 = new FabricCAServices(fabricCAEndpoint1, tlsOptions, ORGS[userOrg1].ca.name);
 		const caService2 = new FabricCAServices(fabricCAEndpoint2, tlsOptions, ORGS[userOrg2].ca.name);

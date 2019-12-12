@@ -30,14 +30,6 @@ const client = new Client();
 const channel = client.newChannel(testUtil.END2END.channel);
 let ORGS;
 
-const querys = [];
-if (process.argv.length > 2) {
-	for (let i = 2; i < process.argv.length; i++) {
-		querys.push(process.argv[i]);
-	}
-}
-logger.info('Found query: %s', querys);
-
 test('  ---->>>>> get config <<<<<-----', (t) => {
 	testUtil.resetDefaults();
 	testUtil.setupChaincodeDeploy();
