@@ -112,9 +112,9 @@ class AbstractEventListener {
 			if (!this.getCheckpointer()) {
 				logger.error('Opted to use checkpointing without defining a checkpointer');
 			}
-			if ((this.clientOptions.startBlock !== null) && (this.clientOptions.startBlock !== undefined) ||
+			if ((this.clientOptions.startBlock !== null) && (this.clientOptions.startBlock !== undefined) &&
 				(this.clientOptions.endBlock !== null) && (this.clientOptions.endBlock !== undefined)) {
-				logger.debug('startBlock and/or endBlock were given. Disabling event replay');
+				logger.debug('startBlock and endBlock were given. Disabling event replay');
 				this.options.replay = false;
 			}
 		}
