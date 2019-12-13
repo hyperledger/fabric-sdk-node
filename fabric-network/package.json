@@ -9,8 +9,8 @@
   "tag": "unstable",
   "main": "index.js",
   "repository": {
-		"type": "git",
-		"url": "https://github.com/hyperledger/fabric-sdk-node"
+    "type": "git",
+    "url": "https://github.com/hyperledger/fabric-sdk-node"
   },
   "homepage": "https://www.hyperledger.org/projects/fabric",
   "author": {
