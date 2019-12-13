@@ -18,6 +18,7 @@ set -e -o pipefail
 readonly COMMIT_HASH=$(git rev-parse HEAD)
 readonly BUILD_DIR="${PROJECT_DIR}/docs/gen"
 readonly DOCS_BRANCH='gh-pages'
+readonly REDIRECT_TEMPLATE_DIR="${PROJECT_DIR}/docs/redirectTemplates"
 
 prepareStaging() {
     echo "Preparing staging directory: ${STAGING_DIR}"
@@ -40,6 +41,11 @@ buildDocs() {
     echo "Building documentation for ${SOURCE_BRANCH} branch in ${BUILD_DIR}"
     rm -rf "${BUILD_DIR}"
 	BUILD_BRANCH="${SOURCE_BRANCH}" DOCS_ROOT="${BUILD_DIR}" npm run docs
+
+    if [[ ${SOURCE_BRANCH} = master ]]; then
+        echo "Copying redirect templates from ${REDIRECT_TEMPLATE_DIR} to ${BUILD_DIR}"
+        rsync -r "${REDIRECT_TEMPLATE_DIR}/" "${BUILD_DIR}"
+    fi
 }
 
 copyToStaging() {
