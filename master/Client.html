@@ -1,106 +1,34 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width">
-	<title>Hyperledger Fabric SDK for node.js Class: Client</title>
+    <meta charset="utf-8">
+    <title>JSDoc: Class: Client</title>
 
-	<!--[if lt IE 9]>
-	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-	<![endif]-->
-	<link type="text/css" rel="stylesheet" href="styles/sunlight.default.css">
-
-	<link type="text/css" rel="stylesheet" href="styles/site.cosmo.css">
-
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
 </head>
 
 <body>
 
-<div class="navbar navbar-default navbar-fixed-top ">
-<div class="container">
-	<div class="navbar-header">
-		<a class="navbar-brand" href="index.html">Hyperledger Fabric SDK for node.js</a>
-		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
-			<span class="icon-bar"></span>
-			<span class="icon-bar"></span>
-			<span class="icon-bar"></span>
-        </button>
-	</div>
-	<div class="navbar-collapse collapse" id="topNavigation">
-		<ul class="nav navbar-nav">
-			
-			<li class="dropdown">
-				<a href="modules.list.html" class="dropdown-toggle" data-toggle="dropdown">Modules<b class="caret"></b></a>
-				<ul class="dropdown-menu ">
-					<li><a href="module-fabric-network.html">fabric-network</a></li>
-				</ul>
-			</li>
-			
-			<li class="dropdown">
-				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
-				<ul class="dropdown-menu ">
-					<li><a href="AffiliationService.html">AffiliationService</a></li><li><a href="BasePackager.html">BasePackager</a></li><li><a href="BasicCommitHandler.html">BasicCommitHandler</a></li><li><a href="BlockDecoder.html">BlockDecoder</a></li><li><a href="CertificateAuthority.html">CertificateAuthority</a></li><li><a href="Chaincode.html">Chaincode</a></li><li><a href="ChaincodeRegistration.html">ChaincodeRegistration</a></li><li><a href="Channel.html">Channel</a></li><li><a href="ChannelEventHub.html">ChannelEventHub</a></li><li><a href="ChannelPeer.html">ChannelPeer</a></li><li><a href="Client.html">Client</a></li><li><a href="CommitHandler.html">CommitHandler</a></li><li><a href="DiscoveryEndorsementHandler.html">DiscoveryEndorsementHandler</a></li><li><a href="EndorsementHandler.html">EndorsementHandler</a></li><li><a href="EndorsementPolicy.html">EndorsementPolicy</a></li><li><a href="Endpoint.html">Endpoint</a></li><li><a href="event_hub_number.html">event_hub_number</a></li><li><a href="FabricCAClient.html">FabricCAClient</a></li><li><a href="FabricCAServices.html">FabricCAServices</a></li><li><a href="IdentityService.html">IdentityService</a></li><li><a href="module-fabric-network.AbstractEventHubSelectionStrategy.html">fabric-network.AbstractEventHubSelectionStrategy</a></li><li><a href="module-fabric-network.AbstractEventListener.html">fabric-network.AbstractEventListener</a></li><li><a href="module-fabric-network.BaseCheckpointer.html">fabric-network.BaseCheckpointer</a></li><li><a href="module-fabric-network.CommitEventListener.html">fabric-network.CommitEventListener</a></li><li><a href="module-fabric-network.Contract.html">fabric-network.Contract</a></li><li><a href="module-fabric-network.ContractEventListener.html">fabric-network.ContractEventListener</a></li><li><a href="module-fabric-network.EventHubDisconnectError.html">fabric-network.EventHubDisconnectError</a></li><li><a href="module-fabric-network.EventHubManager.html">fabric-network.EventHubManager</a></li><li><a href="module-fabric-network.FabricError.html">fabric-network.FabricError</a></li><li><a href="module-fabric-network.FileSystemCheckpointer.html">fabric-network.FileSystemCheckpointer</a></li><li><a href="module-fabric-network.Gateway.html">fabric-network.Gateway</a></li><li><a href="module-fabric-network.HsmX509Provider.html">fabric-network.HsmX509Provider</a></li><li><a href="module-fabric-network.IdentityProviderRegistry.html">fabric-network.IdentityProviderRegistry</a></li><li><a href="module-fabric-network.Network.html">fabric-network.Network</a></li><li><a href="module-fabric-network.Query.html">fabric-network.Query</a></li><li><a href="module-fabric-network.RoundRobinEventHubSelectionStrategy.html">fabric-network.RoundRobinEventHubSelectionStrategy</a></li><li><a href="module-fabric-network.TimeoutError.html">fabric-network.TimeoutError</a></li><li><a href="module-fabric-network.Transaction.html">fabric-network.Transaction</a></li><li><a href="module-fabric-network.Wallet.html">fabric-network.Wallet</a></li><li><a href="module-fabric-network.Wallets.html">fabric-network.Wallets</a></li><li><a href="MSP.html">MSP</a></li><li><a href="MSPManager.html">MSPManager</a></li><li><a href="NetworkConfig_1_0.html">NetworkConfig_1_0</a></li><li><a href="Orderer.html">Orderer</a></li><li><a href="Organization.html">Organization</a></li><li><a href="Peer.html">Peer</a></li><li><a href="Remote.html">Remote</a></li><li><a href="TransactionID.html">TransactionID</a></li>
-				</ul>
-			</li>
-			
-			<li class="dropdown">
-				<a href="interfaces.list.html" class="dropdown-toggle" data-toggle="dropdown">Interfaces<b class="caret"></b></a>
-				<ul class="dropdown-menu ">
-					<li><a href="module-fabric-network.WalletStore.html">fabric-network.WalletStore</a></li>
-				</ul>
-			</li>
-			
-			<li class="dropdown">
-				<a href="tutorials.list.html" class="dropdown-toggle" data-toggle="dropdown">Tutorials<b class="caret"></b></a>
-				<ul class="dropdown-menu ">
-					<li><a href="tutorial-app-dev-env-setup.html">Setting up the Application Developer's Environment</a></li><li><a href="tutorial-chaincode-lifecycle.html">fabric-client: How to install and start your chaincode</a></li><li><a href="tutorial-channel-create.html">fabric-client: How to create a Hyperledger Fabric channel</a></li><li><a href="tutorial-channel-events.html">fabric-client: How to use the channel-based event service</a></li><li><a href="tutorial-discovery.html">fabric-client: How to use the discovery service</a></li><li><a href="tutorial-event-checkpointer.html">fabric-network: How to replay missed events</a></li><li><a href="tutorial-event-hub-management.html">fabric-network: How to automatically select and reconnect to event hubs</a></li><li><a href="tutorial-grpc-settings.html">fabric-client: How to set gRPC settings</a></li><li><a href="tutorial-handlers.html">fabric-client: How to use the endorsement and commit handlers</a></li><li><a href="tutorial-listening-to-events.html">fabric-network: How to listen to events</a></li><li><a href="tutorial-logging.html">fabric-client: How to use logging</a></li><li><a href="tutorial-metadata-chaincode.html">fabric-client: How to add CouchDB indexes during chaincode installation</a></li><li><a href="tutorial-mutual-tls.html">fabric-client: How to configure mutual TLS</a></li><li><a href="tutorial-network-config.html">fabric-client: How to use a common connection profile</a></li><li><a href="tutorial-private-data.html">How to use private data</a></li><li><a href="tutorial-query-peers.html">fabric-network: How to select peers for evaluating transactions (queries)</a></li><li><a href="tutorial-sign-transaction-offline.html">Working with an offline private key</a></li><li><a href="tutorial-transaction-commit-events.html">fabric-network: How to wait for transactions to be committed to the ledger</a></li><li><a href="tutorial-wallet.html">fabric-network: Using wallets to manage identities</a></li>
-				</ul>
-			</li>
-			
-			<li class="dropdown">
-				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
-				<ul class="dropdown-menu ">
-					<li><a href="global.html#CLIENT">CLIENT</a></li><li><a href="global.html#finalPackage">finalPackage</a></li><li><a href="global.html#HFAFFILIATIONMGR">HFAFFILIATIONMGR</a></li><li><a href="global.html#HFGENCRL">HFGENCRL</a></li><li><a href="global.html#HFINTERMEDIATECA">HFINTERMEDIATECA</a></li><li><a href="global.html#HFREGISTRARATTRIBUTES">HFREGISTRARATTRIBUTES</a></li><li><a href="global.html#HFREGISTRARDELEGATEROLES">HFREGISTRARDELEGATEROLES</a></li><li><a href="global.html#HFREGISTRARROLES">HFREGISTRARROLES</a></li><li><a href="global.html#HFREVOKER">HFREVOKER</a></li><li><a href="global.html#loadConfigGroup">loadConfigGroup</a></li><li><a href="global.html#loadConfigValue">loadConfigValue</a></li><li><a href="global.html#ORDERER">ORDERER</a></li><li><a href="global.html#package">package</a></li><li><a href="global.html#PEER">PEER</a></li><li><a href="global.html#toEnvelope">toEnvelope</a></li><li><a href="global.html#USER">USER</a></li>
-				</ul>
-			</li>
-			
-		</ul>
-        
-            <div class="col-sm-3 col-md-3">
-                <form class="navbar-form" role="search">
-                    <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Search" name="q" id="search-input">
-                        <div class="input-group-btn">
-                            <button class="btn btn-default" id="search-submit"><i class="glyphicon glyphicon-search"></i></button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        
-	</div>
+<div id="main">
 
-</div>
-</div>
+    <h1 class="page-title">Class: Client</h1>
+
+    
 
 
-<div class="container" id="toc-content">
-<div class="row">
 
-	
-	<div class="col-md-8">
-	
-		<div id="main">
-			
 
-	<h1 class="page-title">Class: Client</h1>
 <section>
 
 <header>
     
-        <h2>
-        Client
-        </h2>
+        <h2><span class="attribs"><span class="type-signature"></span></span>Client<span class="signature">()</span><span class="type-signature"></span></h2>
         
             <div class="class-description">A client instance provides the main API surface to interact with a network of
 peers and orderers. An application using the SDK may need to interact with
@@ -127,37 +55,36 @@ the User class) in the state store.</div>
     
 </header>
 
-
 <article>
     <div class="container-overview">
     
         
-<hr>
-<dt>
-    <h4 class="name" id="Client"><span class="type-signature"></span>new Client()</h4>
-    
-    
-</dt>
-<dd>
 
+    
+    <h2>Constructor</h2>
     
 
     
-
+    <h4 class="name" id="Client"><span class="type-signature"></span>new Client<span class="signature">()</span><span class="type-signature"></span></h4>
     
 
     
-    
 
-    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -167,42 +94,54 @@ the User class) in the state store.</div>
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line68">line 68</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-</dd>
+
+
+
+
+
+
+
+
+
+
+
 
     
     </div>
@@ -231,34 +170,39 @@ the User class) in the state store.</div>
     
 
     
+
+    
         <h3 class="subsection-title">Methods</h3>
 
-        <dl>
-            
-<hr>
-<dt>
-    <h4 class="name" id=".loadFromConfig"><span class="type-signature">&lt;async, static> </span>loadFromConfig(loadConfig)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Load a common connection profile object or load a JSON file and return a Client object.
-    </div>
-    
-
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
         
+            
 
-<table class="params table table-striped">
+    
+
+    
+    <h4 class="name" id=".loadFromConfig"><span class="type-signature">(async, static) </span>loadFromConfig<span class="signature">(loadConfig)</span><span class="type-signature"> &rarr; {<a href="Client.html">Client</a>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Load a common connection profile object or load a JSON file and return a Client object.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
     <thead>
     <tr>
         
@@ -292,7 +236,6 @@ the User class) in the state store.</div>
 <span class="param-type">string</span>
 
 
-
             
             </td>
 
@@ -307,17 +250,12 @@ the User class) in the state store.</div>
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -327,42 +265,53 @@ the User class) in the state store.</div>
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line109">line 109</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 <div class="param-desc">
     An instance of this class initialized with the network end points.
 </div>
@@ -378,45 +327,47 @@ the User class) in the state store.</div>
 <span class="param-type"><a href="Client.html">Client</a></span>
 
 
-
     </dd>
 </dl>
 
-
-        
-
     
-</dd>
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="_setUserFromConfig"><span class="type-signature">&lt;async> </span>_setUserFromConfig(opts)</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        Utility Method
+
+    
+    <h4 class="name" id="_setUserFromConfig"><span class="type-signature">(async) </span>_setUserFromConfig<span class="signature">(opts)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Utility Method
 Sets the user context based on the passed in username and password
 and the organization in the client section of the common connection profile
 settings.
-    </div>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
     
 
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
+<table class="params">
     <thead>
     <tr>
         
@@ -447,7 +398,6 @@ settings.
 <span class="param-type">Object</span>
 
 
-
             
             </td>
 
@@ -465,17 +415,12 @@ settings.
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -485,56 +430,70 @@ settings.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line1426">line 1426</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-</dd>
+
+
+
+
+
+
+
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="addConnectionOptions"><span class="type-signature"></span>addConnectionOptions(options)</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        Add a set of connection options to this client. These will be
+
+    
+    <h4 class="name" id="addConnectionOptions"><span class="type-signature"></span>addConnectionOptions<span class="signature">(options)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Add a set of connection options to this client. These will be
 available to be merged into an application's options when new
 peers and orderers are created or when a channel
 uses discovery to automatically create the peers and orderers on
@@ -548,19 +507,20 @@ Options will be automatically added when loading a common connection profile
 and the client section has the 'connection' section with an 'options' attribute.
 Default connection options will be initially loaded from the system configuration
 'connection-options' setting.
-    </div>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
     
 
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
+<table class="params">
     <thead>
     <tr>
         
@@ -591,7 +551,6 @@ Default connection options will be initially loaded from the system configuratio
 <span class="param-type">object</span>
 
 
-
             
             </td>
 
@@ -607,17 +566,12 @@ Default connection options will be initially loaded from the system configuratio
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -627,69 +581,84 @@ Default connection options will be initially loaded from the system configuratio
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line261">line 261</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-</dd>
+
+
+
+
+
+
+
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="addTlsClientCertAndKey"><span class="type-signature"></span>addTlsClientCertAndKey(opts)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Utility method to add the mutual tls client material to a set of options.
-    </div>
-    
 
     
 
     
+    <h4 class="name" id="addTlsClientCertAndKey"><span class="type-signature"></span>addTlsClientCertAndKey<span class="signature">(opts)</span><span class="type-signature"></span></h4>
+    
 
     
-    
-        <h5>Parameters:</h5>
-        
 
-<table class="params table table-striped">
+
+
+<div class="description">
+    Utility method to add the mutual tls client material to a set of options.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
     <thead>
     <tr>
         
@@ -720,7 +689,6 @@ Default connection options will be initially loaded from the system configuratio
 <span class="param-type">object</span>
 
 
-
             
             </td>
 
@@ -736,17 +704,12 @@ Default connection options will be initially loaded from the system configuratio
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -756,40 +719,51 @@ Default connection options will be initially loaded from the system configuratio
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line178">line 178</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Throws:</h5>
-    
-            
+
+
+
+
+
+
+
+<h5>Throws:</h5>
+
+        
 
     <div class="param-desc">
     
@@ -798,44 +772,48 @@ Default connection options will be initially loaded from the system configuratio
     </div>
 
 
-        
-
     
 
-    
-</dd>
+
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="buildConnectionOptions"><span class="type-signature"></span>buildConnectionOptions(options)</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        Utility method to merge connection options into a set of options and
+
+    
+    <h4 class="name" id="buildConnectionOptions"><span class="type-signature"></span>buildConnectionOptions<span class="signature">(options)</span><span class="type-signature"> &rarr; {object}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Utility method to merge connection options into a set of options and
 return a new options object.
 The client's options and default connection options will not override any passed settings by
 the same name, these will only be added as new settings to the
 application's options being passed in. see <a href="Client.html#addConnectionOptions">Client#addConnectionOptions</a>
 for how this client will have connection options to merge.
-    </div>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
     
 
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
+<table class="params">
     <thead>
     <tr>
         
@@ -866,7 +844,6 @@ for how this client will have connection options to merge.
 <span class="param-type">object</span>
 
 
-
             
             </td>
 
@@ -882,17 +859,12 @@ for how this client will have connection options to merge.
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -902,42 +874,53 @@ for how this client will have connection options to merge.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line199">line 199</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 <div class="param-desc">
     - The object holding both the application's options
          and this client's options.
@@ -954,29 +937,30 @@ for how this client will have connection options to merge.
 <span class="param-type">object</span>
 
 
-
     </dd>
 </dl>
 
-
-        
-
     
-</dd>
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="createChannel"><span class="type-signature"></span>createChannel(request)</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        Calls the orderer to start building the new channel.
+
+    
+    <h4 class="name" id="createChannel"><span class="type-signature"></span>createChannel<span class="signature">(request)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Calls the orderer to start building the new channel.
 
 A channel typically has more than one participating organizations. To create
 a new channel, one of the participating organizations should call this method
@@ -986,19 +970,20 @@ Once the channel is successfully created by the orderer, the next step is to
 have each organization's peer nodes join the channel, by sending the channel
 configuration to each of the peer nodes. The step is accomplished by calling the
 <a href="Channel.html#joinChannel">joinChannel()</a> method.
-    </div>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
     
 
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
+<table class="params">
     <thead>
     <tr>
         
@@ -1029,7 +1014,6 @@ configuration to each of the peer nodes. The step is accomplished by calling the
 <span class="param-type"><a href="global.html#ChannelRequest">ChannelRequest</a></span>
 
 
-
             
             </td>
 
@@ -1044,17 +1028,12 @@ configuration to each of the peer nodes. The step is accomplished by calling the
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -1064,42 +1043,53 @@ configuration to each of the peer nodes. The step is accomplished by calling the
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line777">line 777</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 <div class="param-desc">
     Promise for a result object with status on the acceptance of the create request
                    by the orderer. Note that this is not the confirmation of successful creation
@@ -1118,29 +1108,30 @@ configuration to each of the peer nodes. The step is accomplished by calling the
 <span class="param-type">Promise</span>
 
 
-
     </dd>
 </dl>
 
-
-        
-
     
-</dd>
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="createUser"><span class="type-signature">&lt;async> </span>createUser(opts)</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        Returns a User object with signing identities based on the
+
+    
+    <h4 class="name" id="createUser"><span class="type-signature">(async) </span>createUser<span class="signature">(opts)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Returns a User object with signing identities based on the
 private key and the corresponding x509 certificate. This allows applications
 to use pre-existing crypto materials (private keys and certificates) to
 construct user objects with signing capabilities, as an alternative to
@@ -1148,19 +1139,20 @@ dynamically enrolling users with <a href="http://hyperledger-fabric-ca.readthedo
 <br><br>
 Note that upon successful creation of the new user object, it is set to
 the client instance as the current <code>userContext</code>.
-    </div>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
     
 
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
+<table class="params">
     <thead>
     <tr>
         
@@ -1191,7 +1183,6 @@ the client instance as the current <code>userContext</code>.
 <span class="param-type"><a href="global.html#UserOpts">UserOpts</a></span>
 
 
-
             
             </td>
 
@@ -1206,17 +1197,12 @@ the client instance as the current <code>userContext</code>.
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -1226,42 +1212,53 @@ the client instance as the current <code>userContext</code>.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line1703">line 1703</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 <div class="param-desc">
     Promise for the user object.
 </div>
@@ -1277,46 +1274,48 @@ the client instance as the current <code>userContext</code>.
 <span class="param-type">Promise</span>
 
 
-
     </dd>
 </dl>
 
-
-        
-
     
-</dd>
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="extractChannelConfig"><span class="type-signature"></span>extractChannelConfig(config_envelope)</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        Extracts the protobuf 'ConfigUpdate' object out of the 'ConfigEnvelope' object
+
+    
+    <h4 class="name" id="extractChannelConfig"><span class="type-signature"></span>extractChannelConfig<span class="signature">(config_envelope)</span><span class="type-signature"> &rarr; {Array.&lt;byte>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Extracts the protobuf 'ConfigUpdate' object out of the 'ConfigEnvelope' object
 that is produced by the <a href="http://hyperledger-fabric.readthedocs.io/en/latest/configtxgen.html">configtxgen tool</a>.
 The returned object may then be signed using the signChannelConfig() method of this class. Once the all
 signatures have been collected, the 'ConfigUpdate' object and the signatures may be used
 on the <a href="Client.html#createChannel">createChannel()</a> or <a href="Client.html#updateChannel">updateChannel()</a> calls.
-    </div>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
     
 
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
+<table class="params">
     <thead>
     <tr>
         
@@ -1347,7 +1346,6 @@ on the <a href="Client.html#createChannel">createChannel()</a> or <a href="Clien
 <span class="param-type">Array.&lt;byte></span>
 
 
-
             
             </td>
 
@@ -1362,17 +1360,12 @@ on the <a href="Client.html#createChannel">createChannel()</a> or <a href="Clien
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -1382,42 +1375,53 @@ on the <a href="Client.html#createChannel">createChannel()</a> or <a href="Clien
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line680">line 680</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 <div class="param-desc">
     The encoded bytes of the ConfigUpdate protobuf, ready to be signed
 </div>
@@ -1433,48 +1437,50 @@ on the <a href="Client.html#createChannel">createChannel()</a> or <a href="Clien
 <span class="param-type">Array.&lt;byte></span>
 
 
-
     </dd>
 </dl>
 
-
-        
-
     
-</dd>
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="getCertificateAuthority"><span class="type-signature"></span>getCertificateAuthority(name)</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        Returns a CertificateAuthority implementation as defined by the settings
+
+    
+    <h4 class="name" id="getCertificateAuthority"><span class="type-signature"></span>getCertificateAuthority<span class="signature">(name)</span><span class="type-signature"> &rarr; {<a href="CertificateAuthority.html">CertificateAuthority</a>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Returns a CertificateAuthority implementation as defined by the settings
 in the currently loaded common connection profile and the client configuration.
 A common connection profile must be loaded for this get method to return a
 Certificate Authority.
 A crypto suite must be assigned to this client instance. Running the
 'initCredentialStores' method will build the stores and create a crypto
 suite as defined in the common connection profile.
-    </div>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
     
 
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
+<table class="params">
     <thead>
     <tr>
         
@@ -1505,7 +1511,6 @@ suite as defined in the common connection profile.
 <span class="param-type">string</span>
 
 
-
             
             </td>
 
@@ -1521,17 +1526,12 @@ suite as defined in the common connection profile.
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -1541,42 +1541,53 @@ suite as defined in the common connection profile.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line548">line 548</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 
 
 <dl>
@@ -1588,45 +1599,47 @@ suite as defined in the common connection profile.
 <span class="param-type"><a href="CertificateAuthority.html">CertificateAuthority</a></span>
 
 
-
     </dd>
 </dl>
 
-
-        
-
     
-</dd>
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="getChannel"><span class="type-signature"></span>getChannel(name, throwError)</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        Get a <a href="Channel.html">Channel</a> instance from the client instance. This is a memory-only lookup.
+
+    
+    <h4 class="name" id="getChannel"><span class="type-signature"></span>getChannel<span class="signature">(name, throwError)</span><span class="type-signature"> &rarr; {<a href="Channel.html">Channel</a>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Get a <a href="Channel.html">Channel</a> instance from the client instance. This is a memory-only lookup.
 If the loaded common connection profile has a channel by the 'name', a new channel instance
 will be created and populated with <a href="Orderer.html">Orderer</a> objects and <a href="Peer.html">Peer</a> objects
 as defined in the common connection profile.
-    </div>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
     
 
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
+<table class="params">
     <thead>
     <tr>
         
@@ -1659,7 +1672,6 @@ as defined in the common connection profile.
 <span class="param-type">string</span>
 
 
-
             
             </td>
 
@@ -1689,7 +1701,6 @@ as defined in the common connection profile.
 <span class="param-type">boolean</span>
 
 
-
             
             </td>
 
@@ -1711,17 +1722,12 @@ as defined in the common connection profile.
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -1731,42 +1737,53 @@ as defined in the common connection profile.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line341">line 341</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 <div class="param-desc">
     The channel instance
 </div>
@@ -1782,42 +1799,44 @@ as defined in the common connection profile.
 <span class="param-type"><a href="Channel.html">Channel</a></span>
 
 
-
     </dd>
 </dl>
 
-
-        
-
     
-</dd>
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="getClientCertHash"><span class="type-signature"></span>getClientCertHash(create)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Get the client certificate hash
-    </div>
-    
 
     
 
     
+    <h4 class="name" id="getClientCertHash"><span class="type-signature"></span>getClientCertHash<span class="signature">(create)</span><span class="type-signature"> &rarr; {Array.&lt;byte>}</span></h4>
+    
 
     
-    
-        <h5>Parameters:</h5>
-        
 
-<table class="params table table-striped">
+
+
+<div class="description">
+    Get the client certificate hash
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
     <thead>
     <tr>
         
@@ -1848,7 +1867,6 @@ as defined in the common connection profile.
 <span class="param-type">boolean</span>
 
 
-
             
             </td>
 
@@ -1864,17 +1882,12 @@ as defined in the common connection profile.
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -1884,42 +1897,53 @@ as defined in the common connection profile.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line1857">line 1857</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 <div class="param-desc">
     The hash of the client certificate
 </div>
@@ -1935,48 +1959,45 @@ as defined in the common connection profile.
 <span class="param-type">Array.&lt;byte></span>
 
 
-
     </dd>
 </dl>
 
-
-        
-
     
-</dd>
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="getClientConfig"><span class="type-signature"></span>getClientConfig()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Returns the "client" section of the common connection profile.
-    </div>
-    
 
     
 
     
+    <h4 class="name" id="getClientConfig"><span class="type-signature"></span>getClientConfig<span class="signature">()</span><span class="type-signature"> &rarr; {object}</span></h4>
+    
 
     
-    
 
-    
+
+
+<div class="description">
+    Returns the "client" section of the common connection profile.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -1986,42 +2007,53 @@ as defined in the common connection profile.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line620">line 620</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 <div class="param-desc">
     The client section from the configuration
 </div>
@@ -2037,49 +2069,46 @@ as defined in the common connection profile.
 <span class="param-type">object</span>
 
 
-
     </dd>
 </dl>
 
-
-        
-
     
-</dd>
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="getMspid"><span class="type-signature"></span>getMspid()</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        Returns the mspid of the client. The mspid is also used as the
+
+    
+    <h4 class="name" id="getMspid"><span class="type-signature"></span>getMspid<span class="signature">()</span><span class="type-signature"> &rarr; {string}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Returns the mspid of the client. The mspid is also used as the
 reference to the organization.
-    </div>
-    
+</div>
 
-    
 
-    
 
-    
-    
 
-    
+
+
+
+
+
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -2089,42 +2118,53 @@ reference to the organization.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line634">line 634</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 <div class="param-desc">
     the mspid of the organization defined in the client
          section of the loaded common connection profile
@@ -2141,47 +2181,49 @@ reference to the organization.
 <span class="param-type">string</span>
 
 
-
     </dd>
 </dl>
 
-
-        
-
     
-</dd>
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="getOrderer"><span class="type-signature"></span>getOrderer(name)</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        This method will create the <a href="Orderer.html">Orderer</a> if it does not exist and hold a
+
+    
+    <h4 class="name" id="getOrderer"><span class="type-signature"></span>getOrderer<span class="signature">(name)</span><span class="type-signature"> &rarr; {<a href="Orderer.html">Orderer</a>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    This method will create the <a href="Orderer.html">Orderer</a> if it does not exist and hold a
 reference to the instance object by name. This method is only able to
 create an instance of an orderer if there is a loaded connection profile that
 contains an orderer with the name. Orderers that have been created by the
 newOrderer method may be reference by the url if no name was provided
 in the options.
-    </div>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
     
 
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
+<table class="params">
     <thead>
     <tr>
         
@@ -2210,7 +2252,6 @@ in the options.
             
                 
 <span class="param-type">string</span>
-
 
 
             
@@ -2227,17 +2268,12 @@ in the options.
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -2247,42 +2283,53 @@ in the options.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line492">line 492</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 <div class="param-desc">
     The Orderer instance.
 </div>
@@ -2298,44 +2345,46 @@ in the options.
 <span class="param-type"><a href="Orderer.html">Orderer</a></span>
 
 
-
     </dd>
 </dl>
 
-
-        
-
     
-</dd>
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="getPeer"><span class="type-signature"></span>getPeer(name)</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        This method will create a <a href="Peer.html">Peer</a> instance. This method is only able to
+
+    
+    <h4 class="name" id="getPeer"><span class="type-signature"></span>getPeer<span class="signature">(name)</span><span class="type-signature"> &rarr; {<a href="Peer.html">Peer</a>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    This method will create a <a href="Peer.html">Peer</a> instance. This method is only able to
 create an instance of a peer if there is a loaded connection profile that
 contains a peer with the name.
-    </div>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
     
 
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
+<table class="params">
     <thead>
     <tr>
         
@@ -2366,7 +2415,6 @@ contains a peer with the name.
 <span class="param-type">string</span>
 
 
-
             
             </td>
 
@@ -2381,17 +2429,12 @@ contains a peer with the name.
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -2401,42 +2444,53 @@ contains a peer with the name.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line428">line 428</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 <div class="param-desc">
     The Peer instance.
 </div>
@@ -2452,45 +2506,47 @@ contains a peer with the name.
 <span class="param-type"><a href="Peer.html">Peer</a></span>
 
 
-
     </dd>
 </dl>
 
-
-        
-
     
-</dd>
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="getPeersForOrg"><span class="type-signature"></span>getPeersForOrg(mspid)</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        Returns a list of <a href="Peer.html">Peer</a> for the mspid of an organization as defined
+
+    
+    <h4 class="name" id="getPeersForOrg"><span class="type-signature"></span>getPeersForOrg<span class="signature">(mspid)</span><span class="type-signature"> &rarr; {Array.&lt;<a href="Peer.html">Peer</a>>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Returns a list of <a href="Peer.html">Peer</a> for the mspid of an organization as defined
 in the currently loaded common connection profile. If no id is
 provided then the organization named in the currently active network
 configuration's client section will be used.
-    </div>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
     
 
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
+<table class="params">
     <thead>
     <tr>
         
@@ -2521,7 +2577,6 @@ configuration's client section will be used.
 <span class="param-type">string</span>
 
 
-
             
             </td>
 
@@ -2536,17 +2591,12 @@ configuration's client section will be used.
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -2556,42 +2606,53 @@ configuration's client section will be used.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line449">line 449</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 <div class="param-desc">
     An array of Peer instances that are defined for this organization
 </div>
@@ -2607,48 +2668,45 @@ configuration's client section will be used.
 <span class="param-type">Array.&lt;<a href="Peer.html">Peer</a>></span>
 
 
-
     </dd>
 </dl>
 
-
-        
-
     
-</dd>
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="getStateStore"><span class="type-signature"></span>getStateStore()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        A convenience method for obtaining the state store object in use by this client.
-    </div>
-    
 
     
 
     
+    <h4 class="name" id="getStateStore"><span class="type-signature"></span>getStateStore<span class="signature">()</span><span class="type-signature"> &rarr; {module:api.KeyValueStore}</span></h4>
+    
 
     
-    
 
-    
+
+
+<div class="description">
+    A convenience method for obtaining the state store object in use by this client.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -2658,42 +2716,53 @@ configuration's client section will be used.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line1668">line 1668</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 <div class="param-desc">
     The KeyValueStore implementation object set on this Client, or null if one has not been set.
 </div>
@@ -2709,29 +2778,30 @@ configuration's client section will be used.
 <span class="param-type">module:api.KeyValueStore</span>
 
 
-
     </dd>
 </dl>
 
-
-        
-
     
-</dd>
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="getUserContext"><span class="type-signature">&lt;async> </span>getUserContext(name, checkPersistence)</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        Returns the user by the given name. This can be a synchronous call or asynchronous call, depending
+
+    
+    <h4 class="name" id="getUserContext"><span class="type-signature">(async) </span>getUserContext<span class="signature">(name, checkPersistence)</span><span class="type-signature"> &rarr; {Promise.&lt;User>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Returns the user by the given name. This can be a synchronous call or asynchronous call, depending
 on whether "checkPersistent" is truthy or not. If truthy, the method is asynchronous and returns a Promise,
 otherwise it's synchronous.
 
@@ -2740,19 +2810,20 @@ in the storage which can be accessed by authorized users of the application (aut
 the application outside of the SDK). This function attempts to load the user by name from the local storage
 (via the KeyValueStore interface). The loaded user object must represent an enrolled user with a valid
 enrollment certificate signed by a trusted CA (such as the CA server).
-    </div>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
     
 
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
+<table class="params">
     <thead>
     <tr>
         
@@ -2783,7 +2854,6 @@ enrollment certificate signed by a trusted CA (such as the CA server).
 <span class="param-type">string</span>
 
 
-
             
             </td>
 
@@ -2809,7 +2879,6 @@ enrollment certificate signed by a trusted CA (such as the CA server).
 <span class="param-type">boolean</span>
 
 
-
             
             </td>
 
@@ -2826,17 +2895,12 @@ enrollment certificate signed by a trusted CA (such as the CA server).
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -2846,42 +2910,53 @@ enrollment certificate signed by a trusted CA (such as the CA server).
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line1589">line 1589</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 <div class="param-desc">
     Promise for the user object corresponding to the name, or null if the user does not exist or if the
                           state store has not been set.
@@ -2898,52 +2973,49 @@ enrollment certificate signed by a trusted CA (such as the CA server).
 <span class="param-type">Promise.&lt;User></span>
 
 
-
     </dd>
 </dl>
 
-
-        
-
     
-</dd>
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="initCredentialStores"><span class="type-signature">&lt;async> </span>initCredentialStores()</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        Sets the state and crypto suite for use by this client.
+
+    
+    <h4 class="name" id="initCredentialStores"><span class="type-signature">(async) </span>initCredentialStores<span class="signature">()</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Sets the state and crypto suite for use by this client.
 This requires that a common connection profile has been loaded. Will use the settings
 from the common connection profile along with the system configuration to build
 instances of the stores and assign them to this client and the crypto suites
 if needed.
-    </div>
-    
+</div>
 
-    
 
-    
 
-    
-    
 
-    
+
+
+
+
+
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -2953,75 +3025,90 @@ if needed.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line1252">line 1252</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-</dd>
+
+
+
+
+
+
+
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="installChaincode"><span class="type-signature">&lt;async> </span>installChaincode(request, timeout)</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        A chaincode must be installed to peers and instantiated on a channel
+
+    
+    <h4 class="name" id="installChaincode"><span class="type-signature">(async) </span>installChaincode<span class="signature">(request, timeout)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    A chaincode must be installed to peers and instantiated on a channel
 before it can be called to process transactions.
 <br><br>
 Chaincode installation is simply uploading the chaincode source and
 dependencies to the peers. This operation is "channel-agnostic" and is
 performed on a peer-by-peer basis. Only the peer organization's ADMIN
 identities are allowed to perform this operation.
-    </div>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
     
 
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
+<table class="params">
     <thead>
     <tr>
         
@@ -3052,7 +3139,6 @@ identities are allowed to perform this operation.
 <span class="param-type"><a href="global.html#Deprecated_ChaincodeInstallRequest">Deprecated_ChaincodeInstallRequest</a></span>
 
 
-
             
             </td>
 
@@ -3076,7 +3162,6 @@ identities are allowed to perform this operation.
 <span class="param-type">Number</span>
 
 
-
             
             </td>
 
@@ -3094,17 +3179,12 @@ identities are allowed to perform this operation.
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -3114,51 +3194,55 @@ identities are allowed to perform this operation.
 
     
 
-	
-	<dt class="important tag-deprecated method-doc-label method-doc-details-label">Deprecated:</dt>
-	
-    <dd class="yes-def tag-deprecated">
-        <ul class="dummy">
-            <li>Yes</li>
-        </ul>
-    </dd>
-    
     
 
-	
+    
 
-	
+    
 
-	
+    
+        <dt class="important tag-deprecated">Deprecated:</dt><dd class="yes-def tag-deprecated"><ul class="dummy"><li>Yes</li></ul></dd>
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line1154">line 1154</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 <div class="param-desc">
     A Promise for a <a href="global.html#ProposalResponseObject">ProposalResponseObject</a>
 </div>
@@ -3174,29 +3258,30 @@ identities are allowed to perform this operation.
 <span class="param-type">Promise</span>
 
 
-
     </dd>
 </dl>
 
-
-        
-
     
-</dd>
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="isDevMode"><span class="type-signature"></span>isDevMode()</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        Determine if the fabric backend is started in
+
+    
+    <h4 class="name" id="isDevMode"><span class="type-signature"></span>isDevMode<span class="signature">()</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Determine if the fabric backend is started in
 <a href="http://hyperledger-fabric.readthedocs.io/en/latest/chaincode4ade.html?highlight=develop%2520mode#testing-using-dev-mode">development mode</a>.
 In development mode, the endorsing peers will not attempt to spin up a docker instance to run
 the target chaincode requested by a transaction proposal, but instead redirect the invocation
@@ -3206,25 +3291,21 @@ it easier to test changes to the chaincode during chaincode development.
 The client instance can be set to dev mode to reflect the backend's development mode. This will
 cause the SDK to make adjustments in certain behaviors such as not sending the chaincode package
 to the peers during chaincode install.
-    </div>
-    
+</div>
 
-    
 
-    
 
-    
-    
 
-    
+
+
+
+
+
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -3234,70 +3315,85 @@ to the peers during chaincode install.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line279">line 279</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-</dd>
+
+
+
+
+
+
+
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="loadFromConfig"><span class="type-signature">&lt;async> </span>loadFromConfig(config)</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        Load a common connection profile object or load a JSON file and update this client with
+
+    
+    <h4 class="name" id="loadFromConfig"><span class="type-signature">(async) </span>loadFromConfig<span class="signature">(config)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Load a common connection profile object or load a JSON file and update this client with
 any values in the config.
-    </div>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
     
 
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
+<table class="params">
     <thead>
     <tr>
         
@@ -3331,7 +3427,6 @@ any values in the config.
 <span class="param-type">string</span>
 
 
-
             
             </td>
 
@@ -3346,17 +3441,12 @@ any values in the config.
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -3366,69 +3456,84 @@ any values in the config.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line122">line 122</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-</dd>
+
+
+
+
+
+
+
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="loadUserFromStateStore"><span class="type-signature">&lt;async> </span>loadUserFromStateStore(name)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Restore the state of the User by the given name from the key value store (if found).  If not found, return null.
-    </div>
-    
 
     
 
     
+    <h4 class="name" id="loadUserFromStateStore"><span class="type-signature">(async) </span>loadUserFromStateStore<span class="signature">(name)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+    
 
     
-    
-        <h5>Parameters:</h5>
-        
 
-<table class="params table table-striped">
+
+
+<div class="description">
+    Restore the state of the User by the given name from the key value store (if found).  If not found, return null.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
     <thead>
     <tr>
         
@@ -3457,7 +3562,6 @@ any values in the config.
             
                 
 <span class="param-type">string</span>
-
 
 
             
@@ -3474,17 +3578,12 @@ any values in the config.
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -3494,42 +3593,53 @@ any values in the config.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line1641">line 1641</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 <div class="param-desc">
     A Promise for a {User} object upon successful restore, or if the user by the name
                    does not exist in the state store, returns null without rejecting the promise
@@ -3546,44 +3656,46 @@ any values in the config.
 <span class="param-type">Promise</span>
 
 
-
     </dd>
 </dl>
 
-
-        
-
     
-</dd>
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="newChaincode"><span class="type-signature"></span>newChaincode(name, version)</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        Returns a <a href="Chaincode.html">Chaincode</a> instance with the given name. This represents
+
+    
+    <h4 class="name" id="newChaincode"><span class="type-signature"></span>newChaincode<span class="signature">(name, version)</span><span class="type-signature"> &rarr; {<a href="Chaincode.html">Chaincode</a>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Returns a <a href="Chaincode.html">Chaincode</a> instance with the given name. This represents
 an administrative object to be used when an application is maintaining
 the lifecycle of chaincode.
-    </div>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
     
 
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
+<table class="params">
     <thead>
     <tr>
         
@@ -3612,7 +3724,6 @@ the lifecycle of chaincode.
             
                 
 <span class="param-type">string</span>
-
 
 
             
@@ -3638,7 +3749,6 @@ the lifecycle of chaincode.
 <span class="param-type">string</span>
 
 
-
             
             </td>
 
@@ -3653,17 +3763,12 @@ the lifecycle of chaincode.
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -3673,42 +3778,53 @@ the lifecycle of chaincode.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line300">line 300</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 <div class="param-desc">
     a new instance of <a href="Chaincode.html">Chaincode</a>.
 </div>
@@ -3724,42 +3840,44 @@ the lifecycle of chaincode.
 <span class="param-type"><a href="Chaincode.html">Chaincode</a></span>
 
 
-
     </dd>
 </dl>
 
-
-        
-
     
-</dd>
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="newChannel"><span class="type-signature"></span>newChannel(name)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Returns a <a href="Channel.html">Channel</a> instance with the given name. This represents a channel and its associated ledger.
-    </div>
-    
 
     
 
     
+    <h4 class="name" id="newChannel"><span class="type-signature"></span>newChannel<span class="signature">(name)</span><span class="type-signature"> &rarr; {<a href="Channel.html">Channel</a>}</span></h4>
+    
 
     
-    
-        <h5>Parameters:</h5>
-        
 
-<table class="params table table-striped">
+
+
+<div class="description">
+    Returns a <a href="Channel.html">Channel</a> instance with the given name. This represents a channel and its associated ledger.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
     <thead>
     <tr>
         
@@ -3790,7 +3908,6 @@ the lifecycle of chaincode.
 <span class="param-type">string</span>
 
 
-
             
             </td>
 
@@ -3805,17 +3922,12 @@ the lifecycle of chaincode.
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -3825,42 +3937,53 @@ the lifecycle of chaincode.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line319">line 319</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 <div class="param-desc">
     The uninitialized channel instance.
 </div>
@@ -3876,48 +3999,50 @@ the lifecycle of chaincode.
 <span class="param-type"><a href="Channel.html">Channel</a></span>
 
 
-
     </dd>
 </dl>
 
-
-        
-
     
-</dd>
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="newOrderer"><span class="type-signature"></span>newOrderer(url, opts)</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        Returns an <a href="Orderer.html">Orderer</a> object with the given url and opts. An orderer object
+
+    
+    <h4 class="name" id="newOrderer"><span class="type-signature"></span>newOrderer<span class="signature">(url, opts)</span><span class="type-signature"> &rarr; {<a href="Orderer.html">Orderer</a>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Returns an <a href="Orderer.html">Orderer</a> object with the given url and opts. An orderer object
 encapsulates the properties of an orderer node and the interactions with it via
 the grpc stream API. Orderer objects are used by the <a href="Client.html">Client</a> objects to broadcast
 requests for creating and updating channels. They are used by the <a href="Channel.html">Channel</a>
 objects to broadcast requests for ordering transactions.
 
 This method will create the orderer.
-    </div>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
     
 
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
+<table class="params">
     <thead>
     <tr>
         
@@ -3948,7 +4073,6 @@ This method will create the orderer.
 <span class="param-type">string</span>
 
 
-
             
             </td>
 
@@ -3970,7 +4094,6 @@ This method will create the orderer.
             
                 
 <span class="param-type"><a href="global.html#ConnectionOpts">ConnectionOpts</a></span>
-
 
 
             
@@ -3987,17 +4110,12 @@ This method will create the orderer.
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -4007,42 +4125,53 @@ This method will create the orderer.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line477">line 477</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 <div class="param-desc">
     The Orderer instance.
 </div>
@@ -4058,29 +4187,30 @@ This method will create the orderer.
 <span class="param-type"><a href="Orderer.html">Orderer</a></span>
 
 
-
     </dd>
 </dl>
 
-
-        
-
     
-</dd>
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="newPeer"><span class="type-signature"></span>newPeer(url, opts)</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        Returns a <a href="Peer.html">Peer</a> object with the given url and opts. A peer object
+
+    
+    <h4 class="name" id="newPeer"><span class="type-signature"></span>newPeer<span class="signature">(url, opts)</span><span class="type-signature"> &rarr; {<a href="Peer.html">Peer</a>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Returns a <a href="Peer.html">Peer</a> object with the given url and opts. A peer object
 encapsulates the properties of an endorsing peer and the interactions with it
 via the grpc service API. Peer objects are used by the <a href="Client.html">Client</a> objects to
 send channel-agnostic requests such as installing chaincode, querying peers for
@@ -4089,19 +4219,20 @@ send channel-aware requests such as instantiating chaincodes, and invoking
 transactions.
 
 This method will return a new <a href="Peer.html">Peer</a> object.
-    </div>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
     
 
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
+<table class="params">
     <thead>
     <tr>
         
@@ -4132,7 +4263,6 @@ This method will return a new <a href="Peer.html">Peer</a> object.
 <span class="param-type">string</span>
 
 
-
             
             </td>
 
@@ -4156,7 +4286,6 @@ This method will return a new <a href="Peer.html">Peer</a> object.
 <span class="param-type"><a href="global.html#ConnectionOpts">ConnectionOpts</a></span>
 
 
-
             
             </td>
 
@@ -4171,17 +4300,12 @@ This method will return a new <a href="Peer.html">Peer</a> object.
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -4191,42 +4315,53 @@ This method will return a new <a href="Peer.html">Peer</a> object.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line416">line 416</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 <div class="param-desc">
     The Peer instance.
 </div>
@@ -4242,47 +4377,49 @@ This method will return a new <a href="Peer.html">Peer</a> object.
 <span class="param-type"><a href="Peer.html">Peer</a></span>
 
 
-
     </dd>
 </dl>
 
-
-        
-
     
-</dd>
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="newTransactionID"><span class="type-signature"></span>newTransactionID(admin)</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        Returns a new <a href="TransactionID.html">TransactionID</a> object. Fabric transaction ids are constructed
+
+    
+    <h4 class="name" id="newTransactionID"><span class="type-signature"></span>newTransactionID<span class="signature">(admin)</span><span class="type-signature"> &rarr; {<a href="TransactionID.html">TransactionID</a>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Returns a new <a href="TransactionID.html">TransactionID</a> object. Fabric transaction ids are constructed
 as a hash of a nonce concatenated with the signing identity's serialized bytes. The
 TransactionID object keeps the nonce and the resulting id string bundled together
 as a coherent pair.
 <br><br>
 This method requires the client instance to have been assigned a userContext.
-    </div>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
     
 
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
+<table class="params">
     <thead>
     <tr>
         
@@ -4313,7 +4450,6 @@ This method requires the client instance to have been assigned a userContext.
 <span class="param-type">boolean</span>
 
 
-
             
             </td>
 
@@ -4329,17 +4465,12 @@ This method requires the client instance to have been assigned a userContext.
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -4349,42 +4480,53 @@ This method requires the client instance to have been assigned a userContext.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line652">line 652</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 <div class="param-desc">
     An object that contains a transaction id based on the
           client's userContext and a randomly generated nonce value.
@@ -4401,43 +4543,45 @@ This method requires the client instance to have been assigned a userContext.
 <span class="param-type"><a href="TransactionID.html">TransactionID</a></span>
 
 
-
     </dd>
 </dl>
 
-
-        
-
     
-</dd>
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="queryChannels"><span class="type-signature">&lt;async> </span>queryChannels(peer, useAdmin)</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        Queries the target peer for the names of all the channels that a
+
+    
+    <h4 class="name" id="queryChannels"><span class="type-signature">(async) </span>queryChannels<span class="signature">(peer, useAdmin)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Queries the target peer for the names of all the channels that a
 peer has joined.
-    </div>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
     
 
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
+<table class="params">
     <thead>
     <tr>
         
@@ -4466,7 +4610,6 @@ peer has joined.
             
                 
 <span class="param-type"><a href="Peer.html">Peer</a></span>
-
 
 
             
@@ -4492,7 +4635,6 @@ peer has joined.
 <span class="param-type">boolean</span>
 
 
-
             
             </td>
 
@@ -4510,17 +4652,12 @@ peer has joined.
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -4530,42 +4667,53 @@ peer has joined.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line967">line 967</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 <div class="param-desc">
     A promise to return a <a href="global.html#ChannelQueryResponse">ChannelQueryResponse</a>
 </div>
@@ -4581,42 +4729,44 @@ peer has joined.
 <span class="param-type">Promise</span>
 
 
-
     </dd>
 </dl>
 
-
-        
-
     
-</dd>
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="queryInstalledChaincodes"><span class="type-signature">&lt;async> </span>queryInstalledChaincodes(peer, useAdmin)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Queries the installed chaincodes on a peer.
-    </div>
-    
 
     
 
     
+    <h4 class="name" id="queryInstalledChaincodes"><span class="type-signature">(async) </span>queryInstalledChaincodes<span class="signature">(peer, useAdmin)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+    
 
     
-    
-        <h5>Parameters:</h5>
-        
 
-<table class="params table table-striped">
+
+
+<div class="description">
+    Queries the installed chaincodes on a peer.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
     <thead>
     <tr>
         
@@ -4647,7 +4797,6 @@ peer has joined.
 <span class="param-type"><a href="Peer.html">Peer</a></span>
 
 
-
             
             </td>
 
@@ -4671,7 +4820,6 @@ peer has joined.
 <span class="param-type">boolean</span>
 
 
-
             
             </td>
 
@@ -4689,17 +4837,12 @@ peer has joined.
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -4709,42 +4852,53 @@ peer has joined.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line1042">line 1042</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 <div class="param-desc">
     Promise for a <a href="global.html#ChaincodeQueryResponse">ChaincodeQueryResponse</a> object
 </div>
@@ -4760,43 +4914,45 @@ peer has joined.
 <span class="param-type">Promise</span>
 
 
-
     </dd>
 </dl>
 
-
-        
-
     
-</dd>
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="queryPeers"><span class="type-signature">&lt;async> </span>queryPeers(request)</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        Queries the target peer for a list of <a href="Peer.html">Peer</a> objects of all peers
+
+    
+    <h4 class="name" id="queryPeers"><span class="type-signature">(async) </span>queryPeers<span class="signature">(request)</span><span class="type-signature"> &rarr; {<a href="global.html#PeerQueryResponse">PeerQueryResponse</a>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Queries the target peer for a list of <a href="Peer.html">Peer</a> objects of all peers
 known by the target peer.
-    </div>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
     
 
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
+<table class="params">
     <thead>
     <tr>
         
@@ -4827,7 +4983,6 @@ known by the target peer.
 <span class="param-type"><a href="global.html#PeerQueryRequest">PeerQueryRequest</a></span>
 
 
-
             
             </td>
 
@@ -4842,17 +4997,12 @@ known by the target peer.
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -4862,42 +5012,53 @@ known by the target peer.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line910">line 910</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 <div class="param-desc">
     The list of peer information
 </div>
@@ -4913,48 +5074,45 @@ known by the target peer.
 <span class="param-type"><a href="global.html#PeerQueryResponse">PeerQueryResponse</a></span>
 
 
-
     </dd>
 </dl>
 
-
-        
-
     
-</dd>
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="saveUserToStateStore"><span class="type-signature">&lt;async> </span>saveUserToStateStore()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Persist the current <code>userContext</code> to the key value store.
-    </div>
-    
 
     
 
     
+    <h4 class="name" id="saveUserToStateStore"><span class="type-signature">(async) </span>saveUserToStateStore<span class="signature">()</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+    
 
     
-    
 
-    
+
+
+<div class="description">
+    Persist the current <code>userContext</code> to the key value store.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -4964,42 +5122,53 @@ known by the target peer.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line1490">line 1490</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 <div class="param-desc">
     A Promise for the userContext object upon successful persistence
 </div>
@@ -5015,44 +5184,46 @@ known by the target peer.
 <span class="param-type">Promise</span>
 
 
-
     </dd>
 </dl>
 
-
-        
-
     
-</dd>
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="setAdminSigningIdentity"><span class="type-signature">&lt;async> </span>setAdminSigningIdentity(private_key, certificate, mspid)</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        Set the admin signing identity object. This method will only assign a
+
+    
+    <h4 class="name" id="setAdminSigningIdentity"><span class="type-signature">(async) </span>setAdminSigningIdentity<span class="signature">(private_key, certificate, mspid)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Set the admin signing identity object. This method will only assign a
 signing identity for use by this client instance and will not persist
 the identity.
-    </div>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
     
 
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
+<table class="params">
     <thead>
     <tr>
         
@@ -5083,7 +5254,6 @@ the identity.
 <span class="param-type">string</span>
 
 
-
             
             </td>
 
@@ -5105,7 +5275,6 @@ the identity.
             
                 
 <span class="param-type">string</span>
-
 
 
             
@@ -5131,7 +5300,6 @@ the identity.
 <span class="param-type">string</span>
 
 
-
             
             </td>
 
@@ -5146,17 +5314,12 @@ the identity.
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -5166,69 +5329,84 @@ the identity.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line1332">line 1332</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-</dd>
+
+
+
+
+
+
+
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="setDevMode"><span class="type-signature"></span>setDevMode(devMode)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Set dev mode to true or false to reflect the mode of the fabric backend. See <a href="Client.html#isDevMode">Client#isDevMode</a> for details.
-    </div>
-    
 
     
 
     
+    <h4 class="name" id="setDevMode"><span class="type-signature"></span>setDevMode<span class="signature">(devMode)</span><span class="type-signature"></span></h4>
+    
 
     
-    
-        <h5>Parameters:</h5>
-        
 
-<table class="params table table-striped">
+
+
+<div class="description">
+    Set dev mode to true or false to reflect the mode of the fabric backend. See <a href="Client.html#isDevMode">Client#isDevMode</a> for details.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
     <thead>
     <tr>
         
@@ -5259,7 +5437,6 @@ the identity.
 <span class="param-type">boolean</span>
 
 
-
             
             </td>
 
@@ -5274,17 +5451,12 @@ the identity.
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -5294,75 +5466,90 @@ the identity.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line287">line 287</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-</dd>
+
+
+
+
+
+
+
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="setStateStore"><span class="type-signature"></span>setStateStore(keyValueStore)</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        Set an optional state store to persist application states. The state store must implement the
+
+    
+    <h4 class="name" id="setStateStore"><span class="type-signature"></span>setStateStore<span class="signature">(keyValueStore)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Set an optional state store to persist application states. The state store must implement the
 module:api.KeyValueStore interface.
 <br><br>
 The SDK supports persisting the User objects so that the heavy-weight objects such as
 the certificate and private keys do not have to be passed in repeatedly. Out of the box the SDK
 provides a file-based implementation, and a CouchDB-based implementation, which also supports Cloudant.
 Applications can provide alternative implementations.
-    </div>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
     
 
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
+<table class="params">
     <thead>
     <tr>
         
@@ -5393,7 +5580,6 @@ Applications can provide alternative implementations.
 <span class="param-type">module:api.KeyValueStore</span>
 
 
-
             
             </td>
 
@@ -5408,17 +5594,12 @@ Applications can provide alternative implementations.
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -5428,56 +5609,70 @@ Applications can provide alternative implementations.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line1281">line 1281</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-</dd>
+
+
+
+
+
+
+
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="setTlsClientCertAndKey"><span class="type-signature"></span>setTlsClientCertAndKey(clientCert, clientKey)</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        Sets the mutual TLS client side certificate and key necessary to build
+
+    
+    <h4 class="name" id="setTlsClientCertAndKey"><span class="type-signature"></span>setTlsClientCertAndKey<span class="signature">(clientCert, clientKey)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Sets the mutual TLS client side certificate and key necessary to build
 network endpoints when working with a common connection profile (connection profile).
 This must be called before a peer, orderer, or channel eventhub is needed.
 
@@ -5485,19 +5680,20 @@ If the tls client material has not been provided for the client, it will be
 generated if the user has been assigned to this client. Note that it will
 always use the default software cryptosuite, not the one assigned to the
 client.
-    </div>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
     
 
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
+<table class="params">
     <thead>
     <tr>
         
@@ -5528,7 +5724,6 @@ client.
 <span class="param-type">string</span>
 
 
-
             
             </td>
 
@@ -5552,7 +5747,6 @@ client.
 <span class="param-type">Array.&lt;byte></span>
 
 
-
             
             </td>
 
@@ -5567,17 +5761,12 @@ client.
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -5587,75 +5776,90 @@ client.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line150">line 150</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-</dd>
+
+
+
+
+
+
+
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="setUserContext"><span class="type-signature">&lt;async> </span>setUserContext(user, skipPersistence)</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        Sets an instance of the User class as the security context of this client instance. This user’s
+
+    
+    <h4 class="name" id="setUserContext"><span class="type-signature">(async) </span>setUserContext<span class="signature">(user, skipPersistence)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Sets an instance of the User class as the security context of this client instance. This user’s
 signing identity (the private key and its corresponding certificate), will be used to sign all requests
 with the fabric backend.
 <br><br>
 Upon setting the user context, the SDK saves the object in a persistence cache if the “state store”
 has been set on the Client instance. If no state store has been set, this cache will not be established
 and the application is responsible for setting the user context again if the application crashes and is recovered.
-    </div>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
     
 
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
+<table class="params">
     <thead>
     <tr>
         
@@ -5689,7 +5893,6 @@ and the application is responsible for setting the user context again if the app
 <span class="param-type"><a href="global.html#UserNamePasswordObject">UserNamePasswordObject</a></span>
 
 
-
             
             </td>
 
@@ -5719,7 +5922,6 @@ and the application is responsible for setting the user context again if the app
 <span class="param-type">boolean</span>
 
 
-
             
             </td>
 
@@ -5737,17 +5939,12 @@ and the application is responsible for setting the user context again if the app
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -5757,42 +5954,53 @@ and the application is responsible for setting the user context again if the app
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line1547">line 1547</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 <div class="param-desc">
     Promise of the 'user' object upon successful persistence of the user to the state store
 </div>
@@ -5808,29 +6016,30 @@ and the application is responsible for setting the user context again if the app
 <span class="param-type">Promise</span>
 
 
-
     </dd>
 </dl>
 
-
-        
-
     
-</dd>
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="signChannelConfig"><span class="type-signature"></span>signChannelConfig(loadConfig)</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        Channel configuration updates can be sent to the orderers to be processed. The
+
+    
+    <h4 class="name" id="signChannelConfig"><span class="type-signature"></span>signChannelConfig<span class="signature">(loadConfig)</span><span class="type-signature"> &rarr; {<a href="global.html#ConfigSignature">ConfigSignature</a>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Channel configuration updates can be sent to the orderers to be processed. The
 orderer enforces the Channel creation or update policies such that the updates
 will be made only when enough signatures from participating organizations are
 discovered in the request. Typically channel creation or update requests must
@@ -5840,19 +6049,20 @@ can be customized when the consortium is defined.
 This method uses the client instance's current signing identity to sign over the
 configuration bytes passed in, and returns the signature that is ready to be
 included in the configuration update protobuf message to send to the orderer.
-    </div>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
     
 
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
+<table class="params">
     <thead>
     <tr>
         
@@ -5883,7 +6093,6 @@ included in the configuration update protobuf message to send to the orderer.
 <span class="param-type">Array.&lt;byte></span>
 
 
-
             
             </td>
 
@@ -5898,17 +6107,12 @@ included in the configuration update protobuf message to send to the orderer.
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -5918,42 +6122,53 @@ included in the configuration update protobuf message to send to the orderer.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line710">line 710</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 <div class="param-desc">
     - The signature of the current user on the config bytes
 </div>
@@ -5969,46 +6184,48 @@ included in the configuration update protobuf message to send to the orderer.
 <span class="param-type"><a href="global.html#ConfigSignature">ConfigSignature</a></span>
 
 
-
     </dd>
 </dl>
 
-
-        
-
     
-</dd>
+
+
+
+
 
         
             
-<hr>
-<dt>
-    <h4 class="name" id="updateChannel"><span class="type-signature"></span>updateChannel(request)</h4>
-    
-    
-</dt>
-<dd>
 
     
-    <div class="description">
-        Calls the orderer to update an existing channel.
+
+    
+    <h4 class="name" id="updateChannel"><span class="type-signature"></span>updateChannel<span class="signature">(request)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Calls the orderer to update an existing channel.
 
 After the channel updates are successfully processed by the orderer, the orderer cuts a new
 block containing the new channel configuration and delivers it to all the participating peers
 in the channel.
-    </div>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
     
 
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
+<table class="params">
     <thead>
     <tr>
         
@@ -6039,7 +6256,6 @@ in the channel.
 <span class="param-type"><a href="global.html#ChannelRequest">ChannelRequest</a></span>
 
 
-
             
             </td>
 
@@ -6054,17 +6270,12 @@ in the channel.
     </tbody>
 </table>
 
-    
 
-    
+
+
+
+
 <dl class="details">
-    
-
-	
-
-	
-
-	
 
     
 
@@ -6074,42 +6285,53 @@ in the channel.
 
     
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
-	
+    
 
+    
 
+    
 
-	
+    
 
-	
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fabric-client_lib_Client.js.html">fabric-client/lib/Client.js</a>, <a href="fabric-client_lib_Client.js.html#line795">line 795</a>
+    </li></ul></dd>
+    
 
-	
+    
 
-	
+    
+
+    
 </dl>
 
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
-    <h5>Returns:</h5>
-    
-            
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
 <div class="param-desc">
     Promise for a result object with status on the acceptance of the update request
                    by the orderer. A channel update is finally completed when the new channel configuration
@@ -6129,17 +6351,16 @@ in the channel.
 <span class="param-type">Promise</span>
 
 
-
     </dd>
 </dl>
 
+    
+
+
+
+
 
         
-
-    
-</dd>
-
-        </dl>
     
 
     
@@ -6152,132 +6373,19 @@ in the channel.
 
 
 
-		</div>
-	</div>
-
-	<div class="clearfix"></div>
-
-	
-		<div class="col-md-3">
-			<div id="toc" class="col-md-3 hidden-xs hidden-sm hidden-md"></div>
-		</div>
-	
-
-</div>
 </div>
 
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-fabric-network.html">fabric-network</a></li></ul><h3>Classes</h3><ul><li><a href="AffiliationService.html">AffiliationService</a></li><li><a href="BasePackager.html">BasePackager</a></li><li><a href="BasicCommitHandler.html">BasicCommitHandler</a></li><li><a href="BlockDecoder.html">BlockDecoder</a></li><li><a href="CertificateAuthority.html">CertificateAuthority</a></li><li><a href="Chaincode.html">Chaincode</a></li><li><a href="ChaincodeRegistration.html">ChaincodeRegistration</a></li><li><a href="Channel.html">Channel</a></li><li><a href="ChannelEventHub.html">ChannelEventHub</a></li><li><a href="ChannelPeer.html">ChannelPeer</a></li><li><a href="Client.html">Client</a></li><li><a href="CommitHandler.html">CommitHandler</a></li><li><a href="DiscoveryEndorsementHandler.html">DiscoveryEndorsementHandler</a></li><li><a href="EndorsementHandler.html">EndorsementHandler</a></li><li><a href="EndorsementPolicy.html">EndorsementPolicy</a></li><li><a href="Endpoint.html">Endpoint</a></li><li><a href="event_hub_number.html">event_hub_number</a></li><li><a href="FabricCAClient.html">FabricCAClient</a></li><li><a href="FabricCAServices.html">FabricCAServices</a></li><li><a href="IdentityService.html">IdentityService</a></li><li><a href="module-fabric-network.AbstractEventHubSelectionStrategy.html">AbstractEventHubSelectionStrategy</a></li><li><a href="module-fabric-network.AbstractEventListener.html">AbstractEventListener</a></li><li><a href="module-fabric-network.BaseCheckpointer.html">BaseCheckpointer</a></li><li><a href="module-fabric-network.CommitEventListener.html">CommitEventListener</a></li><li><a href="module-fabric-network.Contract.html">Contract</a></li><li><a href="module-fabric-network.ContractEventListener.html">ContractEventListener</a></li><li><a href="module-fabric-network.EventHubDisconnectError.html">EventHubDisconnectError</a></li><li><a href="module-fabric-network.EventHubManager.html">EventHubManager</a></li><li><a href="module-fabric-network.FabricError.html">FabricError</a></li><li><a href="module-fabric-network.FileSystemCheckpointer.html">FileSystemCheckpointer</a></li><li><a href="module-fabric-network.Gateway.html">Gateway</a></li><li><a href="module-fabric-network.HsmX509Provider.html">HsmX509Provider</a></li><li><a href="module-fabric-network.IdentityProviderRegistry.html">IdentityProviderRegistry</a></li><li><a href="module-fabric-network.Network.html">Network</a></li><li><a href="module-fabric-network.Query.html">Query</a></li><li><a href="module-fabric-network.RoundRobinEventHubSelectionStrategy.html">RoundRobinEventHubSelectionStrategy</a></li><li><a href="module-fabric-network.TimeoutError.html">TimeoutError</a></li><li><a href="module-fabric-network.Transaction.html">Transaction</a></li><li><a href="module-fabric-network.Wallet.html">Wallet</a></li><li><a href="module-fabric-network.Wallets.html">Wallets</a></li><li><a href="MSP.html">MSP</a></li><li><a href="MSPManager.html">MSPManager</a></li><li><a href="NetworkConfig_1_0.html">NetworkConfig_1_0</a></li><li><a href="Orderer.html">Orderer</a></li><li><a href="Organization.html">Organization</a></li><li><a href="Peer.html">Peer</a></li><li><a href="Remote.html">Remote</a></li><li><a href="TransactionID.html">TransactionID</a></li></ul><h3>Interfaces</h3><ul><li><a href="module-fabric-network.WalletStore.html">WalletStore</a></li></ul><h3>Tutorials</h3><ul><li><a href="tutorial-app-dev-env-setup.html">Setting up the Application Developer's Environment</a></li><li><a href="tutorial-chaincode-lifecycle.html">fabric-client: How to install and start your chaincode</a></li><li><a href="tutorial-channel-create.html">fabric-client: How to create a Hyperledger Fabric channel</a></li><li><a href="tutorial-channel-events.html">fabric-client: How to use the channel-based event service</a></li><li><a href="tutorial-discovery.html">fabric-client: How to use the discovery service</a></li><li><a href="tutorial-event-checkpointer.html">fabric-network: How to replay missed events</a></li><li><a href="tutorial-event-hub-management.html">fabric-network: How to automatically select and reconnect to event hubs</a></li><li><a href="tutorial-grpc-settings.html">fabric-client: How to set gRPC settings</a></li><li><a href="tutorial-handlers.html">fabric-client: How to use the endorsement and commit handlers</a></li><li><a href="tutorial-listening-to-events.html">fabric-network: How to listen to events</a></li><li><a href="tutorial-logging.html">fabric-client: How to use logging</a></li><li><a href="tutorial-metadata-chaincode.html">fabric-client: How to add CouchDB indexes during chaincode installation</a></li><li><a href="tutorial-mutual-tls.html">fabric-client: How to configure mutual TLS</a></li><li><a href="tutorial-network-config.html">fabric-client: How to use a common connection profile</a></li><li><a href="tutorial-private-data.html">How to use private data</a></li><li><a href="tutorial-query-peers.html">fabric-network: How to select peers for evaluating transactions (queries)</a></li><li><a href="tutorial-sign-transaction-offline.html">Working with an offline private key</a></li><li><a href="tutorial-transaction-commit-events.html">fabric-network: How to wait for transactions to be committed to the ledger</a></li><li><a href="tutorial-wallet.html">fabric-network: Using wallets to manage identities</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CLIENT">CLIENT</a></li><li><a href="global.html#finalPackage">finalPackage</a></li><li><a href="global.html#HFAFFILIATIONMGR">HFAFFILIATIONMGR</a></li><li><a href="global.html#HFGENCRL">HFGENCRL</a></li><li><a href="global.html#HFINTERMEDIATECA">HFINTERMEDIATECA</a></li><li><a href="global.html#HFREGISTRARATTRIBUTES">HFREGISTRARATTRIBUTES</a></li><li><a href="global.html#HFREGISTRARDELEGATEROLES">HFREGISTRARDELEGATEROLES</a></li><li><a href="global.html#HFREGISTRARROLES">HFREGISTRARROLES</a></li><li><a href="global.html#HFREVOKER">HFREVOKER</a></li><li><a href="global.html#loadConfigGroup">loadConfigGroup</a></li><li><a href="global.html#loadConfigValue">loadConfigValue</a></li><li><a href="global.html#ORDERER">ORDERER</a></li><li><a href="global.html#package">package</a></li><li><a href="global.html#PEER">PEER</a></li><li><a href="global.html#toEnvelope">toEnvelope</a></li><li><a href="global.html#USER">USER</a></li></ul>
+</nav>
 
-    <div class="modal fade" id="searchResults">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title">Search results</h4>
-          </div>
-          <div class="modal-body"></div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-          </div>
-        </div><!-- /.modal-content -->
-      </div><!-- /.modal-dialog -->
-    </div>
-
+<br class="clear">
 
 <footer>
-
-
-<span class="jsdoc-message">
-	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a>
-	
-		on 2019-12-11T18:30:09+00:00
-	
-	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
-</span>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Fri Dec 13 2019 12:05:42 GMT+0000 (Coordinated Universal Time)
 </footer>
 
-<script src="scripts/docstrap.lib.js"></script>
-<script src="scripts/toc.js"></script>
-
-    <script type="text/javascript" src="scripts/fulltext-search-ui.js"></script>
-
-
-<script>
-$( function () {
-	$( "[id*='$']" ).each( function () {
-		var $this = $( this );
-
-		$this.attr( "id", $this.attr( "id" ).replace( "$", "__" ) );
-	} );
-
-	$( ".tutorial-section pre, .readme-section pre, pre.prettyprint.source" ).each( function () {
-		var $this = $( this );
-
-		var example = $this.find( "code" );
-		exampleText = example.html();
-		var lang = /{@lang (.*?)}/.exec( exampleText );
-		if ( lang && lang[1] ) {
-			exampleText = exampleText.replace( lang[0], "" );
-			example.html( exampleText );
-			lang = lang[1];
-		} else {
-			var langClassMatch = example.parent()[0].className.match(/lang\-(\S+)/);
-			lang = langClassMatch ? langClassMatch[1] : "javascript";
-		}
-
-		if ( lang ) {
-
-			$this
-			.addClass( "sunlight-highlight-" + lang )
-			.addClass( "linenums" )
-			.html( example.html() );
-
-		}
-	} );
-
-	Sunlight.highlightAll( {
-		lineNumbers : false,
-		showMenu : true,
-		enableDoclinks : true
-	} );
-
-	$.catchAnchorLinks( {
-        navbarOffset: 10
-	} );
-	$( "#toc" ).toc( {
-		anchorName  : function ( i, heading, prefix ) {
-			return $( heading ).attr( "id" ) || ( prefix + i );
-		},
-		selectors   : "#toc-content h1,#toc-content h2,#toc-content h3,#toc-content h4",
-		showAndHide : false,
-		smoothScrolling: true
-	} );
-
-	$( "#main span[id^='toc']" ).addClass( "toc-shim" );
-	$( '.dropdown-toggle' ).dropdown();
-
-    $( "table" ).each( function () {
-      var $this = $( this );
-      $this.addClass('table');
-    } );
-
-} );
-</script>
-
-
-
-<!--Navigation and Symbol Display-->
-
-
-<!--Google Analytics-->
-
-
-
-    <script type="text/javascript">
-        $(document).ready(function() {
-            SearcherDisplay.init();
-        });
-    </script>
-
-
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
 </body>
 </html>

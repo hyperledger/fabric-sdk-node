@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: fabric-client/lib/impl/NetworkConfig_1_0.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: fabric-client/lib/impl/NetworkConfig_1_0.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/*
+ Copyright 2016, 2018 IBM All Rights Reserved.
+
+ SPDX-License-Identifier: Apache-2.0
+
+*/
+
+'use strict';
+
+const fs = require('fs-extra');
+const path = require('path');
+const {Utils: utils} = require('fabric-common');
+const Constants = require('../Constants.js');
+const Channel = require('../Channel.js');
+const Organization = require('../Organization.js');
+const CertificateAuthority = require('../CertificateAuthority.js');
+
+const logger = utils.getLogger('NetworkConfig101.js');
+const CHANNELS_CONFIG = 'channels';
+const ORGS_CONFIG = 'organizations';
+const PEERS_CONFIG = 'peers';
+const ORDERERS_CONFIG = 'orderers';
+const CAS_CONFIG = 'certificateAuthorities';
+const TLS_CACERTS = 'tlsCACerts';
+const ADMIN_PRIVATE_KEY = 'adminPrivateKey';
+const ADMIN_CERT = 'signedCert';
+const GRPC_CONNECTION_OPTIONS = 'grpcOptions';
+const HTTP_CONNECTION_OPTIONS = 'httpOptions';
+const URL = 'url';
+const CANAME = 'caName';
+const PEM = 'pem';
+const PATH = 'path';
+const REGISTRAR = 'registrar';
+const ENDORSER = 1;
+const ORDERER = 2;
+const EVENTHUB = 3;
+const EVENTREG = 4;
+const TYPES = ['unknown', 'endorser', 'orderer', 'eventHub', 'eventReg'];
+const REQUEST_TIMEOUT = 'request-timeout';
+const ROLES = Constants.NetworkConfig.ROLES;
+
+/**
+ * This is an implementation of the [NetworkConfig]{@link module:api.NetworkConfig} API.
+ * It will be used to work with the v1.0.1 version of a JSON based common connection profile.
+ * (also known as a network configuration).
+ *
+ * @class
+ * @extends module:api.NetworkConfig
+ */
+const NetworkConfig_1_0 = class {
+
+	/**
+	 * constructor
+	 *
+	 * @param {Object} network_config - Common Connection Profile as represented in a JSON object
+	 */
+	constructor(network_config, client_context, network_config_loc) {
+		logger.debug('constructor, network_config: ' + JSON.stringify(network_config));
+		this._network_config = network_config;
+		this._client_context = client_context;
+		this._network_config_loc = network_config_loc;
+		this._peers = new Map();
+		this._channel = new Map();
+		this._orderers = new Map();
+	}
+
+	/**
+	 * Get the file system path that the network config was loaded from, if any.
+	 * @returns {string} The file system path that the network config was loaded
+	 * from, or null if it was not loaded directly from the file system.
+	 */
+	getNetworkConfigLocation() {
+		return this._network_config_loc;
+	}
+
+	mergeSettings(additions) {
+		const method = 'mergeSettings';
+		logger.debug('%s - additions start', method);
+		if (additions &amp;&amp; additions._network_config) {
+			if (additions._network_config.client) {
+				this._network_config.client = additions._network_config.client;
+			}
+			if (additions._network_config.channels) {
+				this._network_config.channels = additions._network_config.channels;
+			}
+			if (additions._network_config.organizations) {
+				this._network_config.organizations = additions._network_config.organizations;
+			}
+			if (additions._network_config.orderers) {
+				this._network_config.orderers = additions._network_config.orderers;
+			}
+			if (additions._network_config.peers) {
+				this._network_config.peers = additions._network_config.peers;
+			}
+			if (additions._network_config.certificateAuthorities) {
+				this._network_config.certificateAuthorities = additions._network_config.certificateAuthorities;
+			}
+		}
+	}
+
+	hasClient() {
+		if (this._network_config &amp;&amp; this._network_config.client) {
+			return true;
+		}
+
+		return false;
+	}
+
+	getClientConfig() {
+		const result = {};
+		if (this._network_config &amp;&amp; this._network_config.client) {
+			const client_config = this._network_config.client;
+			for (const setting in client_config) {
+				// copy all except credentialStore, special case to handle paths
+				if (setting !== 'credentialStore') {
+					result[setting] = client_config[setting];
+				}
+			}
+			if (client_config.credentialStore) {
+				result.credentialStore = {};
+				if (client_config.credentialStore.path) {
+					result.credentialStore.path = path.resolve(client_config.credentialStore.path);
+				}
+				for (const setting in client_config.credentialStore) {
+					if (setting !== 'cryptoStore' &amp;&amp; setting !== 'path') {
+						result.credentialStore[setting] = client_config.credentialStore[setting];
+					}
+				}
+				if (client_config.credentialStore.cryptoStore) {
+					result.credentialStore.cryptoStore = {};
+					if (client_config.credentialStore.cryptoStore.path) {
+						result.credentialStore.cryptoStore.path = path.resolve(client_config.credentialStore.cryptoStore.path);
+					}
+					for (const setting in client_config.credentialStore.cryptoStore) {
+						if (setting !== 'path') {
+							result.credentialStore.cryptoStore[setting] = client_config.credentialStore.cryptoStore[setting];
+						}
+					}
+				}
+			}
+			if (result.organization) {
+				if (this._network_config.organizations &amp;&amp; this._network_config.organizations[result.organization]) {
+					result.mspid = this._network_config.organizations[result.organization].mspid;
+				}
+			}
+
+		}
+
+		return result;
+	}
+
+	getChannel(name) {
+		const method = 'getChannel';
+		logger.debug('%s - name %s', method, name);
+		let channel = null;
+		if (name &amp;&amp; this._network_config &amp;&amp; this._network_config[CHANNELS_CONFIG]) {
+			const channel_config = this._network_config[CHANNELS_CONFIG][name];
+			if (channel_config) {
+				channel = new Channel(name, this._client_context);
+				this._addPeersToChannel(channel);
+				this._addOrderersToChannel(channel);
+			}
+		}
+
+		return channel;
+	}
+
+	getPeer(name, channel_org) {
+		const method = 'getPeer';
+		logger.debug('%s - name %s, channel_org: %j', method, name, channel_org);
+		let peer = this._peers.get(name);
+		if (!peer &amp;&amp; this._network_config &amp;&amp; this._network_config[PEERS_CONFIG]) {
+			const peer_config = this._network_config[PEERS_CONFIG][name];
+			if (peer_config) {
+				const opts = {name: name};
+				opts.pem = getTLSCACert(peer_config, this._network_config_loc);
+				Object.assign(opts, peer_config[GRPC_CONNECTION_OPTIONS]);
+				this.addTimeout(opts, ENDORSER);
+				peer = this._client_context.newPeer(peer_config[URL], opts);
+				this._peers.set(name, peer);
+			}
+		}
+
+		return peer;
+	}
+
+	addTimeout(opts, type) {
+		const method = 'addTimeout';
+		if (opts &amp;&amp; opts[REQUEST_TIMEOUT]) {
+			logger.debug('%s - request-timeout exist', method);
+			return;
+		}
+		if (opts &amp;&amp; this.hasClient() &amp;&amp;
+			this._network_config.client.connection &amp;&amp;
+			this._network_config.client.connection.timeout) {
+			const timeouts = this._network_config.client.connection.timeout;
+			let timeout = '';
+			if (type === ENDORSER &amp;&amp; timeouts.peer &amp;&amp; timeouts.peer.endorser) {
+				timeout = timeouts.peer.endorser;
+			} else if (type === ORDERER &amp;&amp; timeouts.orderer) {
+				timeout = timeouts.orderer;
+			} else if (type === EVENTHUB &amp;&amp; timeouts.peer &amp;&amp; timeouts.peer.eventHub) {
+				timeout = timeouts.peer.eventHub;
+			} else if (type === EVENTREG &amp;&amp; timeouts.peer &amp;&amp; timeouts.peer.eventReg) {
+				timeout = timeouts.peer.eventReg;
+			}
+
+			if (!isNaN(timeout)) {
+				timeout = timeout * 1000;
+				opts[REQUEST_TIMEOUT] = timeout;
+			} else {
+				logger.warn('%s - timeout value is not a number for the %s : %s', method, TYPES[type], timeout);
+			}
+		}
+	}
+
+	getOrderer(name) {
+		const method = 'getOrderer';
+		logger.debug('%s - name %s', method, name);
+		let orderer = null;
+		if (this._network_config &amp;&amp; this._network_config[ORDERERS_CONFIG]) {
+			const orderer_config = this._network_config[ORDERERS_CONFIG][name];
+			if (orderer_config) {
+				const opts = {name: name};
+				opts.pem = getTLSCACert(orderer_config, this._network_config_loc);
+				Object.assign(opts, orderer_config[GRPC_CONNECTION_OPTIONS]);
+				this.addTimeout(opts, ORDERER);
+				orderer = this._client_context.newOrderer(orderer_config[URL], opts);
+			}
+		}
+
+		return orderer;
+	}
+
+	getOrganizationByMspId(mspid, only_client) {
+		const method = 'getOrganization';
+		logger.debug('%s - mspid %s', method, mspid);
+		if (mspid &amp;&amp; this._network_config &amp;&amp; this._network_config[ORGS_CONFIG]) {
+			for (const name in this._network_config[ORGS_CONFIG]) {
+				const organization_config = this._network_config[ORGS_CONFIG][name];
+				if (organization_config.mspid === mspid) {
+					return this.getOrganization(name, only_client);
+				}
+			}
+		}
+	}
+
+	getOrganization(name, only_client) {
+		const method = 'getOrganization';
+		logger.debug('%s - name %s', method, name);
+		let organization = null;
+		if (name &amp;&amp; this._network_config &amp;&amp; this._network_config[ORGS_CONFIG]) {
+			const organization_config = this._network_config[ORGS_CONFIG][name];
+			if (organization_config) {
+				organization = new Organization(name, organization_config.mspid);
+				if (organization_config[PEERS_CONFIG] &amp;&amp; !only_client) {
+					for (const i in organization_config[PEERS_CONFIG]) {
+						const peer_name = organization_config[PEERS_CONFIG][i];
+						const peer = this.getPeer(peer_name);
+						if (peer) {
+							organization.addPeer(peer);
+						}
+					}
+				}
+				if (organization_config[CAS_CONFIG]) {
+					for (const i in organization_config[CAS_CONFIG]) {
+						const ca_name = organization_config[CAS_CONFIG][i];
+						const ca = this.getCertificateAuthority(ca_name);
+						if (ca) {
+							organization.addCertificateAuthority(ca);
+						}
+					}
+				}
+				if (organization_config[ADMIN_PRIVATE_KEY]) {
+					const key = getPEMfromConfig(organization_config[ADMIN_PRIVATE_KEY]);
+					organization.setAdminPrivateKey(key);
+				}
+				if (organization_config[ADMIN_CERT]) {
+					const cert = getPEMfromConfig(organization_config[ADMIN_CERT]);
+					organization.setAdminCert(cert);
+				}
+			}
+		}
+
+		return organization;
+	}
+
+	getOrganizations() {
+		const method = 'getOrganizations';
+		logger.debug('%s - start', method);
+		const organizations = [];
+		if (this._network_config &amp;&amp; this._network_config[ORGS_CONFIG]) {
+			for (const organization_name in  this._network_config[ORGS_CONFIG]) {
+				const organization = this.getOrganization(organization_name);
+				organizations.push(organization);
+			}
+		}
+
+		return organizations;
+	}
+
+	getCertificateAuthority(name) {
+		const method = 'getCertificateAuthority';
+		logger.debug('%s - name %s', method, name);
+		let certificateAuthority = null;
+		if (name &amp;&amp; this._network_config &amp;&amp; this._network_config[CAS_CONFIG]) {
+			const certificateAuthority_config = this._network_config[CAS_CONFIG][name];
+			if (certificateAuthority_config) {
+				certificateAuthority = new CertificateAuthority(
+					name,
+					certificateAuthority_config[CANAME],
+					certificateAuthority_config[URL],
+					certificateAuthority_config[HTTP_CONNECTION_OPTIONS],
+					getTLSCACert(certificateAuthority_config, this._network_config_loc),
+					certificateAuthority_config[REGISTRAR]
+				);
+			}
+		}
+
+		return certificateAuthority;
+	}
+
+	/*
+	 * Internal method to add orderer instances to a channel as defined
+	 * by the common connection profile
+	 */
+	_addOrderersToChannel(channel) {
+		// get the organization list for this channel
+		if (this._network_config &amp;&amp;
+			this._network_config[CHANNELS_CONFIG] &amp;&amp;
+			this._network_config[CHANNELS_CONFIG][channel.getName()]) {
+			const orderer_names = this._network_config[CHANNELS_CONFIG][channel.getName()][ORDERERS_CONFIG];
+			if (Array.isArray(orderer_names)) {
+				for (const i in orderer_names) {
+					const orderer_name = orderer_names[i];
+					const orderer = this.getOrderer(orderer_name);
+					if (orderer) {
+						channel.addOrderer(orderer);
+					}
+				}
+			}
+		}
+	}
+
+	/*
+	 * Internal method to configure a channel as defined
+	 * by the common connection profile
+	 */
+	_addPeersToChannel(channel) {
+		// get the organization list for this channel
+		if (this._network_config &amp;&amp;
+			this._network_config[CHANNELS_CONFIG] &amp;&amp;
+			this._network_config[CHANNELS_CONFIG][channel.getName()]) {
+			const channel_peers = this._network_config[CHANNELS_CONFIG][channel.getName()][PEERS_CONFIG];
+			if (channel_peers) {
+				for (const peer_name in channel_peers) {
+					const channel_peer = channel_peers[peer_name];
+					const peer = this.getPeer(peer_name);
+					const roles = {};
+					for (const i in ROLES) {
+						if (typeof channel_peer[ROLES[i]] === 'boolean') {
+							roles[ROLES[i]] = channel_peer[ROLES[i]];
+						}
+					}
+					if (peer) {
+						const org_name = this._getOrganizationForPeer(peer_name);
+						const mspid = this._getMspIdForOrganization(org_name);
+						logger.debug('_addPeersToChannel - %s - %s', peer.getName(), peer.getUrl());
+						channel.addPeer(peer, mspid, roles);
+					}
+				}
+			}
+		}
+
+	}
+
+	/*
+	 * Internal utility method to get the organization the peer belongs
+	 */
+	_getOrganizationForPeer(peer_name) {
+		if (this._network_config &amp;&amp; this._network_config[ORGS_CONFIG]) {
+			for (const organization_name in  this._network_config[ORGS_CONFIG]) {
+				const organization = this.getOrganization(organization_name);
+				for (const i in organization._peers) {
+					if (peer_name === organization._peers[i].getName()) {
+						return organization_name;
+					}
+				}
+			}
+		}
+
+		return null;
+	}
+
+	/*
+	 * Internal method to get the MSP id for an organization nam
+	 */
+	_getMspIdForOrganization(org_name) {
+		if (this._network_config &amp;&amp; this._network_config[ORGS_CONFIG]) {
+			const organization = this.getOrganization(org_name);
+			if (organization) {
+				return organization.getMspid();
+			}
+		}
+
+		return null;
+	}
+};
+
+function getTLSCACert(config, network_config_loc) {
+	if (config &amp;&amp; config[TLS_CACERTS]) {
+		return getPEMfromConfig(config[TLS_CACERTS], network_config_loc);
+	}
+	return null;
+}
+
+function getPEMfromConfig(config, network_config_loc) {
+	let result = null;
+	if (config) {
+		if (config[PEM]) {
+			// cert value is directly in the configuration
+			result = config[PEM];
+		} else if (config[PATH]) {
+			// cert value is in a file
+			result = readFileSync(config[PATH], network_config_loc);
+			result = utils.normalizeX509(result);
+		}
+	}
+
+	return result;
+}
+
+function readFileSync(config_path, network_config_loc) {
+	const possiblePaths = [
+		path.resolve(config_path) // relative to cwd
+	];
+	if (network_config_loc) {
+		possiblePaths.push(path.resolve(path.dirname(network_config_loc), config_path));
+	}
+	let lastError;
+	for (const possiblePath of possiblePaths) {
+		try {
+			const data = fs.readFileSync(possiblePath);
+			return Buffer.from(data).toString();
+		} catch (error) {
+			lastError = error;
+		}
+	}
+	logger.error('NetworkConfig101 - problem reading the PEM file :: ' + lastError);
+	throw lastError;
+}
+
+module.exports = NetworkConfig_1_0;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-fabric-network.html">fabric-network</a></li></ul><h3>Classes</h3><ul><li><a href="AffiliationService.html">AffiliationService</a></li><li><a href="BasePackager.html">BasePackager</a></li><li><a href="BasicCommitHandler.html">BasicCommitHandler</a></li><li><a href="BlockDecoder.html">BlockDecoder</a></li><li><a href="CertificateAuthority.html">CertificateAuthority</a></li><li><a href="Chaincode.html">Chaincode</a></li><li><a href="ChaincodeRegistration.html">ChaincodeRegistration</a></li><li><a href="Channel.html">Channel</a></li><li><a href="ChannelEventHub.html">ChannelEventHub</a></li><li><a href="ChannelPeer.html">ChannelPeer</a></li><li><a href="Client.html">Client</a></li><li><a href="CommitHandler.html">CommitHandler</a></li><li><a href="DiscoveryEndorsementHandler.html">DiscoveryEndorsementHandler</a></li><li><a href="EndorsementHandler.html">EndorsementHandler</a></li><li><a href="EndorsementPolicy.html">EndorsementPolicy</a></li><li><a href="Endpoint.html">Endpoint</a></li><li><a href="event_hub_number.html">event_hub_number</a></li><li><a href="FabricCAClient.html">FabricCAClient</a></li><li><a href="FabricCAServices.html">FabricCAServices</a></li><li><a href="IdentityService.html">IdentityService</a></li><li><a href="module-fabric-network.AbstractEventHubSelectionStrategy.html">AbstractEventHubSelectionStrategy</a></li><li><a href="module-fabric-network.AbstractEventListener.html">AbstractEventListener</a></li><li><a href="module-fabric-network.BaseCheckpointer.html">BaseCheckpointer</a></li><li><a href="module-fabric-network.CommitEventListener.html">CommitEventListener</a></li><li><a href="module-fabric-network.Contract.html">Contract</a></li><li><a href="module-fabric-network.ContractEventListener.html">ContractEventListener</a></li><li><a href="module-fabric-network.EventHubDisconnectError.html">EventHubDisconnectError</a></li><li><a href="module-fabric-network.EventHubManager.html">EventHubManager</a></li><li><a href="module-fabric-network.FabricError.html">FabricError</a></li><li><a href="module-fabric-network.FileSystemCheckpointer.html">FileSystemCheckpointer</a></li><li><a href="module-fabric-network.Gateway.html">Gateway</a></li><li><a href="module-fabric-network.HsmX509Provider.html">HsmX509Provider</a></li><li><a href="module-fabric-network.IdentityProviderRegistry.html">IdentityProviderRegistry</a></li><li><a href="module-fabric-network.Network.html">Network</a></li><li><a href="module-fabric-network.Query.html">Query</a></li><li><a href="module-fabric-network.RoundRobinEventHubSelectionStrategy.html">RoundRobinEventHubSelectionStrategy</a></li><li><a href="module-fabric-network.TimeoutError.html">TimeoutError</a></li><li><a href="module-fabric-network.Transaction.html">Transaction</a></li><li><a href="module-fabric-network.Wallet.html">Wallet</a></li><li><a href="module-fabric-network.Wallets.html">Wallets</a></li><li><a href="MSP.html">MSP</a></li><li><a href="MSPManager.html">MSPManager</a></li><li><a href="NetworkConfig_1_0.html">NetworkConfig_1_0</a></li><li><a href="Orderer.html">Orderer</a></li><li><a href="Organization.html">Organization</a></li><li><a href="Peer.html">Peer</a></li><li><a href="Remote.html">Remote</a></li><li><a href="TransactionID.html">TransactionID</a></li></ul><h3>Interfaces</h3><ul><li><a href="module-fabric-network.WalletStore.html">WalletStore</a></li></ul><h3>Tutorials</h3><ul><li><a href="tutorial-app-dev-env-setup.html">Setting up the Application Developer's Environment</a></li><li><a href="tutorial-chaincode-lifecycle.html">fabric-client: How to install and start your chaincode</a></li><li><a href="tutorial-channel-create.html">fabric-client: How to create a Hyperledger Fabric channel</a></li><li><a href="tutorial-channel-events.html">fabric-client: How to use the channel-based event service</a></li><li><a href="tutorial-discovery.html">fabric-client: How to use the discovery service</a></li><li><a href="tutorial-event-checkpointer.html">fabric-network: How to replay missed events</a></li><li><a href="tutorial-event-hub-management.html">fabric-network: How to automatically select and reconnect to event hubs</a></li><li><a href="tutorial-grpc-settings.html">fabric-client: How to set gRPC settings</a></li><li><a href="tutorial-handlers.html">fabric-client: How to use the endorsement and commit handlers</a></li><li><a href="tutorial-listening-to-events.html">fabric-network: How to listen to events</a></li><li><a href="tutorial-logging.html">fabric-client: How to use logging</a></li><li><a href="tutorial-metadata-chaincode.html">fabric-client: How to add CouchDB indexes during chaincode installation</a></li><li><a href="tutorial-mutual-tls.html">fabric-client: How to configure mutual TLS</a></li><li><a href="tutorial-network-config.html">fabric-client: How to use a common connection profile</a></li><li><a href="tutorial-private-data.html">How to use private data</a></li><li><a href="tutorial-query-peers.html">fabric-network: How to select peers for evaluating transactions (queries)</a></li><li><a href="tutorial-sign-transaction-offline.html">Working with an offline private key</a></li><li><a href="tutorial-transaction-commit-events.html">fabric-network: How to wait for transactions to be committed to the ledger</a></li><li><a href="tutorial-wallet.html">fabric-network: Using wallets to manage identities</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CLIENT">CLIENT</a></li><li><a href="global.html#finalPackage">finalPackage</a></li><li><a href="global.html#HFAFFILIATIONMGR">HFAFFILIATIONMGR</a></li><li><a href="global.html#HFGENCRL">HFGENCRL</a></li><li><a href="global.html#HFINTERMEDIATECA">HFINTERMEDIATECA</a></li><li><a href="global.html#HFREGISTRARATTRIBUTES">HFREGISTRARATTRIBUTES</a></li><li><a href="global.html#HFREGISTRARDELEGATEROLES">HFREGISTRARDELEGATEROLES</a></li><li><a href="global.html#HFREGISTRARROLES">HFREGISTRARROLES</a></li><li><a href="global.html#HFREVOKER">HFREVOKER</a></li><li><a href="global.html#loadConfigGroup">loadConfigGroup</a></li><li><a href="global.html#loadConfigValue">loadConfigValue</a></li><li><a href="global.html#ORDERER">ORDERER</a></li><li><a href="global.html#package">package</a></li><li><a href="global.html#PEER">PEER</a></li><li><a href="global.html#toEnvelope">toEnvelope</a></li><li><a href="global.html#USER">USER</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Fri Dec 13 2019 12:05:42 GMT+0000 (Coordinated Universal Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

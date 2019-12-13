@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: fabric-network/lib/impl/event/transactioneventhandler.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: fabric-network/lib/impl/event/transactioneventhandler.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Copyright 2019 IBM All Rights Reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+'use strict';
+const TimeoutError = require('fabric-network/lib/errors/timeouterror');
+const logger = require('fabric-network/lib/logger').getLogger('TransactionEventHandler');
+const util = require('util');
+/**
+ * Handles events for a given transaction. Used to wait for a submitted transaction to be successfully commited to
+ * the ledger.
+ * Delegates to an event strategy to decide whether events or errors received should be interpreted as success or
+ * failure of a transaction.
+ * @private
+ */
+class TransactionEventHandler {
+    /**
+     * @typedef {Object} TransactionEventHandlerOptions
+     * @property {Number} [commitTimeout = 0] Number of seconds to wait for transaction completion. A value of zero
+     * indicates that the handler should wait indefinitely.
+     */
+    /**
+     * Constructor.
+     * @private
+     * @param {Transaction} transaction Traneaction object.
+     * @param {Object} strategy Event strategy implementation.
+     * @param {TransactionEventHandlerOptions} [options] Additional options.
+     */
+    constructor(transaction, strategy, options) {
+        this.transaction = transaction;
+        this.transactionId = transaction.getTransactionID().getTransactionID();
+        this.strategy = strategy;
+        const defaultOptions = {
+            commitTimeout: 0 // No timeout by default
+        };
+        this.options = Object.assign(defaultOptions, options);
+        logger.debug('constructor:', util.format('transactionId = %s, options = %j', this.transactionId, this.options));
+        this.eventHubs = strategy.getEventHubs();
+        this.respondedEventHubs = new Set();
+        this.notificationPromise = new Promise((resolve, reject) => {
+            this._resolveNotificationPromise = resolve;
+            this._rejectNotificationPromise = reject;
+        });
+    }
+    /**
+     * Called to initiate listening for transaction events.
+     */
+    async startListening() {
+        if (this.eventHubs.length > 0) {
+            this._setListenTimeout();
+            this._registerTxEventListeners();
+        }
+        else {
+            logger.debug('startListening: No event hubs');
+            this._resolveNotificationPromise();
+        }
+    }
+    _setListenTimeout() {
+        if (this.options.commitTimeout &lt;= 0) {
+            return;
+        }
+        logger.debug('_setListenTimeout:', `setTimeout(${this.options.commitTimeout}) for transaction ${this.transactionId}`);
+        this.timeoutHandler = setTimeout(() => this._timeoutFail(), this.options.commitTimeout * 1000);
+    }
+    _registerTxEventListeners() {
+        this.eventHubs.forEach(eventHub => {
+            logger.debug('_registerTxEventListeners:', `registerTxEvent(${this.transactionId}) for event hub:`, eventHub.getName());
+            eventHub.registerTxEvent(this.transactionId, (txId, code) => this._onEvent(eventHub, txId, code), (err) => this._onError(eventHub, err));
+            eventHub.connect();
+        });
+    }
+    _timeoutFail() {
+        const unrespondedEventHubs = this.eventHubs
+            .filter(eventHub => !this.respondedEventHubs.has(eventHub))
+            .map(eventHub => eventHub.getName())
+            .join(', ');
+        const message = 'Event strategy not satisfied within the timeout period. No response received from event hubs: ' + unrespondedEventHubs;
+        const error = new TimeoutError({
+            message,
+            transactionId: this.transactionId
+        });
+        this._strategyFail(error);
+    }
+    _onEvent(eventHub, txId, code) {
+        logger.debug('_onEvent:', util.format('received event for %j with code %j', txId, code));
+        this._receivedEventHubResponse(eventHub);
+        if (code !== 'VALID') {
+            const message = util.format('Peer %s has rejected transaction %j with code %j', eventHub.getPeerAddr(), txId, code);
+            this._strategyFail(new Error(message));
+        }
+        else {
+            this.strategy.eventReceived(this._strategySuccess.bind(this), this._strategyFail.bind(this));
+        }
+    }
+    _onError(eventHub, err) {
+        logger.debug('_onError:', util.format('received error from peer %s: %s', eventHub.getPeerAddr(), err));
+        this._receivedEventHubResponse(eventHub);
+        this.strategy.errorReceived(this._strategySuccess.bind(this), this._strategyFail.bind(this));
+    }
+    _receivedEventHubResponse(eventHub) {
+        this.respondedEventHubs.add(eventHub);
+    }
+    /**
+     * Callback for the strategy to indicate successful commit of the transaction.
+     * @private
+     */
+    _strategySuccess() {
+        logger.debug('_strategySuccess:', util.format('strategy success for transaction %j', this.transactionId));
+        this.cancelListening();
+        this._resolveNotificationPromise();
+    }
+    /**
+     * Callback for the strategy to indicate failure of the transaction commit.
+     * @private
+     * @param {Error} error Reason for failure.
+     */
+    _strategyFail(error) {
+        logger.warn('_strategyFail:', util.format('strategy fail for transaction %j: %s', this.transactionId, error));
+        this.cancelListening();
+        this._rejectNotificationPromise(error);
+    }
+    /**
+     * Wait until enough events have been received from the event hubs to satisfy the event handling strategy.
+     * @throws {Error} if the transaction commit is not successful within the timeout period.
+     */
+    async waitForEvents() {
+        logger.debug('waitForEvents called');
+        await this.notificationPromise;
+    }
+    /**
+     * Cancel listening for events.
+     */
+    cancelListening() {
+        logger.debug('cancelListening called');
+        clearTimeout(this.timeoutHandler);
+        this.eventHubs.forEach(eventHub => eventHub.unregisterTxEvent(this.transactionId));
+    }
+}
+module.exports = TransactionEventHandler;
+//# sourceMappingURL=transactioneventhandler.js.map</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-fabric-network.html">fabric-network</a></li></ul><h3>Classes</h3><ul><li><a href="AffiliationService.html">AffiliationService</a></li><li><a href="BasePackager.html">BasePackager</a></li><li><a href="BasicCommitHandler.html">BasicCommitHandler</a></li><li><a href="BlockDecoder.html">BlockDecoder</a></li><li><a href="CertificateAuthority.html">CertificateAuthority</a></li><li><a href="Chaincode.html">Chaincode</a></li><li><a href="ChaincodeRegistration.html">ChaincodeRegistration</a></li><li><a href="Channel.html">Channel</a></li><li><a href="ChannelEventHub.html">ChannelEventHub</a></li><li><a href="ChannelPeer.html">ChannelPeer</a></li><li><a href="Client.html">Client</a></li><li><a href="CommitHandler.html">CommitHandler</a></li><li><a href="DiscoveryEndorsementHandler.html">DiscoveryEndorsementHandler</a></li><li><a href="EndorsementHandler.html">EndorsementHandler</a></li><li><a href="EndorsementPolicy.html">EndorsementPolicy</a></li><li><a href="Endpoint.html">Endpoint</a></li><li><a href="event_hub_number.html">event_hub_number</a></li><li><a href="FabricCAClient.html">FabricCAClient</a></li><li><a href="FabricCAServices.html">FabricCAServices</a></li><li><a href="IdentityService.html">IdentityService</a></li><li><a href="module-fabric-network.AbstractEventHubSelectionStrategy.html">AbstractEventHubSelectionStrategy</a></li><li><a href="module-fabric-network.AbstractEventListener.html">AbstractEventListener</a></li><li><a href="module-fabric-network.BaseCheckpointer.html">BaseCheckpointer</a></li><li><a href="module-fabric-network.CommitEventListener.html">CommitEventListener</a></li><li><a href="module-fabric-network.Contract.html">Contract</a></li><li><a href="module-fabric-network.ContractEventListener.html">ContractEventListener</a></li><li><a href="module-fabric-network.EventHubDisconnectError.html">EventHubDisconnectError</a></li><li><a href="module-fabric-network.EventHubManager.html">EventHubManager</a></li><li><a href="module-fabric-network.FabricError.html">FabricError</a></li><li><a href="module-fabric-network.FileSystemCheckpointer.html">FileSystemCheckpointer</a></li><li><a href="module-fabric-network.Gateway.html">Gateway</a></li><li><a href="module-fabric-network.HsmX509Provider.html">HsmX509Provider</a></li><li><a href="module-fabric-network.IdentityProviderRegistry.html">IdentityProviderRegistry</a></li><li><a href="module-fabric-network.Network.html">Network</a></li><li><a href="module-fabric-network.Query.html">Query</a></li><li><a href="module-fabric-network.RoundRobinEventHubSelectionStrategy.html">RoundRobinEventHubSelectionStrategy</a></li><li><a href="module-fabric-network.TimeoutError.html">TimeoutError</a></li><li><a href="module-fabric-network.Transaction.html">Transaction</a></li><li><a href="module-fabric-network.Wallet.html">Wallet</a></li><li><a href="module-fabric-network.Wallets.html">Wallets</a></li><li><a href="MSP.html">MSP</a></li><li><a href="MSPManager.html">MSPManager</a></li><li><a href="NetworkConfig_1_0.html">NetworkConfig_1_0</a></li><li><a href="Orderer.html">Orderer</a></li><li><a href="Organization.html">Organization</a></li><li><a href="Peer.html">Peer</a></li><li><a href="Remote.html">Remote</a></li><li><a href="TransactionID.html">TransactionID</a></li></ul><h3>Interfaces</h3><ul><li><a href="module-fabric-network.WalletStore.html">WalletStore</a></li></ul><h3>Tutorials</h3><ul><li><a href="tutorial-app-dev-env-setup.html">Setting up the Application Developer's Environment</a></li><li><a href="tutorial-chaincode-lifecycle.html">fabric-client: How to install and start your chaincode</a></li><li><a href="tutorial-channel-create.html">fabric-client: How to create a Hyperledger Fabric channel</a></li><li><a href="tutorial-channel-events.html">fabric-client: How to use the channel-based event service</a></li><li><a href="tutorial-discovery.html">fabric-client: How to use the discovery service</a></li><li><a href="tutorial-event-checkpointer.html">fabric-network: How to replay missed events</a></li><li><a href="tutorial-event-hub-management.html">fabric-network: How to automatically select and reconnect to event hubs</a></li><li><a href="tutorial-grpc-settings.html">fabric-client: How to set gRPC settings</a></li><li><a href="tutorial-handlers.html">fabric-client: How to use the endorsement and commit handlers</a></li><li><a href="tutorial-listening-to-events.html">fabric-network: How to listen to events</a></li><li><a href="tutorial-logging.html">fabric-client: How to use logging</a></li><li><a href="tutorial-metadata-chaincode.html">fabric-client: How to add CouchDB indexes during chaincode installation</a></li><li><a href="tutorial-mutual-tls.html">fabric-client: How to configure mutual TLS</a></li><li><a href="tutorial-network-config.html">fabric-client: How to use a common connection profile</a></li><li><a href="tutorial-private-data.html">How to use private data</a></li><li><a href="tutorial-query-peers.html">fabric-network: How to select peers for evaluating transactions (queries)</a></li><li><a href="tutorial-sign-transaction-offline.html">Working with an offline private key</a></li><li><a href="tutorial-transaction-commit-events.html">fabric-network: How to wait for transactions to be committed to the ledger</a></li><li><a href="tutorial-wallet.html">fabric-network: Using wallets to manage identities</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CLIENT">CLIENT</a></li><li><a href="global.html#finalPackage">finalPackage</a></li><li><a href="global.html#HFAFFILIATIONMGR">HFAFFILIATIONMGR</a></li><li><a href="global.html#HFGENCRL">HFGENCRL</a></li><li><a href="global.html#HFINTERMEDIATECA">HFINTERMEDIATECA</a></li><li><a href="global.html#HFREGISTRARATTRIBUTES">HFREGISTRARATTRIBUTES</a></li><li><a href="global.html#HFREGISTRARDELEGATEROLES">HFREGISTRARDELEGATEROLES</a></li><li><a href="global.html#HFREGISTRARROLES">HFREGISTRARROLES</a></li><li><a href="global.html#HFREVOKER">HFREVOKER</a></li><li><a href="global.html#loadConfigGroup">loadConfigGroup</a></li><li><a href="global.html#loadConfigValue">loadConfigValue</a></li><li><a href="global.html#ORDERER">ORDERER</a></li><li><a href="global.html#package">package</a></li><li><a href="global.html#PEER">PEER</a></li><li><a href="global.html#toEnvelope">toEnvelope</a></li><li><a href="global.html#USER">USER</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Fri Dec 13 2019 12:05:42 GMT+0000 (Coordinated Universal Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

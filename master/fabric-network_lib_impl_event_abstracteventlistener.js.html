@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: fabric-network/lib/impl/event/abstracteventlistener.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: fabric-network/lib/impl/event/abstracteventlistener.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Copyright 2019 IBM All Rights Reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+'use strict';
+const Long = require('long');
+const EventHubDisconnectError = require('fabric-client/lib/errors/EventHubDisconnectError');
+const BaseCheckpointer = require('./basecheckpointer');
+const { Utils } = require('fabric-common');
+const logger = Utils.getLogger('AbstractEventListener');
+/**
+ * Event listener base class handles initializing common properties across contract, transaction
+ * and block event listeners.
+ *
+ * Instances of the event listeners are stateful and must only be used for one listener
+ * @memberof module:fabric-network
+ * @class
+ */
+class AbstractEventListener {
+    /**
+     * Constructor
+     * @param {module:fabric-network.Network} network The network
+     * @param {string} listenerName a unique name identifying the listener.
+     * @param {function} eventCallback The function called when the event is triggered.
+     * It has signature (err, ...args) where args changes depending on the event type
+     * @param {module:fabric-network.Network~ListenerOptions} options Event handler options
+     */
+    constructor(network, listenerName, eventCallback, options) {
+        if (!options) {
+            options = {};
+        }
+        options = Object.assign({
+            eventHubConnectWait: 1000,
+            eventHubConnectTimeout: 30000
+        }, options);
+        this.channel = network.getChannel();
+        this.network = network;
+        this.listenerName = listenerName;
+        this.eventCallback = eventCallback;
+        this.options = options;
+        this.clientOptions = {}; // fabric-client ChannelEventHub options
+        if (Object.prototype.hasOwnProperty.call(this.options, 'unregister')) {
+            this.clientOptions.unregister = this.options.unregister;
+        }
+        if (this.options.startBlock !== undefined &amp;&amp; this.options.startBlock !== null) {
+            this.clientOptions.startBlock = Number(this.options.startBlock);
+            delete this.options.startBlock;
+        }
+        if (this.options.endBlock !== undefined &amp;&amp; this.options.endBlock !== null) {
+            this.clientOptions.endBlock = Number(this.options.endBlock);
+            delete this.options.endBlock;
+        }
+        this._registered = false;
+        this._firstCheckpoint = {};
+        this._registration = null;
+        this._filtered = typeof options.filtered === 'boolean' ? options.filtered : false;
+        this._usingCheckpointer = false;
+        this._firstRegistrationAttempt = true;
+        this._abandonEventHubConnect = false;
+    }
+    /**
+     * Called by the super classes register function. Saves information needed to start
+     * listening, and disconnects an event hub if it is the incorrect type
+     */
+    async register(chaincodeId) {
+        logger.debug(`Register event listener: ${this.listenerName}`);
+        if (this.getEventHubManager().getPeers().length === 0) {
+            logger.error('No peers available to register a listener');
+            return;
+        }
+        if (!this.eventHub &amp;&amp; this.options.fixedEventHub) {
+            throw new Error('No event hub given and option fixedEventHub is set');
+        }
+        if (this._registered) {
+            throw new Error('Listener already registered');
+        }
+        if (!this.network.listeners.has(this.listenerName)) {
+            this.network.saveListener(this.listenerName, this);
+        }
+        if (this.eventHub &amp;&amp; this.eventHub.isconnected()) {
+            if (this.eventHub.isFiltered() !== this._filtered) {
+                this.eventHub._filtered_stream = this._filtered;
+                this.eventHub.disconnect();
+                if (!this.options.fixedEventHub) {
+                    this.eventHub = null;
+                }
+            }
+        }
+        if (this.options.checkpointer) {
+            if (typeof this.options.checkpointer.factory === 'function') {
+                this.checkpointer = this.options.checkpointer.factory(this.channel.getName(), this.listenerName, this.options.checkpointer.options);
+                this.checkpointer.setChaincodeId(chaincodeId);
+            }
+        }
+        if (this.useEventReplay()) {
+            if (!this.getCheckpointer()) {
+                logger.error('Opted to use checkpointing without defining a checkpointer');
+            }
+            if ((this.clientOptions.startBlock !== null) &amp;&amp; (this.clientOptions.startBlock !== undefined) &amp;&amp;
+                (this.clientOptions.endBlock !== null) &amp;&amp; (this.clientOptions.endBlock !== undefined)) {
+                logger.debug('startBlock and endBlock were given. Disabling event replay');
+                this.options.replay = false;
+            }
+        }
+        let checkpoint;
+        if (this.useEventReplay() &amp;&amp; this.checkpointer instanceof BaseCheckpointer) {
+            this._firstCheckpoint = checkpoint = await this.checkpointer.loadLatestCheckpoint();
+            const blockchainInfo = await this.channel.queryInfo();
+            // eslint-disable-next-line no-prototype-builtins
+            if (checkpoint &amp;&amp; checkpoint.hasOwnProperty('blockNumber') &amp;&amp; !isNaN(checkpoint.blockNumber) &amp;&amp; blockchainInfo.height - 1 > Number(checkpoint.blockNumber)) {
+                logger.debug(`Requested Block Number: ${Number(checkpoint.blockNumber) + 1} Latest Block Number: ${blockchainInfo.height - 1}`);
+                this.clientOptions.startBlock = Long.fromInt(Number(checkpoint.blockNumber) + 1);
+            }
+        }
+    }
+    /**
+     * Called by the super classes unregister function.
+     */
+    unregister() {
+        logger.debug(`Unregister event listener: ${this.listenerName}`);
+        this._registered = false;
+        this._abandonEventHubConnect = true;
+        this._firstCheckpoint = {};
+        if (this.network.listeners.has(this.listenerName)) {
+            this.network.listeners.delete(this.listenerName);
+        }
+    }
+    /**
+     * @param {ChannelEventHub} eventHub Event hub.
+     * @param {boolean} isFixed If true only this peers event hub will be used
+     */
+    setEventHub(eventHub, isFixed) {
+        this.eventHub = eventHub;
+        this.options.fixedEventHub = isFixed;
+    }
+    /**
+     * @returns {boolean} Listeners registration status
+     */
+    isregistered() {
+        return this._registered;
+    }
+    /**
+     * Returns the checkpoint instance created by the checkpoint factory
+     * @returns {BaseCheckpointer} Checkpointer instance specific to this listener
+     */
+    getCheckpointer() {
+        return this.checkpointer;
+    }
+    /**
+     * Returns the event hub manager from the network
+     * @returns {EventHubManager} Event hub manager
+     */
+    getEventHubManager() {
+        const network = this.network;
+        return network.getEventHubManager();
+    }
+    useEventReplay() {
+        return this.options.replay;
+    }
+    /**
+     * Check if the event hub error is a disconnect message
+     * @param {Error} error The error emitted by the event hub
+     * @returns {boolean} is shutdown message
+     * @private
+     */
+    _isShutdownMessage(error) {
+        if (error) {
+            logger.debug('Event hub shutdown.');
+            return error instanceof EventHubDisconnectError;
+        }
+        return false;
+    }
+    async _setEventHubConnectWait() {
+        logger.debug(`[${this.listenerName}]: The event hub connect failed. Waiting ${this.options.eventHubConnectWait}ms then trying again`);
+        await new Promise(resolve => setTimeout(resolve, this.options.eventHubConnectWait));
+    }
+    _setEventHubConnectTimeout() {
+        this._abandonEventHubConnect = false;
+        this._eventHubConnectTimeout = setTimeout(() => {
+            logger.error(`[${this.listenerName}]: The event hub failed to connect after ${this.options.eventHubConnectTimeout}ms`);
+        }, this.options.eventHubConnectTimeout);
+    }
+    _unsetEventHubConnectTimeout() {
+        clearTimeout(this._eventHubConnectTimeout);
+        this._eventHubConnectTimeout = null;
+    }
+    /**
+     *
+     * Finds a new event hub for the listener in the event of one shutting down. Will
+     * create a new instance if checkpointer is being used, or reuse one if not
+     * @private
+     */
+    async _registerWithNewEventHub() {
+        this.unregister();
+        if (this.options.fixedEventHub &amp;&amp; !this.eventHub) {
+            throw new Error('No event hub given and option fixedEventHub is set');
+        }
+        if (!this._firstRegistrationAttempt) {
+            await this._setEventHubConnectWait();
+        }
+        const useCheckpointing = this.useEventReplay() &amp;&amp; this.checkpointer instanceof BaseCheckpointer ||
+            (this.clientOptions.startBlock || this.clientOptions.endBlock);
+        if (useCheckpointing &amp;&amp; !this.options.fixedEventHub) {
+            this.eventHub = this.getEventHubManager().getReplayEventHub();
+        }
+        else if (useCheckpointing &amp;&amp; this.options.fixedEventHub) {
+            this.eventHub = this.getEventHubManager().getReplayEventHub(this.eventHub._peer);
+        }
+        else if (!useCheckpointing &amp;&amp; this.options.fixedEventHub) {
+            this.eventHub = this.getEventHubManager().getEventHub(this.eventHub._peer);
+        }
+        else {
+            this.eventHub = this.getEventHubManager().getEventHub();
+        }
+        this._firstRegistrationAttempt = false;
+        await this.register();
+    }
+    async connectEventHub() {
+        return new Promise((resolve, reject) => {
+            const connectTimeout = setTimeout(() => {
+                if (!this.eventHub.isconnected()) {
+                    logger.error('Failed to connect to event hub');
+                    this.eventHub = null;
+                    reject();
+                }
+                resolve();
+            }, this.options.eventHubConnectTimeout);
+            this.eventHub.connect(!this._filtered, () => {
+                clearTimeout(connectTimeout);
+                resolve();
+            });
+        });
+    }
+}
+module.exports = AbstractEventListener;
+//# sourceMappingURL=abstracteventlistener.js.map</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-fabric-network.html">fabric-network</a></li></ul><h3>Classes</h3><ul><li><a href="AffiliationService.html">AffiliationService</a></li><li><a href="BasePackager.html">BasePackager</a></li><li><a href="BasicCommitHandler.html">BasicCommitHandler</a></li><li><a href="BlockDecoder.html">BlockDecoder</a></li><li><a href="CertificateAuthority.html">CertificateAuthority</a></li><li><a href="Chaincode.html">Chaincode</a></li><li><a href="ChaincodeRegistration.html">ChaincodeRegistration</a></li><li><a href="Channel.html">Channel</a></li><li><a href="ChannelEventHub.html">ChannelEventHub</a></li><li><a href="ChannelPeer.html">ChannelPeer</a></li><li><a href="Client.html">Client</a></li><li><a href="CommitHandler.html">CommitHandler</a></li><li><a href="DiscoveryEndorsementHandler.html">DiscoveryEndorsementHandler</a></li><li><a href="EndorsementHandler.html">EndorsementHandler</a></li><li><a href="EndorsementPolicy.html">EndorsementPolicy</a></li><li><a href="Endpoint.html">Endpoint</a></li><li><a href="event_hub_number.html">event_hub_number</a></li><li><a href="FabricCAClient.html">FabricCAClient</a></li><li><a href="FabricCAServices.html">FabricCAServices</a></li><li><a href="IdentityService.html">IdentityService</a></li><li><a href="module-fabric-network.AbstractEventHubSelectionStrategy.html">AbstractEventHubSelectionStrategy</a></li><li><a href="module-fabric-network.AbstractEventListener.html">AbstractEventListener</a></li><li><a href="module-fabric-network.BaseCheckpointer.html">BaseCheckpointer</a></li><li><a href="module-fabric-network.CommitEventListener.html">CommitEventListener</a></li><li><a href="module-fabric-network.Contract.html">Contract</a></li><li><a href="module-fabric-network.ContractEventListener.html">ContractEventListener</a></li><li><a href="module-fabric-network.EventHubDisconnectError.html">EventHubDisconnectError</a></li><li><a href="module-fabric-network.EventHubManager.html">EventHubManager</a></li><li><a href="module-fabric-network.FabricError.html">FabricError</a></li><li><a href="module-fabric-network.FileSystemCheckpointer.html">FileSystemCheckpointer</a></li><li><a href="module-fabric-network.Gateway.html">Gateway</a></li><li><a href="module-fabric-network.HsmX509Provider.html">HsmX509Provider</a></li><li><a href="module-fabric-network.IdentityProviderRegistry.html">IdentityProviderRegistry</a></li><li><a href="module-fabric-network.Network.html">Network</a></li><li><a href="module-fabric-network.Query.html">Query</a></li><li><a href="module-fabric-network.RoundRobinEventHubSelectionStrategy.html">RoundRobinEventHubSelectionStrategy</a></li><li><a href="module-fabric-network.TimeoutError.html">TimeoutError</a></li><li><a href="module-fabric-network.Transaction.html">Transaction</a></li><li><a href="module-fabric-network.Wallet.html">Wallet</a></li><li><a href="module-fabric-network.Wallets.html">Wallets</a></li><li><a href="MSP.html">MSP</a></li><li><a href="MSPManager.html">MSPManager</a></li><li><a href="NetworkConfig_1_0.html">NetworkConfig_1_0</a></li><li><a href="Orderer.html">Orderer</a></li><li><a href="Organization.html">Organization</a></li><li><a href="Peer.html">Peer</a></li><li><a href="Remote.html">Remote</a></li><li><a href="TransactionID.html">TransactionID</a></li></ul><h3>Interfaces</h3><ul><li><a href="module-fabric-network.WalletStore.html">WalletStore</a></li></ul><h3>Tutorials</h3><ul><li><a href="tutorial-app-dev-env-setup.html">Setting up the Application Developer's Environment</a></li><li><a href="tutorial-chaincode-lifecycle.html">fabric-client: How to install and start your chaincode</a></li><li><a href="tutorial-channel-create.html">fabric-client: How to create a Hyperledger Fabric channel</a></li><li><a href="tutorial-channel-events.html">fabric-client: How to use the channel-based event service</a></li><li><a href="tutorial-discovery.html">fabric-client: How to use the discovery service</a></li><li><a href="tutorial-event-checkpointer.html">fabric-network: How to replay missed events</a></li><li><a href="tutorial-event-hub-management.html">fabric-network: How to automatically select and reconnect to event hubs</a></li><li><a href="tutorial-grpc-settings.html">fabric-client: How to set gRPC settings</a></li><li><a href="tutorial-handlers.html">fabric-client: How to use the endorsement and commit handlers</a></li><li><a href="tutorial-listening-to-events.html">fabric-network: How to listen to events</a></li><li><a href="tutorial-logging.html">fabric-client: How to use logging</a></li><li><a href="tutorial-metadata-chaincode.html">fabric-client: How to add CouchDB indexes during chaincode installation</a></li><li><a href="tutorial-mutual-tls.html">fabric-client: How to configure mutual TLS</a></li><li><a href="tutorial-network-config.html">fabric-client: How to use a common connection profile</a></li><li><a href="tutorial-private-data.html">How to use private data</a></li><li><a href="tutorial-query-peers.html">fabric-network: How to select peers for evaluating transactions (queries)</a></li><li><a href="tutorial-sign-transaction-offline.html">Working with an offline private key</a></li><li><a href="tutorial-transaction-commit-events.html">fabric-network: How to wait for transactions to be committed to the ledger</a></li><li><a href="tutorial-wallet.html">fabric-network: Using wallets to manage identities</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CLIENT">CLIENT</a></li><li><a href="global.html#finalPackage">finalPackage</a></li><li><a href="global.html#HFAFFILIATIONMGR">HFAFFILIATIONMGR</a></li><li><a href="global.html#HFGENCRL">HFGENCRL</a></li><li><a href="global.html#HFINTERMEDIATECA">HFINTERMEDIATECA</a></li><li><a href="global.html#HFREGISTRARATTRIBUTES">HFREGISTRARATTRIBUTES</a></li><li><a href="global.html#HFREGISTRARDELEGATEROLES">HFREGISTRARDELEGATEROLES</a></li><li><a href="global.html#HFREGISTRARROLES">HFREGISTRARROLES</a></li><li><a href="global.html#HFREVOKER">HFREVOKER</a></li><li><a href="global.html#loadConfigGroup">loadConfigGroup</a></li><li><a href="global.html#loadConfigValue">loadConfigValue</a></li><li><a href="global.html#ORDERER">ORDERER</a></li><li><a href="global.html#package">package</a></li><li><a href="global.html#PEER">PEER</a></li><li><a href="global.html#toEnvelope">toEnvelope</a></li><li><a href="global.html#USER">USER</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Fri Dec 13 2019 12:05:42 GMT+0000 (Coordinated Universal Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: fabric-ca-client/lib/FabricCAServices.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: fabric-ca-client/lib/FabricCAServices.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/*
+ Copyright 2017, 2018 IBM All Rights Reserved.
+
+ SPDX-License-Identifier: Apache-2.0
+
+*/
+
+'use strict';
+
+const {Utils: utils, BaseClient} = require('fabric-common');
+
+const FabricCAClient = require('./FabricCAClient');
+
+const {normalizeX509} = BaseClient;
+const util = require('util');
+const parseURL = require('./helper').parseURL;
+const path = require('path');
+const checkRegistrar = require('./helper').checkRegistrar;
+const getSubjectCommonName = require('./helper').getSubjectCommonName;
+const config = utils.getConfig();
+const logger = utils.getLogger('FabricCAClientService.js');
+
+// setup the location of the default config shipped with code
+const default_config = path.resolve(__dirname, '../config/default.json');
+config.reorderFileStores(default_config, true); // make sure this one is under the fabric-client
+
+/**
+ * @typedef {Object} TLSOptions
+ * @property {string[]} trustedRoots Array of PEM-encoded trusted root certificates
+ * @property {boolean} [verify=true] Determines whether or not to verify the server certificate when using TLS
+ */
+
+/**
+ * This is an implementation of the member service client which communicates with the Fabric CA server.
+ * @class
+ * @extends BaseClient
+ */
+const FabricCAServices = class extends BaseClient {
+
+	/**
+	 * constructor
+	 *
+	 * @param {string | object} url The endpoint URL for Fabric CA services of the form: "http://host:port" or "https://host:port"
+	 When this parameter is an object then it must include the parameters listed as key value pairs.
+	 * @param {TLSOptions} tlsOptions The TLS settings to use when the Fabric CA services endpoint uses "https"
+	 * @param {string} caName The optional name of the CA. Fabric-ca servers support multiple Certificate Authorities from
+	 *  a single server. If omitted or null or an empty string, then the default CA is the target of requests
+	 * @param {CryptoSuite} cryptoSuite The optional cryptoSuite instance to be used if options other than defaults are needed.
+	 * If not specified, an instance of {@link CryptoSuite} will be constructed based on the current configuration settings:
+	 * &lt;br> - crypto-hsm: use an implementation for Hardware Security Module (if set to true) or software-based key management (if set to false)
+	 * &lt;br> - crypto-keysize: security level, or key size, to use with the digital signature public key algorithm. Currently ECDSA
+	 *  is supported and the valid key sizes are 256 and 384
+	 * &lt;br> - crypto-hash-algo: hashing algorithm
+	 * &lt;br> - key-value-store: some CryptoSuite implementation requires a key store to persist private keys. A {@link CryptoKeyStore}
+	 *  is provided for this purpose, which can be used on top of any implementation of the {@link KeyValueStore} interface,
+	 *  such as a file-based store or a database-based one. The specific implementation is determined by the value of this configuration setting.
+	 */
+	constructor(url, tlsOptions, caName, cryptoSuite) {
+		super();
+		let _url, _tlsOptions, _caName, _cryptoSuite;
+		if (typeof url === 'object') {
+			_url = url.url;
+			_tlsOptions = url.tlsOptions;
+			_caName = url.caName;
+			_cryptoSuite = url.cryptoSuite;
+		} else {
+			_url = url;
+			_tlsOptions = tlsOptions;
+			_caName = caName;
+			_cryptoSuite = cryptoSuite;
+		}
+
+		this.caName = _caName;
+
+		const endpoint = parseURL(_url);
+
+		if (_cryptoSuite) {
+			this.setCryptoSuite(_cryptoSuite);
+		} else {
+			this.setCryptoSuite(utils.newCryptoSuite());
+			this.getCryptoSuite().setCryptoKeyStore(utils.newCryptoKeyStore());
+		}
+
+		this._fabricCAClient = new FabricCAClient({
+			caname: _caName,
+			protocol: endpoint.protocol,
+			hostname: endpoint.hostname,
+			port: endpoint.port,
+			tlsOptions: _tlsOptions
+		}, this.getCryptoSuite());
+
+		logger.debug('Successfully constructed Fabric CA service client: endpoint - %j', endpoint);
+
+	}
+
+	/**
+	 * Returns the name of the certificate authority.
+	 *
+	 * @returns {string} caName
+	 */
+	getCaName() {
+		return this.caName;
+	}
+
+	/**
+	 * @typedef {Object} RegisterRequest
+	 * @property {string} enrollmentID - ID which will be used for enrollment
+	 * @property {string} enrollmentSecret - Optional enrollment secret to set for the registered user.
+	 *                    If not provided, the server will generate one.
+	 * @property {string} role - Optional arbitrary string representing a role value for the user
+	 * @property {string} affiliation - Affiliation with which this user will be associated,
+	 *                    like a company or an organization
+	 * @property {number} maxEnrollments - The maximum number of times this user will be permitted to enroll
+	 * @property {KeyValueAttribute[]} attrs - Array of {@link KeyValueAttribute} attributes to assign to the user
+	 */
+
+	/**
+	 * Register the member and return an enrollment secret.
+	 * @param {RegisterRequest} req - The {@link RegisterRequest}
+	 * @param registrar {User}. The identity of the registrar (i.e. who is performing the registration)
+	 * @returns {Promise} The enrollment secret to use when this user enrolls
+	 */
+	register(req, registrar) {
+		if (!req) {
+			throw new Error('Missing required argument "request"');
+		}
+
+		if (!req.enrollmentID) {
+			throw new Error('Missing required argument "request.enrollmentID"');
+		}
+
+		if (typeof req.maxEnrollments === 'undefined' || req.maxEnrollments === null) {
+			// set maxEnrollments to 1
+			req.maxEnrollments = 1;
+		}
+
+		checkRegistrar(registrar);
+
+		return this._fabricCAClient.register(req.enrollmentID, req.enrollmentSecret, req.role, req.affiliation, req.maxEnrollments, req.attrs,
+			registrar.getSigningIdentity());
+	}
+
+	/**
+	 * @typedef {Object} EnrollmentRequest
+	 * @property {string} enrollmentID - The registered ID to use for enrollment
+	 * @property {string} enrollmentSecret - The secret associated with the enrollment ID
+	 * @property {string} profile - The profile name.  Specify the 'tls' profile for a TLS certificate;
+	 *                   otherwise, an enrollment certificate is issued.
+	 * @property {string} csr - Optional. PEM-encoded PKCS#10 Certificate Signing Request. The message sent from client side to
+	 *                   Fabric-ca for the digital identity certificate.
+	 * @property {AttributeRequest[]} attr_reqs - An array of {@link AttributeRequest}
+	 */
+
+	/**
+	 * @typedef {Object} Enrollment
+	 * @property {Object} key - the private key
+	 * @property {string} certificate - The enrollment certificate in base 64 encoded PEM format
+	 * @property {string} rootCertificate - Base 64 encoded PEM-encoded certificate chain of the CA's signing certificate
+	 */
+
+	/**
+	 * Enroll the member and return an opaque member object.
+	 *
+	 * @param req the {@link EnrollmentRequest} If the request contains the field "csr", this csr will be used for
+	 *     getting the certificate from Fabric-CA. Otherwise , a new private key will be generated and be used to
+	 *     generate a csr later.
+	 * @returns {Promise&lt;Enrollment>} If the request does not contain the field "csr", the returned promise resolves an
+	 *     {@link Enrollment} object with "key" for the new generated private key. If the request contains the field "csr",
+	 *     the resolved {@link Enrollment} object does not contain the property "key".
+	 */
+	async enroll(req) {
+		if (!req) {
+			logger.error('enroll() missing required argument "request"');
+			throw new Error('Missing required argument "request"');
+		}
+
+		if (!req.enrollmentID) {
+			logger.error('Invalid enroll request, missing enrollmentID');
+			throw new Error('req.enrollmentID is not set');
+		}
+
+		if (!req.enrollmentSecret) {
+			logger.error('Invalid enroll request, missing enrollmentSecret');
+			throw new Error('req.enrollmentSecret is not set');
+		}
+
+		if (req.attr_reqs) {
+			if (!Array.isArray(req.attr_reqs)) {
+				logger.error('Invalid enroll request, attr_reqs must be an array of AttributeRequest objects');
+				throw new Error('req.attr_reqs is not an array');
+			} else {
+				for (const i in req.attr_reqs) {
+					const attr_req = req.attr_reqs[i];
+					if (!attr_req.name) {
+						logger.error('Invalid enroll request, attr_reqs object is missing the name of the attribute');
+						throw new Error('req.att_regs is missing the attribute name');
+					}
+				}
+			}
+		}
+
+		const storeKey = this.getCryptoSuite()._cryptoKeyStore ? true : false;
+
+		try {
+			let csr;
+			let privateKey;
+			if (req.csr) {
+				logger.debug('try to enroll with a csr');
+				csr = req.csr;
+			} else {
+				try {
+					if (storeKey) {
+						privateKey = await this.getCryptoSuite().generateKey();
+					} else {
+						privateKey = this.getCryptoSuite().generateEphemeralKey();
+					}
+					logger.debug('successfully generated key pairs');
+				} catch (err) {
+					throw new Error(util.format('Failed to generate key for enrollment due to error [%s]', err));
+				}
+				try {
+					csr = privateKey.generateCSR('CN=' + req.enrollmentID);
+					logger.debug('successfully generated csr');
+				} catch (err) {
+					throw new Error(util.format('Failed to generate CSR for enrollmemnt due to error [%s]', err));
+				}
+			}
+
+			const enrollResponse = await this._fabricCAClient.enroll(req.enrollmentID, req.enrollmentSecret, csr, req.profile, req.attr_reqs);
+			logger.debug('successfully enrolled %s', req.enrollmentID);
+
+			const enrollment = {
+				certificate: enrollResponse.enrollmentCert,
+				rootCertificate: enrollResponse.caCertChain
+			};
+			if (!req.csr) {
+				enrollment.key = privateKey;
+			}
+			return enrollment;
+		} catch (error) {
+			logger.error('Failed to enroll %s, error:%o', req.enrollmentID, error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Re-enroll the member in cases such as the existing enrollment certificate is about to expire, or
+	 * it has been compromised
+	 * @param {User} currentUser The identity of the current user that holds the existing enrollment certificate
+	 * @param {AttributeRequest[]} Optional an array of {@link AttributeRequest} that indicate attributes to
+	 *                             be included in the certificate
+	 * @returns Promise for an object with "key" for private key and "certificate" for the signed certificate
+	 */
+	reenroll(currentUser, attr_reqs) {
+		if (!currentUser) {
+			logger.error('Invalid re-enroll request, missing argument "currentUser"');
+			throw new Error('Invalid re-enroll request, missing argument "currentUser"');
+		}
+
+		if (!currentUser.constructor || currentUser.constructor.name !== 'User') {
+			logger.error('Invalid re-enroll request, "currentUser" is not a valid User object');
+			throw new Error('Invalid re-enroll request, "currentUser" is not a valid User object');
+		}
+
+		if (attr_reqs) {
+			if (!Array.isArray(attr_reqs)) {
+				logger.error('Invalid re-enroll request, attr_reqs must be an array of AttributeRequest objects');
+				throw new Error('Invalid re-enroll request, attr_reqs must be an array of AttributeRequest objects');
+			} else {
+				for (const i in attr_reqs) {
+					const attr_req = attr_reqs[i];
+					if (!attr_req.name) {
+						logger.error('Invalid re-enroll request, attr_reqs object is missing the name of the attribute');
+						throw new Error('Invalid re-enroll request, attr_reqs object is missing the name of the attribute');
+					}
+				}
+			}
+		}
+
+		const cert = currentUser.getIdentity()._certificate;
+		let subject = null;
+		try {
+			subject = getSubjectCommonName(normalizeX509(cert));
+		} catch (err) {
+			logger.error(util.format('Failed to parse enrollment certificate %s for Subject. \nError: %s', cert, err));
+		}
+
+		if (!subject) {
+			throw new Error('Failed to parse the enrollment certificate of the current user for its subject');
+		}
+		const self = this;
+
+		return new Promise((resolve, reject) => {
+			// generate enrollment certificate pair for signing
+			self.getCryptoSuite().generateKey()
+				.then(
+					(privateKey) => {
+						// generate CSR using the subject of the current user's certificate
+						try {
+							const csr = privateKey.generateCSR('CN=' + subject);
+							self._fabricCAClient.reenroll(csr, currentUser.getSigningIdentity(), attr_reqs)
+								.then(
+									(response) => {
+										return resolve({
+											key: privateKey,
+											certificate: Buffer.from(response.result.Cert, 'base64').toString(),
+											rootCertificate: Buffer.from(response.result.ServerInfo.CAChain, 'base64').toString()
+										});
+									},
+									(err) => {
+										return reject(err);
+									}
+								);
+
+						} catch (err) {
+							return reject(new Error(util.format('Failed to generate CSR for enrollmemnt due to error [%s]', err)));
+						}
+					},
+					(err) => {
+						return reject(new Error(util.format('Failed to generate key for enrollment due to error [%s]', err)));
+					}
+				);
+
+		});
+	}
+
+	/**
+	 * Revoke an existing certificate (enrollment certificate or transaction certificate), or revoke
+	 * all certificates issued to an enrollment id. If revoking a particular certificate, then both
+	 * the Authority Key Identifier and serial number are required. If revoking by enrollment id,
+	 * then all future requests to enroll this id will be rejected.
+	 * @param {Object} request Request object with the following fields:
+	 * &lt;br> - enrollmentID {string}. ID to revoke
+	 * &lt;br> - aki {string}. Authority Key Identifier string, hex encoded, for the specific certificate to revoke
+	 * &lt;br> - serial {string}. Serial number string, hex encoded, for the specific certificate to revoke
+	 * &lt;br> - reason {string}. The reason for revocation. See https://godoc.org/golang.org/x/crypto/ocsp
+	 * &lt;br> - gencrl {bool}. GenCRL specifies whether to generate a CRL
+	 *  for valid values. The default value is 0 (ocsp.Unspecified).
+	 * @param {User} registrar The identity of the registrar (i.e. who is performing the revocation)
+	 * @returns {Promise} The revocation results
+	 */
+	revoke(request, registrar) {
+		if (!request) {
+			throw new Error('Missing required argument "request"');
+		}
+
+		if (!request.enrollmentID || request.enrollmentID === '') {
+			if (!request.aki || request.aki === '' || !request.serial || request.serial === '') {
+				throw new Error('Enrollment ID is empty, thus both "aki" and "serial" must have non-empty values');
+			}
+		}
+
+		checkRegistrar(registrar);
+
+		return this._fabricCAClient.revoke(
+			request.enrollmentID,
+			request.aki,
+			request.serial,
+			(request.reason) ? request.reason : null,
+			(request.gencrl) ? request.gencrl : false,
+			registrar.getSigningIdentity());
+	}
+
+	/**
+	 * @typedef {Object} Restriction
+	 * @property {Date} revokedBefore - Include certificates that were revoked before this UTC timestamp (in RFC3339 format) in the CRL
+	 * @property {Date} revokedAfter - Include certificates that were revoked after this UTC timestamp (in RFC3339 format) in the CRL
+	 * @property {Date} expireBefore - Include revoked certificates that expire before this UTC timestamp (in RFC3339 format) in the CRL
+	 * @property {Date} expireAfter - Include revoked certificates that expire after this UTC timestamp (in RFC3339 format) in the CRL
+	 */
+
+	/**
+	 *
+	 * @param {Restriction} request
+	 * @param {User} registrar The identity of the registrar (i.e. who is performing the revocation)
+	 * @returns {Promise} The Certificate Revocation List (CRL)
+	 */
+	generateCRL(request, registrar) {
+		if (!request) {
+			throw new Error('Missing required argument "request"');
+		}
+
+		checkRegistrar(registrar);
+
+		return this._fabricCAClient.generateCRL(
+			request.revokedBefore ? request.revokedBefore.toISOString() : null,
+			request.revokedAfter ? request.revokedAfter.toISOString() : null,
+			request.expireBefore ? request.expireBefore.toISOString() : null,
+			request.expireAfter ? request.expireAfter.toISOString() : null,
+			registrar.getSigningIdentity());
+	}
+
+	/**
+	 * Create a new {@link CertificateService} instance
+	 *
+	 * @returns {CertificateService} object
+	 */
+	newCertificateService() {
+		return this._fabricCAClient.newCertificateService();
+	}
+
+	/**
+	 * Creates a new {@link IdentityService} object
+	 *
+	 * @returns {IdentityService} object
+	 */
+	newIdentityService() {
+		return this._fabricCAClient.newIdentityService();
+	}
+
+	/**
+	 * Create a new {@link AffiliationService} object
+	 *
+	 * @returns {AffiliationService} object
+	 */
+	newAffiliationService() {
+		return this._fabricCAClient.newAffiliationService();
+	}
+
+	/**
+	 * @typedef {Object} HTTPEndpoint
+	 * @property {string} hostname
+	 * @property {number} port
+	 * @property {string} protocol
+	 */
+
+	/**
+	 * return a printable representation of this object
+	 */
+	toString() {
+		return 'FabricCAServices : {' +
+			'hostname: ' + this._fabricCAClient._hostname +
+			', port: ' + this._fabricCAClient._port +
+			'}';
+	}
+
+	/**
+	 * Utility function that exposes the helper.parseURL() function
+	 * @param {string} url HTTP or HTTPS url including protocol, host and port
+	 * @returns {HTTPEndpoint}
+	 * @throws InvalidURL for malformed URLs
+	 * @ignore
+	 */
+	static _parseURL(url) {
+		return parseURL(url);
+	}
+};
+
+module.exports = FabricCAServices;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-fabric-network.html">fabric-network</a></li></ul><h3>Classes</h3><ul><li><a href="AffiliationService.html">AffiliationService</a></li><li><a href="BasePackager.html">BasePackager</a></li><li><a href="BasicCommitHandler.html">BasicCommitHandler</a></li><li><a href="BlockDecoder.html">BlockDecoder</a></li><li><a href="CertificateAuthority.html">CertificateAuthority</a></li><li><a href="Chaincode.html">Chaincode</a></li><li><a href="ChaincodeRegistration.html">ChaincodeRegistration</a></li><li><a href="Channel.html">Channel</a></li><li><a href="ChannelEventHub.html">ChannelEventHub</a></li><li><a href="ChannelPeer.html">ChannelPeer</a></li><li><a href="Client.html">Client</a></li><li><a href="CommitHandler.html">CommitHandler</a></li><li><a href="DiscoveryEndorsementHandler.html">DiscoveryEndorsementHandler</a></li><li><a href="EndorsementHandler.html">EndorsementHandler</a></li><li><a href="EndorsementPolicy.html">EndorsementPolicy</a></li><li><a href="Endpoint.html">Endpoint</a></li><li><a href="event_hub_number.html">event_hub_number</a></li><li><a href="FabricCAClient.html">FabricCAClient</a></li><li><a href="FabricCAServices.html">FabricCAServices</a></li><li><a href="IdentityService.html">IdentityService</a></li><li><a href="module-fabric-network.AbstractEventHubSelectionStrategy.html">AbstractEventHubSelectionStrategy</a></li><li><a href="module-fabric-network.AbstractEventListener.html">AbstractEventListener</a></li><li><a href="module-fabric-network.BaseCheckpointer.html">BaseCheckpointer</a></li><li><a href="module-fabric-network.CommitEventListener.html">CommitEventListener</a></li><li><a href="module-fabric-network.Contract.html">Contract</a></li><li><a href="module-fabric-network.ContractEventListener.html">ContractEventListener</a></li><li><a href="module-fabric-network.EventHubDisconnectError.html">EventHubDisconnectError</a></li><li><a href="module-fabric-network.EventHubManager.html">EventHubManager</a></li><li><a href="module-fabric-network.FabricError.html">FabricError</a></li><li><a href="module-fabric-network.FileSystemCheckpointer.html">FileSystemCheckpointer</a></li><li><a href="module-fabric-network.Gateway.html">Gateway</a></li><li><a href="module-fabric-network.HsmX509Provider.html">HsmX509Provider</a></li><li><a href="module-fabric-network.IdentityProviderRegistry.html">IdentityProviderRegistry</a></li><li><a href="module-fabric-network.Network.html">Network</a></li><li><a href="module-fabric-network.Query.html">Query</a></li><li><a href="module-fabric-network.RoundRobinEventHubSelectionStrategy.html">RoundRobinEventHubSelectionStrategy</a></li><li><a href="module-fabric-network.TimeoutError.html">TimeoutError</a></li><li><a href="module-fabric-network.Transaction.html">Transaction</a></li><li><a href="module-fabric-network.Wallet.html">Wallet</a></li><li><a href="module-fabric-network.Wallets.html">Wallets</a></li><li><a href="MSP.html">MSP</a></li><li><a href="MSPManager.html">MSPManager</a></li><li><a href="NetworkConfig_1_0.html">NetworkConfig_1_0</a></li><li><a href="Orderer.html">Orderer</a></li><li><a href="Organization.html">Organization</a></li><li><a href="Peer.html">Peer</a></li><li><a href="Remote.html">Remote</a></li><li><a href="TransactionID.html">TransactionID</a></li></ul><h3>Interfaces</h3><ul><li><a href="module-fabric-network.WalletStore.html">WalletStore</a></li></ul><h3>Tutorials</h3><ul><li><a href="tutorial-app-dev-env-setup.html">Setting up the Application Developer's Environment</a></li><li><a href="tutorial-chaincode-lifecycle.html">fabric-client: How to install and start your chaincode</a></li><li><a href="tutorial-channel-create.html">fabric-client: How to create a Hyperledger Fabric channel</a></li><li><a href="tutorial-channel-events.html">fabric-client: How to use the channel-based event service</a></li><li><a href="tutorial-discovery.html">fabric-client: How to use the discovery service</a></li><li><a href="tutorial-event-checkpointer.html">fabric-network: How to replay missed events</a></li><li><a href="tutorial-event-hub-management.html">fabric-network: How to automatically select and reconnect to event hubs</a></li><li><a href="tutorial-grpc-settings.html">fabric-client: How to set gRPC settings</a></li><li><a href="tutorial-handlers.html">fabric-client: How to use the endorsement and commit handlers</a></li><li><a href="tutorial-listening-to-events.html">fabric-network: How to listen to events</a></li><li><a href="tutorial-logging.html">fabric-client: How to use logging</a></li><li><a href="tutorial-metadata-chaincode.html">fabric-client: How to add CouchDB indexes during chaincode installation</a></li><li><a href="tutorial-mutual-tls.html">fabric-client: How to configure mutual TLS</a></li><li><a href="tutorial-network-config.html">fabric-client: How to use a common connection profile</a></li><li><a href="tutorial-private-data.html">How to use private data</a></li><li><a href="tutorial-query-peers.html">fabric-network: How to select peers for evaluating transactions (queries)</a></li><li><a href="tutorial-sign-transaction-offline.html">Working with an offline private key</a></li><li><a href="tutorial-transaction-commit-events.html">fabric-network: How to wait for transactions to be committed to the ledger</a></li><li><a href="tutorial-wallet.html">fabric-network: Using wallets to manage identities</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CLIENT">CLIENT</a></li><li><a href="global.html#finalPackage">finalPackage</a></li><li><a href="global.html#HFAFFILIATIONMGR">HFAFFILIATIONMGR</a></li><li><a href="global.html#HFGENCRL">HFGENCRL</a></li><li><a href="global.html#HFINTERMEDIATECA">HFINTERMEDIATECA</a></li><li><a href="global.html#HFREGISTRARATTRIBUTES">HFREGISTRARATTRIBUTES</a></li><li><a href="global.html#HFREGISTRARDELEGATEROLES">HFREGISTRARDELEGATEROLES</a></li><li><a href="global.html#HFREGISTRARROLES">HFREGISTRARROLES</a></li><li><a href="global.html#HFREVOKER">HFREVOKER</a></li><li><a href="global.html#loadConfigGroup">loadConfigGroup</a></li><li><a href="global.html#loadConfigValue">loadConfigValue</a></li><li><a href="global.html#ORDERER">ORDERER</a></li><li><a href="global.html#package">package</a></li><li><a href="global.html#PEER">PEER</a></li><li><a href="global.html#toEnvelope">toEnvelope</a></li><li><a href="global.html#USER">USER</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Fri Dec 13 2019 12:05:42 GMT+0000 (Coordinated Universal Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

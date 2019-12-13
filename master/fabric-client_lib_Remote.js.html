@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: fabric-client/lib/Remote.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: fabric-client/lib/Remote.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+'use strict';
+
+const grpc = require('fabric-protos/grpc');
+const urlParser = require('url');
+
+const {Utils: utils, HashPrimitives} = require('fabric-common');
+const logger = utils.getLogger('Remote.js');
+const MAX_SEND = 'grpc.max_send_message_length';
+const MAX_RECEIVE = 'grpc.max_receive_message_length';
+const MAX_SEND_V10 = 'grpc-max-send-message-length';
+const MAX_RECEIVE_V10 = 'grpc-max-receive-message-length';
+
+// the logger available during construction of instances
+const super_logger = utils.getLogger('Remote.js');
+
+/**
+ * The Remote class represents a the base class for all remote nodes, Peer, Orderer , and MemberServicespeer.
+ *
+ * @class
+ */
+class Remote {
+
+	/**
+	 * Constructs an object with the endpoint configuration settings.
+	 *
+	 * @param {string} url The orderer URL with format of 'grpc(s)://host:port'.
+	 * @param {Object} opts An Object that may contain options to pass to grpcs calls
+	 * &lt;br>- pem {string} The certificate file, in PEM format,
+	 *    to use with the gRPC protocol (that is, with TransportCredentials).
+	 *    Required when using the grpcs protocol.
+	 * &lt;br>- clientKey {string} The private key file, in PEM format,
+	 *    to use with the gRPC protocol (that is, with TransportCredentials).
+	 *    Required when using the grpcs protocol with client certificates.
+	 * &lt;br>- clientCert {string} The public certificate file, in PEM format,
+	 *    to use with the gRPC protocol (that is, with TransportCredentials).
+	 *    Required when using the grpcs protocol with client certificates.
+	 * &lt;br>- ssl-target-name-override {string} Used in test environment only, when the server certificate's
+	 *    hostname (in the 'CN' field) does not match the actual host endpoint that the server process runs
+	 *    at, the application can work around the client TLS verify failure by setting this property to the
+	 *    value of the server certificate's hostname
+	 * &lt;br>- any other standard grpc call options will be passed to the grpc service calls directly
+	 *        grpc options must be an object with string keys and integer or string values
+	 */
+	constructor(url, opts = {}) {
+		this._options = {};
+		for (const key in opts) {
+			const value = opts[key];
+			if (value &amp;&amp; typeof value !== 'string' &amp;&amp; !Number.isInteger(value)) {
+				throw new Error(`invalid grpc option value:${key}-> ${value} expected string|integer`);
+			}
+			if (key !== 'pem' &amp;&amp; key !== 'ssl-target-name-override') {
+				this._options[key] = value;
+			}
+		}
+
+		const {pem, clientKey, clientCert, ['ssl-target-name-override']: ssl_target_name_override} = opts;
+
+		this.clientCert = clientCert;
+
+		// connection options
+
+		if (ssl_target_name_override &amp;&amp; typeof ssl_target_name_override === 'string') {
+			this._options['grpc.ssl_target_name_override'] = ssl_target_name_override;
+			this._options['grpc.default_authority'] = ssl_target_name_override;
+		}
+
+		let grpc_receive_max;
+		if (opts[MAX_RECEIVE_V10]) {
+			grpc_receive_max = opts[MAX_RECEIVE_V10];
+		} else if (opts[MAX_RECEIVE]) {
+			grpc_receive_max = opts[MAX_RECEIVE];
+		} else {
+			grpc_receive_max = utils.getConfigSetting(MAX_RECEIVE_V10);
+			if (typeof grpc_receive_max === 'undefined') {
+				grpc_receive_max = utils.getConfigSetting(MAX_RECEIVE);
+			}
+		}
+		if (typeof grpc_receive_max === 'undefined') {
+			grpc_receive_max = -1; // default is unlimited
+		}
+		// keep this for backward compatibility until remove probably deprecated code (lines 83-115)
+		this._options[MAX_RECEIVE] = (this._options[MAX_RECEIVE] &amp;&amp; (this._options[MAX_RECEIVE] !== -1))
+			? this._options[MAX_RECEIVE] : grpc_receive_max;
+
+		let grpc_send_max;
+		if (opts[MAX_SEND_V10]) {
+			grpc_send_max = opts[MAX_SEND_V10];
+		} else if (opts[MAX_SEND]) {
+			grpc_send_max = opts[MAX_SEND];
+		} else {
+			grpc_send_max = utils.getConfigSetting(MAX_SEND_V10);
+			if (typeof grpc_send_max === 'undefined') {
+				grpc_send_max = utils.getConfigSetting(MAX_SEND);
+			}
+		}
+		if (typeof grpc_send_max === 'undefined') {
+			grpc_send_max = -1; // default is unlimited
+		}
+		this._options[MAX_SEND] = (this._options[MAX_SEND] &amp;&amp; (this._options[MAX_SEND] !== -1)) ? this._options[MAX_SEND] : grpc_send_max;
+
+		// service connection
+		this._url = url;
+		this._endpoint = new Endpoint(url, pem, clientKey, this.clientCert);
+
+		// what shall we call this remote object
+		if (opts &amp;&amp; opts.name) {
+			this._name = opts.name;
+		} else {
+			const split = url.split('//');
+			this._name = split[1];
+		}
+
+		// node.js based timeout
+		if (utils.checkIntegerConfig(opts, 'request-timeout')) {
+			this._request_timeout = opts['request-timeout'];
+		} else {
+			this._request_timeout = utils.getConfigSetting('request-timeout', 30000); // default 30 seconds
+		}
+
+		if (utils.checkIntegerConfig(opts, 'grpc-wait-for-ready-timeout')) {
+			this._grpc_wait_for_ready_timeout = opts['grpc-wait-for-ready-timeout'];
+		} else {
+			this._grpc_wait_for_ready_timeout = utils.getConfigSetting('grpc-wait-for-ready-timeout', 3000); // default 3 seconds
+		}
+
+		super_logger.debug(' ** Remote instance url: %s, name: %s, options loaded are:: %j', this._url, this._name, this._options);
+	}
+
+	waitForReady(client) {
+		const self = this;
+		if (!client) {
+			throw new Error('Missing required gRPC client');
+		}
+		const timeout = new Date().getTime() + this._grpc_wait_for_ready_timeout;
+
+		return new Promise((resolve, reject) => {
+			client.waitForReady(timeout, (err) => {
+				if (err) {
+					if (err.message) {
+						err.message = err.message + ' URL:' + self.getUrl() + ' timeout:' + this._grpc_wait_for_ready_timeout;
+					}
+					err.connectFailed = true;
+					logger.error(err);
+
+					return reject(err);
+				}
+				logger.debug('Successfully connected to remote gRPC server');
+				resolve();
+			});
+		});
+	}
+
+	/**
+	 * Get the name. This is a client-side only identifier for this
+	 * object.
+	 * @returns {string} The name of the object
+	 */
+	getName() {
+		return this._name;
+	}
+
+	/**
+	 * Set the name as a client-side only identifier of this object.
+	 * @param {string} name
+	 */
+	setName(name) {
+		this._name = name;
+	}
+
+	/**
+	 * Get the URL of this object.
+	 * @returns {string} Get the URL associated with the object.
+	 */
+	getUrl() {
+		logger.debug('getUrl::' + this._url);
+		return this._url;
+	}
+
+	/**
+	 * Get the client certificate hash
+	 * @returns {byte[]} The hash of the client certificate
+	 */
+	getClientCertHash() {
+		if (this.clientCert) {
+			const der_cert = utils.pemToDER(this.clientCert);
+			return HashPrimitives.SHA2_256(der_cert, null /* We need a Buffer */);
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * Get this remote endpoints characteristics
+	 *   It's name, url, and connection options are
+	 *   the items that make this instance unique.
+	 *   These items may be useful when debugging issues
+	 *   or validating responses.
+	 */
+	getCharacteristics() {
+		const characteristics = {};
+		characteristics.url = this._url;
+		characteristics.name = this._name;
+		characteristics.options = this._options;
+		// remove a private key
+		if (characteristics.options.clientKey) {
+			delete characteristics.options.clientKey;
+		}
+
+		return characteristics;
+	}
+
+	/**
+	 * return a printable representation of this object
+	 */
+	toString() {
+		return ' Remote : {' +
+			'url:' + this._url +
+			'}';
+	}
+
+	/**
+	 * Determine whether or not this remote endpoint uses TLS.
+	 * @returns {boolean} True if this endpoint uses TLS, false otherwise.
+	 */
+	isTLS() {
+		return this._endpoint.isTLS();
+	}
+
+}
+
+module.exports = Remote;
+
+/**
+ * The Endpoint class represents a remote grpc or grpcs target
+ * @class
+ */
+class Endpoint {
+	/**
+	 *
+	 * @param {string} url
+	 * @param {string} pem
+	 * @param {string} clientKey
+	 * @param {string} clientCert
+	 */
+	constructor(url, pem, clientKey, clientCert) {
+
+		const purl = urlParser.parse(url, true);
+		if (purl.protocol) {
+			this.protocol = purl.protocol.toLowerCase().slice(0, -1);
+		}
+		if (this.protocol === 'grpc') {
+			this.addr = purl.host;
+			this.creds = grpc.credentials.createInsecure();
+		} else if (this.protocol === 'grpcs') {
+			if (!(typeof pem === 'string')) {
+				throw new Error('PEM encoded certificate is required.');
+			}
+			const pembuf = Buffer.concat([Buffer.from(pem), Buffer.from('\0')]);
+			if (clientKey || clientCert) {
+				// must have both clientKey and clientCert if either is defined
+				if (clientKey &amp;&amp; clientCert) {
+					if ((typeof clientKey === 'string') &amp;&amp; (typeof clientCert === 'string')) {
+						const clientKeyBuf = Buffer.from(clientKey);
+						const clientCertBuf = Buffer.concat([Buffer.from(clientCert), Buffer.from('\0')]);
+						this.creds = grpc.credentials.createSsl(pembuf, clientKeyBuf, clientCertBuf);
+					} else {
+						throw new Error('PEM encoded clientKey and clientCert are required.');
+					}
+				} else {
+					throw new Error('clientKey and clientCert are both required.');
+				}
+			} else {
+				this.creds = grpc.credentials.createSsl(pembuf);
+			}
+			this.addr = purl.host;
+		} else {
+			const error = new Error();
+			error.name = 'InvalidProtocol';
+			error.message = 'Invalid protocol: ' + this.protocol + '.  URLs must begin with grpc:// or grpcs://';
+			throw error;
+		}
+	}
+
+	/**
+	 * Determine whether or not this endpoint uses TLS.
+	 * @returns {boolean} True if this endpoint uses TLS, false otherwise.
+	 */
+	isTLS() {
+		return this.protocol === 'grpcs';
+	}
+
+}
+
+module.exports.Endpoint = Endpoint;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-fabric-network.html">fabric-network</a></li></ul><h3>Classes</h3><ul><li><a href="AffiliationService.html">AffiliationService</a></li><li><a href="BasePackager.html">BasePackager</a></li><li><a href="BasicCommitHandler.html">BasicCommitHandler</a></li><li><a href="BlockDecoder.html">BlockDecoder</a></li><li><a href="CertificateAuthority.html">CertificateAuthority</a></li><li><a href="Chaincode.html">Chaincode</a></li><li><a href="ChaincodeRegistration.html">ChaincodeRegistration</a></li><li><a href="Channel.html">Channel</a></li><li><a href="ChannelEventHub.html">ChannelEventHub</a></li><li><a href="ChannelPeer.html">ChannelPeer</a></li><li><a href="Client.html">Client</a></li><li><a href="CommitHandler.html">CommitHandler</a></li><li><a href="DiscoveryEndorsementHandler.html">DiscoveryEndorsementHandler</a></li><li><a href="EndorsementHandler.html">EndorsementHandler</a></li><li><a href="EndorsementPolicy.html">EndorsementPolicy</a></li><li><a href="Endpoint.html">Endpoint</a></li><li><a href="event_hub_number.html">event_hub_number</a></li><li><a href="FabricCAClient.html">FabricCAClient</a></li><li><a href="FabricCAServices.html">FabricCAServices</a></li><li><a href="IdentityService.html">IdentityService</a></li><li><a href="module-fabric-network.AbstractEventHubSelectionStrategy.html">AbstractEventHubSelectionStrategy</a></li><li><a href="module-fabric-network.AbstractEventListener.html">AbstractEventListener</a></li><li><a href="module-fabric-network.BaseCheckpointer.html">BaseCheckpointer</a></li><li><a href="module-fabric-network.CommitEventListener.html">CommitEventListener</a></li><li><a href="module-fabric-network.Contract.html">Contract</a></li><li><a href="module-fabric-network.ContractEventListener.html">ContractEventListener</a></li><li><a href="module-fabric-network.EventHubDisconnectError.html">EventHubDisconnectError</a></li><li><a href="module-fabric-network.EventHubManager.html">EventHubManager</a></li><li><a href="module-fabric-network.FabricError.html">FabricError</a></li><li><a href="module-fabric-network.FileSystemCheckpointer.html">FileSystemCheckpointer</a></li><li><a href="module-fabric-network.Gateway.html">Gateway</a></li><li><a href="module-fabric-network.HsmX509Provider.html">HsmX509Provider</a></li><li><a href="module-fabric-network.IdentityProviderRegistry.html">IdentityProviderRegistry</a></li><li><a href="module-fabric-network.Network.html">Network</a></li><li><a href="module-fabric-network.Query.html">Query</a></li><li><a href="module-fabric-network.RoundRobinEventHubSelectionStrategy.html">RoundRobinEventHubSelectionStrategy</a></li><li><a href="module-fabric-network.TimeoutError.html">TimeoutError</a></li><li><a href="module-fabric-network.Transaction.html">Transaction</a></li><li><a href="module-fabric-network.Wallet.html">Wallet</a></li><li><a href="module-fabric-network.Wallets.html">Wallets</a></li><li><a href="MSP.html">MSP</a></li><li><a href="MSPManager.html">MSPManager</a></li><li><a href="NetworkConfig_1_0.html">NetworkConfig_1_0</a></li><li><a href="Orderer.html">Orderer</a></li><li><a href="Organization.html">Organization</a></li><li><a href="Peer.html">Peer</a></li><li><a href="Remote.html">Remote</a></li><li><a href="TransactionID.html">TransactionID</a></li></ul><h3>Interfaces</h3><ul><li><a href="module-fabric-network.WalletStore.html">WalletStore</a></li></ul><h3>Tutorials</h3><ul><li><a href="tutorial-app-dev-env-setup.html">Setting up the Application Developer's Environment</a></li><li><a href="tutorial-chaincode-lifecycle.html">fabric-client: How to install and start your chaincode</a></li><li><a href="tutorial-channel-create.html">fabric-client: How to create a Hyperledger Fabric channel</a></li><li><a href="tutorial-channel-events.html">fabric-client: How to use the channel-based event service</a></li><li><a href="tutorial-discovery.html">fabric-client: How to use the discovery service</a></li><li><a href="tutorial-event-checkpointer.html">fabric-network: How to replay missed events</a></li><li><a href="tutorial-event-hub-management.html">fabric-network: How to automatically select and reconnect to event hubs</a></li><li><a href="tutorial-grpc-settings.html">fabric-client: How to set gRPC settings</a></li><li><a href="tutorial-handlers.html">fabric-client: How to use the endorsement and commit handlers</a></li><li><a href="tutorial-listening-to-events.html">fabric-network: How to listen to events</a></li><li><a href="tutorial-logging.html">fabric-client: How to use logging</a></li><li><a href="tutorial-metadata-chaincode.html">fabric-client: How to add CouchDB indexes during chaincode installation</a></li><li><a href="tutorial-mutual-tls.html">fabric-client: How to configure mutual TLS</a></li><li><a href="tutorial-network-config.html">fabric-client: How to use a common connection profile</a></li><li><a href="tutorial-private-data.html">How to use private data</a></li><li><a href="tutorial-query-peers.html">fabric-network: How to select peers for evaluating transactions (queries)</a></li><li><a href="tutorial-sign-transaction-offline.html">Working with an offline private key</a></li><li><a href="tutorial-transaction-commit-events.html">fabric-network: How to wait for transactions to be committed to the ledger</a></li><li><a href="tutorial-wallet.html">fabric-network: Using wallets to manage identities</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CLIENT">CLIENT</a></li><li><a href="global.html#finalPackage">finalPackage</a></li><li><a href="global.html#HFAFFILIATIONMGR">HFAFFILIATIONMGR</a></li><li><a href="global.html#HFGENCRL">HFGENCRL</a></li><li><a href="global.html#HFINTERMEDIATECA">HFINTERMEDIATECA</a></li><li><a href="global.html#HFREGISTRARATTRIBUTES">HFREGISTRARATTRIBUTES</a></li><li><a href="global.html#HFREGISTRARDELEGATEROLES">HFREGISTRARDELEGATEROLES</a></li><li><a href="global.html#HFREGISTRARROLES">HFREGISTRARROLES</a></li><li><a href="global.html#HFREVOKER">HFREVOKER</a></li><li><a href="global.html#loadConfigGroup">loadConfigGroup</a></li><li><a href="global.html#loadConfigValue">loadConfigValue</a></li><li><a href="global.html#ORDERER">ORDERER</a></li><li><a href="global.html#package">package</a></li><li><a href="global.html#PEER">PEER</a></li><li><a href="global.html#toEnvelope">toEnvelope</a></li><li><a href="global.html#USER">USER</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Fri Dec 13 2019 12:05:42 GMT+0000 (Coordinated Universal Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
