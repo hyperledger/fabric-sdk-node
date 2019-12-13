@@ -14,12 +14,12 @@
 
 'use strict';
 
-const sbuf = require('stream-buffers');
 const {Utils: utils} = require('fabric-common');
 
 const logger = utils.getLogger('packager/Lifecycle.js');
 
 const BasePackager = require('./BasePackager');
+const BufferStream = require('./BufferStream');
 
 class LifecyclePackager extends BasePackager {
 	/**
@@ -41,13 +41,12 @@ class LifecyclePackager extends BasePackager {
 		// strictly necessary yet, they pave the way for the future where we
 		// will need to assemble sources from multiple packages
 
-		const buffer = new sbuf.WritableStreamBuffer();
-
 		let descriptors = this.buildMetaDataDescriptors(label, chaincodeType, chaincodePath);
 		const package_descriptors = this.buildPackageDescriptors(packageBytes);
 		descriptors = descriptors.concat(package_descriptors);
-		await super.generateTarGz(descriptors, buffer);
-		const return_bytes = buffer.getContents();
+		const stream = new BufferStream();
+		await super.generateTarGz(descriptors, stream);
+		const return_bytes = stream.toBuffer();
 		logger.debug('%s - packaged bytes %s', method, return_bytes.length);
 
 		return return_bytes;
