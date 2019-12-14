@@ -17,7 +17,9 @@ set -e -o pipefail
 
 readonly COMMIT_HASH=$(git rev-parse HEAD)
 readonly BUILD_DIR="${PROJECT_DIR}/docs/gen"
+readonly TEMPLATE_DIR="${PROJECT_DIR}/docs/redirectTemplates"
 readonly DOCS_BRANCH='gh-pages'
+readonly STAGING_RELEASE_DIR="${STAGING_DIR}/${SOURCE_BRANCH}"
 
 prepareStaging() {
     echo "Preparing staging directory: ${STAGING_DIR}"
@@ -39,24 +41,32 @@ _stagingGitSetUp() {
 buildDocs() {
     echo "Building documentation for ${SOURCE_BRANCH} branch in ${BUILD_DIR}"
     rm -rf "${BUILD_DIR}"
-	BUILD_BRANCH="${SOURCE_BRANCH}" DOCS_ROOT="${BUILD_DIR}" npm run docs
-}
-
-copyToStaging() {
-    echo "Copying built documentation from ${BUILD_DIR} to ${STAGING_DIR}"
-    cleanStaging
-    rsync -r "${BUILD_DIR}/" "${STAGING_DIR}"
+	npm run docs
 }
 
 cleanStaging() {
-    local releaseDir targetDir
-    # Remove release sub-directories that have been re-built
-    find "${BUILD_DIR}" -type d -maxdepth 1 -mindepth 1 -print | while read -r subdir; do
-        releaseDir=$(basename "${subdir}")
-        targetDir="${STAGING_DIR}/${releaseDir}"
-        echo "Removing ${targetDir}"
-        rm -rf "${targetDir}"
-    done
+    echo "Removing ${STAGING_RELEASE_DIR}"
+    rm -rf "${STAGING_RELEASE_DIR}"
+
+    if [[ ${SOURCE_BRANCH} = master ]]; then
+        removeStagingRootFiles
+    fi
+}
+
+removeStagingRootFiles() {
+    find "${STAGING_DIR}" -type f -maxdepth 1 -mindepth 1 \
+        -exec echo Removing {} \; \
+        -exec rm -f {} \;
+}
+
+copyToStaging() {
+    echo "Copying built documentation from ${BUILD_DIR} to ${STAGING_RELEASE_DIR}"
+    rsync -r "${BUILD_DIR}/" "${STAGING_RELEASE_DIR}"
+
+    if [[ ${SOURCE_BRANCH} = master ]]; then
+        echo "Copying template files from ${TEMPLATE_DIR} to ${STAGING_DIR}"
+        rsync -r "${TEMPLATE_DIR}/" "${STAGING_DIR}"
+    fi
 }
 
 publishDocs() {
