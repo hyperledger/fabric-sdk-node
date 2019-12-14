@@ -15,7 +15,7 @@
     },
     "opts": {
         "tutorials": "docs/tutorials",
-        "destination": "docs/gen/master"
+        "destination": "docs/gen"
     },
     "templates": {
         "systemName": "Hyperledger Fabric SDK for node.js",
