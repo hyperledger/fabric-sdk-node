@@ -22,8 +22,8 @@ repositories {
     mavenLocal()
     mavenCentral()
     maven {
-        url "https://nexus.hyperledger.org/content/repositories/snapshots/"
-        url 'https://www.jitpack.io' 
+        url "https://hyperledger.jfrog.io/hyperledger/fabric-maven"
+        url 'https://www.jitpack.io'
     }
 }
 
