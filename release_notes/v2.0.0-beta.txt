@@ -7,7 +7,7 @@ agreement on a chaincode before it is made available for interacting with the
 ledger. Specifically, a sufficient number of organizations must approve the
 definition of a chaincode before it becomes active, as defined by configurable
 policies on a Fabric channel.
-https://fabric-sdk-node.github.io/master/tutorial-chaincode-lifecycle.html
+https://hyperledger.github.io/fabric-sdk-node/master/tutorial-chaincode-lifecycle.html
 
 
 Bug fixes and documentation improvements.
