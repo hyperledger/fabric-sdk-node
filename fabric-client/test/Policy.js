@@ -308,7 +308,7 @@ describe('Policy', () => {
 		it('should throw if an invalid identity type', () => {
 			(() => {
 				getIdentityType({'invalid': true});
-			}).should.throw(/Invalid identity type found: must be one of role, organization-unit or identity, but found invalid/);
+			}).should.throw(/Invalid identity type found: must be one of role, organization-unit or identity, but found .*invalid/);
 		});
 
 		it('should return role type', () => {
