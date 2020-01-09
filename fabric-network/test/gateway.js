@@ -299,7 +299,6 @@ describe('Gateway', () => {
 			sinon.assert.calledWith(mockClient.setTlsClientCertAndKey, 'acert', 'akey');
 		});
 
-
 		it('should connect from an existing client object', async () => {
 			const options = {
 				wallet,
@@ -334,6 +333,25 @@ describe('Gateway', () => {
 			};
 			await gateway.connect('ccp', options);
 			should.equal(gateway.options.eventStrategy, null);
+		});
+
+		it('throws if the identity does not exist', () => {
+			const options = {
+				wallet,
+				identity: 'INVALID_IDENTITY_LABEL'
+			};
+			return gateway.connect('ccp', options)
+				.should.be.rejectedWith(options.identity);
+		});
+
+		it('throws if the TLS identity does not exist', () => {
+			const options = {
+				wallet,
+				identity: idLabel,
+				clientTlsIdentity: 'INVALID_IDENTITY_LABEL'
+			};
+			return gateway.connect('ccp', options)
+				.should.be.rejectedWith(options.clientTlsIdentity);
 		});
 	});
 
