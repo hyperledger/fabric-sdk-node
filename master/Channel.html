@@ -1,34 +1,106 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>JSDoc: Class: Channel</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>Hyperledger Fabric SDK for node.js Class: Channel</title>
 
-    <script src="scripts/prettify/prettify.js"> </script>
-    <script src="scripts/prettify/lang-css.js"> </script>
-    <!--[if lt IE 9]>
-      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
-    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+	<!--[if lt IE 9]>
+	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link type="text/css" rel="stylesheet" href="styles/sunlight.default.css">
+
+	<link type="text/css" rel="stylesheet" href="styles/site.cosmo.css">
+
 </head>
 
 <body>
 
-<div id="main">
+<div class="navbar navbar-default navbar-fixed-top ">
+<div class="container">
+	<div class="navbar-header">
+		<a class="navbar-brand" href="index.html">Hyperledger Fabric SDK for node.js</a>
+		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+        </button>
+	</div>
+	<div class="navbar-collapse collapse" id="topNavigation">
+		<ul class="nav navbar-nav">
+			
+			<li class="dropdown">
+				<a href="modules.list.html" class="dropdown-toggle" data-toggle="dropdown">Modules<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="module-fabric-network.html">fabric-network</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="AffiliationService.html">AffiliationService</a></li><li><a href="BasePackager.html">BasePackager</a></li><li><a href="BasicCommitHandler.html">BasicCommitHandler</a></li><li><a href="BlockDecoder.html">BlockDecoder</a></li><li><a href="CertificateAuthority.html">CertificateAuthority</a></li><li><a href="Chaincode.html">Chaincode</a></li><li><a href="ChaincodeRegistration.html">ChaincodeRegistration</a></li><li><a href="Channel.html">Channel</a></li><li><a href="ChannelEventHub.html">ChannelEventHub</a></li><li><a href="ChannelPeer.html">ChannelPeer</a></li><li><a href="Client.html">Client</a></li><li><a href="CommitHandler.html">CommitHandler</a></li><li><a href="DiscoveryEndorsementHandler.html">DiscoveryEndorsementHandler</a></li><li><a href="EndorsementHandler.html">EndorsementHandler</a></li><li><a href="EndorsementPolicy.html">EndorsementPolicy</a></li><li><a href="Endpoint.html">Endpoint</a></li><li><a href="event_hub_number.html">event_hub_number</a></li><li><a href="FabricCAClient.html">FabricCAClient</a></li><li><a href="FabricCAServices.html">FabricCAServices</a></li><li><a href="IdentityService.html">IdentityService</a></li><li><a href="module-fabric-network.AbstractEventHubSelectionStrategy.html">fabric-network.AbstractEventHubSelectionStrategy</a></li><li><a href="module-fabric-network.AbstractEventListener.html">fabric-network.AbstractEventListener</a></li><li><a href="module-fabric-network.BaseCheckpointer.html">fabric-network.BaseCheckpointer</a></li><li><a href="module-fabric-network.CommitEventListener.html">fabric-network.CommitEventListener</a></li><li><a href="module-fabric-network.Contract.html">fabric-network.Contract</a></li><li><a href="module-fabric-network.ContractEventListener.html">fabric-network.ContractEventListener</a></li><li><a href="module-fabric-network.EventHubDisconnectError.html">fabric-network.EventHubDisconnectError</a></li><li><a href="module-fabric-network.EventHubManager.html">fabric-network.EventHubManager</a></li><li><a href="module-fabric-network.FabricError.html">fabric-network.FabricError</a></li><li><a href="module-fabric-network.FileSystemCheckpointer.html">fabric-network.FileSystemCheckpointer</a></li><li><a href="module-fabric-network.Gateway.html">fabric-network.Gateway</a></li><li><a href="module-fabric-network.HsmX509Provider.html">fabric-network.HsmX509Provider</a></li><li><a href="module-fabric-network.IdentityProviderRegistry.html">fabric-network.IdentityProviderRegistry</a></li><li><a href="module-fabric-network.Network.html">fabric-network.Network</a></li><li><a href="module-fabric-network.Query.html">fabric-network.Query</a></li><li><a href="module-fabric-network.RoundRobinEventHubSelectionStrategy.html">fabric-network.RoundRobinEventHubSelectionStrategy</a></li><li><a href="module-fabric-network.TimeoutError.html">fabric-network.TimeoutError</a></li><li><a href="module-fabric-network.Transaction.html">fabric-network.Transaction</a></li><li><a href="module-fabric-network.Wallet.html">fabric-network.Wallet</a></li><li><a href="module-fabric-network.Wallets.html">fabric-network.Wallets</a></li><li><a href="MSP.html">MSP</a></li><li><a href="MSPManager.html">MSPManager</a></li><li><a href="NetworkConfig_1_0.html">NetworkConfig_1_0</a></li><li><a href="Orderer.html">Orderer</a></li><li><a href="Organization.html">Organization</a></li><li><a href="Peer.html">Peer</a></li><li><a href="Remote.html">Remote</a></li><li><a href="TransactionID.html">TransactionID</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="interfaces.list.html" class="dropdown-toggle" data-toggle="dropdown">Interfaces<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="module-fabric-network.WalletStore.html">fabric-network.WalletStore</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="tutorials.list.html" class="dropdown-toggle" data-toggle="dropdown">Tutorials<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="tutorial-app-dev-env-setup.html">Setting up the Application Developer's Environment</a></li><li><a href="tutorial-chaincode-lifecycle.html">fabric-client: How to install and start your chaincode</a></li><li><a href="tutorial-channel-create.html">fabric-client: How to create a Hyperledger Fabric channel</a></li><li><a href="tutorial-channel-events.html">fabric-client: How to use the channel-based event service</a></li><li><a href="tutorial-discovery.html">fabric-client: How to use the discovery service</a></li><li><a href="tutorial-event-checkpointer.html">fabric-network: How to replay missed events</a></li><li><a href="tutorial-event-hub-management.html">fabric-network: How to automatically select and reconnect to event hubs</a></li><li><a href="tutorial-grpc-settings.html">fabric-client: How to set gRPC settings</a></li><li><a href="tutorial-handlers.html">fabric-client: How to use the endorsement and commit handlers</a></li><li><a href="tutorial-listening-to-events.html">fabric-network: How to listen to events</a></li><li><a href="tutorial-logging.html">fabric-client: How to use logging</a></li><li><a href="tutorial-metadata-chaincode.html">fabric-client: How to add CouchDB indexes during chaincode installation</a></li><li><a href="tutorial-mutual-tls.html">fabric-client: How to configure mutual TLS</a></li><li><a href="tutorial-network-config.html">fabric-client: How to use a common connection profile</a></li><li><a href="tutorial-private-data.html">How to use private data</a></li><li><a href="tutorial-query-peers.html">fabric-network: How to select peers for evaluating transactions (queries)</a></li><li><a href="tutorial-sign-transaction-offline.html">Working with an offline private key</a></li><li><a href="tutorial-transaction-commit-events.html">fabric-network: How to wait for transactions to be committed to the ledger</a></li><li><a href="tutorial-wallet.html">fabric-network: Using wallets to manage identities</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="global.html#CLIENT">CLIENT</a></li><li><a href="global.html#finalPackage">finalPackage</a></li><li><a href="global.html#HFAFFILIATIONMGR">HFAFFILIATIONMGR</a></li><li><a href="global.html#HFGENCRL">HFGENCRL</a></li><li><a href="global.html#HFINTERMEDIATECA">HFINTERMEDIATECA</a></li><li><a href="global.html#HFREGISTRARATTRIBUTES">HFREGISTRARATTRIBUTES</a></li><li><a href="global.html#HFREGISTRARDELEGATEROLES">HFREGISTRARDELEGATEROLES</a></li><li><a href="global.html#HFREGISTRARROLES">HFREGISTRARROLES</a></li><li><a href="global.html#HFREVOKER">HFREVOKER</a></li><li><a href="global.html#loadConfigGroup">loadConfigGroup</a></li><li><a href="global.html#loadConfigValue">loadConfigValue</a></li><li><a href="global.html#ORDERER">ORDERER</a></li><li><a href="global.html#package">package</a></li><li><a href="global.html#PEER">PEER</a></li><li><a href="global.html#toEnvelope">toEnvelope</a></li><li><a href="global.html#USER">USER</a></li>
+				</ul>
+			</li>
+			
+		</ul>
+        
+            <div class="col-sm-3 col-md-3">
+                <form class="navbar-form" role="search">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search" name="q" id="search-input">
+                        <div class="input-group-btn">
+                            <button class="btn btn-default" id="search-submit"><i class="glyphicon glyphicon-search"></i></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        
+	</div>
 
-    <h1 class="page-title">Class: Channel</h1>
-
-    
-
+</div>
+</div>
 
 
+<div class="container" id="toc-content">
+<div class="row">
 
+	
+	<div class="col-md-8">
+	
+		<div id="main">
+			
+
+	<h1 class="page-title">Class: Channel</h1>
 <section>
 
 <header>
     
-        <h2><span class="attribs"><span class="type-signature"></span></span>Channel<span class="signature">(name, clientContext)</span><span class="type-signature"></span></h2>
+        <h2>
+        Channel
+        </h2>
         
             <div class="class-description">Channels provide data isolation for a set of participating organizations.
 <br><br>
@@ -49,40 +121,36 @@ to the primary orderer to retrieve the configuration settings for this channel.<
     
 </header>
 
+
 <article>
     <div class="container-overview">
     
         
+<hr>
+<dt>
+    <h4 class="name" id="Channel"><span class="type-signature"></span>new Channel(name, clientContext)</h4>
+    
+    
+</dt>
+<dd>
 
     
-    <h2>Constructor</h2>
-    
-
-    
-    <h4 class="name" id="Channel"><span class="type-signature"></span>new Channel<span class="signature">(name, clientContext)</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Returns a new instance of the class. This is a client-side-only call. To
+    <div class="description">
+        Returns a new instance of the class. This is a client-side-only call. To
 create a new channel in the fabric, call <a href="Client.html#createChannel">createChannel()</a>.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -111,6 +179,7 @@ create a new channel in the fabric, call <a href="Client.html#createChannel">cre
             
                 
 <span class="param-type">string</span>
+
 
 
             
@@ -142,6 +211,7 @@ create a new channel in the fabric, call <a href="Client.html#createChannel">cre
 <span class="param-type"><a href="Client.html">Client</a></span>
 
 
+
             
             </td>
 
@@ -157,12 +227,17 @@ create a new channel in the fabric, call <a href="Client.html#createChannel">cre
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -172,54 +247,42 @@ create a new channel in the fabric, call <a href="Client.html#createChannel">cre
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line83">line 83</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-
-
-
+    
+</dd>
 
     
     </div>
@@ -237,39 +300,34 @@ create a new channel in the fabric, call <a href="Client.html#createChannel">cre
     
 
     
-
-    
         <h3 class="subsection-title">Methods</h3>
 
-        
+        <dl>
             
+<hr>
+<dt>
+    <h4 class="name" id=".sendSignedProposal"><span class="type-signature">&lt;async, static> </span>sendSignedProposal(request, timeout)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Send signed transaction proposal to peer
+    </div>
+    
+
+    
 
     
 
     
-    <h4 class="name" id=".sendSignedProposal"><span class="type-signature">(async, static) </span>sendSignedProposal<span class="signature">(request, timeout)</span><span class="type-signature"></span></h4>
     
+        <h5>Parameters:</h5>
+        
 
-    
-
-
-
-<div class="description">
-    Send signed transaction proposal to peer
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -300,6 +358,7 @@ create a new channel in the fabric, call <a href="Client.html#createChannel">cre
 <span class="param-type"><a href="global.html#SignedProposal">SignedProposal</a></span>
 
 
+
             
             </td>
 
@@ -324,6 +383,7 @@ proposal would be send to peer directly.</td>
 <span class="param-type">number</span>
 
 
+
             
             </td>
 
@@ -338,12 +398,17 @@ proposal would be send to peer directly.</td>
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -353,85 +418,70 @@ proposal would be send to peer directly.</td>
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line3166">line 3166</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-
-
-
+    
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="_discover"><span class="type-signature">&lt;async> </span>_discover(request)</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="_discover"><span class="type-signature">(async) </span>_discover<span class="signature">(request)</span><span class="type-signature"> &rarr; {Promise.&lt;DiscoveryResponse>}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Send a request to a known peer to discover information about the fabric
+    <div class="description">
+        Send a request to a known peer to discover information about the fabric
 network.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -462,6 +512,7 @@ network.
 <span class="param-type">DiscoveryRequest</span>
 
 
+
             
             </td>
 
@@ -476,12 +527,17 @@ network.
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -491,53 +547,42 @@ network.
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line1151">line 1151</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     The results from the discovery service //TODO missing typeDef DiscoveryResponse
 </div>
@@ -553,47 +598,45 @@ network.
 <span class="param-type">Promise.&lt;DiscoveryResponse></span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="addOrderer"><span class="type-signature"></span>addOrderer(orderer, replace)</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="addOrderer"><span class="type-signature"></span>addOrderer<span class="signature">(orderer, replace)</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Add the orderer object to the channel object, this is a client-side-only operation.
+    <div class="description">
+        Add the orderer object to the channel object, this is a client-side-only operation.
 An application may add more than one orderer object to the channel object, however
 the SDK only uses the first one in the list to send broadcast messages to the
 orderer backend.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -624,6 +667,7 @@ orderer backend.
 <span class="param-type"><a href="Orderer.html">Orderer</a></span>
 
 
+
             
             </td>
 
@@ -647,6 +691,7 @@ orderer backend.
 <span class="param-type">boolean</span>
 
 
+
             
             </td>
 
@@ -662,12 +707,17 @@ orderer backend.
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -677,88 +727,73 @@ orderer backend.
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line884">line 884</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-
-
-
+    
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="addPeer"><span class="type-signature"></span>addPeer(peer, mspid [, roles], replace)</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="addPeer"><span class="type-signature"></span>addPeer<span class="signature">(peer, mspid, roles<span class="signature-attributes">opt</span>, replace)</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Add the peer object to the channel object. A channel object can be optionally
+    <div class="description">
+        Add the peer object to the channel object. A channel object can be optionally
 configured with a list of peer objects, which will be used when calling certain
 methods such as <a href="Channel.html#sendInstantiateProposal">sendInstantiateProposal()</a>,
 <a href="Channel.html#sendUpgradeProposal">sendUpgradeProposal()</a>,
 <a href="Channel.html#sendTransactionProposal">sendTransactionProposal</a>.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -768,7 +803,7 @@ methods such as <a href="Channel.html#sendInstantiateProposal">sendInstantiatePr
         <th>Type</th>
 
         
-        <th>Attributes</th>
+        <th>Argument</th>
         
 
         
@@ -789,6 +824,7 @@ methods such as <a href="Channel.html#sendInstantiateProposal">sendInstantiatePr
             
                 
 <span class="param-type"><a href="Peer.html">Peer</a></span>
+
 
 
             
@@ -823,6 +859,7 @@ methods such as <a href="Channel.html#sendInstantiateProposal">sendInstantiatePr
 <span class="param-type">string</span>
 
 
+
             
             </td>
 
@@ -852,6 +889,7 @@ methods such as <a href="Channel.html#sendInstantiateProposal">sendInstantiatePr
             
                 
 <span class="param-type"><a href="global.html#ChannelPeerRoles">ChannelPeerRoles</a></span>
+
 
 
             
@@ -888,6 +926,7 @@ methods such as <a href="Channel.html#sendInstantiateProposal">sendInstantiatePr
 <span class="param-type">boolean</span>
 
 
+
             
             </td>
 
@@ -911,12 +950,17 @@ methods such as <a href="Channel.html#sendInstantiateProposal">sendInstantiatePr
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -926,87 +970,72 @@ methods such as <a href="Channel.html#sendInstantiateProposal">sendInstantiatePr
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line777">line 777</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-
-
-
+    
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="approveChaincodeForOrg"><span class="type-signature">&lt;async> </span>approveChaincodeForOrg(request)</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="approveChaincodeForOrg"><span class="type-signature">(async) </span>approveChaincodeForOrg<span class="signature">(request)</span><span class="type-signature"> &rarr; {Object}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    This method will build and send an
+    <div class="description">
+        This method will build and send an
 "approve chaincode definition for organization for channel"
 transaction to the fabric lifecycle system chaincode.
 see <a href="Chaincode.html">Chaincode</a>
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -1037,6 +1066,7 @@ see <a href="Chaincode.html">Chaincode</a>
 <span class="param-type"><a href="global.html#ChaincodeRequest">ChaincodeRequest</a></span>
 
 
+
             
             </td>
 
@@ -1051,12 +1081,17 @@ see <a href="Chaincode.html">Chaincode</a>
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -1066,53 +1101,42 @@ see <a href="Chaincode.html">Chaincode</a>
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line2653">line 2653</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     Return object will contain the proposalResponses and the proposal
 </div>
@@ -1128,44 +1152,42 @@ see <a href="Chaincode.html">Chaincode</a>
 <span class="param-type">Object</span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="checkCommitReadiness"><span class="type-signature">&lt;async> </span>checkCommitReadiness(request)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Sends a QueryApprovalStatus request to one peer.
+    </div>
+    
+
+    
 
     
 
     
-    <h4 class="name" id="checkCommitReadiness"><span class="type-signature">(async) </span>checkCommitReadiness<span class="signature">(request)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
     
+        <h5>Parameters:</h5>
+        
 
-    
-
-
-
-<div class="description">
-    Sends a QueryApprovalStatus request to one peer.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -1196,6 +1218,7 @@ see <a href="Chaincode.html">Chaincode</a>
 <span class="param-type"><a href="global.html#QueryApprovalStatusRequest">QueryApprovalStatusRequest</a></span>
 
 
+
             
             </td>
 
@@ -1210,12 +1233,17 @@ see <a href="Chaincode.html">Chaincode</a>
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -1225,53 +1253,42 @@ see <a href="Chaincode.html">Chaincode</a>
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line3497">line 3497</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     A Promise for a <a href="Chaincode.html">Chaincode</a> instance
 </div>
@@ -1287,45 +1304,48 @@ see <a href="Chaincode.html">Chaincode</a>
 <span class="param-type">Promise</span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="close"><span class="type-signature"></span>close()</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Close the service connections of all assigned peers and orderers
+    </div>
+    
+
+    
 
     
 
     
-    <h4 class="name" id="close"><span class="type-signature"></span>close<span class="signature">()</span><span class="type-signature"></span></h4>
     
 
     
-
-
-
-<div class="description">
-    Close the service connections of all assigned peers and orderers
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -1335,87 +1355,72 @@ see <a href="Chaincode.html">Chaincode</a>
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line125">line 125</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-
-
-
+    
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="commitChaincode"><span class="type-signature">&lt;async> </span>commitChaincode(request)</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="commitChaincode"><span class="type-signature">(async) </span>commitChaincode<span class="signature">(request)</span><span class="type-signature"> &rarr; {Object}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    This method will build and send a
+    <div class="description">
+        This method will build and send a
 "commit chaincode definition for channel"
 transaction to the fabric lifecycle system chaincode.
 see <a href="Chaincode.html">Chaincode</a>
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -1446,6 +1451,7 @@ see <a href="Chaincode.html">Chaincode</a>
 <span class="param-type"><a href="global.html#ChaincodeRequest">ChaincodeRequest</a></span>
 
 
+
             
             </td>
 
@@ -1460,12 +1466,17 @@ see <a href="Chaincode.html">Chaincode</a>
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -1475,53 +1486,42 @@ see <a href="Chaincode.html">Chaincode</a>
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line2671">line 2671</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     Return object will contain the proposalResponses and the proposal
 </div>
@@ -1537,47 +1537,45 @@ see <a href="Chaincode.html">Chaincode</a>
 <span class="param-type">Object</span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="compareProposalResponseResults"><span class="type-signature"></span>compareProposalResponseResults(proposal_responses)</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="compareProposalResponseResults"><span class="type-signature"></span>compareProposalResponseResults<span class="signature">(proposal_responses)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Utility method to examine a set of proposals to check they contain
+    <div class="description">
+        Utility method to examine a set of proposals to check they contain
 the same endorsement result write sets.
 This will validate that the endorsing peers all agree on the result
 of the chaincode execution.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -1608,6 +1606,7 @@ of the chaincode execution.
 <span class="param-type">Array.&lt;<a href="global.html#ProposalResponse">ProposalResponse</a>></span>
 
 
+
             
             </td>
 
@@ -1622,12 +1621,17 @@ of the chaincode execution.
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -1637,53 +1641,42 @@ of the chaincode execution.
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line3989">line 3989</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     True when all proposals compare equally, false otherwise.
 </div>
@@ -1699,30 +1692,29 @@ of the chaincode execution.
 <span class="param-type">boolean</span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="generateUnsignedProposal"><span class="type-signature"></span>generateUnsignedProposal(request, mspId, certificate, admin)</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="generateUnsignedProposal"><span class="type-signature"></span>generateUnsignedProposal<span class="signature">(request, mspId, certificate, admin)</span><span class="type-signature"> &rarr; {Proposal}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Generates the endorse proposal bytes for a transaction
+    <div class="description">
+        Generates the endorse proposal bytes for a transaction
 
 Current the <a href="Channel.html#sendTransactionProposal">sendTransactionProposal</a>
 sign a transaction using the user identity from SDK's context (which
@@ -1734,20 +1726,19 @@ the signed proposal to peer by [sendSignedProposal]
 
 so the user's private
 key would not be required at SDK side.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -1778,6 +1769,7 @@ key would not be required at SDK side.
 <span class="param-type"><a href="global.html#ProposalRequest">ProposalRequest</a></span>
 
 
+
             
             </td>
 
@@ -1799,6 +1791,7 @@ key would not be required at SDK side.
             
                 
 <span class="param-type">string</span>
+
 
 
             
@@ -1824,6 +1817,7 @@ key would not be required at SDK side.
 <span class="param-type">string</span>
 
 
+
             
             </td>
 
@@ -1847,6 +1841,7 @@ key would not be required at SDK side.
 <span class="param-type">boolean</span>
 
 
+
             
             </td>
 
@@ -1861,12 +1856,17 @@ key would not be required at SDK side.
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -1876,53 +1876,42 @@ key would not be required at SDK side.
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line3087">line 3087</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 
 
 <dl>
@@ -1934,44 +1923,42 @@ key would not be required at SDK side.
 <span class="param-type">Proposal</span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="generateUnsignedTransaction"><span class="type-signature"></span>generateUnsignedTransaction(request)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        generate the commit proposal for a transaction
+    </div>
+    
+
+    
 
     
 
     
-    <h4 class="name" id="generateUnsignedTransaction"><span class="type-signature"></span>generateUnsignedTransaction<span class="signature">(request)</span><span class="type-signature"></span></h4>
     
+        <h5>Parameters:</h5>
+        
 
-    
-
-
-
-<div class="description">
-    generate the commit proposal for a transaction
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -2002,6 +1989,7 @@ key would not be required at SDK side.
 <span class="param-type"><a href="global.html#TransactionRequest">TransactionRequest</a></span>
 
 
+
             
             </td>
 
@@ -2016,12 +2004,17 @@ key would not be required at SDK side.
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -2031,84 +2024,69 @@ key would not be required at SDK side.
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line3176">line 3176</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-
-
-
+    
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="getChannelConfig"><span class="type-signature">&lt;async> </span>getChannelConfig( [target] [, timeout])</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Asks the peer for the current (latest) configuration block for this channel.
+    </div>
+    
+
+    
 
     
 
     
-    <h4 class="name" id="getChannelConfig"><span class="type-signature">(async) </span>getChannelConfig<span class="signature">(target<span class="signature-attributes">opt</span>, timeout<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
     
+        <h5>Parameters:</h5>
+        
 
-    
-
-
-
-<div class="description">
-    Asks the peer for the current (latest) configuration block for this channel.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -2118,7 +2096,7 @@ key would not be required at SDK side.
         <th>Type</th>
 
         
-        <th>Attributes</th>
+        <th>Argument</th>
         
 
         
@@ -2142,6 +2120,7 @@ key would not be required at SDK side.
 |
 
 <span class="param-type"><a href="Peer.html">Peer</a></span>
+
 
 
             
@@ -2178,6 +2157,7 @@ key would not be required at SDK side.
 <span class="param-type">Number</span>
 
 
+
             
             </td>
 
@@ -2206,12 +2186,17 @@ key would not be required at SDK side.
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -2221,53 +2206,42 @@ key would not be required at SDK side.
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line1779">line 1779</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     A Promise for a <a href="global.html#ConfigEnvelope">ConfigEnvelope</a> object containing the configuration items.
 </div>
@@ -2283,48 +2257,51 @@ key would not be required at SDK side.
 <span class="param-type">Promise</span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="getChannelConfigFromOrderer"><span class="type-signature">&lt;async> </span>getChannelConfigFromOrderer()</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="getChannelConfigFromOrderer"><span class="type-signature">(async) </span>getChannelConfigFromOrderer<span class="signature">()</span><span class="type-signature"> &rarr; {Promise}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Asks the orderer for the current (latest) configuration block for this channel.
+    <div class="description">
+        Asks the orderer for the current (latest) configuration block for this channel.
 This is similar to <a href="Channel.html#getGenesisBlock">getGenesisBlock()</a>, except
 that instead of getting block number 0 it gets the latest block that contains
 the channel configuration, and only returns the decoded <a href="global.html#ConfigEnvelope">ConfigEnvelope</a>.
-</div>
+    </div>
+    
 
+    
 
+    
 
+    
+    
 
-
-
-
-
-
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -2334,53 +2311,42 @@ the channel configuration, and only returns the decoded <a href="global.html#Con
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line1825">line 1825</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     A Promise for a <a href="global.html#ConfigEnvelope">ConfigEnvelope</a> object containing the configuration items.
 </div>
@@ -2396,47 +2362,45 @@ the channel configuration, and only returns the decoded <a href="global.html#Con
 <span class="param-type">Promise</span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="getChannelEventHub"><span class="type-signature"></span>getChannelEventHub(name)</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="getChannelEventHub"><span class="type-signature"></span>getChannelEventHub<span class="signature">(name)</span><span class="type-signature"> &rarr; {<a href="ChannelEventHub.html">ChannelEventHub</a>}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Returns a <a href="ChannelEventHub.html">ChannelEventHub</a> object. An event hub object encapsulates the
+    <div class="description">
+        Returns a <a href="ChannelEventHub.html">ChannelEventHub</a> object. An event hub object encapsulates the
 properties of an event stream on a peer node, through which the peer publishes
 notifications of blocks being committed in the channel's ledger.
 This method will create a new ChannelEventHub if one does not exist.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -2467,6 +2431,7 @@ This method will create a new ChannelEventHub if one does not exist.
 <span class="param-type">string</span>
 
 
+
             
             </td>
 
@@ -2483,12 +2448,17 @@ This method will create a new ChannelEventHub if one does not exist.
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -2498,53 +2468,42 @@ This method will create a new ChannelEventHub if one does not exist.
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line978">line 978</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     - The ChannelEventHub associated with the peer.
 </div>
@@ -2560,45 +2519,43 @@ This method will create a new ChannelEventHub if one does not exist.
 <span class="param-type"><a href="ChannelEventHub.html">ChannelEventHub</a></span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="getChannelEventHubsForOrg"><span class="type-signature"></span>getChannelEventHubsForOrg( [mspid])</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="getChannelEventHubsForOrg"><span class="type-signature"></span>getChannelEventHubsForOrg<span class="signature">(mspid<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Array.&lt;<a href="ChannelEventHub.html">ChannelEventHub</a>>}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Returns a list of <a href="ChannelEventHub.html">ChannelEventHub</a> based on the peers that are
+    <div class="description">
+        Returns a list of <a href="ChannelEventHub.html">ChannelEventHub</a> based on the peers that are
 defined in this channel that are in the organization.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -2608,7 +2565,7 @@ defined in this channel that are in the organization.
         <th>Type</th>
 
         
-        <th>Attributes</th>
+        <th>Argument</th>
         
 
         
@@ -2629,6 +2586,7 @@ defined in this channel that are in the organization.
             
                 
 <span class="param-type">string</span>
+
 
 
             
@@ -2655,12 +2613,17 @@ defined in this channel that are in the organization.
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -2670,53 +2633,42 @@ defined in this channel that are in the organization.
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line997">line 997</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     An array of ChannelEventHub instances
 </div>
@@ -2732,46 +2684,44 @@ defined in this channel that are in the organization.
 <span class="param-type">Array.&lt;<a href="ChannelEventHub.html">ChannelEventHub</a>></span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="getChannelPeer"><span class="type-signature"></span>getChannelPeer(name)</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="getChannelPeer"><span class="type-signature"></span>getChannelPeer<span class="signature">(name)</span><span class="type-signature"> &rarr; {<a href="ChannelPeer.html">ChannelPeer</a>}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    This method will return a <a href="ChannelPeer.html">ChannelPeer</a>. This object holds a reference
+    <div class="description">
+        This method will return a <a href="ChannelPeer.html">ChannelPeer</a>. This object holds a reference
 to the <a href="Peer.html">Peer</a> and the <a href="ChannelEventHub.html">ChannelEventHub</a> objects and the attributes
 of how the peer is defined on the channel.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -2802,6 +2752,7 @@ of how the peer is defined on the channel.
 <span class="param-type">string</span>
 
 
+
             
             </td>
 
@@ -2816,12 +2767,17 @@ of how the peer is defined on the channel.
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -2831,53 +2787,42 @@ of how the peer is defined on the channel.
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line839">line 839</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     The ChannelPeer instance
 </div>
@@ -2893,47 +2838,50 @@ of how the peer is defined on the channel.
 <span class="param-type"><a href="ChannelPeer.html">ChannelPeer</a></span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="getChannelPeers"><span class="type-signature"></span>getChannelPeers()</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="getChannelPeers"><span class="type-signature"></span>getChannelPeers<span class="signature">()</span><span class="type-signature"> &rarr; {Array.&lt;<a href="ChannelPeer.html">ChannelPeer</a>>}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Returns a list of <a href="ChannelPeer.html">ChannelPeer</a> assigned to this channel instance.
+    <div class="description">
+        Returns a list of <a href="ChannelPeer.html">ChannelPeer</a> assigned to this channel instance.
 A <a href="ChannelPeer.html">ChannelPeer</a> provides a reference to peer and channel event hub along
 with how this peer is being used on this channel.
-</div>
+    </div>
+    
 
+    
 
+    
 
+    
+    
 
-
-
-
-
-
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -2943,53 +2891,42 @@ with how this peer is being used on this channel.
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line870">line 870</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     The channel peer list on the channel.
 </div>
@@ -3005,46 +2942,44 @@ with how this peer is being used on this channel.
 <span class="param-type">Array.&lt;<a href="ChannelPeer.html">ChannelPeer</a>></span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="getDiscoveryResults"><span class="type-signature">&lt;async> </span>getDiscoveryResults(endorsement_hints)</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="getDiscoveryResults"><span class="type-signature">(async) </span>getDiscoveryResults<span class="signature">(endorsement_hints)</span><span class="type-signature"> &rarr; {Promise.&lt;<a href="global.html#DiscoveryResults">DiscoveryResults</a>>}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Return the discovery results.
+    <div class="description">
+        Return the discovery results.
 Discovery results are only available if this channel has been initialized.
 If the results are too old, they will be refreshed
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -3075,6 +3010,7 @@ If the results are too old, they will be refreshed
 <span class="param-type">Array.&lt;<a href="global.html#DiscoveryChaincodeInterest">DiscoveryChaincodeInterest</a>></span>
 
 
+
             
             </td>
 
@@ -3090,12 +3026,17 @@ If the results are too old, they will be refreshed
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -3105,53 +3046,42 @@ If the results are too old, they will be refreshed
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line643">line 643</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 
 
 <dl>
@@ -3163,44 +3093,42 @@ If the results are too old, they will be refreshed
 <span class="param-type">Promise.&lt;<a href="global.html#DiscoveryResults">DiscoveryResults</a>></span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="getEndorsementPlan"><span class="type-signature">&lt;async> </span>getEndorsementPlan(endorsement_hint)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Return a single endorsement plan based off a <a href="global.html#DiscoveryChaincodeInterest">DiscoveryChaincodeInterest</a>.
+    </div>
+    
+
+    
 
     
 
     
-    <h4 class="name" id="getEndorsementPlan"><span class="type-signature">(async) </span>getEndorsementPlan<span class="signature">(endorsement_hint)</span><span class="type-signature"> &rarr; {<a href="global.html#DiscoveryResultEndorsementPlan">DiscoveryResultEndorsementPlan</a>}</span></h4>
     
+        <h5>Parameters:</h5>
+        
 
-    
-
-
-
-<div class="description">
-    Return a single endorsement plan based off a <a href="global.html#DiscoveryChaincodeInterest">DiscoveryChaincodeInterest</a>.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -3231,6 +3159,7 @@ If the results are too old, they will be refreshed
 <span class="param-type"><a href="global.html#DiscoveryChaincodeInterest">DiscoveryChaincodeInterest</a></span>
 
 
+
             
             </td>
 
@@ -3246,12 +3175,17 @@ If the results are too old, they will be refreshed
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -3261,53 +3195,42 @@ If the results are too old, they will be refreshed
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line671">line 671</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     The endorsement plan based on the hint provided.
 </div>
@@ -3323,47 +3246,45 @@ If the results are too old, they will be refreshed
 <span class="param-type"><a href="global.html#DiscoveryResultEndorsementPlan">DiscoveryResultEndorsementPlan</a></span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="getGenesisBlock"><span class="type-signature"></span>getGenesisBlock( [request])</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="getGenesisBlock"><span class="type-signature"></span>getGenesisBlock<span class="signature">(request<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    A channel's first block is called the "genesis block". This block captures the
+    <div class="description">
+        A channel's first block is called the "genesis block". This block captures the
 initial channel configuration. For a peer node to join the channel, it must be
 provided the genesis block. This method must be called before calling
 <a href="Channel.html#joinChannel">joinChannel()</a>.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -3373,7 +3294,7 @@ provided the genesis block. This method must be called before calling
         <th>Type</th>
 
         
-        <th>Attributes</th>
+        <th>Argument</th>
         
 
         
@@ -3394,6 +3315,7 @@ provided the genesis block. This method must be called before calling
             
                 
 <span class="param-type"><a href="global.html#OrdererRequest">OrdererRequest</a></span>
+
 
 
             
@@ -3420,12 +3342,17 @@ provided the genesis block. This method must be called before calling
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -3435,53 +3362,42 @@ provided the genesis block. This method must be called before calling
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line1066">line 1066</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     A Promise for an encoded protobuf "Block"
 </div>
@@ -3497,44 +3413,42 @@ provided the genesis block. This method must be called before calling
 <span class="param-type">Promise</span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="getInstalledChaincodePackage"><span class="type-signature">&lt;async> </span>getInstalledChaincodePackage(request)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Sends a QueryInstalledChaincode request to one peer.
+    </div>
+    
+
+    
 
     
 
     
-    <h4 class="name" id="getInstalledChaincodePackage"><span class="type-signature">(async) </span>getInstalledChaincodePackage<span class="signature">(request)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
     
+        <h5>Parameters:</h5>
+        
 
-    
-
-
-
-<div class="description">
-    Sends a QueryInstalledChaincode request to one peer.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -3565,6 +3479,7 @@ provided the genesis block. This method must be called before calling
 <span class="param-type"><a href="global.html#GetInstalledChaincodePackageRequest">GetInstalledChaincodePackageRequest</a></span>
 
 
+
             
             </td>
 
@@ -3579,12 +3494,17 @@ provided the genesis block. This method must be called before calling
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -3594,53 +3514,42 @@ provided the genesis block. This method must be called before calling
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line3836">line 3836</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     A Promise for a {byte[]} the installed package.
 </div>
@@ -3656,45 +3565,48 @@ provided the genesis block. This method must be called before calling
 <span class="param-type">Promise</span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="getMSPManager"><span class="type-signature"></span>getMSPManager()</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Get the MSP Manager for this channel
+    </div>
+    
+
+    
 
     
 
     
-    <h4 class="name" id="getMSPManager"><span class="type-signature"></span>getMSPManager<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="MSPManager.html">MSPManager</a>}</span></h4>
     
 
     
-
-
-
-<div class="description">
-    Get the MSP Manager for this channel
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -3704,53 +3616,42 @@ provided the genesis block. This method must be called before calling
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line758">line 758</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 
 
 <dl>
@@ -3762,45 +3663,48 @@ provided the genesis block. This method must be called before calling
 <span class="param-type"><a href="MSPManager.html">MSPManager</a></span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="getName"><span class="type-signature"></span>getName()</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Get the channel name.
+    </div>
+    
+
+    
 
     
 
     
-    <h4 class="name" id="getName"><span class="type-signature"></span>getName<span class="signature">()</span><span class="type-signature"> &rarr; {string}</span></h4>
     
 
     
-
-
-
-<div class="description">
-    Get the channel name.
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -3810,53 +3714,42 @@ provided the genesis block. This method must be called before calling
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line462">line 462</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     The name of the channel.
 </div>
@@ -3872,47 +3765,45 @@ provided the genesis block. This method must be called before calling
 <span class="param-type">string</span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="getOrderer"><span class="type-signature"></span>getOrderer(name)</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="getOrderer"><span class="type-signature"></span>getOrderer<span class="signature">(name)</span><span class="type-signature"> &rarr; {<a href="Orderer.html">Orderer</a>}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    This method will return a <a href="Orderer.html">Orderer</a> instance if assigned to this
+    <div class="description">
+        This method will return a <a href="Orderer.html">Orderer</a> instance if assigned to this
 channel. Peers that have been created by the <a href="Client.html#newOrderer">Client#newOrderer</a>
 method and then added to this channel may be reference by the url if no
 name was provided in the options during the create.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -3941,6 +3832,7 @@ name was provided in the options during the create.
             
                 
 <span class="param-type">string</span>
+
 
 
             
@@ -3957,12 +3849,17 @@ name was provided in the options during the create.
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -3972,53 +3869,42 @@ name was provided in the options during the create.
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line921">line 921</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     The Orderer instance.
 </div>
@@ -4034,45 +3920,48 @@ name was provided in the options during the create.
 <span class="param-type"><a href="Orderer.html">Orderer</a></span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="getOrderers"><span class="type-signature"></span>getOrderers()</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns the orderers of this channel object.
+    </div>
+    
+
+    
 
     
 
     
-    <h4 class="name" id="getOrderers"><span class="type-signature"></span>getOrderers<span class="signature">()</span><span class="type-signature"> &rarr; {Array.&lt;<a href="Orderer.html">Orderer</a>>}</span></h4>
     
 
     
-
-
-
-<div class="description">
-    Returns the orderers of this channel object.
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -4082,53 +3971,42 @@ name was provided in the options during the create.
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line935">line 935</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     The list of orderers in the channel object
 </div>
@@ -4144,45 +4022,48 @@ name was provided in the options during the create.
 <span class="param-type">Array.&lt;<a href="Orderer.html">Orderer</a>></span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="getOrganizations"><span class="type-signature"></span>getOrganizations()</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Get organization identifiers from the MSP's for this channel
+    </div>
+    
+
+    
 
     
 
     
-    <h4 class="name" id="getOrganizations"><span class="type-signature"></span>getOrganizations<span class="signature">()</span><span class="type-signature"> &rarr; {Array.&lt;<a href="global.html#OrganizationIdentifier">OrganizationIdentifier</a>>}</span></h4>
     
 
     
-
-
-
-<div class="description">
-    Get organization identifiers from the MSP's for this channel
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -4192,53 +4073,42 @@ name was provided in the options during the create.
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line730">line 730</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     Array of OrganizationIdentifier Objects
          representing the channel's participating organizations
@@ -4255,49 +4125,47 @@ name was provided in the options during the create.
 <span class="param-type">Array.&lt;<a href="global.html#OrganizationIdentifier">OrganizationIdentifier</a>></span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="getPeer"><span class="type-signature"></span>getPeer(name)</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="getPeer"><span class="type-signature"></span>getPeer<span class="signature">(name)</span><span class="type-signature"> &rarr; {<a href="ChannelPeer.html">ChannelPeer</a>}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    This method will return a <a href="ChannelPeer.html">ChannelPeer</a> instance if assigned to this
+    <div class="description">
+        This method will return a <a href="ChannelPeer.html">ChannelPeer</a> instance if assigned to this
 channel. Peers that have been created by the <a href="Client.html#newPeer">Client#newPeer</a>
 method and then added to this channel may be reference by the url if no
 name was provided in the options during the create.
 A <a href="ChannelPeer.html">ChannelPeer</a> provides a reference to peer and channel event hub along
 with how this peer is being used on this channel.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -4328,6 +4196,7 @@ with how this peer is being used on this channel.
 <span class="param-type">string</span>
 
 
+
             
             </td>
 
@@ -4342,12 +4211,17 @@ with how this peer is being used on this channel.
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -4357,53 +4231,42 @@ with how this peer is being used on this channel.
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line821">line 821</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     The ChannelPeer instance.
 </div>
@@ -4419,47 +4282,50 @@ with how this peer is being used on this channel.
 <span class="param-type"><a href="ChannelPeer.html">ChannelPeer</a></span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="getPeers"><span class="type-signature"></span>getPeers()</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="getPeers"><span class="type-signature"></span>getPeers<span class="signature">()</span><span class="type-signature"> &rarr; {Array.&lt;<a href="ChannelPeer.html">ChannelPeer</a>>}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Returns a list of <a href="ChannelPeer.html">ChannelPeer</a> assigned to this channel instance.
+    <div class="description">
+        Returns a list of <a href="ChannelPeer.html">ChannelPeer</a> assigned to this channel instance.
 A <a href="ChannelPeer.html">ChannelPeer</a> provides a reference to peer and channel event hub along
 with how this peer is being used on this channel.
-</div>
+    </div>
+    
 
+    
 
+    
 
+    
+    
 
-
-
-
-
-
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -4469,53 +4335,42 @@ with how this peer is being used on this channel.
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line855">line 855</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     The channel peer list on the channel.
 </div>
@@ -4531,45 +4386,43 @@ with how this peer is being used on this channel.
 <span class="param-type">Array.&lt;<a href="ChannelPeer.html">ChannelPeer</a>></span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="getPeersForOrg"><span class="type-signature"></span>getPeersForOrg( [mspid])</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="getPeersForOrg"><span class="type-signature"></span>getPeersForOrg<span class="signature">(mspid<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Array.&lt;<a href="Peer.html">Peer</a>>}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Returns a list of <a href="Peer.html">Peer</a> that are
+    <div class="description">
+        Returns a list of <a href="Peer.html">Peer</a> that are
 defined in this channel that are in the named organization.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -4579,7 +4432,7 @@ defined in this channel that are in the named organization.
         <th>Type</th>
 
         
-        <th>Attributes</th>
+        <th>Argument</th>
         
 
         
@@ -4600,6 +4453,7 @@ defined in this channel that are in the named organization.
             
                 
 <span class="param-type">string</span>
+
 
 
             
@@ -4626,12 +4480,17 @@ defined in this channel that are in the named organization.
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -4641,53 +4500,42 @@ defined in this channel that are in the named organization.
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line1029">line 1029</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     An array of Peer instances
 </div>
@@ -4703,30 +4551,29 @@ defined in this channel that are in the named organization.
 <span class="param-type">Array.&lt;<a href="Peer.html">Peer</a>></span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="initialize"><span class="type-signature">&lt;async> </span>initialize( [request])</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="initialize"><span class="type-signature">(async) </span>initialize<span class="signature">(request<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Initializes the channel object with the Membership Service Providers (MSPs). The channel's
+    <div class="description">
+        Initializes the channel object with the Membership Service Providers (MSPs). The channel's
 MSPs are critical in providing applications the ability to validate certificates and verify
 signatures in messages received from the fabric backend. For instance, after calling
 <a href="Channel.html#sendTransactionProposal">sendTransactionProposal()</a>, the application can
@@ -4740,20 +4587,19 @@ to the orderer.
 This method will also automatically load orderers and peers that represent
 the fabric network when using discovery. This application must provide a
 peer running the fabric discovery service.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -4763,7 +4609,7 @@ peer running the fabric discovery service.
         <th>Type</th>
 
         
-        <th>Attributes</th>
+        <th>Argument</th>
         
 
         
@@ -4784,6 +4630,7 @@ peer running the fabric discovery service.
             
                 
 <span class="param-type"><a href="global.html#InitializeRequest">InitializeRequest</a></span>
+
 
 
             
@@ -4810,12 +4657,17 @@ peer running the fabric discovery service.
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -4825,53 +4677,42 @@ peer running the fabric discovery service.
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line181">line 181</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     A Promise that will resolve when the action is complete
 </div>
@@ -4887,46 +4728,44 @@ peer running the fabric discovery service.
 <span class="param-type">Promise</span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="joinChannel"><span class="type-signature"></span>joinChannel(request, timeout)</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="joinChannel"><span class="type-signature"></span>joinChannel<span class="signature">(request, timeout)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    For a peer node to become part of a channel, it must be sent the genesis
+    <div class="description">
+        For a peer node to become part of a channel, it must be sent the genesis
 block, as explained <a href="Channel.html#getGenesisBlock">here</a>. This method
 sends a join channel proposal to one or more endorsing peers.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -4957,6 +4796,7 @@ sends a join channel proposal to one or more endorsing peers.
 <span class="param-type"><a href="global.html#JoinChannelRequest">JoinChannelRequest</a></span>
 
 
+
             
             </td>
 
@@ -4980,6 +4820,7 @@ sends a join channel proposal to one or more endorsing peers.
 <span class="param-type">Number</span>
 
 
+
             
             </td>
 
@@ -4997,12 +4838,17 @@ sends a join channel proposal to one or more endorsing peers.
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -5012,53 +4858,42 @@ sends a join channel proposal to one or more endorsing peers.
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line1715">line 1715</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     A Promise for an array of <a href="global.html#ProposalResponse">ProposalResponse</a> from the target peers
 </div>
@@ -5074,48 +4909,46 @@ sends a join channel proposal to one or more endorsing peers.
 <span class="param-type">Promise</span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="newChannelEventHub"><span class="type-signature"></span>newChannelEventHub( [peer])</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="newChannelEventHub"><span class="type-signature"></span>newChannelEventHub<span class="signature">(peer<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {<a href="ChannelEventHub.html">ChannelEventHub</a>}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Returns a <a href="ChannelEventHub.html">ChannelEventHub</a> object. An event hub object encapsulates the
+    <div class="description">
+        Returns a <a href="ChannelEventHub.html">ChannelEventHub</a> object. An event hub object encapsulates the
 properties of an event stream on a peer node, through which the peer publishes
 notifications of blocks being committed in the channel's ledger.
 This method will create a new ChannelEventHub and not save a reference.
 Use the {getChannelEventHub} to reuse a ChannelEventHub.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -5125,7 +4958,7 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
         <th>Type</th>
 
         
-        <th>Attributes</th>
+        <th>Argument</th>
         
 
         
@@ -5149,6 +4982,7 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
 |
 
 <span class="param-type">string</span>
+
 
 
             
@@ -5177,12 +5011,17 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -5192,53 +5031,42 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line956">line 956</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     The ChannelEventHub instance
 </div>
@@ -5254,44 +5082,42 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
 <span class="param-type"><a href="ChannelEventHub.html">ChannelEventHub</a></span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="queryBlock"><span class="type-signature">&lt;async> </span>queryBlock(blockNumber [, target] [, useAdmin] [, skipDecode])</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Queries the ledger on the target peer for Block by block number.
+    </div>
+    
+
+    
 
     
 
     
-    <h4 class="name" id="queryBlock"><span class="type-signature">(async) </span>queryBlock<span class="signature">(blockNumber, target<span class="signature-attributes">opt</span>, useAdmin<span class="signature-attributes">opt</span>, skipDecode<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
     
+        <h5>Parameters:</h5>
+        
 
-    
-
-
-
-<div class="description">
-    Queries the ledger on the target peer for Block by block number.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -5301,7 +5127,7 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
         <th>Type</th>
 
         
-        <th>Attributes</th>
+        <th>Argument</th>
         
 
         
@@ -5322,6 +5148,7 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
             
                 
 <span class="param-type">number</span>
+
 
 
             
@@ -5353,6 +5180,7 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
             
                 
 <span class="param-type"><a href="Peer.html">Peer</a></span>
+
 
 
             
@@ -5389,6 +5217,7 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
 <span class="param-type">boolean</span>
 
 
+
             
             </td>
 
@@ -5423,6 +5252,7 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
 <span class="param-type">boolean</span>
 
 
+
             
             </td>
 
@@ -5447,12 +5277,17 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -5462,53 +5297,42 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line2169">line 2169</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     A Promise for a <a href="global.html#Block">Block</a> at the blockNumber slot in the ledger, fully decoded into an object.
 </div>
@@ -5524,44 +5348,42 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
 <span class="param-type">Promise</span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="queryBlockByHash"><span class="type-signature">&lt;async> </span>queryBlockByHash(blockHash [, target] [, useAdmin] [, skipDecode])</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Queries the ledger on the target peer for a Block by block hash.
+    </div>
+    
+
+    
 
     
 
     
-    <h4 class="name" id="queryBlockByHash"><span class="type-signature">(async) </span>queryBlockByHash<span class="signature">(blockHash, target<span class="signature-attributes">opt</span>, useAdmin<span class="signature-attributes">opt</span>, skipDecode<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
     
+        <h5>Parameters:</h5>
+        
 
-    
-
-
-
-<div class="description">
-    Queries the ledger on the target peer for a Block by block hash.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -5571,7 +5393,7 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
         <th>Type</th>
 
         
-        <th>Attributes</th>
+        <th>Argument</th>
         
 
         
@@ -5592,6 +5414,7 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
             
                 
 <span class="param-type">Array.&lt;byte></span>
+
 
 
             
@@ -5625,6 +5448,7 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
 <span class="param-type"><a href="Peer.html">Peer</a></span>
 
 
+
             
             </td>
 
@@ -5657,6 +5481,7 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
             
                 
 <span class="param-type">boolean</span>
+
 
 
             
@@ -5693,6 +5518,7 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
 <span class="param-type">boolean</span>
 
 
+
             
             </td>
 
@@ -5717,12 +5543,17 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -5732,53 +5563,42 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line2117">line 2117</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     A Promise for a <a href="global.html#Block">Block</a> matching the hash, fully decoded into an object.
 </div>
@@ -5794,44 +5614,42 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
 <span class="param-type">Promise</span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="queryBlockByTxID"><span class="type-signature">&lt;async> </span>queryBlockByTxID(tx_id [, target] [, useAdmin] [, skipDecode])</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Queries the ledger on the target peer for a Block TransactionID.
+    </div>
+    
+
+    
 
     
 
     
-    <h4 class="name" id="queryBlockByTxID"><span class="type-signature">(async) </span>queryBlockByTxID<span class="signature">(tx_id, target<span class="signature-attributes">opt</span>, useAdmin<span class="signature-attributes">opt</span>, skipDecode<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
     
+        <h5>Parameters:</h5>
+        
 
-    
-
-
-
-<div class="description">
-    Queries the ledger on the target peer for a Block TransactionID.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -5841,7 +5659,7 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
         <th>Type</th>
 
         
-        <th>Attributes</th>
+        <th>Argument</th>
         
 
         
@@ -5862,6 +5680,7 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
             
                 
 <span class="param-type">string</span>
+
 
 
             
@@ -5895,6 +5714,7 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
 <span class="param-type"><a href="Peer.html">Peer</a></span>
 
 
+
             
             </td>
 
@@ -5927,6 +5747,7 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
             
                 
 <span class="param-type">boolean</span>
+
 
 
             
@@ -5963,6 +5784,7 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
 <span class="param-type">boolean</span>
 
 
+
             
             </td>
 
@@ -5987,12 +5809,17 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -6002,53 +5829,42 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line2065">line 2065</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     A Promise for a <a href="global.html#Block">Block</a> matching the tx_id, fully decoded into an object.
 </div>
@@ -6064,30 +5880,29 @@ Use the {getChannelEventHub} to reuse a ChannelEventHub.
 <span class="param-type">Promise</span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="queryByChaincode"><span class="type-signature">&lt;async> </span>queryByChaincode(request [, useAdmin])</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="queryByChaincode"><span class="type-signature">(async) </span>queryByChaincode<span class="signature">(request, useAdmin<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Sends a proposal to one or more endorsing peers that will be handled by the chaincode.
+    <div class="description">
+        Sends a proposal to one or more endorsing peers that will be handled by the chaincode.
 There is no difference in how the endorsing peers process a request
 to invoke a chaincode for transaction vs. to invoke a chaincode for query. All requests
 will be presented to the target chaincode's 'Invoke' method which must be implemented to
@@ -6097,20 +5912,19 @@ these results.
 
 If the request contains a <code>txId</code> property, that transaction ID will be used, and its administrative
 privileges will apply. In this case the <code>useAdmin</code> parameter to this function will be ignored.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -6120,7 +5934,7 @@ privileges will apply. In this case the <code>useAdmin</code> parameter to this 
         <th>Type</th>
 
         
-        <th>Attributes</th>
+        <th>Argument</th>
         
 
         
@@ -6141,6 +5955,7 @@ privileges will apply. In this case the <code>useAdmin</code> parameter to this 
             
                 
 <span class="param-type"><a href="global.html#ChaincodeQueryRequest">ChaincodeQueryRequest</a></span>
+
 
 
             
@@ -6174,6 +5989,7 @@ privileges will apply. In this case the <code>useAdmin</code> parameter to this 
 <span class="param-type">boolean</span>
 
 
+
             
             </td>
 
@@ -6199,12 +6015,17 @@ privileges will apply. In this case the <code>useAdmin</code> parameter to this 
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -6214,53 +6035,42 @@ privileges will apply. In this case the <code>useAdmin</code> parameter to this 
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line3336">line 3336</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     A Promise for an array of byte array results returned from the chaincode
                    on all Endorsing Peers
@@ -6277,54 +6087,53 @@ privileges will apply. In this case the <code>useAdmin</code> parameter to this 
 <span class="param-type">Promise</span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
-    <h5>Example</h5>
-    
+        <h5>Example</h5>
+        
         <p class="code-caption">Get the list of query results returned by the chaincode</p>
     
-    <pre class="prettyprint"><code>const responsePayloads = await channel.queryByChaincode(request);
+    <pre class="sunlight-highlight-javascript">const responsePayloads = await channel.queryByChaincode(request);
 for (let i = 0; i &lt; responsePayloads.length; i++) {
-    console.log(util.format('Query result from peer [%s]: %s', i, responsePayloads[i].toString('utf8')));
-}</code></pre>
+    console.log(util.format(&#x27;Query result from peer [%s]: %s&#x27;, i, responsePayloads[i].toString(&#x27;utf8&#x27;)));
+}</pre>
 
 
+    
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="queryChaincodeDefinition"><span class="type-signature">&lt;async> </span>queryChaincodeDefinition(request)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Sends a QueryChaincodeDefintion request to one peer.
+    </div>
+    
+
+    
 
     
 
     
-    <h4 class="name" id="queryChaincodeDefinition"><span class="type-signature">(async) </span>queryChaincodeDefinition<span class="signature">(request)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
     
+        <h5>Parameters:</h5>
+        
 
-    
-
-
-
-<div class="description">
-    Sends a QueryChaincodeDefintion request to one peer.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -6355,6 +6164,7 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
 <span class="param-type"><a href="global.html#QueryChaincodeDefinitionRequest">QueryChaincodeDefinitionRequest</a></span>
 
 
+
             
             </td>
 
@@ -6369,12 +6179,17 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -6384,53 +6199,42 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line3409">line 3409</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     A Promise for a <a href="Chaincode.html">Chaincode</a> instance
 </div>
@@ -6446,44 +6250,42 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
 <span class="param-type">Promise</span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="queryChaincodeDefinitions"><span class="type-signature">&lt;async> </span>queryChaincodeDefinitions(request)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Sends a QueryChaincodeDefinitions request to one peer.
+    </div>
+    
+
+    
 
     
 
     
-    <h4 class="name" id="queryChaincodeDefinitions"><span class="type-signature">(async) </span>queryChaincodeDefinitions<span class="signature">(request)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
     
+        <h5>Parameters:</h5>
+        
 
-    
-
-
-
-<div class="description">
-    Sends a QueryChaincodeDefinitions request to one peer.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -6514,6 +6316,7 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
 <span class="param-type"><a href="global.html#QueryChaincodeDefinitionsRequest">QueryChaincodeDefinitionsRequest</a></span>
 
 
+
             
             </td>
 
@@ -6528,12 +6331,17 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -6543,53 +6351,42 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line3751">line 3751</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     A Promise for a QueryChaincodeDefinitionsResult[]
 </div>
@@ -6605,44 +6402,42 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
 <span class="param-type">Promise</span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="queryCollectionsConfig"><span class="type-signature">&lt;async> </span>queryCollectionsConfig(options [, useAdmin])</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Query for the collection definitions associated with a chaincode.
+    </div>
+    
+
+    
 
     
 
     
-    <h4 class="name" id="queryCollectionsConfig"><span class="type-signature">(async) </span>queryCollectionsConfig<span class="signature">(options, useAdmin<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise.&lt;Array.&lt;<a href="global.html#CollectionQueryResponse">CollectionQueryResponse</a>>>}</span></h4>
     
+        <h5>Parameters:</h5>
+        
 
-    
-
-
-
-<div class="description">
-    Query for the collection definitions associated with a chaincode.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -6652,7 +6447,7 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
         <th>Type</th>
 
         
-        <th>Attributes</th>
+        <th>Argument</th>
         
 
         
@@ -6673,6 +6468,7 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
             
                 
 <span class="param-type"><a href="global.html#CollectionQueryOptions">CollectionQueryOptions</a></span>
+
 
 
             
@@ -6706,6 +6502,7 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
 <span class="param-type">boolean</span>
 
 
+
             
             </td>
 
@@ -6731,12 +6528,17 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -6746,53 +6548,42 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line2359">line 2359</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     returns a promise for an array of
          <a href="global.html#CollectionQueryResponse">CollectionQueryResponse</a> objects.
@@ -6809,45 +6600,43 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
 <span class="param-type">Promise.&lt;Array.&lt;<a href="global.html#CollectionQueryResponse">CollectionQueryResponse</a>>></span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="queryInfo"><span class="type-signature">&lt;async> </span>queryInfo( [target] [, useAdmin])</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="queryInfo"><span class="type-signature">(async) </span>queryInfo<span class="signature">(target<span class="signature-attributes">opt</span>, useAdmin<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Queries for various useful information on the state of the Channel
+    <div class="description">
+        Queries for various useful information on the state of the Channel
 (height, known peers).
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -6857,7 +6646,7 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
         <th>Type</th>
 
         
-        <th>Attributes</th>
+        <th>Argument</th>
         
 
         
@@ -6878,6 +6667,7 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
             
                 
 <span class="param-type"><a href="Peer.html">Peer</a></span>
+
 
 
             
@@ -6914,6 +6704,7 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
 <span class="param-type">boolean</span>
 
 
+
             
             </td>
 
@@ -6939,12 +6730,17 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -6954,53 +6750,42 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line2022">line 2022</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     A Promise for a <a href="global.html#BlockchainInfo">BlockchainInfo</a> object with blockchain height,
                        current block hash and previous block hash.
@@ -7017,44 +6802,42 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
 <span class="param-type">Promise</span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="queryInstalledChaincode"><span class="type-signature">&lt;async> </span>queryInstalledChaincode(request)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Sends a QueryInstalledChaincode request to one peer.
+    </div>
+    
+
+    
 
     
 
     
-    <h4 class="name" id="queryInstalledChaincode"><span class="type-signature">(async) </span>queryInstalledChaincode<span class="signature">(request)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
     
+        <h5>Parameters:</h5>
+        
 
-    
-
-
-
-<div class="description">
-    Sends a QueryInstalledChaincode request to one peer.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -7085,6 +6868,7 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
 <span class="param-type"><a href="global.html#QueryInstalledChaincodeRequest">QueryInstalledChaincodeRequest</a></span>
 
 
+
             
             </td>
 
@@ -7099,12 +6883,17 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -7114,53 +6903,42 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line3589">line 3589</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     A Promise for a <a href="global.html#QueryInstalledChaincodeResult">QueryInstalledChaincodeResult</a>
 </div>
@@ -7176,44 +6954,42 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
 <span class="param-type">Promise</span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="queryInstalledChaincodes"><span class="type-signature">&lt;async> </span>queryInstalledChaincodes(request)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Sends a QueryInstalledChaincodes request to one peer.
+    </div>
+    
+
+    
 
     
 
     
-    <h4 class="name" id="queryInstalledChaincodes"><span class="type-signature">(async) </span>queryInstalledChaincodes<span class="signature">(request)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
     
+        <h5>Parameters:</h5>
+        
 
-    
-
-
-
-<div class="description">
-    Sends a QueryInstalledChaincodes request to one peer.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -7244,6 +7020,7 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
 <span class="param-type"><a href="global.html#QueryInstalledChaincodesRequest">QueryInstalledChaincodesRequest</a></span>
 
 
+
             
             </td>
 
@@ -7258,12 +7035,17 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -7273,53 +7055,42 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line3672">line 3672</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     A Promise for a QueryInstalledChaincodeResult[]
 </div>
@@ -7335,44 +7106,42 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
 <span class="param-type">Promise</span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="queryInstantiatedChaincodes"><span class="type-signature">&lt;async> </span>queryInstantiatedChaincodes( [target] [, useAdmin])</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Queries the ledger on the target peer for instantiated chaincodes on this channel.
+    </div>
+    
+
+    
 
     
 
     
-    <h4 class="name" id="queryInstantiatedChaincodes"><span class="type-signature">(async) </span>queryInstantiatedChaincodes<span class="signature">(target<span class="signature-attributes">opt</span>, useAdmin<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
     
+        <h5>Parameters:</h5>
+        
 
-    
-
-
-
-<div class="description">
-    Queries the ledger on the target peer for instantiated chaincodes on this channel.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -7382,7 +7151,7 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
         <th>Type</th>
 
         
-        <th>Attributes</th>
+        <th>Argument</th>
         
 
         
@@ -7403,6 +7172,7 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
             
                 
 <span class="param-type"><a href="Peer.html">Peer</a></span>
+
 
 
             
@@ -7440,6 +7210,7 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
 <span class="param-type">boolean</span>
 
 
+
             
             </td>
 
@@ -7467,12 +7238,17 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -7482,53 +7258,42 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line2276">line 2276</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     A Promise for a fully decoded <a href="global.html#ChaincodeQueryResponse">ChaincodeQueryResponse</a> object.
 </div>
@@ -7544,44 +7309,42 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
 <span class="param-type">Promise</span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="queryTransaction"><span class="type-signature">&lt;async> </span>queryTransaction(tx_id [, target] [, useAdmin] [, skipDecode])</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Queries the ledger on the target peer for Transaction by id.
+    </div>
+    
+
+    
 
     
 
     
-    <h4 class="name" id="queryTransaction"><span class="type-signature">(async) </span>queryTransaction<span class="signature">(tx_id, target<span class="signature-attributes">opt</span>, useAdmin<span class="signature-attributes">opt</span>, skipDecode<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
     
+        <h5>Parameters:</h5>
+        
 
-    
-
-
-
-<div class="description">
-    Queries the ledger on the target peer for Transaction by id.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -7591,7 +7354,7 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
         <th>Type</th>
 
         
-        <th>Attributes</th>
+        <th>Argument</th>
         
 
         
@@ -7612,6 +7375,7 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
             
                 
 <span class="param-type">string</span>
+
 
 
             
@@ -7643,6 +7407,7 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
             
                 
 <span class="param-type"><a href="Peer.html">Peer</a></span>
+
 
 
             
@@ -7679,6 +7444,7 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
 <span class="param-type">boolean</span>
 
 
+
             
             </td>
 
@@ -7713,6 +7479,7 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
 <span class="param-type">boolean</span>
 
 
+
             
             </td>
 
@@ -7737,12 +7504,17 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -7752,53 +7524,42 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line2223">line 2223</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     A Promise for a fully decoded <a href="global.html#ProcessedTransaction">ProcessedTransaction</a> object.
 </div>
@@ -7814,48 +7575,51 @@ for (let i = 0; i &lt; responsePayloads.length; i++) {
 <span class="param-type">Promise</span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="refresh"><span class="type-signature">&lt;async> </span>refresh()</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="refresh"><span class="type-signature">(async) </span>refresh<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="global.html#DiscoveryResults">DiscoveryResults</a>}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Refresh the channel's configuration.  The MSP configurations, peers,
+    <div class="description">
+        Refresh the channel's configuration.  The MSP configurations, peers,
 orderers, and endorsement plans will be queired from the peer using
 the Discover Service. The queries will be made to the peer used previously
 for discovery if the 'target' parameter is not provided.
-</div>
+    </div>
+    
 
+    
 
+    
 
+    
+    
 
-
-
-
-
-
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -7865,53 +7629,42 @@ for discovery if the 'target' parameter is not provided.
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line705">line 705</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     - The results of refreshing
 </div>
@@ -7927,46 +7680,44 @@ for discovery if the 'target' parameter is not provided.
 <span class="param-type"><a href="global.html#DiscoveryResults">DiscoveryResults</a></span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="removeOrderer"><span class="type-signature"></span>removeOrderer(orderer)</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="removeOrderer"><span class="type-signature"></span>removeOrderer<span class="signature">(orderer)</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Remove the first orderer object in the channel object's list of orderers
+    <div class="description">
+        Remove the first orderer object in the channel object's list of orderers
 whose endpoint url property matches the url of the orderer that is
 passed in.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -7997,6 +7748,7 @@ passed in.
 <span class="param-type"><a href="Orderer.html">Orderer</a></span>
 
 
+
             
             </td>
 
@@ -8011,12 +7763,17 @@ passed in.
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -8026,86 +7783,71 @@ passed in.
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line908">line 908</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-
-
-
+    
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="removePeer"><span class="type-signature"></span>removePeer(peer)</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="removePeer"><span class="type-signature"></span>removePeer<span class="signature">(peer)</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Remove the peer object in the channel object's list of peers
+    <div class="description">
+        Remove the peer object in the channel object's list of peers
 whose endpoint url property matches the url or name of the peer that is
 passed in.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -8136,6 +7878,7 @@ passed in.
 <span class="param-type"><a href="Peer.html">Peer</a></span>
 
 
+
             
             </td>
 
@@ -8150,12 +7893,17 @@ passed in.
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -8165,70 +7913,56 @@ passed in.
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line806">line 806</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-
-
-
+    
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="sendInstantiateProposal"><span class="type-signature"></span>sendInstantiateProposal(request, timeout)</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="sendInstantiateProposal"><span class="type-signature"></span>sendInstantiateProposal<span class="signature">(request, timeout)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Sends a chaincode instantiate proposal to one or more endorsing peers.
+    <div class="description">
+        Sends a chaincode instantiate proposal to one or more endorsing peers.
 
 A chaincode must be instantiated on a channel-by-channel basis before it can
 be used. The chaincode must first be installed on the endorsing peers where
@@ -8239,20 +7973,19 @@ first endorsed as a proposal, then the endorsements are sent to the orderer
 to be processed for ordering and validation. When the transaction finally gets
 committed to the channel's ledger on the peers, the chaincode is then considered
 activated and the peers are ready to take requests to process transactions.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -8283,6 +8016,7 @@ activated and the peers are ready to take requests to process transactions.
 <span class="param-type"><a href="global.html#ChaincodeInstantiateUpgradeRequest">ChaincodeInstantiateUpgradeRequest</a></span>
 
 
+
             
             </td>
 
@@ -8306,6 +8040,7 @@ activated and the peers are ready to take requests to process transactions.
 <span class="param-type">Number</span>
 
 
+
             
             </td>
 
@@ -8323,12 +8058,17 @@ activated and the peers are ready to take requests to process transactions.
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -8338,55 +8078,51 @@ activated and the peers are ready to take requests to process transactions.
 
     
 
+	
+	<dt class="important tag-deprecated method-doc-label method-doc-details-label">Deprecated:</dt>
+	
+    <dd class="yes-def tag-deprecated">
+        <ul class="dummy">
+            <li>Yes</li>
+        </ul>
+    </dd>
+    
     
 
-    
+	
 
-    
+	
 
-    
-        <dt class="important tag-deprecated">Deprecated:</dt><dd class="yes-def tag-deprecated"><ul class="dummy"><li>Yes</li></ul></dd>
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line2492">line 2492</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     A Promise for the <a href="global.html#ProposalResponseObject">ProposalResponseObject</a>
 </div>
@@ -8402,44 +8138,42 @@ activated and the peers are ready to take requests to process transactions.
 <span class="param-type">Promise</span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="sendSignedProposal"><span class="type-signature">&lt;async> </span>sendSignedProposal(request, timeout)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Send signed transaction proposal to peer
+    </div>
+    
+
+    
 
     
 
     
-    <h4 class="name" id="sendSignedProposal"><span class="type-signature">(async) </span>sendSignedProposal<span class="signature">(request, timeout)</span><span class="type-signature"></span></h4>
     
+        <h5>Parameters:</h5>
+        
 
-    
-
-
-
-<div class="description">
-    Send signed transaction proposal to peer
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -8470,6 +8204,7 @@ activated and the peers are ready to take requests to process transactions.
 <span class="param-type"><a href="global.html#SignedProposal">SignedProposal</a></span>
 
 
+
             
             </td>
 
@@ -8494,6 +8229,7 @@ proposal would be send to peer directly.</td>
 <span class="param-type">number</span>
 
 
+
             
             </td>
 
@@ -8508,12 +8244,17 @@ proposal would be send to peer directly.</td>
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -8523,84 +8264,69 @@ proposal would be send to peer directly.</td>
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line3155">line 3155</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-
-
-
+    
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="sendSignedTransaction"><span class="type-signature">&lt;async> </span>sendSignedTransaction(request, timeout)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        send the signed commit proposal for a transaction
+    </div>
+    
+
+    
 
     
 
     
-    <h4 class="name" id="sendSignedTransaction"><span class="type-signature">(async) </span>sendSignedTransaction<span class="signature">(request, timeout)</span><span class="type-signature"></span></h4>
     
+        <h5>Parameters:</h5>
+        
 
-    
-
-
-
-<div class="description">
-    send the signed commit proposal for a transaction
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -8631,6 +8357,7 @@ proposal would be send to peer directly.</td>
 <span class="param-type"><a href="global.html#SignedCommitProposal">SignedCommitProposal</a></span>
 
 
+
             
             </td>
 
@@ -8654,6 +8381,7 @@ proposal would be send to peer directly.</td>
 <span class="param-type">number</span>
 
 
+
             
             </td>
 
@@ -8668,12 +8396,17 @@ proposal would be send to peer directly.</td>
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -8683,70 +8416,56 @@ proposal would be send to peer directly.</td>
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line3229">line 3229</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-
-
-
+    
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="sendTransaction"><span class="type-signature">&lt;async> </span>sendTransaction(request, timeout)</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="sendTransaction"><span class="type-signature">(async) </span>sendTransaction<span class="signature">(request, timeout)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Send the proposal responses that contain the endorsements of a transaction proposal
+    <div class="description">
+        Send the proposal responses that contain the endorsements of a transaction proposal
 to the orderer for further processing. This is the 2nd phase of the transaction
 lifecycle in the fabric. The orderer will globally order the transactions in the
 context of this channel and deliver the resulting blocks to the committing peers for
@@ -8762,20 +8481,19 @@ in the <a href="global.html#ProposalResponseObject">ProposalResponseObject</a> r
 <li><a href="Channel.html#sendInstantiateProposal">sendInstantiateProposal()</a>
 <li><a href="Channel.html#sendUpgradeProposal">sendUpgradeProposal()</a>
 <li><a href="Channel.html#sendTransactionProposal">sendTransactionProposal()</a>
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -8806,6 +8524,7 @@ in the <a href="global.html#ProposalResponseObject">ProposalResponseObject</a> r
 <span class="param-type"><a href="global.html#TransactionRequest">TransactionRequest</a></span>
 
 
+
             
             </td>
 
@@ -8829,6 +8548,7 @@ in the <a href="global.html#ProposalResponseObject">ProposalResponseObject</a> r
 <span class="param-type">Number</span>
 
 
+
             
             </td>
 
@@ -8846,12 +8566,17 @@ in the <a href="global.html#ProposalResponseObject">ProposalResponseObject</a> r
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -8861,53 +8586,42 @@ in the <a href="global.html#ProposalResponseObject">ProposalResponseObject</a> r
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line2987">line 2987</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     A Promise for a <a href="global.html#BroadcastResponse">BroadcastResponse</a> message returned by
          the orderer that contains a single "status" field for a
@@ -8927,30 +8641,29 @@ in the <a href="global.html#ProposalResponseObject">ProposalResponseObject</a> r
 <span class="param-type">Promise</span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="sendTransactionProposal"><span class="type-signature">&lt;async> </span>sendTransactionProposal(request, timeout)</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="sendTransactionProposal"><span class="type-signature">(async) </span>sendTransactionProposal<span class="signature">(request, timeout)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Sends a transaction proposal to one or more endorsing peers.
+    <div class="description">
+        Sends a transaction proposal to one or more endorsing peers.
 
 After a chaincode gets <a href="Client.html#installChaincode">installed</a> and
 instantiated, it's ready to take endorsement
@@ -8958,20 +8671,19 @@ proposals and participating in transaction processing. A chaincode transaction
 starts with a proposal that gets sent to the endorsing peers, which executes
 the target chaincode and decides whether the proposal should be endorsed (if it
 executes successfully) or not (if the chaincode returns an error).
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -9002,6 +8714,7 @@ executes successfully) or not (if the chaincode returns an error).
 <span class="param-type"><a href="global.html#ChaincodeInvokeRequest">ChaincodeInvokeRequest</a></span>
 
 
+
             
             </td>
 
@@ -9025,6 +8738,7 @@ executes successfully) or not (if the chaincode returns an error).
 <span class="param-type">Number</span>
 
 
+
             
             </td>
 
@@ -9042,12 +8756,17 @@ executes successfully) or not (if the chaincode returns an error).
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -9057,53 +8776,42 @@ executes successfully) or not (if the chaincode returns an error).
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line2857">line 2857</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     A Promise for the <a href="global.html#ProposalResponseObject">ProposalResponseObject</a>
 </div>
@@ -9119,30 +8827,29 @@ executes successfully) or not (if the chaincode returns an error).
 <span class="param-type">Promise</span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="sendUpgradeProposal"><span class="type-signature"></span>sendUpgradeProposal(request, timeout)</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="sendUpgradeProposal"><span class="type-signature"></span>sendUpgradeProposal<span class="signature">(request, timeout)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Sends a chaincode upgrade proposal to one or more endorsing peers.
+    <div class="description">
+        Sends a chaincode upgrade proposal to one or more endorsing peers.
 
 Upgrading a chaincode involves steps similar to instantiating a chaincode.
 The new chaincode must first be installed on the endorsing peers where
@@ -9150,20 +8857,19 @@ this chaincode is expected to run.
 <br><br>
 Similar to instantiating a chaincode, upgrading chaincodes is also a full transaction
 operation.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -9194,6 +8900,7 @@ operation.
 <span class="param-type"><a href="global.html#ChaincodeInstantiateUpgradeRequest">ChaincodeInstantiateUpgradeRequest</a></span>
 
 
+
             
             </td>
 
@@ -9217,6 +8924,7 @@ operation.
 <span class="param-type">Number</span>
 
 
+
             
             </td>
 
@@ -9234,12 +8942,17 @@ operation.
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -9249,55 +8962,51 @@ operation.
 
     
 
+	
+	<dt class="important tag-deprecated method-doc-label method-doc-details-label">Deprecated:</dt>
+	
+    <dd class="yes-def tag-deprecated">
+        <ul class="dummy">
+            <li>Yes</li>
+        </ul>
+    </dd>
+    
     
 
-    
+	
 
-    
+	
 
-    
-        <dt class="important tag-deprecated">Deprecated:</dt><dd class="yes-def tag-deprecated"><ul class="dummy"><li>Yes</li></ul></dd>
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line2514">line 2514</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     A Promise for the <a href="global.html#ProposalResponseObject">ProposalResponseObject</a>
 </div>
@@ -9313,47 +9022,45 @@ operation.
 <span class="param-type">Promise</span>
 
 
+
     </dd>
 </dl>
 
+
+        
+
     
-
-
-
-
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="setMSPManager"><span class="type-signature"></span>setMSPManager(msp_manager)</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="setMSPManager"><span class="type-signature"></span>setMSPManager<span class="signature">(msp_manager)</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Set the MSP Manager for this channel. This utility method will
+    <div class="description">
+        Set the MSP Manager for this channel. This utility method will
 not normally be use as the <a href="Channel.html#initialize">initialize()</a>
 method will read this channel's current configuration and reset
 MSPManager with the MSP's found in the channel configuration.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -9384,6 +9091,7 @@ MSPManager with the MSP's found in the channel configuration.
 <span class="param-type"><a href="MSPManager.html">MSPManager</a></span>
 
 
+
             
             </td>
 
@@ -9398,12 +9106,17 @@ MSPManager with the MSP's found in the channel configuration.
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -9413,85 +9126,75 @@ MSPManager with the MSP's found in the channel configuration.
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line750">line 750</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-
-
-
+    
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="toString"><span class="type-signature"></span>toString()</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        return a printable representation of this channel object
+    </div>
+    
+
+    
 
     
 
     
-    <h4 class="name" id="toString"><span class="type-signature"></span>toString<span class="signature">()</span><span class="type-signature"></span></h4>
     
 
     
-
-
-
-<div class="description">
-    return a printable representation of this channel object
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -9501,70 +9204,56 @@ MSPManager with the MSP's found in the channel configuration.
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line4135">line 4135</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-
-
-
+    
+</dd>
 
         
             
+<hr>
+<dt>
+    <h4 class="name" id="verifyProposalResponse"><span class="type-signature">&lt;async> </span>verifyProposalResponse(proposal_response)</h4>
+    
+    
+</dt>
+<dd>
 
     
-
-    
-    <h4 class="name" id="verifyProposalResponse"><span class="type-signature">(async) </span>verifyProposalResponse<span class="signature">(proposal_response)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Utility method to verify a single proposal response. It checks the
+    <div class="description">
+        Utility method to verify a single proposal response. It checks the
 following aspects:
 <li>The endorser's identity belongs to a legitimate MSP of the channel
     and can be successfully deserialized
@@ -9574,20 +9263,19 @@ following aspects:
 This method requires that the initialize method of this channel object
 has been called to load this channel's MSPs. The MSPs will have the
 trusted root certificates for this channel.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
+    </div>
     
 
-<table class="params">
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
     <thead>
     <tr>
         
@@ -9618,6 +9306,7 @@ trusted root certificates for this channel.
 <span class="param-type"><a href="global.html#ProposalResponse">ProposalResponse</a></span>
 
 
+
             
             </td>
 
@@ -9634,12 +9323,17 @@ trusted root certificates for this channel.
     </tbody>
 </table>
 
+    
 
-
-
-
-
+    
 <dl class="details">
+    
+
+	
+
+	
+
+	
 
     
 
@@ -9649,53 +9343,42 @@ trusted root certificates for this channel.
 
     
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
+	
 
-    
 
-    
 
-    
+	
 
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fabric-client_lib_Channel.js.html">fabric-client/lib/Channel.js</a>, <a href="fabric-client_lib_Channel.js.html#line3922">line 3922</a>
-    </li></ul></dd>
-    
+	
 
-    
+	
 
-    
-
-    
+	
 </dl>
 
 
+    
 
+    
 
+    
 
+    
 
+    
 
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
+    
+    <h5>Returns:</h5>
+    
+            
 <div class="param-desc">
     A boolean value of true when both the identity and
                    the signature are valid, false otherwise.
@@ -9712,16 +9395,17 @@ trusted root certificates for this channel.
 <span class="param-type">boolean</span>
 
 
+
     </dd>
 </dl>
 
-    
-
-
-
-
 
         
+
+    
+</dd>
+
+        </dl>
     
 
     
@@ -9734,19 +9418,132 @@ trusted root certificates for this channel.
 
 
 
+		</div>
+	</div>
+
+	<div class="clearfix"></div>
+
+	
+		<div class="col-md-3">
+			<div id="toc" class="col-md-3 hidden-xs hidden-sm hidden-md"></div>
+		</div>
+	
+
+</div>
 </div>
 
-<nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-fabric-network.html">fabric-network</a></li></ul><h3>Classes</h3><ul><li><a href="AffiliationService.html">AffiliationService</a></li><li><a href="BasePackager.html">BasePackager</a></li><li><a href="BasicCommitHandler.html">BasicCommitHandler</a></li><li><a href="BlockDecoder.html">BlockDecoder</a></li><li><a href="CertificateAuthority.html">CertificateAuthority</a></li><li><a href="Chaincode.html">Chaincode</a></li><li><a href="ChaincodeRegistration.html">ChaincodeRegistration</a></li><li><a href="Channel.html">Channel</a></li><li><a href="ChannelEventHub.html">ChannelEventHub</a></li><li><a href="ChannelPeer.html">ChannelPeer</a></li><li><a href="Client.html">Client</a></li><li><a href="CommitHandler.html">CommitHandler</a></li><li><a href="DiscoveryEndorsementHandler.html">DiscoveryEndorsementHandler</a></li><li><a href="EndorsementHandler.html">EndorsementHandler</a></li><li><a href="EndorsementPolicy.html">EndorsementPolicy</a></li><li><a href="Endpoint.html">Endpoint</a></li><li><a href="event_hub_number.html">event_hub_number</a></li><li><a href="FabricCAClient.html">FabricCAClient</a></li><li><a href="FabricCAServices.html">FabricCAServices</a></li><li><a href="IdentityService.html">IdentityService</a></li><li><a href="module-fabric-network.AbstractEventHubSelectionStrategy.html">AbstractEventHubSelectionStrategy</a></li><li><a href="module-fabric-network.AbstractEventListener.html">AbstractEventListener</a></li><li><a href="module-fabric-network.BaseCheckpointer.html">BaseCheckpointer</a></li><li><a href="module-fabric-network.CommitEventListener.html">CommitEventListener</a></li><li><a href="module-fabric-network.Contract.html">Contract</a></li><li><a href="module-fabric-network.ContractEventListener.html">ContractEventListener</a></li><li><a href="module-fabric-network.EventHubDisconnectError.html">EventHubDisconnectError</a></li><li><a href="module-fabric-network.EventHubManager.html">EventHubManager</a></li><li><a href="module-fabric-network.FabricError.html">FabricError</a></li><li><a href="module-fabric-network.FileSystemCheckpointer.html">FileSystemCheckpointer</a></li><li><a href="module-fabric-network.Gateway.html">Gateway</a></li><li><a href="module-fabric-network.HsmX509Provider.html">HsmX509Provider</a></li><li><a href="module-fabric-network.IdentityProviderRegistry.html">IdentityProviderRegistry</a></li><li><a href="module-fabric-network.Network.html">Network</a></li><li><a href="module-fabric-network.Query.html">Query</a></li><li><a href="module-fabric-network.RoundRobinEventHubSelectionStrategy.html">RoundRobinEventHubSelectionStrategy</a></li><li><a href="module-fabric-network.TimeoutError.html">TimeoutError</a></li><li><a href="module-fabric-network.Transaction.html">Transaction</a></li><li><a href="module-fabric-network.Wallet.html">Wallet</a></li><li><a href="module-fabric-network.Wallets.html">Wallets</a></li><li><a href="MSP.html">MSP</a></li><li><a href="MSPManager.html">MSPManager</a></li><li><a href="NetworkConfig_1_0.html">NetworkConfig_1_0</a></li><li><a href="Orderer.html">Orderer</a></li><li><a href="Organization.html">Organization</a></li><li><a href="Peer.html">Peer</a></li><li><a href="Remote.html">Remote</a></li><li><a href="TransactionID.html">TransactionID</a></li></ul><h3>Interfaces</h3><ul><li><a href="module-fabric-network.WalletStore.html">WalletStore</a></li></ul><h3>Tutorials</h3><ul><li><a href="tutorial-app-dev-env-setup.html">Setting up the Application Developer's Environment</a></li><li><a href="tutorial-chaincode-lifecycle.html">fabric-client: How to install and start your chaincode</a></li><li><a href="tutorial-channel-create.html">fabric-client: How to create a Hyperledger Fabric channel</a></li><li><a href="tutorial-channel-events.html">fabric-client: How to use the channel-based event service</a></li><li><a href="tutorial-discovery.html">fabric-client: How to use the discovery service</a></li><li><a href="tutorial-event-checkpointer.html">fabric-network: How to replay missed events</a></li><li><a href="tutorial-event-hub-management.html">fabric-network: How to automatically select and reconnect to event hubs</a></li><li><a href="tutorial-grpc-settings.html">fabric-client: How to set gRPC settings</a></li><li><a href="tutorial-handlers.html">fabric-client: How to use the endorsement and commit handlers</a></li><li><a href="tutorial-listening-to-events.html">fabric-network: How to listen to events</a></li><li><a href="tutorial-logging.html">fabric-client: How to use logging</a></li><li><a href="tutorial-metadata-chaincode.html">fabric-client: How to add CouchDB indexes during chaincode installation</a></li><li><a href="tutorial-mutual-tls.html">fabric-client: How to configure mutual TLS</a></li><li><a href="tutorial-network-config.html">fabric-client: How to use a common connection profile</a></li><li><a href="tutorial-private-data.html">How to use private data</a></li><li><a href="tutorial-query-peers.html">fabric-network: How to select peers for evaluating transactions (queries)</a></li><li><a href="tutorial-sign-transaction-offline.html">Working with an offline private key</a></li><li><a href="tutorial-transaction-commit-events.html">fabric-network: How to wait for transactions to be committed to the ledger</a></li><li><a href="tutorial-wallet.html">fabric-network: Using wallets to manage identities</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CLIENT">CLIENT</a></li><li><a href="global.html#finalPackage">finalPackage</a></li><li><a href="global.html#HFAFFILIATIONMGR">HFAFFILIATIONMGR</a></li><li><a href="global.html#HFGENCRL">HFGENCRL</a></li><li><a href="global.html#HFINTERMEDIATECA">HFINTERMEDIATECA</a></li><li><a href="global.html#HFREGISTRARATTRIBUTES">HFREGISTRARATTRIBUTES</a></li><li><a href="global.html#HFREGISTRARDELEGATEROLES">HFREGISTRARDELEGATEROLES</a></li><li><a href="global.html#HFREGISTRARROLES">HFREGISTRARROLES</a></li><li><a href="global.html#HFREVOKER">HFREVOKER</a></li><li><a href="global.html#loadConfigGroup">loadConfigGroup</a></li><li><a href="global.html#loadConfigValue">loadConfigValue</a></li><li><a href="global.html#ORDERER">ORDERER</a></li><li><a href="global.html#package">package</a></li><li><a href="global.html#PEER">PEER</a></li><li><a href="global.html#toEnvelope">toEnvelope</a></li><li><a href="global.html#USER">USER</a></li></ul>
-</nav>
 
-<br class="clear">
+    <div class="modal fade" id="searchResults">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Search results</h4>
+          </div>
+          <div class="modal-body"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div>
+
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Thu Jan 09 2020 09:23:24 GMT+0000 (Coordinated Universal Time)
+
+
+<span class="jsdoc-message">
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a>
+	
+		on 2020-01-10T15:39:43+00:00
+	
+	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
+</span>
 </footer>
 
-<script> prettyPrint(); </script>
-<script src="scripts/linenumber.js"> </script>
+<script src="scripts/docstrap.lib.js"></script>
+<script src="scripts/toc.js"></script>
+
+    <script type="text/javascript" src="scripts/fulltext-search-ui.js"></script>
+
+
+<script>
+$( function () {
+	$( "[id*='$']" ).each( function () {
+		var $this = $( this );
+
+		$this.attr( "id", $this.attr( "id" ).replace( "$", "__" ) );
+	} );
+
+	$( ".tutorial-section pre, .readme-section pre, pre.prettyprint.source" ).each( function () {
+		var $this = $( this );
+
+		var example = $this.find( "code" );
+		exampleText = example.html();
+		var lang = /{@lang (.*?)}/.exec( exampleText );
+		if ( lang && lang[1] ) {
+			exampleText = exampleText.replace( lang[0], "" );
+			example.html( exampleText );
+			lang = lang[1];
+		} else {
+			var langClassMatch = example.parent()[0].className.match(/lang\-(\S+)/);
+			lang = langClassMatch ? langClassMatch[1] : "javascript";
+		}
+
+		if ( lang ) {
+
+			$this
+			.addClass( "sunlight-highlight-" + lang )
+			.addClass( "linenums" )
+			.html( example.html() );
+
+		}
+	} );
+
+	Sunlight.highlightAll( {
+		lineNumbers : false,
+		showMenu : true,
+		enableDoclinks : true
+	} );
+
+	$.catchAnchorLinks( {
+        navbarOffset: 10
+	} );
+	$( "#toc" ).toc( {
+		anchorName  : function ( i, heading, prefix ) {
+			return $( heading ).attr( "id" ) || ( prefix + i );
+		},
+		selectors   : "#toc-content h1,#toc-content h2,#toc-content h3,#toc-content h4",
+		showAndHide : false,
+		smoothScrolling: true
+	} );
+
+	$( "#main span[id^='toc']" ).addClass( "toc-shim" );
+	$( '.dropdown-toggle' ).dropdown();
+
+    $( "table" ).each( function () {
+      var $this = $( this );
+      $this.addClass('table');
+    } );
+
+} );
+</script>
+
+
+
+<!--Navigation and Symbol Display-->
+
+
+<!--Google Analytics-->
+
+
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            SearcherDisplay.init();
+        });
+    </script>
+
+
 </body>
 </html>
