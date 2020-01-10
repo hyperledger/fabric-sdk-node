@@ -26,7 +26,7 @@
     "lint": "run-s eslint tslint",
     "eslint": "eslint fabric-network/ fabric-client/ fabric-ca-client/lib/ fabric-common/ test/",
     "tslint": "tslint -t prose -p fabric-client/types/tsconfig.json 'fabric-client/**/*.ts' && tslint -t prose 'test/**/*.ts' && tslint -t prose -p fabric-network/tsconfig.json 'fabric-network/**/*.ts' ",
-    "docs": "node -e 'require(\"./scripts/npm_scripts/testFunctions.js\").cleanUpDocs()' && jsdoc -r -c docs/jsdoc.json",
+    "docs": "node -e 'require(\"./scripts/npm_scripts/testFunctions.js\").cleanUpDocs()' && jsdoc -r -c docs/jsdoc.json -t ./node_modules/ink-docstrap/template",
     "unitTest:all": "export HFC_LOGGING='{\"debug\":\"test/temp/debug.log\"}' && nyc run-s unitTest:common unitTest:ca-client unitTest:client unitTest:network unitTest:protos",
     "unitTest:common": "mocha --reporter 'list' 'fabric-common/test/**/*.js'",
     "unitTest:ca-client": "mocha --reporter 'list' 'fabric-ca-client/test/**/*.js'",
@@ -96,7 +96,8 @@
     "ts-node": "^8.3.0",
     "tslint": "5.19.0",
     "typescript": "3.4.5",
-    "winston": "^2.2.0"
+    "winston": "^2.2.0",
+    "ink-docstrap": "^1.3.2"
   },
   "license": "Apache-2.0",
   "licenses": [
