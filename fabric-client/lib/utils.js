@@ -485,7 +485,11 @@ module.exports.normalizeX509 = (raw) => {
 
 	// make sure '-----BEGIN CERTIFICATE-----' and '-----END CERTIFICATE-----' are in their own lines
 	// and that it ends in a new line
-	return matches.join('\n') + '\n';
+	let result =  matches.join('\n') + '\n';
+	// could be this has multiple certs within that are not separated by a newline
+	const regex2 = /----------/;
+	result = result.replace(new RegExp(regex2, 'g'), '-----\n-----');
+	return result;
 };
 
 /*
