@@ -1,3 +1,55 @@
+## v1.4.5
+Wed Jan 15 10:27:45 EST 2020
+
+* [ae93bdf0](https://github.com/hyperledger/fabric-sdk-node/commit/ae93bdf0) [FABN-1403](https://jira.hyperledger.org/browse/FABN-1403) NodeSDK add new line to certs (#89)
+* [e3d80c81](https://github.com/hyperledger/fabric-sdk-node/commit/e3d80c81) (Release-1.4) Add Mark Lewis as a maintainer (#77)
+* [80ba7559](https://github.com/hyperledger/fabric-sdk-node/commit/80ba7559) [[FABN-1308](https://jira.hyperledger.org/browse/FABN-1308)] Enable checkpointing when start or  end block is given (#52)
+* [6d851d25](https://github.com/hyperledger/fabric-sdk-node/commit/6d851d25) [FABN-1386](https://jira.hyperledger.org/browse/FABN-1386): Import npm credentials in build (#63)
+* [e4256b4e](https://github.com/hyperledger/fabric-sdk-node/commit/e4256b4e) [FABN-1403](https://jira.hyperledger.org/browse/FABN-1403) NodeSDK modify multicert pems (#56)
+* [c57fab76](https://github.com/hyperledger/fabric-sdk-node/commit/c57fab76) [[FABN-1307](https://jira.hyperledger.org/browse/FABN-1307)] Pass options.unregister through to clientOptions.unregister (#54)
+* [54cc00f2](https://github.com/hyperledger/fabric-sdk-node/commit/54cc00f2) (Release-1.4) Remove gerrit/jenkins references (#49)
+* [53d70e23](https://github.com/hyperledger/fabric-sdk-node/commit/53d70e23) [FABN-1386](https://jira.hyperledger.org/browse/FABN-1386): Tidy up npm publish script (#45)
+* [0a779c94](https://github.com/hyperledger/fabric-sdk-node/commit/0a779c94) [FABN-1386](https://jira.hyperledger.org/browse/FABN-1386): Publish npm packages
+* [9f7c6065](https://github.com/hyperledger/fabric-sdk-node/commit/9f7c6065) [FABN-1386](https://jira.hyperledger.org/browse/FABN-1386): Doc publishing fixes (#43)
+* [fa869ca2](https://github.com/hyperledger/fabric-sdk-node/commit/fa869ca2) [FABN-1386](https://jira.hyperledger.org/browse/FABN-1386): Publish correct doc release directory (#42)
+* [90ca4dd3](https://github.com/hyperledger/fabric-sdk-node/commit/90ca4dd3) [FABN-1386](https://jira.hyperledger.org/browse/FABN-1386): Reference credentials in pipeline script
+* [b863a7ad](https://github.com/hyperledger/fabric-sdk-node/commit/b863a7ad) [[FABN-1407](https://jira.hyperledger.org/browse/FABN-1407)] Add PDC and EP types (#28)
+* [7974f86d](https://github.com/hyperledger/fabric-sdk-node/commit/7974f86d) [FABN-1386: Publish docs to gh-](https://jira.hyperledger.org/browse/FABN-1386: Publish docs to gh-)pages branch
+* [5183f8cb](https://github.com/hyperledger/fabric-sdk-node/commit/5183f8cb) [FABN-1419](https://jira.hyperledger.org/browse/FABN-1419): Fix HSMWalletMixin typescript definition
+* [5d88406e](https://github.com/hyperledger/fabric-sdk-node/commit/5d88406e) [[FAB-1418] Fix builds and add package-locks -](https://jira.hyperledger.org/browse/FAB-1418] Fix builds and add package-locks -) rearrange build.grade setup to avoid jitpack woes
+* [0c19edde](https://github.com/hyperledger/fabric-sdk-node/commit/0c19edde) [FABN-1386](https://jira.hyperledger.org/browse/FABN-1386): Don't pull Docker images
+* [b34e883f](https://github.com/hyperledger/fabric-sdk-node/commit/b34e883f) [FABN-1386](https://jira.hyperledger.org/browse/FABN-1386): Azure Pipelines publish of npm packages
+* [14a59c22](https://github.com/hyperledger/fabric-sdk-node/commit/14a59c22) [FABN-1386](https://jira.hyperledger.org/browse/FABN-1386): Publish API documentation in Azure
+* [bb708234](https://github.com/hyperledger/fabric-sdk-node/commit/bb708234) [FABN-1386](https://jira.hyperledger.org/browse/FABN-1386): Azure pipelines build
+* [8f51aba3](https://github.com/hyperledger/fabric-sdk-node/commit/8f51aba3) [[FABN-1402](https://jira.hyperledger.org/browse/FABN-1402)] Use "for of" instead of "for in"
+* [c8ed3965](https://github.com/hyperledger/fabric-sdk-node/commit/c8ed3965) [[FABN-1400](https://jira.hyperledger.org/browse/FABN-1400)] Clean up cryptoSuite key signing.
+* [cb848341](https://github.com/hyperledger/fabric-sdk-node/commit/cb848341) [FABN-1333](https://jira.hyperledger.org/browse/FABN-1333)
+* [2e5e6c90](https://github.com/hyperledger/fabric-sdk-node/commit/2e5e6c90) [FABN-626](https://jira.hyperledger.org/browse/FABN-626) make pkcs11js optional
+* [ac7e9564](https://github.com/hyperledger/fabric-sdk-node/commit/ac7e9564) [[FAB-16680](https://jira.hyperledger.org/browse/FAB-16680)] Fix jitpack link
+* [b5ccfc12](https://github.com/hyperledger/fabric-sdk-node/commit/b5ccfc12) fabric-sdk-node update to baseimage 0.4.16
+* [c3e9e280](https://github.com/hyperledger/fabric-sdk-node/commit/c3e9e280) [[FABN-1335]-](https://jira.hyperledger.org/browse/FABN-1335]-)Reference event handling
+* [926f81b6](https://github.com/hyperledger/fabric-sdk-node/commit/926f81b6) [IN-68] Add default GitHub SECURITY policy
+* [c2077aee](https://github.com/hyperledger/fabric-sdk-node/commit/c2077aee) [FABN-1384](https://jira.hyperledger.org/browse/FABN-1384) NodeSDK update grpc level
+* [a0c3b97a](https://github.com/hyperledger/fabric-sdk-node/commit/a0c3b97a) [[FABN-1359](https://jira.hyperledger.org/browse/FABN-1359)] Move HSM docs into separated page
+* [daabce19](https://github.com/hyperledger/fabric-sdk-node/commit/daabce19) [FABN-1358](https://jira.hyperledger.org/browse/FABN-1358) Update FabricVer to pull latest images
+* [f32f2f4e](https://github.com/hyperledger/fabric-sdk-node/commit/f32f2f4e) [FABN-1348](https://jira.hyperledger.org/browse/FABN-1348) NodeSDK Define discovery
+* [1fafb7c6](https://github.com/hyperledger/fabric-sdk-node/commit/1fafb7c6) [FAB-10717](https://jira.hyperledger.org/browse/FAB-10717) NodeSDK protect endorsement plan
+* [d412969f](https://github.com/hyperledger/fabric-sdk-node/commit/d412969f) [FAB-10717](https://jira.hyperledger.org/browse/FAB-10717) NodeSDK protect endorsement plan
+* [f877da08](https://github.com/hyperledger/fabric-sdk-node/commit/f877da08) [[FABCI-403](https://jira.hyperledger.org/browse/FABCI-403)] Disable AnsiColor Wrapper
+* [40be8660](https://github.com/hyperledger/fabric-sdk-node/commit/40be8660) [FABN-1344](https://jira.hyperledger.org/browse/FABN-1344): Allow endorsing peers to be specified
+* [2a3e8510](https://github.com/hyperledger/fabric-sdk-node/commit/2a3e8510) [[FABN-1342](https://jira.hyperledger.org/browse/FABN-1342)] Improve SDK packaging performance
+* [2795d191](https://github.com/hyperledger/fabric-sdk-node/commit/2795d191) [[FABN-1341](https://jira.hyperledger.org/browse/FABN-1341)] Support .fabricignore files in packaging
+* [596d3430](https://github.com/hyperledger/fabric-sdk-node/commit/596d3430) [[FABN-1320](https://jira.hyperledger.org/browse/FABN-1320)] Add git_tag.sh script
+* [04eda7c8](https://github.com/hyperledger/fabric-sdk-node/commit/04eda7c8) [FABN-1233](https://jira.hyperledger.org/browse/FABN-1233) NodeSDK segment fault
+* [68715a64](https://github.com/hyperledger/fabric-sdk-node/commit/68715a64) [FABN-1332](https://jira.hyperledger.org/browse/FABN-1332): Revert commit handler implementation
+* [b8b17e5d](https://github.com/hyperledger/fabric-sdk-node/commit/b8b17e5d) [FABN-1325](https://jira.hyperledger.org/browse/FABN-1325) NodeSDK update readme for Node.js vers
+* [ede57101](https://github.com/hyperledger/fabric-sdk-node/commit/ede57101) [[FABN-1334](https://jira.hyperledger.org/browse/FABN-1334)] clean duplicated code and jsDoc
+* [68503edc](https://github.com/hyperledger/fabric-sdk-node/commit/68503edc) [FABN-1326](https://jira.hyperledger.org/browse/FABN-1326): Use only eventing peers for commits
+* [9b13f732](https://github.com/hyperledger/fabric-sdk-node/commit/9b13f732) [FABN-1322](https://jira.hyperledger.org/browse/FABN-1322): JSDoc for DefaultEventHandlerStrategies
+* [b19af29d](https://github.com/hyperledger/fabric-sdk-node/commit/b19af29d) [[FAB-16105](https://jira.hyperledger.org/browse/FAB-16105)] Update build.gradle for Java Contracts
+* [d6819132](https://github.com/hyperledger/fabric-sdk-node/commit/d6819132) [[FABN-1282](https://jira.hyperledger.org/browse/FABN-1282)] Fix integration test by README and code.
+* [2d4d6e57](https://github.com/hyperledger/fabric-sdk-node/commit/2d4d6e57) [FABN-1306: Set versions to 1.4.5-](https://jira.hyperledger.org/browse/FABN-1306: Set versions to 1.4.5-)snapshot
+
 ## v1.4.4
 Fri  5 Jul 2019 13:52:44 BST
 
