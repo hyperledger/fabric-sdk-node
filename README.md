@@ -29,7 +29,7 @@ In the project root folder:
 * To run the unit tests that do not require any additional set up, use `npm run testHeadless`
 
 ### Run Integration Tests
-Integration tests run on the master branch require the most recent stable Fabric images, which are hosted on Nexus. A utility script is provided to retrieve non-published docker images, which may be run using the command `npm run retrieveImages`
+Integration tests run on the master branch require the most recent stable Fabric images, which are hosted on Artifactory. A utility script is provided to retrieve non-published docker images, which may be run using the command `npm run retrieveImages`
 
 Now you are ready to run the integration tests. It is advisable to clear out any previous key value stores that may have cached user enrollment certificates using the command (`rm -rf /tmp/hfc-*`, `rm -rf ~/.hfc-key-store`) prior to testing in isolation.
 
