@@ -75,20 +75,10 @@ The SDK is made up of 4 top-level modules that can be accessed through the navig
 
 ### Compatibility
 
-The following tables show versions of Fabric, Node and other dependencies that are explicitly tested and that are supported for use with the Fabric SDK for Node.
-
-#### Version 2.0
+The following tables show versions of Fabric, Node and other dependencies that are explicitly tested and that are supported for use with version 2.0 of the Fabric SDK for Node.
 
 |     | Tested | Supported |
 | --- | ------ | --------- |
 | **Fabric** | 2.0 | 2.0.x |
 | **Node** | 12 | 10.13+, 12.13+ |
-| **Platform** | Ubuntu 18.04 | |
-
-#### Version 1.4
-
-|     | Tested | Supported |
-| --- | ------ | --------- |
-| **Fabric** | 1.4 | 1.4.x, 2.0.x |
-| **Node** | 10 | 8.9+, 10.13+ |
 | **Platform** | Ubuntu 18.04 | |
