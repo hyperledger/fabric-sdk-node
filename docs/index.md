@@ -72,3 +72,13 @@ The SDK is made up of 4 top-level modules that can be accessed through the navig
 * **fabric-client**: Provides APIs to interact with the core components of a Hypreledger Fabric-based blockchain network, namely the peers, orderers and event streams.
 * **fabric-ca-client**: Provides APIs to interact with the optional component, fabric-ca, that contains services for membership management.
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
+
+### Compatibility
+
+The following tables show versions of Fabric, Node and other dependencies that are explicitly tested and that are supported for use with version 1.4 of the Fabric SDK for Node.
+
+|     | Tested | Supported |
+| --- | ------ | --------- |
+| **Fabric** | 1.4 | 1.4.x, 2.0.x |
+| **Node** | 10 | 8.9+, 10.13+ |
+| **Platform** | Ubuntu 18.04 | |
