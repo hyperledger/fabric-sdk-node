@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Hyperledger Fabric SDK for node.js Class: EventHubManager</title>
+	<title>Hyperledger Fabric SDK for node.js Class: EventServiceManager</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -40,7 +40,7 @@
 			<li class="dropdown">
 				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="AffiliationService.html">AffiliationService</a></li><li><a href="BasePackager.html">BasePackager</a></li><li><a href="BasicCommitHandler.html">BasicCommitHandler</a></li><li><a href="BlockDecoder.html">BlockDecoder</a></li><li><a href="CertificateAuthority.html">CertificateAuthority</a></li><li><a href="Chaincode.html">Chaincode</a></li><li><a href="ChaincodeRegistration.html">ChaincodeRegistration</a></li><li><a href="Channel.html">Channel</a></li><li><a href="ChannelEventHub.html">ChannelEventHub</a></li><li><a href="ChannelPeer.html">ChannelPeer</a></li><li><a href="Client.html">Client</a></li><li><a href="CommitHandler.html">CommitHandler</a></li><li><a href="DiscoveryEndorsementHandler.html">DiscoveryEndorsementHandler</a></li><li><a href="EndorsementHandler.html">EndorsementHandler</a></li><li><a href="EndorsementPolicy.html">EndorsementPolicy</a></li><li><a href="Endpoint.html">Endpoint</a></li><li><a href="event_hub_number.html">event_hub_number</a></li><li><a href="FabricCAClient.html">FabricCAClient</a></li><li><a href="FabricCAServices.html">FabricCAServices</a></li><li><a href="IdentityService.html">IdentityService</a></li><li><a href="module-fabric-network.AbstractEventHubSelectionStrategy.html">fabric-network.AbstractEventHubSelectionStrategy</a></li><li><a href="module-fabric-network.AbstractEventListener.html">fabric-network.AbstractEventListener</a></li><li><a href="module-fabric-network.BaseCheckpointer.html">fabric-network.BaseCheckpointer</a></li><li><a href="module-fabric-network.CommitEventListener.html">fabric-network.CommitEventListener</a></li><li><a href="module-fabric-network.Contract.html">fabric-network.Contract</a></li><li><a href="module-fabric-network.ContractEventListener.html">fabric-network.ContractEventListener</a></li><li><a href="module-fabric-network.EventHubDisconnectError.html">fabric-network.EventHubDisconnectError</a></li><li><a href="module-fabric-network.EventHubManager.html">fabric-network.EventHubManager</a></li><li><a href="module-fabric-network.FabricError.html">fabric-network.FabricError</a></li><li><a href="module-fabric-network.FileSystemCheckpointer.html">fabric-network.FileSystemCheckpointer</a></li><li><a href="module-fabric-network.Gateway.html">fabric-network.Gateway</a></li><li><a href="module-fabric-network.HsmX509Provider.html">fabric-network.HsmX509Provider</a></li><li><a href="module-fabric-network.IdentityProviderRegistry.html">fabric-network.IdentityProviderRegistry</a></li><li><a href="module-fabric-network.Network.html">fabric-network.Network</a></li><li><a href="module-fabric-network.Query.html">fabric-network.Query</a></li><li><a href="module-fabric-network.RoundRobinEventHubSelectionStrategy.html">fabric-network.RoundRobinEventHubSelectionStrategy</a></li><li><a href="module-fabric-network.TimeoutError.html">fabric-network.TimeoutError</a></li><li><a href="module-fabric-network.Transaction.html">fabric-network.Transaction</a></li><li><a href="module-fabric-network.Wallet.html">fabric-network.Wallet</a></li><li><a href="module-fabric-network.Wallets.html">fabric-network.Wallets</a></li><li><a href="MSP.html">MSP</a></li><li><a href="MSPManager.html">MSPManager</a></li><li><a href="NetworkConfig_1_0.html">NetworkConfig_1_0</a></li><li><a href="Orderer.html">Orderer</a></li><li><a href="Organization.html">Organization</a></li><li><a href="Peer.html">Peer</a></li><li><a href="Remote.html">Remote</a></li><li><a href="TransactionID.html">TransactionID</a></li>
+					<li><a href="AffiliationService.html">AffiliationService</a></li><li><a href="BasePackager.html">BasePackager</a></li><li><a href="BasicCommitHandler.html">BasicCommitHandler</a></li><li><a href="BlockDecoder.html">BlockDecoder</a></li><li><a href="CertificateAuthority.html">CertificateAuthority</a></li><li><a href="Chaincode.html">Chaincode</a></li><li><a href="ChaincodeRegistration.html">ChaincodeRegistration</a></li><li><a href="Channel.html">Channel</a></li><li><a href="ChannelEventHub.html">ChannelEventHub</a></li><li><a href="ChannelPeer.html">ChannelPeer</a></li><li><a href="Client.html">Client</a></li><li><a href="CommitHandler.html">CommitHandler</a></li><li><a href="DiscoveryEndorsementHandler.html">DiscoveryEndorsementHandler</a></li><li><a href="EndorsementHandler.html">EndorsementHandler</a></li><li><a href="EndorsementPolicy.html">EndorsementPolicy</a></li><li><a href="Endpoint.html">Endpoint</a></li><li><a href="event_hub_number.html">event_hub_number</a></li><li><a href="FabricCAClient.html">FabricCAClient</a></li><li><a href="FabricCAServices.html">FabricCAServices</a></li><li><a href="IdentityService.html">IdentityService</a></li><li><a href="module-fabric-network.BaseCheckpointer.html">fabric-network.BaseCheckpointer</a></li><li><a href="module-fabric-network.BaseEventListener.html">fabric-network.BaseEventListener</a></li><li><a href="module-fabric-network.CommitEventListener.html">fabric-network.CommitEventListener</a></li><li><a href="module-fabric-network.Contract.html">fabric-network.Contract</a></li><li><a href="module-fabric-network.ContractEventListener.html">fabric-network.ContractEventListener</a></li><li><a href="module-fabric-network.EventHubDisconnectError.html">fabric-network.EventHubDisconnectError</a></li><li><a href="module-fabric-network.EventServiceManager.html">fabric-network.EventServiceManager</a></li><li><a href="module-fabric-network.FabricError.html">fabric-network.FabricError</a></li><li><a href="module-fabric-network.FileSystemCheckpointer.html">fabric-network.FileSystemCheckpointer</a></li><li><a href="module-fabric-network.Gateway.html">fabric-network.Gateway</a></li><li><a href="module-fabric-network.HsmX509Provider.html">fabric-network.HsmX509Provider</a></li><li><a href="module-fabric-network.IdentityProviderRegistry.html">fabric-network.IdentityProviderRegistry</a></li><li><a href="module-fabric-network.Network.html">fabric-network.Network</a></li><li><a href="module-fabric-network.TimeoutError.html">fabric-network.TimeoutError</a></li><li><a href="module-fabric-network.Transaction.html">fabric-network.Transaction</a></li><li><a href="module-fabric-network.Wallet.html">fabric-network.Wallet</a></li><li><a href="module-fabric-network.Wallets.html">fabric-network.Wallets</a></li><li><a href="MSP.html">MSP</a></li><li><a href="MSPManager.html">MSPManager</a></li><li><a href="NetworkConfig.html">NetworkConfig</a></li><li><a href="NetworkConfig_1_0.html">NetworkConfig_1_0</a></li><li><a href="Orderer.html">Orderer</a></li><li><a href="Organization.html">Organization</a></li><li><a href="Peer.html">Peer</a></li><li><a href="Remote.html">Remote</a></li><li><a href="TransactionID.html">TransactionID</a></li>
 				</ul>
 			</li>
 			
@@ -93,7 +93,7 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Class: EventHubManager</h1>
+	<h1 class="page-title">Class: EventServiceManager</h1>
 <section>
 
 <header>
@@ -101,12 +101,12 @@
         <h2>
             <span class="ancestors"><a href="module-fabric-network.html">fabric-network</a>~</span>
         
-        EventHubManager
+        EventServiceManager
         </h2>
         
-            <div class="class-description">The Event Hub Manager is responsible for creating and distributing event hubs.
-It uses the event hub factory to reuse event hubs that exists, and maintains
-its own list of new event hubs that are used for event replay</div>
+            <div class="class-description">The Event Service Manager is responsible for creating and distributing EventService instances.
+It uses the event Service factory to reuse event Services that exists, and maintains
+its own list of new event Services that are used for event replay</div>
         
     
 </header>
@@ -118,7 +118,7 @@ its own list of new event hubs that are used for event replay</div>
         
 <hr>
 <dt>
-    <h4 class="name" id="EventHubManager"><span class="type-signature"></span>new EventHubManager(network)</h4>
+    <h4 class="name" id="EventServiceManager"><span class="type-signature"></span>new EventServiceManager(network)</h4>
     
     
 </dt>
@@ -272,7 +272,7 @@ its own list of new event hubs that are used for event replay</div>
 
     
     <div class="description">
-        Disconnect from and delete all event hubs
+        Closes and deletes all event services
     </div>
     
 
@@ -342,7 +342,7 @@ its own list of new event hubs that are used for event replay</div>
             
 <hr>
 <dt>
-    <h4 class="name" id="getEventHub"><span class="type-signature"></span>getEventHub(peer, filtered)</h4>
+    <h4 class="name" id="getEventService"><span class="type-signature"></span>getEventService( [blockType])</h4>
     
     
 </dt>
@@ -350,8 +350,11 @@ its own list of new event hubs that are used for event replay</div>
 
     
     <div class="description">
-        Gets an event hub. If given a peer, it will get that peers event hub, otherwise
-it will get the next peer defined by the EventHubSelectionStrategy
+        Gets an event Service. If given a peer, it will get that peer's event Service,
+otherwise it will get the next peer as defined by the event service pool.
+NOTE: The returned event service will not be able to replay events. Use the
+{@EventServiceManager#getReplayEventService} to get an event service capable
+of replay.
     </div>
     
 
@@ -374,6 +377,8 @@ it will get the next peer defined by the EventHubSelectionStrategy
         <th>Type</th>
 
         
+        <th>Argument</th>
+        
 
         
 
@@ -386,13 +391,13 @@ it will get the next peer defined by the EventHubSelectionStrategy
 
         <tr>
             
-                <td class="name"><code>peer</code></td>
+                <td class="name"><code>blockType</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type"><a href="Peer.html">Peer</a></span>
+<span class="param-type">string</span>
 
 
 
@@ -400,34 +405,21 @@ it will get the next peer defined by the EventHubSelectionStrategy
             </td>
 
             
-
-            
-
-            <td class="description last">A peer instance</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>filtered</code></td>
-            
-
-            <td class="type">
-            
+                <td class="attributes">
                 
-<span class="param-type">boolean</span>
+                    &lt;optional><br>
+                
 
+                
 
-
-            
-            </td>
-
-            
-
+                
+                </td>
             
 
-            <td class="description last">Flag to decide between filtered and unfiltered events</td>
+            
+
+            <td class="description last">The block type (filtered, full or private) that
+event service is receiving, the default will be filtered events</td>
         </tr>
 
     
@@ -491,7 +483,7 @@ it will get the next peer defined by the EventHubSelectionStrategy
     
             
 <div class="param-desc">
-    The event hub
+    The event Service
 </div>
 
 
@@ -502,7 +494,7 @@ it will get the next peer defined by the EventHubSelectionStrategy
     </dt>
     <dd>
         
-<span class="param-type"><a href="ChannelEventHub.html">ChannelEventHub</a></span>
+<span class="param-type">EventService</span>
 
 
 
@@ -519,7 +511,7 @@ it will get the next peer defined by the EventHubSelectionStrategy
             
 <hr>
 <dt>
-    <h4 class="name" id="getEventHubs"><span class="type-signature"></span>getEventHubs(peers)</h4>
+    <h4 class="name" id="getEventServices"><span class="type-signature"></span>getEventServices( [peers])</h4>
     
     
 </dt>
@@ -527,7 +519,343 @@ it will get the next peer defined by the EventHubSelectionStrategy
 
     
     <div class="description">
-        Gets a list of event hubs from the <a href="EventHubFactory.html">EventHubFactory</a> for a list of peers
+        Gets a list of EventServices  for a list of peers Endorser
+provided. The returned event services will be receiving filtered blocks.
+If the peer list is not provided the event service selection strategy will
+be asked for it's full list of peers.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>peers</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;Endorser></span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">A list of endorser instances</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    A list of event services
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array.&lt;EventService></span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="getReplayEventService"><span class="type-signature"></span>getReplayEventService( [peer])</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Gets an event Service instance for a given peer endpoint.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>peer</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Endorser</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">An Endorser peer instance. If the peer is not provided,
+the next peer will be selected by the event service selection strategy.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    The event Service
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">EventService</span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="newEventService"><span class="type-signature"></span>newEventService(peers, name)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        This method will build fabric-common Eventers and the fabric-common
+EventService. The Eventers will not be connected to the endpoint at
+this time. Since the endorsers have been previously connected, the
+endpoint should be accessable. The EventService will check the connection
+and perform the connect during the send() when it starts the service.
     </div>
     
 
@@ -568,7 +896,7 @@ it will get the next peer defined by the EventHubSelectionStrategy
             <td class="type">
             
                 
-<span class="param-type">Array.&lt;<a href="Peer.html">Peer</a>></span>
+<span class="param-type">Array.&lt;Endorser></span>
 
 
 
@@ -579,7 +907,33 @@ it will get the next peer defined by the EventHubSelectionStrategy
 
             
 
-            <td class="description last">A list of peer instances</td>
+            <td class="description last">The Endorser service endpoints used to build a
+ a list of Eventer service endpoints that will be used as the
+ targets of the new EventService.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>name</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The name of this new EventService</td>
         </tr>
 
     
@@ -647,7 +1001,7 @@ it will get the next peer defined by the EventHubSelectionStrategy
             
 <hr>
 <dt>
-    <h4 class="name" id="getFixedEventHub"><span class="type-signature"></span>getFixedEventHub(peer)</h4>
+    <h4 class="name" id="startEventService"><span class="type-signature">&lt;async> </span>startEventService(eventService, options)</h4>
     
     
 </dt>
@@ -655,7 +1009,9 @@ it will get the next peer defined by the EventHubSelectionStrategy
 
     
     <div class="description">
-        Will get a new event hub instance without the possibility of selecting a new peer
+        Use this method to be sure the eventService has been connected and has
+been started. It will start the service based on the options provided.
+It will check that the a started service matches the options provided
     </div>
     
 
@@ -690,13 +1046,13 @@ it will get the next peer defined by the EventHubSelectionStrategy
 
         <tr>
             
-                <td class="name"><code>peer</code></td>
+                <td class="name"><code>eventService</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type"><a href="Peer.html">Peer</a></span>
+<span class="param-type">EventService</span>
 
 
 
@@ -707,149 +1063,21 @@ it will get the next peer defined by the EventHubSelectionStrategy
 
             
 
-            <td class="description last">A peer instance</td>
+            <td class="description last">EventService to be started if it not
+already started.</td>
         </tr>
 
     
-    </tbody>
-</table>
-
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    The event hub
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type"><a href="ChannelEventHub.html">ChannelEventHub</a></span>
-
-
-
-    </dd>
-</dl>
-
-
-        
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="getReplayEventHub"><span class="type-signature"></span>getReplayEventHub(peer)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Gets a new event hub instance for a give peer and updates the list of new event
-hubs that have been created
-    </div>
-    
-
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
 
         <tr>
             
-                <td class="name"><code>peer</code></td>
+                <td class="name"><code>options</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type"><a href="Peer.html">Peer</a></span>
+<span class="param-type">any</span>
 
 
 
@@ -860,160 +1088,8 @@ hubs that have been created
 
             
 
-            <td class="description last">A peer instance</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    The event hub
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type"><a href="ChannelEventHub.html">ChannelEventHub</a></span>
-
-
-
-    </dd>
-</dl>
-
-
-        
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="updateEventHubAvailability"><span class="type-signature"></span>updateEventHubAvailability(deadPeer)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        When called with a peer, it updates the EventHubSelectionStrategy with the
-new status of a peer to allow for intelligent strategies
-    </div>
-    
-
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>deadPeer</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="Peer.html">Peer</a></span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">A peer instance</td>
+            <td class="description last">The options to start the event service which may
+include blocktype, startBlock, endBlock.</td>
         </tr>
 
     
@@ -1127,7 +1203,7 @@ new status of a peer to allow for intelligent strategies
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a>
 	
-		on 2020-01-21T16:03:25+00:00
+		on 2020-01-21T17:08:44+00:00
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>
