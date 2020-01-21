@@ -1,64 +1,64 @@
 /**
- * Copyright 2018 IBM All Rights Reserved.
+ * Copyright 2018, 2019 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+
+/* eslint require-atomic-updates: off */
 
 'use strict';
 const sinon = require('sinon');
 const rewire = require('rewire');
 
-const InternalChannel = rewire('fabric-client/lib/Channel');
-const Peer = InternalChannel.__get__('ChannelPeer');
-const FABRIC_CONSTANTS = require('fabric-client/lib/Constants');
-
-const Client = require('fabric-client');
+const {IdentityContext} = require('fabric-common');
 
 const chai = require('chai');
 const should = chai.should();
 chai.use(require('chai-as-promised'));
 
-const Network = require('../lib/network');
-const Gateway = require('../lib/gateway');
-const {Wallets} = require('../lib/impl/wallet/wallets');
-const QueryStrategies = require('../lib/impl/query/defaultqueryhandlerstrategies');
+const Gateway = rewire('../lib/gateway');
+const Client = rewire('fabric-common/lib/Client');
+const QueryStrategies = require('../lib/impl/query/queryhandlerstrategies');
 
 describe('Gateway', () => {
-	let mockClient;
-	let wallet;
-	const idLabel = 'myId';
-	const identity = {
-		type: 'X.509',
-		mspId: 'ID_MSPID',
-		credentials: {
-			certificate: 'CERTIFICATE',
-			privateKey: 'PRIVATE_KEY',
-		}
-	};
-	const idUser = Object.assign(sinon.createStubInstance(Client.User), {_stubInfo: 'identity'});
-	const tlsLabel = 'myTlsId';
-	const tlsIdentity = {
-		type: 'X.509',
-		mspId: 'TLS_MSPID',
-		credentials: {
-			certificate: 'TLS_CERTIFICATE',
-			privateKey: 'TLS_PRIVATE_KEY',
-		}
-	};
-	const tlsUser = Object.assign(sinon.createStubInstance(Client.User), {_stubInfo: 'tlsIdentity'});
+	let client;
+	let identityContext;
+	let sandbox;
+	let revert;
+	let FakeLogger;
+	let clientHelper;
 
-	beforeEach(async () => {
-		mockClient = sinon.createStubInstance(Client);
-		mockClient.createUser.withArgs(sinon.match(data => data.mspid === identity.mspId)).returns(idUser);
-		mockClient.createUser.withArgs(sinon.match(data => data.mspid === tlsIdentity.mspId)).returns(tlsUser);
+	let gateway;
 
-		wallet = await Wallets.newInMemoryWallet();
-		await wallet.put(idLabel, identity);
-		await wallet.put(tlsLabel, tlsIdentity);
+	beforeEach(() => {
+		revert = [];
+		sandbox = sinon.createSandbox();
+		FakeLogger = {
+			debug: () => {
+			},
+			error: () => {
+			},
+			warn: () => {
+			}
+		};
+		sandbox.stub(FakeLogger);
+		revert.push(Gateway.__set__('logger', FakeLogger));
+		clientHelper = sinon.stub();
+		clientHelper.loadFromConfig = sinon.stub().resolves('ccp');
+		Gateway.__set__('NetworkConfig', clientHelper);
+		client = sinon.createStubInstance(Client);
+		client.type = 'Client';
+		identityContext = sinon.createStubInstance(IdentityContext);
+		client.newIdentityContext.returns(identityContext);
+
+		gateway = new Gateway();
 	});
 
 	afterEach(() => {
-		sinon.restore();
+		if (revert.length) {
+			revert.forEach(Function.prototype.call, Function.prototype.call);
+		}
+		sandbox.restore();
 	});
 
 	describe('#_mergeOptions', () => {
@@ -66,180 +66,238 @@ describe('Gateway', () => {
 
 		beforeEach(() => {
 			defaultOptions = {
-				aTimeout: 300 * 1000,
+				top1: {
+					inner11: 10,
+					inner12: 'ten'
+				},
+				top2: {
+					inner21: 20,
+					inner22: 'twenty'
+				}
 			};
 		});
 
 		it('should return the default options when there are no overrides', () => {
 			const overrideOptions = {};
-			const expectedOptions = {
-				aTimeout: 300 * 1000
-			};
 			Gateway._mergeOptions(defaultOptions, overrideOptions);
-			defaultOptions.should.deep.equal(expectedOptions);
+			defaultOptions.should.deep.equal(defaultOptions);
 		});
 
-		it('should change a default option', () => {
+		it('should change all top option', () => {
 			const overrideOptions = {
-				aTimeout: 1234
-			};
-			const expectedOptions = {
-				aTimeout: 1234
-			};
-			Gateway._mergeOptions(defaultOptions, overrideOptions);
-			defaultOptions.should.deep.equal(expectedOptions);
-		});
-
-		it('should add a new option', () => {
-			const overrideOptions = {
-				useDiscovery: true
-			};
-			const expectedOptions = {
-				aTimeout: 300 * 1000,
-				useDiscovery: true
-			};
-			Gateway._mergeOptions(defaultOptions, overrideOptions);
-			defaultOptions.should.deep.equal(expectedOptions);
-		});
-
-		it('should add option structures', () => {
-			const overrideOptions = {
-				identity: 'admin',
-				useDiscovery: true,
-				discoveryOptions: {
-					discoveryProtocol: 'grpc',
-					asLocalhost: true
-				}
-			};
-			const expectedOptions = {
-				aTimeout: 300 * 1000,
-				identity: 'admin',
-				useDiscovery: true,
-				discoveryOptions: {
-					discoveryProtocol: 'grpc',
-					asLocalhost: true
-				}
-			};
-			Gateway._mergeOptions(defaultOptions, overrideOptions);
-			defaultOptions.should.deep.equal(expectedOptions);
-		});
-
-		it('should merge option structures', () => {
-			defaultOptions = {
-				aTimeout: 300 * 1000,
-				identity: 'user',
-				useDiscovery: true,
-				discoveryOptions: {
-					discoveryProtocol: 'grpc',
-					asLocalhost: false
-				}
-			};
-			const overrideOptions = {
-				identity: 'admin',
-				useDiscovery: true,
-				discoveryOptions: {
-					asLocalhost: true
-				}
-			};
-			const expectedOptions = {
-				aTimeout: 300 * 1000,
-				identity: 'admin',
-				useDiscovery: true,
-				discoveryOptions: {
-					discoveryProtocol: 'grpc',
-					asLocalhost: true
-				}
-			};
-			Gateway._mergeOptions(defaultOptions, overrideOptions);
-			defaultOptions.should.deep.equal(expectedOptions);
-		});
-
-		it('should merge option structures - even ones that don\t end in Option', () => {
-			const strategy = () => {
-				return null;
-			};
-			defaultOptions = {
-				commitTimeout: 300 * 1000,
-				identity: 'user',
-				eventHandlerOptions: {
-					commitTimeout: 300, // 5 minutes
-					strategy: strategy
+				top1: {
+					inner11: 20,
+					inner12: 'twenty'
 				},
-				discovery: {
-					enabled: true,
-					asLocalhost: true
-				}
-			};
-			const overrideOptions = {
-				identity: 'admin',
-				discovery: {
-					asLocalhost: false
-				}
 			};
 			const expectedOptions = {
-				commitTimeout: 300 * 1000,
-				identity: 'admin',
-				eventHandlerOptions: {
-					commitTimeout: 300, // 5 minutes
-					strategy: strategy
+				top1: {
+					inner11: 20,
+					inner12: 'twenty'
 				},
-				discovery: {
-					enabled: true,
-					asLocalhost: false
+				top2: {
+					inner21: 20,
+					inner22: 'twenty'
 				}
 			};
 			Gateway._mergeOptions(defaultOptions, overrideOptions);
 			defaultOptions.should.deep.equal(expectedOptions);
 		});
 
-		it('should merge null option structures', () => {
-			const strategy = () => {
-				return null;
-			};
-			defaultOptions = {
-				commitTimeout: 300 * 1000,
-				identity: 'user',
-				eventHandlerOptions: {
-					commitTimeout: 300, // 5 minutes
-					strategy: strategy
-				},
-				discovery: {
-					enabled: true,
-					asLocalhost: true
-				}
-			};
+		it('should change a one inner option', () => {
 			const overrideOptions = {
-				identity: 'admin',
-				discovery: null
+				top1: {
+					inner11: 20
+				},
 			};
 			const expectedOptions = {
-				commitTimeout: 300 * 1000,
-				identity: 'admin',
-				eventHandlerOptions: {
-					commitTimeout: 300, // 5 minutes
-					strategy: strategy
+				top1: {
+					inner11: 20,
+					inner12: 'ten'
 				},
-				discovery: null
+				top2: {
+					inner21: 20,
+					inner22: 'twenty'
+				}
 			};
 			Gateway._mergeOptions(defaultOptions, overrideOptions);
 			defaultOptions.should.deep.equal(expectedOptions);
 		});
 
+		it('should null out one inner option', () => {
+			const overrideOptions = {
+				top1: {
+					inner11: null
+				},
+			};
+			const expectedOptions = {
+				top1: {
+					inner11: null,
+					inner12: 'ten'
+				},
+				top2: {
+					inner21: 20,
+					inner22: 'twenty'
+				}
+			};
+			Gateway._mergeOptions(defaultOptions, overrideOptions);
+			defaultOptions.should.deep.equal(expectedOptions);
+		});
+
+		it('should null out one inner option using reference null', () => {
+			const myNull = null;
+			const overrideOptions = {
+				top1: {
+					inner11: myNull
+				},
+			};
+			const expectedOptions = {
+				top1: {
+					inner11: null,
+					inner12: 'ten'
+				},
+				top2: {
+					inner21: 20,
+					inner22: 'twenty'
+				}
+			};
+			Gateway._mergeOptions(defaultOptions, overrideOptions);
+			defaultOptions.should.deep.equal(expectedOptions);
+		});
+
+		it('should add a non structure top option', () => {
+			const overrideOptions = {
+				single: true
+			};
+			const expectedOptions = {
+				top1: {
+					inner11: 10,
+					inner12: 'ten'
+				},
+				top2: {
+					inner21: 20,
+					inner22: 'twenty'
+				},
+				single: true
+			};
+			Gateway._mergeOptions(defaultOptions, overrideOptions);
+			defaultOptions.should.deep.equal(expectedOptions);
+		});
+
+		it('should add a null non structure top option', () => {
+			const overrideOptions = {
+				single: null
+			};
+			const expectedOptions = {
+				top1: {
+					inner11: 10,
+					inner12: 'ten'
+				},
+				top2: {
+					inner21: 20,
+					inner22: 'twenty'
+				},
+				single: null
+			};
+			Gateway._mergeOptions(defaultOptions, overrideOptions);
+			defaultOptions.should.deep.equal(expectedOptions);
+		});
+
+		it('should null a structure top option', () => {
+			const overrideOptions = {
+				top1: null
+			};
+			const expectedOptions = {
+				top1: null,
+				top2: {
+					inner21: 20,
+					inner22: 'twenty'
+				}
+			};
+			Gateway._mergeOptions(defaultOptions, overrideOptions);
+			defaultOptions.should.deep.equal(expectedOptions);
+		});
+
+		it('should add an option structure', () => {
+			const overrideOptions = {
+				top3: {
+					inner31: 30,
+					inner32: 'thirty'
+				}
+			};
+			const expectedOptions = {
+				top1: {
+					inner11: 10,
+					inner12: 'ten'
+				},
+				top2: {
+					inner21: 20,
+					inner22: 'twenty'
+				},
+				top3: {
+					inner31: 30,
+					inner32: 'thirty'
+				}
+			};
+			Gateway._mergeOptions(defaultOptions, overrideOptions);
+			defaultOptions.should.deep.equal(expectedOptions);
+		});
+
+		it('should add inner-inner structure to top option', () => {
+			const overrideOptions = {
+				top1: {
+					top13: {
+						inner131: 131
+					}
+				}
+			};
+			const expectedOptions = {
+				top1: {
+					inner11: 10,
+					inner12: 'ten',
+					top13: {
+						inner131: 131
+					}
+				},
+				top2: {
+					inner21: 20,
+					inner22: 'twenty'
+				}
+			};
+			Gateway._mergeOptions(defaultOptions, overrideOptions);
+			defaultOptions.should.deep.equal(expectedOptions);
+		});
 	});
 
 	describe('#constructor', () => {
 		it('should instantiate a Gateway object', () => {
-			const gateway = new Gateway();
-			gateway.networks.should.be.instanceof(Map);
+			const gy = new Gateway();
+			gy.networks.should.be.instanceof(Map);
 		});
 	});
 
 	describe('#connect', () => {
-		let gateway;
+		let wallet;
+		let provider;
+		const identity = {
+			credentials: {
+				certificate: 'certificate',
+				privateKey: 'privateKey'
+			}
+		};
+		let user;
 
 		beforeEach(() => {
-			gateway = new Gateway();
-			sinon.stub(Client, 'loadFromConfig').withArgs('ccp').returns(mockClient);
+			user = sinon.stub();
+			user.getName = sinon.stub().returns('user');
+			user.getMspid = sinon.stub().returns('mspid');
+			provider = sinon.stub();
+			provider.getUserContext = sinon.stub().resolves(user);
+			const providerRegistry = sinon.stub();
+			providerRegistry.getProvider = sinon.stub().returns(provider);
+			wallet = sinon.stub();
+			wallet.getProviderRegistry = sinon.stub().returns(providerRegistry);
+			wallet.get = sinon.stub().resolves(identity);
 		});
 
 		it('should fail without options supplied', () => {
@@ -249,7 +307,7 @@ describe('Gateway', () => {
 
 		it('should fail without wallet option supplied', () => {
 			const options = {
-				identity: idLabel
+				identity: 'identity'
 			};
 			return gateway.connect('ccp', options)
 				.should.be.rejectedWith(/A wallet must be assigned to a Gateway instance/);
@@ -260,52 +318,48 @@ describe('Gateway', () => {
 				wallet,
 			};
 			await gateway.connect('ccp', options);
-			gateway.client.should.equal(mockClient);
-			sinon.assert.notCalled(mockClient.setUserContext);
+			sinon.assert.calledWith(FakeLogger.debug, '%s - end');
 		});
 
 		it('should connect to the gateway with identity', async () => {
 			const options = {
 				wallet,
-				identity: idLabel
+				identity: 'identity'
 			};
 			await gateway.connect('ccp', options);
-			gateway.client.should.equal(mockClient);
-			sinon.assert.calledWith(mockClient.setUserContext, idUser);
+			gateway.client.name.should.equal('gateway client');
+			gateway.identityContext.mspid.should.equal('mspid');
 		});
 
 		it('should connect to the gateway with identity and set client tls crypto material', async () => {
 			const options = {
 				wallet,
-				identity: idLabel,
-				clientTlsIdentity: tlsLabel
+				identity: 'identity',
+				clientTlsIdentity: 'tls'
 			};
-			await gateway.connect('ccp', options);
-			gateway.client.should.equal(mockClient);
-			sinon.assert.calledOnce(mockClient.setTlsClientCertAndKey);
-			sinon.assert.calledWith(mockClient.setTlsClientCertAndKey,
-				tlsIdentity.credentials.certificate, tlsIdentity.credentials.privateKey);
+			await gateway.connect(client, options);
+			sinon.assert.calledOnce(client.setTlsClientCertAndKey);
+			sinon.assert.calledWith(client.setTlsClientCertAndKey,
+				identity.credentials.certificate, identity.credentials.privateKey);
 		});
 
 		it('should connect to the gateway with identity and set client tls crypto material using tlsInfo', async () => {
 			const options = {
 				wallet,
-				identity: idLabel,
+				identity: 'identity',
 				tlsInfo: {certificate: 'acert', key: 'akey'}
 			};
-			await gateway.connect('ccp', options);
-			gateway.client.should.equal(mockClient);
-			sinon.assert.calledOnce(mockClient.setTlsClientCertAndKey);
-			sinon.assert.calledWith(mockClient.setTlsClientCertAndKey, 'acert', 'akey');
+			await gateway.connect(client, options);
+			sinon.assert.calledOnce(client.setTlsClientCertAndKey);
+			sinon.assert.calledWith(client.setTlsClientCertAndKey, 'acert', 'akey');
 		});
 
 		it('should connect from an existing client object', async () => {
 			const options = {
-				wallet,
-				identity: idLabel
+				wallet
 			};
-			await gateway.connect(mockClient, options);
-			gateway.client.should.equal(mockClient);
+			await gateway.connect(client, options);
+			gateway.client.should.equal(client);
 		});
 
 		it('has default transaction event handling strategy if none specified', async () => {
@@ -313,7 +367,7 @@ describe('Gateway', () => {
 				wallet
 			};
 			await gateway.connect('ccp', options);
-			gateway.options.eventHandlerOptions.strategy.should.be.a('Function');
+			gateway.options.transaction.strategy.should.be.a('Function');
 		});
 
 		it('allows transaction event handling strategy to be specified', async () => {
@@ -329,132 +383,107 @@ describe('Gateway', () => {
 		it('allows null transaction event handling strategy to be set', async () => {
 			const options = {
 				wallet,
-				eventStrategy: null
+				transaction: {
+					strategy: null
+				}
 			};
 			await gateway.connect('ccp', options);
-			should.equal(gateway.options.eventStrategy, null);
+			should.equal(gateway.options.transaction.strategy, null);
 		});
 
+		it('should assign connection options to the client', async () => {
+			const options = {
+				wallet,
+				'connection-options': {
+					option1: 'option1',
+					option2: 'option2'
+				}
+			};
+			await gateway.connect(client, options);
+			client.centralized_options.option1.should.equal('option1');
+		});
 		it('throws if the identity does not exist', () => {
 			const options = {
 				wallet,
 				identity: 'INVALID_IDENTITY_LABEL'
 			};
+			wallet.get = sinon.stub().resolves(null);
 			return gateway.connect('ccp', options)
-				.should.be.rejectedWith(options.identity);
+				.should.be.rejectedWith('Identity not found in wallet: INVALID_IDENTITY_LABEL');
 		});
 
 		it('throws if the TLS identity does not exist', () => {
 			const options = {
 				wallet,
-				identity: idLabel,
 				clientTlsIdentity: 'INVALID_IDENTITY_LABEL'
 			};
+			wallet.get = sinon.stub().resolves(null);
 			return gateway.connect('ccp', options)
-				.should.be.rejectedWith(options.clientTlsIdentity);
+				.should.be.rejectedWith('Identity not found in wallet: INVALID_IDENTITY_LABEL');
 		});
 	});
 
 	describe('getters', () => {
-		let gateway;
-
 		beforeEach(async () => {
-			gateway = new Gateway();
-			sinon.stub(Client, 'loadFromConfig').withArgs('ccp').returns(mockClient);
+			gateway.identityContext = identityContext;
 			const options = {
-				wallet,
-				identity: idLabel
+				wallet: 'something'
 			};
-			await gateway.connect('ccp', options);
-		});
-
-		describe('#getClient', () => {
-			it('should return the underlying client object', () => {
-				gateway.getClient().should.equal(mockClient);
-			});
+			await gateway.connect(client, options);
 		});
 
 		describe('#getOptions', () => {
-			it('should return the initialized options', () => {
+			it('should return the options', () => {
 				const expectedOptions = {
-					wallet,
-					identity: idLabel,
-					queryHandlerOptions: {
+					wallet: 'something',
+					query: {
+						timeout: 30,
 						strategy: QueryStrategies.MSPID_SCOPE_SINGLE
 					}
 				};
 				gateway.getOptions().should.deep.include(expectedOptions);
-				gateway.getOptions().eventHandlerOptions.should.include({
+				gateway.getOptions().transaction.should.include({
 					commitTimeout: 300
 				});
-
 			});
 		});
 	});
 
-	describe('network interactions', () => {
-		let gateway;
-		let mockNetwork;
-		let mockInternalChannel;
 
-		beforeEach(() => {
+	describe('#getNetwork/#disconnect', () => {
+		beforeEach(async () => {
 			gateway = new Gateway();
-			mockNetwork = sinon.createStubInstance(Network);
-			gateway.networks.set('foo', mockNetwork);
-			gateway.client = mockClient;
-			gateway.options.discovery.enabled = false;
-
-			mockInternalChannel = sinon.createStubInstance(InternalChannel);
-			const mockPeer1 = sinon.createStubInstance(Peer);
-			mockPeer1.index = 1; // add these so that the mockPeers can be distiguished when used in WithArgs().
-			mockPeer1.getName.returns('Peer1');
-			mockPeer1.getMspid.returns('MSP01');
-			mockPeer1.isInRole.withArgs(FABRIC_CONSTANTS.NetworkConfig.LEDGER_QUERY_ROLE).returns(true);
-			const peerArray = [mockPeer1];
-			mockInternalChannel.getPeers.returns(peerArray);
-			mockInternalChannel.getChannelEventHub.returns({isconnected: () => true, getName: () => 'myeventhub'});
+			const options = {
+				wallet: 'something',
+				discovery: {
+					enabled: false
+				},
+				query: {
+					strategy: () => {}
+				}
+			};
+			await gateway.connect('ccp', options);
+			gateway.identityContext = identityContext;
 		});
 
-		describe('#getNetwork', () => {
-			it('should return a cached network object', () => {
-				gateway.getNetwork('foo').should.eventually.equal(mockNetwork);
-			});
-
-			it('should create a non-existent network object', async () => {
-				mockClient.getChannel.withArgs('bar').returns(mockInternalChannel);
-				gateway.getCurrentIdentity = sinon.stub().returns({_mspId: 'MSP01'});
-				gateway.getOptions().queryHandlerOptions.strategy = () => {};
-				gateway.getOptions().eventHubSelectionOptions.strategy = () => {};
-
-				const network2 = await gateway.getNetwork('bar');
-				network2.should.be.instanceof(Network);
-				network2.gateway.should.equal(gateway);
-				network2.channel.should.equal(mockInternalChannel);
-				gateway.networks.size.should.equal(2);
-			});
-
-			it('should create a channel object if not defined in the ccp', async () => {
-				mockClient.getChannel.withArgs('bar').returns(null);
-				mockClient.newChannel.withArgs('bar').returns(mockInternalChannel);
-				gateway.getCurrentIdentity = sinon.stub().returns({_mspId: 'MSP01'});
-				gateway.getOptions().queryHandlerOptions.strategy = () => {};
-				gateway.getOptions().eventHubSelectionOptions.strategy = () => {};
-
-				const network2 = await gateway.getNetwork('bar');
-				network2.should.be.instanceof(Network);
-				network2.gateway.should.equal(gateway);
-				network2.channel.should.equal(mockInternalChannel);
-				gateway.networks.size.should.equal(2);
-			});
+		it('should get a new network with new name', async () => {
+			const network1 = await gateway.getNetwork('network1');
+			const network2 = await gateway.getNetwork('network2');
+			gateway.networks.size.should.equal(2);
+			network1.should.not.equal(network2);
 		});
 
-		describe('#disconnect', () => {
-			it('should cleanup the gateway and its networks', () => {
-				gateway.networks.size.should.equal(1);
-				gateway.disconnect();
-				gateway.networks.size.should.equal(0);
-			});
+		it('should return a cached network object', async () => {
+			const network1 = await gateway.getNetwork('network1');
+			const network2 = await gateway.getNetwork('network1');
+			network1.should.equal(network2);
+		});
+
+		it('should cleanup the gateway and its networks', async () => {
+			await gateway.getNetwork('network1');
+			gateway.networks.size.should.equal(1);
+			gateway.disconnect();
+			gateway.networks.size.should.equal(0);
 		});
 	});
-
 });

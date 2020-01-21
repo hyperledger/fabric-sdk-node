@@ -6,6 +6,8 @@
 
 'use strict';
 
+const Query = require('fabric-common/lib/Query');
+const Endorser = require('fabric-common/lib/Endorser');
 const SingleQueryHandler = require('fabric-network/lib/impl/query/singlequeryhandler');
 const RoundRobinQueryHandler = require('fabric-network/lib/impl/query/roundrobinqueryhandler');
 
@@ -17,43 +19,37 @@ chai.use(require('chai-as-promised'));
 describe('QueryHandlers', () => {
 	const querySuccessResult = Buffer.from('SUCCESS_QUERY_RESULT');
 	const queryErrorResult = new Error('ERROR_QUERY_RESULT');
-	queryErrorResult.isProposalResponse = true;
 	const queryFailMessage = 'QUERY_FAILED';
+	const peerInfo = {name: 'peer1', url: 'grpc://fakehost:9999'};
+	const validProposalResponse = {
+		response: {
+			status: 200,
+			payload: querySuccessResult
+		},
+		connection: peerInfo
+	};
+	const invalidProposalResponse = {
+		response: {
+			status: 500,
+			message: queryFailMessage
+		},
+		connection: peerInfo
+	};
 
-	let failedPeers;
-	let errorPeers;
-	let fakeEvaluate;
-	let stubQuery;
-	let stubPeer1;
-	let stubPeer2;
+	const validProposalResponses = {responses: [validProposalResponse], queryResponses: [querySuccessResult]};
+	const invalidProposalResponses = {responses: [invalidProposalResponse]};
+	const errorProposalResponses = {errors: [queryErrorResult]};
+
+	let endorser1;
+	let endorser2;
+	let query;
 
 	beforeEach(() => {
-		failedPeers = [];
-		errorPeers = [];
-		fakeEvaluate = sinon.fake(async (peers) => {
-			const results = [];
-			for (const peer of peers) {
-				const peerName = peer.getName();
-				if (failedPeers.includes(peer)) {
-					results[peerName] = new Error(`${queryFailMessage}: ${peerName}`);
-				} else if (errorPeers.includes(peer)) {
-					results[peerName] = queryErrorResult;
-				} else {
-					results[peerName] = querySuccessResult;
-				}
-			}
-			return results;
-		});
-		stubQuery = {
-			evaluate: fakeEvaluate
-		};
-		stubPeer1 = {
-			getName: () => 'peer1'
-		};
-		stubPeer2 = {
-			getName: () => 'peer2'
-		};
-
+		query = sinon.createStubInstance(Query);
+		endorser1 = sinon.createStubInstance(Endorser);
+		endorser1.name = 'peer1';
+		endorser2 = sinon.createStubInstance(Endorser);
+		endorser2.name = 'peer2';
 	});
 
 	afterEach(() => {
@@ -61,160 +57,116 @@ describe('QueryHandlers', () => {
 	});
 
 	describe('SingleQueryHandler', () => {
-		let strategy;
+		let handler;
 
 		beforeEach(() => {
-			strategy = new SingleQueryHandler([stubPeer1, stubPeer2]);
+			handler = new SingleQueryHandler([endorser1, endorser2]);
 		});
 
-		it('only queries first peer if successful', async () => {
-			await strategy.evaluate(stubQuery);
+		it('returns peer valid results', async () => {
+			query.send.resolves(validProposalResponses);
+			handler._options = {timeout: 1};
 
-			sinon.assert.calledOnce(fakeEvaluate);
-			sinon.assert.calledWith(fakeEvaluate, [stubPeer1]);
+			const result = await handler.evaluate(query);
+			expect(result).to.be.equal(querySuccessResult);
 		});
 
-		it('continues to query first peer if successful', async () => {
-			await strategy.evaluate(stubQuery);
-			await strategy.evaluate(stubQuery);
+		it('returns an error with the peer invalid results', async () => {
+			query.send.resolves(invalidProposalResponses);
 
-			sinon.assert.calledTwice(fakeEvaluate);
-			sinon.assert.alwaysCalledWith(fakeEvaluate, [stubPeer1]);
+			try {
+				await handler.evaluate(query);
+			} catch (error) {
+				expect(error.message).to.contain(queryFailMessage);
+			}
 		});
 
-		it('returns query result', async () => {
-			const result = await strategy.evaluate(stubQuery);
-			expect(result).to.equal(querySuccessResult);
+		it('returns an error with the grpc sending error', async () => {
+			query.send.resolves(errorProposalResponses);
+
+			try {
+				await handler.evaluate(query);
+			} catch (error) {
+				expect(error.message).to.contain('ERROR_QUERY_RESULT');
+			}
 		});
 
-		it('queries second peer if first fails', async () => {
-			failedPeers = [stubPeer1];
+		it('returns an error with internal sending error', async () => {
+			query.send.rejects(new Error('Send failed'));
 
-			await strategy.evaluate(stubQuery);
-
-			sinon.assert.calledTwice(fakeEvaluate);
-			sinon.assert.calledWith(fakeEvaluate.getCall(0), [stubPeer1]);
-			sinon.assert.calledWith(fakeEvaluate.getCall(1), [stubPeer2]);
+			try {
+				await handler.evaluate(query);
+			} catch (error) {
+				expect(error.message).to.contain('Send failed');
+			}
 		});
 
-		it('continues to query second peer if first fails', async () => {
-			failedPeers = [stubPeer1];
+		it('returns nothing', async () => {
+			query.send.resolves();
 
-			await strategy.evaluate(stubQuery);
-			await strategy.evaluate(stubQuery);
-
-			sinon.assert.calledThrice(fakeEvaluate);
-			sinon.assert.calledWith(fakeEvaluate.lastCall, [stubPeer2]);
+			try {
+				await handler.evaluate(query);
+			} catch (error) {
+				expect(error.message).to.contain('No response from query');
+			}
 		});
 
-		it('queries first peer again if second fails', async () => {
-			failedPeers = [stubPeer1];
-			await strategy.evaluate(stubQuery);
-			failedPeers = [stubPeer2];
-			await strategy.evaluate(stubQuery);
-
-			sinon.assert.callCount(fakeEvaluate, 4);
-			sinon.assert.calledWith(fakeEvaluate.lastCall, [stubPeer1]);
-		});
-
-		it('returns query result if first peer fails', async () => {
-			failedPeers = [stubPeer1];
-
-			const result = await strategy.evaluate(stubQuery);
-
-			expect(result).equals(querySuccessResult);
-		});
-
-		it('throws if all peers fail', () => {
-			failedPeers = [stubPeer1, stubPeer2];
-
-			return expect(strategy.evaluate(stubQuery))
-				.to.be.rejectedWith(queryFailMessage);
-		});
-
-		it('throws if peer returns error response', () => {
-			errorPeers = [stubPeer1];
-
-			return expect(strategy.evaluate(stubQuery))
-				.to.be.rejectedWith(queryErrorResult);
-		});
 	});
 
 	describe('RoundRobinQueryHandler', () => {
-		let strategy;
+		let handler;
 
 		beforeEach(() => {
-			strategy = new RoundRobinQueryHandler([stubPeer1, stubPeer2]);
+			handler = new RoundRobinQueryHandler([endorser1, endorser2]);
 		});
 
-		it('queries first peer on first call', async () => {
-			await strategy.evaluate(stubQuery);
+		it('returns peer valid results', async () => {
+			query.send.resolves(validProposalResponses);
+			handler._options = {timeout: 1};
 
-			sinon.assert.callCount(fakeEvaluate, 1);
-			sinon.assert.calledWith(fakeEvaluate.lastCall, [stubPeer1]);
+			const result = await handler.evaluate(query);
+			expect(result).to.be.equal(querySuccessResult);
 		});
 
-		it('queries second peer on second call', async () => {
-			await strategy.evaluate(stubQuery);
-			await strategy.evaluate(stubQuery);
+		it('returns an error with the peer invalid results', async () => {
+			query.send.resolves(invalidProposalResponses);
 
-			sinon.assert.callCount(fakeEvaluate, 2);
-			sinon.assert.calledWith(fakeEvaluate.lastCall, [stubPeer2]);
+			try {
+				await handler.evaluate(query);
+			} catch (error) {
+				expect(error.message).to.contain(queryFailMessage);
+			}
 		});
 
-		it('queries third peer on third call', async () => {
-			await strategy.evaluate(stubQuery);
-			await strategy.evaluate(stubQuery);
-			await strategy.evaluate(stubQuery);
+		it('returns an error with the grpc sending error', async () => {
+			query.send.resolves(errorProposalResponses);
 
-			sinon.assert.callCount(fakeEvaluate, 3);
-			sinon.assert.calledWith(fakeEvaluate.lastCall, [stubPeer1]);
+			try {
+				await handler.evaluate(query);
+			} catch (error) {
+				expect(error.message).to.contain('ERROR_QUERY_RESULT');
+			}
 		});
 
-		it('returns query result', async () => {
-			const result = await strategy.evaluate(stubQuery);
-			expect(result).to.equal(querySuccessResult);
+		it('returns an error with internal sending error', async () => {
+			query.send.rejects(new Error('Send failed'));
+
+			try {
+				await handler.evaluate(query);
+			} catch (error) {
+				expect(error.message).to.contain('Send failed');
+			}
 		});
 
-		it('queries second peer if first fails', async () => {
-			failedPeers = [stubPeer1];
+		it('returns nothing', async () => {
+			query.send.resolves();
 
-			await strategy.evaluate(stubQuery);
-
-			sinon.assert.callCount(fakeEvaluate, 2);
-			sinon.assert.calledWith(fakeEvaluate.getCall(0), [stubPeer1]);
-			sinon.assert.calledWith(fakeEvaluate.getCall(1), [stubPeer2]);
+			try {
+				await handler.evaluate(query);
+			} catch (error) {
+				expect(error.message).to.contain('No response from query');
+			}
 		});
 
-		it('queries first peer again if second fails', async () => {
-			await strategy.evaluate(stubQuery);
-			failedPeers = [stubPeer2];
-			await strategy.evaluate(stubQuery);
-
-			sinon.assert.callCount(fakeEvaluate, 3);
-			sinon.assert.calledWith(fakeEvaluate.lastCall, [stubPeer1]);
-		});
-
-		it('returns query result if first peer fails', async () => {
-			failedPeers = [stubPeer1];
-
-			const result = await strategy.evaluate(stubQuery);
-
-			expect(result).equals(querySuccessResult);
-		});
-
-		it('throws if all peers fail', () => {
-			failedPeers = [stubPeer1, stubPeer2];
-
-			return expect(strategy.evaluate(stubQuery))
-				.to.be.rejectedWith(queryFailMessage);
-		});
-
-		it('throws if peer returns error response', () => {
-			errorPeers = [stubPeer1];
-
-			return expect(strategy.evaluate(stubQuery))
-				.to.be.rejectedWith(queryErrorResult);
-		});
 	});
 });

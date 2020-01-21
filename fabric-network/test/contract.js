@@ -1,78 +1,71 @@
 /**
- * Copyright 2018 IBM All Rights Reserved.
+ * Copyright 2018, 2019 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
 'use strict';
 const sinon = require('sinon');
+const rewire = require('rewire');
 
-const Channel = require('fabric-client/lib/Channel');
-const ChannelEventHub = require('fabric-client/lib/ChannelEventHub');
-const Client = require('fabric-client');
-const TransactionID = require('fabric-client/lib/TransactionID.js');
+const Channel = require('fabric-common/lib/Channel');
+const DiscoveryService = require('fabric-common/lib/DiscoveryService');
+const Endorsement = require('fabric-common/lib/Endorsement');
 
 const chai = require('chai');
 const expect = chai.expect;
 chai.use(require('chai-as-promised'));
 chai.should();
 
-const Contract = require('../lib/contract');
+const Contract = rewire('../lib/contract');
 const Gateway = require('../lib/gateway');
 const Network = require('fabric-network/lib/network');
 const Transaction = require('../lib/transaction');
-const TransactionEventHandler = require('../lib/impl/event/transactioneventhandler');
-const BaseCheckpointer = require('./../lib/impl/event/basecheckpointer');
-const ContractEventListener = require('./../lib/impl/event/contracteventlistener');
-const EventHubManager = require('./../lib/impl/event/eventhubmanager');
+class FakeListener {
+	constructor(network, listenerName) {
+		this.listenerName = listenerName;
+	}
+	register() {}
+}
 
 describe('Contract', () => {
 	const chaincodeId = 'CHAINCODE_ID';
+	const namespace = 'namespace';
+	const collections = ['col1', 'col2'];
 
 	let network;
-
-	let mockChannel, mockClient, mockGateway;
+	let channel;
+	let gateway;
 	let contract;
-	let mockTransactionID;
-	let mockCheckpointer;
-	let mockEventHubManager;
-	let mockEventHub;
+	let transaction;
+	let endorsement;
+	let discoveryService;
 
 	beforeEach(() => {
-		mockEventHub = sinon.createStubInstance(ChannelEventHub);
-		mockEventHub.connect.yields((filtered) => {
-			mockEventHub.isconnected.returns(true);
-			return mockEventHub._filtered_stream = filtered;
-		});
-		mockChannel = sinon.createStubInstance(Channel);
-		mockClient = sinon.createStubInstance(Client);
-
-		mockGateway = sinon.createStubInstance(Gateway);
-		mockCheckpointer = sinon.createStubInstance(BaseCheckpointer);
-		mockEventHubManager = sinon.createStubInstance(EventHubManager);
-		mockGateway.getClient.returns(mockClient);
-		mockGateway.getOptions.returns({
-			eventHandlerOptions: {
-				strategy: null
-			},
-			queryHandlerOptions: {
-				strategy: () => {
-					return {};
-				}
+		channel = sinon.createStubInstance(Channel);
+		channel.newDiscoveryService = sinon.stub().returns(discoveryService);
+		gateway = sinon.createStubInstance(Gateway);
+		gateway.identityContext = 'idx';
+		gateway.getOptions = sinon.stub().returns({
+			transaction: 'options',
+			discovery: {
+				asLocalhost: true
 			}
 		});
-		network = new Network(mockGateway, mockChannel);
-		mockEventHubManager.getEventHub.returns(mockEventHub);
-		mockEventHubManager.getReplayEventHub.returns(mockEventHub);
-		network.eventHubManager = mockEventHubManager;
-		mockEventHubManager.getPeers.returns(['peer1']);
+		network = new Network(gateway, channel);
+		transaction = sinon.createStubInstance(Transaction);
+		transaction.submit.resolves('result');
+		transaction.evaluate.resolves('result');
+		endorsement = sinon.createStubInstance(Endorsement);
+		endorsement.buildProposalInterest = sinon.stub().returns('interest');
+		discoveryService = sinon.createStubInstance(DiscoveryService);
+		discoveryService.newHandler = sinon.stub().returns('handler');
+		discoveryService.build = sinon.stub();
+		discoveryService.sign = sinon.stub();
+		discoveryService.send = sinon.stub().resolves();
 
-		mockTransactionID = sinon.createStubInstance(TransactionID);
-		mockTransactionID.getTransactionID.returns('00000000-0000-0000-0000-000000000000');
-		mockClient.newTransactionID.returns(mockTransactionID);
-		mockChannel.getName.returns('testchainid');
-
-		contract = new Contract(network, chaincodeId, mockGateway, mockCheckpointer);
+		Contract.__set__('ContractEventListener', FakeListener);
+		contract = new Contract(network, chaincodeId, namespace, collections);
 	});
 
 	afterEach(() => {
@@ -81,93 +74,25 @@ describe('Contract', () => {
 
 	describe('#constructor', () => {
 		it('throws if namespace is not a string', () => {
-			(() => new Contract(network, chaincodeId, mockGateway, mockCheckpointer, 123))
-				.should.throw(/namespace/i);
-		});
-	});
-
-	describe('#getNetwork', () => {
-		it('returns a Network', () => {
-			const result = contract.getNetwork();
-			result.should.be.an.instanceOf(Network);
-		});
-	});
-
-	describe('#createTransactionID', () => {
-		it('returns a TransactionID', () => {
-			const result = contract.createTransactionID();
-			result.should.be.an.instanceOf(TransactionID);
-		});
-	});
-
-	describe('#getChaincodeId', () => {
-		it('returns the chaincode ID', () => {
-			const result = contract.getChaincodeId();
-			result.should.equal(chaincodeId);
-		});
-	});
-
-	describe('#getCheckpointer', () => {
-		it('should return the global checkpointer if it is undefined in options', () => {
-			const checkpointer = contract.getCheckpointer();
-			expect(checkpointer).to.equal(mockCheckpointer);
-		});
-
-		it('should return the global checkpointer if it is undefined in options object', () => {
-			const checkpointer = contract.getCheckpointer({});
-			expect(checkpointer).to.equal(mockCheckpointer);
-		});
-
-		it('should return the global checkpointer if it is true in options', () => {
-			const checkpointer = contract.getCheckpointer({checkpointer: 'something'});
-			expect(checkpointer).to.equal(mockCheckpointer);
-		});
-
-		it('should return the checkpointer passed as an option', () => {
-			const options = {checkpointer: {factory: () => {}}};
-			const checkpointer = contract.getCheckpointer(options);
-			expect(checkpointer).to.equal(options.checkpointer);
-			expect(checkpointer).to.not.equal(mockCheckpointer);
-		});
-
-		it('should return null if checkpointer is false', () => {
-			const checkpointer = contract.getCheckpointer({checkpointer: false});
-			expect(checkpointer).to.be.null;
-		});
-	});
-
-	describe('#getEventHubSelectionStrategy', () => {
-		it('should return the eventhub selection strategy', () => {
-			network.eventHubSelectionStrategy = 'selection-strategy';
-			const strategy = contract.getEventHubSelectionStrategy();
-			expect(strategy).to.equal('selection-strategy');
-		});
-	});
-
-	describe('#getEventHandlerOptions', () => {
-		it('returns event handler options from the gateway', () => {
-			const result = contract.getEventHandlerOptions();
-			const expected = mockGateway.getOptions().eventHandlerOptions;
-			result.should.deep.equal(expected);
+			(() => new Contract(network, chaincodeId, 123))
+				.should.throw(/Namespace must be a non-empty string/i);
 		});
 	});
 
 	describe('#createTransaction', () => {
 		it('returns a transaction with only a name', () => {
+			contract.namespace = undefined;
 			const name = 'name';
 			const result = contract.createTransaction(name);
-			result.getName().should.equal(name);
+			result.name.should.equal(name);
 		});
 
 		it ('returns a transaction with both name and namespace', () => {
-			const namespace = 'namespace';
-			const name = 'name';
-			const expected = `${namespace}:${name}`;
 
-			contract = new Contract(network, chaincodeId, mockGateway, mockCheckpointer, namespace);
+			const name = 'name';
 			const result = contract.createTransaction(name);
 
-			result.getName().should.equal(expected);
+			result.name.should.equal('namespace:name');
 		});
 
 		it ('throws if name is an empty string', () => {
@@ -177,84 +102,62 @@ describe('Contract', () => {
 		it ('throws is name is not a string', () => {
 			(() => contract.createTransaction(123)).should.throw('name');
 		});
-
-		it ('sets an event handler strategy on the transaction', () => {
-			const stubEventHandler = sinon.createStubInstance(TransactionEventHandler);
-			const strategy = () => stubEventHandler;
-			mockGateway.getOptions.returns({
-				eventHandlerOptions: {strategy}
-			});
-
-			const result = contract.createTransaction('name');
-
-			result._createTxEventHandler.should.equal(strategy);
-		});
 	});
 
 	describe('#submitTransaction', () => {
 		it('submits a transaction with supplied arguments', async () => {
 			const args = ['a', 'b', 'c'];
-			const expected = Buffer.from('result');
-			const stubTransaction = sinon.createStubInstance(Transaction);
-			stubTransaction.submit.withArgs(...args).resolves(expected);
-			sinon.stub(contract, 'createTransaction').returns(stubTransaction);
-
+			contract.createTransaction = sinon.stub().returns(transaction);
 			const result = await contract.submitTransaction('name', ...args);
-
-			result.should.equal(expected);
+			result.should.equal('result');
 		});
 	});
 
 	describe('#evaluateTransaction', () => {
 		it('evaluates a transaction with supplied arguments', async () => {
 			const args = ['a', 'b', 'c'];
-			const expected = Buffer.from('result');
-			const stubTransaction = sinon.createStubInstance(Transaction);
-			stubTransaction.evaluate.withArgs(...args).resolves(expected);
-			sinon.stub(contract, 'createTransaction').returns(stubTransaction);
-
+			contract.createTransaction = sinon.stub().returns(transaction);
 			const result = await contract.evaluateTransaction('name', ...args);
-
-			result.should.equal(expected);
+			result.should.equal('result');
 		});
 	});
 
 
 	describe('#addContractListener', () => {
-		let listenerName;
-		let testEventName;
-		let callback;
-		beforeEach(() => {
-			listenerName = 'testContractListener';
-			testEventName = 'testEvent';
-			callback = () => {};
-			mockEventHub.isFiltered.returns(true);
+		it('should create if no options', async () => {
+			const listener = await contract.addContractListener('testEventName', () => {});
+			expect(listener).to.be.instanceof(FakeListener);
+			expect(network.listeners.get(listener)).to.equal(listener);
 		});
-		it('should create options if the options param is undefined', async () => {
-			const listener = await contract.addContractListener(listenerName, testEventName, callback);
-			expect(listener).to.be.instanceof(ContractEventListener);
-			expect(network.listeners.get(listenerName)).to.equal(listener);
+		it('should create if options', async () => {
+			const listener = await contract.addContractListener('testEventName', () => {}, {something: 'something'});
+			expect(listener).to.be.instanceof(FakeListener);
+			expect(network.listeners.get(listener)).to.equal(listener);
 		});
 
-		it('should create an instance of ContractEventListener and add it to the list of listeners', async () => {
-			const listener = await contract.addContractListener(listenerName, testEventName, callback, {});
-			expect(listener).to.be.instanceof(ContractEventListener);
-			expect(network.listeners.get(listenerName)).to.equal(listener);
+		it('should create if event service', async () => {
+			const listener = await contract.addContractListener('testEventName', () => {}, null, 'eventService');
+			expect(listener).to.be.instanceof(FakeListener);
+			expect(network.listeners.get(listener)).to.equal(listener);
 		});
+	});
 
-		it('should change options.replay=undefined to options.replay=false', async () => {
-			sinon.spy(contract, 'getCheckpointer');
-			await contract.addContractListener(listenerName, testEventName, callback, {replay: undefined});
-			sinon.assert.calledWith(contract.getCheckpointer, {
-				replay: false,
-				checkpointer: sinon.match.instanceOf(BaseCheckpointer)
-			});
+	describe('#getDiscoveryHandler', () => {
+		it('should run with no discovery', async () => {
+			network.discoveryService = undefined;
+			const handler = await contract.getDiscoveryHandler(endorsement);
+			expect(handler).to.equal(null);
 		});
-
-		it('should change options.replay=\'true\' to options.replay=true', async () => {
-			sinon.spy(contract, 'getCheckpointer');
-			await contract.addContractListener(listenerName, testEventName, callback, {replay: 'true'});
-			sinon.assert.calledWith(contract.getCheckpointer, {checkpointer: sinon.match.instanceOf(BaseCheckpointer), replay: true});
+		it('should run when discover is assigned to network and contract', async () => {
+			network.discoveryService = discoveryService;
+			contract.discoveryService = discoveryService;
+			const handler = await contract.getDiscoveryHandler(endorsement);
+			expect(handler).to.equal('handler');
+		});
+		it('should run when discover is assigned to network and not to contract', async () => {
+			network.discoveryService = discoveryService;
+			const handler = await contract.getDiscoveryHandler(endorsement);
+			expect(handler).to.equal('handler');
 		});
 	});
 });

@@ -128,7 +128,7 @@ async function disconnectGateway(gatewayName) {
 }
 
 /**
- * Disconnect all gateways within the  `gateways` Map
+ * Disconnect all gateways within the `gateways` Map
  */
 async function disconnectAllGateways() {
 	try {

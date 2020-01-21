@@ -1,18 +1,18 @@
 /**
- * Copyright 2018 IBM All Rights Reserved.
+ * Copyright 2018, 2019 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
 'use strict';
 
-const AbstractEventStrategy = require('fabric-network/lib/impl/event/abstracteventstrategy');
+const BaseEventStrategy = require('fabric-network/lib/impl/event/baseeventstrategy');
 
 const logger = require('fabric-network/lib/logger').getLogger('AnyForTxStrategy');
 
 /**
  * Event handling strategy that:
- * - Waits for first successful reponse from an event hub.
+ * - Waits for first successful reponse from an event service.
  * - Fails if all responses are errors.
  * - Succeeds if any reponses are successful.
  *
@@ -20,17 +20,21 @@ const logger = require('fabric-network/lib/logger').getLogger('AnyForTxStrategy'
  * @private
  * @class
  */
-class AnyForTxStrategy extends AbstractEventStrategy {
+class AnyForTxStrategy extends BaseEventStrategy {
 	/**
 	 * @inheritdoc
 	 */
 	checkCompletion(counts, successFn, failFn) {
-		logger.debug('checkCompletion:', counts);
+		const method = 'checkCompletion';
+		logger.debug('%s:%j:', method, counts);
 		const isAllResponsesReceived = (counts.success + counts.fail === counts.expected);
 		if (counts.success > 0) {
+			logger.debug('%s: success', method);
 			successFn();
 		} else if (isAllResponsesReceived) {
 			failFn(new Error('No successful events received'));
+		} else {
+			logger.debug('%s - not complete', method);
 		}
 	}
 }

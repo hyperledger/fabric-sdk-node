@@ -1,5 +1,5 @@
 /**
- * Copyright 2018 IBM All Rights Reserved.
+ * Copyright 2018, 2019 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -7,49 +7,46 @@
 // Sample query handler that will use all queryable peers within the network to evaluate transactions, with preference
 // given to peers within the same organization.
 
-import { Network, Query, QueryHandler, QueryHandlerFactory, QueryResults } from 'fabric-network';
-
-import { ChannelPeer } from 'fabric-client';
-
-import util = require('util');
-import Client = require('fabric-client');
+import { Network, QueryHandler, QueryHandlerFactory } from 'fabric-network';
+import { Query } from 'fabric-common';
 
 /**
- * Query handler implementation that simply tries all the peers it is given in order until it gets a result.
+ * Query handler implementation
  */
 class SampleQueryHandler implements QueryHandler {
-	private peers: ChannelPeer[];
+	private readonly peers: any;
+	private readonly requestTimeout: number;
 
-	constructor(peers: ChannelPeer[]) {
+	constructor(peers: any, requestTimeout: number) {
 		this.peers = peers;
+		this.requestTimeout = requestTimeout;
 	}
 
-	public async evaluate(query: Query): Promise<Buffer> {
-		const errorMessages: string[] = [];
+	public async evaluate(query: Query): Promise<any> {
+		// send to all
+		const results = await query.send({targets: this.peers}, {requestTimeout: this.requestTimeout});
 
-		for (const peer of this.peers) {
-			const results: QueryResults = await query.evaluate([peer]);
-			const result: Buffer | Client.ProposalErrorResponse = results[peer.getName()];
-
-			if (!(result instanceof Error)) {
-				// Good response from peer
-				return result;
+		// check the results
+		if (results) {
+			// first check to see if we have any good results
+			if (results && results.queryResults && results.queryResults.length > 0) {
+				return results.queryResults[0];
+			// maybe the request failed
+			} else if (results && results.errors && results.errors.length > 0) {
+				throw results.errors[0];
+			// maybe the query failed
+			} else if (results.responses) {
+				for (const response of results.responses) {
+					if (response.response.status >= 400) {
+						return response.response.payload;
+					}
+				}
 			}
-			if (result.isProposalResponse) {
-				// Error response from peer
-				throw result;
-			}
-			// Failed to get response from peer
-			errorMessages.push(result.message);
 		}
 
-		const message: string = util.format('Evaluate failed with the following errors: %j', errorMessages);
-		throw new Error(message);
+		// seems that we did not get anything worth returning
+		throw new Error('No results returned');
 	}
-}
-
-function filterQueryablePeers(peers: ChannelPeer[]): ChannelPeer[] {
-	return peers.filter((peer: ChannelPeer) => peer.isInRole('chaincodeQuery'));
 }
 
 /**
@@ -57,14 +54,13 @@ function filterQueryablePeers(peers: ChannelPeer[]): ChannelPeer[] {
  * @param {Network} network The network where transactions are to be evaluated.
  * @returns {QueryHandler} A query handler implementation.
  */
-const createQueryHandler: QueryHandlerFactory = (network: Network): SampleQueryHandler => {
-	const channel: Client.Channel = network.getChannel();
-	const orgPeers: ChannelPeer[] = filterQueryablePeers(channel.getPeersForOrg());
-	const networkPeers: ChannelPeer[] = filterQueryablePeers(channel.getChannelPeers())
-		.filter((peer: ChannelPeer) => !orgPeers.includes(peer)); // Exclude peers already in the orgPeer array
-
-	const allPeers: ChannelPeer[] = orgPeers.concat(networkPeers); // Peers in our organization first
-	return new SampleQueryHandler(allPeers);
+const createQueryHandler: QueryHandlerFactory = (network: Network, options: any): SampleQueryHandler => {
+	let timeout: number = 3000; // default 3 seconds
+	if (Number.isInteger(options.timeout)) {
+		timeout = options.timeout * 1000; // convert to ms;
+	}
+	const peers = network.channel.getEndorsers(network.mspid);
+	return new SampleQueryHandler(peers, timeout);
 };
 
 export = createQueryHandler; // Plain JavaScript compatible node module export

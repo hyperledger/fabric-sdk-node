@@ -13,11 +13,9 @@ import { StateStore } from './utility/stateStore';
 import sampleQueryStrategy = require('../../config/handlers/sample-query-handler');
 import sampleTxnEventStrategy = require('../../config/handlers/sample-transaction-event-handler');
 
-import { DefaultEventHandlerStrategies, DefaultQueryHandlerStrategies, Gateway, GatewayOptions, Wallet, Wallets, Identity, Contract, Network, TxEventHandlerFactory, QueryHandlerFactory, EventHubManager, Transaction, TransientMap } from 'fabric-network';
+import { DefaultEventHandlerStrategies, QueryHandlerStrategies, CommitEventListener, Gateway, GatewayOptions, Wallet, Wallets, Identity, Contract, Network, TxEventHandlerFactory, QueryHandlerFactory, Transaction, TransientMap } from 'fabric-network';
 import * as fs from 'fs';
 import * as path from 'path';
-import { ChannelEventHub } from 'fabric-client';
-import Client = require('fabric-client');
 
 const stateStore: StateStore = StateStore.getInstance();
 const txnTypes: string[] = ['evaluate', 'submit'];
@@ -32,8 +30,8 @@ const EventStrategies: any = {
 };
 
 const QueryStrategies: any = {
-	MSPID_SCOPE_SINGLE : DefaultQueryHandlerStrategies.MSPID_SCOPE_SINGLE,
-	MSPID_SCOPE_ROUND_ROBIN : DefaultQueryHandlerStrategies.MSPID_SCOPE_ROUND_ROBIN,
+	MSPID_SCOPE_SINGLE : QueryHandlerStrategies.MSPID_SCOPE_SINGLE,
+	MSPID_SCOPE_ROUND_ROBIN : QueryHandlerStrategies.MSPID_SCOPE_ROUND_ROBIN,
 };
 
 /**
@@ -278,22 +276,22 @@ export async function performHandledGatewayTransaction(gatewayName: string, ccNa
 	if (submit) {
 		// add event handler options
 		if (handlerOption.localeCompare('custom') === 0) {
-			currentOptions.eventHandlerOptions = {
+			currentOptions.transaction = {
 				strategy: sampleTxnEventStrategy as TxEventHandlerFactory
 			};
 		} else {
-			currentOptions.eventHandlerOptions = {
+			currentOptions.transaction = {
 				strategy: EventStrategies[handlerOption]
 			};
 		}
 	} else {
 		// Add queryHandlerOptions
 		if (handlerOption.localeCompare('custom') === 0) {
-			currentOptions.queryHandlerOptions = {
+			currentOptions.query = {
 				strategy: sampleQueryStrategy as QueryHandlerFactory
 			};
 		} else {
-			currentOptions.queryHandlerOptions = {
+			currentOptions.query = {
 				strategy: QueryStrategies[handlerOption]
 			};
 		}
@@ -308,55 +306,56 @@ export async function performHandledGatewayTransaction(gatewayName: string, ccNa
 
 	// Build a transaction
 	const transaction: Transaction = contract.createTransaction(func);
-	const transactionId: string = transaction.getTransactionID().getTransactionID();
 
 	// Submit/evaluate transaction
 	if (submit) {
-		// Create event hubs to monitor so we can test it worked
-		const org1EventHub: ChannelEventHub = await getInternalEventHubForOrg(gateway, channelName, 'Org1MSP');
-		const org2EventHub: ChannelEventHub = await getInternalEventHubForOrg(gateway, channelName, 'Org2MSP');
+		let listener: CommitEventListener;
+		let resolveNotificationPromise: () => void;
+		let rejectNotificationPromise: () => void;
+		let eventResults: any;
 
-		let org1EventsFired: any = 0;
-		let org2EventsFired: number = 0;
-		org1EventHub.registerTxEvent('all', (txId: string, code: string) => {
-			if (code === 'VALID' && txId === transactionId) {
-				org1EventsFired++;
-			}
-		}, () => {
-			// Ignore errors
+		const notificationPromise = new Promise((resolve, reject) => {
+			resolveNotificationPromise = resolve;
+			rejectNotificationPromise = reject;
 		});
-		org2EventHub.registerTxEvent('all', (txId: string, code: string) => {
-			if (code === 'VALID' && txId === transactionId) {
-				org2EventsFired++;
-			}
-		}, () => {
-			// Ignore errors
-		});
+
+		listener = await network.addCommitListener(
+			async (error: Error, blockNum: string, txid: string, status: string) => {
+				if (error) {
+					rejectNotificationPromise();
+				} else {
+					eventResults = {txid, status, blockNum};
+					resolveNotificationPromise();
+				}
+			},
+			{} // options
+		);
 
 		try {
-			// Split args, do not capture response
+			// -------- S E N D
 			await transaction.submit(...funcArgs);
 			BaseUtils.logMsg(`Successfully submitted transaction [${func}] using handler [${EventStrategies[handlerOption]}]`);
+
+			await notificationPromise;
+			listener.unregister();
+			BaseUtils.logMsg(`Successfully got event status [${func}] using handler [${EventStrategies[handlerOption]}]`, undefined);
+			gatewayObj.result = {type: 'event', response: JSON.stringify(eventResults), commitTransactionId: transaction.transactionId};
 		} catch (error) {
 			gatewayObj.result = {type: 'error', response: error.toString()};
 			BaseUtils.logError(error.toString());
 		}
-
-		// Record result on gateway object
-		const events: any = {
-			Org1: org1EventsFired,
-			Org2: org2EventsFired,
-		};
-
-		gatewayObj.result = {type: 'event', response: JSON.stringify(events)};
-
 	} else {
 		// No event hubs, just query away
 		try {
 			// Split args, capture response
 			const result: Buffer = await transaction.evaluate(...funcArgs);
-			BaseUtils.logMsg(`Successfully evaluated transaction [${func}] using handler [${QueryStrategies[handlerOption]}] with result [${result}]`);
-			gatewayObj.result = {type: 'evaluate', response: JSON.parse(result.toString())};
+			BaseUtils.logMsg(`Successfully evaluated transaction [${func}] using handler [${QueryStrategies[handlerOption]}] with result [${result}]`, undefined);
+			if (handlerOption.localeCompare('custom') === 0) {
+				gatewayObj.result = {type: 'evaluate', response: result.toString()};
+			} else {
+				gatewayObj.result = {type: 'evaluate', response: JSON.parse(result.toString())};
+
+			}
 		} catch (error) {
 			gatewayObj.result = {type: 'error', response: error.toString()};
 			BaseUtils.logError(error.toString());
@@ -393,7 +392,6 @@ export async function performTransientGatewayTransaction(gatewayName: string, cc
 
 	// Build a transaction
 	const transaction: Transaction = contract.createTransaction(func);
-	const transactionId: string = transaction.getTransactionID().getTransactionID();
 
 	// Build Transient data
 	const transientMap: TransientMap = {};
@@ -408,11 +406,11 @@ export async function performTransientGatewayTransaction(gatewayName: string, cc
 		if (submit) {
 			const result: Buffer = await transaction.setTransient(transientMap).submit();
 			BaseUtils.logMsg(`Successfully submitted transaction [${func}] with transient data`);
-			gatewayObj.result = {type: 'submit', response: JSON.parse(result.toString())};
+			gatewayObj.result = {type: 'submit', response: result.toString()};
 		} else {
 			const result: Buffer = await transaction.setTransient(transientMap).evaluate();
 			BaseUtils.logMsg(`Successfully evaluated transaction [${func}] with transient data`);
-			gatewayObj.result = {type: 'evaluate', response: JSON.parse(result.toString())};
+			gatewayObj.result = {type: 'evaluate', response: result.toString()};
 		}
 	} catch (error) {
 		gatewayObj.result = {type: 'error', response: error.toString()};
@@ -460,6 +458,16 @@ export function lastTransactionTypeCompare(gatewayName: string, type: string): b
 		throw  new Error('Unknown type transaction response type ' + type + ', must be one of [evaluate, error, submit]');
 	}
 
+	if (type === 'event' && gatewayObj.result.transactionId) {
+		// check the transactionid
+		if (gatewayObj.result.event.includes(gatewayObj.result.transactionId)) {
+			BaseUtils.logMsg('Event transaction committed successfully');
+		} else {
+			BaseUtils.logError('Event transaction committed failed - transactionId not seen');
+			throw new Error('TransactionId ' + gatewayObj.result.transactionId + ' not seen by event commit listener after the submit');
+		}
+	}
+
 	return gatewayObj.result.type.localeCompare(type) === 0;
 }
 
@@ -479,10 +487,11 @@ export function getLastTransactionResult(gatewayName: string): any {
  */
 export function lastTransactionResponseCompare(gatewayName: string, msg: string, exactMatch: boolean): boolean {
 	const gatewayObj: any = getGatewayObject(gatewayName);
+
 	if (exactMatch) {
-		return (gatewayObj.result.response.localeCompare(JSON.parse(msg)) === 0);
+		return (gatewayObj.result.response.localeCompare(msg) === 0);
 	} else {
-		return gatewayObj.result.response.includes(JSON.parse(msg));
+		return gatewayObj.result.response.includes(msg);
 	}
 }
 
@@ -509,14 +518,4 @@ export async function disconnectAllGateways(): Promise<void> {
 		BaseUtils.logError('disconnectAllGateways() failed with error ', err);
 		throw err;
 	}
-}
-
-async function getInternalEventHubForOrg(gateway: Gateway, channelName: string, orgMSP: string): Promise<ChannelEventHub> {
-	const network: Network = await gateway.getNetwork(channelName);
-	const channel: Client.Channel = network.getChannel();
-	const orgPeer: any = channel.getPeersForOrg(orgMSP)[0]; // Only one peer per org in the test configuration
-
-	// Using private functions to get hold of an internal event hub. Don't try this at home, kids!
-	const eventHubManager: EventHubManager = (network as any).getEventHubManager();
-	return eventHubManager.getEventHub(orgPeer);
 }

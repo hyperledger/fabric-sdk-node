@@ -9,7 +9,6 @@
 const TimeoutError = require('fabric-network/lib/errors/timeouterror');
 
 const logger = require('fabric-network/lib/logger').getLogger('TransactionEventHandler');
-const util = require('util');
 
 /**
  * Handles events for a given transaction. Used to wait for a submitted transaction to be successfully commited to
@@ -20,7 +19,7 @@ const util = require('util');
  */
 class TransactionEventHandler {
 	/**
-	 * @typedef {Object} TransactionEventHandlerOptions
+	 * @typedef {Object} TransactionOptions
 	 * @property {Number} [commitTimeout = 0] Number of seconds to wait for transaction completion. A value of zero
 	 * indicates that the handler should wait indefinitely.
 	 */
@@ -28,24 +27,28 @@ class TransactionEventHandler {
 	/**
 	 * Constructor.
 	 * @private
-	 * @param {Transaction} transaction Traneaction object.
-	 * @param {Object} strategy Event strategy implementation.
-	 * @param {TransactionEventHandlerOptions} [options] Additional options.
+	 * @param {Transaction} transaction - Transaction object.
+	 * @param {Object} strategy - Event strategy implementation.
+	 * @param {TransactionOptions} [options] Additional options.
 	 */
 	constructor(transaction, strategy, options) {
+		const method = 'constructor';
+		logger.debug('%s - start', method);
+
 		this.transaction = transaction;
-		this.transactionId = transaction.getTransactionID().getTransactionID();
+		this.transactionId = transaction.transactionId;
 		this.strategy = strategy;
 
 		const defaultOptions = {
-			commitTimeout: 0 // No timeout by default
+			commitTimeout: 30
 		};
 		this.options = Object.assign(defaultOptions, options);
 
-		logger.debug('constructor:', util.format('transactionId = %s, options = %j', this.transactionId, this.options));
+		logger.debug('%s: transactionId = %s, options = %j', method, this.transactionId, this.options);
 
-		this.eventHubs = strategy.getEventHubs();
-		this.respondedEventHubs = new Set();
+		this.eventServices = strategy.getEventServices();
+		this.activeListeners = new Set();
+		this.respondedEventServices = new Set();
 
 		this.notificationPromise = new Promise((resolve, reject) => {
 			this._resolveNotificationPromise = resolve;
@@ -57,46 +60,87 @@ class TransactionEventHandler {
 	 * Called to initiate listening for transaction events.
 	 */
 	async startListening() {
-		if (this.eventHubs.length > 0) {
+		const method = 'startListening';
+		logger.debug('%s - start', method);
+
+		if (this.eventServices && this.eventServices.length > 0) {
+			logger.debug('%s - have eventService list - start monitoring', method);
 			this._setListenTimeout();
+			await this._startEventServices();
 			this._registerTxEventListeners();
 		} else {
-			logger.debug('startListening: No event hubs');
-			this._resolveNotificationPromise();
+			logger.error('%s - No event services', method);
+			// shutdown the monitoring
+			this._resolveNotificationPromise('No EventServices');
 		}
+	}
+
+	async _startEventServices() {
+		const method = '_startEventServices';
+		logger.debug('%s - start', method);
+		logger.debug('%s - have %s eventServices', method, this.eventServices.length);
+
+		for (const eventService of this.eventServices) {
+			try {
+				logger.debug('%s - start event service for %', method, eventService.name);
+				await this.transaction.getNetwork().eventServiceManager.startEventService(eventService);
+			} catch (error) {
+				logger.error('%s - %s', method, error);
+				this._onError(eventService, error);
+			}
+		}
+
+		logger.debug('%s - end', method);
 	}
 
 	_setListenTimeout() {
+		const method = '_setListenTimeout';
+		logger.debug('%s - start', method);
+
 		if (this.options.commitTimeout <= 0) {
+			logger.debug('%s - no commit timeout', method);
 			return;
 		}
 
-		logger.debug('_setListenTimeout:', `setTimeout(${this.options.commitTimeout}) for transaction ${this.transactionId}`);
-
+		logger.debug('%s setTimeout(%s) in seconds for transaction %s', method, this.options.commitTimeout, this.transactionId);
 		this.timeoutHandler = setTimeout(
-			() => this._timeoutFail(),
+			() => {
+				this._timeoutFail();
+				logger.error('%s - event handler timed out', method);
+			},
 			this.options.commitTimeout * 1000
 		);
+		logger.debug('%s - end', method);
 	}
 
 	_registerTxEventListeners() {
-		this.eventHubs.forEach(eventHub => {
-			logger.debug('_registerTxEventListeners:', `registerTxEvent(${this.transactionId}) for event hub:`, eventHub.getName());
-			eventHub.registerTxEvent(
+		const method = '_registerTxEventListeners';
+		logger.debug('%s - start', method);
+
+		this.eventServices.forEach(eventService => {
+			logger.debug('%s - transactionId:%s for event service:%s', method, this.transactionId, eventService.name);
+			const eventListener = eventService.registerTransactionListener(
 				this.transactionId,
-				(txId, code) => this._onEvent(eventHub, txId, code),
-				(err) => this._onError(eventHub, err)
+				(err, event) => {
+					if (err) {
+						this._onError(eventService, err);
+						return;
+					}
+					this._onEvent(eventService, event.transactionId, event.status);
+				}
 			);
-			eventHub.connect();
+			this.activeListeners.add(eventListener);
 		});
+
+		logger.debug('%s - end', method);
 	}
 
 	_timeoutFail() {
-		const unrespondedEventHubs = this.eventHubs
-			.filter(eventHub => !this.respondedEventHubs.has(eventHub))
-			.map(eventHub => eventHub.getName())
+		const unrespondedEventServices = this.eventServices
+			.filter(eventService => !this.respondedEventServices.has(eventService))
+			.map(eventService => eventService.name)
 			.join(', ');
-		const message = 'Event strategy not satisfied within the timeout period. No response received from event hubs: ' + unrespondedEventHubs;
+		const message = 'Event strategy not satisfied within the timeout period. No response received from event services: ' + unrespondedEventServices;
 		const error = new TimeoutError({
 			message,
 			transactionId: this.transactionId
@@ -104,27 +148,27 @@ class TransactionEventHandler {
 		this._strategyFail(error);
 	}
 
-	_onEvent(eventHub, txId, code) {
-		logger.debug('_onEvent:', util.format('received event for %j with code %j', txId, code));
+	_onEvent(eventService, txId, code) {
+		logger.debug('_onEvent:', `received event for ${txId} with code ${code}`);
 
-		this._receivedEventHubResponse(eventHub);
+		this._receivedEventServiceResponse(eventService);
 		if (code !== 'VALID') {
-			const message = util.format('Peer %s has rejected transaction %j with code %j', eventHub.getPeerAddr(), txId, code);
+			const message = `EventService ${eventService.name} has received transaction ${txId} with code ${code}`;
 			this._strategyFail(new Error(message));
 		} else {
 			this.strategy.eventReceived(this._strategySuccess.bind(this), this._strategyFail.bind(this));
 		}
 	}
 
-	_onError(eventHub, err) {
-		logger.debug('_onError:', util.format('received error from peer %s: %s', eventHub.getPeerAddr(), err));
+	_onError(eventService, err) {
+		logger.debug('_onError: received error from EventService %s: %s', eventService.name, err);
 
-		this._receivedEventHubResponse(eventHub);
+		this._receivedEventServiceResponse(eventService);
 		this.strategy.errorReceived(this._strategySuccess.bind(this), this._strategyFail.bind(this));
 	}
 
-	_receivedEventHubResponse(eventHub) {
-		this.respondedEventHubs.add(eventHub);
+	_receivedEventServiceResponse(eventService) {
+		this.respondedEventServices.add(eventService);
 	}
 
 	/**
@@ -132,7 +176,7 @@ class TransactionEventHandler {
 	 * @private
 	 */
 	_strategySuccess() {
-		logger.debug('_strategySuccess:', util.format('strategy success for transaction %j', this.transactionId));
+		logger.debug('_strategySuccess: strategy success for transaction %j', this.transactionId);
 
 		this.cancelListening();
 		this._resolveNotificationPromise();
@@ -144,19 +188,20 @@ class TransactionEventHandler {
 	 * @param {Error} error Reason for failure.
 	 */
 	_strategyFail(error) {
-		logger.warn('_strategyFail:', util.format('strategy fail for transaction %j: %s', this.transactionId, error));
+		logger.warn('_strategyFail: strategy fail for transaction %j: %s', this.transactionId, error);
 
 		this.cancelListening();
 		this._rejectNotificationPromise(error);
 	}
 
 	/**
-     * Wait until enough events have been received from the event hubs to satisfy the event handling strategy.
+     * Wait until enough events have been received from the event services to satisfy the event handling strategy.
 	 * @throws {Error} if the transaction commit is not successful within the timeout period.
      */
 	async waitForEvents() {
-		logger.debug('waitForEvents called');
+		logger.debug('waitForEvents start');
 		await this.notificationPromise;
+		logger.debug('waitForEvents end');
 	}
 
 	/**
@@ -166,7 +211,7 @@ class TransactionEventHandler {
 		logger.debug('cancelListening called');
 
 		clearTimeout(this.timeoutHandler);
-		this.eventHubs.forEach(eventHub => eventHub.unregisterTxEvent(this.transactionId));
+		this.activeListeners.forEach(eventListener => eventListener.eventService.unregisterEventListener(eventListener, true));
 	}
 }
 

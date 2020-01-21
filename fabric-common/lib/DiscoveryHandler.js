@@ -1,5 +1,5 @@
 /*
- Copyright 2016, 2018 IBM All Rights Reserved.
+ Copyright 2019 IBM All Rights Reserved.
 
  SPDX-License-Identifier: Apache-2.0
 
@@ -35,6 +35,7 @@ class DiscoveryHandler extends ServiceHandler {
 		logger.debug('DiscoveryHandler.constructor - start');
 		super();
 		this.discovery = discovery;
+		this.type = TYPE;
 	}
 
 	/**
@@ -573,6 +574,10 @@ class DiscoveryHandler extends ServiceHandler {
 		}
 
 		return result_list;
+	}
+
+	toString() {
+		return `{type:${this.type}, discoveryService:${this.discovery.name}}`;
 	}
 }
 

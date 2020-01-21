@@ -6,238 +6,195 @@
 
 'use strict';
 
+const Long = require('long');
+const rewire = require('rewire');
 const chai = require('chai');
-chai.use(require('chai-as-promised'));
 const expect = chai.expect;
 const sinon = require('sinon');
+chai.use(require('chai-as-promised'));
 
-const Channel = require('fabric-client/lib/Channel');
-const Contract = require('fabric-network/lib/contract');
-const Network = require('fabric-network/lib/network');
-const Gateway = require('fabric-network/lib/gateway');
-const EventHubManager = require('fabric-network/lib/impl/event/eventhubmanager');
-const ChannelEventHub = require('fabric-client/lib/ChannelEventHub');
-const CommitEventListener = require('fabric-network/lib/impl/event/commiteventlistener');
+const EventService = require('fabric-common/lib/EventService');
+const Network = require('./../../../lib/network');
+const EventServiceManager = require('./../../../lib/impl/event/eventservicemanager');
+const CommitEventListener = rewire('fabric-network/lib/impl/event/commiteventlistener');
+const FileSystemCheckpointer = require('./../../../lib/impl/event/filesystemcheckpointer');
 
 describe('CommitEventListener', () => {
 	let sandbox;
-	let eventHubManagerStub;
-	let eventHubStub;
-	let contractStub;
+	let FakeLogger;
+	let eventService;
+	let checkpointer;
 	let network;
-	let channelStub;
+	let eventServiceManager;
+	let baseListener;
+	let revert;
+
 	let listener;
-	let callback;
 
 	beforeEach(() => {
+		revert = [];
 		sandbox = sinon.createSandbox();
-		eventHubStub = sandbox.createStubInstance(ChannelEventHub);
-		eventHubStub._transactionRegistrations = {};
-		contractStub = sandbox.createStubInstance(Contract);
-		// network = sandbox.createStubInstance(Network);
-		const gatewayStub = sandbox.createStubInstance(Gateway);
-		channelStub = sandbox.createStubInstance(Channel);
-		network = new Network(gatewayStub, channelStub);
-		contractStub.getNetwork.returns(network);
-		eventHubManagerStub = sinon.createStubInstance(EventHubManager);
-		eventHubManagerStub.getPeers.returns(['peer1']);
-		sandbox.stub(network, 'getEventHubManager').returns(eventHubManagerStub);
-		eventHubStub.isFiltered.returns(true);
+		FakeLogger = {
+			debug: () => {
+			},
+			error: () => {
+			},
+			warn: () => {
+			}
+		};
+		sandbox.stub(FakeLogger);
+		revert.push(CommitEventListener.__set__('logger', FakeLogger));
+		baseListener = sinon.stub();
+		checkpointer = sandbox.createStubInstance(FileSystemCheckpointer);
+		checkpointer.check.returns(false);
+		checkpointer.save.resolves();
+		eventServiceManager = sandbox.createStubInstance(EventServiceManager);
+		eventServiceManager.startEventService.resolves();
+		eventService = sandbox.createStubInstance(EventService);
+		eventService.registerTransactionListener = sinon.stub().returns(baseListener);
+		eventServiceManager.getEventService = sinon.stub().returns(eventService);
+		eventServiceManager.getReplayEventService = sinon.stub().returns(eventService);
+		network = sandbox.createStubInstance(Network);
+		network.eventServiceManager = eventServiceManager;
 
-		callback = () => {};
-		listener = new CommitEventListener(network, 'transactionId', callback, {});
+		listener = new CommitEventListener(network, () => {}, {replay: true});
+		listener.eventService = eventService;
+		listener.checkpointer = checkpointer;
 	});
 
 	afterEach(() => {
-		sandbox.reset();
+		if (revert.length) {
+			revert.forEach(Function.prototype.call, Function.prototype.call);
+		}
+		sandbox.restore();
 	});
 
-	describe('#constructor', () => {
-		it('should set the listener name and transactionId', () => {
-			expect(listener.transactionId).to.equal('transactionId');
-			expect(listener.listenerName).to.match(/^transactionId[.0-9]+$/);
+	describe('#_constructor', () => {
+		it('should create new instance', () => {
+			const test = new CommitEventListener(network, () => {}, {transactionId: '12345'});
+			expect(test.transactionId).to.be.equal('12345');
+		});
+		it('should create new instance', () => {
+			const test = new CommitEventListener(network, () => {});
+			expect(test.transactionId).to.be.equal('all');
 		});
 	});
 
-	describe('#register', () => {
+	describe('#_registerListener', () => {
+		it('should register a transaction event', () => {
+			listener._registerListener();
+			expect(listener.registration).to.be.equal(baseListener);
+		});
+	});
+
+
+	describe('#onEvent', () => {
+		const transactionId = 'txid';
+		const status = 'VALID';
+		const blockNumber = Long.fromValue(10);
+
 		beforeEach(() => {
-			sandbox.stub(listener, '_registerWithNewCommitEventHub');
-		});
-
-		it('should grab a new event hub if one isnt given', async () => {
-			await listener.register();
-			sinon.assert.called(listener._registerWithNewCommitEventHub);
-		});
-
-		it('should assign a new event hub if given on has registrations', async () => {
-			const newEventHub = sandbox.createStubInstance(ChannelEventHub);
-			newEventHub._transactionRegistrations = {};
-			eventHubManagerStub.getEventHub.returns(newEventHub);
-			listener.eventHub = eventHubStub;
-			eventHubStub._peer = 'peer';
-			eventHubStub._transactionRegistrations = {transactionId: 'registration'};
-			await listener.register();
-			sinon.assert.calledWith(eventHubManagerStub.getEventHub, 'peer');
-		});
-
-		it('should call registerTxEvent', async () => {
-			listener.eventHub = eventHubStub;
-			await listener.register();
-			sinon.assert.calledWith(
-				eventHubStub.registerTxEvent,
-				'transactionId',
-				sinon.match.func,
-				sinon.match.func,
-				{unregister: true}
-			);
-			sinon.assert.called(eventHubStub.connect);
-			expect(listener._registered).to.be.true;
-		});
-
-		it('should assign an an event hub instance from the same peer if options.fixedEventHub is true', async () => {
-			eventHubManagerStub.getFixedEventHub.returns(eventHubStub);
-			eventHubStub._peer = 'peer';
-			listener.setEventHub(eventHubStub, true);
-			eventHubStub._transactionRegistrations = {transactionId: {}};
-			await listener.register();
-			sinon.assert.calledWith(eventHubManagerStub.getFixedEventHub, eventHubStub._peer);
-		});
-	});
-
-	describe('#unregister', () => {
-		it('should not call ChannelEventHub.unregisterTxEvent', () => {
-			listener.unregister();
-			sinon.assert.notCalled(eventHubStub.unregisterTxEvent);
-		});
-
-		it('should call ChannelEventHub.unregisterBlockEvent', async () => {
-			listener.eventHub = eventHubStub;
-			await listener.register();
-			listener.unregister();
-			sinon.assert.calledWith(eventHubStub.unregisterTxEvent, 'transactionId');
-		});
-
-		it('should remove the listener from the network', async () => {
-			network.listeners.set(listener.listenerName, listener);
-			listener.eventHub = eventHubStub;
-			await listener.register();
-			expect(network.listeners.get(listener.listenerName)).to.equal(listener);
-			listener.unregister();
-			expect(network.listeners.has(listener.listenerName)).to.be.false;
-		});
-	});
-
-	describe('#_onEvent', () => {
-		beforeEach(() => {
-			listener._registration = {};
-			sandbox.spy(listener, 'unregister');
+			listener.registration = baseListener;
 			sandbox.stub(listener, 'eventCallback');
 		});
 
-		it('should call the event callback', async () => {
-			const blockNumber = '10';
-			const transactionId = 'transactionId';
-			const status = 'VALID';
-			await listener._onEvent(transactionId, status, blockNumber);
-			sinon.assert.calledWith(listener.eventCallback, null, transactionId, status, Number(blockNumber));
-			sinon.assert.notCalled(listener.unregister);
+		it('should handle the endblockReceived', async () => {
+			listener.eventServiceOptions = {
+				endBlock: Long.fromValue(10)
+			};
+			const event = {
+				endBlockReceived: true,
+				blockNumber
+			};
+
+			await listener.onEvent(null, event);
+			sinon.assert.notCalled(listener.eventCallback);
+			sinon.assert.notCalled(checkpointer.save);
 		});
 
-		it('should unregister if registration.unregister is set', async () => {
-			const blockNumber = '10';
-			const transactionId = 'transactionId';
-			const status = 'VALID';
-			listener._registration.unregister = true;
-			await listener._onEvent(transactionId, status, blockNumber);
-			sinon.assert.calledWith(listener.eventCallback, null, transactionId, status, 10);
-			sinon.assert.called(listener.unregister);
+		it('should handle the endblockReceived received too soon', async () => {
+			listener.eventServiceOptions = {
+				endBlock: Long.fromValue(11)
+			};
+			const event = {
+				endBlockReceived: true,
+				blockNumber
+			};
+
+			await listener.onEvent(null, event);
+			sinon.assert.called(listener.eventCallback);
 		});
 
-		it('should not fail if eventCallback throws', async () => {
-			const blockNumber = '10';
-			const transactionId = 'transactionId';
-			const status = 'VALID';
-			listener.eventCallback.throws(new Error('forced error'));
-			await listener._onEvent(transactionId, status, blockNumber);
-		});
-	});
+		it('should handle the endblockReceived when not defined', async () => {
+			listener.eventServiceOptions = {};
+			const event = {
+				endBlockReceived: true,
+				blockNumber
+			};
 
-	describe('#_onError', () => {
-		beforeEach(() => {
-			eventHubStub._peer = 'peer';
-			listener._registration = {};
-			sandbox.spy(listener, 'unregister');
-			sandbox.stub(listener, 'eventCallback');
+			await listener.onEvent(null, event);
+			sinon.assert.called(listener.eventCallback);
 		});
-		it('should call eventCallback', () => {
-			listener.eventHub = eventHubStub;
-			const error = new Error();
-			listener._onError(error);
+
+		it('should call user callback with error', async () => {
+			listener.eventServiceOptions = {};
+			const error = new Error('really bad error');
+
+			await listener.onEvent(error);
 			sinon.assert.calledWith(listener.eventCallback, error);
 		});
-	});
 
-	describe('#setEventHub', () => {
-		it('should set the eventhub', () => {
-			listener.setEventHub('new event hub');
-			expect(listener.eventHub).to.equal('new event hub');
+		it('should call the event callback with checkpointer', async () => {
+			const event = {
+				blockNumber,
+				transactionId,
+				status
+			};
+
+			await listener.onEvent(null, event);
+			sinon.assert.calledWith(listener.eventCallback, null, blockNumber.toString(), transactionId, status);
+			sinon.assert.calledWith(checkpointer.check, '10');
+			sinon.assert.calledWith(checkpointer.save, '10');
 		});
 
-		it('should set options.fixedEventHub', () => {
-			listener.setEventHub('new event hub', true);
-			expect(listener.options.fixedEventHub).to.be.true;
-		});
-	});
+		it('should call the event callback with no checkpointer', async () => {
+			listener.checkpointer = null;
+			const event = {
+				blockNumber,
+				transactionId,
+				status
+			};
 
-	describe('#_registerWithNewCommitEventHub', () => {
-		beforeEach(() => {
-			listener._registration = {};
-			sandbox.spy(listener, 'unregister');
-			sandbox.stub(listener, 'eventCallback');
-			eventHubManagerStub.getReplayEventHub.returns(eventHubStub);
-			sinon.stub(listener, 'register');
+			await listener.onEvent(null, event);
+			sinon.assert.calledWith(listener.eventCallback, null, blockNumber.toString(), transactionId, status);
 		});
 
-		it('should call the correct methods', async () => {
-			await listener._registerWithNewCommitEventHub();
-			sinon.assert.called(eventHubManagerStub.getReplayEventHub);
-			expect(listener.eventHub).to.equal(eventHubStub);
-			expect(listener.clientOptions.disconnect).to.be.true;
-			sinon.assert.called(listener.register);
+		it('should not call the event callback when checkpoint has seen', async () => {
+			checkpointer.check.returns(true);
+			const event = {
+				blockNumber,
+				transactionId,
+				status
+			};
+
+			await listener.onEvent(null, event);
+			sinon.assert.notCalled(listener.eventCallback);
+			sinon.assert.calledWith(checkpointer.check, '10');
+			sinon.assert.calledWith(checkpointer.save, '10');
 		});
 
-		it('should call EventHubManager.getFixedEventHub if options.fixedEventHub', async () => {
-			eventHubStub._peer = 'peer';
-			listener.eventHub = eventHubStub;
-			listener.options.fixedEventHub = true;
-			await listener._registerWithNewCommitEventHub();
-			sinon.assert.calledWith(eventHubManagerStub.getFixedEventHub, eventHubStub._peer);
-		});
+		it('should call the event callback and have an error', async () => {
+			listener.eventCallback = sinon.stub().rejects(new Error('CALLBACK ERROR'));
 
-		it('should unregister if the listener is already registered', async () => {
-			listener._registered = true;
-			await listener._registerWithNewCommitEventHub();
-			sinon.assert.called(listener.unregister);
-		});
-
-		it('should throw if options.fixedEventHub is set and no event hub is given', () => {
-			listener.options.fixedEventHub = true;
-			return expect(listener._registerWithNewCommitEventHub()).to.be.rejectedWith();
-		});
-	});
-
-	describe('#_isAlreadyRegistered', () => {
-		it('should throw if no event hub is given', () => {
-			expect(() => listener._isAlreadyRegistered()).to.throw(/Event hub not given/);
-		});
-
-		it('should return false if no registration exists', () => {
-			expect(listener._isAlreadyRegistered(eventHubStub)).to.be.false;
-		});
-
-		it('should return true if registration exists', () => {
-			eventHubStub._transactionRegistrations = {transactionId: 'registration'};
-			expect(listener._isAlreadyRegistered(eventHubStub)).to.be.true;
+			const event = {
+				blockNumber,
+				transactionId,
+				status
+			};
+			await listener.onEvent(null, event);
+			sinon.assert.calledWith(checkpointer.check, '10');
+			sinon.assert.calledWith(checkpointer.save, '10');
+			sinon.assert.calledWith(FakeLogger.error, '%s - Error executing callback: %s');
 		});
 	});
 });

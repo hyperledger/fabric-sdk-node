@@ -6,7 +6,7 @@ as queries.
 
 The SDK provides several selectable strategies for how it should evaluate
 transactions on peers in the network. The available strategies are defined
-in `DefaultQueryHandlerStrategies`. The desired strategy is (optionally)
+in `QueryHandlerStrategies`. The desired strategy is (optionally)
 specified as an argument to `connect()` on the `Gateway`, and is used for
 all transaction evaluations on Contracts obtained from that Gateway
 instance.
@@ -17,11 +17,12 @@ which is can obtain a response, and only switch to another peer if this
 peer fails.
 
 ```javascript
-const { Gateway, DefaultQueryHandlerStrategies } = require('fabric-network');
+const { Gateway, QueryHandlerStrategies } = require('fabric-network');
 
 const connectOptions = {
-    queryHandlerOptions: {
-        strategy: DefaultQueryHandlerStrategies.MSPID_SCOPE_SINGLE
+    query: {
+        timeout: 3,
+        strategy: QueryHandlerStrategies.MSPID_SCOPE_SINGLE
     }
 }
 
@@ -48,7 +49,8 @@ function createQueryHandler(network) {
 }
 
 const connectOptions = {
-    queryHandlerOptions: {
+    query: {
+        timeout: 3,
         strategy: createQueryHandler
     }
  }

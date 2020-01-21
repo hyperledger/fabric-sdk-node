@@ -1,52 +1,46 @@
 /**
- * Copyright 2018 IBM All Rights Reserved.
+ * Copyright 2018, 2019 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
 'use strict';
 
-const FabricConstants = require('fabric-client/lib/Constants');
-
 const AllForTxStrategy = require('fabric-network/lib/impl/event/allfortxstrategy');
 const AnyForTxStrategy = require('fabric-network/lib/impl/event/anyfortxstrategy');
 const TransactionEventHandler = require('fabric-network/lib/impl/event/transactioneventhandler');
 
-function getOrganizationEventHubs(network) {
-	const peers = network.getChannel().getPeersForOrg().filter(hasEventSourceRole);
-	return network.getEventHubManager().getEventHubs(peers);
+function getOrganizationEventServices(network) {
+	const peers = network.channel.getEndorsers(network.mspid);
+	return network.eventServiceManager.getEventServices(peers);
 }
 
-function getNetworkEventHubs(network) {
-	const peers = network.getChannel().getPeers().filter(hasEventSourceRole);
-	return network.getEventHubManager().getEventHubs(peers);
-}
-
-function hasEventSourceRole(peer) {
-	return peer.isInRole(FabricConstants.NetworkConfig.EVENT_SOURCE_ROLE);
+function getNetworkEventServices(network) {
+	const peers = network.channel.getEndorsers();
+	return network.eventServiceManager.getEventServices(peers);
 }
 
 function MSPID_SCOPE_ALLFORTX(transaction, options) {
 	const network = transaction.getNetwork();
-	const eventStrategy = new AllForTxStrategy(getOrganizationEventHubs(network));
+	const eventStrategy = new AllForTxStrategy(getOrganizationEventServices(network));
 	return new TransactionEventHandler(transaction, eventStrategy, options);
 }
 
 function MSPID_SCOPE_ANYFORTX(transaction, options) {
 	const network = transaction.getNetwork();
-	const eventStrategy = new AnyForTxStrategy(getOrganizationEventHubs(network));
+	const eventStrategy = new AnyForTxStrategy(getOrganizationEventServices(network));
 	return new TransactionEventHandler(transaction, eventStrategy, options);
 }
 
 function NETWORK_SCOPE_ALLFORTX(transaction, options) {
 	const network = transaction.getNetwork();
-	const eventStrategy = new AllForTxStrategy(getNetworkEventHubs(network));
+	const eventStrategy = new AllForTxStrategy(getNetworkEventServices(network));
 	return new TransactionEventHandler(transaction, eventStrategy, options);
 }
 
 function NETWORK_SCOPE_ANYFORTX(transaction, options) {
 	const network = transaction.getNetwork();
-	const eventStrategy = new AnyForTxStrategy(getNetworkEventHubs(network));
+	const eventStrategy = new AnyForTxStrategy(getNetworkEventServices(network));
 	return new TransactionEventHandler(transaction, eventStrategy, options);
 }
 

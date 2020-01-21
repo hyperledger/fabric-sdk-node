@@ -1,5 +1,5 @@
 /**
- * Copyright 2018 IBM All Rights Reserved.
+ * Copyright 2018, 2019 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -10,117 +10,139 @@ const sinon = require('sinon');
 const chai = require('chai');
 const expect = chai.expect;
 chai.use(require('chai-as-promised'));
-const rewire = require('rewire');
 
-const Client = require('fabric-client');
-const Channel = require('fabric-client/lib/Channel');
-const RewireChannel = rewire('fabric-client/lib/Channel');
-const ChannelPeer = RewireChannel.__get__('ChannelPeer');
+const Client = require('fabric-common/lib/Client');
+const Channel = require('fabric-common/lib/Channel');
+const Endorsement = require('fabric-common/lib/Endorsement');
+const Query = require('fabric-common/lib/Query');
+const Endorser = require('fabric-common/lib/Endorser');
+const Commit = require('fabric-common/lib/Commit');
+const IdentityContext = require('fabric-common/lib/IdentityContext');
+
 const Contract = require('fabric-network/lib/contract');
 const Network = require('fabric-network/lib/network');
 const Gateway = require('fabric-network/lib/gateway');
-const Query = require('fabric-network/lib/impl/query/query');
 const Transaction = require('fabric-network/lib/transaction');
 const TransactionEventHandler = require('fabric-network/lib/impl/event/transactioneventhandler');
-const TransactionID = require('fabric-client/lib/TransactionID');
+const EventStrategies = require('fabric-network/lib/impl/event/defaulteventhandlerstrategies');
+const QueryStrategies = require('fabric-network/lib/impl/query/queryhandlerstrategies');
 
 describe('Transaction', () => {
 	const transactionName = 'TRANSACTION_NAME';
 	const chaincodeId = 'chaincode-id';
 	const expectedResult = Buffer.from('42');
 
-	const peerInfo = {name: 'PEER_NAME', url: 'grpc://fakehost:9999'};
-	const fakeProposal = {proposal: 'I do'};
-	const fakeHeader = {header: 'gooooal'};
+	const peerInfo = {name: 'peer1', url: 'grpc://fakehost:9999'};
 	const validProposalResponse = {
 		response: {
 			status: 200,
-			payload: expectedResult,
-			peer: peerInfo
-		}
+			payload: expectedResult
+		},
+		connection: peerInfo
 	};
-	const noPayloadProposalResponse = {
+	const invalidProposalResponse = {
 		response: {
-			status: 200,
-			peer: peerInfo
-		}
+			status: 500,
+			payload: expectedResult
+		},
+		connection: peerInfo
 	};
+
 	const errorResponseMessage = 'I_AM_AN_ERROR_RESPONSE';
-	// Note that error responses have the 'response' property of the actual proposal response promoted up to the
-	// top-level error object in Peer.sendProposal()
+
 	const errorProposalResponse = Object.assign(new Error(errorResponseMessage), {
 		status: 500,
 		payload: 'error',
-		peer: peerInfo
+		connection: peerInfo
 	});
-	const emptyStringProposalResponse = {
-		response: {
-			status: 200,
-			payload: Buffer.from(''),
-			peer: peerInfo
-		}
-	};
 
-	const validProposalResponses = [[validProposalResponse], fakeProposal, fakeHeader];
-	const noPayloadProposalResponses = [[noPayloadProposalResponse], fakeProposal, fakeHeader];
-	const noProposalResponses = [[], fakeProposal, fakeHeader];
-	const errorProposalResponses = [[errorProposalResponse], fakeProposal, fakeHeader];
-	const mixedProposalResponses = [[validProposalResponse, errorProposalResponse], fakeProposal, fakeHeader];
-	const emptyStringProposalResponses = [[emptyStringProposalResponse], fakeProposal, fakeHeader];
+	const validProposalResponses = {responses: [validProposalResponse]};
+	const invalidProposalResponses = {responses: [invalidProposalResponse]};
+	const errorProposalResponses = {errors: [errorProposalResponse]};
 
-	let stubContract;
+	let contract;
 	let transaction;
 	let channel;
+	let endorsement;
+	let endorser;
+	let query;
+	let commit;
+	let queryHandler;
 	let network;
-	let stubQueryHandler;
+	let idx;
+	let eventHandler;
 
 	beforeEach(() => {
-		stubContract = sinon.createStubInstance(Contract);
-
-		const transactionId = sinon.createStubInstance(TransactionID);
-		transactionId.getTransactionID.returns('TRANSACTION_ID');
-		stubContract.createTransactionID.returns(transactionId);
-
-		stubQueryHandler = {
-			evaluate: sinon.fake.resolves(expectedResult)
-		};
+		contract = sinon.createStubInstance(Contract);
 
 		network = sinon.createStubInstance(Network);
-		network.getQueryHandler.returns(stubQueryHandler);
-		stubContract.getNetwork.returns(network);
+		network.queryHandler = queryHandler;
+		contract.network = network;
 
+		idx = sinon.createStubInstance(IdentityContext);
+		endorser = sinon.createStubInstance(Endorser);
+		query = sinon.createStubInstance(Query);
+		endorsement = sinon.createStubInstance(Endorsement);
+		endorsement.send = sinon.stub().resolves(validProposalResponses);
+		commit = sinon.createStubInstance(Commit);
+		commit.send = sinon.stub().resolves({status: 'SUCCESS'});
+		endorsement.newCommit = sinon.stub().returns(commit);
 		channel = sinon.createStubInstance(Channel);
-		channel.sendTransactionProposal.resolves(validProposalResponses);
-		channel.sendTransaction.resolves({status: 'SUCCESS'});
-		network.getChannel.returns(channel);
+		channel.newEndorsement.returns(endorsement);
+		channel.newQuery.returns(query);
+		channel.getEndorsers.returns(['peer2']);
+		network.channel = channel;
+		network.addCommitListener.returns('listener');
+		queryHandler = sinon.stub();
+		queryHandler.evaluate = sinon.stub().resolves(expectedResult);
+		network.queryHandler = queryHandler;
 
-		stubContract.getChaincodeId.returns(chaincodeId);
-		stubContract.getEventHandlerOptions.returns({commitTimeout: 418});
+		contract.getChaincodeId = chaincodeId;
+		contract.getDiscoveryHandler = sinon.stub().resolves('discoveryHandler');
 
 		const mockClient = sinon.createStubInstance(Client);
 		const mockGateway = sinon.createStubInstance(Gateway);
-		mockGateway.getClient.returns(mockClient);
-		mockClient.getConfigSetting.returns(45000);
-		stubContract.gateway = mockGateway;
+		mockGateway.client = mockClient;
+		mockGateway.identityContext = idx;
 
-		transaction = new Transaction(stubContract, transactionName);
+		const gatewayOptions = {
+			query: {
+				timeout: 44,
+				strategy: QueryStrategies.MSPID_SCOPE_SINGLE
+			},
+			transaction: {
+				endorseTimeout: 55,
+				commitTimeout: 88,
+				strategy: EventStrategies.MSPID_SCOPE_ALLFORTX
+			},
+			discovery: {
+				enabled: true,
+				asLocalhost: false
+			}
+		};
+		mockGateway.getOptions.returns(gatewayOptions);
+
+		mockClient.getConfigSetting.returns(45000);
+		contract.gateway = mockGateway;
+
+		transaction = new Transaction(contract, transactionName);
+		transaction._endorsingPeers = [endorser];
+		eventHandler = sinon.stub();
+		transaction._eventHandlerStrategyFactory = sinon.stub().returns(eventHandler);
+		eventHandler.startListening = sinon.stub().resolves();
+		eventHandler.waitForEvents = sinon.stub().resolves();
+		eventHandler.cancelListening = sinon.stub();
 	});
 
 	afterEach(() => {
 		sinon.restore();
 	});
 
-	describe('#getName', () => {
-		it('return the name', () => {
-			const result = transaction.getName();
-			expect(result).to.equal(transactionName);
-		});
-	});
+	describe('#constructor', () => {
+		it('should run', () => {
+			const t = new Transaction(contract, transactionName);
+			expect(t.queryHandler).to.equal(queryHandler);
 
-	describe('#getTransactionID', () => {
-		it('has a default transaction ID', () => {
-			const result = transaction.getTransactionID();
-			expect(result).to.be.an.instanceOf(TransactionID);
 		});
 	});
 
@@ -128,9 +150,7 @@ describe('Transaction', () => {
 		it('returns this', () => {
 			const stubEventHandler = sinon.createStubInstance(TransactionEventHandler);
 			const stubEventHandlerFactoryFn = () => stubEventHandler;
-
 			const result = transaction.setEventHandlerStrategy(stubEventHandlerFactoryFn);
-
 			expect(result).to.equal(transaction);
 		});
 	});
@@ -142,158 +162,105 @@ describe('Transaction', () => {
 		});
 	});
 
+	describe('#setEndorsingPeers', () => {
+		it('returns this', () => {
+			const result = transaction.setEndorsingPeers([]);
+			expect(result).to.equal(transaction);
+		});
+	});
+
+	describe('#setEndorsingOrganizations', () => {
+		it('returns this', () => {
+			const result = transaction.setEndorsingOrganizations([]);
+			expect(result).to.equal(transaction);
+		});
+	});
+
+	describe('#getNetwork', () => {
+		it('returns network', () => {
+			transaction.network = network;
+			const result = transaction.getNetwork();
+			expect(result).to.equal(network);
+		});
+	});
+
 	describe('#submit', () => {
-		let expectedProposal;
-
-		beforeEach(() => {
-			expectedProposal = {
-				fcn: transactionName,
-				txId: transaction.getTransactionID(),
-				chaincodeId: stubContract.getChaincodeId(),
-				args: []
+		it('user assigned peers with valid response', async () => {
+			const result = await transaction.submit();
+			expect(result.toString()).to.equal('42');
+		});
+		it('default peers with valid response', async () => {
+			transaction._endorsingPeers = null;
+			contract.network.discoveryService = null;
+			const result = await transaction.submit();
+			expect(result.toString()).to.equal('42');
+		});
+		it('default peers and gateway event handler with valid response', async () => {
+			transaction._endorsingPeers = null;
+			contract.network.discoveryService = null;
+			transaction._eventHandlerStrategyFactory = null;
+			transaction._transactionOptions = {
+				strategy: sinon.stub().returns(eventHandler)
 			};
-		});
-
-		it('rejects for non-string arguments', () => {
-			const promise = transaction.submit('arg1', 3.142, null);
-			return expect(promise).to.be.rejectedWith('"arg1", 3.142, null');
-		});
-
-		it('sends proposal with no arguments', async () => {
-			await transaction.submit();
-			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal));
-		});
-
-		it('sends proposal with arguments', async () => {
-			const args = ['one', 'two', 'three'];
-			expectedProposal.args = args;
-			await transaction.submit(...args);
-			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal));
-		});
-
-		it('returns null for no proposal response payload', async () => {
-			channel.sendTransactionProposal.resolves(noPayloadProposalResponses);
 			const result = await transaction.submit();
-			expect(result).to.be.null;
+			expect(result.toString()).to.equal('42');
 		});
-
-		it('returns proposal response payload', async () => {
+		it('user assigned peers and collections with valid response', async () => {
+			contract.collections = ['collection1'];
 			const result = await transaction.submit();
-			expect(result).to.equal(expectedResult);
+			expect(result.toString()).to.equal('42');
+			sinon.assert.calledWith(endorsement.addCollectionInterest, 'collection1');
 		});
-
-		it('throws if no peer responses are returned', () => {
-			channel.sendTransactionProposal.resolves(noProposalResponses);
-			const promise = transaction.submit();
-			return expect(promise).to.be.rejectedWith('No results were returned from the request');
-		});
-
-		it('throws if proposal responses are all errors', () => {
-			channel.sendTransactionProposal.resolves(errorProposalResponses);
-			const promise = transaction.submit();
-			return expect(promise).to.be.rejectedWith('No valid responses from any peers');
-		});
-
-		it('throws with message including underlying error message', () => {
-			channel.sendTransactionProposal.resolves(errorProposalResponses);
-			const promise = transaction.submit();
-			return expect(promise).to.be.rejectedWith(errorResponseMessage);
-		});
-
-		it('throws with message including underlying error status', () => {
-			channel.sendTransactionProposal.resolves(errorProposalResponses);
-			const promise = transaction.submit();
-			return expect(promise).to.be.rejectedWith(`${errorProposalResponse.status}`);
-		});
-
-		it('throws with message including underlying error peer name', () => {
-			channel.sendTransactionProposal.resolves(errorProposalResponses);
-			const promise = transaction.submit();
-			return expect(promise).to.be.rejectedWith(`${errorProposalResponse.peer.name}`);
-		});
-
-		it('succeeds if some proposal responses are valid', () => {
-			channel.sendTransactionProposal.resolves(mixedProposalResponses);
-			const promise = transaction.submit();
-			return expect(promise).to.be.fulfilled;
-		});
-
-		it('throws if the orderer returns an unsuccessful response', () => {
-			const status = 'FAILURE';
-			channel.sendTransaction.resolves({status});
-			const promise = transaction.submit();
-			return expect(promise).to.be.rejectedWith(status);
-		});
-
-		it('sends only valid proposal responses to orderer', async () => {
-			channel.sendTransactionProposal.resolves(mixedProposalResponses);
-			await transaction.submit();
-			const expected = {
-				proposalResponses: [validProposalResponse],
-				proposal: fakeProposal
-			};
-			sinon.assert.calledWith(channel.sendTransaction, sinon.match(expected));
-		});
-
-		it('uses a supplied event handler strategy', async () => {
-			const stubEventHandler = sinon.createStubInstance(TransactionEventHandler);
-			const options = stubContract.getEventHandlerOptions();
-			const stubEventHandlerFactoryFn = sinon.stub();
-			stubEventHandlerFactoryFn.withArgs(transaction, stubContract.getNetwork(), options).returns(stubEventHandler);
-
-			await transaction.setEventHandlerStrategy(stubEventHandlerFactoryFn).submit();
-
-			sinon.assert.called(stubEventHandler.startListening);
-			sinon.assert.called(stubEventHandler.waitForEvents);
-		});
-
-		it('sends a proposal with transient data', async () => {
-			const transientMap = {key1: 'value1', key2: 'value2'};
-			expectedProposal.transientMap = transientMap;
-
-			await transaction.setTransient(transientMap).submit();
-
-			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal));
-		});
-
-		it('returns empty string proposal response payload', async () => {
-			channel.sendTransactionProposal.resolves(emptyStringProposalResponses);
+		it('user assigned orgs with valid response', async () => {
+			transaction._endorsingPeers = null;
+			transaction._endorsingOrgs = ['org1'];
 			const result = await transaction.submit();
-			expect(result.toString()).to.equal('');
+			expect(result.toString()).to.equal('42');
+			sinon.assert.calledWith(channel.getEndorsers, 'org1');
 		});
-
-		it('throws if called a second time', async () => {
-			await transaction.submit();
-			const promise = transaction.submit();
-			return expect(promise).to.be.rejectedWith('Transaction has already been invoked');
+		it('use discover handler with valid response', async () => {
+			contract.network.discoveryService = 'discoveryService';
+			transaction._endorsingPeers = null;
+			const result = await transaction.submit();
+			expect(result.toString()).to.equal('42');
 		});
-
-		it('throws if called after evaluate', async () => {
-			await transaction.evaluate();
-			const promise = transaction.submit();
-			return expect(promise).to.be.rejectedWith('Transaction has already been invoked');
+		it('use discover handler and assigned orgs with valid response', async () => {
+			contract.network.discoveryService = 'discoveryService';
+			transaction._endorsingPeers = null;
+			transaction._endorsingOrgs = ['org1'];
+			const result = await transaction.submit();
+			expect(result.toString()).to.equal('42');
 		});
-
-		it('sends proposal with long timeout', async () => {
-			stubContract.getEventHandlerOptions.returns({commitTimeout: 999});
-			await transaction.submit();
-			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal), 999000);
+		it('user assigned peers with invalid response', async () => {
+			try {
+				commit.send.resolves('BAD');
+				await transaction.submit();
+			} catch (error) {
+				expect(error.message).to.contain('Failed to commit transaction');
+			}
+			sinon.assert.calledOnce(eventHandler.cancelListening);
 		});
-
-		it('sends proposal with short timeout', async () => {
-			stubContract.getEventHandlerOptions.returns({commitTimeout: 3});
-			await transaction.submit();
-			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal), 45000);
+		it('user assigned peers with invalid response', async () => {
+			try {
+				endorsement.send = sinon.stub().resolves(invalidProposalResponses);
+				await transaction.submit();
+			} catch (error) {
+				expect(error.message).to.contain('No valid responses from any peers.');
+			}
 		});
+		it('user assigned peers with error response', async () => {
+			try {
+				endorsement.send = sinon.stub().resolves(errorProposalResponses);
+				await transaction.submit();
+			} catch (error) {
+				expect(error.message).to.contain('No valid responses from any peers.');
+			}
+		});
+	});
 
-		it('sends proposal to specified peers', async () => {
-			const peer = sinon.createStubInstance(ChannelPeer);
-			const endorsingPeers = [peer];
-
-			await transaction.setEndorsingPeers(endorsingPeers).submit();
-
-			expectedProposal.targets = endorsingPeers;
-			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal));
+	describe('#_validatePeerResponses', () => {
+		it('throws error', () => {
+			expect(() => transaction._validatePeerResponses()).to.throw();
 		});
 	});
 
@@ -302,110 +269,33 @@ describe('Transaction', () => {
 			const result = await transaction.evaluate();
 			expect(result).to.equal(expectedResult);
 		});
-
-		it('passes a query to the query handler', async () => {
-			await transaction.evaluate();
-			sinon.assert.calledWith(stubQueryHandler.evaluate, sinon.match.instanceOf(Query));
+		it('returns the bad result from the query handler', async () => {
+			try {
+				queryHandler.evaluate = sinon.stub().resolves(invalidProposalResponse);
+				await transaction.evaluate();
+			} catch (error) {
+				expect(error.status).to.equal(500);
+			}
 		});
+	});
 
-		it('builds correct request for no-args invocation', async () => {
-			await transaction.evaluate();
-
-			const query = stubQueryHandler.evaluate.lastArg;
-			expect(query._request).to.deep.include({
-				chaincodeId,
-				fcn: transactionName,
-				txId: transaction.getTransactionID(),
-				args: []
-			});
-		});
-
-		it('builds correct request for with-args invocation', async () => {
+	describe('#_buildRequest', () => {
+		it('builds correct request for with-args invocation', () => {
+			transaction.name = 'test';
 			const args = ['a', 'b', 'c'];
-
-			await transaction.evaluate(...args);
-
-			const query = stubQueryHandler.evaluate.lastArg;
-			expect(query._request).to.deep.include({
-				chaincodeId,
-				fcn: transactionName,
-				txId: transaction.getTransactionID(),
+			const result = transaction._buildRequest(args);
+			expect(result).to.deep.include({
+				fcn: 'test',
 				args
 			});
 		});
-
-		it('builds request with transient data', async () => {
+		it('builds request with transient data', () => {
 			const transientMap = {key1: 'value1', key2: 'value2'};
 			transaction.setTransient(transientMap);
-
-			await transaction.evaluate();
-
-			const query = stubQueryHandler.evaluate.lastArg;
-			expect(query._request).to.deep.include({
+			const result = transaction._buildRequest();
+			expect(result).to.deep.include({
 				transientMap
 			});
-		});
-
-		it('rejects for non-string arguments', () => {
-			const promise = transaction.evaluate('arg1', 3.142, null);
-			return expect(promise).to.be.rejectedWith('"arg1", 3.142, null');
-		});
-
-		it('returns empty string response', async () => {
-			stubQueryHandler.evaluate = sinon.fake.resolves(Buffer.from(''));
-			const result = await transaction.evaluate();
-			expect(result.toString()).to.equal('');
-		});
-
-		it('throws if called a second time', async () => {
-			await transaction.evaluate();
-			const promise = transaction.evaluate();
-			return expect(promise).to.be.rejectedWith('Transaction has already been invoked');
-		});
-
-		it('throws if called after submit', async () => {
-			await transaction.submit();
-			const promise = transaction.evaluate();
-			return expect(promise).to.be.rejectedWith('Transaction has already been invoked');
-		});
-
-		it('builds correct request for invocation with long timeout', async () => {
-			stubContract.getEventHandlerOptions.returns({commitTimeout: 999});
-
-			await transaction.evaluate();
-
-			const query = stubQueryHandler.evaluate.lastArg;
-			expect(query._request).to.deep.include({
-				request_timeout: 999000
-			});
-		});
-
-		it('builds correct request for invocation with short timeout', async () => {
-			stubContract.getEventHandlerOptions.returns({commitTimeout: 3});
-
-			await transaction.evaluate();
-
-			const query = stubQueryHandler.evaluate.lastArg;
-			expect(query._request.request_timeout).to.be.undefined;
-		});
-
-	});
-
-	describe('#addCommitListener', () => {
-		it('should call Network.addCommitlistner', async () => {
-			network.addCommitListener.resolves('listener');
-			const callback = (err, transationId, status, blockNumber) => {};
-			const listener = await transaction.addCommitListener(callback, {}, 'eventHub');
-			expect(listener).to.equal('listener');
-			sinon.assert.calledWith(network.addCommitListener, 'TRANSACTION_ID', callback, {}, 'eventHub');
-		});
-	});
-
-	describe('#getNetwork', () => {
-		it('should call Contract.getNetwork', () => {
-			stubContract.getNetwork.returns(network);
-			expect(transaction.getNetwork()).to.equal(network);
-			sinon.assert.called(stubContract.getNetwork);
 		});
 	});
 });

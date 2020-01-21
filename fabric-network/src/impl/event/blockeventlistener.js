@@ -6,11 +6,9 @@
 
 'use strict';
 
-const BaseCheckpointer = require('./basecheckpointer');
-const AbstractEventListener = require('./abstracteventlistener');
+const BaseEventListener = require('./baseeventlistener');
 
 const logger = require('fabric-network/lib/logger').getLogger('BlockEventListener');
-const util = require('util');
 
 /**
  * The Block Event listener class handles block events from the channel.
@@ -20,106 +18,66 @@ const util = require('util');
  * @memberof module:fabric-network
  * @class
  */
-class BlockEventListener extends AbstractEventListener {
+class BlockEventListener extends BaseEventListener {
 	/**
 	 *
 	 * @param {module:fabric-network.Network} network The fabric network
-	 * @param {string} listenerName a unique name identifying the listener
 	 * @param {Function} eventCallback The event callback called when a transaction is committed.
 	 * It has signature (err, block)
-	 * @param {module:fabric-network.Network~ListenerOptions} options
+	 * @param {module:fabric-network.Network~EventListenerOptions} options
 	 */
-	constructor(network, listenerName, eventCallback, options) {
-		super(network, listenerName, eventCallback, options);
+	constructor(network, eventCallback, options) {
+
+		super(network, eventCallback, options);
 	}
 
-	/**
-	 * Finds and connects to an event hub then creates the listener registration
-	 */
-	async register() {
-		await super.register();
-		if (!this.eventHub) {
-			if (!this._eventHubConnectTimeout) {
-				this._setEventHubConnectTimeout();
-			}
-			if (this._abandonEventHubConnect) {
-				this._unsetEventHubConnectTimeout();
-				return;
-			}
-			return await this._registerWithNewEventHub();
-		}
-		this._unsetEventHubConnectTimeout();
-		this._registration = this.eventHub.registerBlockEvent(
-			this._onEvent.bind(this),
-			this._onError.bind(this),
-			this.clientOptions
+	_registerListener() {
+		const method = '_registerListener';
+		logger.debug('%s - start', method);
+		this.registration = this.eventService.registerBlockListener(
+			this.onEvent.bind(this),
+			this.eventServiceOptions
 		);
-		if (!this.eventHub.isconnected()) {
-			this.eventHub.connect(!this._filtered);
-		}
-		this._registered = true;
+		logger.debug('%s - end', method);
 	}
 
-	/**
-	 * Unregister the registration from the event hub
+	/*
+	 * This is the called by the base.onEvent() class event processing.
+	 * This will be the sending of the unique data for this event Listener type
+	 * to the user's callback.
 	 */
-	unregister() {
-		super.unregister();
-		if (this.eventHub) {
-			this.eventHub.unregisterBlockEvent(this._registration);
-		}
-	}
+	async _onEvent(event) {
+		const method = `_onEvent[${this.listenerCount}]`;
+		logger.debug('%s - start', method);
 
-	/**
-	 * The callback triggered when the event was successful. Checkpoints the last
-	 * block and transaction seen once the callback has run and unregisters the
-	 * listener if the unregister flag was provided
-	 * @param {Block} block Either a full or filtered block
-	 * @private
-	 */
-	async _onEvent(block) {
-		let blockNumber;
-		if (!this._filtered) {
-			blockNumber = Number(block.header.number);
+		const {block, filteredBlock, privateData, blockNumber} = event;
+
+		let _block;
+
+		if (filteredBlock) {
+			logger.debug('%s - have filtered block data', method);
+			_block = filteredBlock;
+		} else if (block) {
+			logger.debug('%s - have full block data', method);
+			_block = block;
+			if (privateData) {
+				logger.debug('%s - have private data', method);
+				_block.privateData = privateData;
+			}
 		} else {
-			blockNumber = Number(block.number);
+			logger.error('%s - missing block data in event %s', method, blockNumber.toString());
+			this.eventCallback(new Error('Event is missing block data'));
+			return;
 		}
 
 		try {
-			await this.eventCallback(null, block);
-			if (this.useEventReplay() && this.checkpointer instanceof BaseCheckpointer) {
-				const checkpoint = await this.checkpointer.load();
-				if (!checkpoint.blockNumber || Number(checkpoint.blockNumber) <= Number(blockNumber)) {
-					await this.checkpointer.save(null, blockNumber);
-				}
-			}
+			logger.debug('%s - calling user callback', method);
+			await this.eventCallback(null, blockNumber.toString(), _block);
+			logger.debug('%s - completed calling user callback', method);
 		} catch (err) {
-			logger.error(util.format('Error executing callback: %s', err));
+			logger.error('%s - Error executing callback: %s', method, err);
 		}
-		if (this._registration.unregister) {
-			this.unregister();
-		}
-	}
 
-	/**
-	 * This callback is triggered when the event was unsuccessful. If the error indicates
-	 * that the event hub shutdown and the listener is still registered, it updates the
-	 * {@link EventHubSelectionStrategy} status of event hubs (if implemented) and finds a
-	 * new event hub to connect to
-	 * @param {Error} error The error emitted
-	 * @private
-	 */
-	async _onError(error) {
-		logger.debug('_onError:', util.format('received error from peer %s: %j', this.eventHub.getPeerAddr(), error));
-		if (error) {
-			if (this._isShutdownMessage(error) && this.isregistered()) {
-				this._firstRegistrationAttempt = true;
-				this._unsetEventHubConnectTimeout();
-				this.getEventHubManager().updateEventHubAvailability(this.eventHub._peer);
-				await this._registerWithNewEventHub();
-			}
-		}
-		this.eventCallback(error);
 	}
 }
 

@@ -42,6 +42,7 @@ const IdentityContext = class {
 			throw Error('Missing valid user parameter');
 		}
 		this.name = user.getName();
+		this.mspid =  user.getMspid();
 		this.transactionId = null;
 		this.nonce = null;
 	}

@@ -38,27 +38,33 @@ export async function createContractListener(gatewayName: string, channelName: s
 	// If no listeners, then create the new map item
 	if (!listeners) {
 		listeners = new Map();
+		stateStore.set(Constants.LISTENERS, listeners);
 	}
 
 	// Create the listener
-	const listener: ContractEventListener = await contract.addContractListener(listenerName, eventName, (err: Error, ...args: any[]) => {
+	const listener: ContractEventListener = await contract.addContractListener(eventName, (err: Error, ...args: any[]) => {
 		if (err) {
 			BaseUtils.logMsg('-> Detected a contract event error', err);
 			throw err;
-		} else {
-			BaseUtils.logMsg(`-> Received a contract event for listener [${listenerName}] of type ${eventName}`);
 		}
+		BaseUtils.logMsg(`-> Received a contract event for listener [${listenerName}] of type ${eventName}`);
 
 		if (!filtered) {
 			const [event]: any = args as any;
-			if (event && event.hasOwnProperty('payload')) {
+			if (event && Object.prototype.hasOwnProperty.call(event, 'payload')) {
 				BaseUtils.checkString(event.payload.toString('utf8'), 'content', true);
 			}
 		}
 
-		const listenerUpdate: any = stateStore.get(Constants.LISTENERS).get(listenerName);
-		listenerUpdate.payloads.push(args);
-		listenerUpdate.calls = listenerUpdate.payloads.length;
+		const tlisteners: any = stateStore.get(Constants.LISTENERS);
+		if (tlisteners) {
+			const listenerUpdate: any = tlisteners.get(listenerName);
+			if (listenerUpdate) {
+				listenerUpdate.payloads.push(args);
+				listenerUpdate.calls = listenerUpdate.payloads.length;
+			}
+		}
+
 		return Promise.resolve();
 	}, {replay, filtered});
 
@@ -96,33 +102,40 @@ export async function createBlockListener(gatewayName: string, channelName: stri
 	}
 
 	// Create the listener
-	const listener: BlockEventListener = await network.addBlockListener(listenerName, (err: any, block: any) => {
+	const listener: BlockEventListener = await network.addBlockListener((err: any, blockNumber: string, block: any) => {
 		if (err) {
 			BaseUtils.logMsg('-> Received a block event error', err);
 			throw err;
-		} else {
-			BaseUtils.logMsg('->Received a block event', listenerName);
 		}
+		BaseUtils.logMsg('->Received a block event', listenerName);
 
 		if (filtered) {
 			BaseUtils.checkProperty(block, 'channel_id', true);
 			BaseUtils.checkProperty(block, 'number', true);
 			BaseUtils.checkProperty(block, 'filtered_transactions', true);
+			blockNumber = block.number;
 		} else {
 			BaseUtils.checkProperty(block, 'header', true);
 			BaseUtils.checkProperty(block, 'data', true);
 			BaseUtils.checkProperty(block, 'metadata', true);
 		}
-		const blockNumber: number = filtered ? block.number : block.header.number;
+
 		if (startBlock) {
 			BaseUtils.checkSizeEquality(Number(blockNumber), Number(startBlock) - 1, true, true);
 		}
 		if (endBlock) {
 			BaseUtils.checkSizeEquality(Number(blockNumber), Number(endBlock) + 1, false, true);
 		}
-		const listenerInfo: any = listeners.get(listenerName);
-		listenerInfo.payloads.push(block);
-		listenerInfo.calls = listenerInfo.payloads.length;
+
+		const tlisteners: any = stateStore.get(Constants.LISTENERS);
+		if (tlisteners) {
+			const listenerUpdate: any = tlisteners.get(listenerName);
+			if (listenerUpdate) {
+				listenerUpdate.payloads.push(block);
+				listenerUpdate.calls = listenerUpdate.payloads.length;
+			}
+		}
+
 		return Promise.resolve();
 	}, {filtered, replay, startBlock, endBlock});
 
@@ -147,17 +160,25 @@ export async function createTransactionCommitListener(transaction: Transaction, 
 		listeners = new Map();
 	}
 
-	// Create the listener
-	const listener: CommitEventListener = await transaction.addCommitListener((err: any, ...args: any[]) => {
-		if (err) {
-			BaseUtils.logMsg('-> Commit transaction event error', err);
-			return err;
+	// Create a listener
+	const listener: CommitEventListener = await transaction.getNetwork().addCommitListener(
+		(err: any, ...args: any[]) => {
+			if (err) {
+				BaseUtils.logMsg('-> Commit transaction event error', err);
+				return err;
+			}
+			BaseUtils.logMsg('-> Received a transaction commit event', listenerName);
+
+			const tlisteners: any = stateStore.get(Constants.LISTENERS);
+			if (tlisteners) {
+				const listenerUpdate: any = tlisteners.get(listenerName);
+				if (listenerUpdate) {
+					listenerUpdate.payloads.push(args);
+					listenerUpdate.calls = listenerUpdate.payloads.length;
+				}
+			}
 		}
-		BaseUtils.logMsg('-> Received a transaction commit event', listenerName);
-		const listenerInfo: any = listeners.get(listenerName);
-		listenerInfo.payloads.push(args);
-		listenerInfo.calls = listenerInfo.payloads.length;
-	});
+	);
 
 	// Roll into a listener object to store
 	listenerObject.listener = listener;

@@ -60,7 +60,7 @@ export function checkString(actual: string, expected: string, enableThrow: boole
 }
 
 export function checkProperty(object: any, expectedProperty: string, enableThrow: boolean): Error | void {
-	if (!object.hasOwnProperty(expectedProperty)) {
+	if (!Object.prototype.hasOwnProperty.call(object, expectedProperty)) {
 		const msg: string = `Property ${expectedProperty} missing from object ${JSON.stringify(object)}`;
 		if (enableThrow) {
 			logAndThrow(msg);

@@ -247,6 +247,16 @@ describe('DiscoveryService', () => {
 			discovery.sign(idx);
 			await discovery.send().should.be.rejectedWith('Missing targets parameter');
 		});
+		it('throws if targets is not an array', async () => {
+			discovery.build(idx);
+			discovery.sign(idx);
+			await discovery.send({targets: ''}).should.be.rejectedWith('Missing targets parameter');
+		});
+		it('throws if targets is an empty array', async () => {
+			discovery.build(idx);
+			discovery.sign(idx);
+			await discovery.send({targets: []}).should.be.rejectedWith('Missing targets parameter');
+		});
 		it('throws no results if targets is not missing', async () => {
 			discovery.build(idx);
 			discovery.sign(idx);

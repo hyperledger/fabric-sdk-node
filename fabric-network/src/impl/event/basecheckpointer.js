@@ -22,50 +22,70 @@
 class BaseCheckpointer {
 	/**
 	 * The constructor
-	 * @param {Object} options The options to configure the checkpointer
+	 * @param {Object} options - The options to configure the checkpointer
 	 */
-	constructor(options) {
-		this.options = options || {};
-		this._chaincodeId = null;
+	constructor(options = {}) {
+		this.options = Object.assign({}, options);
 	}
 
 	/**
-	 * Updates the storage mechanism
-	 * @param {String} transactionId the transaction ID
-	 * @param {Number} blockNumber the block number
-	 * @param {Number} expectedTotal the number of events expected in this block
+	 * Initializes the checkpointer using the options provided when the instance
+	 * was constructed
 	 * @async
 	 */
-	async save(transactionId, blockNumber, expectedTotal) {
+	async initialize() {
 		throw new Error('Method has not been implemented');
 	}
 
 	/**
-	 * Loads the latest checkpoint
-	 * @return {module:fabric-network.BaseCheckpointer~Checkpoint | Object} Object parameter has key
-	 * blockNumber: string and value {@link module:fabric-network.BaseCheckpointer~Checkpoint}
+	 * Prunes the checkpointer store to be the same as the in memory checkpoints
 	 * @async
 	 */
-	async load() {
+	async prune() {
 		throw new Error('Method has not been implemented');
 	}
 
 	/**
-	 * Loads the earliest incomplete checkpoint to decide which
-	 * block to replay from
-	 * @return {module:fabric-network.BaseCheckpointer~Checkpoint}
+	 * Updates the storage mechanism to save the checkpoint.
+	 * @param {string} blockNumber - The blockNumber of the checkpoint to save
+	 * @param {string} [transactionId] - Optional, The transactionId of the checkpoint to save
 	 * @async
 	 */
-	async loadLatestCheckpoint() {
-		return this.load();
+	async save(blockNumber, transactionId) {
+		throw new Error('Method has not been implemented');
 	}
 
 	/**
-	 * Sets the chaincode ID to group together listeners
-	 * @param {String} chaincodeId the chaincodeId
+	 * checks the storage mechanism for the transactionId and
+	 * blockNumber. The transactionId is optional.
+	 * @param {string} blockNumber
+	 * @param {string} [transactionId]
+	 * @returns {boolean} True when the block number or the block number and
+	 * the transactionId have been seen by this checkpointer.
+	 * @async
 	 */
-	setChaincodeId(chaincodeId) {
-		this._chaincodeId = chaincodeId;
+	async check(blockNumber, transactionId) {
+		throw new Error('Method has not been implemented');
+	}
+
+	/**
+	 * Returns a blockNumber of the last block received in order. May not be the
+	 * last block received or be the highest block received if the blocks are
+	 * received out of order.
+	 * For example if blocks 1, 2, 4, 5 have been received, then
+	 * block 2 should be returned, this is the last block before a break
+	 * in receiving the blocks in order. The listening should start at block 2
+	 * since block 3 is missing.
+	 * This method should only be used when using the checkpointer with a
+	 * block listener or a commit listener that is listening for all
+	 * transactions, other listeners will not receive all blocks.
+	 * The event listeners will use the getBlockNumber() or getTransactionId()
+	 * methods to avoid processing blocks/transactions that have been seen.
+	 * @return {string} The block number as string
+	 * @async
+	 */
+	async getStartBlock() {
+		throw new Error('Method has not been implemented');
 	}
 }
 

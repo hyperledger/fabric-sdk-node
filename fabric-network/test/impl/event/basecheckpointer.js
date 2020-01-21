@@ -25,6 +25,20 @@ describe('BaseCheckpointer', () => {
 		});
 	});
 
+	describe('#initialize', () => {
+		it('should throw an exception', () => {
+			const checkpointer = new BaseCheckpointer();
+			expect(checkpointer.initialize()).to.be.rejectedWith('Method has not been implemented');
+		});
+	});
+
+	describe('#prune', () => {
+		it('should throw an exception', () => {
+			const checkpointer = new BaseCheckpointer();
+			expect(checkpointer.prune()).to.be.rejectedWith('Method has not been implemented');
+		});
+	});
+
 	describe('#save', () => {
 		it('should throw an exception', () => {
 			const checkpointer = new BaseCheckpointer();
@@ -32,25 +46,17 @@ describe('BaseCheckpointer', () => {
 		});
 	});
 
-	describe('#load', () => {
+	describe('#check', () => {
 		it('should throw an exception', () => {
 			const checkpointer = new BaseCheckpointer();
-			expect(checkpointer.load()).to.be.rejectedWith('Method has not been implemented');
+			expect(checkpointer.check()).to.be.rejectedWith('Method has not been implemented');
 		});
 	});
 
-	describe('#loadLatestCheckpoint', () => {
+	describe('#getStartBlock', () => {
 		it('should throw an exception', () => {
 			const checkpointer = new BaseCheckpointer();
-			expect(checkpointer.loadLatestCheckpoint()).to.be.rejectedWith('Method has not been implemented');
-		});
-	});
-
-	describe('#setChaincodeId', () => {
-		it('should set the chaincodeId', () => {
-			const checkpointer = new BaseCheckpointer();
-			checkpointer.setChaincodeId('CHAINCODE_ID');
-			expect(checkpointer._chaincodeId).to.equal('CHAINCODE_ID');
+			expect(checkpointer.getStartBlock()).to.be.rejectedWith('Method has not been implemented');
 		});
 	});
 });

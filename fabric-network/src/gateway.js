@@ -1,44 +1,44 @@
 /**
- * Copyright 2018 IBM All Rights Reserved.
+ * Copyright 2018, 2019 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
 'use strict';
 
-const Client = require('fabric-client');
-
 const Network = require('./network');
+const NetworkConfig = require('./impl/ccp/networkconfig');
+const {Client} = require('fabric-common');
 const EventStrategies = require('fabric-network/lib/impl/event/defaulteventhandlerstrategies');
-const QueryStrategies = require('fabric-network/lib/impl/query/defaultqueryhandlerstrategies');
-const EventHubSelectionStrategies = require('fabric-network/lib/impl/event/defaulteventhubselectionstrategies');
-const CheckpointFactories = require('fabric-network/lib/impl/event/checkpointfactories');
+const QueryStrategies = require('fabric-network/lib/impl/query/queryhandlerstrategies');
 
 const logger = require('./logger').getLogger('Gateway');
 
 /**
  * @typedef {Object} Gateway~GatewayOptions
  * @memberof module:fabric-network
- * @property {module:fabric-network.Wallet} wallet The identity wallet implementation for use with this Gateway instance.
+ * @property {module:fabric-network.Wallet} wallet The identity wallet implementation for use with
+ * this Gateway instance.
  * @property {string} identity The identity in the wallet for all interactions on this Gateway instance.
  * @property {string} [clientTlsIdentity] The identity in the wallet to use as the client TLS identity.
- * @property {module:fabric-network.Gateway~DefaultEventHandlerOptions} [eventHandlerOptions] Options for the inbuilt default
- * event handler capability.
- * @property {module:fabric-network.Gateway~DefaultQueryHandlerOptions} [queryHandlerOptions] Options for the inbuilt
- * default query handler capability.
+ * @property {module:fabric-network.Gateway~TransactionOptions} [transaction]
+ * Options for the default event handler capability.
+ * @property {module:fabric-network.Gateway~QueryOptions} [query]
+ * Options for the default query handler capability.
  * @property {module:fabric-network.Gateway~DiscoveryOptions} [discovery] Discovery options.
- * @property {module:fabric-network.Gateway~DefaultEventHubSelectionOptions} [eventHubSelectionOptions] Event hub selection options.
- * @property {module:fabric-network.Network~CheckpointerFactory} [checkpointer] Event hub selection options.
  */
 
 /**
- * @typedef {Object} Gateway~DefaultEventHandlerOptions
+ * @typedef {Object} Gateway~TransactionOptions
  * @memberof module:fabric-network
- * @property {number} [commitTimeout = 300] The timeout period in seconds to wait for commit notification to
- * complete.
- * @property {?module:fabric-network.Gateway~TxEventHandlerFactory} [strategy=MSPID_SCOPE_ALLFORTX] Event handling strategy to identify
- * successful transaction commits. A null value indicates that no event handling is desired. The default is
- * [MSPID_SCOPE_ALLFORTX]{@link module:fabric-network.DefaultEventHandlerStrategies}.
+ * @property {number} [commitTimeout = 300] The timeout period in seconds to wait
+ * for commit notification to complete.
+ * @property {number} [endorseTimeout = 30] The timeout period in seconds to wait
+ * for the endorsement to complete.
+ * @property {?module:fabric-network.Gateway~TxEventHandlerFactory} [strategy=MSPID_SCOPE_ALLFORTX]
+ * Event handling strategy to identify successful transaction commits. A null value indicates
+ * that no event handling is desired. The default is
+ * [MSPID_SCOPE_ALLFORTX]{@link module:fabric-network.EventHandlerStrategies}.
  */
 
 /**
@@ -62,63 +62,47 @@ const logger = require('./logger').getLogger('Gateway');
  */
 
 /**
- * @typedef {Object} Gateway~DefaultEventHubSelectionOptions
+ * @typedef {Object} Gateway~QueryOptions
  * @memberof module:fabric-network
- * @property {?module:fabric-network.Gateway~DefaultEventHubSelectionFactory} [strategy=MSPID_SCOPE_ROUND_ROBIN] Selects the next
- * event hub in the event of a new listener being created or an event hub disconnect
- */
-
-/**
- * @typedef {Object} Gateway~DefaultEventHubSelectionFactory
- * @memberof module:fabric-network
- * @param {module:fabric-network.Network} network The network the event hub is being selected for
- * @returns {module:fabric-network.Gateway~AbstractEventHubSelectionStrategy}
- */
-
-/**
-  * @typedef {Object} Gateway~AbstractEventHubSelectionStrategy
-  * @memberof module:fabric-network
-  * @property {Function} getNextPeer Function that returns the next peer in the list of available peers
-  * @property {Function} updateEventHubAvailability Function that updates the availability of an event hub
-  */
-
-
-/**
- * @typedef {Object} Gateway~DefaultQueryHandlerOptions
- * @memberof module:fabric-network
- * @property {module:fabric-network.Gateway~QueryHandlerFactory} [strategy=MSPID_SCOPE_SINGLE] Query handling strategy
- * used to evaluate queries. The default is [MSPID_SCOPE_SINGLE]{@link module:fabric-network.DefaultQueryHandlerStrategies}.
+ * @property {number} [timeout = 30] The timeout period in seconds to wait for the query to
+ * complete.
+ * @property {module:fabric-network.Gateway~QueryHandlerFactory} [strategy=MSPID_SCOPE_SINGLE]
+ * Query handling strategy used to evaluate queries. The default is
+ * [MSPID_SCOPE_SINGLE]{@link module:fabric-network.QueryHandlerStrategies}.
  */
 
 /**
  * @typedef {Function} Gateway~QueryHandlerFactory
  * @memberof module:fabric-network
  * @param {module:fabric-network.Network} network The network on which queries are being evaluated.
+ * @param {Object} options The request options to use when queries are being evaluated.
  * @returns {module:fabric-network.Gateway~QueryHandler} A query handler.
  */
 
 /**
  * @typedef {Object} Gateway~QueryHandler
  * @memberof module:fabric-network
- * @property {Function} evaluate Async function that takes a [Query]{@link module:fabric-network.Query} and resolves
- * with the result of the query evaluation.
+ * @property {Function} evaluate Async function that takes a [Query]{@link module:fabric-common.Query}
+ * and resolves with the result of the query evaluation.
  */
 
 /**
  * @typedef {Object} Gateway~DiscoveryOptions
  * @memberof module:fabric-network
  * @property {boolean} [enabled=true] True if discovery should be used; otherwise false.
- * @property {boolean} [asLocalhost=true] Convert discovered host addresses to be 'localhost'. Will be needed when
- * running a docker composed fabric network on the local system; otherwise should be disabled.
+ * @property {boolean} [asLocalhost=false] Convert discovered host addresses to be 'localhost'.
+ * Will be needed when running a docker composed fabric network on the local system;
+ * otherwise should be disabled.
  */
 
 /**
- * The gateway peer provides the connection point for an application to access the Fabric network.  It is instantiated using
- * the default constructor.
- * It can then be connected to a fabric network using the [connect]{@link #connect} method by passing either a common connection profile definition
- * or an existing {@link Client} object.
- * Once connected, it can then access individual Network instances (channels) using the [getNetwork]{@link #getNetwork} method
- * which in turn can access the [smart contracts]{@link Contract} installed on a network and
+ * The gateway peer provides the connection point for an application to access the Fabric network.
+ * It is instantiated using the default constructor.
+ * It can then be connected to a fabric network using the [connect]{@link #connect} method by
+ * passing either a common connection profile definition or an existing {@link Client} object.
+ * Once connected, it can then access individual Network instances (channels) using the
+ * [getNetwork]{@link #getNetwork} method which in turn can access the
+ * [smart contracts]{@link Contract} installed on a network and
  * [submit transactions]{@link Contract#submitTransaction} to the ledger.
  * @memberof module:fabric-network
  */
@@ -142,26 +126,23 @@ class Gateway {
 		logger.debug('in Gateway constructor');
 		this.client = null;
 		this.wallet = null;
+		this.identityContext = null;
 		this.networks = new Map();
 
-		// default options
+		// initial options - override with the connect()
 		this.options = {
-			queryHandlerOptions: {
+			query: {
+				timeout: 30, // 30 seconds
 				strategy: QueryStrategies.MSPID_SCOPE_SINGLE
 			},
-			eventHandlerOptions: {
+			transaction: {
+				endorseTimeout: 30, // 30 seconds
 				commitTimeout: 300, // 5 minutes
 				strategy: EventStrategies.MSPID_SCOPE_ALLFORTX
 			},
 			discovery: {
-				enabled: Client.getConfigSetting('initialize-with-discovery', true)
-			},
-			checkpointer: {
-				factory: CheckpointFactories.FILE_SYSTEM_CHECKPOINTER,
-				options: {}
-			},
-			eventHubSelectionOptions: {
-				strategy: EventHubSelectionStrategies.MSPID_SCOPE_ROUND_ROBIN,
+				enabled: true,
+				asLocalhost: true
 			}
 		};
 	}
@@ -175,7 +156,8 @@ class Gateway {
 	 *   <li>A common connection profile JSON (Object)</li>
 	 *   <li>A pre-configured client instance</li>
 	 * </ul>
-     * @param {module:fabric-network.Gateway~GatewayOptions} options specific options for creating this Gateway instance
+     * @param {module:fabric-network.Gateway~GatewayOptions} options - specific options
+	  * for creating this Gateway instance
 	 * @example
 	 * const gateway = new Gateway();
 	 * const wallet = new FileSystemWallet('./WALLETS/wallet');
@@ -188,7 +170,7 @@ class Gateway {
      */
 	async connect(config, options) {
 		const method = 'connect';
-		logger.debug('in %s', method);
+		logger.debug('%s - start', method);
 
 		if (!options || !options.wallet) {
 			logger.error('%s - A wallet must be assigned to a Gateway instance', method);
@@ -198,14 +180,16 @@ class Gateway {
 		Gateway._mergeOptions(this.options, options);
 		logger.debug('connection options: %j', options);
 
-		if (!(config && config.constructor && config.constructor.name === 'Client')) {
-			// still use a ccp for the discovery peer and ca information
-			logger.debug('%s - loading client from ccp', method);
-			this.client = await Client.loadFromConfig(config);
-		} else {
+		let load_ccp = false;
+		if (config && config.type === 'Client') {
 			// initialize from an existing Client object instance
 			logger.debug('%s - using existing client object', method);
 			this.client = config;
+		} else {
+			// build a new client and once it has been configured with
+			// the passed in options it will be loaded with the ccp
+			this.client = new Client('gateway client');
+			load_ccp = true;
 		}
 
 		// setup an initial identity for the Gateway
@@ -213,17 +197,38 @@ class Gateway {
 			logger.debug('%s - setting identity', method);
 			const identity = await this._getIdentity(options.identity);
 			const provider = options.wallet.getProviderRegistry().getProvider(identity.type);
-			await provider.setUserContext(this.client, identity, options.identity);
+			const user = await provider.getUserContext(identity, options.identity);
+			this.identityContext = this.client.newIdentityContext(user);
 		}
 
 		if (options.clientTlsIdentity) {
+			logger.debug('%s - setting tlsIdentity', method);
 			const tlsIdentity = await this._getIdentity(options.clientTlsIdentity);
 			this.client.setTlsClientCertAndKey(tlsIdentity.credentials.certificate, tlsIdentity.credentials.privateKey);
+		} else if (options.tlsInfo) {
+			logger.debug('%s - setting tlsInfo', method);
+			this.client.setTlsClientCertAndKey(options.tlsInfo.certificate, options.tlsInfo.key);
+		} else {
+			logger.debug('%s - not setting tls', method);
 		}
 
-		if (options.tlsInfo && !options.clientTlsIdentity) {
-			this.client.setTlsClientCertAndKey(options.tlsInfo.certificate, options.tlsInfo.key);
+		if (load_ccp) {
+			logger.debug('%s - NetworkConfig loading client from ccp', method);
+			await NetworkConfig.loadFromConfig(this.client, config);
+		} else {
+			logger.debug('%s - no connection profile - using client instance', method);
 		}
+
+		// apply any connection options to the client instance for use
+		// internally by the client instance when building a complete set
+		// of connection options for an endpoint
+		// these will be merged with those from the config (default.json)
+		if (options['connection-options']) {
+			this.client.centralized_options = options['connection-options'];
+			logger.debug('%s - assigned connection options');
+		}
+
+		logger.debug('%s - end', method);
 	}
 
 	async _getIdentity(label) {
@@ -232,16 +237,6 @@ class Gateway {
 			throw new Error(`Identity not found in wallet: ${label}`);
 		}
 		return identity;
-	}
-
-	/**
-     * Get the underlying Client object instance
-     *
-     * @returns {Client} The underlying client instance
-     */
-	getClient() {
-		logger.debug('in getClient');
-		return this.client;
 	}
 
 	/**
@@ -270,19 +265,17 @@ class Gateway {
 	 * @returns {module:fabric-network.Network}
 	 */
 	async getNetwork(networkName) {
-		logger.debug('in getNetwork');
+		const method = 'getNetwork';
+		logger.debug('%s - start', method);
 
 		const existingNetwork = this.networks.get(networkName);
 		if (existingNetwork) {
+			logger.debug('%s - returning existing network:%s', method, networkName);
 			return existingNetwork;
 		}
 
-		logger.debug('getNetwork: create network object and initialize');
-		let channel = this.client.getChannel(networkName, false);
-		if (channel === null) {
-			// not found in the in-memory cache or the CCP
-			channel = this.client.newChannel(networkName);
-		}
+		logger.debug('%s - create network object and initialize', method);
+		const channel = this.client.getChannel(networkName);
 		const newNetwork = new Network(this, channel);
 		await newNetwork._initialize(this.options.discovery);
 		this.networks.set(networkName, newNetwork);
