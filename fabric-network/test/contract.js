@@ -42,27 +42,29 @@ describe('Contract', () => {
 	let discoveryService;
 
 	beforeEach(() => {
+		discoveryService = sinon.createStubInstance(DiscoveryService);
+		discoveryService.newHandler.returns('handler');
+
 		channel = sinon.createStubInstance(Channel);
-		channel.newDiscoveryService = sinon.stub().returns(discoveryService);
+		channel.newDiscoveryService.returns(discoveryService);
+
 		gateway = sinon.createStubInstance(Gateway);
 		gateway.identityContext = 'idx';
-		gateway.getOptions = sinon.stub().returns({
+		gateway.getOptions.returns({
 			transaction: 'options',
 			discovery: {
 				asLocalhost: true
 			}
 		});
+
 		network = new Network(gateway, channel);
+
 		transaction = sinon.createStubInstance(Transaction);
 		transaction.submit.resolves('result');
 		transaction.evaluate.resolves('result');
+
 		endorsement = sinon.createStubInstance(Endorsement);
-		endorsement.buildProposalInterest = sinon.stub().returns('interest');
-		discoveryService = sinon.createStubInstance(DiscoveryService);
-		discoveryService.newHandler = sinon.stub().returns('handler');
-		discoveryService.build = sinon.stub();
-		discoveryService.sign = sinon.stub();
-		discoveryService.send = sinon.stub().resolves();
+		endorsement.buildProposalInterest.returns('interest');
 
 		Contract.__set__('ContractEventListener', FakeListener);
 		contract = new Contract(network, chaincodeId, namespace, collections);
