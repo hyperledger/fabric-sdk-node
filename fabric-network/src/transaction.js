@@ -237,8 +237,8 @@ class Transaction {
 			request.targets = channel.getCommitters();
 		}
 
-		// by now we should have a discovery handler or the target orderers
-		// to perform the commit have been assigned from the channel
+		// by now we should have a discovery handler or use the target orderers
+		// that have been assigned from the channel to perform the commit
 
 		const commit = endorsement.newCommit();
 		commit.build(this.identityContext, request);
@@ -310,7 +310,7 @@ class Transaction {
 				// as part of an extended client side validation strategy but for now don't perform any client
 				// side checks as the peers will have to do this anyway and it impacts client performance
 				if (responseContent.response.status < 400) {
-					logger.debug('%s: valid response from peer %j', method, responseContent.connection);
+					logger.debug('%s: valid response from peer %j, status:%s', method, responseContent.connection, responseContent.response.status);
 					validResponses.push(responseContent);
 				} else {
 					logger.warn('%s: invalid response from peer %j', method, responseContent.peer);

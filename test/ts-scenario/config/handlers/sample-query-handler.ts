@@ -22,13 +22,13 @@ class SampleQueryHandler implements QueryHandler {
 		this.requestTimeout = requestTimeout;
 	}
 
-	public async evaluate(query: Query): Promise<any> {
+	public async evaluate(query: Query): Promise<Buffer> {
 		// send to all
 		const results = await query.send({targets: this.peers}, {requestTimeout: this.requestTimeout});
 
 		// check the results
 		if (results) {
-			// first check to see if we have any good results
+			// first check to see if we have results (any result with a payload will be here)
 			if (results && results.queryResults && results.queryResults.length > 0) {
 				return results.queryResults[0];
 			// maybe the request failed
@@ -37,10 +37,12 @@ class SampleQueryHandler implements QueryHandler {
 			// maybe the query failed
 			} else if (results.responses) {
 				for (const response of results.responses) {
-					if (response.response.status >= 400) {
-						return response.response.payload;
+					if (response.response.message) {
+						// return the first one found
+						throw new Error(`Query failed status:${response.response.status} message:${response.response.message}`);
 					}
 				}
+				throw new Error('Unknown result');
 			}
 		}
 

@@ -42,9 +42,9 @@ Feature: Configure Fabric using CLI and submit/evaluate using a network Gateway 
 
 	Scenario: Using a Gateway I can use transient data
 		When I modify mycouchgateway to submit a transaction with transient data using args [getTransient,value1,value2] for contract fabcar instantiated on channel gatewaychannel
-		Then The gateway named mycouchgateway has a submit type response matching "{\"key0\":\"value1\",\"key1\":\"value2\"}"
+		Then The gateway named mycouchgateway has a submit type response matching {"key0":"value1","key1":"value2"}
 		When I modify mycouchgateway to evaluate a transaction with transient data using args [getTransient,valueA,valueB] for contract fabcar instantiated on channel gatewaychannel
-		Then The gateway named mycouchgateway has a evaluate type response matching "{\"key0\":\"valueA\",\"key1\":\"valueB\"}"
+		Then The gateway named mycouchgateway has a evaluate type response matching {"key0":"valueA","key1":"valueB"}
 
 	Scenario: Using a Gateway to evaluate transactions I can use different query handler strategies
 		When I modify mycouchgateway to evaluate a transaction with args [queryCar,1001] for contract fabcar instantiated on channel gatewaychannel using handler option MSPID_SCOPE_SINGLE
@@ -52,4 +52,4 @@ Feature: Configure Fabric using CLI and submit/evaluate using a network Gateway 
 		When I modify mycouchgateway to evaluate a transaction with args [queryCar,1001] for contract fabcar instantiated on channel gatewaychannel using handler option MSPID_SCOPE_ROUND_ROBIN
 		Then The gateway named mycouchgateway has a evaluate type response matching {"color":"brown","docType":"car","make":"Trabant","model":"601 Estate","owner":"Simon"}
 		When I modify mycouchgateway to evaluate a transaction with args [queryCar,1001] for contract fabcar instantiated on channel gatewaychannel using handler option custom
-		Then The gateway named mycouchgateway has a evaluate type response containing "{\"color\":\"brown\",\"docType\":\"car\",\"make\":\"Trabant\",\"model\":\"601 Estate\",\"owner\":\"Simon\"}"
+		Then The gateway named mycouchgateway has a evaluate type response containing {"color":"brown","docType":"car","make":"Trabant","model":"601 Estate","owner":"Simon"}

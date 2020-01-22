@@ -225,19 +225,27 @@ export async function performGatewayTransaction(gatewayName: string, contractNam
 	try {
 		if (submit) {
 			BaseUtils.logMsg('Submitting transaction [' + func + '] with arguments ' + args);
-			const result: Buffer = await contract.submitTransaction(func, ...funcArgs);
-			gatewayObj.result = {type: 'submit', response: result.toString()};
-			BaseUtils.logMsg('Successfully submitted transaction [' + func + ']');
+			const resultBuffer: Buffer = await contract.submitTransaction(func, ...funcArgs);
+			const result: string = resultBuffer.toString();
+			BaseUtils.logMsg(`Successfully submitted transaction [${func}] with result [${result}]`);
+			// some functions do not return anything
+			if (result.length > 0) {
+				gatewayObj.result = {type: 'submit', response: JSON.parse(result)};
+			} else {
+				gatewayObj.result = {type: 'submit', response: ''};
+			}
+
 		} else {
 			BaseUtils.logMsg('Evaluating transaction [' + func + '] with arguments ' + args);
-			const result: Buffer = await contract.evaluateTransaction(func, ...funcArgs);
-			BaseUtils.logMsg('Successfully evaluated transaction [' + func  + '] with result [' + result.toString() + ']');
-			gatewayObj.result = {type: 'evaluate', response: JSON.parse(result.toString())};
+			const resultBuffer: Buffer = await contract.evaluateTransaction(func, ...funcArgs);
+			const result: string = resultBuffer.toString('utf8');
+			BaseUtils.logMsg(`Successfully evaluated transaction [${func}] with result [${result}]`);
+			gatewayObj.result = {type: 'evaluate', response: JSON.parse(result)};
 		}
 	} catch (err) {
 		gatewayObj.result = {type: 'error', response: err.toString()};
 		// Don't log the full error, since we might be forcing the error
-		BaseUtils.logError(err.toString());
+		BaseUtils.logError(' --- in gateway transaction:' + err.toString());
 	}
 }
 
@@ -333,32 +341,33 @@ export async function performHandledGatewayTransaction(gatewayName: string, ccNa
 
 		try {
 			// -------- S E N D
-			await transaction.submit(...funcArgs);
-			BaseUtils.logMsg(`Successfully submitted transaction [${func}] using handler [${EventStrategies[handlerOption]}]`);
+			const resultBuffer: Buffer = await transaction.submit(...funcArgs);
+			const result: string = resultBuffer.toString('utf8');
+			BaseUtils.logMsg(`Successfully submitted transaction [${func}] using handler [${EventStrategies[handlerOption]}] with result [${result}]`);
 
 			await notificationPromise;
 			listener.unregister();
-			BaseUtils.logMsg(`Successfully got event status [${func}] using handler [${EventStrategies[handlerOption]}]`, undefined);
+			BaseUtils.logMsg(`Successfully got event status [${func}] using handler [${EventStrategies[handlerOption]}] after submitting and getting status [${JSON.stringify(eventResults)}]`);
 			gatewayObj.result = {type: 'event', response: JSON.stringify(eventResults), commitTransactionId: transaction.transactionId};
 		} catch (error) {
 			gatewayObj.result = {type: 'error', response: error.toString()};
-			BaseUtils.logError(error.toString());
+			BaseUtils.logError('--- in Submit: ' + error.toString());
 		}
 	} else {
 		// No event hubs, just query away
 		try {
 			// Split args, capture response
-			const result: Buffer = await transaction.evaluate(...funcArgs);
-			BaseUtils.logMsg(`Successfully evaluated transaction [${func}] using handler [${QueryStrategies[handlerOption]}] with result [${result}]`, undefined);
-			if (handlerOption.localeCompare('custom') === 0) {
-				gatewayObj.result = {type: 'evaluate', response: result.toString()};
-			} else {
-				gatewayObj.result = {type: 'evaluate', response: JSON.parse(result.toString())};
-
+			const resultBuffer: Buffer = await transaction.evaluate(...funcArgs);
+			const result: string = resultBuffer.toString('utf8');
+			let handlerPrint: string = 'custom';
+			if (handlerOption.localeCompare('custom') !== 0) {
+				handlerPrint = QueryStrategies[handlerOption].toString();
 			}
+			BaseUtils.logMsg(`Successfully evaluated transaction [${func}] using handler [${handlerPrint}] with result [${result}]`);
+			gatewayObj.result = {type: 'evaluate', response: JSON.parse(result)};
 		} catch (error) {
 			gatewayObj.result = {type: 'error', response: error.toString()};
-			BaseUtils.logError(error.toString());
+			BaseUtils.logError('--- in Evaluate: ' + error.toString());
 		}
 	}
 }
@@ -401,20 +410,25 @@ export async function performTransientGatewayTransaction(gatewayName: string, cc
 		i++;
 	}
 
+	let printType: string = 'Evaluate';
+
 	try {
 		const submit: boolean = ( txnType.localeCompare('submit') === 0 );
 		if (submit) {
-			const result: Buffer = await transaction.setTransient(transientMap).submit();
-			BaseUtils.logMsg(`Successfully submitted transaction [${func}] with transient data`);
-			gatewayObj.result = {type: 'submit', response: result.toString()};
+			printType = 'Submit';
+			const resultBuffer: Buffer = await transaction.setTransient(transientMap).submit();
+			const result: string = resultBuffer.toString('utf8');
+			BaseUtils.logMsg(`Successfully submitted transaction [${func}] with transient data with result of [${result}]`);
+			gatewayObj.result = {type: 'submit', response: JSON.parse(result)};
 		} else {
-			const result: Buffer = await transaction.setTransient(transientMap).evaluate();
-			BaseUtils.logMsg(`Successfully evaluated transaction [${func}] with transient data`);
-			gatewayObj.result = {type: 'evaluate', response: result.toString()};
+			const resultBuffer: Buffer = await transaction.setTransient(transientMap).evaluate();
+			const result: string = resultBuffer.toString('utf8');
+			BaseUtils.logMsg(`Successfully evaluated transaction [${func}] with transient data with result of [${result}]`);
+			gatewayObj.result = {type: 'evaluate', response: JSON.parse(result)};
 		}
 	} catch (error) {
 		gatewayObj.result = {type: 'error', response: error.toString()};
-		BaseUtils.logError(error.toString());
+		BaseUtils.logError('--- in ' + printType + ' with transient: ' + error.toString());
 	}
 }
 
