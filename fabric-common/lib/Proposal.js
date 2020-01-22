@@ -391,7 +391,7 @@ message Endorsement {
 		if (this.type === 'Query') {
 			this._queryResults = [];
 			this._proposalResponses.forEach((response) => {
-				if (response.response && response.response.payload) {
+				if (response.response && response.response.payload && response.response.payload.length > 0) {
 					logger.debug('%s - have payload', method);
 					this._queryResults.push(response.response.payload);
 				} else {

@@ -41,8 +41,16 @@ Feature: Configure Fabric using CLI and submit/evaluate using a network Gateway 
 		When I modify myDiscoveryGateway to submit a transaction with args [createCar,1005,Ford,Mustang,Silver,Andy] for contract fabcar instantiated on channel discoverychannel using handler option NETWORK_SCOPE_ANYFORTX
 		Then The gateway named myDiscoveryGateway has a event type response containing "status":"VALID"
 
+	Scenario: Using a Gateway to evaluate transactions I can use different query handler strategies
+		When I modify myDiscoveryGateway to evaluate a transaction with args [queryCar,1001] for contract fabcar instantiated on channel discoverychannel using handler option MSPID_SCOPE_SINGLE
+		Then The gateway named myDiscoveryGateway has a evaluate type response matching {"color":"red","docType":"car","make":"Ariel","model":"Atom","owner":"Nick"}
+		When I modify myDiscoveryGateway to evaluate a transaction with args [queryCar,1001] for contract fabcar instantiated on channel discoverychannel using handler option MSPID_SCOPE_ROUND_ROBIN
+		Then The gateway named myDiscoveryGateway has a evaluate type response matching {"color":"red","docType":"car","make":"Ariel","model":"Atom","owner":"Nick"}
+		When I modify myDiscoveryGateway to evaluate a transaction with args [queryCar,1001] for contract fabcar instantiated on channel discoverychannel using handler option custom
+		Then The gateway named myDiscoveryGateway has a evaluate type response matching {"color":"red","docType":"car","make":"Ariel","model":"Atom","owner":"Nick"}
+
 	Scenario: Using a Gateway I can use transient data
 		When I modify myDiscoveryGateway to submit a transaction with transient data using args [getTransient,value1,value2] for contract fabcar instantiated on channel discoverychannel
-		Then The gateway named myDiscoveryGateway has a submit type response matching "{\"key0\":\"value1\",\"key1\":\"value2\"}"
+		Then The gateway named myDiscoveryGateway has a submit type response matching {"key0":"value1","key1":"value2"}
 		When I modify myDiscoveryGateway to evaluate a transaction with transient data using args [getTransient,valueA,valueB] for contract fabcar instantiated on channel discoverychannel
-		Then The gateway named myDiscoveryGateway has a evaluate type response matching "{\"key0\":\"valueA\",\"key1\":\"valueB\"}"
+		Then The gateway named myDiscoveryGateway has a evaluate type response matching {"key0":"valueA","key1":"valueB"}
