@@ -154,7 +154,7 @@ class Eventer extends ServiceEndpoint {
 		} else if (blockType === FULL_BLOCK) {
 			this.stream = this.service.deliver();
 		} else if (blockType === PRIVATE_BLOCK) {
-			this.stream = this.service.deliverPrivate(); // for now until we get the new protos
+			this.stream = this.service.deliverWithPrivateData();
 		} else {
 			throw Error('Unknown block type');
 		}

@@ -98,7 +98,7 @@ Given(/^I use the cli to deploy a (.+?) smart contract named (.+?) at version (.
 	}
 });
 
-Given(/^I use the cli to lifecycle deploy a (.+?) smart contract named (.+?) at version (.+?) as (.+?) for all organizations on channel (.+?) with default endorsement policy and arguments (.+?)$/, { timeout: Constants.STEP_MED as number }, async (ccType: string, ccName: string, ccVersion: string, ccReference: string, channelName: string, initArgs: string) => {
+Given(/^I use the cli to lifecycle deploy a (.+?) smart contract named (.+?) at version (.+?) as (.+?) for all organizations on channel (.+?) with default endorsement policy and arguments (.+?)$/, { timeout: Constants.STEP_LONG as number }, async (ccType: string, ccName: string, ccVersion: string, ccReference: string, channelName: string, initArgs: string) => {
 
 	const fabricState: any = stateStore.get(Constants.FABRIC_STATE);
 	if (!fabricState) {
@@ -109,11 +109,13 @@ Given(/^I use the cli to lifecycle deploy a (.+?) smart contract named (.+?) at 
 
 	try {
 		// Skip if already committed on channel
-		// TODO: Use CLI
-		// const isCommitted: boolean = await AdminUtils.isOrgChaincodeLifecycleCommittedOnChannel(Object.keys(ccp.getOrganizations())[0], ccp, ccName, ccReference, channelName);
-		// if (isCommitted) {
-		// 	BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} has already been committed on channel ${channelName} as ${ccReference} `);
-		// } else {
+		if (await Contract.cli_lifecycle_chaincode_query_commit(ccName, Object.keys(ccp.getOrganizations())[0], channelName, tls)) {
+			BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} has already been committed on channel ${channelName} as ${ccReference} `);
+			return Promise.resolve();
+		} else {
+			BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} is not committed on channel ${channelName} as ${ccReference} `);
+		}
+
 		// Package on each org
 		for (const orgName of orgNames) {
 			await Contract.cli_lifecycle_chaincode_package(ccType, ccName, orgName.toLowerCase());
@@ -133,11 +135,11 @@ Given(/^I use the cli to lifecycle deploy a (.+?) smart contract named (.+?) at 
 		// Approve on each org
 		for (const orgName of orgNames) {
 			const packageId: string = await Contract.retrievePackageIdForLabelOnOrg(ccName, orgName.toLowerCase()) as any;
-			await Contract.cli_lifecycle_chaincode_approve(ccReference, ccVersion, orgName.toLowerCase(), channelName, packageId, '1', tls);
+			await Contract.cli_lifecycle_chaincode_approve(ccReference, ccVersion, orgName.toLowerCase(), channelName, packageId, '1', tls, ccType, ccName);
 		}
 
 		// Commit on single org
-		await Contract.cli_lifecycle_chaincode_commit(ccReference, ccVersion, orgNames[0].toLowerCase(), channelName, ccp, '1', tls);
+		await Contract.cli_lifecycle_chaincode_commit(ccReference, ccVersion, orgNames[0].toLowerCase(), channelName, ccp, '1', tls, ccType, ccName);
 		// }
 	} catch (err) {
 		return Promise.reject(err);

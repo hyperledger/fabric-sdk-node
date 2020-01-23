@@ -132,6 +132,52 @@ describe('BlockDecoder', () => {
 		});
 	});
 
+	describe('#BlockDecoder.decodeBlockWithPrivateData', () => {
+		const blockData = {
+			header: {number: 0, previous_hash: 'previous_hash', data_hash: 'data_hash'}
+		};
+		let pvt_block;
+
+		beforeEach(() => {
+			pvt_block = {block: blockData, private_data_map: 'private_data_map'};
+		});
+
+		it('should throw error if block input data is missing', () => {
+			(() => {
+				BlockDecoderRewire.decodeBlockWithPrivateData();
+			}).should.throw(/Block with private data input data is missing/);
+		});
+
+		it('should decode Block object', () => {
+			revert.push(BlockDecoderRewire.__set__('decodePrivateData', (value) => {
+				return value;
+			}));
+			revert.push(BlockDecoderRewire.__set__('decodeBlockData', () => {}));
+			revert.push(BlockDecoderRewire.__set__('decodeBlockMetaData', () => {}));
+			const block_with_private_data = BlockDecoderRewire.decodeBlockWithPrivateData(pvt_block);
+			block_with_private_data.block.header.should.deep.equal({
+				number: '0',
+				previous_hash: 'previous_hash',
+				data_hash: 'data_hash'
+			});
+			block_with_private_data.private_data_map.should.equal('private_data_map');
+		});
+
+		it('should throw and log error object', () => {
+			revert.push(BlockDecoderRewire.__set__('logger', FakeLogger));
+			revert.push(BlockDecoderRewire.__set__('decodePrivateData', () => {
+				throw new Error('MockError');
+			}));
+			revert.push(BlockDecoderRewire.__set__('decodeBlockData', () => {}));
+			revert.push(BlockDecoderRewire.__set__('decodeBlockMetaData', () => {}));
+
+			(() => {
+				BlockDecoderRewire.decodeBlockWithPrivateData(pvt_block);
+			}).should.throw(/Block with private data decode has failed with/);
+			sinon.assert.calledOnce(FakeLogger.error);
+		});
+	});
+
 	describe('#BlockDecoder.decodeTransaction', () => {
 		beforeEach(() => {
 			revert.push(BlockDecoderRewire.__set__('fabprotos.protos.ProcessedTransaction.decode', () => {
@@ -2462,6 +2508,46 @@ describe('BlockDecoder', () => {
 			const payload = BlockDecoderRewire.HeaderType.decodePayloadBasedOnType('data', null);
 			payload.should.deep.equal({});
 			sinon.assert.calledWith(FakeLogger.debug, ' ***** found a header type of %s :: %s', null, 'type');
+		});
+	});
+
+	describe('#decodePrivateData', () => {
+		let decodePrivateData;
+		let decodeKVRWSet_stub;
+
+		const private_data_map_proto = {};
+
+		const collection_pvt_rwset_array = [];
+		const collection_pvt_rwset = {};
+		collection_pvt_rwset.collection_name = 'mycollection';
+		collection_pvt_rwset.rwset = Buffer.from('rwset'); // will not be decoded
+		collection_pvt_rwset_array.push(collection_pvt_rwset);
+
+		const ns_pvt_rwset_array = []; // be sure to populate before setting into protobuf
+		const ns_pvt_rwset = {};
+		ns_pvt_rwset_array.push(ns_pvt_rwset);
+		ns_pvt_rwset.namespace = 'collections';
+		ns_pvt_rwset.collection_pvt_rwset = collection_pvt_rwset_array;
+
+		const txPvtReadWriteSet = {};
+		txPvtReadWriteSet.data_model = 'KV';
+		txPvtReadWriteSet.ns_pvt_rwset = ns_pvt_rwset_array;
+		private_data_map_proto['0'] = txPvtReadWriteSet;
+
+		beforeEach(() => {
+			decodePrivateData = BlockDecoderRewire.__get__('decodePrivateData');
+			decodeKVRWSet_stub = sandbox.stub().returns('myrwset');
+			revert.push(BlockDecoderRewire.__set__('decodeKVRWSet', decodeKVRWSet_stub));
+		});
+		it('should run with no data', () => {
+			const private_data_map = decodePrivateData();
+			should.exist(private_data_map);
+		});
+
+		it('should return the correct rwset', () => {
+			const private_data_map = decodePrivateData(private_data_map_proto);
+			private_data_map[0].ns_pvt_rwset[0].collection_pvt_rwset[0].rwset.should.equal('myrwset');
+			private_data_map[0].ns_pvt_rwset[0].collection_pvt_rwset[0].collection_name.should.equal('mycollection');
 		});
 	});
 });

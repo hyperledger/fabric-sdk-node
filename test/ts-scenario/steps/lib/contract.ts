@@ -248,10 +248,21 @@ export async function cli_lifecycle_chaincode_install(packageName: string, orgNa
  * @param {string} sequence the sequence of the smart contract
  * @param {boolean} tls tls boolean
  */
-export async function cli_lifecycle_chaincode_approve(ccReference: string, ccVersion: string, orgName: string, channelName: string, packageId: string, sequence: string, tls: boolean): Promise<void> {
+export async function cli_lifecycle_chaincode_approve(
+	ccReference: string,
+	ccVersion: string,
+	orgName: string,
+	channelName: string,
+	packageId: string,
+	sequence: string,
+	tls: boolean,
+	ccType: string,
+	ccName: string
+	): Promise<void> {
 	try {
 		// Use CLI container to package smart contract
 		BaseUtils.logMsg(`Attempting lifecycle approve of smart contract with reference ${ccReference} for organization ${orgName} using the CLI`);
+		const colPath: string = path.join('/', 'opt', 'gopath', 'src', 'github.com', 'chaincode', ccType, ccName, 'metadata/collections.json');
 
 		let approveCommand: string[];
 		approveCommand = [
@@ -262,6 +273,7 @@ export async function cli_lifecycle_chaincode_approve(ccReference: string, ccVer
 			'--package-id', packageId,
 			'--sequence', sequence,
 			'--waitForEvent',
+			'--collections-config', colPath,
 		];
 
 		if (tls) {
@@ -278,6 +290,54 @@ export async function cli_lifecycle_chaincode_approve(ccReference: string, ccVer
 }
 
 /**
+ * Use the CLI container to lifecycle query committed chaincode
+ * @param {string} ccName the chaincode name
+ * @param {string} orgName the organization to use
+ * @param {string} channelName the channel name
+ * @param {boolean} tls tls boolean
+ */
+export async function cli_lifecycle_chaincode_query_commit(
+	ccName: string,
+	orgName: string,
+	channelName: string,
+	tls: boolean
+	): Promise<boolean> {
+	try {
+		// Use CLI container to query for a committed smart contract
+		BaseUtils.logMsg(`Attempting lifecycle query for committed smart contract with name ${ccName} for organization ${orgName} using the CLI`);
+
+		let command: string[];
+		command = [
+			'docker', 'exec', `${Constants.DEFAULT_CLI_CONTAINER}_cli`, 'peer', 'lifecycle', 'chaincode', 'querycommitted',
+			'--channelID', channelName,
+			'--name', ccName,
+			'--output', 'json'
+		];
+
+		if (tls) {
+			command.push('--tls', 'true', '--cafile', Constants.CLI_ORDERER_CA_FILE);
+		}
+
+		// will throw an error if not committed
+		await commandRunner.runShellCommand(true, command.join(' '), VERBOSE_CLI);
+		// const results: any = await commandRunner.runShellCommand(true, command.join(' '), VERBOSE_CLI) as any;
+		// const committed = results.stdout; // use this to see the JSON results
+
+		BaseUtils.logMsg(`Smart contract with name ${ccName} is committed for organization ${orgName} using the CLI`);
+		return Promise.resolve(true);
+	} catch (err) {
+		if (err.stderr.includes('404')) {
+			BaseUtils.logMsg(`Smart contract with name ${ccName} is not committed for organization ${orgName} using the CLI`);
+			return Promise.resolve(false);
+		}
+
+		// only show error if not expected
+		BaseUtils.logError(`Failed to query committed smart contract with name ${ccName} using the CLI`, err);
+		return Promise.reject(err);
+	}
+}
+
+/**
  * Use the CLI container to lifecycle commit chaincode
  * @param {string} ccReference the chaincode reference
  * @param {string} ccVersion the chaincode version
@@ -287,7 +347,17 @@ export async function cli_lifecycle_chaincode_approve(ccReference: string, ccVer
  * @param {string} sequence the sequence of the process
  * @param {boolean} tls tls boolean
  */
-export async function cli_lifecycle_chaincode_commit(ccReference: string, ccVersion: string, orgName: string, channelName: string, ccp: CommonConnectionProfileHelper, sequence: string, tls: boolean): Promise<void> {
+export async function cli_lifecycle_chaincode_commit(
+	ccReference: string,
+	ccVersion: string,
+	orgName: string,
+	channelName: string,
+	ccp: CommonConnectionProfileHelper,
+	sequence: string,
+	tls: boolean,
+	ccType: string,
+	ccName: string
+	): Promise<void> {
 	try {
 		// Use CLI container to commit smart contract
 		BaseUtils.logMsg(`Attempting lifecycle commit of smart contract with reference ${ccReference} for organization ${orgName} using the CLI`);
@@ -296,6 +366,7 @@ export async function cli_lifecycle_chaincode_commit(ccReference: string, ccVers
 		const ordererUrl: string = ccp.getOrderer(ordererName).url;
 		const ordererPort: string = ordererUrl.substr(ordererUrl.lastIndexOf(':') + 1);
 		const ordererHost: string = ccp.getOrderer(ordererName).grpcOptions['ssl-target-name-override'];
+		const colPath: string = path.join('/', 'opt', 'gopath', 'src', 'github.com', 'chaincode', ccType, ccName, 'metadata/collections.json');
 
 		// --peerAddresses
 		const peerAddresses: string = `${Constants.CLI_ORG1_PEER_ADDRESS} ${Constants.CLI_ORG2_PEER_ADDRESS}`;
@@ -309,6 +380,7 @@ export async function cli_lifecycle_chaincode_commit(ccReference: string, ccVers
 			'--sequence', sequence,
 			'--peerAddresses', peerAddresses,
 			'--waitForEvent',
+			'--collections-config', colPath,
 		];
 
 		if (tls) {

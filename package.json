@@ -31,11 +31,11 @@
     "dockerReady": "npm run dockerClean && (cd test/fixtures/docker-compose && docker-compose -f docker-compose-tls-level-db.yaml -p node up -d && sleep 15 && docker ps -a)",
     "tapeIntegration": "./scripts/npm_scripts/runTape.sh",
     "tapeIntegrationNoHSM": "./scripts/npm_scripts/runTape.sh noHSM",
-    "cucumberScenario": "npm run setupCucumbers && export HFC_LOGGING='{\"debug\":\"test/temp/debugc.log\"}' && npm run test:cucumber && npm run dockerClean && nyc --check-coverage --statements 58 --branches 37 --functions 56 --lines 58 npm run test:ts-cucumber",
+    "cucumberScenario": "npm run setupCucumbers && export HFC_LOGGING='{\"debug\":\"test/temp/debugc.log\"}' && npm run test:cucumber && npm run dockerClean && nyc --check-coverage --statements 54 --branches 32 --functions 46 --lines 54 npm run test:ts-cucumber",
     "setupCucumbers": "node -e 'require(\"./scripts/npm_scripts/testFunctions.js\").createCucumberLogFile()'",
     "test:cucumber": "cucumber-js -f node_modules/cucumber-pretty ./test/scenario/features/*.feature",
     "test:ts-cucumber": "cucumber-js -f node_modules/cucumber-pretty ./test/ts-scenario/features/*.feature --require './test/ts-scenario/steps/**/*.ts' --require './test/ts-scenario/support/**/*.ts' --require-module ts-node/register",
-    "test:ts-cucumber-tagged": "npm run test:ts-cucumber -- --tags @discovery",
+    "test:ts-cucumber-tagged": "npm run test:ts-cucumber -- --tags @events",
     "testHeadless": "run-s cleanUp compile lint unitTest:all",
     "tapeAndCucumber": "run-s tapeIntegration dockerClean cucumberScenario"
   },

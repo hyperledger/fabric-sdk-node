@@ -34,9 +34,9 @@ describe('Eventer', () => {
 		eventer.options = {};
 		eventer.service = sinon.stub();
 		eventer.service.close = sinon.stub();
-		eventer.service.deliverFiltered = sinon.stub();
-		eventer.service.deliver = sinon.stub();
-		eventer.service.deliverPrivate = sinon.stub();
+		eventer.service.deliverFiltered = sinon.stub().returns(FILTERED_BLOCK);
+		eventer.service.deliver = sinon.stub().returns(FULL_BLOCK);
+		eventer.service.deliverWithPrivateData = sinon.stub().returns(PRIVATE_BLOCK);
 		eventer.stream = sinon.stub();
 		eventer.stream.cancel = sinon.stub();
 		eventer.stream.resume = sinon.stub();
@@ -141,12 +141,15 @@ describe('Eventer', () => {
 	describe('#setStreamByType', () => {
 		it('should setStreamByType FILTERED_BLOCK ', () => {
 			eventer.setStreamByType(FILTERED_BLOCK);
+			eventer.stream.should.be.equal(FILTERED_BLOCK);
 		});
 		it('should setStreamByType FULL_BLOCK ', () => {
 			eventer.setStreamByType(FULL_BLOCK);
+			eventer.stream.should.be.equal(FULL_BLOCK);
 		});
 		it('should setStreamByType PRIVATE_BLOCK ', () => {
 			eventer.setStreamByType(PRIVATE_BLOCK);
+			eventer.stream.should.be.equal(PRIVATE_BLOCK);
 		});
 		it('should not setStreamByType with null', () => {
 			(() => {

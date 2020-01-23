@@ -9,10 +9,10 @@ Feature: Node SDK Events
 
 	Background:
 		Given I place a scenario start message EVENTS FEATURE
-	 	Given I deploy a tls Fabric network
+	 	Given I deploy a tls Fabric network at 2.0 version
 	 	And I use the cli to create and join the channel named eventschannel on the deployed network
 		And I use the cli to update the channel with name eventschannel with config file eventschannel-anchor.tx on the deployed network
-		And I use the cli to deploy a node smart contract named events at version 1.0.0 for all organizations on channel eventschannel with endorsement policy 1ofAny and arguments ["initLedger"]
+		And I use the cli to lifecycle deploy a node smart contract named events at version 1.0.0 as events for all organizations on channel eventschannel with default endorsement policy and arguments ["initLedger"]
 		And I have a memory backed gateway named event_gateway with discovery set to true for user User1 using the connection profile named ccp-tls.json
 
  	Scenario: Using a Contract I can listen to full contract create events emitted by instantiated chaincodes
@@ -75,3 +75,15 @@ Feature: Node SDK Events
 		When I unregister the listener named filteredNumberedBlockListener
 		And I use the gateway named event_gateway to submit a total of 5 transactions with args [createValue] for contract events instantiated on channel eventschannel
 		Then I receive 0 events from the listener named filteredNumberedBlockListener
+
+	#Scenario: Using a Contract I can listen to unfiltered block events with private data emitted by networks
+	#	When I use the gateway named event_gateway to listen for unfiltered private events with a listener named unfilteredPrivateBlockListener on channel eventschannel
+	#	When I use the gateway named event_gateway to submit a transaction with args [privateValuePut] for contract events instantiated on channel eventschannel
+	#	When I use the gateway named event_gateway to submit a transaction with args [privateValueGet] for contract events instantiated on channel eventschannel
+	#	Then I receive a minimum 2 events from the listener unfilteredPrivateBlockListener
+
+	#Scenario: Using a Contract I can stop listening to unfiltered block events emitted by networks
+	#	Given I am listening for unfiltered block events with a listener named unfilteredPrivateBlockListener
+	#	When I unregister the listener named unfilteredPrivateBlockListener
+	#	And I use the gateway named event_gateway to submit a total of 5 transactions with args [createValue] for contract events instantiated on channel eventschannel
+	#	Then I receive 0 events from the listener named unfilteredPrivateBlockListener

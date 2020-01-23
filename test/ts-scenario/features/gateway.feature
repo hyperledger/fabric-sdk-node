@@ -9,7 +9,7 @@ Feature: Configure Fabric using CLI and submit/evaluate using a network Gateway 
 
 	Background:
 		Given I place a scenario start message GATEWAY FEATURE
-	 	Given I deploy a tls Fabric network
+	 	Given I deploy a tls Fabric network at 2.0 version
 	 	And I use the cli to create and join the channel named gatewaychannel on the deployed network
 		And I use the cli to deploy a node smart contract named fabcar at version 1.0.0 for all organizations on channel gatewaychannel with endorsement policy 1ofAny and arguments ["initLedger"]
 		And I have a couchDB backed gateway named mycouchgateway with discovery set to false for user User1 using the connection profile named ccp-tls.json
