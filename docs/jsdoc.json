@@ -7,8 +7,7 @@
             "fabric-ca-client/lib/FabricCAClient.js",
             "fabric-ca-client/lib/AffiliationService.js",
             "fabric-ca-client/lib/IdentityService.js",
-            "fabric-client/index.js",
-            "fabric-client/lib/",
+            "fabric-common/lib/",
             "fabric-network/index.js",
             "fabric-network/lib/"
         ]

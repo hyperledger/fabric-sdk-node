@@ -121,7 +121,7 @@ class Commit extends Proposal {
 	 * @typedef {Object} CommitSendRequest
 	 * @property {Committers[]} [targets] - Optional. The Committers to send the endorsements.
 	 * When not included an handler must be included.
-	 * @property {EndorsementHandler} - [handler] - Optional. The handler to send the endorsements.
+	 * @property {ServiceHandler} - [handler] - Optional. The handler to send the endorsements.
 	 * When not included, targets must be included.
 	 * @property {Number} [requestTimeout] - Optional. The request timeout
 	 */
