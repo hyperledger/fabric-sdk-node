@@ -6,7 +6,6 @@
 
 'use strict';
 
-const rewire = require('rewire');
 const chai = require('chai');
 chai.use(require('chai-as-promised'));
 const expect = chai.expect;
@@ -19,7 +18,8 @@ const Network = require('fabric-network/lib/network');
 const Contract = require('fabric-network/lib/contract');
 const EventServiceManager = require('fabric-network/lib/impl/event/eventservicemanager');
 const EventStrategy = require('fabric-network/lib/impl/event/baseeventstrategy');
-const TransactionEventHandler = rewire('fabric-network/lib/impl/event/transactioneventhandler');
+const TransactionEventHandler = require('fabric-network/lib/impl/event/transactioneventhandler');
+const TimeoutError = require('fabric-network/lib/errors/timeouterror');
 
 describe('TransactionEventHandler', () => {
 	let strategy;
@@ -29,27 +29,9 @@ describe('TransactionEventHandler', () => {
 	let eventService;
 	let eventServiceManager;
 	let baseListener;
-	let revert;
-	let FakeLogger;
-	let sandbox;
 	const transactionId = 'TRANSACTION_ID';
-	const options = {};
-
-	let handler;
 
 	beforeEach(() => {
-		revert = [];
-		sandbox = sinon.createSandbox();
-		FakeLogger = {
-			debug: () => {
-			},
-			error: () => {
-			},
-			warn: () => {
-			}
-		};
-		sandbox.stub(FakeLogger);
-		revert.push(TransactionEventHandler.__set__('logger', FakeLogger));
 		eventServiceManager = sinon.createStubInstance(EventServiceManager);
 		eventServiceManager.startEventService.resolves();
 		network = sinon.createStubInstance(Network);
@@ -64,23 +46,18 @@ describe('TransactionEventHandler', () => {
 
 		eventService = sinon.createStubInstance(EventService);
 		eventService.name = 'eventService';
-		eventService.unregisterEventListener = sinon.stub();
 		baseListener = sinon.stub();
 		baseListener.eventService = eventService;
-		eventService.registerTransactionListener.returns(baseListener);
-
+		eventService.registerTransactionListener.callsFake((txId, listenerFn) => {
+			eventService._listenerFn = listenerFn;
+			return baseListener;
+		});
 		strategy = sinon.createStubInstance(EventStrategy);
 		strategy.getEventServices.returns([eventService]);
-
-		handler = new TransactionEventHandler(transaction, strategy, options);
 	});
 
 
 	afterEach(() => {
-		if (revert.length) {
-			revert.forEach(Function.prototype.call, Function.prototype.call);
-		}
-		sandbox.restore();
 		sinon.restore();
 	});
 
@@ -99,189 +76,200 @@ describe('TransactionEventHandler', () => {
 		});
 
 		it('uses timeout from supplied options', () => {
-			const toptions = {commitTimeout: 1};
+			const options = {commitTimeout: 1};
 
-			const test = new TransactionEventHandler(transaction, strategy, toptions);
-			expect(test.options.commitTimeout).to.equal(toptions.commitTimeout);
+			const test = new TransactionEventHandler(transaction, strategy, options);
+			expect(test.options.commitTimeout).to.equal(options.commitTimeout);
 		});
 	});
 
-	describe('#startListening', () => {
-		it('calls registerTxEvent() on event service with transaction ID', async () => {
-			handler._registerTxEventListeners = sinon.stub().returns();
-			handler._setListenTimeout = sinon.stub().returns();
-			handler._startEventServices = sinon.stub().resolves();
+	describe('event handling', () => {
+		let handler;
 
-			await handler.startListening();
-			expect(handler.notificationPromise).to.exist;
-			sinon.assert.called(handler._registerTxEventListeners);
+		beforeEach(() => {
+			handler = new TransactionEventHandler(transaction, strategy, {commitTimeout: 0});
 		});
 
-		it('calls promiose resolve when no event services', async () => {
-			handler.eventServices = [];
-
-			await handler.startListening();
-			expect(handler.notificationPromise).to.exist;
-		});
-	});
-
-	describe('#_startEventServices', () => {
-		it('calls start on event service', async () => {
-
-			await handler._startEventServices();
-			sinon.assert.called(eventServiceManager.startEventService);
-		});
-		it('see an error', async () => {
-			eventServiceManager.startEventService.rejects(new Error('FAILED'));
-			handler._onError = sinon.stub();
-			await handler._startEventServices();
-			sinon.assert.called(eventServiceManager.startEventService);
-			sinon.assert.called(handler._onError);
-		});
-	});
-
-	describe('#_setListenTimeout', () => {
-		it('returns', () => {
-			handler.options = {commitTimeout: 0};
-
-			handler._setListenTimeout();
-			sinon.assert.calledWith(FakeLogger.debug, '%s - no commit timeout');
-		});
-		it('set and clear', () => {
-			handler.options = {commitTimeout: 10};
-
-			handler._setListenTimeout();
-			sinon.assert.calledWith(FakeLogger.debug, '%s - end');
-			clearTimeout(handler.timeoutHandler);
-		});
-		it('set and let fire', async () => {
-			handler.options = {commitTimeout: 1};
-			handler._timeoutFail = sinon.stub();
-			handler._setListenTimeout();
-			await sleep(1100);
-			sinon.assert.calledWith(FakeLogger.debug, '%s - end');
-			sinon.assert.called(handler._timeoutFail);
-		});
-	});
-
-	describe('#_registerTxEventListeners', () => {
-		it('runs onEvent', () => {
-			handler._onError = sinon.stub();
-			handler._onEvent = sinon.stub();
-			eventService.registerTransactionListener = (txid, callback) => {
-				callback(null, {transactionId: txid, status: 'VALID'});
-				return 'something';
-			};
-			expect(handler.activeListeners.size).to.be.equal(0);
-			handler._registerTxEventListeners();
-			sinon.assert.calledWith(FakeLogger.debug, '%s - end');
-			expect(handler.activeListeners.size).to.be.equal(1);
-			sinon.assert.called(handler._onEvent);
-			sinon.assert.notCalled(handler._onError);
-		});
-		it('runs onError', () => {
-			handler._onError = sinon.stub();
-			handler._onEvent = sinon.stub();
-			eventService.registerTransactionListener = (txid, callback) => {
-				callback(new Error('onERROR'));
-				return 'something';
-			};
-			expect(handler.activeListeners.size).to.be.equal(0);
-			handler._registerTxEventListeners();
-			sinon.assert.calledWith(FakeLogger.debug, '%s - end');
-			expect(handler.activeListeners.size).to.be.equal(1);
-			sinon.assert.notCalled(handler._onEvent);
-			sinon.assert.called(handler._onError);
-		});
-	});
-
-	describe('#_timeoutFail', () => {
-		it('runs', () => {
-			handler._strategyFail = sinon.stub();
-			handler._timeoutFail();
-			sinon.assert.called(handler._strategyFail);
-		});
-	});
-
-	describe('#_onEvent', () => {
-		it('runs with valid', () => {
-			handler._strategyFail = sinon.stub();
-			strategy.eventReceived = sinon.stub();
-
-			handler._onEvent(eventService, 'txid', 'VALID');
-			sinon.assert.called(strategy.eventReceived);
-			sinon.assert.notCalled(handler._strategyFail);
-		});
-		it('runs with invalid', () => {
-			handler._strategyFail = sinon.stub();
-			strategy.eventReceived = sinon.stub();
-
-			handler._onEvent(eventService, 'txid', 'INVALID');
-			sinon.assert.notCalled(strategy.eventReceived);
-			sinon.assert.called(handler._strategyFail);
-		});
-	});
-
-	describe('#_onError', () => {
-		it('runs', () => {
-			strategy.errorReceived = sinon.stub();
-
-			handler._onError(eventService, new Error('FAILED'));
-			sinon.assert.called(strategy.errorReceived);
-		});
-	});
-
-	describe('#_receivedEventServiceResponse', () => {
-		it('runs', () => {
-			expect(handler.respondedEventServices.size).to.be.equal(0);
-
-			handler._receivedEventServiceResponse(eventService);
-			expect(handler.respondedEventServices.size).to.be.equal(1);
-		});
-	});
-
-	describe('#_strategySuccess', () => {
-		it('runs', () => {
-			handler.cancelListening = sinon.stub();
-			handler._resolveNotificationPromise = sinon.stub();
-
-			handler._strategySuccess();
-			sinon.assert.called(handler.cancelListening);
-			sinon.assert.called(handler._resolveNotificationPromise);
-		});
-	});
-
-	describe('#_strategyFail', () => {
-		it('runs', () => {
-			handler.cancelListening = sinon.stub();
-			handler._rejectNotificationPromise = sinon.stub();
-
-			handler._strategyFail();
-			sinon.assert.called(handler.cancelListening);
-			sinon.assert.called(handler._rejectNotificationPromise);
-		});
-	});
-
-	describe('#waitForEvents', () => {
-		it('runs', async () => {
-			setTimeout(() => {
-				handler._strategySuccess();
-			}, 100);
-			await handler.waitForEvents();
-			sinon.assert.calledWith(FakeLogger.debug, 'waitForEvents end');
-		});
-	});
-
-	describe('#cancelListening', () => {
-		it('runs', () => {
-			handler.activeListeners.add(baseListener);
-
+		afterEach(() => {
 			handler.cancelListening();
-			sinon.assert.called(baseListener.eventService.unregisterEventListener);
+		});
+
+		describe('#startListening', () => {
+			it('registers listener with event service using transaction ID', async () => {
+				await handler.startListening();
+				sinon.assert.calledWith(eventService.registerTransactionListener, transactionId);
+			});
+
+			it('starts event service', async () => {
+				await handler.startListening();
+				sinon.assert.calledWith(eventServiceManager.startEventService, eventService);
+			});
+		});
+
+		it('calls eventReceived() on strategy when event service sends valid event', async () => {
+			await handler.startListening();
+			eventService._listenerFn(null, {
+				transactionId,
+				status: 'VALID'
+			});
+			sinon.assert.calledWith(strategy.eventReceived, sinon.match.func, sinon.match.func);
+		});
+
+		it('does not call errorReceived() on strategy when event service sends valid event', async () => {
+			await handler.startListening();
+			eventService._listenerFn(null, {
+				transactionId,
+				status: 'VALID'
+			});
+			sinon.assert.notCalled(strategy.errorReceived);
+		});
+
+		it('calls errorReceived() on strategy when event service sends an error', async () => {
+			await handler.startListening();
+			eventService._listenerFn(new Error('EVENT HUB ERROR'), null);
+			sinon.assert.calledWith(strategy.errorReceived, sinon.match.func, sinon.match.func);
+		});
+
+		it('does not call eventReceived() on strategy when event hub sends an error', async () => {
+			await handler.startListening();
+			eventService._listenerFn(new Error('EVENT HUB ERROR'), null);
+			sinon.assert.notCalled(strategy.eventReceived);
+		});
+
+		it('fails when event hub sends an invalid event', async () => {
+			const status = 'ERROR_CODE';
+			await handler.startListening();
+			eventService._listenerFn(null, {
+				transactionId,
+				status
+			});
+			await expect(handler.waitForEvents()).to.be.rejectedWith(status);
+		});
+
+		it('succeeds when strategy calls success function after event received', async () => {
+			strategy.eventReceived = (successFn, failFn) => successFn();
+
+			await handler.startListening();
+			eventService._listenerFn(null, {
+				transactionId,
+				status: 'VALID'
+			});
+			await expect(handler.waitForEvents()).to.be.fulfilled;
+		});
+
+		it('fails when strategy calls fail function after event received', async () => {
+			const error = new Error('STRATEGY_FAIL');
+			strategy.eventReceived = ((successFn, failFn) => failFn(error));
+
+			await handler.startListening();
+			eventService._listenerFn(null, {
+				transactionId,
+				status: 'VALID'
+			});
+			await expect(handler.waitForEvents()).to.be.rejectedWith(error);
+		});
+
+		it('succeeds when strategy calls success function after error received', async () => {
+			strategy.errorReceived = ((successFn, failFn) => successFn());
+
+			await handler.startListening();
+			eventService._listenerFn(new Error('EVENT HUB ERROR'), null);
+			await expect(handler.waitForEvents()).to.be.fulfilled;
+		});
+
+		it('fails when strategy calls fail function after error received', async () => {
+			const error = new Error('STRATEGY_FAIL');
+			strategy.errorReceived = ((successFn, failFn) => failFn(error));
+
+			await handler.startListening();
+			eventService._listenerFn(new Error('EVENT HUB ERROR'), null);
+			await expect(handler.waitForEvents()).to.be.rejectedWith(error);
+		});
+
+		it('succeeds immediately with no event services', async () => {
+			strategy.getEventServices.returns([]);
+			handler = new TransactionEventHandler(transaction, strategy);
+			await handler.startListening();
+			await expect(handler.waitForEvents()).to.be.fulfilled;
 		});
 	});
-});
 
-function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
-}
+	describe('timeouts', () => {
+		let handler;
+		let clock;
+
+		beforeEach(() => {
+			clock = sinon.useFakeTimers();
+		});
+
+		afterEach(() => {
+			handler.cancelListening();
+			clock.restore();
+		});
+
+		it('fails on timeout if timeout set', async () => {
+			const options = {commitTimeout: 418};
+			handler = new TransactionEventHandler(transaction, strategy, options);
+
+			await handler.startListening();
+			const promise = handler.waitForEvents();
+
+			await clock.runAllAsync();
+			await expect(promise).to.be.rejectedWith(TimeoutError);
+		});
+
+		it('does not timeout if timeout set to zero', async () => {
+			strategy.eventReceived = ((successFn, failFn) => successFn());
+			const options = {commitTimeout: 0};
+			handler = new TransactionEventHandler(transaction, strategy, options);
+
+			await handler.startListening();
+			await clock.runAllAsync();
+			eventService._listenerFn(null, {
+				transactionId,
+				status: 'VALID'
+			});
+
+			await expect(handler.waitForEvents()).to.be.fulfilled;
+		});
+
+		it('timeout failure message includes peers that have not responded', async () => {
+			const options = {commitTimeout: 418};
+			handler = new TransactionEventHandler(transaction, strategy, options);
+
+			await handler.startListening();
+			const promise = handler.waitForEvents();
+			await clock.runAllAsync();
+
+			await expect(promise).to.be.rejectedWith(eventService.name);
+		});
+
+		it('does not timeout if no peers', async () => {
+			strategy.getEventServices.returns([]);
+			const options = {commitTimeout: 418};
+			handler = new TransactionEventHandler(transaction, strategy, options);
+
+			await handler.startListening();
+			await clock.runAllAsync();
+
+			await expect(handler.waitForEvents()).to.be.fulfilled;
+		});
+
+		it('timeout failure error has transaction ID property', async () => {
+			const options = {commitTimeout: 418};
+			handler = new TransactionEventHandler(transaction, strategy, options);
+
+			await handler.startListening();
+			const promise = handler.waitForEvents();
+			await clock.runAllAsync();
+
+			try {
+				await promise;
+				chai.assert.fail('Expected an error');
+			} catch (error) {
+				expect(error.transactionId).to.equal(transactionId);
+			}
+		});
+	});
+
+});
