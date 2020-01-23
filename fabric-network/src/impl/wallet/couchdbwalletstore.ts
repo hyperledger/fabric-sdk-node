@@ -22,7 +22,7 @@ export class CouchDBWalletStore implements WalletStore {
 		} catch (error) {
 			await client.db.create(dbName);
 		}
-		const db = await client.use<WalletDocument>(dbName);
+		const db = client.use<WalletDocument>(dbName);
 		return new CouchDBWalletStore(db);
 	}
 
