@@ -44,7 +44,7 @@ class AbstractEventListener {
 		this.options = options;
 		this.clientOptions = {}; // fabric-client ChannelEventHub options
 
-		if (this.options.hasOwnProperty('unregister')) {
+		if (Object.prototype.hasOwnProperty.call(this.options, 'unregister')) {
 			this.clientOptions.unregister = this.options.unregister;
 		}
 

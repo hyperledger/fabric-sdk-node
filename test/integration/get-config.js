@@ -81,7 +81,7 @@ test('  ---->>>>> get config <<<<<-----', (t) => {
 						);
 
 						for (const key in ORGS[org]) {
-							if (ORGS[org].hasOwnProperty(key)) {
+							if (Object.prototype.hasOwnProperty.call(ORGS[org], key)) {
 								if (key.indexOf('peer') === 0) {
 									data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[org][key].tls_cacerts));
 									const peer = new Peer(

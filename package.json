@@ -25,7 +25,9 @@
     "coverage": "nyc npm run unit-test",
     "unit-test": "mocha --exclude 'fabric-client/test/data/**' --recursive",
     "compile": "tsc --project test/typescript",
-    "compile:w": "tsc --project test/typescript --watch"
+    "compile:w": "tsc --project test/typescript --watch",
+    "eslint": "eslint fabric-network/ fabric-client/ fabric-ca-client/lib/ fabric-common/ test/",
+    "tslint": "tslint -t prose -p fabric-client/types/tsconfig.json 'fabric-client/**/*.ts' && tslint -t prose 'test/**/*.ts' && tslint -t prose -p fabric-network/types/tsconfig.json 'fabric-network/**/*.ts' "
   },
   "devDependencies": {
     "@cloudant/cloudant": "^2.1.0",

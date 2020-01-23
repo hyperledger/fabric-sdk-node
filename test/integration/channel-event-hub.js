@@ -1033,7 +1033,7 @@ function createChaincodeRegistrationAsArray(t, message, event_hub, chaincode_id,
 			t.fail('Failed to receive the ' + message + ' ::' + error);
 			reject(error);
 		},
-			{as_array: true}
+		{as_array: true}
 		);
 	});
 	return event_monitor;
