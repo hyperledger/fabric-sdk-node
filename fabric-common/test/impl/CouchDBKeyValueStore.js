@@ -192,7 +192,7 @@ describe('CouchDBKeyValueStore', () => {
 
 			await store.setValue('myKey', 'myValue');
 
-			// insert should ah e been called once with known value
+			// insert should have been called once with known value
 			sinon.assert.calledOnce(insertStub);
 			sinon.assert.calledWith(insertStub, {_id: 'myKey', member: 'myValue'});
 		});
