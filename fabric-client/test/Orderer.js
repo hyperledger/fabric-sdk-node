@@ -105,12 +105,10 @@ describe('Orderer', () => {
 				error: () => {}
 			};
 
-			const errorStub = sinon.stub(FakeLogger, 'error');
 			revert.push(OrdererRewire.__set__('logger', FakeLogger));
 			revert.push(OrdererRewire.__set__('Orderer.prototype.waitForReady', sinon.stub().rejects(new Error('waitForReady fail'))));
-			const obj = new OrdererRewire('grpc://host:2700');
+			const obj = new OrdererRewire('grpc://host:2700', {useWaitForReady: true});
 			await obj.sendBroadcast('broadcast').should.be.rejectedWith(/waitForReady fail/);
-			sinon.assert.calledWith(errorStub, 'Orderer %s has an error %s ');
 		});
 
 		it('should log and reject a Promise on timeout', async () => {
@@ -122,7 +120,7 @@ describe('Orderer', () => {
 			const errorStub = sinon.stub(FakeLogger, 'error');
 			revert.push(OrdererRewire.__set__('logger', FakeLogger));
 			revert.push(OrdererRewire.__set__('Orderer.prototype.waitForReady', sinon.stub().resolves()));
-			const obj = new OrdererRewire('grpc://host:2700');
+			const obj = new OrdererRewire('grpc://host:2700', {useWaitForReady: true});
 
 			const broadcastStub = sinon.stub();
 
@@ -145,7 +143,6 @@ describe('Orderer', () => {
 
 			const errorStub = sinon.stub(FakeLogger, 'error');
 			revert.push(OrdererRewire.__set__('logger', FakeLogger));
-			revert.push(OrdererRewire.__set__('Orderer.prototype.waitForReady', sinon.stub().resolves()));
 			const obj = new OrdererRewire('grpc://host:2700');
 
 			const broadcastStub = sinon.stub();
@@ -169,7 +166,6 @@ describe('Orderer', () => {
 
 			const errorStub = sinon.stub(FakeLogger, 'error');
 			revert.push(OrdererRewire.__set__('logger', FakeLogger));
-			revert.push(OrdererRewire.__set__('Orderer.prototype.waitForReady', sinon.stub().resolves()));
 			const obj = new OrdererRewire('grpc://host:2700');
 
 			const broadcastStub = sinon.stub();
@@ -203,7 +199,6 @@ describe('Orderer', () => {
 
 			const errorStub = sinon.stub(FakeLogger, 'error');
 			revert.push(OrdererRewire.__set__('logger', FakeLogger));
-			revert.push(OrdererRewire.__set__('Orderer.prototype.waitForReady', sinon.stub().resolves()));
 			const obj = new OrdererRewire('grpc://host:2700');
 
 			const broadcastStub = sinon.stub();
@@ -239,7 +234,6 @@ describe('Orderer', () => {
 
 			const errorStub = sinon.stub(FakeLogger, 'error');
 			revert.push(OrdererRewire.__set__('logger', FakeLogger));
-			revert.push(OrdererRewire.__set__('Orderer.prototype.waitForReady', sinon.stub().resolves()));
 			const obj = new OrdererRewire('grpc://host:2700');
 
 			const broadcastStub = sinon.stub();
@@ -274,7 +268,6 @@ describe('Orderer', () => {
 
 			const errorStub = sinon.stub(FakeLogger, 'error');
 			revert.push(OrdererRewire.__set__('logger', FakeLogger));
-			revert.push(OrdererRewire.__set__('Orderer.prototype.waitForReady', sinon.stub().resolves()));
 			const obj = new OrdererRewire('grpc://host:2700');
 
 			const broadcastStub = sinon.stub();
@@ -309,7 +302,6 @@ describe('Orderer', () => {
 
 			const errorStub = sinon.stub(FakeLogger, 'error');
 			revert.push(OrdererRewire.__set__('logger', FakeLogger));
-			revert.push(OrdererRewire.__set__('Orderer.prototype.waitForReady', sinon.stub().resolves()));
 			const obj = new OrdererRewire('grpc://host:2700');
 
 			const broadcastStub = sinon.stub();
@@ -338,7 +330,6 @@ describe('Orderer', () => {
 
 		it('should resolve if there is a valid response', async () => {
 
-			OrdererRewire.__set__('Orderer.prototype.waitForReady', sinon.stub().resolves());
 			const obj = new OrdererRewire('grpc://host:2700');
 
 			const broadcastStub = sinon.stub();
@@ -378,7 +369,7 @@ describe('Orderer', () => {
 
 		it('should reject on error during `waitForReady`', async () => {
 			revert.push(OrdererRewire.__set__('Orderer.prototype.waitForReady', sinon.stub().rejects(new Error('waitForReady fail'))));
-			const obj = new OrdererRewire('grpc://host:2700');
+			const obj = new OrdererRewire('grpc://host:2700', {useWaitForReady: true});
 			await obj.sendDeliver('deliver').should.be.rejectedWith(/waitForReady fail/);
 		});
 
@@ -391,7 +382,7 @@ describe('Orderer', () => {
 			const errorStub = sinon.stub(FakeLogger, 'error');
 			revert.push(OrdererRewire.__set__('logger', FakeLogger));
 			revert.push(OrdererRewire.__set__('Orderer.prototype.waitForReady', sinon.stub().resolves()));
-			const obj = new OrdererRewire('grpc://host:2700');
+			const obj = new OrdererRewire('grpc://host:2700', {useWaitForReady: true});
 			obj._request_timeout = 0;
 
 			const deliverStub = sinon.stub();
@@ -404,7 +395,7 @@ describe('Orderer', () => {
 
 		it('should reject a Promise on timeout', async () => {
 			revert.push(OrdererRewire.__set__('Orderer.prototype.waitForReady', sinon.stub().resolves()));
-			const obj = new OrdererRewire('grpc://host:2700');
+			const obj = new OrdererRewire('grpc://host:2700', {useWaitForReady: true});
 			obj._request_timeout = 0;
 
 			const deliverStub = sinon.stub();
@@ -427,7 +418,6 @@ describe('Orderer', () => {
 
 			const errorStub = sinon.stub(FakeLogger, 'error');
 			revert.push(OrdererRewire.__set__('logger', FakeLogger));
-			revert.push(OrdererRewire.__set__('Orderer.prototype.waitForReady', sinon.stub().resolves()));
 			const obj = new OrdererRewire('grpc://host:2700');
 
 			const deliverStub = sinon.stub();
@@ -451,7 +441,6 @@ describe('Orderer', () => {
 
 			const errorStub = sinon.stub(FakeLogger, 'error');
 			revert.push(OrdererRewire.__set__('logger', FakeLogger));
-			revert.push(OrdererRewire.__set__('Orderer.prototype.waitForReady', sinon.stub().resolves()));
 			const obj = new OrdererRewire('grpc://host:2700');
 
 			const deliverStub = sinon.stub();
@@ -469,7 +458,6 @@ describe('Orderer', () => {
 
 		it('should reject if there is an error in the response with a non-matched error code', async () => {
 
-			OrdererRewire.__set__('Orderer.prototype.waitForReady', sinon.stub().resolves());
 			const obj = new OrdererRewire('grpc://host:2700');
 
 			const deliverStub = sinon.stub();
@@ -497,7 +485,6 @@ describe('Orderer', () => {
 		});
 
 		it('should reject if there is an error in the response with a no error code and disconnect', async () => {
-			OrdererRewire.__set__('Orderer.prototype.waitForReady', sinon.stub().resolves());
 			const obj = new OrdererRewire('grpc://host:2700');
 
 			const deliverStub = sinon.stub();
@@ -524,7 +511,6 @@ describe('Orderer', () => {
 		});
 
 		it('should reject if there is an error in the response with a non-matched error code and disconnect', async () => {
-			OrdererRewire.__set__('Orderer.prototype.waitForReady', sinon.stub().resolves());
 			const obj = new OrdererRewire('grpc://host:2700');
 
 			const deliverStub = sinon.stub();
@@ -558,7 +544,6 @@ describe('Orderer', () => {
 
 			const errorStub = sinon.stub(FakeLogger, 'error');
 			revert.push(OrdererRewire.__set__('logger', FakeLogger));
-			revert.push(OrdererRewire.__set__('Orderer.prototype.waitForReady', sinon.stub().resolves()));
 			const obj = new OrdererRewire('grpc://host:2700');
 
 			const deliverStub = sinon.stub();
@@ -592,7 +577,6 @@ describe('Orderer', () => {
 
 			const errorStub = sinon.stub(FakeLogger, 'error');
 			revert.push(OrdererRewire.__set__('logger', FakeLogger));
-			revert.push(OrdererRewire.__set__('Orderer.prototype.waitForReady', sinon.stub().resolves()));
 			const obj = new OrdererRewire('grpc://host:2700');
 
 			const deliverStub = sinon.stub();
@@ -627,7 +611,6 @@ describe('Orderer', () => {
 			};
 			const errorStub = sinon.stub(FakeLogger, 'error');
 			revert.push(OrdererRewire.__set__('logger', FakeLogger));
-			revert.push(OrdererRewire.__set__('Orderer.prototype.waitForReady', sinon.stub().resolves()));
 			const obj = new OrdererRewire('grpc://host:2700');
 			obj._ordererClient.deliver = () => {
 				throw 'Fake Error';
@@ -647,7 +630,6 @@ describe('Orderer', () => {
 
 			OrdererRewire.__set__('logger', FakeLogger);
 
-			OrdererRewire.__set__('Orderer.prototype.waitForReady', sinon.stub().resolves());
 			const obj = new OrdererRewire('grpc://host:2700');
 
 			const deliverStub = sinon.stub();
@@ -678,7 +660,6 @@ describe('Orderer', () => {
 		});
 
 		it('should deal with `block` and `status` response types ', async () => {
-			OrdererRewire.__set__('Orderer.prototype.waitForReady', sinon.stub().resolves());
 			const obj = new OrdererRewire('grpc://host:2700');
 
 			const deliverStub = sinon.stub();

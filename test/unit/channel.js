@@ -1076,7 +1076,7 @@ test('\n\n ** Channel Discovery tests **\n\n', async (t) => {
 	);
 
 
-	const peer = new Peer('grpc://localhost:9999');
+	const peer = new Peer('grpc://localhost:9999', {useWaitForReady: true});
 
 	channel.addPeer(peer);
 
@@ -1159,7 +1159,7 @@ test('\n\n ** Channel Discovery tests **\n\n', async (t) => {
 	try {
 		await channel.initialize({
 			target: peer,
-			endorsementHandler: 'fabric-client/lib/impl/BasicCommitHandler.js',
+			commitHandler: 'fabric-client/lib/impl/BasicCommitHandler.js',
 			discover: false
 		});
 		t.fail('able to initialize channel with a good commit handler path');

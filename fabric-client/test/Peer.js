@@ -114,6 +114,12 @@ describe('Peer', () => {
 			await obj.sendProposal().should.be.rejectedWith(/Missing proposal to send to peer/);
 		});
 
+		it('should reject on error during `waitForReady`', async () => {
+			PeerRewire.__set__('Peer.prototype.waitForReady', sinon.stub().rejects(new Error('waitForReady fail')));
+			const obj = new PeerRewire('grpc://host:2700', {useWaitForReady: true});
+			await obj.sendProposal('deliver').should.be.rejectedWith(/waitForReady fail/);
+		});
+
 		it('should reject on timeout', async () => {
 			PeerRewire.__set__('Peer.prototype.waitForReady', sinon.stub().resolves());
 
@@ -126,7 +132,7 @@ describe('Peer', () => {
 			const endorserClient = sinon.stub();
 			endorserClient.processProposal = sinon.stub().callsFake(Fake);
 
-			const obj = new PeerRewire('grpc://host:2700');
+			const obj = new PeerRewire('grpc://host:2700', {useWaitForReady: true});
 			obj._endorserClient = endorserClient;
 
 			await obj.sendProposal('deliver', 0).should.be.rejectedWith(/REQUEST_TIMEOUT/);
@@ -142,8 +148,6 @@ describe('Peer', () => {
 			const debugStub = sandbox.stub(FakeLogger, 'debug');
 
 			PeerRewire.__set__('logger', FakeLogger);
-
-			PeerRewire.__set__('Peer.prototype.waitForReady', sinon.stub().resolves());
 
 			const endorserClient = sinon.stub();
 
@@ -170,8 +174,6 @@ describe('Peer', () => {
 
 			PeerRewire.__set__('logger', FakeLogger);
 
-			PeerRewire.__set__('Peer.prototype.waitForReady', sinon.stub().resolves());
-
 			const endorserClient = sinon.stub();
 
 			function Fake(params, callback) {
@@ -196,8 +198,6 @@ describe('Peer', () => {
 			const errorStub = sandbox.stub(FakeLogger, 'error');
 
 			PeerRewire.__set__('logger', FakeLogger);
-
-			PeerRewire.__set__('Peer.prototype.waitForReady', sinon.stub().resolves());
 
 			const endorserClient = sinon.stub();
 
@@ -225,8 +225,6 @@ describe('Peer', () => {
 
 			PeerRewire.__set__('logger', FakeLogger);
 
-			PeerRewire.__set__('Peer.prototype.waitForReady', sinon.stub().resolves());
-
 			const endorserClient = sinon.stub();
 
 			function Fake(params, callback) {
@@ -253,8 +251,6 @@ describe('Peer', () => {
 
 			PeerRewire.__set__('logger', FakeLogger);
 
-			PeerRewire.__set__('Peer.prototype.waitForReady', sinon.stub().resolves());
-
 			const endorserClient = sinon.stub();
 
 			function Fake(params, callback) {
@@ -279,8 +275,6 @@ describe('Peer', () => {
 			const debugStub = sandbox.stub(FakeLogger, 'debug');
 
 			PeerRewire.__set__('logger', FakeLogger);
-
-			PeerRewire.__set__('Peer.prototype.waitForReady', sinon.stub().resolves());
 
 			const endorserClient = sinon.stub();
 
@@ -308,7 +302,6 @@ describe('Peer', () => {
 			};
 
 			PeerRewire.__set__('logger', FakeLogger);
-			PeerRewire.__set__('Peer.prototype.waitForReady', sinon.stub().resolves());
 			const endorserClient = sinon.stub();
 
 			const myResponse = {response: {status: 500, message: 'some error'}};
@@ -334,8 +327,6 @@ describe('Peer', () => {
 		});
 
 		it('should not mark errors as proposal response if not a proposal response', async () => {
-			PeerRewire.__set__('Peer.prototype.waitForReady', sinon.stub().resolves());
-
 			function Fake(params, callback) {
 				setTimeout(() => {
 					callback.call(null, 'timeout not honoured');
@@ -377,7 +368,7 @@ describe('Peer', () => {
 
 			PeerRewire.__set__('logger', FakeLogger);
 
-			const obj = new PeerRewire('grpc://host:2700');
+			const obj = new PeerRewire('grpc://host:2700', {useWaitForReady: true});
 
 			// this will throw, but we can still check method entry
 			obj.sendDiscovery()
@@ -393,6 +384,12 @@ describe('Peer', () => {
 		it('should reject if no request to send', async () => {
 			const obj = new Peer('grpc://host:2700');
 			await obj.sendDiscovery().should.be.rejectedWith(/Missing request to send to peer discovery service/);
+		});
+
+		it('should reject on error during `waitForReady`', async () => {
+			PeerRewire.__set__('Peer.prototype.waitForReady', sinon.stub().rejects(new Error('waitForReady fail')));
+			const obj = new PeerRewire('grpc://host:2700', {useWaitForReady: true});
+			await obj.sendDiscovery('deliver').should.be.rejectedWith(/waitForReady fail/);
 		});
 
 		it('should log and reject on timeout', async () => {
@@ -416,7 +413,7 @@ describe('Peer', () => {
 			const discoveryClient = sinon.stub();
 			discoveryClient.discover = sinon.stub().callsFake(Fake);
 
-			const obj = new PeerRewire('grpc://host:2700');
+			const obj = new PeerRewire('grpc://host:2700', {useWaitForReady: true});
 			obj._discoveryClient = discoveryClient;
 
 			await obj.sendDiscovery('deliver', 0).should.be.rejectedWith(/REQUEST_TIMEOUT/);
@@ -433,8 +430,6 @@ describe('Peer', () => {
 			const debugStub = sandbox.stub(FakeLogger, 'debug');
 
 			PeerRewire.__set__('logger', FakeLogger);
-
-			PeerRewire.__set__('Peer.prototype.waitForReady', sinon.stub().resolves());
 
 			function Fake(params, callback) {
 				callback.call(null, 'i_am_an_error');
@@ -461,8 +456,6 @@ describe('Peer', () => {
 
 			PeerRewire.__set__('logger', FakeLogger);
 
-			PeerRewire.__set__('Peer.prototype.waitForReady', sinon.stub().resolves());
-
 			function Fake(params, callback) {
 				callback.call(null, new Error('FORCED_ERROR'));
 			}
@@ -488,8 +481,6 @@ describe('Peer', () => {
 
 			PeerRewire.__set__('logger', FakeLogger);
 
-			PeerRewire.__set__('Peer.prototype.waitForReady', sinon.stub().resolves());
-
 			function Fake(params, callback) {
 				callback.call(null, null, null);
 			}
@@ -514,7 +505,6 @@ describe('Peer', () => {
 			const debugStub = sandbox.stub(FakeLogger, 'debug');
 
 			PeerRewire.__set__('logger', FakeLogger);
-			PeerRewire.__set__('Peer.prototype.waitForReady', sinon.stub().resolves());
 
 			const myResponse = {me: 'valid'};
 			function Fake(params, callback) {

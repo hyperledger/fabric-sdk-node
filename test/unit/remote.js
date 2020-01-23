@@ -150,7 +150,7 @@ test('\n\n ** Remote node tests **\n\n', async (t) => {
 		'Check not passing any GRPC options.'
 	);
 
-	peer = new Peer(url, {pem: aPem, clientKey: aPem, clientCert: aPem});
+	peer = new Peer(url, {pem: aPem, clientKey: aPem, clientCert: aPem, useWaitForReady: true});
 	try {
 		await peer.sendProposal({}, 100);
 	} catch (error) {

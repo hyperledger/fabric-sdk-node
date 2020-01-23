@@ -111,7 +111,11 @@ class Peer extends Remote {
 
 		this._createClients();
 
-		await this.waitForReady(this._endorserClient);
+		// by default users will have to choose to have the connection
+		// checked by the wait for ready processing of the gRPC service
+		if (this.useWaitForReady) {
+			await this.waitForReady(this._endorserClient);
+		}
 
 		return new Promise((resolve, reject) => {
 			const send_timeout = setTimeout(() => {
@@ -169,7 +173,7 @@ class Peer extends Remote {
 	 *        timeout in the config settings.
 	 * @returns {Promise} A Promise for a {@link DiscoveryResponse}
 	 */
-	sendDiscovery(request, timeout) {
+	async sendDiscovery(request, timeout) {
 		const method = 'sendDiscovery';
 		logger.debug('%s - Start', method);
 		const self = this;
@@ -184,38 +188,42 @@ class Peer extends Remote {
 
 		this._createClients();
 
-		return this.waitForReady(this._discoveryClient).then(() => {
-			return new Promise((resolve, reject) => {
-				const send_timeout = setTimeout(() => {
-					logger.error('%s - timed out after:%s', method, rto);
-					return reject(new Error('REQUEST_TIMEOUT'));
-				}, rto);
+		// by default users will have to choose to have the connection
+		// checked by the wait for ready processing of the gRPC service
+		if (this.useWaitForReady) {
+			await this.waitForReady(this._discoveryClient);
+		}
 
-				self._discoveryClient.discover(request, (err, response) => {
-					clearTimeout(send_timeout);
-					if (err) {
-						logger.debug('%s - Received discovery response from: %s status: %s', method, self._url, err);
-						if (err instanceof Error) {
-							err.peer = self.getCharacteristics();
-							reject(err);
-						} else {
-							const return_error = new Error(err);
-							return_error.peer = self.getCharacteristics();
-							reject(return_error);
-						}
+		return new Promise((resolve, reject) => {
+			const send_timeout = setTimeout(() => {
+				logger.error('%s - timed out after:%s', method, rto);
+				return reject(new Error('REQUEST_TIMEOUT'));
+			}, rto);
+
+			self._discoveryClient.discover(request, (err, response) => {
+				clearTimeout(send_timeout);
+				if (err) {
+					logger.debug('%s - Received discovery response from: %s status: %s', method, self._url, err);
+					if (err instanceof Error) {
+						err.peer = self.getCharacteristics();
+						reject(err);
 					} else {
-						if (response) {
-							logger.debug('%s - Received discovery response from peer "%s"', method, self._url);
-							response.peer = self.getCharacteristics();
-							resolve(response);
-						} else {
-							const return_error = new Error(util.format('GRPC client failed to get a proper response from the peer "%s".', self._url));
-							return_error.peer = self.getCharacteristics();
-							logger.error('%s - rejecting with:%s', method, return_error);
-							reject(return_error);
-						}
+						const return_error = new Error(err);
+						return_error.peer = self.getCharacteristics();
+						reject(return_error);
 					}
-				});
+				} else {
+					if (response) {
+						logger.debug('%s - Received discovery response from peer "%s"', method, self._url);
+						response.peer = self.getCharacteristics();
+						resolve(response);
+					} else {
+						const return_error = new Error(util.format('GRPC client failed to get a proper response from the peer "%s".', self._url));
+						return_error.peer = self.getCharacteristics();
+						logger.error('%s - rejecting with:%s', method, return_error);
+						reject(return_error);
+					}
+				}
 			});
 		});
 	}

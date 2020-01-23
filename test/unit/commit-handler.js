@@ -68,16 +68,16 @@ test('\n\n ** BasicCommitHandler - test **\n\n', async (t) => {
 	parameters.request = {};
 	await errorChecker(t, handler, parameters, 'Missing "signed_envolope"');
 
-	const orderer = client.newOrderer('grpc://somehost.com:7777');
+	const orderer = client.newOrderer('grpc://somehost.com:7777', {useWaitForReady: true});
 	try {
 		await handler.commit({request: {orderer}, signed_envelope: {}}, 1000);
 		t.fail('Should not be here - looking for orderers in request');
 	} catch (error) {
 		if (error instanceof Error) {
 			if (error.toString().indexOf('Failed to connect before the deadline') > -1) {
-				t.pass('This should fail with ' + error.toString());
+				t.pass('Successfull - got failed with ' + error.toString());
 			} else {
-				t.fail('Did not get Failed to connect before the deadline - got ' + error.toString());
+				t.fail('Failed - Did not get Failed to connect before the deadline - got ' + error.toString());
 			}
 		} else {
 			t.fail('Unknown commit results returned');
@@ -104,12 +104,12 @@ test('\n\n ** BasicCommitHandler - test **\n\n', async (t) => {
 		}
 	}
 
-	channel.addOrderer(client.newOrderer('grpc://somehost.com:1111'));
-	channel.addOrderer(client.newOrderer('grpc://somehost.com:2222'));
-	channel.addOrderer(client.newOrderer('grpc://somehost.com:3333'));
-	channel.addOrderer(client.newOrderer('grpc://somehost.com:4444'));
-	channel.addOrderer(client.newOrderer('grpc://somehost.com:5555'));
-	channel.addOrderer(client.newOrderer('grpc://somehost.com:6666'));
+	channel.addOrderer(client.newOrderer('grpc://somehost.com:1111', {useWaitForReady: true}));
+	channel.addOrderer(client.newOrderer('grpc://somehost.com:2222', {useWaitForReady: true}));
+	channel.addOrderer(client.newOrderer('grpc://somehost.com:3333', {useWaitForReady: true}));
+	channel.addOrderer(client.newOrderer('grpc://somehost.com:4444', {useWaitForReady: true}));
+	channel.addOrderer(client.newOrderer('grpc://somehost.com:5555', {useWaitForReady: true}));
+	channel.addOrderer(client.newOrderer('grpc://somehost.com:6666', {useWaitForReady: true}));
 
 	try {
 		await handler._commit(request, envelope, 5000);
