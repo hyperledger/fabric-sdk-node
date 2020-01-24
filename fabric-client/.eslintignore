@@ -7,4 +7,4 @@ coverage
 node_modules
 config
 .nyc_output
-
+test/data/**

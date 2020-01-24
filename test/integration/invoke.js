@@ -79,7 +79,7 @@ function init() {
 	}
 
 	for (const key in ORGS) {
-		if (ORGS.hasOwnProperty(key) && typeof ORGS[key].peer1 !== 'undefined') {
+		if (Object.prototype.hasOwnProperty.call(ORGS, key) && typeof ORGS[key].peer1 !== 'undefined') {
 			const data = fs.readFileSync(path.join(__dirname, 'e2e', ORGS[key].peer1.tls_cacerts));
 			const org = ORGS[key].peer1;
 			org.pem = Buffer.from(data).toString();
