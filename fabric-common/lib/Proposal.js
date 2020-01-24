@@ -244,7 +244,7 @@ class Proposal extends ServiceAction {
 	/**
 	 * @typedef {Object} SendProposalRequest
 	 * @property {Peer[]} [targets] - Optional. The peers to send the proposal.
-	 * @property {EndorsementHandler} - [handler] - Optional. The handler to send the proposal.
+	 * @property {ServiceHandler} - [handler] - Optional. The handler to send the proposal.
 	 * @property {Number} [requestTimeout] - Optional. The request timeout
 	 */
 

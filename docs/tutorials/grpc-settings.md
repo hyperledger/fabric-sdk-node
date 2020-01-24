@@ -1,39 +1,35 @@
 
-This tutorial illustrates the different ways of setting the gRPC settings used on connections to the Hyperledger Fabric network with a Hyperledger Fabric Node.js Client as of 1.4.
-
-For more information on:
-* getting started with Hyperledger Fabric see
-[Building your first network](http://hyperledger-fabric.readthedocs.io/en/latest/build_network.html).
+This tutorial illustrates the different ways of setting the gRPC settings used on connections to the Hyperledger Fabric network with a Hyperledger Fabric Node.js Client as of 2.0
 
 The following assumes an understanding of the Hyperledger Fabric network
 (orderers and peers),
 and of Node application development.
 
 ### Overview
-The Hyperledger Fabric Node.js javascript SDK, `fabric-client`,  communicates
+The Hyperledger Fabric Node.js javascript SDK, `fabric-common`,  communicates
 with a Hyperledger Fabric network using gRPC. The gRPC technology, framework,
 handles moving data reliably between the fabric network and the fabric client
 application.
-fabric-client allows the application to provide settings required to control
+fabric-common allows the application to provide settings required to control
 the environment.
 
-fabric-client has default connection options that include default gRPC settings.
+fabric-common has default connection options that include default gRPC settings.
 There are various ways for the application to override the default connection
-options. 
+options.
 
 ### Default connection options
-fabric-client has the following gRPC connection options as defaults.
+fabric-common has the following gRPC connection options as defaults.
 These are in the `default.json` system configuration file that is included
-with the fabric-client NPM package.
+with the fabric-common NPM package.
 ```
 	"connection-options": {
 		"grpc.max_receive_message_length": -1,
 		"grpc.max_send_message_length": -1,
-		"grpc.keepalive_time_ms": 120000, 
-		"grpc.http2.min_time_between_pings_ms": 120000, 
-		"grpc.keepalive_timeout_ms": 20000, 
-		"grpc.http2.max_pings_without_data": 0, 
-		"grpc.keepalive_permit_without_calls": 1 
+		"grpc.keepalive_time_ms": 120000,
+		"grpc.http2.min_time_between_pings_ms": 120000,
+		"grpc.keepalive_timeout_ms": 20000,
+		"grpc.http2.max_pings_without_data": 0,
+		"grpc.keepalive_permit_without_calls": 1
 	}
 ```
 * `grpc.max_receive_message_length` - Maximum message length that the channel
@@ -42,11 +38,11 @@ can receive. Int valued, bytes. -1 means unlimited.
 send. Int valued, bytes. -1 means unlimited.
 * `grpc.keepalive_time_ms` - After a duration of this time the client/server
 pings its peer to see if the transport is still alive. Int valued, milliseconds.
-* `grpc.keepalive_timeout_ms` - After waiting for a duration of this time, 
+* `grpc.keepalive_timeout_ms` - After waiting for a duration of this time,
 if the keepalive ping sender does not receive the ping ack, it will close the
-transport. Int valued, milliseconds. 
+transport. Int valued, milliseconds.
 * `grpc.keepalive_permit_without_calls` - Is it permissible to send keepalive
-pings without any outstanding streams. Int valued, 0(false)/1(true). 
+pings without any outstanding streams. Int valued, 0(false)/1(true).
 * `grpc.http2.min_time_between_pings_ms` - Minimum time between sending
 successive ping frames without receiving any data frame.
 Int valued, milliseconds.
@@ -60,13 +56,13 @@ By using the system configuration, the application may change the default
 connection options used for all new connections established.
 
 The default connection options are retrieved as a set of options when
-the {@link Client} instance builds new {@link Peer}s or new {@link Orderer}s.
+the {@link Client} instance builds new {@link Endorsers}s or new {@link Orderer}s.
 To modify the  default connection options before runtime, update the
 `default.json` file or add your own configuration file to the system configuration.
 The last file loaded will override all previous files including the `default.json`
-file shipped with the fabric-client. see {@link BaseClient.addConfigFile}.
+file shipped with the fabric-common. see {@link BaseClient.addConfigFile}.
 ```
-const Client = require('fabric-client');
+const Client = require('fabric-common');
 Client.addConfigFile(<path to the config file>);
 ```
 To modify the default connection options during runtime, get them from the

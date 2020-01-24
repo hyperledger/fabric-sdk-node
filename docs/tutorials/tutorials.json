@@ -2,32 +2,17 @@
 	"app-dev-env-setup": {
 		"title": "Setting up the Application Developer's Environment"
 	},
-	"channel-create": {
-		"title": "fabric-client: How to create a Hyperledger Fabric channel"
-	},
-	"network-config" : {
-		"title": "fabric-client: How to use a common connection profile"
-	},
-	"channel-events" : {
-		"title": "fabric-client: How to use the channel-based event service"
-	},
-	"mutual-tls" : {
-		"title": "fabric-client: How to configure mutual TLS"
-	},
-	"metadata-chaincode" : {
-		"title": "fabric-client: How to add CouchDB indexes during chaincode installation"
-	},
-	"discovery" : {
-		"title": "fabric-client: How to use the discovery service"
-	},
 	"logging" : {
-		"title": "fabric-client: How to use logging"
+		"title": "fabric-common: How to use logging"
 	},
-	"private-data" : {
-		"title": "How to use private data"
+	"grpc-settings": {
+		"title": "fabric-common: How to set gRPC settings"
 	},
 	"sign-transaction-offline": {
-		"title": "Working with an offline private key"
+		"title": "fabric-common: Working with an offline private key"
+	},
+	"handlers": {
+		"title": "fabric-common: How to use the endorsement, query, and commit handlers"
 	},
 	"transaction-commit-events": {
 		"title": "fabric-network: How to wait for transactions to be committed to the ledger"
@@ -43,15 +28,6 @@
 	},
 	"listening-to-events": {
 		"title": "fabric-network: How to listen to events"
-	},
-	"grpc-settings": {
-		"title": "fabric-client: How to set gRPC settings"
-	},
-	"handlers": {
-		"title": "fabric-client: How to use the endorsement and commit handlers"
-	},
-	"chaincode-lifecycle": {
-		"title": "fabric-client: How to install and start your chaincode"
 	},
 	"wallet": {
 		"title": "fabric-network: Using wallets to manage identities"
