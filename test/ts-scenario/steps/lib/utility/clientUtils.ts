@@ -16,6 +16,15 @@ import { stringify } from 'querystring';
 
 const stateStore: StateStore = StateStore.getInstance();
 
+function assertNoErrors(endorsementResults: ProposalResponse): void {
+	if (endorsementResults.errors && endorsementResults.errors.length > 0) {
+		for (const error of endorsementResults.errors) {
+			BaseUtils.logMsg(`Failed to get endorsement : ${error.message}`);
+		}
+		throw Error('failed endorsement');
+	}
+}
+
 export async function createAdminClient(clientName: string, ccp: CommonConnectionProfileHelper, clientOrg: string): Promise<void> {
 
 	// check if the client already exists
@@ -190,12 +199,7 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 
 			// Send the signed endorsement to the requested peers.
 			const endorsementResponse: ProposalResponse = await endorsement.send(endorsementRequest, {});
-			if (endorsementResponse.errors) {
-				for (const error of endorsementResponse.errors) {
-					BaseUtils.logMsg(`Failed to get endorsement : ${error.message}`);
-				}
-				throw Error('failed endorsement');
-			}
+			assertNoErrors(endorsementResponse);
 
 			// Connect to 'Eventer'
 			try {
@@ -362,7 +366,7 @@ export async function submitChannelRequest(clientName: string, channelName: stri
 
 			// Build a query request
 			const buildQueryRequest: any = {
-				args: [...argArray]
+				args: argArray
 			};
 
 			// Build and sign the query
@@ -380,7 +384,7 @@ export async function submitChannelRequest(clientName: string, channelName: stri
 			try {
 				const queryResponse: ProposalResponse = await query.send(queryRequest, {});
 
-				if (queryResponse.errors) {
+				if (queryResponse.errors.length > 0) {
 					// failure
 					BaseUtils.logMsg(`Query failure detected`);
 					queryObject.results = {

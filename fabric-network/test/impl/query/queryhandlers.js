@@ -22,6 +22,7 @@ describe('QueryHandlers', () => {
 	const queryFailMessage = 'QUERY_FAILED';
 	const peerInfo = {name: 'peer1', url: 'grpc://fakehost:9999'};
 	const validProposalResponse = {
+		endorsement: {},
 		response: {
 			status: 200,
 			payload: querySuccessResult
@@ -36,9 +37,9 @@ describe('QueryHandlers', () => {
 		connection: peerInfo
 	};
 
-	const validProposalResponses = {responses: [validProposalResponse], queryResponses: [querySuccessResult]};
-	const invalidProposalResponses = {responses: [invalidProposalResponse]};
-	const errorProposalResponses = {errors: [queryErrorResult]};
+	const validProposalResponses = {responses: [validProposalResponse], errors: [], queryResponses: [querySuccessResult]};
+	const invalidProposalResponses = {responses: [invalidProposalResponse], errors: []};
+	const errorProposalResponses = {responses: [], errors: [queryErrorResult]};
 
 	let endorser1;
 	let endorser2;
@@ -100,17 +101,6 @@ describe('QueryHandlers', () => {
 				expect(error.message).to.contain('Send failed');
 			}
 		});
-
-		it('returns nothing', async () => {
-			query.send.resolves();
-
-			try {
-				await handler.evaluate(query);
-			} catch (error) {
-				expect(error.message).to.contain('No response from query');
-			}
-		});
-
 	});
 
 	describe('RoundRobinQueryHandler', () => {
@@ -157,16 +147,5 @@ describe('QueryHandlers', () => {
 				expect(error.message).to.contain('Send failed');
 			}
 		});
-
-		it('returns nothing', async () => {
-			query.send.resolves();
-
-			try {
-				await handler.evaluate(query);
-			} catch (error) {
-				expect(error.message).to.contain('No response from query');
-			}
-		});
-
 	});
 });

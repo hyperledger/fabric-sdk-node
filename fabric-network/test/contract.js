@@ -86,7 +86,7 @@ describe('Contract', () => {
 			contract.namespace = undefined;
 			const name = 'name';
 			const result = contract.createTransaction(name);
-			result.name.should.equal(name);
+			result.getName().should.equal(name);
 		});
 
 		it ('returns a transaction with both name and namespace', () => {
@@ -94,7 +94,7 @@ describe('Contract', () => {
 			const name = 'name';
 			const result = contract.createTransaction(name);
 
-			result.name.should.equal('namespace:name');
+			result.getName().should.equal('namespace:name');
 		});
 
 		it ('throws if name is an empty string', () => {
