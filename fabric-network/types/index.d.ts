@@ -7,7 +7,7 @@
 /* tslint:disable:max-classes-per-file */
 
 import { Wallet } from '../lib/impl/wallet/wallet';
-import { ChaincodeEvent, Channel, Client, Endorser, EventService, IdentityContext, ProposalResponse, Query, User } from 'fabric-common';
+import { ChaincodeEvent, Channel, Client, Endorser, EventService, IdentityContext, ProposalResponse, User } from 'fabric-common';
 
 export { Wallet };
 export { Wallets } from '../lib/impl/wallet/wallets';
@@ -77,14 +77,25 @@ export class QueryHandlerStrategies {
 	public static MSPID_SCOPE_SINGLE: QueryHandlerFactory;
 }
 
-export type QueryHandlerFactory = (network: Network, options: object) => QueryHandler;
+export type QueryHandlerFactory = (network: Network) => QueryHandler;
 
 export interface QueryHandler {
 	evaluate(query: Query): Promise<Buffer>;
 }
 
+export interface Query {
+	evaluate(targets: Endorser[]): Promise<QueryResults>;
+}
+
 export interface QueryResults {
-	[peerName: string]: Buffer | ProposalResponse;
+	[peerName: string]: Error | QueryResponse;
+}
+
+export interface QueryResponse {
+	isEndorsed: boolean;
+	payload: Buffer;
+	status: number;
+	message: string;
 }
 
 export class Gateway {

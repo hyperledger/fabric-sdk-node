@@ -112,6 +112,7 @@ export class DiscoveryHandler extends ServiceHandler {
 }
 
 export class ServiceEndpoint {
+	public readonly name: string;
 	constructor(name: string, client: Client, mspid?: string);
 	public connect(endpoint: Endpoint, options: ConnectOptions): Promise<void>;
 	public disconnect(): void;

@@ -13,23 +13,14 @@ function getOrganizationPeers(network) {
 	return network.channel.getEndorsers(network.mspid);
 }
 
-function getTimeout(network) {
-	const queryOptions = network.gateway.getOptions().query;
-	let timeout = 3000; // default 3 seconds
-	if (Number.isInteger(queryOptions.timeout)) {
-		timeout = queryOptions.timeout * 1000; // need ms;
-	}
-	return {timeout};
-}
-
 function MSPID_SCOPE_SINGLE(network) {
 	const peers = getOrganizationPeers(network);
-	return new SingleQueryHandler(peers, getTimeout(network));
+	return new SingleQueryHandler(peers);
 }
 
 function MSPID_SCOPE_ROUND_ROBIN(network) {
 	const peers = getOrganizationPeers(network);
-	return new RoundRobinQueryHandler(peers, getTimeout(network));
+	return new RoundRobinQueryHandler(peers);
 }
 
 /**
