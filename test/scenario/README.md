@@ -60,8 +60,7 @@ scenario
 ## Running the Tests
 
 The tests are run at a high level within the `/build` directory using the main `test.js` gulp file, or the npm script:
-- To run the test using gulp, issue the command `gulp run-test-cucumber`. 
-- To run the test using npm script, issue the command `npm run test:cucumber`. 
+- To run the tests using npm script, issue the command `npm run test:cucumber`. 
 Both commands will run all feature files located within `/test/scenario/features`.
 
 

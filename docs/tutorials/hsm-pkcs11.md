@@ -48,4 +48,4 @@ The unit tests have been tried with SoftHSM2 and assumes slot '0' and user PIN `
 * PKCS11_PIN
 * PKCS11_SLOT
 
-To turn these tests off, set environment variable "PKCS11_TESTS" to "false".
+To turn these tests off, the npm script `tapeIntegrationNoHSM` should be specified.

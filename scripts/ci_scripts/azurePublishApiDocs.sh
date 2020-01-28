@@ -39,7 +39,7 @@ _stagingGitSetUp() {
 buildDocs() {
     echo "Building documentation for ${SOURCE_BRANCH} branch in ${BUILD_DIR}"
     rm -rf "${BUILD_DIR}"
-	BUILD_BRANCH="${SOURCE_BRANCH}" DOCS_ROOT="${BUILD_DIR}" npx gulp docs
+	BUILD_BRANCH="${SOURCE_BRANCH}" DOCS_ROOT="${BUILD_DIR}" npm run docs
 }
 
 copyToStaging() {

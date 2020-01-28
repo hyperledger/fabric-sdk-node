@@ -1,0 +1,24 @@
+{
+    "source": {
+        "include": [
+            "docs/index.md",
+            "fabric-ca-client/index.js",
+            "fabric-ca-client/lib/FabricCAServices.js",
+            "fabric-ca-client/lib/FabricCAClient.js",
+            "fabric-ca-client/lib/AffiliationService.js",
+            "fabric-ca-client/lib/IdentityService.js",
+            "fabric-client/index.js",
+            "fabric-client/lib/",
+            "fabric-network/index.js",
+            "fabric-network/lib/"
+        ]
+    },
+    "opts": {
+        "tutorials": "docs/tutorials",
+        "destination": "docs/gen"
+    },
+    "templates": {
+        "systemName": "Hyperledger Fabric SDK for node.js",
+        "theme": "cosmo"
+    }
+}

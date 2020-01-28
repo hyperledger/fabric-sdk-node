@@ -8,7 +8,6 @@
 function filterExcludedFiles {
   CHECK=`echo "$CHECK" \
 		| grep -v "^\.git/" \
-		| grep -v "^\.build/" \
 		| grep -v "^vendor/" \
 		| grep -v "testdata/" \
 		| grep -v "test/data/" \

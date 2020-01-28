@@ -18,13 +18,14 @@ const path = require('path');
 
 const testUtil = require('../unit/util.js');
 const e2eUtils = require('./e2e/e2eUtils.js');
+const util = require('util');
 
 let ORGS;
 
 //
 // Attempt to send a request to the orderer with the createChannel method
 //
-test('\n\n***** Configtx Built config  create flow  *****\n\n', (t) => {
+test('\n\n***** Configtx Built config create flow *****\n\n', (t) => {
 	testUtil.resetDefaults();
 	Client.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
 	ORGS = Client.getConfigSetting('test-network');
@@ -130,9 +131,9 @@ test('\n\n***** Configtx Built config  create flow  *****\n\n', (t) => {
 			logger.debug('\n***\n completed the create \n***\n');
 
 			logger.debug(' response ::%j', result);
-			t.pass('Successfully created the channel.');
+			t.pass(util.format('Successfully created the channel: %s.', channel_name));
 			if (result.status && result.status === 'SUCCESS') {
-				return e2eUtils.sleep(5000);
+				return e2eUtils.sleep(10000);
 			} else {
 				t.fail('Failed to create the channel. ');
 				t.end();

@@ -40,7 +40,7 @@ function sleep(ms) {
 /**
  * Run a shell command
  * @param {Boolean} pass - Boolean pass/fail case expected, undefined if unchecked case
- * @param {DataTable} cmd -  CLI command with parameters to be run
+ * @param {String} cmd -  CLI command with parameters to be run
  * @return {Promise} - Promise that will be resolved or rejected with an error
  */
 function runShellCommand(pass, cmd) {

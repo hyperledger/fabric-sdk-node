@@ -5,22 +5,20 @@ Please consult [Fabric's CONTRIBUTING documentation](http://hyperledger-fabric.r
 
 ## To code contributors
 
-The following check-list is for code contributors to make sure their changesets are compliant to the coding standards and avoid time wasted in rejected changesets:
+The following check-list is for code contributors to make sure their commits are compliant and avoid time wasted in rejected pull requests:
 
 Check the coding styles, run the following command and make sure no ESLint violations are present:
-* `gulp`
+* `npm run lint`
 
-Run the full unit test bucket and make sure 100% are passing.  You can also run each test individually to isolate any failures:
-* `gulp test`
-
-The gulp test command above also generates code coverage reports. Your new code should be accompanied with unit tests that provide 100% line coverage, and functional tests that establish the correct operation of your code delivery.
+Run the full test bucket and make sure 100% are passing.  You can also run each test individually to isolate any failures:
+* `npm test`
 
 ## Test Delivery
 
-The Fabric-SDK-Node repository contains unit and functional (e2e) tests to ensure correct code functionality and guard against regressions. The published packages are tested in an additional repository ([Fabric-Test](https://github.com/hyperledger/fabric-test)), which tests the interoperability of the Fabric-SDK-Node packages with all other Hyperledger Fabric repositories.
+The Fabric-SDK-Node repository contains unit, integration and scenario tests to ensure correct code functionality and guard against regressions. The published packages are tested in an additional repository ([Fabric-Test](https://github.com/hyperledger/fabric-test)), which tests the interoperability of the Fabric-SDK-Node packages with all other Hyperledger Fabric repositories.
 
 ### Unit Tests
-Unit tests for each package are held locally under a `package/test` directory that mirrors the `package/lib` directory. Tests within these directories are written in Mocha, and may be run locally within the package via the `npm test` command at the package level. We make use of the following dependancies within the unit tests:
+Unit tests for each package are held locally under a `package/test` directory that mirrors the `package/lib` directory. Tests within these directories are written in Mocha, and may be run locally with the corresponding npm task: `npm run unitTest:<packageName>`. We make use of the following dependencies within the unit tests:
 - [Sinon](https://sinonjs.org/) for test spies, stubs and mocks
 - [Rewire](https://github.com/jhnns/rewire) for greater control of the component under test
 - [Istanbul](https://istanbul.js.org/) for code coverage reports
