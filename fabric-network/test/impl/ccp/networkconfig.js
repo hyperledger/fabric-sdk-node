@@ -68,13 +68,6 @@ describe('NetworkConfig', () => {
 		};
 		sandbox.stub(FakeLogger);
 		revert.push(NetworkConfig.__set__('logger', FakeLogger));
-
-		FakeFS = {
-			readFileSync: () => {}
-		};
-		sandbox.stub(FakeFS);
-		FakeFS.readFileSync.returns(PEM);
-		revert.push(NetworkConfig.__set__('fs', FakeFS));
 	});
 
 	afterEach(() => {
@@ -144,15 +137,42 @@ describe('NetworkConfig', () => {
 	};
 
 	describe('#loadFromConfig', () => {
+		let buildPeerStub;
+		let buildOrdererStub;
+		let buildChannelStub;
+
+		beforeEach(() => {
+			buildPeerStub = sinon.stub();
+			buildOrdererStub = sinon.stub();
+			buildChannelStub = sinon.stub();
+			revert.push(NetworkConfig.__set__('buildPeer', buildPeerStub));
+			revert.push(NetworkConfig.__set__('buildOrderer', buildOrdererStub));
+			revert.push(NetworkConfig.__set__('buildChannel', buildChannelStub));
+		});
+
 		it('should run with no config', async () => {
 			await NetworkConfig.loadFromConfig();
 		});
 		it('should run with a config', async () => {
-			revert.push(NetworkConfig.__set__('buildPeer', sinon.stub()));
-			revert.push(NetworkConfig.__set__('buildOrderer', sinon.stub()));
-			revert.push(NetworkConfig.__set__('buildChannel', sinon.stub()));
 			await NetworkConfig.loadFromConfig(client, config);
 			sinon.assert.calledWith(FakeLogger.debug, '%s - end');
+			sinon.assert.callCount(buildPeerStub, 2);
+			sinon.assert.callCount(buildOrdererStub, 1);
+			sinon.assert.callCount(buildChannelStub, 1);
+		});
+		it('should run with a config of yaml', async () => {
+			await NetworkConfig.loadFromConfig(client, 'fabric-network/test/impl/ccp/ccp.yaml');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - end');
+			sinon.assert.callCount(buildPeerStub, 2);
+			sinon.assert.callCount(buildOrdererStub, 1);
+			sinon.assert.callCount(buildChannelStub, 1);
+		});
+		it('should run with a config of json', async () => {
+			await NetworkConfig.loadFromConfig(client, 'fabric-network/test/impl/ccp/ccp.json');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - end');
+			sinon.assert.callCount(buildPeerStub, 2);
+			sinon.assert.callCount(buildOrdererStub, 1);
+			sinon.assert.callCount(buildChannelStub, 1);
 		});
 	});
 
@@ -228,6 +248,15 @@ describe('NetworkConfig', () => {
 	});
 
 	describe('#getPEMfromConfig', () => {
+		beforeEach(() => {
+			FakeFS = {
+				readFileSync: () => {}
+			};
+			sandbox.stub(FakeFS);
+			FakeFS.readFileSync.returns(PEM);
+			revert.push(NetworkConfig.__set__('fs', FakeFS));
+		});
+
 		it('should run getPEMfromConfig with pem param', async () => {
 			const result = getPEMfromConfig({pem: PEM});
 			result.should.equal(PEM);

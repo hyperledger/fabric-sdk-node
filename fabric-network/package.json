@@ -30,6 +30,7 @@
     "fabric-client": "file:../fabric-client",
     "fabric-common": "file:../fabric-common",
     "fs-extra": "^8.1.0",
+    "js-yaml": "^3.13.0",
     "long": "^4.0.0",
     "nano": "^8.1.0"
   },

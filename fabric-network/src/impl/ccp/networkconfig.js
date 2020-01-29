@@ -1,27 +1,43 @@
 /*
- Copyright 2019 IBM All Rights Reserved.
+ Copyright 2019, 2020 IBM All Rights Reserved.
 
  SPDX-License-Identifier: Apache-2.0
 
 */
 
 const fs = require('fs-extra');
+const path = require('path');
+const yaml = require('js-yaml');
 const {Utils: utils} = require('fabric-common');
 
 const logger = utils.getLogger('NetworkConfig');
 
 /**
- * This is an implementation of the [NetworkConfig]{@link module:api.NetworkConfig} API.
- * It will be used to work with the v1.0.1 version of a JSON based common connection profile.
+ * This is an implementation will be used to work with the v1.0.1 version
+ * of a JSON based common connection profile.
  * (also known as a network configuration).
  *
  * @class
  */
 class NetworkConfig {
 
-	static async loadFromConfig(client, config = {}) {
-		const method = 'buildChannel';
+	static async loadFromConfig(client, profile = {}) {
+		const method = 'loadFromConfig';
 		logger.debug('%s - start', method);
+
+		let config = profile;
+		if (typeof config === 'string') {
+			const network_config_loc = path.resolve(profile);
+			logger.debug('%s - looking at absolute path of ==>%s<==', method, network_config_loc);
+			const file_data = fs.readFileSync(network_config_loc);
+			const file_ext = path.extname(network_config_loc);
+			// maybe the file is yaml else has to be JSON
+			if ((/(yml|yaml)$/i).test(file_ext)) {
+				config = yaml.safeLoad(file_data);
+			} else {
+				config = JSON.parse(file_data);
+			}
+		}
 
 		// create peers
 		if (config.peers) {
@@ -30,7 +46,7 @@ class NetworkConfig {
 			}
 		}
 		// create orderers
-		if (config.peers) {
+		if (config.orderers) {
 			for (const orderer_name in config.orderers) {
 				await buildOrderer(client, orderer_name, config.orderers[orderer_name]);
 			}
