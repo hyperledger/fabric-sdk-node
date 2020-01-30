@@ -93,7 +93,10 @@ async function testErrorResponse(t: any, contract: Contract): Promise<void> {
 		const response = await contract.submitTransaction('returnError', errorMessage);
 		t.fail('Transaction "returnError" should have thrown an error.  Got response: ' + response.toString());
 	} catch (expectedErr) {
-		if (expectedErr.message.includes(errorMessage)) {
+		if (expectedErr.message.includes(errorMessage) &&
+			expectedErr.responses.length === 2 &&
+			expectedErr.responses[0].status === 500 &&
+			expectedErr.responses[0].message.includes(errorMessage)) {
 			t.pass('Successfully handled invocation errors');
 		} else {
 			t.fail('Unexpected exception: ' + expectedErr);

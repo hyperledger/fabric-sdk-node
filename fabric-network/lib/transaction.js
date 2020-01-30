@@ -155,27 +155,33 @@ class Transaction {
 		const proposalResponses = results[0];
 		const proposal = results[1];
 
-		// get only the valid responses to submit to the orderer
-		const {validResponses} = this._validatePeerResponses(proposalResponses);
+		try {
+			// get only the valid responses to submit to the orderer
+			const {validResponses} = this._validatePeerResponses(proposalResponses);
 
-		await eventHandler.startListening();
+			await eventHandler.startListening();
 
-		// Submit the endorsed transaction to the primary orderers.
-		const response = await channel.sendTransaction({
-			proposalResponses: validResponses,
-			proposal
-		});
+			// Submit the endorsed transaction to the primary orderers.
+			const response = await channel.sendTransaction({
+				proposalResponses: validResponses,
+				proposal
+			});
 
-		if (response.status !== 'SUCCESS') {
-			const msg = util.format('Failed to send peer responses for transaction %j to orderer. Response status: %j', txId, response.status);
-			logger.error('submit:', msg);
-			eventHandler.cancelListening();
-			throw new Error(msg);
+			if (response.status !== 'SUCCESS') {
+				const msg = util.format('Failed to send peer responses for transaction %j to orderer. Response status: %j', txId, response.status);
+				logger.error('submit:', msg);
+				eventHandler.cancelListening();
+				throw new Error(msg);
+			}
+
+			await eventHandler.waitForEvents();
+
+			return validResponses[0].response.payload || null;
+
+		} catch(err) {
+			err.responses = proposalResponses;
+			throw err;
 		}
-
-		await eventHandler.waitForEvents();
-
-		return validResponses[0].response.payload || null;
 	}
 
 	_setInvokedOrThrow() {

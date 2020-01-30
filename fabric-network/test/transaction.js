@@ -225,6 +225,13 @@ describe('Transaction', () => {
 			return expect(promise).to.be.rejectedWith(status);
 		});
 
+		it('throws with peer responses if the orderer returns an unsuccessful response', () => {
+			const status = 'FAILURE';
+			channel.sendTransaction.resolves({status});
+			const promise = transaction.submit();
+			return expect(promise).to.be.eventually.rejectedWith(status).and.have.deep.property('responses', [validProposalResponse]);
+		});
+
 		it('sends only valid proposal responses to orderer', async () => {
 			channel.sendTransactionProposal.resolves(mixedProposalResponses);
 			await transaction.submit();
