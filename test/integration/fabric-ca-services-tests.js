@@ -10,7 +10,8 @@
 // this test is meant to test the fabric-ca-client
 // package ALONE! do not require anything from the fabric-client
 // package. If anything is required but missing, add them to
-// the fabric-ca-client package by editing build/tasks/ca.js
+// the fabric-ca-client package by editing:
+// scripts/npm_scripts/testFunctions.js.(copyFabricClient)
 // ///////////////////////////////////////////////////////////////
 
 const utils = require('fabric-client/lib/utils.js');

@@ -24,8 +24,8 @@ runTape() {
 
     # Tests have to be executed in the following order
 
-    # First run the ca-tests that run good/bad path member registration/enrollment scenarios
-    # The remaining tests re-use the same key value store with the saved user certificates, in order to interact with the network
+	# first run the ca-tests that tests all the member registration and enrollment scenarios (good and bad calls). 
+    # Then the rest of the tests will re-use the same key value store that has saved the user certificates so they can interact with the network
     npx tape test/unit/config.js \
     test/integration/fabric-ca-affiliation-service-tests.js \
     test/integration/fabric-ca-identity-service-tests.js \

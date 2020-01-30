@@ -9,3 +9,4 @@ fabric-network/lib/**
 fabric-protos/**
 fabric-client/test/data/**
 tmp/**
+test/typescript/**
