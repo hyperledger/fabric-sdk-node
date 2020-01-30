@@ -116,7 +116,7 @@ class Orderer extends Remote {
 	 * @returns {Promise} A Promise for a {@link BroadcastResponse} object
 	 * @throws {SYSTEM_TIMEOUT | REQUEST_TIMEOUT}
 	 */
-	sendBroadcast(envelope, timeout) {
+	async sendBroadcast(envelope, timeout) {
 		logger.debug('sendBroadcast - start');
 
 		if (!envelope || envelope === '') {
@@ -131,60 +131,60 @@ class Orderer extends Remote {
 			rto = timeout;
 		}
 
-		return this.waitForReady(this._ordererClient).then(() => {
-			// Send the envelope to the orderer via grpc
-			return new Promise((resolve, reject) => {
-				const broadcast = self._ordererClient.broadcast();
-				let error_msg = 'SYSTEM_TIMEOUT';
+		// by defautl users will have to choose to have the connection
+		// checked by the wait for ready processing of the gRPC service
+		if (this.useWaitForReady) {
+			await this.waitForReady(this._ordererClient);
+		}
 
-				const broadcast_timeout = setTimeout(() => {
-					logger.error('sendBroadcast - timed out after:%s', rto);
-					broadcast.end();
-					return reject(new Error(error_msg));
-				}, rto);
+		// Send the envelope to the orderer via grpc
+		return new Promise((resolve, reject) => {
+			const broadcast = self._ordererClient.broadcast();
+			let error_msg = 'SYSTEM_TIMEOUT';
 
-				broadcast.on('data', (response) => {
-					logger.debug('sendBroadcast - on data response: %j', response);
-					broadcast.end();
-					if (response && response.info) {
-						logger.debug('sendBroadcast - response info :: %s', response.info);
-					}
-					if (response && response.status) {
-						logger.debug('sendBroadcast - response status %s', response.status);
-						return resolve(response);
-					} else {
-						logger.error('sendBroadcast ERROR - reject with invalid response from the orderer');
-						return reject(new Error('SYSTEM_ERROR'));
-					}
-				});
+			const broadcast_timeout = setTimeout(() => {
+				logger.error('sendBroadcast - timed out after:%s', rto);
+				broadcast.end();
+				return reject(new Error(error_msg));
+			}, rto);
 
-				broadcast.on('end', () => {
-					logger.debug('sendBroadcast - on end:');
-					clearTimeout(broadcast_timeout);
-					broadcast.cancel();
-				});
-
-				broadcast.on('error', (err) => {
-					clearTimeout(broadcast_timeout);
-					broadcast.end();
-					if (err && err.code) {
-						if (err.code === 14) {
-							logger.error('sendBroadcast - on error: %j', err.stack ? err.stack : err);
-							return reject(new Error('SERVICE_UNAVAILABLE'));
-						}
-					}
-					logger.error('sendBroadcast - on error: %j', err.stack ? err.stack : err);
-					return reject(err);
-				});
-
-				broadcast.write(envelope);
-				error_msg = 'REQUEST_TIMEOUT';
-				logger.debug('sendBroadcast - sent message');
+			broadcast.on('data', (response) => {
+				logger.debug('sendBroadcast - on data response: %j', response);
+				broadcast.end();
+				if (response && response.info) {
+					logger.debug('sendBroadcast - response info :: %s', response.info);
+				}
+				if (response && response.status) {
+					logger.debug('sendBroadcast - response status %s', response.status);
+					return resolve(response);
+				} else {
+					logger.error('sendBroadcast ERROR - reject with invalid response from the orderer');
+					return reject(new Error('SYSTEM_ERROR'));
+				}
 			});
-		},
-		(error) => {
-			logger.error('Orderer %s has an error %s ', self.getUrl(), error.toString());
-			return Promise.reject(error);
+
+			broadcast.on('end', () => {
+				logger.debug('sendBroadcast - on end:');
+				clearTimeout(broadcast_timeout);
+				broadcast.cancel();
+			});
+
+			broadcast.on('error', (err) => {
+				clearTimeout(broadcast_timeout);
+				broadcast.end();
+				if (err && err.code) {
+					if (err.code === 14) {
+						logger.error('sendBroadcast - on error: %j', err.stack ? err.stack : err);
+						return reject(new Error('SERVICE_UNAVAILABLE'));
+					}
+				}
+				logger.error('sendBroadcast - on error: %j', err.stack ? err.stack : err);
+				return reject(err);
+			});
+
+			broadcast.write(envelope);
+			error_msg = 'REQUEST_TIMEOUT';
+			logger.debug('sendBroadcast - sent message');
 		});
 	}
 
@@ -208,7 +208,7 @@ class Orderer extends Remote {
 	 *                    byte arrays.
 	 * @throws {SYSTEM_TIMEOUT | REQUEST_TIMEOUT}
 	 */
-	sendDeliver(envelope) {
+	async sendDeliver(envelope) {
 		logger.debug('sendDeliver - start');
 
 		if (!envelope) {
@@ -219,104 +219,108 @@ class Orderer extends Remote {
 
 		const self = this;
 
-		return this.waitForReady(this._ordererClient).then(() => {
-			// Send the seek info to the orderer via grpc
-			return new Promise((resolve, reject) => {
-				try {
-					const deliver = self._ordererClient.deliver();
-					let return_block = null;
-					self._sendDeliverConnect = false;
-					let error_msg = 'SYSTEM_TIMEOUT';
+		// by defautl users will have to choose to have the connection
+		// checked by the wait for ready processing of the gRPC service
+		if (this.useWaitForReady) {
+			await this.waitForReady(this._ordererClient);
+		}
 
-					const deliver_timeout = setTimeout(() => {
-						logger.debug('sendDeliver - timed out after:%s', self._request_timeout);
-						deliver.end();
-						return reject(new Error(error_msg));
-					}, self._request_timeout);
-					deliver.on('data', (response) => {
-						logger.debug('sendDeliver - on data'); // response: %j', response);
-						// check the type of the response
-						if (response.Type === 'block') {
-							const blockHeader = new _common.BlockHeader();
-							blockHeader.setNumber(response.block.header.number);
-							blockHeader.setPreviousHash(response.block.header.previous_hash);
-							blockHeader.setDataHash(response.block.header.data_hash);
-							const blockData = new _common.BlockData();
-							blockData.setData(response.block.data.data);
-							const blockMetadata = new _common.BlockMetadata();
-							blockMetadata.setMetadata(response.block.metadata.metadata);
+		// Send the seek info to the orderer via grpc
+		return new Promise((resolve, reject) => {
+			try {
+				const deliver = self._ordererClient.deliver();
+				let return_block = null;
+				self._sendDeliverConnect = false;
+				let error_msg = 'SYSTEM_TIMEOUT';
 
-							const block = new _common.Block();
-							block.setHeader(blockHeader);
-							block.setData(blockData);
-							block.setMetadata(blockMetadata);
-							return_block = block;
+				const deliver_timeout = setTimeout(() => {
+					logger.debug('sendDeliver - timed out after:%s', self._request_timeout);
+					deliver.end();
+					return reject(new Error(error_msg));
+				}, self._request_timeout);
+				deliver.on('data', (response) => {
+					logger.debug('sendDeliver - on data'); // response: %j', response);
+					// check the type of the response
+					if (response.Type === 'block') {
+						const blockHeader = new _common.BlockHeader();
+						blockHeader.setNumber(response.block.header.number);
+						blockHeader.setPreviousHash(response.block.header.previous_hash);
+						blockHeader.setDataHash(response.block.header.data_hash);
+						const blockData = new _common.BlockData();
+						blockData.setData(response.block.data.data);
+						const blockMetadata = new _common.BlockMetadata();
+						blockMetadata.setMetadata(response.block.metadata.metadata);
 
-							logger.debug('sendDeliver - wait for success, keep this block number %s', return_block.header.number);
-						} else if (response.Type === 'status') {
-							clearTimeout(deliver_timeout);
-							self._sendDeliverConnect = false;
-							deliver.end();
-							// response type should now be 'status'
-							if (response.status === 'SUCCESS') {
-								logger.debug('sendDeliver - resolve - status:%s', response.status);
-								return resolve(return_block);
-							} else {
-								logger.error('sendDeliver - rejecting - status:%s', response.status);
-								return reject(new Error('Invalid results returned ::' + response.status));
-							}
-						} else {
-							logger.error('sendDeliver ERROR - reject with invalid response from the orderer');
-							clearTimeout(deliver_timeout);
-							deliver.end();
-							self._sendDeliverConnect = false;
-							return reject(new Error('SYSTEM_ERROR'));
-						}
-					});
+						const block = new _common.Block();
+						block.setHeader(blockHeader);
+						block.setData(blockData);
+						block.setMetadata(blockMetadata);
+						return_block = block;
 
-					deliver.on('status', (response) => {
-						logger.debug('sendDeliver - on status:%j', response);
-					});
-
-					deliver.on('end', () => {
-						logger.debug('sendDeliver - on end');
-						if (self._sendDeliverConnect) {
-							clearTimeout(deliver_timeout);
-							deliver.cancel();
-							self._sendDeliverConnect = false;
-						}
-
-					});
-
-					deliver.on('error', (err) => {
-						logger.debug('sendDeliver - on error');
+						logger.debug('sendDeliver - wait for success, keep this block number %s', return_block.header.number);
+					} else if (response.Type === 'status') {
 						clearTimeout(deliver_timeout);
-						if (self._sendDeliverConnect) {
-							deliver.end();
-							self._sendDeliverConnect = false;
-							if (err && err.code) {
-								if (err.code === 14) {
-									logger.error('sendDeliver - on error code 14: %j', err.stack ? err.stack : err);
-									return reject(new Error('SERVICE_UNAVAILABLE'));
-								}
+						self._sendDeliverConnect = false;
+						deliver.end();
+						// response type should now be 'status'
+						if (response.status === 'SUCCESS') {
+							logger.debug('sendDeliver - resolve - status:%s', response.status);
+							return resolve(return_block);
+						} else {
+							logger.error('sendDeliver - rejecting - status:%s', response.status);
+							return reject(new Error('Invalid results returned ::' + response.status));
+						}
+					} else {
+						logger.error('sendDeliver ERROR - reject with invalid response from the orderer');
+						clearTimeout(deliver_timeout);
+						deliver.end();
+						self._sendDeliverConnect = false;
+						return reject(new Error('SYSTEM_ERROR'));
+					}
+				});
+
+				deliver.on('status', (response) => {
+					logger.debug('sendDeliver - on status:%j', response);
+				});
+
+				deliver.on('end', () => {
+					logger.debug('sendDeliver - on end');
+					if (self._sendDeliverConnect) {
+						clearTimeout(deliver_timeout);
+						deliver.cancel();
+						self._sendDeliverConnect = false;
+					}
+
+				});
+
+				deliver.on('error', (err) => {
+					logger.debug('sendDeliver - on error');
+					clearTimeout(deliver_timeout);
+					if (self._sendDeliverConnect) {
+						deliver.end();
+						self._sendDeliverConnect = false;
+						if (err && err.code) {
+							if (err.code === 14) {
+								logger.error('sendDeliver - on error code 14: %j', err.stack ? err.stack : err);
+								return reject(new Error('SERVICE_UNAVAILABLE'));
 							}
 						}
-						return reject(err);
-					});
-
-					deliver.write(envelope);
-					error_msg = 'REQUEST_TIMEOUT';
-					self._sendDeliverConnect = true;
-					logger.debug('sendDeliver - sent envelope');
-				} catch (error) {
-					logger.error('sendDeliver - system error ::' + (error.stack ? error.stack : error));
-					if (error instanceof Error) {
-						return reject(error);
-					} else {
-						return reject(new Error(error));
 					}
+					return reject(err);
+				});
+
+				deliver.write(envelope);
+				error_msg = 'REQUEST_TIMEOUT';
+				self._sendDeliverConnect = true;
+				logger.debug('sendDeliver - sent envelope');
+			} catch (error) {
+				logger.error('sendDeliver - system error ::' + (error.stack ? error.stack : error));
+				if (error instanceof Error) {
+					return reject(error);
+				} else {
+					return reject(new Error(error));
 				}
-			});
+			}
 		});
 	}
 

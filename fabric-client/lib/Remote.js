@@ -26,6 +26,8 @@ const MAX_RECEIVE = 'grpc.max_receive_message_length';
 const MAX_SEND_V10 = 'grpc-max-send-message-length';
 const MAX_RECEIVE_V10 = 'grpc-max-receive-message-length';
 
+const USE_WAIT_FOR_READY = 'useWaitForReady';
+
 // the logger available during construction of instances
 const super_logger = utils.getLogger('Remote.js');
 
@@ -59,8 +61,19 @@ class Remote {
 	 */
 	constructor(url, opts = {}) {
 		this._options = {};
+
+		// default
+		this.useWaitForReady = false;
+
 		for (const key in opts) {
 			const value = opts[key];
+			if (key === USE_WAIT_FOR_READY) {
+				if (typeof value === 'boolean') {
+					this.useWaitForReady = value;
+				}
+				// we do not want to add this to the grpc options
+				continue;
+			}
 			if (value && typeof value !== 'string' && !Number.isInteger(value)) {
 				throw new Error(`invalid grpc option value:${key}-> ${value} expected string|integer`);
 			}
