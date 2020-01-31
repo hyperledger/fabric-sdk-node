@@ -22,6 +22,10 @@ runTape() {
         unset E2E_SCRIPT_SUFFIX
     fi
 
+    # force the non HSM for now
+    unset E2E_SCRIPT_SUFFIX
+
+
     # Tests have to executed in the following order
 
     # First run the ca-tests that run good/bad path member registration/enrollment scenarios
@@ -32,26 +36,6 @@ runTape() {
     test/integration/fabric-ca-services-tests.js \
     test/integration/e2e.js \
     test/integration/network-e2e/e2e${E2E_SCRIPT_SUFFIX}.js \
-    test/integration/signTransactionOffline.js \
-    test/integration/query.js \
-    test/integration/client.js \
-    test/integration/orderer-channel-tests.js \
-    test/integration/couchdb-fabricca-tests.js \
-    test/integration/fileKeyValueStore-fabricca-tests.js \
-    test/integration/install.js \
-    test/integration/channel-event-hub.js \
-    test/integration/upgrade.js \
-    test/integration/get-config.js \
-    test/integration/create-configtx-channel.js \
-    test/integration/e2e/join-channel-copy.js \
-    test/integration/instantiate.js \
-    test/integration/e2e/invoke-transaction-copy.js \
-    test/integration/e2e/query-copy.js \
-    test/integration/invoke.js \
-    test/integration/network-config.js \
-    test/integration/only-admin.js \
-    test/integration/discovery.js \
-    test/integration/grpc.js \
     | npx tap-colorize
 }
 

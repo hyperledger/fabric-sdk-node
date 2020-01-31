@@ -27,7 +27,6 @@
   "types": "./types/index.d.ts",
   "dependencies": {
     "fabric-ca-client": "file:../fabric-ca-client",
-    "fabric-client": "file:../fabric-client",
     "fabric-common": "file:../fabric-common",
     "fs-extra": "^8.1.0",
     "long": "^4.0.0",

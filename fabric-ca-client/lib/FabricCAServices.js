@@ -22,7 +22,7 @@ const logger = utils.getLogger('FabricCAClientService.js');
 
 // setup the location of the default config shipped with code
 const default_config = path.resolve(__dirname, '../config/default.json');
-config.reorderFileStores(default_config, true); // make sure this one is under the fabric-client
+config.reorderFileStores(default_config, true); // make sure this one is under the fabric-common
 
 /**
  * @typedef {Object} TLSOptions
