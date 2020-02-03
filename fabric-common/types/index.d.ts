@@ -53,26 +53,28 @@ export interface UserConfig {
 }
 
 export interface ProposalResponse {
-	errors: Error[],
-	responses: EndorsementResponse[],
-	queryResults: Buffer[]
+	errors: Error[];
+	responses: EndorsementResponse[];
+	queryResults: Buffer[];
 }
 
 export interface EndorsementResponse {
 	response: {
-		status: Number,
-		message: string,
-		payload: Buffer
-	},
-	payload: Buffer,
+		status: number;
+		message: string;
+		payload: Buffer;
+	};
+	payload: Buffer;
 	endorsment: {
-		endorser: Buffer,
-		signature: Buffer
-	}
+		endorser: Buffer;
+		signature: Buffer;
+	};
 }
 
 export class User {
+	public static createUser(name: string, password: string, mspid: string, signedCertPem: string, privateKeyPEM?: string): User;
 	public static isInstance(object: any): boolean;
+	public static newCryptoSuite(options?: CryptoSetting): ICryptoSuite;
 
 	constructor(cfg: string | UserConfig);
 	public getName(): string;
@@ -81,7 +83,7 @@ export class User {
 	public setRoles(roles: string[]): void;
 	public getAffiliation(): string;
 	public setAffiliation(affiliation: string): void;
-	public getEnrollmentSecret() : string;
+	public getEnrollmentSecret(): string;
 	public getIdentity(): IIdentity;
 	public getSigningIdentity(): ISigningIdentity;
 	public setSigningIdentity(signingIdentity: ISigningIdentity): void;
@@ -90,8 +92,6 @@ export class User {
 	public setEnrollment(privateKey: ICryptoKey, certificate: string, mspId: string, skipPersistence: boolean): Promise<void>;
 	public isEnrolled(): boolean;
 	public fromString(): Promise<User>;
-	public static createUser(name: string, password: string, mspid: string, signedCertPem: string, privateKeyPEM?: string): User;
-	public static newCryptoSuite(options?: CryptoSetting): ICryptoSuite;
 }
 
 export class Endpoint {
@@ -102,7 +102,7 @@ export class Endpoint {
 export class ServiceHandler {
 	commit(signedEnvelope: Buffer, request: any): Promise<any>;
 	endorse(signedProposal: Buffer, request: any): Promise<any>;
-	query(signedProposal: Buffer, request: any): Promise<any>
+	query(signedProposal: Buffer, request: any): Promise<any>;
 }
 export class DiscoveryHandler extends ServiceHandler {
 	constructor(discovery: DiscoveryService)
@@ -119,25 +119,25 @@ export class ServiceEndpoint {
 	public isTLS(): boolean;
 }
 
-export class Committer extends ServiceEndpoint{
+export class Committer extends ServiceEndpoint {
 	constructor(name: string, client: Client, mspid: string);
-	public sendBroadcast(envelope?: Buffer, timeout?: Number): Promise<any>;
+	public sendBroadcast(envelope?: Buffer, timeout?: number): Promise<any>;
 }
 
-export class Endorser extends ServiceEndpoint{
+export class Endorser extends ServiceEndpoint {
 	constructor(name: string, client: Client, mspid: string);
-	public sendProposal(signedProposal?: Buffer, timeout?: Number): Promise<any>;
+	public sendProposal(signedProposal?: Buffer, timeout?: number): Promise<any>;
 }
 
-export class Eventer extends ServiceEndpoint{
+export class Eventer extends ServiceEndpoint {
 	constructor(name: string, client: Client, mspid: string);
 	public disconnect(): void;
 	public checkConnection(): Promise<boolean>;
 }
 
-export class Discoverer extends ServiceEndpoint{
+export class Discoverer extends ServiceEndpoint {
 	constructor(name: string, client: Client, mspid: string);
-	public sendDiscovery(signedEnvelope?: Buffer, timeout?: Number): Promise<any>;
+	public sendDiscovery(signedEnvelope?: Buffer, timeout?: number): Promise<any>;
 }
 
 export class ServiceAction {
@@ -148,22 +148,22 @@ export class ServiceAction {
 	public getSignedEnvelope(): any;
 }
 
-export class Commit extends Proposal{
+export class Commit extends Proposal {
 	constructor(chaincodeName: string, channel: Channel, endorsement: Endorsement);
 	public build(idContext: IdentityContext, request: any): Buffer;
 	public send(request: any, options: any): Promise<any>;
 }
 
-export class Endorsement extends Proposal{
+export class Endorsement extends Proposal {
 	constructor(chaincodeName: string, channel: Channel);
 	public newCommit(): Commit;
 }
 
-export class Query extends Proposal{
+export class Query extends Proposal {
 	constructor(chaincodeName: string, channel: Channel);
 }
 
-export class Proposal extends ServiceAction{
+export class Proposal extends ServiceAction {
 	constructor(chaincodeName: string, channel: Channel);
 	public getTransactionId(): string;
 	public buildProposalInterest(): any;
@@ -175,7 +175,7 @@ export class Proposal extends ServiceAction{
 	public compareProposalResponseResults(proposalResponses: any[]): boolean;
 }
 
-export class DiscoveryService extends ServiceAction{
+export class DiscoveryService extends ServiceAction {
 	constructor(chaincodeName: string, channel: Channel);
 	public setDiscoverer(discoverer: Discoverer): DiscoveryService;
 	public newHandler(): DiscoveryHandler;
@@ -190,9 +190,7 @@ export class EventListener {
 	onEvent(error: Error, event: any): void;
 }
 
-export interface EventCallback {
-	(error: Error, event: EventInfo): void;
-}
+export type EventCallback = (error: Error, event: EventInfo) => void;
 
 export interface EventInfo {
 	eventHub: EventService;
@@ -220,7 +218,7 @@ export interface ChaincodeEvent {
 	payload: Buffer;
 }
 
-export class EventService extends ServiceAction{
+export class EventService extends ServiceAction {
 	public startBlock: Long | string;
 	public endBlock: Long | string;
 	constructor(chaincodeName: string, channel: Channel);
@@ -230,7 +228,7 @@ export class EventService extends ServiceAction{
 	public build(idContext: IdentityContext, request: any): Buffer;
 	public send(request: any): Promise<any>;
 	public isListening(): boolean;
-	public unregisterEventListener(eventListener: EventListener):EventService;
+	public unregisterEventListener(eventListener: EventListener): EventService;
 	public registerTransactionListener(txid: string, callback: EventCallback, options: EventRegistrationOptions): EventListener;
 	public registerChaincodeListener(eventName: string, callback: EventCallback, options: EventRegistrationOptions): EventListener;
 	public registerBlockListener(callback: EventCallback, options: EventRegistrationOptions): EventListener;
@@ -240,7 +238,6 @@ export class Client {
 	public static newClient(name: string): Client;
 
 	constructor(name: string);
-	public setUserContext(user: User): void;
 	public newIdentityContext(user: User): IdentityContext;
 
 	public getConnectionOptions(options?: ConnectOptions): ConnectOptions;

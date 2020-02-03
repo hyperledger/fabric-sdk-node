@@ -7,5 +7,4 @@
 docs/**
 fabric-network/lib/**
 fabric-protos/**
-fabric-client/test/data/**
 test/typescript/**

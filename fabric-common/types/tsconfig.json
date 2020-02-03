@@ -10,7 +10,7 @@
     "suppressImplicitAnyIndexErrors": true,
     "moduleResolution": "node",
     "module": "commonjs",
-    "target": "es6",
+    "target": "es2017",
     "outDir": "dist",
     "baseUrl": ".",
     "paths": {
@@ -20,8 +20,7 @@
     }
   },
   "files": [
-      "index.d.ts",
-      "base.d.ts"
+      "index.d.ts"
   ],
   "exclude": [
     "test/data/**"

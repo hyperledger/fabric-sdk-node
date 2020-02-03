@@ -124,7 +124,7 @@ async function getMember(username: string, password: string, client: Client, use
 			trustedRoots: [],
 			verify: false,
 		};
-		const cop: FabricCAServices = new FabricCAServices(caUrl, tlsOptions as any, org.ca.name, cryptoSuite);
+		const cop: FabricCAServices = new FabricCAServices(caUrl, tlsOptions as any, org.ca.name);
 
 		const enrollment: FabricCAServices.IEnrollResponse = await cop.enroll({enrollmentID: username, enrollmentSecret: password});
 

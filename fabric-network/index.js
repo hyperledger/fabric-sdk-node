@@ -11,8 +11,8 @@
  * client applications to interact with smart contracts deployed to a Hyperledger Fabric blockchain network.</p>
  *
  * <p>Note that administrative capabilities, such as installing and starting smart contracts, are not currently provided
- * by this API. For these tasks or other specific advanced usage, the lower level <em>fabric-client</em> API
- * should be used. Access to related <em>fabric-client</em> objects is provided through the <em>fabric-network</em>
+ * by this API. For these tasks or other specific advanced usage, the lower level <em>fabric-common</em> API
+ * should be used. Access to related <em>fabric-common</em> objects is provided through the <em>fabric-network</em>
  * API objects.</p>
  *
  * [TypeScript]{@link http://www.typescriptlang.org/} definitions are included in this module.

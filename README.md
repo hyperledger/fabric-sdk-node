@@ -5,10 +5,9 @@
 The Hyperledger Fabric Client SDK makes it possible to use APIs to interact with a Hyperledger Fabric blockchain. This readme is directed towards a current or future contributor to this project, and gives an overview of setting up the project locally and running tests. For more information on the SDK, including features and an API reference, please visit the [SDK documentation](https://hyperledger.github.io/fabric-sdk-node/).
 
 This project publishes the following npm packages:
-* `fabric-client` - main client for the [Hyperledger Fabric](http://hyperledger-fabric.readthedocs.io/en/latest/). Applications can use this package to install and instantiate chaincodes, submit transactions and make queries against a Hyperledger Fabric-based blockchain network.
 * `fabric-ca-client` - client for the optional component in Hyperledger Fabric, [fabric-ca](http://hyperledger-fabric-ca.readthedocs.io/en/latest/users-guide.html). The fabric-ca component allows applications to enroll Peers and application users to establish trusted identities on the blockchain network. It also provides support for pseudonymous transaction submissions with Transaction Certificates. If the target blockchain network is configured with standard Certificate Authorities for trust anchors, the application does not need to use this package.
-* `fabric-common` - This package contains common codes shared by other packages
-* `fabric-network` - This package encapsulates the APIs to connect to a Fabric network, submit transactions and perform queries against the ledger at a higher level of abstraction than through the `fabric-client`.
+* `fabric-common`, encapsulates the common code used by all fabric-sdk-node packages supporting fine grain interactions with the Fabric network to send transaction invocations
+* `fabric-network` - This package encapsulates the APIs to connect to a Fabric network, submit transactions and perform queries against the ledger at a higher level of abstraction than through the `fabric-common`.
 * `fabric-protos` - This package encapsulates the protobuffers that are used to communicate over gRPC
 
 ## Build and Test
@@ -37,23 +36,11 @@ We have functional and scenario based tests that may be run via the following co
   * end to end (tape) tests may be run via `npm run tapeIntegration`
   * scenario (cucumber) tests may be run via `npm run cucumberScenario`
   * You may run both integration test styles using `npm run tapeAndCucumber`
-  * All tests (unit and integration) may be run using the command `npm test`
+  * All tests (unit and integration) may be run using the command `npm test` or `npm run testNoHSM` when not using a HSM or HSM simulator
 
 ### Special Tests for Hardware Security Module support via PKCS #11 interface
 
 The SDK has support for Hardware Security Module (HSM) via PKCS #11 interface. See the test [README](test/README.md) for details of how to run HSM tests locally.
-
-### Hyperledger Fabric Client objects and reference documentation
-The SDK has support for Java based Chaincode. To turn these tests off, set the environment variable "JAVA_TESTS" to false.
-
-### Hyperledger Fabric Client objects
-fabric-client and fabric-ca-client are written in CommonJS modules and take advantage of ECMAScript 2015 class syntax.
-
-* The main top-level class is **Client**. The client's view of a fabric [channel] is the class **Channel**.
-The SDK allows you to interact with multiple channels. A channel object can be configured with a different ordering service or share a common ordering service, depending on how the target blockchain network is set up. A client object has a _KeyValueStore_ to store private keys and certificates for authenticated users. Through the client object the application can perform
-* The **KeyValueStore** is a very simple interface which SDK uses to store and retrieve all persistent data. This data includes private keys, so it is very important to keep this storage secure. The default implementation is a simple file-based version found in the _FileKeyValueStore_ class. The SDK also provides an implementation based on CouchDB which can be configured to use a local CouchDB database or a remote deployment including a Cloudant database.
-* The **User** class represents an end user who transacts on the channel. The user object must have a valid enrollment configured in order to properly sign transaction requests. The enrollment materials can either be obtained from enrolling with fabric-ca or an external Certificate Authority.
-* The **FabricCAClientImpl** class provides security and identity related features such as user registration and enrollment, transaction certificate issuance. The Hyperledger Fabric has a built-in implementation that issues _ECerts_ (enrollment certificates) and _TCerts_ (transaction certificates). ECerts are for enrollment identity and TCerts are for transactions.
 
 ### Pluggability
 HFC defines the following abstract classes for application developers to supply extensions or alternative implementations. For each abstract class, a built-in implementation is included with the ability to load alternative implementations via designated environment variables:
@@ -66,7 +53,7 @@ HFC defines the following abstract classes for application developers to supply 
 
 ### Continuous Integration
 
-Our Continuous Integration is run using [Azure Pipelines](https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_build). Builds are automatically triggered on opening pull requests. 
+Our Continuous Integration is run using [Azure Pipelines](https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_build). Builds are automatically triggered on opening pull requests.
 
 ### Release notes
 
