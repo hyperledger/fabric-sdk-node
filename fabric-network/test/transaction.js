@@ -240,6 +240,12 @@ describe('Transaction', () => {
 			}
 			sinon.assert.calledOnce(eventHandler.cancelListening);
 		});
+		it('throws with peer responses if the orderer returns an unsuccessful response', () => {
+			const status = 'FAILURE';
+			commit.send.resolves({status});
+			const promise = transaction.submit();
+			return expect(promise).to.be.eventually.rejectedWith(status).and.have.deep.property('responses', [validProposalResponse]);
+		});
 		it('user assigned peers with invalid response', async () => {
 			try {
 				endorsement.send = sinon.stub().resolves(invalidProposalResponses);
