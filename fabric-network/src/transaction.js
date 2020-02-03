@@ -207,62 +207,68 @@ class Transaction {
 		// This is where the request gets sent to the peers
 		const results = await endorsement.send(request);
 
-		// the validate throws an error if no valid endorsements
-		logger.debug('%s - check the results of the endorsement', method);
-		const {validResponses} = this._validatePeerResponses(results);
+		try {
 
-		// The endorsement is the source for the transaction id.
-		// The endorsement created the transaction id on demand
-		// when it built the proposal.
-		this.transactionId = endorsement.getTransactionId();
+			// the validate throws an error if no valid endorsements
+			logger.debug('%s - check the results of the endorsement', method);
+			const {validResponses} = this._validatePeerResponses(results);
 
-		// using the event handler strategy factory function from the gateway,
-		// or assigned by the user this instance,
-		// the eventService list will be built by the strategy to monitor for this
-		// transaction's completion by the eventHandler
-		let eventHandler;
-		if (this._eventHandlerStrategyFactory) {
-			eventHandler = this._eventHandlerStrategyFactory(this, this._transactionOptions);
-		} else {
-			eventHandler = this._transactionOptions.strategy(this, this._transactionOptions);
+			// The endorsement is the source for the transaction id.
+			// The endorsement created the transaction id on demand
+			// when it built the proposal.
+			this.transactionId = endorsement.getTransactionId();
+
+			// using the event handler strategy factory function from the gateway,
+			// or assigned by the user this instance,
+			// the eventService list will be built by the strategy to monitor for this
+			// transaction's completion by the eventHandler
+			let eventHandler;
+			if (this._eventHandlerStrategyFactory) {
+				eventHandler = this._eventHandlerStrategyFactory(this, this._transactionOptions);
+			} else {
+				eventHandler = this._transactionOptions.strategy(this, this._transactionOptions);
+			}
+
+			// ------- E V E N T   M O N I T O R
+			await eventHandler.startListening(this.identityContext);
+
+			if (request.handler) {
+				logger.debug('%s - use discovery to commit', method);
+			} else {
+				logger.debug('%s - use the orderers assigned to the channel', method);
+				request.targets = channel.getCommitters();
+			}
+
+			// by now we should have a discovery handler or use the target orderers
+			// that have been assigned from the channel to perform the commit
+
+			const commit = endorsement.newCommit();
+			commit.build(this.identityContext, request);
+			commit.sign(this.identityContext);
+
+			// -----  C O M M I T   E N D O R S E M E N T
+			// this is where the endorsement results are sent to the orderer
+			const response = await commit.send(request);
+
+			logger.debug('%s - commit response %j', method, response);
+
+			if (response.status !== 'SUCCESS') {
+				const msg = `Failed to commit transaction %${endorsement.transactionId}, orderer response status: ${response.status}`;
+				logger.error('%s - %s', method, msg);
+				eventHandler.cancelListening();
+				throw new Error(msg);
+			} else {
+				logger.debug('%s - successful commit', method);
+			}
+
+			logger.debug('%s - wait for the transaction to be committed on the peer', method);
+			await eventHandler.waitForEvents();
+
+			return validResponses[0].response.payload;
+		} catch (err) {
+			err.responses = results.responses;
+			throw err;
 		}
-
-		// ------- E V E N T   M O N I T O R
-		await eventHandler.startListening(this.identityContext);
-
-		if (request.handler) {
-			logger.debug('%s - use discovery to commit', method);
-		} else {
-			logger.debug('%s - use the orderers assigned to the channel', method);
-			request.targets = channel.getCommitters();
-		}
-
-		// by now we should have a discovery handler or use the target orderers
-		// that have been assigned from the channel to perform the commit
-
-		const commit = endorsement.newCommit();
-		commit.build(this.identityContext, request);
-		commit.sign(this.identityContext);
-
-		// -----  C O M M I T   E N D O R S E M E N T
-		// this is where the endorsement results are sent to the orderer
-		const response = await commit.send(request);
-
-		logger.debug('%s - commit response %j', method, response);
-
-		if (response.status !== 'SUCCESS') {
-			const msg = `Failed to commit transaction %${endorsement.transactionId}, orderer response status: ${response.status}`;
-			logger.error('%s - %s', method, msg);
-			eventHandler.cancelListening();
-			throw new Error(msg);
-		} else {
-			logger.debug('%s - successful commit', method);
-		}
-
-		logger.debug('%s - wait for the transaction to be committed on the peer', method);
-		await eventHandler.waitForEvents();
-
-		return validResponses[0].response.payload;
 	}
 
 	_buildRequest(args) {
