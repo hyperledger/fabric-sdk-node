@@ -2453,7 +2453,7 @@ const Channel = class {
 	 * @property {TransactionID} txId - Required. Object with the transaction id
 	 *           and nonce
 	 * @property {string} collections-config - Optional. The path to the collections
-	 *           config. More details can be found at this [tutorial]{@link https://fabric-sdk-node.github.io/tutorial-private-data.html}
+	 *           config. More details can be found at this [tutorial]{@link https://hyperledger.github.io/fabric-sdk-node/release-1.4/tutorial-private-data.html}
 	 * @property {object} [transientMap] - Optional. Object with String property names
 	 *           and Buffer property values that can be used by the chaincode but not
 	 *           saved in the ledger. Data such as cryptographic information for

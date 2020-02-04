@@ -2,7 +2,7 @@
 
 The Hyperledger Fabric Client SDK makes it possible to use APIs to interact with a Hyperledger Fabric blockchain.
 
-As an application developer, to learn about how to install and use the Node.js SDK, please visit the [SDK documentation](https://fabric-sdk-node.github.io/).
+As an application developer, to learn about how to install and use the Node.js SDK, please visit the [SDK documentation](https://hyperledger.github.io/fabric-sdk-node/release-1.4/).
 
 This project publishes three separate npm packages:
 * `fabric-client` - main client for the [Hyperledger Fabric](http://hyperledger-fabric.readthedocs.io/en/latest/). Applications can use this package to install and instantiate chaincodes, submit transactions and make queries against a Hyperledger Fabric-based blockchain network.
@@ -65,7 +65,7 @@ You can build the docker images in your native host (Mac, Ubuntu, Windows, etc.)
 
 ### Special Tests for Hardware Security Module support via PKCS#11 interface
 
-The SDK has support for Hardware Security Module via PKCS#11 interface. See [Testing for Hardware Security Module via PKCS#11 interface](https://fabric-sdk-node.github.io/release-1.4/tutorial-hsm-pkcs11.html) for configuration and tests.
+The SDK has support for Hardware Security Module via PKCS#11 interface. See [Testing for Hardware Security Module via PKCS#11 interface](https://hyperledger.github.io/fabric-sdk-node/release-1.4/tutorial-hsm-pkcs11.html) for configuration and tests.
 
 ### Hyperledger Fabric Client objects and reference documentation
 The SDK has support for Java based Chaincode. To turn these tests off, set the environment variable "JAVA_TESTS" to false.
