@@ -3,6 +3,7 @@
 */
 
 const runShellCommand = require('./runShellCommand').runShellCommand;
+const os = require('os');
 
 const binariesPath = '/tmp/fabric-binaries';
 const version = '1.4.0';
@@ -12,8 +13,15 @@ const binariesRoot = `https://github.com/hyperledger/fabric/releases/download/v$
 const darwinBinaries =  `${binariesRoot}/${darwinTarFile}`;
 const amd64Binaries = `${binariesRoot}/${amd64TarFile}`;
 
+async function installAndGenerateCerts() {
+	if (os.platform() === 'darwin') {
+		await installAndGenerateCertsMac();
+	} else {
+		await installAndGenerateCertsamd64();
+	}
+}
 
-module.exports.installAndGenerateCertsamd64 = async function() {
+async function installAndGenerateCertsamd64() {
 	// Retrieve the cryptogen material binaries, pinned at 1.4
 	// Download and extract binaries from tar file
 	// Set to path via export
@@ -21,13 +29,13 @@ module.exports.installAndGenerateCertsamd64 = async function() {
 	await runShellCommand(`wget ${amd64Binaries} -P ${binariesPath}`, null);
 	await runShellCommand(`tar xvzf ${binariesPath}/${amd64TarFile} -C ${binariesPath}`, null);
 	await generateTestCerts();
-};
+}
 
-module.exports.installAndGenerateCertsMac = async function() {
+async function installAndGenerateCertsMac() {
 	await runShellCommand(`curl -L --create-dirs --output ${binariesPath}/${darwinTarFile} ${darwinBinaries}`, null);
 	await runShellCommand(`tar xvzf ${binariesPath}/${darwinTarFile} -C ${binariesPath}`, null);
 	await generateTestCerts();
-};
+}
 
 async function generateTestCerts() {
 	// Generate required crypto material, channel tx blocks, and fabric ca certs
@@ -36,4 +44,8 @@ async function generateTestCerts() {
 	await runShellCommand('./test/fixtures/fabricca/generateCSR.sh', null);
 }
 
-
+installAndGenerateCerts()
+	.catch(error => {
+		console.log(error); // eslint-disable-line no-console
+		process.exitCode = 1;
+	});

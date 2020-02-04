@@ -138,7 +138,7 @@ class Contract {
 		return listener;
 	}
 
-	/*
+	/**
 	 * Internal use
 	 * Use this method to get the DiscoveryHandler to get the endorsements
 	 * needed to commit a transaction.
@@ -155,6 +155,7 @@ class Contract {
 	 * "refreshAge" discovery option after the first call to determine if the
 	 * endorsement plan should be refreshed by a new call to the peer's
 	 * discovery service.
+	 * @private
 	 * @param {Endorsement} endorsement instance
 	 * @return {DiscoveryHandler} The handler that will work with the discovery
 	 * endorsement plan to send a proposal to be endorsed to the peers as described

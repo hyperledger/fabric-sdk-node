@@ -36,29 +36,29 @@ class SingleQueryHandler {
 			const peerIndex = (startPeerIndex + i) % this._peers.length;
 			this._currentPeerIndex = peerIndex;
 			const peer = this._peers[peerIndex];
+
 			logger.debug('%s - query sending to peer %s', method, peer.name);
-			try {
-				const results = await query.send({targets:[peer]}, options);
-				if (results && results.errors && results.errors.length > 0) {
-					logger.error('%s - problem with query to peer %s error:%s', method, peer.name, results.errors[0]);
-					// since only one peer, only one error
-					errorMessages.push(results.errors[0].message);
-				} else if (results && results.responses && results.responses[0].response.status < 400) {
-					logger.debug('%s - peer response status %s', method, results.responses[0].response.status);
-					return results.responses[0].response.payload;
-				} else if (results && results.responses && results.responses[0].response.message) {
-					logger.debug('%s - peer response status: %s message: %s', method,
-						results.responses[0].response.status,
-						results.responses[0].response.message);
-					errorMessages.push(results.responses[0].response.message);
-				} else {
-					logger.error('%s - no results returned from the query', method);
-					errorMessages.push('No response from query');
-				}
-			} catch (error) {
-				logger.error('%s - problem with query to peer %s error:%s', method, peer.name, error);
-				errorMessages.push(error.message);
+			const results = await query.send({targets:[peer]}, options);
+
+			if (results.errors.length > 0) {
+				logger.error('%s - problem with query to peer %s error:%s', method, peer.name, results.errors[0]);
+				// since only one peer, only one error
+				errorMessages.push(results.errors[0].message);
+				continue;
 			}
+
+			const endorsementResponse = results.responses[0];
+
+			if (!endorsementResponse.endorsement) {
+				logger.debug('%s - peer response status: %s message: %s',
+					method,
+					endorsementResponse.response.status,
+					endorsementResponse.response.message);
+				throw new Error(endorsementResponse.response.message);
+			}
+
+			logger.debug('%s - peer response status %s', method, endorsementResponse.response.status);
+			return endorsementResponse.response.payload;
 		}
 
 		const message = util.format('Query failed. Errors: %j', errorMessages);

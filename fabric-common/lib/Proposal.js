@@ -384,8 +384,8 @@ message Endorsement {
 		}
 
 		const return_results =  {
-			errors: this._proposalErrors.length > 0 ? this._proposalErrors : null,
-			responses: this._proposalResponses.length > 0 ? this._proposalResponses : null
+			errors: this._proposalErrors,
+			responses: this._proposalResponses
 		};
 
 		if (this.type === 'Query') {
@@ -398,7 +398,7 @@ message Endorsement {
 					logger.error('%s - unknown or missing results in query', method);
 				}
 			});
-			return_results.queryResults = this._queryResults.length > 0 ? this._queryResults : null;
+			return_results.queryResults = this._queryResults;
 		}
 
 		return return_results;

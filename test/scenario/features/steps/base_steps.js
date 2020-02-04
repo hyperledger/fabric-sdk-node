@@ -11,6 +11,15 @@ const {format} = require('util');
 const testUtil = require('../lib/utils');
 const {Client, User} = require('fabric-common');
 
+function assertNoErrors(endorsementResults) {
+	if (endorsementResults.errors && endorsementResults.errors.length > 0) {
+		for (const error of endorsementResults.errors) {
+			testUtil.logMsg(`Failed to get successful response from peer : ${error.message}`);
+		}
+		throw Error('failed endorsement');
+	}
+}
+
 module.exports = function () {
 	this.Then(/^endorse chaincode (.+?) channel (.+?)$/,
 		{timeout: testUtil.TIMEOUTS.LONG_STEP},
@@ -109,12 +118,7 @@ module.exports = function () {
 				// New API, the "send" method on the endorsement object
 				// will send the signed endorsement to the requested peers.
 				const endorse_results = await endorsement.send(endorse_request);
-				if (endorse_results.errors) {
-					for (const error of endorse_results.errors) {
-						testUtil.logMsg(`Failed to get endorsement : ${error.message}`);
-					}
-					throw Error('failed endorsement');
-				}
+				assertNoErrors(endorse_results);
 
 				// ----- T R A N S A C T I O N   E V E N T -----
 				try {
@@ -228,15 +232,9 @@ module.exports = function () {
 				// New API, the "send" method on the proposal object
 				// will send the signed proposal to the requested peers.
 				const query_results = await query.send(query_request);
-				if (query_results.errors) {
-					for (const error of query_results.errors) {
-						testUtil.logMsg(`Failed to get query results from peer :: ${error}`);
-					}
-					throw Error('failed query');
-				} else {
-					for (const result of query_results.queryResults) {
-						testUtil.logMsg(` *** query results:: ${result.toString('utf8')}`);
-					}
+				assertNoErrors(query_request);
+				for (const result of query_results.queryResults) {
+					testUtil.logMsg(` *** query results:: ${result.toString('utf8')}`);
 				}
 
 			} catch (error) {
@@ -423,15 +421,9 @@ module.exports = function () {
 					};
 
 					const endorse_results = await endorsement.send(endorse_request);
-					if (endorse_results.errors) {
-						for (const error of endorse_results.errors) {
-							testUtil.logMsg(`Failed to get endorsement : ${error.message}`);
-						}
-						throw Error('failed endorsement');
-					} else {
-						for (const response of endorse_results.responses) {
-							testUtil.logMsg(`Successfully got an endorsement status: ${response.response.status}`);
-						}
+					assertNoErrors(endorse_results);
+					for (const response of endorse_results.responses) {
+						testUtil.logMsg(`Successfully got an endorsement status: ${response.response.status}`);
 					}
 
 					// ------ E V E N T -------
@@ -517,15 +509,9 @@ module.exports = function () {
 					};
 
 					const query_results = await query.send(query_request);
-					if (query_results.errors) {
-						for (const error of query_results.errors) {
-							testUtil.logMsg(`Failed to get query results from peer ${error.peer.url} : ${error.message}`);
-						}
-						throw Error('failed query');
-					} else {
-						for (const result of query_results.queryResults) {
-							testUtil.logMsg(` *** query results:: ${result.toString('utf8')}`);
-						}
+					assertNoErrors(query_results);
+					for (const result of query_results.queryResults) {
+						testUtil.logMsg(` *** query results:: ${result.toString('utf8')}`);
 					}
 					testUtil.logMsg('\n\nDISCOVERY Endorse TEST 1 --- END\n');
 				} catch (error) {
@@ -780,12 +766,7 @@ module.exports = function () {
 				};
 
 				const endorse_results = await endorsement.send(endorse_request);
-				if (endorse_results.errors) {
-					for (const error of endorse_results.errors) {
-						testUtil.logMsg(`Failed to get endorsement : ${error.message}`);
-					}
-					throw Error('failed endorsement');
-				}
+				assertNoErrors(endorse_results);
 
 				// ----- C H A I N C O D E   E V E N T -----
 				try {
@@ -940,20 +921,14 @@ module.exports = function () {
 				};
 
 				const endorse_results = await endorsement.send(endorse_request);
-				if (endorse_results.errors) {
-					for (const error of endorse_results.errors) {
-						testUtil.logMsg(`Failed to get endorsement : ${error.message}`);
-					}
-					throw Error('failed endorsement');
-				} else {
-					testUtil.logMsg(format('\n\n%s - Successfully endorsed with transient data\n', step));
-					for (const endorsement_result of endorse_results.responses) {
-						const transient_return = endorsement_result.response.payload.toString('utf8');
-						if (transient_return === '"extra info"') {
-							testUtil.logMsg('Successfully returned transient data');
-						} else {
-							throw Error('Failed - Transient data was not handled correctly');
-						}
+				assertNoErrors(endorse_results);
+				testUtil.logMsg(format('\n\n%s - Successfully endorsed with transient data\n', step));
+				for (const endorsement_result of endorse_results.responses) {
+					const transient_return = endorsement_result.response.payload.toString('utf8');
+					if (transient_return === '"extra info"') {
+						testUtil.logMsg('Successfully returned transient data');
+					} else {
+						throw Error('Failed - Transient data was not handled correctly');
 					}
 				}
 
