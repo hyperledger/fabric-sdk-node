@@ -128,6 +128,8 @@ class Transaction {
      * @returns {Buffer} Payload response from the transaction function.
 	 * @throws {module:fabric-network.TimeoutError} If the transaction was successfully submitted to the orderer but
 	 * timed out before a commit event was received from peers.
+	 * @throws {Error} if an underlying infrastructure failure occurs.  The `responses` property of the error contains the
+	 * array of proposal response objects from the endorsing peers.
      */
 	async submit(...args) {
 		verifyArguments(args);
