@@ -132,10 +132,10 @@ declare namespace FabricCAServices {
     }
 
     export interface IServiceResponse {
-        Success: boolean;
-        Result: any;
-        Errors: IServiceResponseMessage[];
-        Messages: IServiceResponseMessage[];
+        success: boolean;
+        result: any;
+        errors: IServiceResponseMessage[];
+        messages: IServiceResponseMessage[];
     }
 
     export interface IAffiliationRequest {
