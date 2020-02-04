@@ -22,10 +22,6 @@ runTape() {
         unset E2E_SCRIPT_SUFFIX
     fi
 
-    # force the non HSM for now
-    unset E2E_SCRIPT_SUFFIX
-
-
     # Tests have to executed in the following order
 
     # First run the ca-tests that run good/bad path member registration/enrollment scenarios

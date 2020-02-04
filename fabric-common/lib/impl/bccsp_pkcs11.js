@@ -315,6 +315,8 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 			}
 			this._pkcs11Session = pkcs11.C_OpenSession(slot, flags);
 
+			logger.debug(__func() + ' after the open , %s', this._pkcs11Session);
+
 			// Getting info about Session
 			logger.debug(__func() + 'C_GetSessionInfo(' +
 				util.inspect(this._pkcs11Session, {depth: null}) + '): ' +
@@ -330,7 +332,7 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 			// pkcs11.C_Logout(session);
 			// pkcs11.C_CloseSession(session);
 		} catch (e) {
-			if (this._pkcs11Session !== null) {
+			if (this._pkcs11Session) {
 				pkcs11.C_CloseSession(this._pkcs11Session);
 			}
 			pkcs11.C_Finalize();
