@@ -61,7 +61,7 @@
 			<li class="dropdown">
 				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="global.html#CLIENT">CLIENT</a></li><li><a href="global.html#HFAFFILIATIONMGR">HFAFFILIATIONMGR</a></li><li><a href="global.html#HFGENCRL">HFGENCRL</a></li><li><a href="global.html#HFINTERMEDIATECA">HFINTERMEDIATECA</a></li><li><a href="global.html#HFREGISTRARATTRIBUTES">HFREGISTRARATTRIBUTES</a></li><li><a href="global.html#HFREGISTRARDELEGATEROLES">HFREGISTRARDELEGATEROLES</a></li><li><a href="global.html#HFREGISTRARROLES">HFREGISTRARROLES</a></li><li><a href="global.html#HFREVOKER">HFREVOKER</a></li><li><a href="global.html#loadConfigGroup">loadConfigGroup</a></li><li><a href="global.html#loadConfigValue">loadConfigValue</a></li><li><a href="global.html#ORDERER">ORDERER</a></li><li><a href="global.html#package">package</a></li><li><a href="global.html#PEER">PEER</a></li><li><a href="global.html#toEnvelope">toEnvelope</a></li><li><a href="global.html#USER">USER</a></li>
+					<li><a href="global.html#bitsToBytes">bitsToBytes</a></li><li><a href="global.html#bytesToBits">bytesToBits</a></li><li><a href="global.html#CLIENT">CLIENT</a></li><li><a href="global.html#HFAFFILIATIONMGR">HFAFFILIATIONMGR</a></li><li><a href="global.html#HFGENCRL">HFGENCRL</a></li><li><a href="global.html#HFINTERMEDIATECA">HFINTERMEDIATECA</a></li><li><a href="global.html#HFREGISTRARATTRIBUTES">HFREGISTRARATTRIBUTES</a></li><li><a href="global.html#HFREGISTRARDELEGATEROLES">HFREGISTRARDELEGATEROLES</a></li><li><a href="global.html#HFREGISTRARROLES">HFREGISTRARROLES</a></li><li><a href="global.html#HFREVOKER">HFREVOKER</a></li><li><a href="global.html#jsSHA3">jsSHA3</a></li><li><a href="global.html#loadConfigGroup">loadConfigGroup</a></li><li><a href="global.html#loadConfigValue">loadConfigValue</a></li><li><a href="global.html#ORDERER">ORDERER</a></li><li><a href="global.html#package">package</a></li><li><a href="global.html#PEER">PEER</a></li><li><a href="global.html#toEnvelope">toEnvelope</a></li><li><a href="global.html#USER">USER</a></li>
 				</ul>
 			</li>
 			
@@ -653,6 +653,66 @@ to a registree for its 'hf.Registrar.Roles' attribute
         
             
 <hr>
+<dt class="name" id="jsSHA3">
+    <h4 id="jsSHA3"><span class="type-signature">&lt;constant> </span>jsSHA3<span class="type-signature"></span></h4>
+
+    
+</dt>
+<dd>
+    
+    <div class="description">
+        Implement hash primitives.
+    </div>
+    
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+</dd>
+
+        
+            
+<hr>
 <dt class="name" id="ORDERER">
     <h4 id="ORDERER"><span class="type-signature">&lt;constant> </span>ORDERER<span class="type-signature"></span></h4>
 
@@ -837,6 +897,284 @@ to a registree for its 'hf.Registrar.Roles' attribute
         <h3 class="subsection-title">Methods</h3>
 
         <dl>
+            
+<hr>
+<dt>
+    <h4 class="name" id="bitsToBytes"><span class="type-signature"></span>bitsToBytes(arr)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Convert from a bitArray to bytes (refer to SJCL's codec)
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>arr</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;number></span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">a bitArray to convert from</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    the bytes converted from the bitArray
+</div>
+
+
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="bytesToBits"><span class="type-signature"></span>bytesToBits(bytes)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Convert from bytes to a bitArray (refer to SJCL's codec)
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>bytes</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;number></span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">a bytes to convert from</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    the bitArray converted from bytes
+</div>
+
+
+
+
+        
+
+    
+</dd>
+
+        
             
 <hr>
 <dt>
@@ -17493,7 +17831,7 @@ with a common connection profile.
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a>
 	
-		on 2020-02-04T16:00:18+00:00
+		on 2020-02-05T17:31:04+00:00
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>
