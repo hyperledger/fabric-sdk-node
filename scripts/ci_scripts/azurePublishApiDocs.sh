@@ -17,7 +17,6 @@ set -e -o pipefail
 
 readonly COMMIT_HASH=$(git rev-parse HEAD)
 readonly BUILD_DIR="${PROJECT_DIR}/docs/gen"
-readonly TEMPLATE_DIR="${PROJECT_DIR}/docs/redirectTemplates"
 readonly DOCS_BRANCH='gh-pages'
 readonly STAGING_RELEASE_DIR="${STAGING_DIR}/${SOURCE_BRANCH}"
 
@@ -47,26 +46,11 @@ buildDocs() {
 cleanStaging() {
     echo "Removing ${STAGING_RELEASE_DIR}"
     rm -rf "${STAGING_RELEASE_DIR}"
-
-    if [[ ${SOURCE_BRANCH} = master ]]; then
-        removeStagingRootFiles
-    fi
-}
-
-removeStagingRootFiles() {
-    find "${STAGING_DIR}" -type f -maxdepth 1 -mindepth 1 \
-        -exec echo Removing {} \; \
-        -exec rm -f {} \;
 }
 
 copyToStaging() {
     echo "Copying built documentation from ${BUILD_DIR} to ${STAGING_RELEASE_DIR}"
     rsync -r "${BUILD_DIR}/" "${STAGING_RELEASE_DIR}"
-
-    if [[ ${SOURCE_BRANCH} = master ]]; then
-        echo "Copying template files from ${TEMPLATE_DIR} to ${STAGING_DIR}"
-        rsync -r "${TEMPLATE_DIR}/" "${STAGING_DIR}"
-    fi
 }
 
 publishDocs() {
@@ -82,5 +66,6 @@ _stagingPushDocs() {
 
 prepareStaging
 buildDocs
+cleanStaging
 copyToStaging
 publishDocs
