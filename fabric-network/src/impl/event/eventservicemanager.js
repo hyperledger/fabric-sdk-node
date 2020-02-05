@@ -14,6 +14,7 @@ const logger = require('fabric-network/lib/logger').getLogger('EventServiceManag
  * its own list of new event Services that are used for event replay
  * @memberof module:fabric-network
  * @class
+ * @private
  */
 class EventServiceManager {
 	/**

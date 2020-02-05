@@ -17,6 +17,7 @@ let counter = 1;
  * Instances of the event listeners are stateful and must only be used for one low level listener
  * @memberof module:fabric-network
  * @class
+ * @private
  */
 class BaseEventListener {
 	/**

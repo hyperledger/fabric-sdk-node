@@ -14,6 +14,7 @@ const logger = require('./logger').getLogger('Network');
 
 /**
  * @typedef {Object} Network~EventListenerOptions
+ * @private
  * @memberof module:fabric-network
  * @property {Object} checkpointer - a checkpointer instance
  * @property {boolean} [replay=false] - event replay on listener
@@ -28,7 +29,7 @@ const logger = require('./logger').getLogger('Network');
  * events. Only used for transaction commit events and will be ignored for other
  * event types. The default is to call the application commit event listener on
  * every transaction committed to the ledger.
-*/
+ */
 
 /**
  * A Network represents the set of peers in a Fabric network.
@@ -160,7 +161,7 @@ class Network {
 	 * Get an instance of a contract (chaincode) on the current network.
 	 * @param {string} chaincodeId - the chaincode identifier.
 	 * @param {string} [name] - the name of the contract.
-	 * @param {string[] [collections] - the names of collections defined for this chaincode.
+	 * @param {string[]} [collections] - the names of collections defined for this chaincode.
 	 * @returns {module:fabric-network.Contract} the contract.
 	 */
 	getContract(chaincodeId, name = '', collections) {
@@ -206,6 +207,7 @@ class Network {
 	 * event service selection
 	 * @returns {module:fabric-network~BlockEventListener}
 	 * @async
+	 * @private
 	 */
 	async addBlockListener(callback, options = {}, eventService) {
 		const method = 'addBlockListener';
@@ -229,6 +231,7 @@ class Network {
 	 * event service selection
 	 * @returns {module:fabric-network~CommitEventListener}
 	 * @async
+	 * @private
 	 */
 	async addCommitListener(callback, options = {}, eventService) {
 		const method = 'addCommitListener';

@@ -13,6 +13,7 @@ const logger = require('fabric-network/lib/logger').getLogger('FileSystemCheckpo
 
 /**
  * @typedef FileSystemCheckpointer~FileSystemCheckpointerOptions
+ * @private
  * @memberof module:fabric-network
  * @property {string} checkpointPath - The path to the checkpoint.
  * @property {number} [maxLength] The maximum number of blocks that can be in the checkpointer.
@@ -24,6 +25,7 @@ const logger = require('fabric-network/lib/logger').getLogger('FileSystemCheckpo
  * @memberof module:fabric-network
  * @extends module:fabric-network~BaseCheckpointer
  * @class
+ * @private
  */
 class FileSystemCheckpointer extends BaseCheckpointer {
 	/**
