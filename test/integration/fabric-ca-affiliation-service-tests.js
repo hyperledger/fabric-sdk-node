@@ -62,8 +62,8 @@ test('\n\n ** HFCAIdentityService Test **\n\n', (t) => {
 
 	const fabricCAEndpoint = ORGS[userOrg].ca.url;
 
-	FabricCAServices.getConfigSetting('crypto-keysize', '256'); // force for gulp test
-	FabricCAServices.setConfigSetting('crypto-hash-algo', 'SHA2'); // force for gulp test
+	FabricCAServices.getConfigSetting('crypto-keysize', '256'); // force for npm test
+	FabricCAServices.setConfigSetting('crypto-hash-algo', 'SHA2'); // force for npm test
 
 	const caService = new FabricCAServices(fabricCAEndpoint, tlsOptions, ORGS[userOrg].ca.name);
 

@@ -81,7 +81,7 @@ module.exports.setupChaincodeDeploy = function() {
 };
 
 // specifically set the values to defaults because they may have been overridden when
-// running in the overall test bucket ('gulp test')
+// running in the overall test bucket ('npm test')
 module.exports.resetDefaults = function() {
 	global.hfc.config = undefined;
 	require('nconf').reset();

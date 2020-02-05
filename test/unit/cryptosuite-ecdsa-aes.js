@@ -235,7 +235,7 @@ test('\n\n ** CryptoSuite_ECDSA_AES - function tests **\n\n', (t) => {
 
 	// reset to default key size
 	utils.setConfigSetting('crypto-keysize', 256);
-	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');// force for gulp test
+	utils.setConfigSetting('key-value-store', 'fabric-client/lib/impl/FileKeyValueStore.js');// force for npm test
 	cryptoUtils = utils.newCryptoSuite();
 	cryptoUtils.setCryptoKeyStore(utils.newCryptoKeyStore());
 

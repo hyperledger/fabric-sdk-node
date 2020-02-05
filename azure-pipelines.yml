@@ -29,7 +29,7 @@ steps:
 - script: npm install
   displayName: 'npm install'
 
-- script: npx gulp run-test-all
+- script: npm test
   displayName: 'Run tests'
 
 - script: scripts/ci_scripts/azurePublishNpmPackages.sh

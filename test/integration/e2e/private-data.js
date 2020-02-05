@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// This is an end-to-end tests for the private data feature.i
+// This is an end-to-end tests for the private data feature.
 // Install and instantiate a chaincode with private data.
 // Invokes and queries chaincode for private data.
 // Prerequisite: a chaincode reading/writing private data, install-channel.js and join-channels.js

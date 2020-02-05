@@ -233,7 +233,7 @@ function testKeyStore(store, t) {
 }
 
 test('\n\n** CryptoKeyStore tests - newCryptoKeyStore tests **\n\n', (t) => {
-	utils.setConfigSetting('key-value-store', 'fabric-ca-client/lib/impl/FileKeyValueStore.js');// force for 'gulp test'
+	utils.setConfigSetting('key-value-store', 'fabric-ca-client/lib/impl/FileKeyValueStore.js');// force for 'npm test'
 	const keyValStorePath = 'tmp/keyValStore1';
 	const config = {path: keyValStorePath};
 	let cs = utils.newCryptoKeyStore(config);

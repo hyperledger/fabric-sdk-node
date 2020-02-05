@@ -24,32 +24,33 @@ const e2eUtils = require('./e2eUtils.js');
 let tx_id = null;
 
 let ORGS;
-const channelName = process.env.channel ? process.env.channel : testUtil.END2END.channel;
 
 //
 // Attempt to send a request to the orderer with the createChannel method
-//
+
+// This file is a copy of test/integration/e2e/join-channel.js
+// This is required by scripts/npm_scripts/runTape.sh, which needs to call these join-channel.js tests for a second time
 test('\n\n***** End-to-end flow: join channel *****\n\n', (t) => {
 	Client.addConfigFile(path.join(__dirname, './config.json'));
 	ORGS = Client.getConfigSetting('test-network');
 
 	joinChannel('org1', t)
 		.then(() => {
-			t.pass(util.format('Successfully joined peers in organization "%s" to the channel "%s"', ORGS.org1.name, channelName));
+			t.pass(util.format('Successfully joined peers in organization "%s" to the channel', ORGS.org1.name));
 			return joinChannel('org2', t);
 		}, (err) => {
-			t.fail(util.format('Failed to join peers in organization "%s" to the channel "%s". %s', ORGS.org1.name, channelName, err.stack ? err.stack : err));
+			t.fail(util.format('Failed to join peers in organization "%s" to the channel. %s', ORGS.org1.name, err.stack ? err.stack : err));
 			t.end();
 		})
 		.then(() => {
-			t.pass(util.format('Successfully joined peers in organization "%s" to the channel "%s"', ORGS.org2.name, channelName));
+			t.pass(util.format('Successfully joined peers in organization "%s" to the channel', ORGS.org2.name));
 			t.end();
 		}, (err) => {
-			t.fail(util.format('Failed to join peers in organization "%s" to the channel "%s". %s', ORGS.org2.name, channelName, err.stack ? err.stack : err));
+			t.fail(util.format('Failed to join peers in organization "%s" to the channel. %s', ORGS.org2.name), err.stack ? err.stack : err);
 			t.end();
 		})
 		.catch((err) => {
-			t.fail('Join channel: Failed request. ' + err);
+			t.fail('Failed request. ' + err);
 			t.end();
 		});
 });
@@ -138,16 +139,18 @@ function joinChannel(org, t) {
 			return channel.joinChannel(request, 30000);
 		}, (err) => {
 			t.fail('Failed to enroll user \'admin\' due to error: ' + err.stack ? err.stack : err);
-			t.end();
+			throw new Error('Failed to enroll user \'admin\' due to error: ' + err.stack ? err.stack : err);
 		})
 		.then((results) => {
 			logger.debug(util.format('Join Channel R E S P O N S E : %j', results));
 
 			if (results && results[0] && results[0].response && results[0].response.status === 200) {
-				t.pass(util.format('Successfully joined peers in organization %s to join the channel "%s"', orgName, channelName));
+				t.pass(util.format('Successfully joined peers in organization %s to join the channel', orgName));
 			} else {
-				t.fail(util.format(' Failed to join channel "%s", with response:', channelName, results[0]));
-				t.end();
+				t.fail(' Failed to join channel');
+				throw new Error('Failed to join channel');
 			}
+		}, (err) => {
+			t.fail('Failed to join channel due to error: ' + err.stack ? err.stack : err);
 		});
 }

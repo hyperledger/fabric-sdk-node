@@ -39,7 +39,7 @@ test(DESC, (t) => {
 
 async function perfTest3(t) {
 	testUtil.resetDefaults();
-	Client.setConfigSetting('key-value-store', 'fabric-ca-client/lib/impl/FileKeyValueStore.js');// force for 'gulp test'
+	Client.setConfigSetting('key-value-store', 'fabric-ca-client/lib/impl/FileKeyValueStore.js');// force for 'npm test'
 	Client.addConfigFile(path.join(__dirname, '../e2e', 'config.json'));
 	ORGS = Client.getConfigSetting('test-network');
 	const orgName = ORGS[org].name;

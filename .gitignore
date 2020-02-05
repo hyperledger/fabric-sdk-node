@@ -23,6 +23,7 @@ test/typescript/**/*.js.map
 test/fixtures/src/node_cc/example_cc/.npmrc
 test/fixtures/src/node_cc/example_cc1/.npmrc
 test/fixtures/src/github.com/example_cc/junk.go
+test/temp/**
 
 #fabric client
 fabric-client/.DS_Store

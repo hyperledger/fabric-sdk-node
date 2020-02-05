@@ -16,15 +16,14 @@ To build and test, the following pre-requisites must be installed first:
 * Node.js, version 8 is supported from 8.9.4 and higher.
 * Node.js, version 10 is supported from 10.15.3 and higher.
 * npm tool version 5.5.1 or higher
-* gulp command (must be installed globaly with `npm install -g gulp`)
-* docker (not required if you only want to run the headless tests with `npm test`, see below)
+* docker (only required for running integration tests, see below)
 
 Clone the project and launch the following commands to install the dependencies and perform various tasks.
 
 In the project root folder:
 * `npm install` to install dependencies
-* optionally, `gulp docs` to generate API docs if you want to review the doc content
-* `npm test` or `gulp test-headless` to run the headless tests that do not require any additional set up
+* optionally, `npm run docs` to generate API docs if you want to review the doc content
+* To run the unit tests that do not require any additional set up, use `npm run testHeadless`
 
 The following tests require setting up a local blockchain network as the target. You need to build the necessary Docker images required to run the network. Follow the steps below to set it up.
 * You will need the peers, orderers and fabric-ca server (new implementation of the member service) to run the tests. The first two components are from the *fabric* repository. The fabric-ca server is from the *fabric-ca* repository.
@@ -47,7 +46,7 @@ You can build the docker images in your native host (Mac, Ubuntu, Windows, etc.)
   * run `make docker` to build the docker images (you may need to run `make docker-clean` first if you've built before)
 * Now you are ready to run the tests:
   * Clear out your previous key value stores that may have cached user enrollment certificates (`rm -rf /tmp/hfc-*`, `rm -rf ~/.hfc-key-store`)
-  * run `gulp test` to execute the entire test suite (800+ test cases), or you can run them individually
+  * run `npm test` to execute the entire test suite (800+ test cases), or you can run them individually
   * Test happy path from end to end, run `node test/integration/e2e.js`
   * Test end to end one step at a time, make sure to follow this sequence:
     * `node test/integration/e2e/create-channel.js`
@@ -68,7 +67,7 @@ You can build the docker images in your native host (Mac, Ubuntu, Windows, etc.)
 The SDK has support for Hardware Security Module via PKCS#11 interface. See [Testing for Hardware Security Module via PKCS#11 interface](https://hyperledger.github.io/fabric-sdk-node/release-1.4/tutorial-hsm-pkcs11.html) for configuration and tests.
 
 ### Hyperledger Fabric Client objects and reference documentation
-The SDK has support for Java based Chaincode. To turn these tests off, set the environment variable "JAVA_TESTS" to false.
+The SDK has support for Java based Chaincode.
 
 ### Hyperledger Fabric Client objects
 fabric-client and fabric-ca-client are written in CommonJS modules and take advantage of ECMAScript 2015 class syntax.
