@@ -14,6 +14,7 @@ const logger = require('fabric-network/lib/logger').getLogger('CommitEventListen
  *
  * @memberof module:fabric-network
  * @class
+ * @private
  */
 class CommitEventListener extends BaseEventListener {
 	/**

@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { BlockEventListener, CommitEventListener, Contract, ContractEventListener, Gateway, Network, Transaction } from 'fabric-network';
+import { Contract, Gateway, Network, Transaction } from 'fabric-network';
 import { Constants } from '../constants';
 import * as GatewayHelper from './gateway';
 import * as BaseUtils from './utility/baseUtils';
@@ -42,7 +42,7 @@ export async function createContractListener(gatewayName: string, channelName: s
 	}
 
 	// Create the listener
-	const listener: ContractEventListener = await contract.addContractListener(eventName, (err: Error, ...args: any[]) => {
+	const listener = await (contract as any).addContractListener(eventName, (err: Error, ...args: any[]) => { // TODO: remove cast
 		if (err) {
 			BaseUtils.logMsg('-> Detected a contract event error', err);
 			throw err;
@@ -102,7 +102,7 @@ export async function createBlockListener(gatewayName: string, channelName: stri
 	}
 
 	// Create the listener
-	const listener: BlockEventListener = await network.addBlockListener((err: any, blockNumber: string, block: any) => {
+	const listener = await (network as any).addBlockListener((err: any, blockNumber: string, block: any) => { // TODO: remove cast
 		if (err) {
 			BaseUtils.logMsg('-> Received a block event error', err);
 			throw err;
@@ -161,7 +161,7 @@ export async function createTransactionCommitListener(transaction: Transaction, 
 	}
 
 	// Create a listener
-	const listener: CommitEventListener = await transaction.getNetwork().addCommitListener(
+	const listener = await (transaction.getNetwork() as any).addCommitListener( // TODO: remove cast
 		(err: any, ...args: any[]) => {
 			if (err) {
 				BaseUtils.logMsg('-> Commit transaction event error', err);

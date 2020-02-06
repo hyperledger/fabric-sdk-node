@@ -13,7 +13,7 @@ import { StateStore } from './utility/stateStore';
 import sampleQueryStrategy = require('../../config/handlers/sample-query-handler');
 import sampleTxnEventStrategy = require('../../config/handlers/sample-transaction-event-handler');
 
-import { DefaultEventHandlerStrategies, QueryHandlerStrategies, CommitEventListener, Gateway, GatewayOptions, Wallet, Wallets, Identity, Contract, Network, TxEventHandlerFactory, QueryHandlerFactory, Transaction, TransientMap } from 'fabric-network';
+import { DefaultEventHandlerStrategies, QueryHandlerStrategies, Gateway, GatewayOptions, Wallet, Wallets, Identity, Contract, Network, TxEventHandlerFactory, QueryHandlerFactory, Transaction, TransientMap } from 'fabric-network';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -317,7 +317,6 @@ export async function performHandledGatewayTransaction(gatewayName: string, ccNa
 
 	// Submit/evaluate transaction
 	if (submit) {
-		let listener: CommitEventListener;
 		let resolveNotificationPromise: () => void;
 		let rejectNotificationPromise: () => void;
 		let eventResults: any;
@@ -327,7 +326,7 @@ export async function performHandledGatewayTransaction(gatewayName: string, ccNa
 			rejectNotificationPromise = reject;
 		});
 
-		listener = await network.addCommitListener(
+		const listener = await (network as any).addCommitListener( // TODO: remove cast
 			async (error: Error, blockNum: string, txid: string, status: string) => {
 				if (error) {
 					rejectNotificationPromise();

@@ -126,6 +126,7 @@ class Contract {
 	 * @param {EventService} [eventService] - Optional. Used to override the event service selection
 	 * @returns {module:fabric-network~ContractEventListener}
 	 * @async
+	 * @private
 	 */
 	async addContractListener(eventName, callback, options = {}, eventService) {
 		const listener = new ContractEventListener(this, eventName, callback, options);

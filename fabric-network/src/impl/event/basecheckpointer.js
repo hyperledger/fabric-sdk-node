@@ -18,6 +18,7 @@
  * Base checkpointer providing an interface for checkpointers
  * @memberof module:fabric-network
  * @class
+ * @private
  */
 class BaseCheckpointer {
 	/**

@@ -226,7 +226,11 @@ class Transaction {
 			}
 		} else if (this._endorsingOrgs) {
 			logger.debug('%s - user has assigned an endorsing orgs %s', method, this._endorsingOrgs);
-			endorsementOptions.targets = this._endorsingOrgs.flatMap(channel.getEndorsers);
+			const flatten = (accumulator, value) => {
+				accumulator.push(...value);
+				return accumulator;
+			};
+			endorsementOptions.targets = this._endorsingOrgs.map(channel.getEndorsers).reduce(flatten, []);
 		} else {
 			logger.debug('%s - targets will be all that are assigned to this channel', method);
 			endorsementOptions.targets = channel.getEndorsers();

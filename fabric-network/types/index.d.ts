@@ -30,15 +30,15 @@ export interface GatewayOptions {
 	query?: QueryOptions;
 }
 
-export interface EventListenerOptions {
-	checkpointer?: BaseCheckpointer;
-	replay?: boolean;
-	filtered?: boolean;
-	privateData?: boolean;
-	unregister?: boolean;
-	startBlock?: number;
-	endBlock?: number;
-}
+// export interface EventListenerOptions {
+// 	checkpointer?: BaseCheckpointer;
+// 	replay?: boolean;
+// 	filtered?: boolean;
+// 	privateData?: boolean;
+// 	unregister?: boolean;
+// 	startBlock?: number;
+// 	endBlock?: number;
+// }
 
 export interface DiscoveryOptions {
 	asLocalhost?: boolean;
@@ -88,21 +88,21 @@ export interface QueryResults {
 }
 
 export class Gateway {
-	constructor();
 	public client: Client;
+	public identityContext: IdentityContext;
+	constructor();
 	public connect(config: Client | string | object, options: GatewayOptions): Promise<void>;
 	public disconnect(): void;
 	public getNetwork(channelName: string): Promise<Network>;
 	public getOptions(): GatewayOptions;
-	public identityContext: IdentityContext;
 }
 
 export class Network {
 	public channel: Channel;
 	public mspid: string;
 	getContract(chaincodeId: string, name?: string): Contract;
-	addBlockListener(callback: (error: Error, blockNumber: string, block: any) => Promise<any>, options?: EventListenerOptions): Promise<BlockEventListener>;
-	addCommitListener(callback: (error: Error, blockNumber: string, transactionId: string, status: string) => Promise<any>, options?: EventListenerOptions): Promise<CommitEventListener>;
+	// addBlockListener(callback: (error: Error, blockNumber: string, block: any) => Promise<any>, options?: EventListenerOptions): Promise<BlockEventListener>;
+	// addCommitListener(callback: (error: Error, blockNumber: string, transactionId: string, status: string) => Promise<any>, options?: EventListenerOptions): Promise<CommitEventListener>;
 	unregisterAllEventListeners(): void;
 }
 
@@ -110,20 +110,20 @@ export class Contract {
 	createTransaction(name: string): Transaction;
 	evaluateTransaction(name: string, ...args: string[]): Promise<Buffer>;
 	submitTransaction(name: string, ...args: string[]): Promise<Buffer>;
-	addContractListener(eventName: string, callback: (error: Error, blockNumber: string, chaincodeEvents: Array<ChaincodeEvent>) => Promise<any>, options?: EventListenerOptions): Promise<ContractEventListener>;
+	// addContractListener(eventName: string, callback: (error: Error, blockNumber: string, chaincodeEvents: Array<ChaincodeEvent>) => Promise<any>, options?: EventListenerOptions): Promise<ContractEventListener>;
 }
 
 export interface TransientMap {
 	[key: string]: Buffer;
 }
 export class Transaction {
+	transactionId: string;
 	evaluate(...args: string[]): Promise<Buffer>;
 	getName(): string;
 	getNetwork(): Network;
 	setEndorsingPeers(peers: Endorser[]): this;
 	setTransient(transientMap: TransientMap): this;
 	submit(...args: string[]): Promise<Buffer>;
-	transactionId: string;
 }
 
 export interface FabricError extends Error {
@@ -133,23 +133,23 @@ export interface FabricError extends Error {
 
 export interface TimeoutError extends FabricError {} // tslint:disable-line:no-empty-interface
 
-export class BaseCheckpointer {
-	constructor(options: any);
-	public check(blockNumber: string): Promise<boolean>;
-	public getStartBlock(): Promise<string>;
-	public initialize(): Promise<void>;
-	public prune(): Promise<void>;
-	public save(blockNumber: string): Promise<void>;
-}
+// export class BaseCheckpointer {
+// 	constructor(options: any);
+// 	public check(blockNumber: string): Promise<boolean>;
+// 	public getStartBlock(): Promise<string>;
+// 	public initialize(): Promise<void>;
+// 	public prune(): Promise<void>;
+// 	public save(blockNumber: string): Promise<void>;
+// }
 
-export class FileSystemCheckpointer extends BaseCheckpointer {
-	constructor(options: any);
-	public check(blockNumber: string): Promise<boolean>;
-	public getStartBlock(): Promise<string>;
-	public initialize(): Promise<void>;
-	public prune(): Promise<void>;
-	public save(blockNumber: string): Promise<void>;
-}
+// export class FileSystemCheckpointer extends BaseCheckpointer {
+// 	constructor(options: any);
+// 	public check(blockNumber: string): Promise<boolean>;
+// 	public getStartBlock(): Promise<string>;
+// 	public initialize(): Promise<void>;
+// 	public prune(): Promise<void>;
+// 	public save(blockNumber: string): Promise<void>;
+// }
 
 export class EventServiceManager {
 	constructor();
@@ -159,17 +159,17 @@ export class EventServiceManager {
 	public getReplayEventServices(peers: Endorser[]): EventService[];
 }
 
-export class CommitEventListener {
-	public register(): void;
-	public unregister(): void;
-}
+// export class CommitEventListener {
+// 	public register(): void;
+// 	public unregister(): void;
+// }
 
-export class ContractEventListener {
-	public register(): void;
-	public unregister(): void;
-}
+// export class ContractEventListener {
+// 	public register(): void;
+// 	public unregister(): void;
+// }
 
-export class BlockEventListener {
-	public register(): void;
-	public unregister(): void;
-}
+// export class BlockEventListener {
+// 	public register(): void;
+// 	public unregister(): void;
+// }

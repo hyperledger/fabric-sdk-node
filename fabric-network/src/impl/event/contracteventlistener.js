@@ -14,6 +14,7 @@ const logger = require('fabric-network/lib/logger').getLogger('ContractEventList
  *
  * @memberof module:fabric-network
  * @class
+ * @private
  */
 class ContractEventListener extends BaseEventListener {
 	/**
