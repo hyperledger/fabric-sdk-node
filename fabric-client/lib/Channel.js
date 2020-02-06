@@ -2406,36 +2406,32 @@ const Channel = class {
 			args: [options.chaincodeId]
 		};
 
-		try {
-			const [responses] = await Channel.sendTransactionProposal(request, this._name, this._clientContext, null);
-			if (responses && Array.isArray(responses)) {
-				if (responses.length > 1) {
-					throw new Error('Too many results returned');
-				}
-				const [response] = responses;
-				if (response instanceof Error) {
-					throw response;
-				}
-				if (!response.response) {
-					throw new Error('Didn\'t receive a valid peer response');
-				}
-				logger.debug('%s - response status :: %d', method, response.response.status);
-
-				if (response.response.status !== 200) {
-					logger.debug('%s - response:%j', method, response);
-					if (response.response.message) {
-						throw new Error(response.response.message);
-					}
-					throw new Error('Failed to retrieve collections config from peer');
-				}
-				const queryResponse = decodeCollectionsConfig(response.response.payload);
-				logger.debug('%s - get %s collections for chaincode %s from peer', method, queryResponse.length, options.chaincodeId);
-				return queryResponse;
+		const [responses] = await Channel.sendTransactionProposal(request, this._name, this._clientContext, null);
+		if (responses && Array.isArray(responses)) {
+			if (responses.length > 1) {
+				throw new Error('Too many results returned');
 			}
-			throw new Error('Failed to retrieve collections config from peer');
-		} catch (e) {
-			throw e;
+			const [response] = responses;
+			if (response instanceof Error) {
+				throw response;
+			}
+			if (!response.response) {
+				throw new Error('Didn\'t receive a valid peer response');
+			}
+			logger.debug('%s - response status :: %d', method, response.response.status);
+
+			if (response.response.status !== 200) {
+				logger.debug('%s - response:%j', method, response);
+				if (response.response.message) {
+					throw new Error(response.response.message);
+				}
+				throw new Error('Failed to retrieve collections config from peer');
+			}
+			const queryResponse = decodeCollectionsConfig(response.response.payload);
+			logger.debug('%s - get %s collections for chaincode %s from peer', method, queryResponse.length, options.chaincodeId);
+			return queryResponse;
 		}
+		throw new Error('Failed to retrieve collections config from peer');
 	}
 
 	/**

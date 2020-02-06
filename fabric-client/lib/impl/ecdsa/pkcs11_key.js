@@ -142,17 +142,13 @@ const PKCS11_ECDSA_KEY = class extends api.Key {
 			throw new Error('A CSR cannot be generated from a public key');
 		}
 
-		try {
-			const csr = this.newCSRPEM({
-				subject: {str: asn1.x509.X500Name.ldapToOneline(subjectDN)},
-				sbjpubkey: this._pub,
-				sigalg: 'SHA256withECDSA',
-				sbjprvkey: this
-			});
-			return csr;
-		} catch (err) {
-			throw err;
-		}
+		const csr = this.newCSRPEM({
+			subject: {str: asn1.x509.X500Name.ldapToOneline(subjectDN)},
+			sbjpubkey: this._pub,
+			sigalg: 'SHA256withECDSA',
+			sbjprvkey: this
+		});
+		return csr;
 	}
 
 	getSKI() {

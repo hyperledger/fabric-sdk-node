@@ -86,7 +86,7 @@ test('\n\n** MSP Tests **\n\n', async (t) => {
 
 	const msps = mspm.getMSPs();
 	for (const mspid in msps) {
-		if (msps.hasOwnProperty(mspid)) {
+		if (Object.prototype.hasOwnProperty.call(msps, mspid)) {
 			const msp = msps[mspid];
 			t.equal(msp.getId(), mspid, 'Check loaded MSP instance for id');
 			t.notEqual(msp._rootCerts, null, 'Check loaded MSP instance of non-null root certs');

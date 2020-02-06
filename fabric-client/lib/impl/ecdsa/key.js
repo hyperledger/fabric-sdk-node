@@ -117,17 +117,13 @@ module.exports = class ECDSA_KEY extends api.Key {
 			throw new Error('A CSR cannot be generated from a public key');
 		}
 
-		try {
-			const csr = asn1.csr.CSRUtil.newCSRPEM({
-				subject: {str: asn1.x509.X500Name.ldapToOneline(subjectDN)},
-				sbjpubkey: this.getPublicKey()._key,
-				sigalg: 'SHA256withECDSA',
-				sbjprvkey: this._key
-			});
-			return csr;
-		} catch (err) {
-			throw err;
-		}
+		const csr = asn1.csr.CSRUtil.newCSRPEM({
+			subject: {str: asn1.x509.X500Name.ldapToOneline(subjectDN)},
+			sbjpubkey: this.getPublicKey()._key,
+			sigalg: 'SHA256withECDSA',
+			sbjprvkey: this._key
+		});
+		return csr;
 	}
 
 	/**
@@ -148,40 +144,35 @@ module.exports = class ECDSA_KEY extends api.Key {
 			throw new Error('An X509 certificate cannot be generated from a public key');
 		}
 
-		try {
-			// var before = Date.now() - 60000;
-			// var after = Date.now() + 60000;
-			const certPEM = asn1.x509.X509Util.newCertPEM({
-				serial: {int: 4},
-				sigalg: {name: 'SHA256withECDSA'},
-				issuer: {str: subjectDN},
-				notbefore: {'str': jws.IntDate.intDate2Zulu(jws.IntDate.getNow() - 5000)},
-				notafter: {'str': jws.IntDate.intDate2Zulu(jws.IntDate.getNow() + 60000)},
-				subject: {str: subjectDN},
-				sbjpubkey: this.getPublicKey()._key,
-				ext: [
-					{
-						basicConstraints: {
-							cA: false,
-							critical: true
-						}
-					},
-					{
-						keyUsage: {bin: '11'}
-					},
-					{
-						extKeyUsage: {
-							array: [{name: 'clientAuth'}]
-						}
+		// var before = Date.now() - 60000;
+		// var after = Date.now() + 60000;
+		const certPEM = asn1.x509.X509Util.newCertPEM({
+			serial: {int: 4},
+			sigalg: {name: 'SHA256withECDSA'},
+			issuer: {str: subjectDN},
+			notbefore: {'str': jws.IntDate.intDate2Zulu(jws.IntDate.getNow() - 5000)},
+			notafter: {'str': jws.IntDate.intDate2Zulu(jws.IntDate.getNow() + 60000)},
+			subject: {str: subjectDN},
+			sbjpubkey: this.getPublicKey()._key,
+			ext: [
+				{
+					basicConstraints: {
+						cA: false,
+						critical: true
 					}
-				],
-				cakey: this._key
-			});
-			return certPEM;
-
-		} catch (err) {
-			throw err;
-		}
+				},
+				{
+					keyUsage: {bin: '11'}
+				},
+				{
+					extKeyUsage: {
+						array: [{name: 'clientAuth'}]
+					}
+				}
+			],
+			cakey: this._key
+		});
+		return certPEM;
 	}
 
 	toBytes() {
