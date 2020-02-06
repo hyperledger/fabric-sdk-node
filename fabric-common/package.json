@@ -27,6 +27,7 @@
 	"types": "./types/index.d.ts",
 	"dependencies": {
 		"elliptic": "^6.2.3",
+		"fabric-protos": "file:../fabric-protos",
 		"js-sha3": "^0.7.0",
 		"nano": "^6.4.4",
 		"nconf": "^0.10.0",
