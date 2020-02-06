@@ -174,7 +174,7 @@ module.exports.getLogger = function (name) {
 				throw new Error('Environment variable "HFC_LOGGING" must be an object conforming to the format documented.');
 			}
 			for (const level in config) {
-				if (!config.hasOwnProperty(level)) {
+				if (!Object.prototype.hasOwnProperty.call(config, level)) {
 					continue;
 				}
 
