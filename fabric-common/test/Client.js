@@ -355,7 +355,7 @@ describe('Client', () => {
 				generateX509Certificate: generateX509CertificateStub
 			});
 			const newCryptoSuiteStub = sinon.stub().returns({generateEphemeralKey: generateEphemeralKeyStub});
-			Client.__set__('Client.newCryptoSuite', newCryptoSuiteStub);
+			Client.__set__('newCryptoSuite', newCryptoSuiteStub);
 			const myClient = new Client('client');
 
 			myClient.setTlsClientCertAndKey();

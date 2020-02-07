@@ -209,7 +209,8 @@ class Gateway {
 			logger.debug('%s - setting tlsInfo', method);
 			this.client.setTlsClientCertAndKey(options.tlsInfo.certificate, options.tlsInfo.key);
 		} else {
-			logger.debug('%s - not setting tls', method);
+			logger.debug('%s - using self signed setting for tls', method);
+			this.client.setTlsClientCertAndKey();
 		}
 
 		if (load_ccp) {
