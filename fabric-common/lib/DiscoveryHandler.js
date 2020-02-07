@@ -190,7 +190,7 @@ class DiscoveryHandler extends ServiceHandler {
 			throw Error('preferred_height_gap setting is not a number');
 		}
 
-		let sort = BLOCK_HEIGHT;
+		let sort = RANDOM;
 		if (request.sort) {
 			if (request.sort === BLOCK_HEIGHT) {
 				sort = BLOCK_HEIGHT;
@@ -381,11 +381,15 @@ class DiscoveryHandler extends ServiceHandler {
 		logger.debug('%s - required_orgs:%j', method, required_orgs);
 		logger.debug('%s - preferred_orgs:%j', method, preferred_orgs);
 		logger.debug('%s - ignored_orgs:%j', method, ignored_orgs);
+		logger.debug('%s - preferred_height_gap:%s', method, preferred_height_gap);
 		logger.debug('%s - sort: %s', method, sort);
 		logger.debug('%s - endorsement_plan:%j', method, endorsement_plan);
 
 		for (const group_name in endorsement_plan.groups) {
 			const group = endorsement_plan.groups[group_name];
+			for (const peer of group.peers) {
+				peer.ledger_height = new Long(peer.ledger_height.low, peer.ledger_height.high);
+			}
 			// remove ignored and non-required
 			const clean_list = this._removePeers(ignored, ignored_orgs, required, required_orgs, group.peers);
 			// get the highest ledger height if needed
