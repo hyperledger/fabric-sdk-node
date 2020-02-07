@@ -239,6 +239,13 @@ describe('DiscoveryHandler', () => {
 		});
 	});
 
+	describe('#toString', () => {
+		it('should run', () => {
+			const output = discoveryHandler.toString();
+			output.should.equal('{type:DiscoveryHandler, discoveryService:mydiscovery}');
+		});
+	});
+
 	describe('#query', () => {
 		it('should reject if signedProposal arg is not given', async () => {
 			await discoveryHandler.query().should.be.rejectedWith(/Missing signedProposal parameter/);
@@ -555,46 +562,66 @@ describe('DiscoveryHandler', () => {
 	});
 
 	describe('#_modify_groups', () => {
+		const peer1 = {mspid: 'org1', name: 'peer1', ledger_height: {low: 5, high: 0}};
+		const peer2 = {mspid: 'org1', name: 'peer2', ledger_height: {low: 8, high: 0}};
+		const peer3 = {mspid: 'org1', name: 'peer3', ledger_height: {low: 10, high: 0}};
+		const peer4 = {mspid: 'org2', name: 'peer4', ledger_height: {low: 5, high: 0}};
+		const peer5 = {mspid: 'org2', name: 'peer5', ledger_height: {low: 8, high: 0}};
+		const peer6 = {mspid: 'org2', name: 'peer6', ledger_height: {low: 10, high: 0}};
+		let plan;
+
+		beforeEach(() => {
+			plan = {groups:{
+				G0: {peers: [peer1, peer2, peer3]},
+				G1: {peers: [peer4, peer5, peer6]}}
+			};
+		});
+
 		it('should run ok', async () => {
-			discoveryHandler._removePeers = sinon.stub();
-			discoveryHandler._findHighest = sinon.stub().returns(100);
-			discoveryHandler._sortPeerList = sinon.stub();
-			discoveryHandler._splitList = sinon.stub().returns({priority: [1, 2, 3], non_priority: [4, 5, 6]});
-			const plan = {groups: {G0: {peers: [1, 2, 3]}, G1: {peers: [4, 5, 6]}}};
-			// TEST CALL
 			discoveryHandler._modify_groups(
-				null, // required
-				null, // preferred
-				null, // ignored
-				null, // required_orgs
-				null, // preferred_orgs
-				null, // ignored_orgs
-				1, // preferred_height_gap
+				new Map(), // required
+				new Map(), // preferred
+				new Map(), // ignored
+				new Map(), // required_orgs
+				new Map(), // preferred_orgs
+				new Map(), // ignored_orgs
+				new Long(1), // preferred_height_gap
 				'default', // sort
 				plan // endorsement_plan
 			);
-			should.equal(plan.groups.G0.peers.length, 6);
+			should.equal(plan.groups.G0.peers.length, 3);
 			sinon.assert.calledWith(FakeLogger.debug, '%s - start');
 		});
 		it('should run ok with no ledger_height_gap', async () => {
-			discoveryHandler._removePeers = sinon.stub();
-			discoveryHandler._findHighest = sinon.stub().returns(100);
-			discoveryHandler._sortPeerList = sinon.stub();
-			discoveryHandler._splitList = sinon.stub().returns({priority: [1, 2, 3], non_priority: [4, 5, 6]});
-			const plan = {groups: {G0: {peers: [1, 2, 3]}, G1: {peers: [4, 5, 6]}}};
-			// TEST CALL
 			discoveryHandler._modify_groups(
-				null, // required
-				null, // preferred
-				null, // ignored
-				null, // required_orgs
-				null, // preferred_orgs
-				null, // ignored_orgs
+				new Map(), // required
+				new Map(), // preferred
+				new Map(), // ignored
+				new Map(), // required_orgs
+				new Map(), // preferred_orgs
+				new Map(), // ignored_orgs
 				null, // preferred_height_gap
 				'default', // sort
 				plan // endorsement_plan
 			);
-			should.equal(plan.groups.G0.peers.length, 6);
+			should.equal(plan.groups.G0.peers.length, 3);
+			sinon.assert.calledWith(FakeLogger.debug, '%s - start');
+		});
+		it('should convert ledger_height', async () => {
+			discoveryHandler._modify_groups(
+				new Map(), // required
+				new Map(), // preferred
+				new Map(), // ignored
+				new Map(), // required_orgs
+				new Map(), // preferred_orgs
+				new Map(), // ignored_orgs
+				null, // preferred_height_gap
+				'ledgerHeight', // sort
+				plan // endorsement_plan
+			);
+			should.equal(plan.groups.G0.peers[0].name, 'peer3');
+			should.equal(plan.groups.G0.peers[1].name, 'peer2');
+			should.equal(plan.groups.G0.peers[2].name, 'peer1');
 			sinon.assert.calledWith(FakeLogger.debug, '%s - start');
 		});
 	});
