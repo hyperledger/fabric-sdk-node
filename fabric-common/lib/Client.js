@@ -9,7 +9,8 @@ const TYPE = 'Client';
 const path = require('path');
 const crypto = require('crypto');
 
-const {checkParameter, getLogger, pemToDER, getConfig, setConfigSetting, getConfigSetting} = require('./Utils.js');
+const {checkParameter, getLogger, pemToDER, getConfig, setConfigSetting,
+	getConfigSetting, newCryptoSuite} = require('./Utils.js');
 const Channel = require('./Channel');
 const Endpoint = require('./Endpoint');
 const Committer = require('./Committer');
@@ -405,7 +406,7 @@ const Client = class {
 			// generate X509 cert pair
 			// use the default software cryptosuite, not the client assigned cryptosuite, which may be
 			// HSM, or the default has been set to HSM. FABN-830
-			const key = Client.newCryptoSuite({software: true}).generateEphemeralKey();
+			const key = newCryptoSuite({software: true}).generateEphemeralKey();
 			this._tls_mutual.clientKey = key.toBytes();
 			this._tls_mutual.clientCert = key.generateX509Certificate('fabric-common');
 			this._tls_mutual.selfGenerated = true;
