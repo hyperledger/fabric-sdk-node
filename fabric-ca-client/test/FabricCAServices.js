@@ -275,7 +275,7 @@ describe('FabricCAServices', () => {
 			const atts = [{name: 'penguin'}, {name: 'power'}];
 			const req = {enrollmentID: 'enrollmentID', enrollmentSecret: 'enrollmentSecret', profile: 'profile', attr_reqs: atts};
 
-			await service.enroll(req).should.be.rejectedWith(/Failed to generate CSR for enrollmemnt due to error \[Error: CSR error\]/);
+			await service.enroll(req).should.be.rejectedWith(/Failed to generate CSR for enrollment due to error.* CSR error/);
 		});
 
 		it('should reject in generate key failure', async () => {
@@ -288,7 +288,7 @@ describe('FabricCAServices', () => {
 			const atts = [{name: 'penguin'}, {name: 'power'}];
 			const req = {enrollmentID: 'enrollmentID', enrollmentSecret: 'enrollmentSecret', profile: 'profile', attr_reqs: atts};
 
-			await service.enroll(req).should.be.rejectedWith(/Failed to generate key for enrollment due to error \[Error: Key error\]/);
+			await service.enroll(req).should.be.rejectedWith(/Failed to generate key for enrollment due to error.* Key error/);
 		});
 
 		it('should set ephemeral option to false if `getCryptoSuite()._cryptoKeyStore` exists', async () => {
@@ -441,7 +441,7 @@ describe('FabricCAServices', () => {
 			cryptoPrimitives.generateKey.rejects(new Error('Key Error'));
 
 			const atts = [{name: 'penguin'}, {name: 'power'}];
-			await service.reenroll(user, atts).should.be.rejectedWith('Failed to generate key for enrollment due to error [Error: Key Error]');
+			await service.reenroll(user, atts).should.be.rejectedWith(/Failed to generate key for enrollment due to error.* Key Error/);
 		});
 
 		it('should reject if unable to generate CSR', async () => {
@@ -456,7 +456,7 @@ describe('FabricCAServices', () => {
 			cryptoPrimitives.generateKey.resolves(keyStub);
 
 			const atts = [{name: 'penguin'}, {name: 'power'}];
-			await service.reenroll(user, atts).should.be.rejectedWith('Failed to generate CSR for enrollmemnt due to error [Error: CSR Error]');
+			await service.reenroll(user, atts).should.be.rejectedWith(/Failed to generate CSR for enrollment due to error.* CSR Error/);
 		});
 
 		it('should rejected if reenroll fails', async () => {

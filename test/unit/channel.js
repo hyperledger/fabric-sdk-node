@@ -579,7 +579,7 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', (t) => {
 			};
 			c._buildEndorsementPolicy({identities: [{dummy: 'value', dummer: 'value'}], policy: policy});
 		},
-		/Invalid identity type found: must be one of role, organization-unit or identity, but found dummy,dummer/,
+		'Error: Invalid identity type found: must be one of role, organization-unit or identity, but found [ \'dummy\', \'dummer\' ]',
 		'Checking policy spec: each identity must be "role", "organization-unit" or "identity"'
 	);
 
@@ -662,7 +662,7 @@ test('\n\n ** Channel _buildDefaultEndorsementPolicy() tests **\n\n', (t) => {
 				policy: {dummy: 'value'}
 			});
 		},
-		/Invalid policy type found: must be one of "n-of" or "signed-by" but found "dummy"/,
+		'Error: Invalid policy type found: must be one of "n-of" or "signed-by" but found "[ \'dummy\' ]"',
 		'Checking policy spec: policy type must be "n-of" or "signed-by"'
 	);
 

@@ -13,8 +13,8 @@ The following section targets a current or future contributor to this project it
 
 ### Build and Test
 To build and test, the following pre-requisites must be installed first:
-* Node.js, version 8 is supported from 8.9.4 and higher.
-* Node.js, version 10 is supported from 10.15.3 and higher.
+* Node.js, version 10 is supported from 10.15.3 and higher
+* Node.js, version 12 is supported from 12.15.0 and higher
 * npm tool version 5.5.1 or higher
 * docker (only required for running integration tests, see below)
 
