@@ -302,7 +302,7 @@ describe('FabricCAServices', () => {
 				attr_reqs: atts
 			};
 
-			await service.enroll(req).should.be.rejectedWith(/Failed to generate CSR for enrollmemnt due to error.* CSR error/);
+			await service.enroll(req).should.be.rejectedWith(/Failed to generate CSR for enrollment due to error.* CSR error/);
 		});
 
 		it('should reject in generate key failure', async () => {
@@ -498,7 +498,7 @@ describe('FabricCAServices', () => {
 			cryptoPrimitives.generateKey.resolves(keyStub);
 
 			const atts = [{name: 'penguin'}, {name: 'power'}];
-			await service.reenroll(user, atts).should.be.rejectedWith(/Failed to generate CSR for enrollmemnt due to error.* CSR Error/);
+			await service.reenroll(user, atts).should.be.rejectedWith(/Failed to generate CSR for enrollment due to error.* CSR Error/);
 		});
 
 		it('should rejected if reenroll fails', async () => {
