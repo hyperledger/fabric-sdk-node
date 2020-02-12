@@ -161,7 +161,7 @@ export async function createTransactionCommitListener(transaction: Transaction, 
 	}
 
 	// Create a listener
-	const listener = await (transaction.getNetwork() as any).addCommitListener( // TODO: remove cast
+	const listener = await (transaction.getNetwork() as any).oldAddCommitListener( // TODO: Replace this with what...?
 		(err: any, ...args: any[]) => {
 			if (err) {
 				BaseUtils.logMsg('-> Commit transaction event error', err);

@@ -16,6 +16,7 @@ import sampleTxnEventStrategy = require('../../config/handlers/sample-transactio
 import { DefaultEventHandlerStrategies, QueryHandlerStrategies, Gateway, GatewayOptions, Wallet, Wallets, Identity, Contract, Network, TxEventHandlerFactory, QueryHandlerFactory, Transaction, TransientMap } from 'fabric-network';
 import * as fs from 'fs';
 import * as path from 'path';
+import { EventInfo } from 'fabric-common';
 
 const stateStore: StateStore = StateStore.getInstance();
 const txnTypes: string[] = ['evaluate', 'submit'];
@@ -326,7 +327,7 @@ export async function performHandledGatewayTransaction(gatewayName: string, ccNa
 			rejectNotificationPromise = reject;
 		});
 
-		const listener = await (network as any).addCommitListener( // TODO: remove cast
+		const listener = await (network as any).oldAddCommitListener( // TODO: Replace this with what...?
 			async (error: Error, blockNum: string, txid: string, status: string) => {
 				if (error) {
 					rejectNotificationPromise();

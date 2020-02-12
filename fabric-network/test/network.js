@@ -261,21 +261,21 @@ describe('Network', () => {
 		});
 	});
 
-	describe('#addCommitListener', () => {
+	describe('#oldAddCommitListener', () => {
 		let callback;
 		beforeEach(() => {
 			callback = () => {};
 		});
 
 		it('should create options if the options param is undefined', async () => {
-			const listener = await network.addCommitListener(callback, {}, eventService);
+			const listener = await network.oldAddCommitListener(callback, {}, eventService);
 			listener.should.to.be.instanceof(CommitEventListener);
 			listener.eventService.should.to.equal(eventService);
 			network.listeners.get(listener).should.to.equal(listener);
 		});
 
 		it('should create an instance of BlockEventListener and add it to the list of listeners', async () => {
-			const listener = await network.addCommitListener(callback, {}, eventService);
+			const listener = await network.oldAddCommitListener(callback, {}, eventService);
 			listener.should.to.be.instanceof(CommitEventListener);
 			listener.eventService.should.to.equal(eventService);
 			network.listeners.get(listener).should.to.equal(listener);
@@ -283,9 +283,8 @@ describe('Network', () => {
 
 		it('should not set an event service if an event service is not given', async () => {
 			eventServiceManager.getReplayEventService.returns(eventService);
-			const listener = await network.addCommitListener(callback);
+			const listener = await network.oldAddCommitListener(callback);
 			listener.eventService.should.equal(eventService);
 		});
 	});
-
 });
