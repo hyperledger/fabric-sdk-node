@@ -222,7 +222,7 @@ const FabricCAServices = class extends BaseClient {
 					csr = privateKey.generateCSR('CN=' + req.enrollmentID);
 					logger.debug('successfully generated csr');
 				} catch (err) {
-					throw new Error(util.format('Failed to generate CSR for enrollmemnt due to error [%s]', err));
+					throw new Error(util.format('Failed to generate CSR for enrollment due to error [%s]', err));
 				}
 			}
 
@@ -313,7 +313,7 @@ const FabricCAServices = class extends BaseClient {
 								);
 
 						} catch (err) {
-							return reject(new Error(util.format('Failed to generate CSR for enrollmemnt due to error [%s]', err)));
+							return reject(new Error(util.format('Failed to generate CSR for enrollment due to error [%s]', err)));
 						}
 					},
 					(err) => {
