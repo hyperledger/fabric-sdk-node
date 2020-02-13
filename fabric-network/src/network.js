@@ -8,7 +8,6 @@
 const Contract = require('./contract');
 const EventServiceManager = require('./impl/event/eventservicemanager');
 const BlockEventListener = require('./impl/event/blockeventlistener');
-const CommitEventListener = require('./impl/event/commiteventlistener');
 const {CommitListenerSession} = require('./impl/event/commitlistener');
 
 const logger = require('./logger').getLogger('Network');
@@ -258,35 +257,6 @@ class Network {
 			listener.eventService = eventService;
 		}
 		await listener.register();
-		return listener;
-	}
-
-	/**
-	 * Create a commit event listener for committed transactions.
-	 * @param {Function} callback - the function to be called when an event is
-	 * triggered with signature (error, block)
-	 * @param {module:fabric-network.Network~EventListenerOptions} [options] Optional.
-	 * @param {EventService} [eventService] - Optional. Used to override the
-	 * event service selection
-	 * @returns {module:fabric-network~CommitEventListener}
-	 * @async
-	 * @private
-	 */
-	async oldAddCommitListener(callback, options = {}, eventService) {
-		const method = 'addCommitListener';
-		logger.debug('%s - start', method);
-
-		const listener = new CommitEventListener(this, callback, options);
-
-		this.listeners.set(listener, listener);
-		if (eventService) {
-			logger.debug('%s - user provided eventService %s', method, eventService.name);
-			listener.eventService = eventService;
-		}
-
-		// this will also check to be sure the eventService is started
-		await listener.register();
-
 		return listener;
 	}
 

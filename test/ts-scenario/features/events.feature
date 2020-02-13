@@ -69,9 +69,3 @@ Feature: Node SDK Events
 		When I unregister the listener named unfilteredNumberedBlockListener
 		And I use the gateway named event_gateway to submit a total of 5 transactions with args [createValue] for contract events instantiated on channel eventschannel
 		Then I receive 0 events from the listener named unfilteredNumberedBlockListener
-
-	Scenario: I can listen to a transaction commit event
-		Given I use the gateway named event_gateway to create a transaction named transaction1 that calls createValue using contract events instantiated on channel eventschannel
-		And I use the transaction named transaction1 to create a commit listener called transaction1Listener
-		When I use the transaction named transaction1 to submit a transaction with args []
-		Then I receive 1 events from the listener named transaction1Listener

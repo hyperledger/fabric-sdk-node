@@ -19,7 +19,7 @@ import * as path from 'path';
 
 const stateStore: StateStore = StateStore.getInstance();
 const txnTypes: string[] = ['evaluate', 'submit'];
-const txnResponseTypes: string[] = ['evaluate', 'event', 'error', 'submit'];
+const txnResponseTypes: string[] = ['evaluate', 'error', 'submit'];
 const supportedWallets: string[] = [Constants.FILE_WALLET as string, Constants.MEMORY_WALLET as string, Constants.COUCH_WALLET as string];
 
 const EventStrategies: any = {
@@ -65,7 +65,7 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 				if (fs.existsSync(tempDir)) {
 					BaseUtils.recursiveDirDelete(tempDir);
 				}
-				await fs.mkdirSync(tempDir);
+				fs.mkdirSync(tempDir);
 				wallet = await Wallets.newFileSystemWallet(tempDir);
 				break;
 			case Constants.COUCH_WALLET:
@@ -138,16 +138,17 @@ function addGatewayObjectToStateStore(gatewayName: string, gateway: any): void {
 	stateStore.set(Constants.GATEWAYS, gateways);
 }
 
-function getGatewayObject(gatewayName: string): any | undefined {
+function getGatewayObject(gatewayName: string): any {
 	const gateways: Map<string, any> = stateStore.get(Constants.GATEWAYS);
 	if (gateways.get(gatewayName)) {
 		return gateways.get(gatewayName);
 	} else {
-		return undefined;
+		const msg: string = `Gateway named ${gatewayName} is not present in the state store`;
+		BaseUtils.logAndThrow(msg);
 	}
 }
 
-export function getGateway(gatewayName: string): Gateway | undefined {
+function getGateway(gatewayName: string): any {
 	const gateways: Map<string, any> = stateStore.get(Constants.GATEWAYS);
 	if (gateways.get(gatewayName)) {
 		return gateways.get(gatewayName).gateway;
@@ -198,209 +199,95 @@ async function identitySetup(wallet: Wallet, ccp: CommonConnectionProfileHelper,
  * @param {String} channelName the name of the channel the smart contract is instantiated on
  * @param {String} args the arguments array [func, arg0, arg1, ..., argX]
  * @param {String} txnType the type of transaction (submit/evaluate)
- * @return {Object} resolved Promise if a submit transaction; evaluate result if not
+ * @param {String} handlerOption Optional: the handler option to use
  */
-export async function performGatewayTransaction(gatewayName: string, contractName: string, channelName: string, args: string, txnType: string): Promise<void> {
-	// What type of txn is this?
-	if (txnTypes.indexOf(txnType) === -1) {
-		throw  new Error(`Unknown transaction type ${txnType}, must be one of ${txnTypes}`);
+export async function performGatewayTransaction(gatewayName: string, contractName: string, channelName: string, args: string, txnType: string, handlerOption?: string): Promise<void> {
+
+	const gatewayObj: any = getGatewayObject(gatewayName);
+	const gateway: Gateway = getGateway(gatewayName);
+
+	const submit: boolean = isSubmit(txnType);
+
+	// If a commit event handler was specified
+	if (handlerOption) {
+
+		gateway.disconnect();
+
+		const currentOptions: GatewayOptions = gateway.getOptions();
+
+		if (submit) {
+			// add event handler options
+			if (handlerOption.localeCompare('custom') === 0) {
+				currentOptions.transaction = {
+					strategy: sampleTxnEventStrategy as TxEventHandlerFactory
+				};
+			} else {
+				currentOptions.transaction = {
+					strategy: EventStrategies[handlerOption]
+				};
+			}
+		} else {
+			// Add queryHandlerOptions
+			if (handlerOption.localeCompare('custom') === 0) {
+				currentOptions.query = {
+					strategy: sampleQueryStrategy as QueryHandlerFactory
+				};
+			} else {
+				currentOptions.query = {
+					strategy: QueryStrategies[handlerOption]
+				};
+			}
+		}
+		// Reconnect with new options based on modifying existing with handler option
+		await gateway.connect(gatewayObj.profile, currentOptions);
+
 	}
-	const submit: boolean = ( txnType.localeCompare('submit') === 0 );
 
-	// Get contract from Gateway
-	const gateways: Map<string, any> = stateStore.get(Constants.GATEWAYS);
-
-	if (!gateways || !gateways.has(gatewayName)) {
-		throw new Error(`Gateway named ${gatewayName} is not present in the state store ${Object.keys(gateways)}`);
-	}
-
-	const gatewayObj: any = gateways.get(gatewayName);
-	const gateway: Gateway = gatewayObj.gateway;
 	const contract: Contract = await retrieveContractFromGateway(gateway, channelName, contractName);
 
 	// Split args
 	const argArray: string[] = args.slice(1, -1).split(',');
 	const func: string = argArray[0];
 	const funcArgs: string[] = argArray.slice(1);
-	try {
-		if (submit) {
-			BaseUtils.logMsg('Submitting transaction [' + func + '] with arguments ' + args);
-			const resultBuffer: Buffer = await contract.submitTransaction(func, ...funcArgs);
-			const result: string = resultBuffer.toString();
-			BaseUtils.logMsg(`Successfully submitted transaction [${func}] with result [${result}]`);
-			// some functions do not return anything
-			if (result.length > 0) {
-				gatewayObj.result = {type: 'submit', response: result};
-			} else {
-				gatewayObj.result = {type: 'submit', response: ''};
-			}
-
-		} else {
-			BaseUtils.logMsg('Evaluating transaction [' + func + '] with arguments ' + args);
-			const resultBuffer: Buffer = await contract.evaluateTransaction(func, ...funcArgs);
-			const result: string = resultBuffer.toString('utf8');
-			BaseUtils.logMsg(`Successfully evaluated transaction [${func}] with result [${result}]`);
-			gatewayObj.result = {type: 'evaluate', response: result};
-		}
-	} catch (err) {
-		gatewayObj.result = {type: 'error', response: err.toString()};
-		// Don't log the full error, since we might be forcing the error
-		BaseUtils.logError(' --- in gateway transaction:' + err.toString());
-	}
-}
-
-/**
- * Perform a transaction using a handler
- * @param gatewayName the name of the gateway to use
- * @param ccName chaincode name to use
- * @param channelName chanel to submit on
- * @param args transaction arguments
- * @param txnType the type of transaction (submit/evaluate)
- * @param handlerOption the handler option to use
- */
-export async function performHandledGatewayTransaction(gatewayName: string, ccName: string, channelName: string, args: string, txnType: string, handlerOption: string): Promise<void> {
-	// Split args out, we need these for later
-	const argArray: string[] = args.slice(1, -1).split(',');
-	const func: string = argArray[0];
-	const funcArgs: string[] = argArray.slice(1);
-
-	// Retrieve the base gateway
-	const gateways: Map<string, any> = stateStore.get(Constants.GATEWAYS);
-
-	if (!gateways || !gateways.has(gatewayName)) {
-		throw new Error(`Gateway named ${gatewayName} is not present in the state store ${Object.keys(gateways)}`);
-	}
-
-	const gatewayObj: any = gateways.get(gatewayName);
-	const gateway: Gateway = gatewayObj.gateway;
-
-	const currentOptions: GatewayOptions = gateway.getOptions();
-
-	// Disconnect
-	await gateway.disconnect();
-
-	// Reconnect with new options based on modifying existing with handler option
-	const submit: boolean = ( txnType.localeCompare('submit') === 0 );
-	if (submit) {
-		// add event handler options
-		if (handlerOption.localeCompare('custom') === 0) {
-			currentOptions.transaction = {
-				strategy: sampleTxnEventStrategy as TxEventHandlerFactory
-			};
-		} else {
-			currentOptions.transaction = {
-				strategy: EventStrategies[handlerOption]
-			};
-		}
-	} else {
-		// Add queryHandlerOptions
-		if (handlerOption.localeCompare('custom') === 0) {
-			currentOptions.query = {
-				strategy: sampleQueryStrategy as QueryHandlerFactory
-			};
-		} else {
-			currentOptions.query = {
-				strategy: QueryStrategies[handlerOption]
-			};
-		}
-	}
-
-	// Reconnect
-	await gateway.connect(gatewayObj.profile, currentOptions);
-
-	// Retrieve contract
-	const network: Network = await gateway.getNetwork(channelName);
-	const contract: Contract = network.getContract(ccName);
-
-	// Build a transaction
-	const transaction: Transaction = contract.createTransaction(func);
 
 	// Submit/evaluate transaction
-	if (submit) {
-		let resolveNotificationPromise: () => void;
-		let rejectNotificationPromise: () => void;
-		let eventResults: any;
-
-		const notificationPromise = new Promise((resolve, reject) => {
-			resolveNotificationPromise = resolve;
-			rejectNotificationPromise = reject;
-		});
-
-		const listener = await (network as any).oldAddCommitListener( // TODO: Replace this with what...?
-			async (error: Error, blockNum: string, txid: string, status: string) => {
-				if (error) {
-					rejectNotificationPromise();
-				} else {
-					eventResults = {txid, status, blockNum};
-					resolveNotificationPromise();
-				}
-			},
-			{} // options
-		);
-
-		try {
-			// -------- S E N D
-			const resultBuffer: Buffer = await transaction.submit(...funcArgs);
-			const result: string = resultBuffer.toString('utf8');
-			BaseUtils.logMsg(`Successfully submitted transaction [${func}] using handler [${EventStrategies[handlerOption]}] with result [${result}]`);
-
-			await notificationPromise;
-			listener.unregister();
-			BaseUtils.logMsg(`Successfully got event status [${func}] using handler [${EventStrategies[handlerOption]}] after submitting and getting status [${JSON.stringify(eventResults)}]`);
-			// gatewayObj.result = {type: 'event', response: JSON.stringify(eventResults), commitTransactionId: transaction.transactionId};
-			gatewayObj.result = {type: 'event', response: JSON.stringify(eventResults)};
-		} catch (error) {
-			gatewayObj.result = {type: 'error', response: error.toString()};
-			BaseUtils.logError('--- in Submit: ' + error.toString());
+	try {
+		const transaction: Transaction = contract.createTransaction(func);
+		let resultBuffer: Buffer;
+		if (submit) {
+			resultBuffer = await transaction.submit(...funcArgs);
+		} else {
+			resultBuffer = await transaction.evaluate(...funcArgs);
 		}
-	} else {
-		// No event hubs, just query away
-		try {
-			// Split args, capture response
-			const resultBuffer: Buffer = await transaction.evaluate(...funcArgs);
-			const result: string = resultBuffer.toString('utf8');
-			let handlerPrint: string = 'custom';
-			if (handlerOption.localeCompare('custom') !== 0) {
-				handlerPrint = QueryStrategies[handlerOption].toString();
-			}
-			BaseUtils.logMsg(`Successfully evaluated transaction [${func}] using handler [${handlerPrint}] with result [${result}]`);
-			gatewayObj.result = {type: 'evaluate', response: JSON.parse(result)};
-		} catch (error) {
-			gatewayObj.result = {type: 'error', response: error.toString()};
-			BaseUtils.logError('--- in Evaluate: ' + error.toString());
-		}
+		const result: string = resultBuffer.toString('utf8');
+		BaseUtils.logMsg(`Successfully performed ${txnType} transaction [${func}] with result [${result}]`);
+		gatewayObj.result = {type: txnType, response: result};
+
+	} catch (error) {
+		gatewayObj.result = {type: 'error', response: error.toString()};
+		BaseUtils.logError(' --- in gateway transaction:' + error.toString());
 	}
 }
 
 /**
  * Perform a transaction that uses transient data
  * @param gatewayName the gateway to use
- * @param ccName the chaincode name
+ * @param contractName the contract name
  * @param channelName the channel to submit on
  * @param txnArgs transaction arguments [methodName, methodArgs...]
  * @param txnType the type of transaction (submit/evaluate)
  */
-export async function performTransientGatewayTransaction(gatewayName: string, ccName: string, channelName: string, args: string, txnType: string): Promise<void> {
-	// Split args out, we need these for later
+export async function performTransientGatewayTransaction(gatewayName: string, contractName: string, channelName: string, args: string, txnType: string): Promise<void> {
+
+	// Retrieve gateway and contract
+	const gatewayObj: any = getGatewayObject(gatewayName);
+	const gateway: Gateway = getGateway(gatewayName);
+	const contract: Contract = await retrieveContractFromGateway(gateway, channelName, contractName);
+
+	// Split args out
 	const argArray: string[] = args.slice(1, -1).split(',');
 	const func: string = argArray[0];
 	const funcArgs: string[] = argArray.slice(1);
-
-	// Retrieve the base gateway
-	const gateways: Map<string, any> = stateStore.get(Constants.GATEWAYS);
-
-	if (!gateways || !gateways.has(gatewayName)) {
-		throw new Error(`Gateway named ${gatewayName} is not present in the state store ${Object.keys(gateways)}`);
-	}
-
-	// Retrieve gateway and contract
-	const gatewayObj: any = gateways.get(gatewayName);
-	const gateway: Gateway = gatewayObj.gateway;
-	const network: Network = await gateway.getNetwork(channelName);
-	const contract: Contract = network.getContract(ccName);
-
-	// Build a transaction
-	const transaction: Transaction = contract.createTransaction(func);
 
 	// Build Transient data
 	const transientMap: TransientMap = {};
@@ -410,26 +297,36 @@ export async function performTransientGatewayTransaction(gatewayName: string, cc
 		i++;
 	}
 
-	let printType: string = 'Evaluate';
+	const submit: boolean = isSubmit(txnType);
 
 	try {
-		const submit: boolean = ( txnType.localeCompare('submit') === 0 );
+		const transaction: Transaction = contract.createTransaction(func);
+		let resultBuffer: Buffer;
 		if (submit) {
-			printType = 'Submit';
-			const resultBuffer: Buffer = await transaction.setTransient(transientMap).submit();
-			const result: string = resultBuffer.toString('utf8');
-			BaseUtils.logMsg(`Successfully submitted transaction [${func}] with transient data with result of [${result}]`);
-			gatewayObj.result = {type: 'submit', response: JSON.parse(result)};
+			resultBuffer = await transaction.setTransient(transientMap).submit();
 		} else {
-			const resultBuffer: Buffer = await transaction.setTransient(transientMap).evaluate();
-			const result: string = resultBuffer.toString('utf8');
-			BaseUtils.logMsg(`Successfully evaluated transaction [${func}] with transient data with result of [${result}]`);
-			gatewayObj.result = {type: 'evaluate', response: JSON.parse(result)};
+			resultBuffer = await transaction.setTransient(transientMap).evaluate();
 		}
+		const result: string = resultBuffer.toString('utf8');
+		BaseUtils.logMsg(`Successfully performed ${txnType} transaction [${func}] with transient data with result of [${result}]`);
+		gatewayObj.result = {type: txnType, response: result};
 	} catch (error) {
 		gatewayObj.result = {type: 'error', response: error.toString()};
-		BaseUtils.logError('--- in ' + printType + ' with transient: ' + error.toString());
+		BaseUtils.logError('--- in ' + txnType + ' with transient: ' + error.toString());
 	}
+}
+
+/**
+ * Determine if txnType is valid and is equal to 'submit'
+ * @param {String} txnType the txnType to check
+ * @returns {boolean} true if txnType is valid and equal to 'submit'
+ */
+function isSubmit(txnType: string): boolean {
+
+	if (txnTypes.indexOf(txnType) === -1) {
+		throw  new Error(`Unknown transaction type ${txnType}, must be one of ${txnTypes}`);
+	}
+	return txnType.localeCompare('submit') === 0 ;
 }
 
 /**
@@ -472,16 +369,6 @@ export function lastTransactionTypeCompare(gatewayName: string, type: string): b
 		throw  new Error('Unknown type transaction response type ' + type + ', must be one of [evaluate, error, submit]');
 	}
 
-	if (type === 'event' && gatewayObj.result.transactionId) {
-		// check the transactionid
-		if (gatewayObj.result.event.includes(gatewayObj.result.transactionId)) {
-			BaseUtils.logMsg('Event transaction committed successfully');
-		} else {
-			BaseUtils.logError('Event transaction committed failed - transactionId not seen');
-			throw new Error('TransactionId ' + gatewayObj.result.transactionId + ' not seen by event commit listener after the submit');
-		}
-	}
-
 	return gatewayObj.result.type.localeCompare(type) === 0;
 }
 
@@ -505,7 +392,7 @@ export function lastTransactionResponseCompare(gatewayName: string, msg: string,
 	let result: string;
 	if (typeof gatewayObj.result.response === 'string') {
 		result = gatewayObj.result.response;
-	} else { // must be and object
+	} else { // must be an object
 		result = JSON.stringify(gatewayObj.result.response);
 	}
 
@@ -531,7 +418,7 @@ export async function disconnectAllGateways(): Promise<void> {
 				BaseUtils.logMsg('disconnecting from Gateway ', next.value);
 				const gatewayObj: any = gateways.get(next.value);
 				const gateway: Gateway = gatewayObj.gateway;
-				await gateway.disconnect();
+				gateway.disconnect();
 				next = iterator.next();
 			}
 			gateways.clear();

@@ -27,7 +27,6 @@ const Gateway = require('../lib/gateway');
 const Contract = require('../lib/contract');
 const EventStrategies = require('fabric-network/lib/impl/event/defaulteventhandlerstrategies');
 const EventServiceManager = require('fabric-network/lib/impl/event/eventservicemanager');
-const CommitEventListener = require('fabric-network/lib/impl/event/commiteventlistener');
 const BlockEventListener = require('fabric-network/lib/impl/event/blockeventlistener');
 
 describe('Network', () => {
@@ -264,30 +263,4 @@ describe('Network', () => {
 		});
 	});
 
-	describe('#oldAddCommitListener', () => {
-		let callback;
-		beforeEach(() => {
-			callback = () => {};
-		});
-
-		it('should create options if the options param is undefined', async () => {
-			const listener = await network.oldAddCommitListener(callback, {}, eventService);
-			listener.should.to.be.instanceof(CommitEventListener);
-			listener.eventService.should.to.equal(eventService);
-			network.listeners.get(listener).should.to.equal(listener);
-		});
-
-		it('should create an instance of BlockEventListener and add it to the list of listeners', async () => {
-			const listener = await network.oldAddCommitListener(callback, {}, eventService);
-			listener.should.to.be.instanceof(CommitEventListener);
-			listener.eventService.should.to.equal(eventService);
-			network.listeners.get(listener).should.to.equal(listener);
-		});
-
-		it('should not set an event service if an event service is not given', async () => {
-			eventServiceManager.getReplayEventService.returns(eventService);
-			const listener = await network.oldAddCommitListener(callback);
-			listener.eventService.should.equal(eventService);
-		});
-	});
 });

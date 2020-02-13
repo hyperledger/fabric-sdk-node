@@ -233,7 +233,7 @@ async function performGatewayTransactionWithListener(gatewayName, ccName, channe
 
 /**
  * Compare the last gateway transaction response with a passed value
- * @param {String} type type of resposne
+ * @param {String} type type of response
  * @param {*} msg the message to compare against
  */
 function lastResponseCompare(gatewayName, msg) {
@@ -243,7 +243,7 @@ function lastResponseCompare(gatewayName, msg) {
 
 /**
  * Retrieve the last gateway transaction result
- * @param {String} type type of resposne
+ * @param {String} type type of response
  */
 function lastResult(gatewayName) {
 	const gatewayObj = gateways.get(gatewayName);
@@ -253,7 +253,7 @@ function lastResult(gatewayName) {
 /**
  * Compare the last gateway transaction type with a passed value
  * @param {String} gatewayName gateway name
- * @param {String} type type of resposne
+ * @param {String} type type of response
  */
 function lastTypeCompare(gatewayName, type) {
 	const gatewayObj = gateways.get(gatewayName);

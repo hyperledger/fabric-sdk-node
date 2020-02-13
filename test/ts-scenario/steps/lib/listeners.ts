@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { Contract, Gateway, Network, Transaction } from 'fabric-network';
+import { Contract, Gateway, Network } from 'fabric-network';
 import { Constants } from '../constants';
 import * as GatewayHelper from './gateway';
 import * as BaseUtils from './utility/baseUtils';
@@ -138,47 +138,6 @@ export async function createBlockListener(gatewayName: string, channelName: stri
 
 		return Promise.resolve();
 	}, {filtered, replay, startBlock, endBlock});
-
-	// Roll into a listener object to store
-	listenerObject.listener = listener;
-	listeners.set(listenerName, listenerObject);
-	stateStore.set(Constants.LISTENERS, listeners);
-}
-
-export async function createTransactionCommitListener(transaction: Transaction, listenerName: string): Promise<void> {
-	let listeners: Map<string, any> = stateStore.get(Constants.LISTENERS);
-	const listenerObject: any = {
-		active: true,
-		calls: 0,
-		listener: {},
-		payloads: [],
-		type: Constants.TRANSACTION,
-	};
-
-	// If no listeners, then create the new map item
-	if (!listeners) {
-		listeners = new Map();
-	}
-
-	// Create a listener
-	const listener = await (transaction as any).contract.network.oldAddCommitListener( // TODO: Replace this with what...?
-		(err: any, ...args: any[]) => {
-			if (err) {
-				BaseUtils.logMsg('-> Commit transaction event error', err);
-				return err;
-			}
-			BaseUtils.logMsg('-> Received a transaction commit event', listenerName);
-
-			const tlisteners: any = stateStore.get(Constants.LISTENERS);
-			if (tlisteners) {
-				const listenerUpdate: any = tlisteners.get(listenerName);
-				if (listenerUpdate) {
-					listenerUpdate.payloads.push(args);
-					listenerUpdate.calls = listenerUpdate.payloads.length;
-				}
-			}
-		}
-	);
 
 	// Roll into a listener object to store
 	listenerObject.listener = listener;
