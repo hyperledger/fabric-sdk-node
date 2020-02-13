@@ -1,6 +1,6 @@
 {
     "name": "fabcar",
-    "version": "2.0.0",
+    "version": "unstable",
     "description": "FabCar contract implemented in JavaScript",
     "main": "index.js",
     "engines": {

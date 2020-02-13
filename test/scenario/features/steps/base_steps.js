@@ -928,7 +928,7 @@ module.exports = function () {
 					if (transient_return === '"extra info"') {
 						testUtil.logMsg('Successfully returned transient data');
 					} else {
-						throw Error('Failed - Transient data was not handled correctly');
+						throw Error('Failed - Transient data was not handled correctly  we got back ==>' + transient_return + '<==');
 					}
 				}
 
