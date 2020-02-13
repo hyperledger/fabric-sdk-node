@@ -330,6 +330,7 @@ message Endorsement {
 		const signedEnvelope = this.getSignedProposal();
 		this._proposalResponses = [];
 		this._proposalErrors = [];
+		this._queryResults = [];
 
 		if (handler) {
 			logger.debug('%s - endorsing with a handler', method);
@@ -389,13 +390,12 @@ message Endorsement {
 		};
 
 		if (this.type === 'Query') {
-			this._queryResults = [];
 			this._proposalResponses.forEach((response) => {
-				if (response.response && response.response.payload && response.response.payload.length > 0) {
+				if (response.endorsement && response.response && response.response.payload) {
 					logger.debug('%s - have payload', method);
 					this._queryResults.push(response.response.payload);
 				} else {
-					logger.error('%s - unknown or missing results in query', method);
+					logger.debug('%s - no payload in query', method);
 				}
 			});
 			return_results.queryResults = this._queryResults;

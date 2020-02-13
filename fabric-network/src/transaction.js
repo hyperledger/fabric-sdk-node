@@ -6,8 +6,9 @@
 
 'use strict';
 
-const util = require('util');
+const Query = require('fabric-network/lib/impl/query/query');
 const logger = require('fabric-network/lib/logger').getLogger('Transaction');
+const util = require('util');
 
 const noOpEventHandler = {
 	startListening: async () => {},
@@ -222,17 +223,18 @@ class Transaction {
 			logger.debug('%s - discovery handler will be used for endorsing', method);
 			endorsementOptions.handler = await this.contract.getDiscoveryHandler(endorsement);
 			if (this._endorsingOrgs) {
+				logger.debug('%s - using discovery and user has assigned endorsing orgs %s', method, this._endorsingOrgs);
 				endorsementOptions.requiredOrgs = this._endorsingOrgs;
 			}
 		} else if (this._endorsingOrgs) {
-			logger.debug('%s - user has assigned an endorsing orgs %s', method, this._endorsingOrgs);
+			logger.debug('%s - user has assigned endorsing orgs %s', method, this._endorsingOrgs);
 			const flatten = (accumulator, value) => {
 				accumulator.push(...value);
 				return accumulator;
 			};
 			endorsementOptions.targets = this._endorsingOrgs.map(channel.getEndorsers).reduce(flatten, []);
 		} else {
-			logger.debug('%s - targets will be all that are assigned to this channel', method);
+			logger.debug('%s - targets will default to all that are assigned to this channel', method);
 			endorsementOptions.targets = channel.getEndorsers();
 		}
 
@@ -336,11 +338,14 @@ class Transaction {
 			request.requestTimeout = this._options.query.timeout * 1000; // in ms;
 		}
 
-		const query = this.contract.network.channel.newQuery(this.contract.chaincodeId);
+		const queryProposal = this.contract.network.channel.newQuery(this.contract.chaincodeId);
 
 		logger.debug('%s - build and sign the query', method);
-		query.build(this.identityContext, request);
-		query.sign(this.identityContext);
+		queryProposal.build(this.identityContext, request);
+		queryProposal.sign(this.identityContext);
+
+		const queryOptions = this.contract.gateway.getOptions().query;
+		const query = new Query(queryProposal, queryOptions);
 
 		logger.debug('%s - handler will send', method);
 		const results = await this.queryHandler.evaluate(query);

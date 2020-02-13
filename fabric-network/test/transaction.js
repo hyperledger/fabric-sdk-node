@@ -14,8 +14,8 @@ chai.use(require('chai-as-promised'));
 const Client = require('fabric-common/lib/Client');
 const Channel = require('fabric-common/lib/Channel');
 const Endorsement = require('fabric-common/lib/Endorsement');
-const Query = require('fabric-common/lib/Query');
 const Endorser = require('fabric-common/lib/Endorser');
+const QueryProposal = require('fabric-common/lib/Query');
 const Commit = require('fabric-common/lib/Commit');
 const IdentityContext = require('fabric-common/lib/IdentityContext');
 const DiscoveryHandler = require('fabric-common/lib/DiscoveryHandler');
@@ -26,6 +26,7 @@ const Network = require('fabric-network/lib/network');
 const Gateway = require('fabric-network/lib/gateway');
 const Transaction = require('fabric-network/lib/transaction');
 const TransactionEventHandler = require('fabric-network/lib/impl/event/transactioneventhandler');
+const Query = require('fabric-network/lib/impl/query/query');
 const QueryStrategies = require('fabric-network/lib/impl/query/queryhandlerstrategies');
 
 describe('Transaction', () => {
@@ -81,7 +82,7 @@ describe('Transaction', () => {
 	let channel;
 	let endorsement;
 	let endorser;
-	let query;
+	let queryProposal;
 	let commit;
 	let queryHandler;
 	let network;
@@ -93,14 +94,13 @@ describe('Transaction', () => {
 
 	beforeEach(() => {
 		contract = sinon.createStubInstance(Contract);
-
 		network = sinon.createStubInstance(Network);
 		network.queryHandler = queryHandler;
 		contract.network = network;
 
 		idx = sinon.createStubInstance(IdentityContext);
 		endorser = sinon.createStubInstance(Endorser);
-		query = sinon.createStubInstance(Query);
+		queryProposal = sinon.createStubInstance(QueryProposal);
 		endorsement = sinon.createStubInstance(Endorsement);
 		endorsement.send.resolves(newProposalResponse([validEnsorsementResponse]));
 		commit = sinon.createStubInstance(Commit);
@@ -108,7 +108,7 @@ describe('Transaction', () => {
 		endorsement.newCommit.returns(commit);
 		channel = sinon.createStubInstance(Channel);
 		channel.newEndorsement.returns(endorsement);
-		channel.newQuery.withArgs(chaincodeId).returns(query);
+		channel.newQuery.withArgs(chaincodeId).returns(queryProposal);
 		channel.getEndorsers.returns([endorser]);
 		network.channel = channel;
 		queryHandler = {
@@ -423,7 +423,7 @@ describe('Transaction', () => {
 		it('builds correct request for no-args invocation', async () => {
 			await transaction.evaluate();
 
-			sinon.assert.calledWith(query.build, idx, sinon.match({
+			sinon.assert.calledWith(queryProposal.build, idx, sinon.match({
 				fcn: transactionName,
 				args: []
 			}));
@@ -434,7 +434,7 @@ describe('Transaction', () => {
 
 			await transaction.evaluate(...args);
 
-			sinon.assert.calledWith(query.build, idx, sinon.match({
+			sinon.assert.calledWith(queryProposal.build, idx, sinon.match({
 				fcn: transactionName,
 				args
 			}));
@@ -446,7 +446,7 @@ describe('Transaction', () => {
 
 			await transaction.evaluate();
 
-			sinon.assert.calledWith(query.build, idx, sinon.match({transientMap}));
+			sinon.assert.calledWith(queryProposal.build, idx, sinon.match({transientMap}));
 		});
 
 		it('returns empty string response', async () => {
@@ -462,7 +462,7 @@ describe('Transaction', () => {
 
 			await transaction.evaluate();
 
-			sinon.assert.calledWith(query.build, idx, sinon.match({requestTimeout: 55000}));
+			sinon.assert.calledWith(queryProposal.build, idx, sinon.match({requestTimeout: 55000}));
 		});
 	});
 });

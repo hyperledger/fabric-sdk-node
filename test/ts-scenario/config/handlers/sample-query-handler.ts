@@ -7,47 +7,39 @@
 // Sample query handler that will use all queryable peers within the network to evaluate transactions, with preference
 // given to peers within the same organization.
 
-import { Network, QueryHandler, QueryHandlerFactory } from 'fabric-network';
-import { Query } from 'fabric-common';
+import { Network, QueryHandler, QueryHandlerFactory, Query, QueryResults} from 'fabric-network';
+import {Endorser} from 'fabric-common';
+import util = require('util');
 
 /**
  * Query handler implementation
  */
 class SampleQueryHandler implements QueryHandler {
-	private readonly peers: any;
-	private readonly requestTimeout: number;
+	private readonly peers: Endorser[];
 
-	constructor(peers: any, requestTimeout: number) {
+	constructor(peers: Endorser[]) {
 		this.peers = peers;
-		this.requestTimeout = requestTimeout;
 	}
 
 	public async evaluate(query: Query): Promise<Buffer> {
-		// send to all
-		const results = await query.send({targets: this.peers}, {requestTimeout: this.requestTimeout});
+		const errorMessages: string[] = [];
 
-		// check the results
-		if (results) {
-			// first check to see if we have results (any result with a payload will be here)
-			if (results && results.queryResults && results.queryResults.length > 0) {
-				return results.queryResults[0];
-			// maybe the request failed
-			} else if (results && results.errors && results.errors.length > 0) {
-				throw results.errors[0];
-			// maybe the query failed
-			} else if (results.responses) {
-				for (const response of results.responses) {
-					if (response.response.message) {
-						// return the first one found
-						throw new Error(`Query failed status:${response.response.status} message:${response.response.message}`);
-					}
+		for (const peer of this.peers) {
+			const results: QueryResults = await query.evaluate([peer]);
+			const result = results[peer.name];
+			if (result instanceof Error) {
+				errorMessages.push(result.toString());
+			} else {
+				if (result.isEndorsed) {
+					return result.payload;
 				}
-				throw new Error('Unknown result');
+				throw new Error(result.message);
 			}
 		}
 
-		// seems that we did not get anything worth returning
-		throw new Error('No results returned');
+		const message = util.format('Query failed. Errors: %j', errorMessages);
+		const error = new Error(message);
+		throw error;
 	}
 }
 
@@ -56,13 +48,11 @@ class SampleQueryHandler implements QueryHandler {
  * @param {Network} network The network where transactions are to be evaluated.
  * @returns {QueryHandler} A query handler implementation.
  */
-const createQueryHandler: QueryHandlerFactory = (network: Network, options: any): SampleQueryHandler => {
-	let timeout: number = 3000; // default 3 seconds
-	if (Number.isInteger(options.timeout)) {
-		timeout = options.timeout * 1000; // convert to ms;
-	}
-	const peers = network.channel.getEndorsers(network.mspid);
-	return new SampleQueryHandler(peers, timeout);
+const createQueryHandler: QueryHandlerFactory = (network: Network): SampleQueryHandler => {
+	const orgPeers = network.channel.getEndorsers(network.mspid);
+	const otherPeers = network.channel.getEndorsers().filter((peer) => !orgPeers.includes(peer));
+	const allPeers = orgPeers.concat(otherPeers);
+	return new SampleQueryHandler(allPeers);
 };
 
 export = createQueryHandler; // Plain JavaScript compatible node module export
