@@ -6,11 +6,11 @@
 
 'use strict';
 
-const FabricError = require('fabric-network/lib/errors/fabricerror');
+const {FabricError} = require('../../errors/fabricerror');
 
 const util = require('util');
 
-const logger = require('fabric-network/lib/logger').getLogger('RoundRobinQueryHandler');
+const logger = require('../../logger').getLogger('RoundRobinQueryHandler');
 
 class RoundRobinQueryHandler {
 	constructor(peers) {

@@ -17,8 +17,8 @@ import {
 } from 'fabric-common';
 import Long = require('long');
 
-import Network = require('../../../lib/network');
-import EventServiceManager = require('../../../lib/impl/event/eventservicemanager');
+import Network = require('../../../src/network');
+import EventServiceManager = require('../../../src/impl/event/eventservicemanager');
 import { Gateway } from 'fabric-network';
 import { StubEventService } from './stubeventservice';
 
@@ -39,9 +39,8 @@ describe('commit listener', () => {
 
 		eventService = new StubEventService(peer.name);
 
-		eventServiceManager = sinon.createStubInstance(EventServiceManager, {
-			getEventServices: (sinon.stub().withArgs(peers).returns([eventService]) as any)
-		});
+		eventServiceManager = sinon.createStubInstance(EventServiceManager);
+		eventServiceManager.getEventServices.withArgs(peers).returns([eventService]);
 
 		eventInfo = {
 			eventHub: null,

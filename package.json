@@ -26,7 +26,7 @@
     "eslint": "eslint fabric-network/ fabric-ca-client/lib/ fabric-common/ test/",
     "tslint": "tslint -t prose -p fabric-common/types/tsconfig.json 'fabric-common/**/*.ts' && tslint -t prose 'test/**/*.ts' && tslint -t prose -p fabric-network/tsconfig.json 'fabric-network/**/*.ts' ",
     "docs": "node -e 'require(\"./scripts/npm_scripts/testFunctions.js\").cleanUpDocs()' && jsdoc -r -c docs/jsdoc.json -t ./node_modules/ink-docstrap/template",
-    "unitTest:all": "export HFC_LOGGING='{\"debug\":\"test/temp/debug.log\"}' && nyc run-s unitTest:common unitTest:ca-client unitTest:network",
+    "unitTest:all": "export HFC_LOGGING='{\"debug\":\"test/temp/debug.log\"}' && run-s unitTest:common unitTest:ca-client unitTest:network",
     "unitTest:common": "mocha --reporter list 'fabric-common/test/**/*.js'",
     "unitTest:ca-client": "mocha --reporter list 'fabric-ca-client/test/**/*.js'",
     "unitTest:network": "npm run compile && mocha --require ts-node/register --reporter list 'fabric-network/test/**/*.{js,ts}'",

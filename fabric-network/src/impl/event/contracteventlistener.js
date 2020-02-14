@@ -7,7 +7,7 @@
 'use strict';
 
 const BaseEventListener = require('./baseeventlistener');
-const logger = require('fabric-network/lib/logger').getLogger('ContractEventListener');
+const logger = require('../../logger').getLogger('ContractEventListener');
 
 /**
  * The Contract Event Listener handles contract events from the chaincode.

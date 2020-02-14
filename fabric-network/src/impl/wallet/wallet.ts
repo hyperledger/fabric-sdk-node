@@ -5,7 +5,6 @@
  */
 
 import { Identity } from './identity';
-import { IdentityData } from './identitydata';
 import { IdentityProviderRegistry } from './identityproviderregistry';
 import { WalletStore } from './walletstore';
 

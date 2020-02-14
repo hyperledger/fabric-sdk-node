@@ -9,8 +9,8 @@
 const Network = require('./network');
 const NetworkConfig = require('./impl/ccp/networkconfig');
 const {Client} = require('fabric-common');
-const EventStrategies = require('fabric-network/lib/impl/event/defaulteventhandlerstrategies');
-const QueryStrategies = require('fabric-network/lib/impl/query/queryhandlerstrategies');
+const EventStrategies = require('./impl/event/defaulteventhandlerstrategies');
+const QueryStrategies = require('./impl/query/queryhandlerstrategies');
 
 const logger = require('./logger').getLogger('Gateway');
 

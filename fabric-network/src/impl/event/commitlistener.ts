@@ -11,7 +11,7 @@ import {
 	Endorser,
 	EventInfo,
 	EventListener,
-	EventService,
+	EventService
 } from 'fabric-common';
 
 export interface CommitError extends Error {

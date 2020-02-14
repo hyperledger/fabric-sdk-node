@@ -25,7 +25,7 @@ const Contract = require('fabric-network/lib/contract');
 const Network = require('fabric-network/lib/network');
 const Gateway = require('fabric-network/lib/gateway');
 const Transaction = require('fabric-network/lib/transaction');
-const TransactionEventHandler = require('fabric-network/lib/impl/event/transactioneventhandler');
+const {TransactionEventHandler} = require('fabric-network/lib/impl/event/transactioneventhandler');
 const Query = require('fabric-network/lib/impl/query/query');
 const QueryStrategies = require('fabric-network/lib/impl/query/queryhandlerstrategies');
 
@@ -33,6 +33,7 @@ describe('Transaction', () => {
 	const transactionName = 'TRANSACTION_NAME';
 	const chaincodeId = 'chaincode-id';
 	const expectedResult = Buffer.from('42');
+	const transactionId = 'TX_ID';
 
 	const peerInfo = {name: 'peer1', url: 'grpc://fakehost:9999'};
 	const validEnsorsementResponse = {
@@ -101,15 +102,20 @@ describe('Transaction', () => {
 		idx = sinon.createStubInstance(IdentityContext);
 		endorser = sinon.createStubInstance(Endorser);
 		queryProposal = sinon.createStubInstance(QueryProposal);
+
 		endorsement = sinon.createStubInstance(Endorsement);
 		endorsement.send.resolves(newProposalResponse([validEnsorsementResponse]));
+		endorsement.getTransactionId.returns(transactionId);
+
 		commit = sinon.createStubInstance(Commit);
 		commit.send.resolves({status: 'SUCCESS'});
 		endorsement.newCommit.returns(commit);
+
 		channel = sinon.createStubInstance(Channel);
 		channel.newEndorsement.returns(endorsement);
 		channel.newQuery.withArgs(chaincodeId).returns(queryProposal);
 		channel.getEndorsers.returns([endorser]);
+
 		network.channel = channel;
 		queryHandler = {
 			evaluate: sinon.stub().resolves(expectedResult)
@@ -144,6 +150,7 @@ describe('Transaction', () => {
 		mockGateway.getOptions.returns(gatewayOptions);
 
 		contract.gateway = mockGateway;
+		contract.network = network;
 
 		transaction = new Transaction(contract, transactionName);
 	});
@@ -194,14 +201,6 @@ describe('Transaction', () => {
 		it('returns this', () => {
 			const result = transaction.setEndorsingOrganizations([]);
 			expect(result).to.equal(transaction);
-		});
-	});
-
-	describe('#getNetwork', () => {
-		it('returns network', () => {
-			transaction.network = network;
-			const result = transaction.getNetwork();
-			expect(result).to.equal(network);
 		});
 	});
 
@@ -281,8 +280,7 @@ describe('Transaction', () => {
 
 		it('uses a supplied event handler strategy', async () => {
 			const stubEventHandler = sinon.createStubInstance(TransactionEventHandler);
-			const stubEventHandlerFactoryFn = sinon.stub();
-			stubEventHandlerFactoryFn.withArgs(transaction).returns(stubEventHandler);
+			const stubEventHandlerFactoryFn = sinon.stub().withArgs(transactionId, network).returns(stubEventHandler);
 
 			await transaction.setEventHandlerStrategy(stubEventHandlerFactoryFn).submit();
 
@@ -292,10 +290,9 @@ describe('Transaction', () => {
 
 		it('uses event handler strategy from gateway options', async () => {
 			const stubEventHandler = sinon.createStubInstance(TransactionEventHandler);
-			const stubEventHandlerFactoryFn = sinon.stub();
+			const stubEventHandlerFactoryFn = sinon.stub().withArgs(transactionId, network).returns(stubEventHandler);
 			gatewayOptions.transaction.strategy = stubEventHandlerFactoryFn;
 			transaction = new Transaction(contract, transactionName);
-			stubEventHandlerFactoryFn.withArgs(transaction).returns(stubEventHandler);
 
 			await transaction.submit();
 

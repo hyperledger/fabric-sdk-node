@@ -148,9 +148,6 @@ module.exports.Wallet = require('./lib/impl/wallet/wallet').Wallet;
 module.exports.Wallets = require('./lib/impl/wallet/wallets').Wallets;
 module.exports.IdentityProviderRegistry = require('./lib/impl/wallet/identityproviderregistry').IdentityProviderRegistry;
 module.exports.HsmX509Provider = require('./lib/impl/wallet/hsmx509identity').HsmX509Provider;
-module.exports.DefaultEventHandlerStrategies = require('fabric-network/lib/impl/event/defaulteventhandlerstrategies');
-module.exports.QueryHandlerStrategies = require('fabric-network/lib/impl/query/queryhandlerstrategies');
-
-module.exports.TimeoutError = require('fabric-network/lib/errors/timeouterror');
-module.exports.FileSystemCheckpointer = require('fabric-network/lib/impl/event/filesystemcheckpointer');
-module.exports.BaseCheckpointer = require('fabric-network/lib/impl/event/basecheckpointer');
+module.exports.DefaultEventHandlerStrategies = require('./lib/impl/event/defaulteventhandlerstrategies');
+module.exports.QueryHandlerStrategies = require('./lib/impl/query/queryhandlerstrategies');
+module.exports.TimeoutError = require('./lib/errors/timeouterror').TimeoutError;

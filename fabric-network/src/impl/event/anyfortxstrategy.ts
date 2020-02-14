@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
+import { EventCount, SuccessCallback, FailCallback, TransactionEventStrategy } from './transactioneventstrategy';
 
-const BaseEventStrategy = require('fabric-network/lib/impl/event/baseeventstrategy');
-
-const logger = require('fabric-network/lib/logger').getLogger('AnyForTxStrategy');
+// @ts-ignore no implicit any
+import Logger = require('../../logger');
+const logger = Logger.getLogger('AnyForTxStrategy');
 
 /**
  * Event handling strategy that:
@@ -20,11 +20,8 @@ const logger = require('fabric-network/lib/logger').getLogger('AnyForTxStrategy'
  * @private
  * @class
  */
-class AnyForTxStrategy extends BaseEventStrategy {
-	/**
-	 * @inheritdoc
-	 */
-	checkCompletion(counts, successFn, failFn) {
+export class AnyForTxStrategy extends TransactionEventStrategy {
+	protected checkCompletion(counts: EventCount, successFn: SuccessCallback, failFn: FailCallback) {
 		const method = 'checkCompletion';
 		logger.debug('%s:%j:', method, counts);
 		const isAllResponsesReceived = (counts.success + counts.fail === counts.expected);
@@ -38,5 +35,3 @@ class AnyForTxStrategy extends BaseEventStrategy {
 		}
 	}
 }
-
-module.exports = AnyForTxStrategy;

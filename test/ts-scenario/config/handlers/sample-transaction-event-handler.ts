@@ -18,7 +18,6 @@ class SampleTransactionEventHandler {
 
 	private readonly network: Network;
 	private readonly transactionId: string;
-	private readonly options: any;
 	private readonly notificationPromise: any;
 	private _resolveNotificationPromise: any;
 	private _rejectNotificationPromise: any;
@@ -29,16 +28,13 @@ class SampleTransactionEventHandler {
 
 	/**
 	 * Constructor.
-	 * @param {Transaction} transaction Transaction ID for which events will be received.
-	 * @param {ChannelEventHub[]} eventHubs Event hubs from which events will be received.
-	 * @param {Object} [options] Additional configuration options.
-	 * @param {Number} [options.commitTimeout] Time in seconds to wait for commit events to be received.
+	 * @param {string} transactionId The ID of the transactions being submitted
+	 * @param {Network} network The network where the transaction is being submitted.
 	 */
-	constructor(transaction: Transaction, options: any) {
-		this.network = transaction.getNetwork();
-		this.transactionId = transaction.transactionId;
-		this.options = options;
-		this.endorsers = this.network.channel.getEndorsers();
+	constructor(transactionId: string, network: Network) {
+		this.network = network;
+		this.transactionId = transactionId;
+		this.endorsers = network.channel.getEndorsers();
 
 		this.notificationPromise = new Promise((resolve: any, reject: any): any => {
 			this._resolveNotificationPromise = resolve;
@@ -108,11 +104,9 @@ class SampleTransactionEventHandler {
  * Factory function called for each submitted transaction, which supplies a commit handler instance for that
  * transaction. This implementation returns a commit handler that listens to all eventing peers in the user's
  * organization.
- * @param {Transaction} transaction The transaction being submitted.
+ * @param {string} transactionId The ID of the transactions being submitted
  * @param {Network} network The network where the transaction is being submitted.
  */
-function createTransactionEventHandler(transaction: Transaction, options: any): SampleTransactionEventHandler {
-	return new SampleTransactionEventHandler(transaction, options);
+export function createTransactionEventHandler(transactionId: string, network: Network): SampleTransactionEventHandler {
+	return new SampleTransactionEventHandler(transactionId, network);
 }
-
-module.exports = createTransactionEventHandler;

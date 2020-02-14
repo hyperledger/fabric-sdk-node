@@ -8,7 +8,7 @@
 
 const BaseEventListener = require('./baseeventlistener');
 
-const logger = require('fabric-network/lib/logger').getLogger('BlockEventListener');
+const logger = require('../../logger').getLogger('BlockEventListener');
 
 /**
  * The Block Event listener class handles block events from the channel.
