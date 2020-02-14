@@ -1,3 +1,185 @@
+## v2.0.0-beta.3
+Thu Feb 13 17:31:21 EST 2020
+
+* [d8d99d08](https://github.com/hyperledger/fabric-sdk-node/commit/d8d99d08) [FABN-1477](https://jira.hyperledger.org/browse/FABN-1477) NodeSDK publish beta.3
+* [5d61cfde](https://github.com/hyperledger/fabric-sdk-node/commit/5d61cfde) [FABN-1464](https://jira.hyperledger.org/browse/FABN-1464) NodeSDK update queryHandling (#105)
+* [854dba2a](https://github.com/hyperledger/fabric-sdk-node/commit/854dba2a) Fix module publishing (#125)
+* [bf6675a4](https://github.com/hyperledger/fabric-sdk-node/commit/bf6675a4) [[FABN-1481](https://jira.hyperledger.org/browse/FABN-1481)] Fix api docs publishing (#124)
+* [135a2484](https://github.com/hyperledger/fabric-sdk-node/commit/135a2484) [[FABN-1481](https://jira.hyperledger.org/browse/FABN-1481)] Remove node 8 support and add node 12 (#123)
+* [25de487f](https://github.com/hyperledger/fabric-sdk-node/commit/25de487f) [FABN-1484](https://jira.hyperledger.org/browse/FABN-1484) NodeSDK ledger height discovery sort (#122)
+* [c5d8148d](https://github.com/hyperledger/fabric-sdk-node/commit/c5d8148d) [FABN-1483](https://jira.hyperledger.org/browse/FABN-1483) NodeSDK set self signed cert (#121)
+* [b76cdd4d](https://github.com/hyperledger/fabric-sdk-node/commit/b76cdd4d) [FABN-1482](https://jira.hyperledger.org/browse/FABN-1482) NodeSDK missing dependencies (#120)
+* [acfb9098](https://github.com/hyperledger/fabric-sdk-node/commit/acfb9098) [FABN-1480](https://jira.hyperledger.org/browse/FABN-1480) NodeSDK initialize the config system (#119)
+* [fb72b2c8](https://github.com/hyperledger/fabric-sdk-node/commit/fb72b2c8) [FABN-1476: Temporarily remove fabric-](https://jira.hyperledger.org/browse/FABN-1476: Temporarily remove fabric-)network listener APIs (#116)
+* [f63c19fd](https://github.com/hyperledger/fabric-sdk-node/commit/f63c19fd) [FABN-1479](https://jira.hyperledger.org/browse/FABN-1479) NodeSDK fix HSM tests (#115)
+* [742b7458](https://github.com/hyperledger/fabric-sdk-node/commit/742b7458) [[FABN-1430](https://jira.hyperledger.org/browse/FABN-1430)] Fix type for IServiceResponse (#62)
+* [240db1dc](https://github.com/hyperledger/fabric-sdk-node/commit/240db1dc) [FABN-1455: Re-](https://jira.hyperledger.org/browse/FABN-1455: Re-)add removed unit tests in transaction.js (#109)
+* [d5495f99](https://github.com/hyperledger/fabric-sdk-node/commit/d5495f99) add responses to exception thrown from submitTransaction (#111)
+* [9276072b](https://github.com/hyperledger/fabric-sdk-node/commit/9276072b) [FABN-1465 NodeSDK remove fabric-](https://jira.hyperledger.org/browse/FABN-1465 NodeSDK remove fabric-)client (#110)
+* [e00798d8](https://github.com/hyperledger/fabric-sdk-node/commit/e00798d8) [FABN-1458](https://jira.hyperledger.org/browse/FABN-1458) NodeSDK commit all endorsed (#97)
+* [fc28cbb5](https://github.com/hyperledger/fabric-sdk-node/commit/fc28cbb5) [FABN-1452 NodeSDK add fabric-](https://jira.hyperledger.org/browse/FABN-1452 NodeSDK add fabric-)common doc (#96)
+* [ca255008](https://github.com/hyperledger/fabric-sdk-node/commit/ca255008) [FABN-1455: Re-](https://jira.hyperledger.org/browse/FABN-1455: Re-)enable unit tests for transactioneventhandler.js (#99)
+* [f5ab6a8c](https://github.com/hyperledger/fabric-sdk-node/commit/f5ab6a8c) [[FABN-1459](https://jira.hyperledger.org/browse/FABN-1459)] Remove extra tsconfig files (#98)
+* [fdaa8b44](https://github.com/hyperledger/fabric-sdk-node/commit/fdaa8b44) [[FABN-1039](https://jira.hyperledger.org/browse/FABN-1039)] Clean up node dependencies (#95)
+* [94bcabc5](https://github.com/hyperledger/fabric-sdk-node/commit/94bcabc5) [FABN-1453](https://jira.hyperledger.org/browse/FABN-1453) NodeSDK add discovery test (#94)
+* [af143157](https://github.com/hyperledger/fabric-sdk-node/commit/af143157) [FABN-1446](https://jira.hyperledger.org/browse/FABN-1446): Specific compatibility matrix for v2.0 (#93)
+* [aadf3be1](https://github.com/hyperledger/fabric-sdk-node/commit/aadf3be1) [FABN-1347 NodeSDK refactor fabric-](https://jira.hyperledger.org/browse/FABN-1347 NodeSDK refactor fabric-)network (#68)
+* [9851e8e6](https://github.com/hyperledger/fabric-sdk-node/commit/9851e8e6) [FABN-1446](https://jira.hyperledger.org/browse/FABN-1446): Add compatibility matrix to docs (#91)
+* [d084b6d9](https://github.com/hyperledger/fabric-sdk-node/commit/d084b6d9) [[FABCI-482](https://jira.hyperledger.org/browse/FABCI-482)] Change Nexus URLs to Artifactory (#81)
+* [b6c64de7](https://github.com/hyperledger/fabric-sdk-node/commit/b6c64de7) [FABN-1440](https://jira.hyperledger.org/browse/FABN-1440): Fix docstrap theme on master api docs (#88)
+* [50cebaa8](https://github.com/hyperledger/fabric-sdk-node/commit/50cebaa8) [FABN-1444](https://jira.hyperledger.org/browse/FABN-1444): Better errors for missing identities (#87)
+* [eab743c1](https://github.com/hyperledger/fabric-sdk-node/commit/eab743c1) Update chat handle
+* [8dd365ed](https://github.com/hyperledger/fabric-sdk-node/commit/8dd365ed) Add build status badge (#85)
+* [b1fbefd6](https://github.com/hyperledger/fabric-sdk-node/commit/b1fbefd6) Update CODEOWNERS (#84)
+* [ba231be7](https://github.com/hyperledger/fabric-sdk-node/commit/ba231be7) Add Heather Pollard as maintainer (#83)
+* [9f18701c](https://github.com/hyperledger/fabric-sdk-node/commit/9f18701c) (Master) Add Mark Lewis as a maintainer (#78)
+* [726c61f1](https://github.com/hyperledger/fabric-sdk-node/commit/726c61f1) [FABN-1428](https://jira.hyperledger.org/browse/FABN-1428): Point to new API documentation site (#80)
+* [c5eaf353](https://github.com/hyperledger/fabric-sdk-node/commit/c5eaf353) [FABN-1439](https://jira.hyperledger.org/browse/FABN-1439): Use Node 12 (#79)
+* [a9577414](https://github.com/hyperledger/fabric-sdk-node/commit/a9577414) Revert "[[FABN-1435] Publish 2.0.0-](https://jira.hyperledger.org/browse/FABN-1435] Publish 2.0.0-)beta.2" (#76)
+* [c1c0bcad](https://github.com/hyperledger/fabric-sdk-node/commit/c1c0bcad) Improve readability by using interpolation (#75)
+* [2cb20d48](https://github.com/hyperledger/fabric-sdk-node/commit/2cb20d48) [FABN-1039](https://jira.hyperledger.org/browse/FABN-1039): Fix master branch doc publishing (#74)
+* [5124fd78](https://github.com/hyperledger/fabric-sdk-node/commit/5124fd78) [[FABN-1435] Publish 2.0.0-](https://jira.hyperledger.org/browse/FABN-1435] Publish 2.0.0-)beta.2
+* [55b5398d](https://github.com/hyperledger/fabric-sdk-node/commit/55b5398d) [[FABN-1435] Remove stream-](https://jira.hyperledger.org/browse/FABN-1435] Remove stream-)buffers from lifecycle code (#71)
+* [d06fcdf2](https://github.com/hyperledger/fabric-sdk-node/commit/d06fcdf2) [FABN-1433](https://jira.hyperledger.org/browse/FABN-1433) NodeSDK return to snapshot (#70)
+* [558cea43](https://github.com/hyperledger/fabric-sdk-node/commit/558cea43) Wallet interop test (#69)
+* [6eb90b88](https://github.com/hyperledger/fabric-sdk-node/commit/6eb90b88) [[FABN-1308](https://jira.hyperledger.org/browse/FABN-1308)] Enable checkpointing when start or end block are given (#51)
+* [6e398bcf](https://github.com/hyperledger/fabric-sdk-node/commit/6e398bcf) [FABN-1039](https://jira.hyperledger.org/browse/FABN-1039)] Replace gulp with npm scripts
+* [7bb78d33](https://github.com/hyperledger/fabric-sdk-node/commit/7bb78d33) [FABN-1432](https://jira.hyperledger.org/browse/FABN-1432) NodeSDK publish v2 beta.1
+* [7b9f2527](https://github.com/hyperledger/fabric-sdk-node/commit/7b9f2527) Align Java and Node wallet API naming (#65)
+* [11b5a553](https://github.com/hyperledger/fabric-sdk-node/commit/11b5a553) Add NPM credential group (#60)
+* [ee4225fe](https://github.com/hyperledger/fabric-sdk-node/commit/ee4225fe) [FABN-1347](https://jira.hyperledger.org/browse/FABN-1347) NodeSDK update low level (#59)
+* [0c2f5201](https://github.com/hyperledger/fabric-sdk-node/commit/0c2f5201) Remove redundant jenkins scripts (#58)
+* [67365b5e](https://github.com/hyperledger/fabric-sdk-node/commit/67365b5e) Create eslint task Ahead of the changes for [FABN-1039: - Create eslint npm script - Fix eslint errors, disable some - Ensure all modules eslintignore files extend the top level eslintignore - Ensure fabric-](https://jira.hyperledger.org/browse/FABN-1039: - Create eslint npm script - Fix eslint errors, disable some - Ensure all modules eslintignore files extend the top level eslintignore - Ensure fabric-)client/test/data is excluded from tslint
+* [a5f78e74](https://github.com/hyperledger/fabric-sdk-node/commit/a5f78e74) [[FAB-1307](https://jira.hyperledger.org/browse/FAB-1307)] Pass options.unregister through to clientOptions.unregister (#53)
+* [583e9025](https://github.com/hyperledger/fabric-sdk-node/commit/583e9025) [[FABN-1407](https://jira.hyperledger.org/browse/FABN-1407)] Add PDC and EP types (#38)
+* [9e9ec9e2](https://github.com/hyperledger/fabric-sdk-node/commit/9e9ec9e2) [[FABN-1342](https://jira.hyperledger.org/browse/FABN-1342)] Improve SDK packaging performance (#47)
+* [cf63bccc](https://github.com/hyperledger/fabric-sdk-node/commit/cf63bccc) Port relevant changes from PR#33 (#50)
+* [014e65bf](https://github.com/hyperledger/fabric-sdk-node/commit/014e65bf) (Master) Remove gerrit/jenkins references (#48)
+* [b4b04ade](https://github.com/hyperledger/fabric-sdk-node/commit/b4b04ade) [FABN-1386](https://jira.hyperledger.org/browse/FABN-1386): Doc publishing fixes (#40)
+* [fb171122](https://github.com/hyperledger/fabric-sdk-node/commit/fb171122) [FABN-1424](https://jira.hyperledger.org/browse/FABN-1424): Fix lifecycle scenario tests (#46)
+* [99c22279](https://github.com/hyperledger/fabric-sdk-node/commit/99c22279) [FABN-1386: Publish docs to gh-](https://jira.hyperledger.org/browse/FABN-1386: Publish docs to gh-)pages branch
+* [2815f6d9](https://github.com/hyperledger/fabric-sdk-node/commit/2815f6d9) [[FABN-1393] Pass baseDir/gopath from client to node-](https://jira.hyperledger.org/browse/FABN-1393] Pass baseDir/gopath from client to node-)sdk
+* [cce8f1cd](https://github.com/hyperledger/fabric-sdk-node/commit/cce8f1cd) Defang Stalebot
+* [e41f3b20](https://github.com/hyperledger/fabric-sdk-node/commit/e41f3b20) [FABN-1415](https://jira.hyperledger.org/browse/FABN-1415) NodeSDK update protos
+* [ca321d1d](https://github.com/hyperledger/fabric-sdk-node/commit/ca321d1d) [FABN-1386](https://jira.hyperledger.org/browse/FABN-1386): Azure Pipelines publish of npm packages
+* [eeebb171](https://github.com/hyperledger/fabric-sdk-node/commit/eeebb171) [FABN-1413](https://jira.hyperledger.org/browse/FABN-1413) NodeSDK addCommitter fails
+* [9a38da6c](https://github.com/hyperledger/fabric-sdk-node/commit/9a38da6c) [FABN-1386](https://jira.hyperledger.org/browse/FABN-1386): Publish API documentation in Azure
+* [316a1748](https://github.com/hyperledger/fabric-sdk-node/commit/316a1748) [[FAB-1394]Fabric-](https://jira.hyperledger.org/browse/FAB-1394]Fabric-)merge gulp task
+* [19c90973](https://github.com/hyperledger/fabric-sdk-node/commit/19c90973) [[FABN-1396] Deprecate js-](https://jira.hyperledger.org/browse/FABN-1396] Deprecate js-)scenario
+* [07c2a183](https://github.com/hyperledger/fabric-sdk-node/commit/07c2a183) [[FABN-1396](https://jira.hyperledger.org/browse/FABN-1396)] convert base endorse scenario test
+* [0cfb0a32](https://github.com/hyperledger/fabric-sdk-node/commit/0cfb0a32) [[FABN-1396](https://jira.hyperledger.org/browse/FABN-1396)] update readme
+* [463c8ee7](https://github.com/hyperledger/fabric-sdk-node/commit/463c8ee7) [FABN-1386](https://jira.hyperledger.org/browse/FABN-1386): Azure pipelines build
+* [6ea632c1](https://github.com/hyperledger/fabric-sdk-node/commit/6ea632c1) [[FABN-1396](https://jira.hyperledger.org/browse/FABN-1396)] hoist typescript tests to cucumber
+* [39b44e00](https://github.com/hyperledger/fabric-sdk-node/commit/39b44e00) [FABN-1386](https://jira.hyperledger.org/browse/FABN-1386): TSLint and Docker image fixes
+* [982cf3af](https://github.com/hyperledger/fabric-sdk-node/commit/982cf3af) [[FABN-1396](https://jira.hyperledger.org/browse/FABN-1396)] Move typescript tests into scenario
+* [104ecd53](https://github.com/hyperledger/fabric-sdk-node/commit/104ecd53) [[FAB-1390](https://jira.hyperledger.org/browse/FAB-1390)] Move tape util file
+* [12f43350](https://github.com/hyperledger/fabric-sdk-node/commit/12f43350) [FABN-1407](https://jira.hyperledger.org/browse/FABN-1407) NodeSDK update low level
+* [03f6bbf1](https://github.com/hyperledger/fabric-sdk-node/commit/03f6bbf1) [FAB-16778](https://jira.hyperledger.org/browse/FAB-16778) Update baseimage ver to 0.4.16
+* [aff09826](https://github.com/hyperledger/fabric-sdk-node/commit/aff09826) [[FABN-1135](https://jira.hyperledger.org/browse/FABN-1135)] Remove nodechaincode
+* [b11008e0](https://github.com/hyperledger/fabric-sdk-node/commit/b11008e0) [[FABN-1396](https://jira.hyperledger.org/browse/FABN-1396)] Convert events feature test to typescript
+* [bb5cad23](https://github.com/hyperledger/fabric-sdk-node/commit/bb5cad23) [FABN-1403](https://jira.hyperledger.org/browse/FABN-1403) NodeSDK check multiple certs
+* [d1be5431](https://github.com/hyperledger/fabric-sdk-node/commit/d1be5431) [[FAB-1395](https://jira.hyperledger.org/browse/FAB-1395)] Improve coverage reporting
+* [39ec9fa1](https://github.com/hyperledger/fabric-sdk-node/commit/39ec9fa1) [[FABN-1391](https://jira.hyperledger.org/browse/FABN-1391)] Remove tape unit tests
+* [7422cfa8](https://github.com/hyperledger/fabric-sdk-node/commit/7422cfa8) [[FABN-1402](https://jira.hyperledger.org/browse/FABN-1402)] Use "for of" instead of "for in"
+* [8c7d395d](https://github.com/hyperledger/fabric-sdk-node/commit/8c7d395d) [[FABN-1396](https://jira.hyperledger.org/browse/FABN-1396)] remove unrequired tape tests
+* [424dae77](https://github.com/hyperledger/fabric-sdk-node/commit/424dae77) [[FABN-1397] add ts-](https://jira.hyperledger.org/browse/FABN-1397] add ts-)cucumber test suite
+* [b7ce0733](https://github.com/hyperledger/fabric-sdk-node/commit/b7ce0733) [FABN-1347](https://jira.hyperledger.org/browse/FABN-1347) NodeSDK add new low level tests
+* [df43b855](https://github.com/hyperledger/fabric-sdk-node/commit/df43b855) [FABN-626](https://jira.hyperledger.org/browse/FABN-626) Make pkcs11js optional
+* [5834c7d5](https://github.com/hyperledger/fabric-sdk-node/commit/5834c7d5) [FABN-1391](https://jira.hyperledger.org/browse/FABN-1391)] Refactor cryptosuite tape UT
+* [70ce950d](https://github.com/hyperledger/fabric-sdk-node/commit/70ce950d) [FABN-1333](https://jira.hyperledger.org/browse/FABN-1333) improve error message
+* [5b012027](https://github.com/hyperledger/fabric-sdk-node/commit/5b012027) [FABN-1347](https://jira.hyperledger.org/browse/FABN-1347) NodeSDK add new lowlevel
+* [d826d155](https://github.com/hyperledger/fabric-sdk-node/commit/d826d155) [[FABN-1276](https://jira.hyperledger.org/browse/FABN-1276)] Update ConnectOptions type
+* [067b6274](https://github.com/hyperledger/fabric-sdk-node/commit/067b6274) [[FABN-1335]-](https://jira.hyperledger.org/browse/FABN-1335]-)Reference event handling
+* [73405acc](https://github.com/hyperledger/fabric-sdk-node/commit/73405acc) [[FABN-1280](https://jira.hyperledger.org/browse/FABN-1280)] Support gencrl in revoke
+* [b45430e3](https://github.com/hyperledger/fabric-sdk-node/commit/b45430e3) [[FABN-1391](https://jira.hyperledger.org/browse/FABN-1391)] Initial removal of tape unit tests
+* [3e86242f](https://github.com/hyperledger/fabric-sdk-node/commit/3e86242f) [FABN-1388](https://jira.hyperledger.org/browse/FABN-1388) NodeSDK add compile
+* [2230ac7f](https://github.com/hyperledger/fabric-sdk-node/commit/2230ac7f) [[FABN-1301](https://jira.hyperledger.org/browse/FABN-1301)] Fix a shell for getting Nexus's image
+* [fc6f92c7](https://github.com/hyperledger/fabric-sdk-node/commit/fc6f92c7) [IN-68] Add default GitHub SECURITY policy
+* [e9e8c593](https://github.com/hyperledger/fabric-sdk-node/commit/e9e8c593) [FABN-1387: Fix fabric-](https://jira.hyperledger.org/browse/FABN-1387: Fix fabric-)network TypeScript definitions
+* [223d1239](https://github.com/hyperledger/fabric-sdk-node/commit/223d1239) [[FABN-1140](https://jira.hyperledger.org/browse/FABN-1140)] Migrate UT to mocha: BasicCommitHandler
+* [59afabc3](https://github.com/hyperledger/fabric-sdk-node/commit/59afabc3) [FABN-1345](https://jira.hyperledger.org/browse/FABN-1345) NodeSDK Add DeliverWithPrivateData support
+* [70a92348](https://github.com/hyperledger/fabric-sdk-node/commit/70a92348) [FABN-1384](https://jira.hyperledger.org/browse/FABN-1384) NodeSDK udpate grpc levels
+* [00aaa8a7](https://github.com/hyperledger/fabric-sdk-node/commit/00aaa8a7) [FABN-1353](https://jira.hyperledger.org/browse/FABN-1353): New wallet implementation
+* [535cb809](https://github.com/hyperledger/fabric-sdk-node/commit/535cb809) [[FABN-1378](https://jira.hyperledger.org/browse/FABN-1378)] Increase chaincode execute timeout
+* [7ade43cc](https://github.com/hyperledger/fabric-sdk-node/commit/7ade43cc) [FABN-1378](https://jira.hyperledger.org/browse/FABN-1378) NodeSDK Lifecycle timeout
+* [38daed68](https://github.com/hyperledger/fabric-sdk-node/commit/38daed68) [[FABN-1383](https://jira.hyperledger.org/browse/FABN-1383)] Remove token docs for node.js sdk
+* [4b90dec1](https://github.com/hyperledger/fabric-sdk-node/commit/4b90dec1) [FABN-1379: Cleanup of identity-](https://jira.hyperledger.org/browse/FABN-1379: Cleanup of identity-)service tests
+* [22571511](https://github.com/hyperledger/fabric-sdk-node/commit/22571511) [FABN-1379 NodeSDK fabric-ca-](https://jira.hyperledger.org/browse/FABN-1379 NodeSDK fabric-ca-)client test fix
+* [be894cb0](https://github.com/hyperledger/fabric-sdk-node/commit/be894cb0) [[FABN-1379](https://jira.hyperledger.org/browse/FABN-1379)] Gradle updates for E2E tests
+* [35edb795](https://github.com/hyperledger/fabric-sdk-node/commit/35edb795) [[FABN-1379](https://jira.hyperledger.org/browse/FABN-1379)] Fix certificate service tests
+* [c24a331a](https://github.com/hyperledger/fabric-sdk-node/commit/c24a331a) [[FABN-1379](https://jira.hyperledger.org/browse/FABN-1379)] Fix dodgy E2E chaincode example_cc1++
+* [a2f1d7fb](https://github.com/hyperledger/fabric-sdk-node/commit/a2f1d7fb) [[FABN-1379](https://jira.hyperledger.org/browse/FABN-1379)] Fix dodgy E2E chaincode example_cc1
+* [13e8a8ee](https://github.com/hyperledger/fabric-sdk-node/commit/13e8a8ee) [[FABN-1379](https://jira.hyperledger.org/browse/FABN-1379)] Timing problems in packaging UT
+* [1a4f1910](https://github.com/hyperledger/fabric-sdk-node/commit/1a4f1910) Add packaging support for go module chaincode
+* [0a273c9b](https://github.com/hyperledger/fabric-sdk-node/commit/0a273c9b) Vendor package dependencies for go chaincode
+* [e6cfcfe0](https://github.com/hyperledger/fabric-sdk-node/commit/e6cfcfe0) [[FAB-16489](https://jira.hyperledger.org/browse/FAB-16489)] Add CODEOWNERS
+* [130173b4](https://github.com/hyperledger/fabric-sdk-node/commit/130173b4) [[FABN-1359](https://jira.hyperledger.org/browse/FABN-1359)] Move HSM docs into separated page
+* [3493d67d](https://github.com/hyperledger/fabric-sdk-node/commit/3493d67d) Use patch-package instead of sed
+* [be841fea](https://github.com/hyperledger/fabric-sdk-node/commit/be841fea) Use github.com/hyperledger/fabric-protos repo
+* [b06fda46](https://github.com/hyperledger/fabric-sdk-node/commit/b06fda46) [FABN-1348](https://jira.hyperledger.org/browse/FABN-1348) NodeSDK allow targets with discovery
+* [6418070b](https://github.com/hyperledger/fabric-sdk-node/commit/6418070b) [FAB-16290](https://jira.hyperledger.org/browse/FAB-16290) Make metadata fields lower case
+* [c75dc252](https://github.com/hyperledger/fabric-sdk-node/commit/c75dc252) [[FABN-1354](https://jira.hyperledger.org/browse/FABN-1354)] Remove token code from Node.js SDK
+* [54be4c55](https://github.com/hyperledger/fabric-sdk-node/commit/54be4c55) [[FABCI-395](https://jira.hyperledger.org/browse/FABCI-395)] Remove AnsiColor wrapper
+* [fbad794a](https://github.com/hyperledger/fabric-sdk-node/commit/fbad794a) [[FABN-1350] enhance network-](https://jira.hyperledger.org/browse/FABN-1350] enhance network-)config tutorial
+* [79b528a9](https://github.com/hyperledger/fabric-sdk-node/commit/79b528a9) [FABN-1349](https://jira.hyperledger.org/browse/FABN-1349) NodeSDK set init on lifecycle test
+* [61064c62](https://github.com/hyperledger/fabric-sdk-node/commit/61064c62) [FABN-1344](https://jira.hyperledger.org/browse/FABN-1344): Allow endorsing peers to be specified
+* [a4c8390b](https://github.com/hyperledger/fabric-sdk-node/commit/a4c8390b) [FAB-15821](https://jira.hyperledger.org/browse/FAB-15821) NodeSDK new lifecycle queries
+* [e0b4b83a](https://github.com/hyperledger/fabric-sdk-node/commit/e0b4b83a) [FABN-1233](https://jira.hyperledger.org/browse/FABN-1233) NodeSDK segfault
+* [83f7aac9](https://github.com/hyperledger/fabric-sdk-node/commit/83f7aac9) [FABN-1325](https://jira.hyperledger.org/browse/FABN-1325) NodeSDK readme update
+* [14686caa](https://github.com/hyperledger/fabric-sdk-node/commit/14686caa) [FABN-1233](https://jira.hyperledger.org/browse/FABN-1233) NodeSDK segfault
+* [ee4052ce](https://github.com/hyperledger/fabric-sdk-node/commit/ee4052ce) [FAB-16166](https://jira.hyperledger.org/browse/FAB-16166) Switch to metadata.json for packaging
+* [f7c7cc89](https://github.com/hyperledger/fabric-sdk-node/commit/f7c7cc89) [FABN-669](https://jira.hyperledger.org/browse/FABN-669) NodeSDK Lifecycle support
+* [be1cb8b3](https://github.com/hyperledger/fabric-sdk-node/commit/be1cb8b3) [[FABN-1340](https://jira.hyperledger.org/browse/FABN-1340)] Fix typos and deadlinks in documents
+* [9761dce9](https://github.com/hyperledger/fabric-sdk-node/commit/9761dce9) [FABN-1233](https://jira.hyperledger.org/browse/FABN-1233) NodeSDK segfault
+* [53f51c26](https://github.com/hyperledger/fabric-sdk-node/commit/53f51c26) [FABN-1336](https://jira.hyperledger.org/browse/FABN-1336) NodeSDK typescript test fails
+* [54d230b2](https://github.com/hyperledger/fabric-sdk-node/commit/54d230b2) [FABN-1332](https://jira.hyperledger.org/browse/FABN-1332): Revert commit handler implementation
+* [6a7e5ef5](https://github.com/hyperledger/fabric-sdk-node/commit/6a7e5ef5) [FAB-16166](https://jira.hyperledger.org/browse/FAB-16166) Standardize _lifecycle code package name
+* [5ff2e190](https://github.com/hyperledger/fabric-sdk-node/commit/5ff2e190) [FABN-1326](https://jira.hyperledger.org/browse/FABN-1326): Use only eventing peers for commits
+* [950b81f7](https://github.com/hyperledger/fabric-sdk-node/commit/950b81f7) [FABN-1331](https://jira.hyperledger.org/browse/FABN-1331)
+* [58c70b53](https://github.com/hyperledger/fabric-sdk-node/commit/58c70b53) [FABN-1321](https://jira.hyperledger.org/browse/FABN-1321) Validate boolean type value of Config
+* [b51f12a7](https://github.com/hyperledger/fabric-sdk-node/commit/b51f12a7) [FABN-1322](https://jira.hyperledger.org/browse/FABN-1322): JSDoc for DefaultEventHandlerStrategies
+* [e4c1d5a0](https://github.com/hyperledger/fabric-sdk-node/commit/e4c1d5a0) [[FABN-1318](https://jira.hyperledger.org/browse/FABN-1318)] not to split word by link
+* [5d1a88bf](https://github.com/hyperledger/fabric-sdk-node/commit/5d1a88bf) [[FABN-1314](https://jira.hyperledger.org/browse/FABN-1314)]
+* [7634660a](https://github.com/hyperledger/fabric-sdk-node/commit/7634660a) [[FABN-1302](https://jira.hyperledger.org/browse/FABN-1302)] Added filtered block
+* [c19bb33d](https://github.com/hyperledger/fabric-sdk-node/commit/c19bb33d) [FABN-1303](https://jira.hyperledger.org/browse/FABN-1303) Update to version 1.21 of grpc
+* [54409b61](https://github.com/hyperledger/fabric-sdk-node/commit/54409b61) [FABN-1304](https://jira.hyperledger.org/browse/FABN-1304) NodeSDK disable new lifecycle test
+* [021cdf78](https://github.com/hyperledger/fabric-sdk-node/commit/021cdf78) [FABN-1288](https://jira.hyperledger.org/browse/FABN-1288) NodeSDK remove clientKey from log
+* [bd9d3093](https://github.com/hyperledger/fabric-sdk-node/commit/bd9d3093) [FAB-15821](https://jira.hyperledger.org/browse/FAB-15821) NodeSDK prepare for lifecycle changes
+* [fe56f257](https://github.com/hyperledger/fabric-sdk-node/commit/fe56f257) [[FABN-1251](https://jira.hyperledger.org/browse/FABN-1251)] Added start/end block functionality
+* [d86d83b8](https://github.com/hyperledger/fabric-sdk-node/commit/d86d83b8) [[FABN-1274](https://jira.hyperledger.org/browse/FABN-1274)] enhance gateway doc
+* [0b885e1a](https://github.com/hyperledger/fabric-sdk-node/commit/0b885e1a) [[FABN-1203] fabric-](https://jira.hyperledger.org/browse/FABN-1203] fabric-)network event listening doc changes
+* [be3df228](https://github.com/hyperledger/fabric-sdk-node/commit/be3df228) [FABN-1259](https://jira.hyperledger.org/browse/FABN-1259) fix timeout when debugging chaincode
+* [1e28d1bc](https://github.com/hyperledger/fabric-sdk-node/commit/1e28d1bc) [FABN-1265](https://jira.hyperledger.org/browse/FABN-1265) NodeSDK remove logging go chaincode
+* [3fbe8cd3](https://github.com/hyperledger/fabric-sdk-node/commit/3fbe8cd3) [[FABN-1180](https://jira.hyperledger.org/browse/FABN-1180)] Simplify initial user experience
+* [36fbdc68](https://github.com/hyperledger/fabric-sdk-node/commit/36fbdc68) [FABN-1256](https://jira.hyperledger.org/browse/FABN-1256) NodeSDK reset as_local default
+* [c9285c58](https://github.com/hyperledger/fabric-sdk-node/commit/c9285c58) [FABN-1220 NodeSDK add fabric-ca-](https://jira.hyperledger.org/browse/FABN-1220 NodeSDK add fabric-ca-)client
+* [10caad4b](https://github.com/hyperledger/fabric-sdk-node/commit/10caad4b) [FABN-1133](https://jira.hyperledger.org/browse/FABN-1133) NodeSDK switch to caname
+* [bdfdf785](https://github.com/hyperledger/fabric-sdk-node/commit/bdfdf785) [FABN-1260](https://jira.hyperledger.org/browse/FABN-1260) NodeSDK have fixed typescript
+* [200b8622](https://github.com/hyperledger/fabric-sdk-node/commit/200b8622) [FABN-401](https://jira.hyperledger.org/browse/FABN-401) NodeSDK update connect link
+* [60d160db](https://github.com/hyperledger/fabric-sdk-node/commit/60d160db) [[FABN-1257](https://jira.hyperledger.org/browse/FABN-1257)] Fix EventHub error when reconnecting
+* [309dc104](https://github.com/hyperledger/fabric-sdk-node/commit/309dc104) [[FABN-1254](https://jira.hyperledger.org/browse/FABN-1254)] Fix Chaincode's label for the validation
+* [38402b27](https://github.com/hyperledger/fabric-sdk-node/commit/38402b27) [FABN-401](https://jira.hyperledger.org/browse/FABN-401) NodeSDK add chaincode event note
+* [51509d4a](https://github.com/hyperledger/fabric-sdk-node/commit/51509d4a) [FABN-1208](https://jira.hyperledger.org/browse/FABN-1208) NodeSDK add release notes section
+* [d693bc3f](https://github.com/hyperledger/fabric-sdk-node/commit/d693bc3f) [FABN-1239](https://jira.hyperledger.org/browse/FABN-1239): Better error on submitTransaction failure
+* [96afa090](https://github.com/hyperledger/fabric-sdk-node/commit/96afa090) [FABN-1238](https://jira.hyperledger.org/browse/FABN-1238) NodeSDK Add chaincode cnstr
+* [9b1f7155](https://github.com/hyperledger/fabric-sdk-node/commit/9b1f7155) [[FABN-1235](https://jira.hyperledger.org/browse/FABN-1235)] Block event checkpointer fix
+* [661b6a2c](https://github.com/hyperledger/fabric-sdk-node/commit/661b6a2c) [[FABN-1180](https://jira.hyperledger.org/browse/FABN-1180)] readme typo
+* [11b1ad24](https://github.com/hyperledger/fabric-sdk-node/commit/11b1ad24) [FABN-1238](https://jira.hyperledger.org/browse/FABN-1238) NodeSDK add lifecycle ts
+* [6296c5d1](https://github.com/hyperledger/fabric-sdk-node/commit/6296c5d1) [[FABN-1205](https://jira.hyperledger.org/browse/FABN-1205)] Chaincode event data fix
+* [4d5ff985](https://github.com/hyperledger/fabric-sdk-node/commit/4d5ff985) [FABN-1238](https://jira.hyperledger.org/browse/FABN-1238) NodeSDK add TS for lifecycle
+* [14dd4ac8](https://github.com/hyperledger/fabric-sdk-node/commit/14dd4ac8) [FABN-1231](https://jira.hyperledger.org/browse/FABN-1231) NodeSDK add connect to event tutorial
+* [31b20842](https://github.com/hyperledger/fabric-sdk-node/commit/31b20842) [FABN-1226](https://jira.hyperledger.org/browse/FABN-1226): Better handling of query error responses
+* [c3f95cc5](https://github.com/hyperledger/fabric-sdk-node/commit/c3f95cc5) [[FABN-1225](https://jira.hyperledger.org/browse/FABN-1225)] Convert CDS path seps from Win to UNIX
+* [21dcf963](https://github.com/hyperledger/fabric-sdk-node/commit/21dcf963) [[FABN-1100](https://jira.hyperledger.org/browse/FABN-1100)] Fix for checkpoint factory
+* [5a361ae6](https://github.com/hyperledger/fabric-sdk-node/commit/5a361ae6) [FABN-1210](https://jira.hyperledger.org/browse/FABN-1210) NodeSDK Chaincode events as array
+* [a9f082c0](https://github.com/hyperledger/fabric-sdk-node/commit/a9f082c0) [[FABN-1219](https://jira.hyperledger.org/browse/FABN-1219)] Convert FabricCAClient.js to ES6 syntax.
+* [71e371bb](https://github.com/hyperledger/fabric-sdk-node/commit/71e371bb) [[FABN-1216](https://jira.hyperledger.org/browse/FABN-1216)] package.json add node 10
+* [936a78c8](https://github.com/hyperledger/fabric-sdk-node/commit/936a78c8) [#[FABN-1206](https://jira.hyperledger.org/browse/FABN-1206)] Fixed inability to receive filtered events
+* [686aec35](https://github.com/hyperledger/fabric-sdk-node/commit/686aec35) [FABN-1215](https://jira.hyperledger.org/browse/FABN-1215) Fix license statements
+* [28fa7947](https://github.com/hyperledger/fabric-sdk-node/commit/28fa7947) [FAB-14999](https://jira.hyperledger.org/browse/FAB-14999) NodeSDK prepare for v2.0.0
+* [126175c9](https://github.com/hyperledger/fabric-sdk-node/commit/126175c9) [FABN-1207](https://jira.hyperledger.org/browse/FABN-1207) NodeSDK chaincode event defaults
+
+
 ## v2.0.0-alpha
 Thu Apr 11 21:30:29 EDT 2019
 
