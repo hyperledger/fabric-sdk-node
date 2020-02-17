@@ -1196,7 +1196,7 @@ describe('Channel', () => {
 			peer.getUrl.returns('grpcs://peer:7051');
 			peer.getName.returns('peerName');
 			channel._channel_peers = [peer];
-			const request = {asLocalHost: true};
+			const request = {asLocalhost: true};
 			const name = channel._buildPeerName('peer:7051', 'mspid', null, request);
 			sinon.assert.calledWith(channel._buildUrl, 'peer', '7051', request);
 			name.should.equal('peerName');
@@ -1355,7 +1355,41 @@ describe('Channel', () => {
 		});
 	});
 
-	describe('#_buildProtoChaincodeInterest', () => {});
+	describe('#_buildProtoChaincodeInterest', () => {
+		it('should throw an error if name is not a string', () => {
+			(() => {
+				const interests = {chaincodes: [{name: {}}]};
+				channel._buildProtoChaincodeInterest(interests);
+			}).should.throw(Error, 'Chaincode name must be a string');
+		});
+		it('should throw an error if collection_name is not a string', () => {
+			(() => {
+				const interests = {chaincodes: [{name: 'mychaincode', collection_names: [{}, 'c2']}]};
+				channel._buildProtoChaincodeInterest(interests);
+			}).should.throw(Error, 'The collection name must be a string');
+		});
+		it('should throw an error if collectionName is not a string', () => {
+			(() => {
+				const interests = {chaincodes: [{name: 'mychaincode', collectionNames: [{}, 'c2']}]};
+				channel._buildProtoChaincodeInterest(interests);
+			}).should.throw(Error, 'The collection name must be a string');
+		});
+		it('should return a proto chaincode call with just name', () => {
+			const interests = {chaincodes: [{name: 'mychaincode'}]};
+			const result = channel._buildProtoChaincodeInterest(interests);
+			expect(result.getChaincodes()[0].name).to.be.equal('mychaincode');
+		});
+		it('should return a proto chaincode call with collection_names', () => {
+			const interests = {chaincodes: [{name: 'mychaincode', collection_names: ['c1', 'c2']}]};
+			const result = channel._buildProtoChaincodeInterest(interests);
+			expect(result.getChaincodes()[0].getCollectionNames()[0]).to.be.equal('c1');
+		});
+		it('should return a proto chaincode call with collectionNames', () => {
+			const interests = {chaincodes: [{name: 'mychaincode', collectionNames: ['c1', 'c2']}]};
+			const result = channel._buildProtoChaincodeInterest(interests);
+			expect(result.getChaincodes()[0].getCollectionNames()[0]).to.be.equal('c1');
+		});
+	});
 
 	describe('#_merge_hints', () => {
 		it('should return false if no hints are given', () => {

@@ -145,6 +145,7 @@ class Transaction {
 		if (this._endorsingPeers) {
 			request.targets = this._endorsingPeers;
 		}
+		request.endorsement_hint = {chaincodes: this._contract.getDiscoveryInterests()};
 
 		const commitTimeout = options.commitTimeout * 1000; // in ms
 		let timeout = this._contract.gateway.getClient().getConfigSetting('request-timeout', commitTimeout);

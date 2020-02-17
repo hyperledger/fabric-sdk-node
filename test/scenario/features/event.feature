@@ -8,7 +8,7 @@ Feature: Listen to events using a fabric-network
 	Background:
 		Given I have deployed a tls Fabric network
 		And I can create and join all channels from the tls common connection profile
-		And I can create a gateway named test_gateway as user User1 within Org1 using the tls common connection profile
+		And I can create a non-discovery gateway named test_gateway as user User1 within Org1 using the tls common connection profile
 		Given I can install/instantiate node chaincode at version 1.0.0 named events to the tls Fabric network for all organizations on channel mychannel with endorsement policy 1AdminOr2Other and args [initLedger]
 
 	Scenario: Using a Contract I can listen to contract events emitted by instantiated chaincodes

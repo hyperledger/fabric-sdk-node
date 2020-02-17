@@ -353,6 +353,10 @@ class DiscoveryEndorsementHandler extends api.EndorsementHandler {
 		for (const group_name in endorsement_plan.groups) {
 			const group = endorsement_plan.groups[group_name];
 			logger.debug('%s starting - group: %s - size: %s', method, group_name, group.peers.length);
+			for (const peer of group.peers) {
+				peer.ledger_height = new Long(peer.ledger_height.low, peer.ledger_height.high);
+			}
+
 			// remove ignored and non-required
 			const clean_list = this._removePeers(ignored, ignored_orgs, required, required_orgs, group.peers);
 			logger.debug('%s removed - group: %s - size: %s', method, group_name, clean_list.length);

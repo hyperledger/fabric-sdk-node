@@ -523,9 +523,9 @@ describe('ChannelEventHub', () => {
 		});
 
 		it('should log on entry', () => {
-			hub._connect_running = true;
+			hub._connect_running = false;
 			hub._connect();
-			sinon.assert.calledWith(FakeLogger.debug, '_connect - start - %s', new Date());
+			sinon.assert.calledWith(FakeLogger.debug, '_connect - start - %s');
 		});
 
 		it('should log if _connect_running', () => {

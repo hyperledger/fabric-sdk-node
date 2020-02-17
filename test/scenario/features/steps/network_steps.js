@@ -14,7 +14,7 @@ const ccpPath = '../../config/ccp.json';
 const tlsCcpPath = '../../config/ccp-tls.json';
 
 module.exports = function () {
-	this.Then(/^I can create a gateway named (.+?) as user (.+?) within (.+?) using the (.+?) common connection profile$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (gatewayName, userName, orgName, tlsType) => {
+	this.Then(/^I can create a (.+?) gateway named (.+?) as user (.+?) within (.+?) using the (.+?) common connection profile$/, {timeout: testUtil.TIMEOUTS.SHORT_STEP}, async (discovery, gatewayName, userName, orgName, tlsType) => {
 		let profile;
 		let tls;
 		if (tlsType.localeCompare('non-tls') === 0) {
@@ -24,11 +24,17 @@ module.exports = function () {
 			tls = true;
 			profile = new CCP(path.join(__dirname, tlsCcpPath), true);
 		}
-		return network_util.connectGateway(profile, tls, userName, orgName, gatewayName);
+		const useDiscovery = discovery.localeCompare('discovery') === 0;
+
+		return network_util.connectGateway(profile, tls, userName, orgName, gatewayName, useDiscovery);
 	});
 
 	this.Then(/^I use the gateway named (.+?) to submit a transaction with args (.+?) for chaincode (.+?) instantiated on channel (.+?)$/, {timeout: testUtil.TIMEOUTS.LONG_STEP}, async (gatewayName, args, ccName, channelName) => {
 		return network_util.performGatewayTransaction(gatewayName, ccName, channelName, args, true);
+	});
+
+	this.Then(/^I use the gateway named (.+?) to submit a transaction with args (.+?) using chaincode (.+?) in collection (.+?) on channel (.+?)$/, {timeout: testUtil.TIMEOUTS.LONG_STEP}, async (gatewayName, args, ccName, collection, channelName) => {
+		return network_util.performGatewayTransaction(gatewayName, ccName, channelName, args, true, collection);
 	});
 
 	this.Then(/^I use the gateway named (.+?) to evaluate transaction with args (.+?) for chaincode (.+?) instantiated on channel (.+?) with the response matching (.+?)$/, {timeout: testUtil.TIMEOUTS.LONG_STEP}, async (gatewayName, args, ccName, channelName, expected) => {
