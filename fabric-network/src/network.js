@@ -71,7 +71,6 @@ class Network {
 		logger.debug('%s - start', method);
 
 		this.gateway = gateway;
-		this.mspid = gateway.identityContext.mspid;
 		this.channel = channel;
 		this.contracts = new Map();
 		this.initialized = false;
@@ -109,10 +108,11 @@ class Network {
 				logger.debug('%s - user has not specified discovery targets, check channel and client', method);
 
 				// maybe the channel has connected endorsers with the mspid
-				targets = this.channel.getEndorsers(this.mspid);
+				const mspId = this.gateway.getIdentity().mspId;
+				targets = this.channel.getEndorsers(mspId);
 				if (!targets || targets.length < 1) {
 					// then check the client for connected peers associated with the mspid
-					targets = this.channel.client.getEndorsers(this.mspid);
+					targets = this.channel.client.getEndorsers(mspId);
 				}
 				if (!targets || targets.length < 1) {
 					// get any peer
@@ -181,6 +181,14 @@ class Network {
 	}
 
 	/**
+	 * Get the owning Gateway connection.
+	 * @returns {module:fabric-network.Gateway} A Gateway.
+	 */
+	getGateway() {
+		return this.gateway;
+	}
+
+	/**
 	 * Get an instance of a contract (chaincode) on the current network.
 	 * @param {string} chaincodeId - the chaincode identifier.
 	 * @param {string} [name] - the name of the contract.
@@ -206,6 +214,14 @@ class Network {
 			this.contracts.set(key, contract);
 		}
 		return contract;
+	}
+
+	/**
+	 * Get the underlying channel object representation of this network.
+	 * @returns {Channel} A channel.
+	 */
+	getChannel() {
+		return this.channel;
 	}
 
 	_dispose() {

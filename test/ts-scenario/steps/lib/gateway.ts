@@ -10,13 +10,12 @@ import * as BaseUtils from './utility/baseUtils';
 import { CommonConnectionProfileHelper } from './utility/commonConnectionProfileHelper';
 import { StateStore } from './utility/stateStore';
 
-import sampleQueryStrategy = require('../../config/handlers/sample-query-handler');
+import { createQueryHandler as sampleQueryStrategy } from '../../config/handlers/sample-query-handler';
 import { createTransactionEventHandler as sampleTxnEventStrategy } from '../../config/handlers/sample-transaction-event-handler';
 
 import { DefaultEventHandlerStrategies, QueryHandlerStrategies, Gateway, GatewayOptions, Wallet, Wallets, Identity, Contract, Network, TxEventHandlerFactory, QueryHandlerFactory, Transaction, TransientMap } from 'fabric-network';
 import * as fs from 'fs';
 import * as path from 'path';
-import { EventInfo } from 'fabric-common';
 
 const stateStore: StateStore = StateStore.getInstance();
 const txnTypes: string[] = ['evaluate', 'submit'];

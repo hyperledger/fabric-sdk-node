@@ -48,6 +48,7 @@ describe('EventServiceManager', () => {
 		eventService = sandbox.createStubInstance(EventService);
 		eventService.name = 'peer1';
 
+		gateway.getIdentity.returns({mspId: 'mspId'});
 		gateway.identityContext = 'idx';
 		gateway.getOptions.returns({
 			query: {
@@ -66,8 +67,8 @@ describe('EventServiceManager', () => {
 		});
 
 		channel.client = client;
-		network.channel = channel;
-		network.gateway = gateway;
+		network.getChannel.returns(channel);
+		network.getGateway.returns(gateway);
 		client.newEventer.returns(eventer);
 		channel.newEventService.returns(eventService);
 		channel.getEndorsers.returns([endorser]);
@@ -317,10 +318,12 @@ describe('EventServiceManager', () => {
 
 			it('should throw error when no peers found', () => {
 				try {
-					const network2 = sinon.stub();
-					network2.channel = sinon.stub();
-					network2.channel.getEndorsers = sinon.stub().returns([]);
-					new RoundRobinPeerPool(network2);
+					// const network2 = sinon.stub();
+					// network2.getChannel = sinon.stub();
+					// network2.getChannel.getEndorsers = sinon.stub().returns([]);
+					// network2.getGateway = sinon.stub().returns(gateway);
+					channel.getEndorsers.returns([]);
+					new RoundRobinPeerPool(network);
 					expect(1, 'should have throw error').to.be.false;
 				} catch (error) {
 					expect(error.message).to.contain('No peers available');
@@ -328,10 +331,12 @@ describe('EventServiceManager', () => {
 			});
 			it('should throw error when no peers found', () => {
 				try {
-					const network2 = sinon.stub();
-					network2.channel = sinon.stub();
-					network2.channel.getEndorsers = sinon.stub().returns();
-					new RoundRobinPeerPool(network2);
+					// const network2 = sinon.stub();
+					// network2.getChannel = sinon.stub();
+					// network2.getChannel.getEndorsers = sinon.stub().returns();
+					// network2.getGateway = sinon.stub().returns(gateway);
+					channel.getEndorsers.returns();
+					new RoundRobinPeerPool(network);
 					expect(1, 'should have throw error').to.be.false;
 				} catch (error) {
 					expect(error.message).to.contain('No peers available');

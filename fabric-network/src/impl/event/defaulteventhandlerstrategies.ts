@@ -12,11 +12,12 @@ import Network = require('../../network');
 import { Endorser } from 'fabric-common';
 
 function getOrganizationPeers(network: Network): Endorser[] {
-	return network.channel.getEndorsers(network.mspid);
+	const mspId = network.getGateway().getIdentity().mspId;
+	return network.getChannel().getEndorsers(mspId);
 }
 
 function getNetworkPeers(network: Network): Endorser[] {
-	return network.channel.getEndorsers();
+	return network.getChannel().getEndorsers();
 }
 
 /**

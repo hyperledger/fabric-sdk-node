@@ -4,109 +4,122 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
-
-import { CommitEvent, CommitError, CommitListener, Transaction, Network } from 'fabric-network';
+import {
+	CommitEvent,
+	CommitError,
+	CommitListener,
+	Network,
+	TxEventHandler,
+	TxEventHandlerFactory
+} from 'fabric-network';
 import { Endorser } from 'fabric-common';
 
 // --- Plug-in event handler sample where the user takes full responsibility for event handling
 
 /**
- * Handler that does nothing but make test the calling
+ * Handler that listens for commit events for a specific transaction from a set of peers. A new instance of this class
+ * is created to handle each transaction as it maintains state related to events for a given transaction.
+ *
+ * This implementation will unblock once all the peers have either supplied a vaid transaction commit event or
+ * disconnected. It will report an error if any of the peers supply an invalid commit event.
  */
-class SampleTransactionEventHandler {
-
+class SampleTransactionEventHandler implements TxEventHandler {
 	private readonly network: Network;
 	private readonly transactionId: string;
 	private readonly notificationPromise: any;
-	private _resolveNotificationPromise: any;
-	private _rejectNotificationPromise: any;
-	private timeoutHandler: any;
-	private readonly listener: CommitListener;
-	private readonly endorsers: Endorser[];
-	private eventCount: number = 0;
+	private resolveNotificationPromise!: () => void;
+	private rejectNotificationPromise!: (reason: Error) => void;
+	private timeoutHandler?: NodeJS.Timeout;
+	private readonly listener: CommitListener = this.eventCallback.bind(this);
+	private readonly peers: Endorser[];
+	private readonly unrespondedPeers: Set<Endorser>;
 
 	/**
 	 * Constructor.
 	 * @param {string} transactionId The ID of the transactions being submitted
 	 * @param {Network} network The network where the transaction is being submitted.
 	 */
-	constructor(transactionId: string, network: Network) {
+	constructor(transactionId: string, network: Network, peers: Endorser[]) {
+		if (peers.length === 0) {
+			throw new Error(`No peers supplied to handle events for transaction ID ${transactionId}`);
+		}
+
 		this.network = network;
 		this.transactionId = transactionId;
-		this.endorsers = network.channel.getEndorsers();
+		this.peers = peers;
+		this.unrespondedPeers = new Set(peers);
 
-		this.notificationPromise = new Promise((resolve: any, reject: any): any => {
-			this._resolveNotificationPromise = resolve;
-			this._rejectNotificationPromise = reject;
+		this.notificationPromise = new Promise((resolve, reject) => {
+			this.resolveNotificationPromise = resolve;
+			this.rejectNotificationPromise = reject;
 		});
-
-		this.listener = (error, event) => this._eventCallback(error, event);
 	}
 
 	/**
 	 * Called to initiate listening for transaction events.
-	 * @throws {Error} if not in a state where the handling strategy can be satisfied and the transaction should
-	 * be aborted. For example, if insufficient event hubs could be connected.
 	 */
-	async startListening(): Promise<void> {
-		this._setListenTimeout();
-		await this.network.addCommitListener(this.listener, this.endorsers, this.transactionId);
+	async startListening() {
+		this.setListenTimeout();
+		await this.network.addCommitListener(this.listener, this.peers, this.transactionId);
 	}
 
 	/**
-	 * Wait until enough events have been received from the event hubs to satisfy the event handling strategy.
-	 * @throws {Error} if the transaction commit is not successful within the timeout period.
+	 * Wait until enough events have been received from peers to satisfy the event handling strategy.
+	 * @throws {Error} if the transaction commit fails or is not successful within the timeout period.
 	 */
-	async waitForEvents(): Promise<void> {
+	async waitForEvents() {
 		await this.notificationPromise;
-	}
-
-	_eventCallback(error?: CommitError, event?: CommitEvent) {
-		this.eventCount++;
-		console.log(`_eventCallback:${this.eventCount}`, error, event); // tslint:disable-line:no-console
-
-		if (event?.status !== 'VALID') {
-			return this._fail(new Error(event?.status));
-		}
-
-		if (this.eventCount >= this.endorsers.length) {
-			return this._success();
-		}
 	}
 
 	/**
 	 * Cancel listening for events.
 	 */
-	cancelListening(): void {
-		clearTimeout(this.timeoutHandler);
+	cancelListening() {
+		if (this.timeoutHandler) {
+			clearTimeout(this.timeoutHandler);
+		}
 		this.network.removeCommitListener(this.listener);
 	}
 
-	_setListenTimeout(): void {
-		this.timeoutHandler = setTimeout(() => {
-			this._fail(new Error(`Timeout waiting for commit events for transaction ID ${this.transactionId}`));
-		}, 30 * 1000);
+	private eventCallback(error?: CommitError, event?: CommitEvent) {
+		if (event && event.status !== 'VALID') {
+			return this.fail(new Error(event.status));
+		}
+
+		const peer = error?.peer || event!.peer;
+		this.unrespondedPeers.delete(peer);
+
+		if (this.unrespondedPeers.size === 0) {
+			return this.success();
+		}
 	}
 
-	_fail(error: Error): void {
-		this.cancelListening();
-		this._rejectNotificationPromise(error);
+	private setListenTimeout() {
+		this.timeoutHandler = setTimeout(
+			() => this.fail(new Error(`Timeout waiting for commit events for transaction ID ${this.transactionId}`)),
+			30 * 1000
+		);
 	}
 
-	_success(): void {
+	private fail(error: Error) {
 		this.cancelListening();
-		this._resolveNotificationPromise();
+		this.rejectNotificationPromise(error);
+	}
+
+	private success() {
+		this.cancelListening();
+		this.resolveNotificationPromise();
 	}
 }
 
 /**
  * Factory function called for each submitted transaction, which supplies a commit handler instance for that
- * transaction. This implementation returns a commit handler that listens to all eventing peers in the user's
- * organization.
+ * transaction. This implementation returns a commit handler that listens to all peers in the user's organization.
  * @param {string} transactionId The ID of the transactions being submitted
  * @param {Network} network The network where the transaction is being submitted.
  */
-export function createTransactionEventHandler(transactionId: string, network: Network): SampleTransactionEventHandler {
-	return new SampleTransactionEventHandler(transactionId, network);
-}
+export const createTransactionEventHandler: TxEventHandlerFactory = (transactionId, network) => {
+	const mspId = network.getGateway().getIdentity().mspId;
+	const peers = network.getChannel().getEndorsers(mspId);
+	return new SampleTransactionEventHandler(transactionId, network, peers);
+};

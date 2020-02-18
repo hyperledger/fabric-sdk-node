@@ -35,8 +35,13 @@ describe('QueryHandlerStrategies', () => {
 		const channel = sinon.createStubInstance(Channel);
 		channel.getEndorsers.returns([org1QueryPeer]);
 
+		const gateway = sinon.createStubInstance(Gateway);
+		gateway.getIdentity.returns({
+			mspId: 'mspId'
+		});
 		network = sinon.createStubInstance(Network);
-		network.channel = channel;
+		network.getChannel.returns(channel);
+		network.getGateway.returns(gateway);
 	});
 
 	afterEach(() => {
