@@ -908,27 +908,6 @@ module.exports.queryChaincode = queryChaincode;
 
 module.exports.sleep = testUtil.sleep;
 
-function loadMSPConfig(name, mspdir) {
-	const msp = {};
-	msp.id = name;
-	msp.rootCerts = readAllFiles(path.join(__dirname, mspdir, 'cacerts'));
-	msp.admins = readAllFiles(path.join(__dirname, mspdir, 'admincerts'));
-	return msp;
-}
-module.exports.loadMSPConfig = loadMSPConfig;
-
-function readAllFiles(dir) {
-	const files = fs.readdirSync(dir);
-	const certs = [];
-	files.forEach((file_name) => {
-		const file_path = path.join(dir, file_name);
-		const data = fs.readFileSync(file_path);
-		certs.push(data);
-	});
-	return certs;
-}
-module.exports.readAllFiles = readAllFiles;
-
 function tlsEnroll(orgName) {
 	return new Promise(((resolve, reject) => {
 		FabricCAServices.addConfigFile(path.join(__dirname, 'config.json'));
@@ -1056,59 +1035,3 @@ function checkPrivateDataContent(privateData, expectedResults) {
 	// that means that the checking was successful, otherwise not
 	return (Object.keys(expectedResults).length === 0);
 }
-
-async function getCollectionsConfig(t, org, chaincodeId, channel_name) {
-	init();
-
-	// this is a transaction, will just use org's identity to
-	// submit the request. intentionally we are using a different org
-	// than the one that submitted the "move" transaction, although either org
-	// should work properly
-	const client = new Client();
-	const channel = client.newChannel(channel_name);
-
-	const orgName = ORGS[org].name;
-	const cryptoSuite = Client.newCryptoSuite();
-	cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: testUtil.storePathForOrg(orgName)}));
-	client.setCryptoSuite(cryptoSuite);
-	let tlsInfo = null;
-
-	try {
-		const enrollment = await e2eUtils.tlsEnroll(org);
-		t.pass('Successfully retrieved TLS certificate');
-		tlsInfo = enrollment;
-		client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
-		const store = await Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
-		client.setStateStore(store);
-
-		const admin = await testUtil.getSubmitter(client, t, org);
-		await client.setUserContext(admin);
-		t.pass('Successfully enrolled user \'admin\'');
-
-		const caRootsPath = ORGS[org].peer1.tls_cacerts;
-		const data = fs.readFileSync(path.join(__dirname, '../e2e', caRootsPath));
-		const caroots = Buffer.from(data).toString();
-
-		const peer = client.newPeer(
-			ORGS[org].peer1.requests,
-			{
-				'pem': caroots,
-				'ssl-target-name-override': ORGS[org].peer1['server-hostname']
-			}
-		);
-
-		const request = {
-			chaincodeId: chaincodeId,
-			target: peer
-		};
-
-		const resp = await channel.queryCollectionsConfig(request);
-		t.pass('Successfully retrieved collections config from peer');
-		return resp;
-	} catch (error) {
-		t.fail(error.message);
-		throw error;
-	}
-}
-
-module.exports.getCollectionsConfig = getCollectionsConfig;
