@@ -142,6 +142,7 @@ export class Discoverer extends ServiceEndpoint {
 }
 
 export class ServiceAction {
+	public readonly name: string;
 	constructor(name: string);
 	public sign(parm: IdentityContext | Buffer): ServiceAction;
 
@@ -189,15 +190,16 @@ export class DiscoveryService extends ServiceAction {
 export class EventListener {
 	constructor(listenerType: string, callback: any, options: any, event: string);
 	onEvent(error: Error, event: any): void;
+	unregisterEventListener(): void;
 }
 
-export type EventCallback = (error: Error, event: EventInfo) => void;
+export type EventCallback = (error?: Error, event?: EventInfo) => void;
 
 export interface EventInfo {
 	eventHub: EventService;
 	blockNumber: Long;
 	transactionId?: string;
-	transactionStatus?: string;
+	status?: string;
 	endBlockReceived?: boolean;
 	chaincodeEvents?: ChaincodeEvent[];
 	block?: Block;

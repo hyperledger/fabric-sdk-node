@@ -9,6 +9,7 @@ const Contract = require('./contract');
 const EventServiceManager = require('fabric-network/lib/impl/event/eventservicemanager');
 const BlockEventListener = require('fabric-network/lib/impl/event/blockeventlistener');
 const CommitEventListener = require('fabric-network/lib/impl/event/commiteventlistener');
+const {CommitListenerSession} = require('./impl/event/commitlistener');
 
 const logger = require('./logger').getLogger('Network');
 
@@ -29,6 +30,27 @@ const logger = require('./logger').getLogger('Network');
  * events. Only used for transaction commit events and will be ignored for other
  * event types. The default is to call the application commit event listener on
  * every transaction committed to the ledger.
+ */
+
+/**
+ * A callback function that will be invoked when either a peer communication error occurs or a transaction commit event
+ * is received. Only one of the two arguments will have a value for any given invocation.
+ * @callback Network~CommitListener
+ * @memberof module:fabric-network
+ * @param {module:fabric-network.Network~CommitError} [error] Peer communication error.
+ * @param {module:fabric-network.Network~CommitEvent} [event] Transaction commit event from a specific peer.
+ */
+
+/**
+ * @typedef {Error} Network~CommitError
+ * @memberof module:fabric-network
+ * @property {Endorser} peer The peer that raised this error.
+ */
+
+/**
+ * @typedef {EventInfo} Network~CommitEvent
+ * @memberof module:fabric-network
+ * @property {Endorser} peer The peer that raised this error.
  */
 
 /**
@@ -57,6 +79,7 @@ class Network {
 		this.discoveryService = null;
 		this.queryHandler = null;
 		this.eventServiceManager = null;
+		this.commitListeners = new Map();
 	}
 
 	/**
@@ -233,7 +256,7 @@ class Network {
 	 * @async
 	 * @private
 	 */
-	async addCommitListener(callback, options = {}, eventService) {
+	async oldAddCommitListener(callback, options = {}, eventService) {
 		const method = 'addCommitListener';
 		logger.debug('%s - start', method);
 
@@ -249,6 +272,45 @@ class Network {
 		await listener.register();
 
 		return listener;
+	}
+
+	/**
+	 * Add a listener to receive transaction commit and peer disconnect events for a set of peers.
+	 * @param {module:fabric-network.Network~CommitListener} listener A transaction commit listener callback function.
+	 * @param {Endorser[]} peers The peers from which to receive events.
+	 * @param {string} transactionId A transaction ID.
+	 * @returns {module:fabric-network.Network~CommitListener} The added listener.
+	 * @example
+	 * const listener: CommitListener = (error, event) => {
+	 *     if (error) {
+	 *         // Handle peer communication error
+	 *     } else {
+	 *         // Handle transaction commit event
+	 *     }
+	 * }
+	 * const peers = network.channel.getEndorsers();
+	 * await network.addCommitListener(listener, peers, transactionId);
+	 */
+	async addCommitListener(listener, peers, transactionId) {
+		if (!this.commitListeners.has(listener)) {
+			const session = new CommitListenerSession(listener, this.eventServiceManager, peers, transactionId);
+			// Store listener before starting in case start fires error events that trigger remove of the listener
+			this.commitListeners.set(listener, session);
+			await session.start();
+		}
+		return listener;
+	}
+
+	/**
+	 * Removes a previously added transaction commit listener.
+	 * @param {module:fabric-network.Network~CommitListener} listener A transaction commit listener callback function.
+	 */
+	removeCommitListener(listener) {
+		const session = this.commitListeners.get(listener);
+		if (session) {
+			session.close();
+			this.commitListeners.delete(listener);
+		}
 	}
 
 	/*

@@ -6,7 +6,8 @@
 
 'use strict';
 
-import { Transaction } from 'fabric-network';
+import { CommitEvent, CommitError, CommitListener, Transaction, Network } from 'fabric-network';
+import { Endorser } from 'fabric-common';
 
 // --- Plug-in event handler sample where the user takes full responsibility for event handling
 
@@ -15,12 +16,16 @@ import { Transaction } from 'fabric-network';
  */
 class SampleTransactionEventHandler {
 
-	protected transactionId: string;
-	protected options: any;
-	protected notificationPromise: any;
-	protected _resolveNotificationPromise: any;
-	protected _rejectNotificationPromise: any;
-	protected timeoutHandler: any;
+	private readonly network: Network;
+	private readonly transactionId: string;
+	private readonly options: any;
+	private readonly notificationPromise: any;
+	private _resolveNotificationPromise: any;
+	private _rejectNotificationPromise: any;
+	private timeoutHandler: any;
+	private readonly listener: CommitListener;
+	private readonly endorsers: Endorser[];
+	private eventCount: number = 0;
 
 	/**
 	 * Constructor.
@@ -30,13 +35,17 @@ class SampleTransactionEventHandler {
 	 * @param {Number} [options.commitTimeout] Time in seconds to wait for commit events to be received.
 	 */
 	constructor(transaction: Transaction, options: any) {
-		this.transactionId = options.transactionId;
+		this.network = transaction.getNetwork();
+		this.transactionId = transaction.transactionId;
 		this.options = options;
+		this.endorsers = this.network.channel.getEndorsers();
 
 		this.notificationPromise = new Promise((resolve: any, reject: any): any => {
 			this._resolveNotificationPromise = resolve;
 			this._rejectNotificationPromise = reject;
 		});
+
+		this.listener = (error, event) => this._eventCallback(error, event);
 	}
 
 	/**
@@ -46,6 +55,7 @@ class SampleTransactionEventHandler {
 	 */
 	async startListening(): Promise<void> {
 		this._setListenTimeout();
+		await this.network.addCommitListener(this.listener, this.endorsers, this.transactionId);
 	}
 
 	/**
@@ -56,18 +66,31 @@ class SampleTransactionEventHandler {
 		await this.notificationPromise;
 	}
 
+	_eventCallback(error?: CommitError, event?: CommitEvent) {
+		this.eventCount++;
+		console.log(`_eventCallback:${this.eventCount}`, error, event); // tslint:disable-line:no-console
+
+		if (event?.status !== 'VALID') {
+			return this._fail(new Error(event?.status));
+		}
+
+		if (this.eventCount >= this.endorsers.length) {
+			return this._success();
+		}
+	}
+
 	/**
 	 * Cancel listening for events.
 	 */
 	cancelListening(): void {
 		clearTimeout(this.timeoutHandler);
+		this.network.removeCommitListener(this.listener);
 	}
 
 	_setListenTimeout(): void {
 		this.timeoutHandler = setTimeout(() => {
-			// this._fail(new Error(`Timeout waiting for commit events for transaction ID ${this.transactionId}`));
-			this._success();
-		}, 1000);
+			this._fail(new Error(`Timeout waiting for commit events for transaction ID ${this.transactionId}`));
+		}, 30 * 1000);
 	}
 
 	_fail(error: Error): void {

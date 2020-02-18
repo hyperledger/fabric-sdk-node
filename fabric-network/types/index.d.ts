@@ -7,6 +7,7 @@
 /* tslint:disable:max-classes-per-file */
 
 import { Wallet } from '../lib/impl/wallet/wallet';
+import { CommitListener } from '../lib/impl/event/commitlistener';
 import { ChaincodeEvent, Channel, Client, Endorser, EventService, IdentityContext, ProposalResponse, User } from 'fabric-common';
 
 export { Wallet };
@@ -18,6 +19,7 @@ export { IdentityProvider } from '../lib/impl/wallet/identityprovider';
 export { IdentityProviderRegistry } from '../lib/impl/wallet/identityproviderregistry';
 export { HsmOptions, HsmX509Provider, HsmX509Identity } from '../lib/impl/wallet/hsmx509identity';
 export { X509Identity } from '../lib/impl/wallet/x509identity';
+export { CommitEvent, CommitError, CommitListener } from '../lib/impl/event/commitlistener';
 
 // Main fabric network classes
 // -------------------------------------------
@@ -114,7 +116,9 @@ export class Network {
 	getContract(chaincodeId: string, name?: string): Contract;
 	// addBlockListener(callback: (error: Error, blockNumber: string, block: any) => Promise<any>, options?: EventListenerOptions): Promise<BlockEventListener>;
 	// addCommitListener(callback: (error: Error, blockNumber: string, transactionId: string, status: string) => Promise<any>, options?: EventListenerOptions): Promise<CommitEventListener>;
-	unregisterAllEventListeners(): void;
+	// unregisterAllEventListeners(): void;
+	addCommitListener(listener: CommitListener, endorsers: Endorser[], transactionId: string): Promise<CommitListener>;
+	removeCommitListener(listener: CommitListener): void;
 }
 
 export class Contract {

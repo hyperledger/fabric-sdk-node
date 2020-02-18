@@ -111,9 +111,9 @@
     ],
     "cache": true,
     "check-coverage": true,
-    "statements": 87,
+    "statements": 89,
     "branches": 81,
-    "functions": 88,
-    "lines": 87
+    "functions": 85,
+    "lines": 90
   }
 }

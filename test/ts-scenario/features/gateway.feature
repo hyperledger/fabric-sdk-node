@@ -39,6 +39,8 @@ Feature: Configure Fabric using CLI and submit/evaluate using a network Gateway 
 		Then The gateway named mycouchgateway has a event type response containing "status":"VALID"
 		When I modify mycouchgateway to submit a transaction with args [createCar,1005,Ford,Mustang,Silver,Andy] for contract fabcar instantiated on channel gatewaychannel using handler option NETWORK_SCOPE_ANYFORTX
 		Then The gateway named mycouchgateway has a event type response containing "status":"VALID"
+		When I modify mycouchgateway to submit a transaction with args [createCar,1006,Ford,Mustang,Silver,Andy] for contract fabcar instantiated on channel gatewaychannel using handler option custom
+		Then The gateway named mycouchgateway has a event type response containing "status":"VALID"
 
 	Scenario: Using a Gateway I can use transient data
 		When I modify mycouchgateway to submit a transaction with transient data using args [getTransient,value1,value2] for contract fabcar instantiated on channel gatewaychannel
