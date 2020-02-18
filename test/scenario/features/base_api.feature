@@ -3,7 +3,6 @@
 #
 
 @debug
-#@clean-images
 
 Feature: Configure Fabric using SDK and endorse and commit and query using a fabric-base
 
