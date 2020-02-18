@@ -4,31 +4,32 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
-
-const chai = require('chai');
-chai.use(require('chai-as-promised'));
+import chai = require('chai');
+import chaiAsPromised = require('chai-as-promised');
+chai.use(chaiAsPromised);
 const expect = chai.expect;
-const sinon = require('sinon');
+import sinon = require('sinon');
 
-const EventService = require('fabric-common/lib/EventService');
+import { Endorser } from 'fabric-common';
 
-const BaseEventStrategy = require('fabric-network/lib/impl/event/baseeventstrategy');
-const AllForTxStrategy = require('fabric-network/lib/impl/event/allfortxstrategy');
-const AnyForTxStrategy = require('fabric-network/lib/impl/event/anyfortxstrategy');
+import { TransactionEventStrategy } from '../../../src/impl/event/transactioneventstrategy';
+import { AllForTxStrategy } from '../../../src/impl/event/allfortxstrategy';
+import { AnyForTxStrategy } from '../../../src/impl/event/anyfortxstrategy';
+
+// tslint:disable: no-unused-expression
 
 describe('Event Strategy Implementations', () => {
-	let stubEventService1;
-	let stubEventService2;
+	let peer1;
+	let peer2;
 	let stubSuccessFn;
 	let stubFailFn;
 
 	beforeEach(() => {
-		stubEventService1 = sinon.createStubInstance(EventService);
-		stubEventService1.name = 'eventService1';
+		peer1 = sinon.createStubInstance(Endorser);
+		peer1.name = 'peer1';
 
-		stubEventService2 = sinon.createStubInstance(EventService);
-		stubEventService2.name = 'eventService2';
+		peer2 = sinon.createStubInstance(Endorser);
+		peer2.name = 'peer2';
 
 		stubSuccessFn = sinon.stub();
 		stubFailFn = sinon.stub();
@@ -41,40 +42,26 @@ describe('Event Strategy Implementations', () => {
 	// Common behaviour for all implementations
 	[AllForTxStrategy, AnyForTxStrategy].forEach((StrategyClass) => describe(StrategyClass.name + ' common behaviour', () => {
 		describe('#constructor', () => {
-			it('throws if no event Services supplied', () => {
-				expect(() => new StrategyClass()).to.throw('No event services for strategy');
-			});
-			it('throws if no event Services supplied', () => {
-				expect(() => new StrategyClass('string')).to.throw('No event services for strategy');
-			});
-			it('throws if no event Services supplied', () => {
-				expect(() => new StrategyClass([])).to.throw('No event services for strategy');
+			it('throws if no peers supplied', () => {
+				expect(() => new StrategyClass([])).to.throw('No peers for strategy');
 			});
 		});
 
-		describe('#getEventServices', () => {
-			it('returns the event Services', () => {
-				const eventServices = [stubEventService1, stubEventService2];
-				const strategy = new StrategyClass(eventServices);
-				const results = strategy.getEventServices();
-				expect(results).to.equal(eventServices);
+		describe('#getPeers', () => {
+			it('returns the supplied peers', () => {
+				const peers = [peer1, peer2];
+				const strategy = new StrategyClass(peers);
+				const results = strategy.getPeers();
+				expect(results).to.equal(peers);
 			});
 		});
 	}));
 
-	describe('BaseEventStrategy', () => {
-		it('#checkCompletion (Base) throws if not overridden', () => {
-			const strategy = new BaseEventStrategy([stubEventService1, stubEventService2]);
-			expect(() => strategy.checkCompletion()).to.throw();
-		});
-	});
-
 	describe('AllForTxStrategy event handling', () => {
 		let strategy;
 
-		beforeEach(async () => {
-			// Two connected and one disconnected event Services
-			strategy = new AllForTxStrategy([stubEventService1, stubEventService2]);
+		beforeEach(() => {
+			strategy = new AllForTxStrategy([peer1, peer2]);
 		});
 
 		it('does not call callbacks on first event of two expected events', () => {
@@ -122,9 +109,8 @@ describe('Event Strategy Implementations', () => {
 	describe('AnyForTxStrategy event handling', () => {
 		let strategy;
 
-		beforeEach(async () => {
-			// Two connected and one disconnected event Services
-			strategy = new AnyForTxStrategy([stubEventService1, stubEventService2]);
+		beforeEach(() => {
+			strategy = new AnyForTxStrategy([peer1, peer2]);
 		});
 
 		it('calls success callback on first event of two expected events', () => {

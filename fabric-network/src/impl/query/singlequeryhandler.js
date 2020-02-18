@@ -6,11 +6,11 @@
 
 'use strict';
 
-const FabricError = require('fabric-network/lib/errors/fabricerror');
+const {FabricError} = require('../../errors/fabricerror');
 
 const util = require('util');
 
-const logger = require('fabric-network/lib/logger').getLogger('SingleQueryHandler');
+const logger = require('../../logger').getLogger('SingleQueryHandler');
 
 class SingleQueryHandler {
 	constructor(peers) {

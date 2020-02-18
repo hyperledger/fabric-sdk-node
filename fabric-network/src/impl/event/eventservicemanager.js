@@ -6,7 +6,7 @@
 
 'use strict';
 
-const logger = require('fabric-network/lib/logger').getLogger('EventServiceManager');
+const logger = require('../../logger').getLogger('EventServiceManager');
 
 /**
  * The Event Service Manager is responsible for creating and distributing {@link EventService} instances.

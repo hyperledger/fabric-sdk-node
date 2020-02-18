@@ -20,6 +20,8 @@ export { IdentityProviderRegistry } from '../lib/impl/wallet/identityproviderreg
 export { HsmOptions, HsmX509Provider, HsmX509Identity } from '../lib/impl/wallet/hsmx509identity';
 export { X509Identity } from '../lib/impl/wallet/x509identity';
 export { CommitEvent, CommitError, CommitListener } from '../lib/impl/event/commitlistener';
+export { FabricError } from '../lib/errors/fabricerror';
+export { TimeoutError } from '../lib/errors/timeouterror';
 
 // Main fabric network classes
 // -------------------------------------------
@@ -31,16 +33,6 @@ export interface GatewayOptions {
 	transaction?: TransactionOptions;
 	query?: QueryOptions;
 }
-
-// export interface EventListenerOptions {
-// 	checkpointer?: BaseCheckpointer;
-// 	replay?: boolean;
-// 	filtered?: boolean;
-// 	privateData?: boolean;
-// 	unregister?: boolean;
-// 	startBlock?: number;
-// 	endBlock?: number;
-// }
 
 export interface DiscoveryOptions {
 	asLocalhost?: boolean;
@@ -54,20 +46,11 @@ export interface TransactionOptions {
 	strategy?: TxEventHandlerFactory | null;
 }
 
-export class DefaultEventHandlerStrategies {
-	public static MSPID_SCOPE_ALLFORTX: TxEventHandlerFactory;
-	public static MSPID_SCOPE_ANYFORTX: TxEventHandlerFactory;
-	public static NETWORK_SCOPE_ALLFORTX: TxEventHandlerFactory;
-	public static NETWORK_SCOPE_ANYFORTX: TxEventHandlerFactory;
-}
+import * as DefaultEventHandlerStrategies from '../lib/impl/event/defaulteventhandlerstrategies';
+export { DefaultEventHandlerStrategies };
 
-export type TxEventHandlerFactory = (transaction: Transaction, options: object) => TxEventHandler;
-
-export interface TxEventHandler {
-	startListening(): Promise<void>;
-	waitForEvents(): Promise<void>;
-	cancelListening(): void;
-}
+import { TxEventHandler, TxEventHandlerFactory } from '../lib/impl/event/transactioneventhandler';
+export { TxEventHandler, TxEventHandlerFactory };
 
 export interface QueryOptions {
 	strategy?: QueryHandlerFactory;
@@ -114,10 +97,7 @@ export class Network {
 	public channel: Channel;
 	public mspid: string;
 	getContract(chaincodeId: string, name?: string): Contract;
-	// addBlockListener(callback: (error: Error, blockNumber: string, block: any) => Promise<any>, options?: EventListenerOptions): Promise<BlockEventListener>;
-	// addCommitListener(callback: (error: Error, blockNumber: string, transactionId: string, status: string) => Promise<any>, options?: EventListenerOptions): Promise<CommitEventListener>;
-	// unregisterAllEventListeners(): void;
-	addCommitListener(listener: CommitListener, endorsers: Endorser[], transactionId: string): Promise<CommitListener>;
+	addCommitListener(listener: CommitListener, peers: Endorser[], transactionId: string): Promise<CommitListener>;
 	removeCommitListener(listener: CommitListener): void;
 }
 
@@ -125,46 +105,18 @@ export class Contract {
 	createTransaction(name: string): Transaction;
 	evaluateTransaction(name: string, ...args: string[]): Promise<Buffer>;
 	submitTransaction(name: string, ...args: string[]): Promise<Buffer>;
-	// addContractListener(eventName: string, callback: (error: Error, blockNumber: string, chaincodeEvents: Array<ChaincodeEvent>) => Promise<any>, options?: EventListenerOptions): Promise<ContractEventListener>;
 }
 
 export interface TransientMap {
 	[key: string]: Buffer;
 }
 export class Transaction {
-	transactionId: string;
 	evaluate(...args: string[]): Promise<Buffer>;
 	getName(): string;
-	getNetwork(): Network;
 	setEndorsingPeers(peers: Endorser[]): this;
 	setTransient(transientMap: TransientMap): this;
 	submit(...args: string[]): Promise<Buffer>;
 }
-
-export interface FabricError extends Error {
-	cause?: Error;
-	transactionId?: string;
-}
-
-export interface TimeoutError extends FabricError {} // tslint:disable-line:no-empty-interface
-
-// export class BaseCheckpointer {
-// 	constructor(options: any);
-// 	public check(blockNumber: string): Promise<boolean>;
-// 	public getStartBlock(): Promise<string>;
-// 	public initialize(): Promise<void>;
-// 	public prune(): Promise<void>;
-// 	public save(blockNumber: string): Promise<void>;
-// }
-
-// export class FileSystemCheckpointer extends BaseCheckpointer {
-// 	constructor(options: any);
-// 	public check(blockNumber: string): Promise<boolean>;
-// 	public getStartBlock(): Promise<string>;
-// 	public initialize(): Promise<void>;
-// 	public prune(): Promise<void>;
-// 	public save(blockNumber: string): Promise<void>;
-// }
 
 export class EventServiceManager {
 	constructor();
@@ -173,18 +125,3 @@ export class EventServiceManager {
 	public getReplayEventService(peer: Endorser): EventService;
 	public getReplayEventServices(peers: Endorser[]): EventService[];
 }
-
-// export class CommitEventListener {
-// 	public register(): void;
-// 	public unregister(): void;
-// }
-
-// export class ContractEventListener {
-// 	public register(): void;
-// 	public unregister(): void;
-// }
-
-// export class BlockEventListener {
-// 	public register(): void;
-// 	public unregister(): void;
-// }

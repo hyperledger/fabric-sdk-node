@@ -1,0 +1,89 @@
+/**
+ * Copyright 2018, 2019 IBM All Rights Reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import sinon = require('sinon');
+import chai = require('chai');
+const expect = chai.expect;
+
+import { Channel, Endorser } from 'fabric-common';
+
+import Network = require('fabric-network/lib/network');
+import Gateway = require('fabric-network/lib/gateway');
+
+import { AllForTxStrategy } from '../../../src/impl/event/allfortxstrategy';
+import { AnyForTxStrategy } from '../../../src/impl/event/anyfortxstrategy';
+import { TransactionEventHandler } from '../../../src/impl/event/transactioneventhandler';
+import * as EventStrategies from '../../../src/impl/event/defaulteventhandlerstrategies';
+
+describe('DefaultEventHandlerStrategies', () => {
+	const expectedStrategyTypes = {
+		MSPID_SCOPE_ALLFORTX: AllForTxStrategy,
+		MSPID_SCOPE_ANYFORTX: AnyForTxStrategy,
+		NETWORK_SCOPE_ALLFORTX: AllForTxStrategy,
+		NETWORK_SCOPE_ANYFORTX: AnyForTxStrategy
+	};
+	const strategyNames = Object.keys(expectedStrategyTypes);
+
+	const stubPeer1 = sinon.createStubInstance(Endorser);
+	const stubPeer2 = sinon.createStubInstance(Endorser);
+	const orgPeers = [stubPeer1];
+	const networkPeers = [stubPeer1, stubPeer2];
+	const expectedStrategyPeers = {
+		MSPID_SCOPE_ALLFORTX: orgPeers,
+		MSPID_SCOPE_ANYFORTX: orgPeers,
+		NETWORK_SCOPE_ALLFORTX: networkPeers,
+		NETWORK_SCOPE_ANYFORTX: networkPeers
+	};
+
+	let network;
+	const transactionId = 'TX_ID';
+	const mspId = 'MSP_ID';
+
+	beforeEach(() => {
+		const channel = sinon.createStubInstance(Channel);
+		channel.getEndorsers.withArgs().returns(networkPeers);
+		channel.getEndorsers.withArgs(mspId).returns(orgPeers);
+
+		network = sinon.createStubInstance(Network);
+		network.channel = channel;
+		network.mspid = mspId;
+		network.gateway = sinon.createStubInstance(Gateway, {
+			getOptions: sinon.stub().returns({})
+		});
+	});
+
+	afterEach(() => {
+		sinon.restore();
+	});
+
+	strategyNames.forEach((strategyName) => describe(strategyName, () => {
+		const createTxEventHandler = EventStrategies[strategyName];
+
+		let eventHandler;
+
+		beforeEach(() => {
+			eventHandler = createTxEventHandler(transactionId, network);
+		});
+
+		it('Returns a TransactionEventHandler', () => {
+			expect(eventHandler).to.be.an.instanceOf(TransactionEventHandler);
+		});
+
+		it('Sets transaction ID on event handler', () => {
+			expect(eventHandler.transactionId).to.equal(transactionId);
+		});
+
+		it('Sets correct strategy on event handler', () => {
+			const expectedType = expectedStrategyTypes[strategyName];
+			expect(eventHandler.strategy).to.be.an.instanceOf(expectedType);
+		});
+
+		it('Sets correct peers', () => {
+			const expectedPeers = expectedStrategyPeers[strategyName];
+			expect(eventHandler.strategy.getPeers()).to.equal(expectedPeers);
+		});
+	}));
+});

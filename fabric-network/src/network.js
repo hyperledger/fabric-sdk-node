@@ -6,9 +6,9 @@
 
 'use strict';
 const Contract = require('./contract');
-const EventServiceManager = require('fabric-network/lib/impl/event/eventservicemanager');
-const BlockEventListener = require('fabric-network/lib/impl/event/blockeventlistener');
-const CommitEventListener = require('fabric-network/lib/impl/event/commiteventlistener');
+const EventServiceManager = require('./impl/event/eventservicemanager');
+const BlockEventListener = require('./impl/event/blockeventlistener');
+const CommitEventListener = require('./impl/event/commiteventlistener');
 const {CommitListenerSession} = require('./impl/event/commitlistener');
 
 const logger = require('./logger').getLogger('Network');

@@ -9,7 +9,7 @@
 const fs = require('fs-extra');
 const Long = require('long');
 const BaseCheckpointer = require('./basecheckpointer');
-const logger = require('fabric-network/lib/logger').getLogger('FileSystemCheckpointer');
+const logger = require('../../logger').getLogger('FileSystemCheckpointer');
 
 /**
  * @typedef FileSystemCheckpointer~FileSystemCheckpointerOptions

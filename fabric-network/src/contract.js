@@ -6,7 +6,7 @@
 
 'use strict';
 
-const Transaction = require('fabric-network/lib/transaction');
+const Transaction = require('./transaction');
 const ContractEventListener = require('./impl/event/contracteventlistener');
 
 const logger = require('./logger').getLogger('Contract');

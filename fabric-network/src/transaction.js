@@ -6,8 +6,8 @@
 
 'use strict';
 
-const Query = require('fabric-network/lib/impl/query/query');
-const logger = require('fabric-network/lib/logger').getLogger('Transaction');
+const Query = require('./impl/query/query');
+const logger = require('./logger').getLogger('Transaction');
 const util = require('util');
 
 const noOpEventHandler = {
@@ -96,7 +96,6 @@ class Transaction {
 		this.queryHandler = contract.network.queryHandler;
 		this._endorsingPeers = null; // for user assigned endorsements
 		this._commitingOrderers = null; // for user assigned orderers
-		this.transactionId = null; // will have a value after a submit
 
 		// the signer of the outbound requests to the fabric network
 		this.identityContext = this.contract.gateway.identityContext;
@@ -180,14 +179,6 @@ class Transaction {
 	}
 
 	/**
-	 * Returns the network from the contract
-	 * @returns {module:fabric-network.Network}
-	 */
-	getNetwork() {
-		return this.contract.network;
-	}
-
-	/**
 	 * Submit a transaction to the ledger. The transaction function <code>name</code>
 	 * will be evaluated on the endorsing peers and then submitted to the ordering service
 	 * for committing to the ledger.
@@ -254,14 +245,9 @@ class Transaction {
 		try {
 			const result = getResponsePayload(proposalResponse);
 
-			// The endorsement is the source for the transaction id.
-			// The endorsement created the transaction id on demand
-			// when it built the proposal.
-			this.transactionId = endorsement.getTransactionId();
-
 			// ------- E V E N T   M O N I T O R
-			const eventHandler = this._eventHandlerStrategyFactory(this, this._options.transaction);
-			await eventHandler.startListening(this.identityContext);
+			const eventHandler = this._eventHandlerStrategyFactory(endorsement.getTransactionId(), this.contract.network);
+			await eventHandler.startListening();
 
 			const commitOptions = {};
 			if (Number.isInteger(this._options.transaction.commitTimeout)) {

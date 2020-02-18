@@ -7,7 +7,7 @@
 'use strict';
 
 const BaseEventListener = require('./baseeventlistener');
-const logger = require('fabric-network/lib/logger').getLogger('CommitEventListener');
+const logger = require('../../logger').getLogger('CommitEventListener');
 
 /**
  * The Commit Event Listener handles transaction commit events

@@ -4,19 +4,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
-
-const FabricError = require('./fabricerror');
+import { FabricError, FabricErrorInfo } from './fabricerror';
 
 /**
  * Error indicating a timeout.
  * @extends module:fabric-network.FabricError
  * @memberof module:fabric-network
  */
-class TimeoutError extends FabricError {
-	constructor(info) {
+export class TimeoutError extends FabricError {
+	constructor(info?: string | FabricErrorInfo) {
 		super(info);
+		this.name = TimeoutError.name;
 	}
 }
-
-module.exports = TimeoutError;

@@ -4,9 +4,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
+import { Endorser } from 'fabric-common';
 
-const logger = require('fabric-network/lib/logger').getLogger('BaseEventStrategy');
+// @ts-ignore no implicit any
+import Logger = require('../../logger');
+const logger = Logger.getLogger('TransactionEventStrategy');
+
+export interface EventCount {
+	success: number;
+	fail: number;
+	readonly expected: number;
+}
+
+export type SuccessCallback = () => void;
+export type FailCallback = (error: Error) => void;
 
 /**
  * Event handling strategy base class that keeps counts of success and fail events to allow
@@ -18,33 +29,35 @@ const logger = require('fabric-network/lib/logger').getLogger('BaseEventStrategy
  * @private
  * @class
  */
-class BaseEventStrategy {
+export abstract class TransactionEventStrategy {
+	private readonly peers: Endorser[];
+	private readonly counts: EventCount;
+
 	/**
 	 * Constructor.
-	 * @param {EventService[]} eventServices - Event services for which to process events.
+	 * @param {Endorser[]} peers - Peers for which to process events.
 	 */
-	constructor(eventServices) {
-		if (!eventServices || !Array.isArray(eventServices)  || eventServices.length < 1) {
-			const message = 'No event services for strategy';
+	constructor(peers: Endorser[]) {
+		if (!peers || !Array.isArray(peers) || peers.length < 1) {
+			const message = 'No peers for strategy';
 			logger.error('constructor:', message);
 			throw new Error(message);
 		}
 
-		this.eventServices = eventServices;
+		this.peers = peers;
 		this.counts = {
 			success: 0,
 			fail: 0,
-			expected: eventServices.length
+			expected: peers.length
 		};
 	}
 
 	/**
-	 * Called by event handler to obtain the event services to which it should listen. Gives an opportunity for
-	 * the strategy to store information on the events it expects to receive for later use in event handling.
-	 * @returns {EventService[]} Event services.
+	 * Called by event handler to obtain the peers to which it should listen.
+	 * @returns {Endorser[]} Peers.
 	 */
-	getEventServices() {
-		return this.eventServices;
+	getPeers() {
+		return this.peers;
 	}
 
 	/**
@@ -52,7 +65,7 @@ class BaseEventStrategy {
 	 * @param {Function} successFn Callback function to invoke if this event satisfies the strategy.
 	 * @param {Function} failFn Callback function to invoke if this event fails the strategy.
 	 */
-	eventReceived(successFn, failFn) {
+	eventReceived(successFn: SuccessCallback, failFn: FailCallback) {
 		this.counts.success++;
 		this.checkCompletion(this.counts, successFn, failFn);
 	}
@@ -62,7 +75,7 @@ class BaseEventStrategy {
 	 * @param {Function} successFn Callback function to invoke if this error satisfies the strategy.
 	 * @param {Function} failFn Callback function to invoke if this error fails the strategy.
 	 */
-	errorReceived(successFn, failFn) {
+	errorReceived(successFn: SuccessCallback, failFn: FailCallback) {
 		this.counts.fail++;
 		this.checkCompletion(this.counts, successFn, failFn);
 	}
@@ -80,9 +93,5 @@ class BaseEventStrategy {
 	 * @param {Function} successFn Callback function to invoke if the strategy is successful.
 	 * @param {Function} failFn Callback function to invoke if the strategy fails.
 	 */
-	checkCompletion(counts, successFn, failFn) { // eslint-disable-line no-unused-vars
-		throw new Error('BaseEventStrategy.checkCompletion() not implemented');
-	}
+	protected abstract checkCompletion(counts: EventCount, successFn: SuccessCallback, failFn: FailCallback): void;
 }
-
-module.exports = BaseEventStrategy;

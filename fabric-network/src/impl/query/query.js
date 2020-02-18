@@ -6,7 +6,7 @@
 
 'use strict';
 
-const logger = require('fabric-network/lib/logger').getLogger('Query');
+const logger = require('../../logger').getLogger('Query');
 
 /**
  * @typedef {Object} Query~QueryResponse

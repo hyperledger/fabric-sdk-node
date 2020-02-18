@@ -11,7 +11,7 @@ import { CommonConnectionProfileHelper } from './utility/commonConnectionProfile
 import { StateStore } from './utility/stateStore';
 
 import sampleQueryStrategy = require('../../config/handlers/sample-query-handler');
-import sampleTxnEventStrategy = require('../../config/handlers/sample-transaction-event-handler');
+import { createTransactionEventHandler as sampleTxnEventStrategy } from '../../config/handlers/sample-transaction-event-handler';
 
 import { DefaultEventHandlerStrategies, QueryHandlerStrategies, Gateway, GatewayOptions, Wallet, Wallets, Identity, Contract, Network, TxEventHandlerFactory, QueryHandlerFactory, Transaction, TransientMap } from 'fabric-network';
 import * as fs from 'fs';
@@ -348,7 +348,8 @@ export async function performHandledGatewayTransaction(gatewayName: string, ccNa
 			await notificationPromise;
 			listener.unregister();
 			BaseUtils.logMsg(`Successfully got event status [${func}] using handler [${EventStrategies[handlerOption]}] after submitting and getting status [${JSON.stringify(eventResults)}]`);
-			gatewayObj.result = {type: 'event', response: JSON.stringify(eventResults), commitTransactionId: transaction.transactionId};
+			// gatewayObj.result = {type: 'event', response: JSON.stringify(eventResults), commitTransactionId: transaction.transactionId};
+			gatewayObj.result = {type: 'event', response: JSON.stringify(eventResults)};
 		} catch (error) {
 			gatewayObj.result = {type: 'error', response: error.toString()};
 			BaseUtils.logError('--- in Submit: ' + error.toString());
