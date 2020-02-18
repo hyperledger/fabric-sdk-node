@@ -16,13 +16,13 @@ Scenario: Using only fabric-base I can propose, endorse and commit a transaction
     And I have used the client named leon to create a channel object for the channel named baseapichannel
     When I build a new endorsement request named myFirstRequest for smart contract named fabcar with arguments [createCar, 2000, GMC, Savana, grey, Jones] as client leon on channel baseapichannel
     And I commit the endorsement request named myFirstRequest as client leon on channel baseapichannel
-	Then the request named myFirstRequest for client leon has a general result matching "{\"result\":\"SUCCESS\"}"
-	And the request named myFirstRequest for client leon has a event result matching "{\"result\":\"Commit success\"}"
-	And the request named myFirstRequest for client leon has a commit result matching "{\"status\":\"SUCCESS\"}"
+	Then the request named myFirstRequest for client leon has a general result matching {"result":"SUCCESS"}
+	And the request named myFirstRequest for client leon has a event result matching {"result":"Commit success"}
+	And the request named myFirstRequest for client leon has a commit result matching {"status":"SUCCESS"}
 
 Scenario: Using only fabric-base I can send a query request to peers and recieve a valid result
     Given I have created a client named leon based on information in profile ccp-tls under organization Org1
     And I have used the client named leon to create a channel object for the channel named baseapichannel
     When I submit a query named myFirstQuery with args [queryCar,CAR0] for contract fabcar as client leon on channel baseapichannel
-    Then the query named myFirstQuery for client leon has a general result matching "{\"result\":\"SUCCESS\"}"
-	And the query named myFirstQuery for client leon has a peer0 result matching "{\"color\":\"blue\",\"docType\":\"car\",\"make\":\"Toyota\",\"model\":\"Prius\",\"owner\":\"Tomoko\"}"
+    Then the query named myFirstQuery for client leon has a general result matching {"result":"SUCCESS"}
+	And the query named myFirstQuery for client leon has a peer0 result matching {"color":"blue","docType":"car","make":"Toyota","model":"Prius","owner":"Tomoko"}

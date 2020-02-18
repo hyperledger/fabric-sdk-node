@@ -256,7 +256,7 @@ const Chaincode = class {
 		transientMap.forEach((value, key) => {
 			result[key] = value.toString('utf8');
 		});
-		const payload = Buffer.from(JSON.stringify(result));
+		const payload = Buffer.from(result);
 		return shim.success(payload);
 	}
 

@@ -230,7 +230,7 @@ export async function performGatewayTransaction(gatewayName: string, contractNam
 			BaseUtils.logMsg(`Successfully submitted transaction [${func}] with result [${result}]`);
 			// some functions do not return anything
 			if (result.length > 0) {
-				gatewayObj.result = {type: 'submit', response: JSON.parse(result)};
+				gatewayObj.result = {type: 'submit', response: result};
 			} else {
 				gatewayObj.result = {type: 'submit', response: ''};
 			}
@@ -240,7 +240,7 @@ export async function performGatewayTransaction(gatewayName: string, contractNam
 			const resultBuffer: Buffer = await contract.evaluateTransaction(func, ...funcArgs);
 			const result: string = resultBuffer.toString('utf8');
 			BaseUtils.logMsg(`Successfully evaluated transaction [${func}] with result [${result}]`);
-			gatewayObj.result = {type: 'evaluate', response: JSON.parse(result)};
+			gatewayObj.result = {type: 'evaluate', response: result};
 		}
 	} catch (err) {
 		gatewayObj.result = {type: 'error', response: err.toString()};
@@ -501,10 +501,19 @@ export function getLastTransactionResult(gatewayName: string): any {
 export function lastTransactionResponseCompare(gatewayName: string, msg: string, exactMatch: boolean): boolean {
 	const gatewayObj: any = getGatewayObject(gatewayName);
 
+	let result: string;
+	if (typeof gatewayObj.result.response === 'string') {
+		result = gatewayObj.result.response;
+	} else { // must be and object
+		result = JSON.stringify(gatewayObj.result.response);
+	}
+
+	BaseUtils.logMsg(`Comparing gatewayObj.result.response ${result} to msg ${msg}`);
+
 	if (exactMatch) {
-		return (gatewayObj.result.response.localeCompare(msg) === 0);
+		return (result.localeCompare(msg) === 0);
 	} else {
-		return gatewayObj.result.response.includes(msg);
+		return result.includes(msg);
 	}
 }
 

@@ -492,13 +492,28 @@ export function validateChannelRequestResponse(clientName: string, isRequest: bo
 	}
 
 	if (results) {
-		const actualResult: string = results[fieldName];
-		const isMatch: boolean = (actualResult.localeCompare(JSON.parse(expectedResult)) === 0);
+		const savedResult: any = results[fieldName];
+		BaseUtils.logMsg(`clientUtils - raw results of query = ${savedResult}`);
+
+		let stringResult: string;
+		if (savedResult instanceof Buffer) {
+			stringResult = savedResult.toString('utf8');
+			BaseUtils.logMsg(`clientUtils - results of query was a Buffer = ${stringResult}`);
+		} else if (typeof savedResult === 'string') {
+			stringResult = savedResult.toString();
+			BaseUtils.logMsg(`clientUtils - results of query was a string = ${stringResult}`);
+		} else { // must be an object
+			stringResult = JSON.stringify(savedResult);
+			BaseUtils.logMsg(`clientUtils - results of query was a object = ${stringResult}`);
+		}
+
+		const isMatch: boolean = (stringResult.localeCompare(expectedResult) === 0);
 		if (isMatch) {
 			BaseUtils.logMsg(`Validated response ${requestName} of type ${fieldName}`, {});
 		} else {
-			BaseUtils.logAndThrow(`Unexpected response for ${requestName} and type ${fieldName}. Expected ${expectedResult} but had ${actualResult}`);
+			BaseUtils.logAndThrow(`Unexpected response for ${requestName} and type ${fieldName}. Expected ${expectedResult} but had ${stringResult}`);
 		}
+
 	} else {
 		BaseUtils.logAndThrow(`Response for ${requestName} does not have a results object for validation`);
 	}

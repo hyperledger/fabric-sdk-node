@@ -925,8 +925,8 @@ module.exports = function () {
 				testUtil.logMsg(format('\n\n%s - Successfully endorsed with transient data\n', step));
 				for (const endorsement_result of endorse_results.responses) {
 					const transient_return = endorsement_result.response.payload.toString('utf8');
-					if (transient_return === '"extra info"') {
-						testUtil.logMsg('Successfully returned transient data');
+					if (transient_return === 'extra info') {
+						testUtil.logMsg('Successfully returned transient data as sent');
 					} else {
 						throw Error('Failed - Transient data was not handled correctly  we got back ==>' + transient_return + '<==');
 					}
