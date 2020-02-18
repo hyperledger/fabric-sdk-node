@@ -128,6 +128,7 @@ class Gateway {
 		this.wallet = null;
 		this.identityContext = null;
 		this.networks = new Map();
+		this.identity = null;
 
 		// initial options - override with the connect()
 		this.options = {
@@ -195,15 +196,15 @@ class Gateway {
 		// setup an initial identity for the Gateway
 		if (options.identity) {
 			logger.debug('%s - setting identity', method);
-			const identity = await this._getIdentity(options.identity);
-			const provider = options.wallet.getProviderRegistry().getProvider(identity.type);
-			const user = await provider.getUserContext(identity, options.identity);
+			this.identity = await this._getWalletIdentity(options.identity);
+			const provider = options.wallet.getProviderRegistry().getProvider(this.identity.type);
+			const user = await provider.getUserContext(this.identity, options.identity);
 			this.identityContext = this.client.newIdentityContext(user);
 		}
 
 		if (options.clientTlsIdentity) {
 			logger.debug('%s - setting tlsIdentity', method);
-			const tlsIdentity = await this._getIdentity(options.clientTlsIdentity);
+			const tlsIdentity = await this._getWalletIdentity(options.clientTlsIdentity);
 			this.client.setTlsClientCertAndKey(tlsIdentity.credentials.certificate, tlsIdentity.credentials.privateKey);
 		} else if (options.tlsInfo) {
 			logger.debug('%s - setting tlsInfo', method);
@@ -232,12 +233,20 @@ class Gateway {
 		logger.debug('%s - end', method);
 	}
 
-	async _getIdentity(label) {
+	async _getWalletIdentity(label) {
 		const identity = await this.options.wallet.get(label);
 		if (!identity) {
 			throw new Error(`Identity not found in wallet: ${label}`);
 		}
 		return identity;
+	}
+
+	/**
+	 * Get the identity associated with the gateway connection.
+	 * @returns {module:fabric-network.Identity} An identity.
+	 */
+	getIdentity() {
+		return this.identity;
 	}
 
 	/**

@@ -10,7 +10,8 @@ const SingleQueryHandler = require('./singlequeryhandler');
 const RoundRobinQueryHandler = require('./roundrobinqueryhandler');
 
 function getOrganizationPeers(network) {
-	return network.channel.getEndorsers(network.mspid);
+	const mspId = network.getGateway().getIdentity().mspId;
+	return network.getChannel().getEndorsers(mspId);
 }
 
 function MSPID_SCOPE_SINGLE(network) {

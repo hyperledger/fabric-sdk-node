@@ -26,7 +26,8 @@ class EventServiceManager {
 		logger.debug('%s - start', method);
 
 		this.network = network;
-		this.identityContext = this.network.gateway.identityContext;
+		this.channel = network.getChannel();
+		this.identityContext = this.network.getGateway().identityContext;
 
 		// wait to build the list of peers until someone needs an event service
 		// hopefully by then we have loaded the network (channel) with peers
@@ -179,7 +180,7 @@ class EventServiceManager {
 
 		const eventers = [];
 		for (const peer of peers) {
-			const eventer = this.network.channel.client.newEventer(peer.name);
+			const eventer = this.channel.client.newEventer(peer.name);
 			eventer.setEndpoint(peer.endpoint);
 			eventers.push(eventer);
 			logger.debug('%s - built new eventer %s', method, eventer.name);
@@ -188,7 +189,7 @@ class EventServiceManager {
 		if (!name) {
 			name = eventers[0].name;
 		}
-		const eventService = this.network.channel.newEventService(name);
+		const eventService = this.channel.newEventService(name);
 		logger.debug('%s - setting targets for eventService %s', method, eventService.name);
 		eventService.setTargets(eventers);
 
@@ -255,7 +256,8 @@ class RoundRobinPeerPool {
 	 * @param {Endorser[]} peers The list of peers that the strategy can choose from
 	 */
 	constructor(network) {
-		const peers = network.channel.getEndorsers(network.mspid);
+		const mspId = network.getGateway().getIdentity().mspId;
+		const peers = network.getChannel().getEndorsers(mspId);
 		if (!peers || peers.length === 0) {
 			throw Error('No peers available');
 		}

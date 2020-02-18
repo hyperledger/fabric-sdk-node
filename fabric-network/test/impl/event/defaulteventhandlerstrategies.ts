@@ -38,7 +38,7 @@ describe('DefaultEventHandlerStrategies', () => {
 		NETWORK_SCOPE_ANYFORTX: networkPeers
 	};
 
-	let network;
+	let network: sinon.SinonStubbedInstance<Network>;
 	const transactionId = 'TX_ID';
 	const mspId = 'MSP_ID';
 
@@ -47,12 +47,15 @@ describe('DefaultEventHandlerStrategies', () => {
 		channel.getEndorsers.withArgs().returns(networkPeers);
 		channel.getEndorsers.withArgs(mspId).returns(orgPeers);
 
-		network = sinon.createStubInstance(Network);
-		network.channel = channel;
-		network.mspid = mspId;
-		network.gateway = sinon.createStubInstance(Gateway, {
-			getOptions: sinon.stub().returns({})
+		const gateway: sinon.SinonStubbedInstance<Gateway> = sinon.createStubInstance(Gateway);
+		gateway.getOptions.returns({});
+		gateway.getIdentity.returns({
+			mspId
 		});
+
+		network = sinon.createStubInstance(Network);
+		network.getChannel.returns(channel);
+		network.getGateway.returns(gateway);
 	});
 
 	afterEach(() => {

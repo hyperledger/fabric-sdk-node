@@ -8,12 +8,13 @@
 
 import { Wallet } from '../lib/impl/wallet/wallet';
 import { CommitListener } from '../lib/impl/event/commitlistener';
+import { Identity } from '../lib/impl/wallet/identity';
 import { ChaincodeEvent, Channel, Client, Endorser, EventService, IdentityContext, ProposalResponse, User } from 'fabric-common';
 
 export { Wallet };
 export { Wallets } from '../lib/impl/wallet/wallets';
 export { WalletStore } from '../lib/impl/wallet/walletstore';
-export { Identity } from '../lib/impl/wallet/identity';
+export { Identity };
 export { IdentityData } from '../lib/impl/wallet/identitydata';
 export { IdentityProvider } from '../lib/impl/wallet/identityprovider';
 export { IdentityProviderRegistry } from '../lib/impl/wallet/identityproviderregistry';
@@ -89,13 +90,14 @@ export class Gateway {
 	constructor();
 	public connect(config: Client | string | object, options: GatewayOptions): Promise<void>;
 	public disconnect(): void;
+	public getIdentity(): Identity;
 	public getNetwork(channelName: string): Promise<Network>;
 	public getOptions(): GatewayOptions;
 }
 
 export class Network {
-	public channel: Channel;
-	public mspid: string;
+	getGateway(): Gateway;
+	getChannel(): Channel;
 	getContract(chaincodeId: string, name?: string): Contract;
 	addCommitListener(listener: CommitListener, peers: Endorser[], transactionId: string): Promise<CommitListener>;
 	removeCommitListener(listener: CommitListener): void;

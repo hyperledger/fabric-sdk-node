@@ -7,8 +7,8 @@
 // Sample query handler that will use all queryable peers within the network to evaluate transactions, with preference
 // given to peers within the same organization.
 
-import { Network, QueryHandler, QueryHandlerFactory, Query, QueryResults} from 'fabric-network';
-import {Endorser} from 'fabric-common';
+import { QueryHandler, QueryHandlerFactory, Query, QueryResults } from 'fabric-network';
+import { Endorser } from 'fabric-common';
 import util = require('util');
 
 /**
@@ -38,8 +38,7 @@ class SampleQueryHandler implements QueryHandler {
 		}
 
 		const message = util.format('Query failed. Errors: %j', errorMessages);
-		const error = new Error(message);
-		throw error;
+		throw new Error(message);
 	}
 }
 
@@ -48,11 +47,11 @@ class SampleQueryHandler implements QueryHandler {
  * @param {Network} network The network where transactions are to be evaluated.
  * @returns {QueryHandler} A query handler implementation.
  */
-const createQueryHandler: QueryHandlerFactory = (network: Network): SampleQueryHandler => {
-	const orgPeers = network.channel.getEndorsers(network.mspid);
-	const otherPeers = network.channel.getEndorsers().filter((peer) => !orgPeers.includes(peer));
+export const createQueryHandler: QueryHandlerFactory = (network) => {
+	const mspId = network.getGateway().getIdentity().mspId;
+	const channel = network.getChannel();
+	const orgPeers = channel.getEndorsers(mspId);
+	const otherPeers = channel.getEndorsers().filter((peer) => !orgPeers.includes(peer));
 	const allPeers = orgPeers.concat(otherPeers);
 	return new SampleQueryHandler(allPeers);
 };
-
-export = createQueryHandler; // Plain JavaScript compatible node module export

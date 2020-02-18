@@ -131,19 +131,19 @@ describe('TransactionEventHandler', () => {
 
 		it('calls errorReceived() on strategy when event service sends an error', async () => {
 			await handler.startListening();
-			eventService.sendError(new Error('EVENT HUB ERROR'));
+			eventService.sendError(new Error('PEER_ERROR'));
 
 			sinon.assert.calledWith(stubStrategy.errorReceived, sinon.match.func, sinon.match.func);
 		});
 
-		it('does not call eventReceived() on strategy when event hub sends an error', async () => {
+		it('does not call eventReceived() on strategy when peer sends an error', async () => {
 			await handler.startListening();
-			eventService.sendError(new Error('EVENT HUB ERROR'));
+			eventService.sendError(new Error('PEER_ERROR'));
 
 			sinon.assert.notCalled(stubStrategy.eventReceived);
 		});
 
-		it('fails when event hub sends an invalid event', async () => {
+		it('fails when peer sends an invalid event', async () => {
 			await handler.startListening();
 			eventService.sendEvent(invalidEventInfo);
 
@@ -173,7 +173,7 @@ describe('TransactionEventHandler', () => {
 			stubStrategy.errorReceived.callsArg(0);
 
 			await handler.startListening();
-			eventService.sendError(new Error('EVENT HUB ERROR'));
+			eventService.sendError(new Error('peer ERROR'));
 
 			await expect(handler.waitForEvents()).to.be.fulfilled;
 		});
@@ -183,18 +183,46 @@ describe('TransactionEventHandler', () => {
 			stubStrategy.errorReceived.callsArgWith(1, error);
 
 			await handler.startListening();
-			eventService.sendError(new Error('EVENT HUB ERROR'));
+			eventService.sendError(new Error('peer ERROR'));
 
 			await expect(handler.waitForEvents()).to.be.rejectedWith(error);
 		});
 
-		it('succeeds immediately with no event services', async () => {
+		it('succeeds immediately with no peers', async () => {
 			stubStrategy.getPeers.returns([]);
 
 			handler = new TransactionEventHandler(transactionId, network, strategy);
 			await handler.startListening();
 
 			await expect(handler.waitForEvents()).to.be.fulfilled;
+		});
+
+		it('ignores anything from peer that has already sent an event', async () => {
+			await handler.startListening();
+			eventService.sendEvent(validEventInfo);
+			eventService.sendEvent(validEventInfo);
+			eventService.sendError(new Error('PEER_ERROR'));
+
+			sinon.assert.calledOnce(stubStrategy.eventReceived);
+			sinon.assert.notCalled(stubStrategy.errorReceived);
+		});
+
+		it('ignores anything from peer that has already sent an error', async () => {
+			await handler.startListening();
+			eventService.sendError(new Error('one'));
+			eventService.sendEvent(validEventInfo);
+			eventService.sendError(new Error('two'));
+
+			sinon.assert.calledOnce(stubStrategy.errorReceived);
+			sinon.assert.notCalled(stubStrategy.eventReceived);
+		});
+
+		it('fails when receiving invalid event from peer that previously disconnected', async () => {
+			await handler.startListening();
+			eventService.sendError(new Error('PEER_ERROR'));
+			eventService.sendEvent(invalidEventInfo);
+
+			await expect(handler.waitForEvents()).to.be.rejectedWith(invalidEventInfo.status);
 		});
 	});
 

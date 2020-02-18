@@ -89,6 +89,9 @@ describe('Network', () => {
 				}
 			}
 		});
+		gateway.getIdentity.returns({
+			mspId: 'mspId'
+		});
 
 		client.getEndorsers.returns([endorser]);
 

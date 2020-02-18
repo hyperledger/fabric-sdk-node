@@ -28,7 +28,7 @@ being queried.
 
 The SDK provides several selectable strategies for how it should wait for
 commit events following a transaction invocation. The available strategies
-are defined in `EventHandlerStrategies`. The desired strategy is
+are defined in `DefaultEventHandlerStrategies`. The desired strategy is
 (optionally) specified as an argument to `connect()` on the `Gateway`, and
 is used for all transaction invocations on Contracts obtained from that
 Gateway instance.
@@ -37,11 +37,11 @@ If no event handling strategy is specified, `MSPID_SCOPE_ALLFORTX` is used
 by default.
 
 ```javascript
-const { Gateway, EventHandlerStrategies } = require('fabric-network');
+import { Gateway, GatewayOptions, DefaultEventHandlerStrategies } from 'fabric-network';
 
-const connectOptions = {
+const connectOptions: GatewayOptions = {
     transaction: {
-        strategy: EventHandlerStrategies.MSPID_SCOPE_ALLFORTX
+        strategy: DefaultEventHandlerStrategies.MSPID_SCOPE_ALLFORTX
     }
 }
 
@@ -52,7 +52,10 @@ await gateway.connect(connectionProfile, connectOptions);
 Specifying `null` as the event handling strategy will cause transaction
 invocations to return immediately after successfully sending the endorsed
 transaction to the orderer. It will not wait for any commit events to be
-received from peers.  For more details on *Event Handling Options*, see [TransactionOptions](module-fabric-network.Gateway.html#~TransactionOptions__anchor).
+received from peers.
+
+For more details on *Event Handling Options*, see
+[TransactionOptions](module-fabric-network.Gateway.html#~TransactionOptions).
 
 ### Plug-in event handlers
 
@@ -61,18 +64,23 @@ strategies, it is possible to implement your own event handling. This is
 achieved by specifying your own factory function as the event handling
 strategy. The factory function should return a *transaction event handler*
 object and take two parameters:
-1. transaction:  `Transaction`
-2. options: `any`
+1. transactionId: `string`
+2. network: `Network`
 
-From the Transaction instance get the Network instance to provides access to peers and event services from which events will be recieved.
+The Network instance provides access to an underlying Channel object, from
+which endorsing peers can be obtained.
 
 ```javascript
-function createTransactionEventHandler(transaction, options) {
-    /* Your implementation here */
-    return new MyTransactionEventHandler(transaction, options);
+import { Gateway, GatewayOptions, TxEventHandlerFactory } from 'fabric-network';
+
+const createTransactionEventHandler: TxEventHandlerFactory = (transactionId, network) => {
+	/* Your implementation here */
+    const mspId = network.getGateway().getIdentity().mspId;
+    const myOrgPeers = network.getChannel().getEndorsers(mspId);
+    return new MyTransactionEventHandler(transactionId, network, myOrgPeers);
 }
 
-const connectOptions = {
+const connectOptions: GatewayOptions = {
     transaction: {
         strategy: createTransactionEventhandler
     }
@@ -82,23 +90,20 @@ const gateway = new Gateway();
 await gateway.connect(connectionProfile, connectOptions);
 ```
 
-For more details on *Event Handling Options*, see [TransactionOptions](module-fabric-network.Gateway.html#~TransactionOptions__anchor).
-
-The *transaction event handler* object returned must implement the following functions.
+The *transaction event handler* object returned must implement the following
+functions:
 
 ```javascript
-class MyTransactionEventHandler {
+import { TxEventHandler } from 'fabric-network';
+
+class MyTransactionEventHandler implements TxEventHandler {
     /**
      * Called to initiate listening for transaction events.
-     * @async
-     * @throws {Error} if not in a state where the handling strategy can be satified and the transaction should
-     * be aborted. For example, if insufficient event hubs are available.
      */
     async startListening() { /* Your implementation here */ }
 
     /**
-     * Wait until enough events have been received from the event hubs to satisfy the event handling strategy.
-     * @async
+     * Wait until enough events have been received from peers to satisfy the event handling strategy.
      * @throws {Error} if the transaction commit is not successfully confirmed.
      */
     async waitForEvents() { /* Your implementation here */ }
@@ -110,4 +115,9 @@ class MyTransactionEventHandler {
 }
 ```
 
-For a complete sample plug-in event handler implementation, see [sample-transaction-event-handler.ts](https://github.com/hyperledger/fabric-sdk-node/blob/master/test/ts-scenario/config/handlers/sample-transaction-event-handler.ts).
+The *transaction event handler* implementation will typically use a commit
+listener to monitor commit events from endorsing peers by calling
+[Network.addCommitListener](module-fabric-network.Network.html#addCommitListener).
+
+For a complete sample plug-in event handler implementation, see
+[sample-transaction-event-handler.ts](https://github.com/hyperledger/fabric-sdk-node/blob/master/test/ts-scenario/config/handlers/sample-transaction-event-handler.ts).

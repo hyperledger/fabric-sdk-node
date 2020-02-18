@@ -43,11 +43,13 @@ export class TransactionEventHandler implements TxEventHandler {
 	private readonly options: any;
 	private readonly peers: Endorser[];
 	private readonly notificationPromise: Promise<void>;
-	private readonly respondedPeers = new Set<Endorser>();
+	private readonly unrespondedPeers: Set<Endorser>;
+	private readonly listener: CommitListener = this.eventCallback.bind(this);
+	private readonly strategySuccessCallback = this.strategySuccess.bind(this);
+	private readonly strategyFailCallback = this.strategyFail.bind(this);
 	private resolveNotificationPromise!: () => void;
 	private rejectNotificationPromise!: (reason: Error) => void;
 	private timeoutHandler?: NodeJS.Timeout;
-	private listener: CommitListener;
 
 	/**
 	 * Constructor.
@@ -66,24 +68,17 @@ export class TransactionEventHandler implements TxEventHandler {
 		const defaultOptions: any = {
 			commitTimeout: 30
 		};
-		this.options = Object.assign(defaultOptions, network.gateway.getOptions().transaction);
+		this.options = Object.assign(defaultOptions, network.getGateway().getOptions().transaction);
 
 		logger.debug('%s: transactionId = %s, options = %j', method, this.transactionId, this.options);
 
 		this.peers = strategy.getPeers();
+		this.unrespondedPeers = new Set(this.peers);
 
 		this.notificationPromise = new Promise((resolve, reject) => {
 			this.resolveNotificationPromise = resolve;
 			this.rejectNotificationPromise = reject;
 		});
-
-		this.listener = (error, event) => {
-			if (error) {
-				this.onError(error);
-			} else {
-				this.onEvent(event!);
-			}
-		};
 	}
 
 	/**
@@ -125,6 +120,25 @@ export class TransactionEventHandler implements TxEventHandler {
 		this.network.removeCommitListener(this.listener);
 	}
 
+	private eventCallback(error?: CommitError, event?: CommitEvent) {
+		if (event && event.status !== 'VALID') {
+			const message = `Commit of transaction ${this.transactionId} failed on peer ${event.peer.name} with status ${event.status}`;
+			this.strategyFail(new Error(message));
+		}
+
+		const peer = error?.peer || event!.peer;
+		if (!this.unrespondedPeers.delete(peer)) {
+			// Already seen a response from this peer
+			return;
+		}
+
+		if (error) {
+			this.strategy.errorReceived(this.strategySuccessCallback, this.strategyFailCallback);
+		} else {
+			this.strategy.eventReceived(this.strategySuccessCallback, this.strategyFailCallback);
+		}
+	}
+
 	private setListenTimeout() {
 		const method = 'setListenTimeout';
 
@@ -145,39 +159,15 @@ export class TransactionEventHandler implements TxEventHandler {
 	}
 
 	private timeoutFail() {
-		const unrespondedEventServices = this.peers
-			.filter((peer) => !this.respondedPeers.has(peer))
+		const unrespondedPeerNames = Array.from(this.unrespondedPeers)
 			.map((peer) => peer.name)
 			.join(', ');
 		const errorInfo = {
-			message: 'Event strategy not satisfied within the timeout period. No response received from peers: ' + unrespondedEventServices,
+			message: 'Event strategy not satisfied within the timeout period. No response received from peers: ' + unrespondedPeerNames,
 			transactionId: this.transactionId
 		};
 		const error = new TimeoutError(errorInfo);
 		this.strategyFail(error);
-	}
-
-	private onEvent(event: CommitEvent) {
-		logger.debug(`onEvent: received event for ${event.transactionId} from peer ${event.peer.name} with status ${event.status}`);
-
-		this.receivedEventServiceResponse(event.peer);
-		if (event.status !== 'VALID') {
-			const message = `Commit of transaction ${this.transactionId} failed on peer ${event.peer.name} with status ${event.status}`;
-			this.strategyFail(new Error(message));
-		} else {
-			this.strategy.eventReceived(this.strategySuccess.bind(this), this.strategyFail.bind(this));
-		}
-	}
-
-	private onError(error: CommitError) {
-		logger.debug('onError: received error from peer %s: %s', error.peer.name, error);
-
-		this.receivedEventServiceResponse(error.peer);
-		this.strategy.errorReceived(this.strategySuccess.bind(this), this.strategyFail.bind(this));
-	}
-
-	private receivedEventServiceResponse(peer: Endorser) {
-		this.respondedPeers.add(peer);
 	}
 
 	/**
