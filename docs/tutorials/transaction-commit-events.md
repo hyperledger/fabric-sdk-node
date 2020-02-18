@@ -106,8 +106,8 @@ class MyTransactionEventHandler {
     /**
      * Cancel listening for events.
      */
-    cancelListening() { /* Your imeplementation here */ }
+    cancelListening() { /* Your implementation here */ }
 }
 ```
 
-For a complete sample plug-in event handler implementation, see [sample-transaction-event-handler.js](https://github.com/hyperledger/fabric-sdk-node/blob/master/test/integration/network-e2e/sample-transaction-event-handler.js).
+For a complete sample plug-in event handler implementation, see [sample-transaction-event-handler.ts](https://github.com/hyperledger/fabric-sdk-node/blob/master/test/ts-scenario/config/handlers/sample-transaction-event-handler.ts).

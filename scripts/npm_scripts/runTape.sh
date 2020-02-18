@@ -14,15 +14,15 @@ runTape() {
     export HFC_LOGGING='{"debug":"test/temp/debug.log"}'
 
     # Run HSM tests by default
-    E2E_SCRIPT_SUFFIX=-hsm
+    HSM_SCRIPT=test/integration/network-e2e/e2e-hsm.js
     # If the script has been called with noHSM parameter
-    # run test/integration/network-e2e/e2e.js instead of test/integration/network-e2e/e2e-hsm.js
+    # exclude test/integration/network-e2e/e2e-hsm.js
     if [ $1 ] && [ $1 == 'noHSM' ]
     then
-        unset E2E_SCRIPT_SUFFIX
+        unset HSM_SCRIPT
     fi
 
-    # Tests have to executed in the following order
+    # Tests have to be executed in the following order
 
     # First run the ca-tests that run good/bad path member registration/enrollment scenarios
     # The remaining tests re-use the same key value store with the saved user certificates, in order to interact with the network
@@ -31,7 +31,7 @@ runTape() {
     test/integration/fabric-ca-certificate-service-tests.js \
     test/integration/fabric-ca-services-tests.js \
     test/integration/e2e.js \
-    test/integration/network-e2e/e2e${E2E_SCRIPT_SUFFIX}.js \
+    ${HSM_SCRIPT} \
     | npx tap-colorize
 }
 
