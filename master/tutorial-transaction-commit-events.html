@@ -126,17 +126,17 @@ being queried.</p>
 <h3>Event handling strategies</h3>
 <p>The SDK provides several selectable strategies for how it should wait for
 commit events following a transaction invocation. The available strategies
-are defined in <code>EventHandlerStrategies</code>. The desired strategy is
+are defined in <code>DefaultEventHandlerStrategies</code>. The desired strategy is
 (optionally) specified as an argument to <code>connect()</code> on the <code>Gateway</code>, and
 is used for all transaction invocations on Contracts obtained from that
 Gateway instance.</p>
 <p>If no event handling strategy is specified, <code>MSPID_SCOPE_ALLFORTX</code> is used
 by default.</p>
-<pre class="prettyprint source lang-javascript"><code>const { Gateway, EventHandlerStrategies } = require('fabric-network');
+<pre class="prettyprint source lang-javascript"><code>import { Gateway, GatewayOptions, DefaultEventHandlerStrategies } from 'fabric-network';
 
-const connectOptions = {
+const connectOptions: GatewayOptions = {
     transaction: {
-        strategy: EventHandlerStrategies.MSPID_SCOPE_ALLFORTX
+        strategy: DefaultEventHandlerStrategies.MSPID_SCOPE_ALLFORTX
     }
 }
 
@@ -146,7 +146,9 @@ await gateway.connect(connectionProfile, connectOptions);
 <p>Specifying <code>null</code> as the event handling strategy will cause transaction
 invocations to return immediately after successfully sending the endorsed
 transaction to the orderer. It will not wait for any commit events to be
-received from peers.  For more details on <em>Event Handling Options</em>, see <a href="module-fabric-network.Gateway.html#~TransactionOptions__anchor">TransactionOptions</a>.</p>
+received from peers.</p>
+<p>For more details on <em>Event Handling Options</em>, see
+<a href="module-fabric-network.Gateway.html#~TransactionOptions">TransactionOptions</a>.</p>
 <h3>Plug-in event handlers</h3>
 <p>If behavior is required that is not provided by the default event handling
 strategies, it is possible to implement your own event handling. This is
@@ -154,16 +156,21 @@ achieved by specifying your own factory function as the event handling
 strategy. The factory function should return a <em>transaction event handler</em>
 object and take two parameters:</p>
 <ol>
-<li>transaction:  <code>Transaction</code></li>
-<li>options: <code>any</code></li>
+<li>transactionId: <code>string</code></li>
+<li>network: <code>Network</code></li>
 </ol>
-<p>From the Transaction instance get the Network instance to provides access to peers and event services from which events will be recieved.</p>
-<pre class="prettyprint source lang-javascript"><code>function createTransactionEventHandler(transaction, options) {
-    /* Your implementation here */
-    return new MyTransactionEventHandler(transaction, options);
+<p>The Network instance provides access to an underlying Channel object, from
+which endorsing peers can be obtained.</p>
+<pre class="prettyprint source lang-javascript"><code>import { Gateway, GatewayOptions, TxEventHandlerFactory } from 'fabric-network';
+
+const createTransactionEventHandler: TxEventHandlerFactory = (transactionId, network) => {
+	/* Your implementation here */
+    const mspId = network.getGateway().getIdentity().mspId;
+    const myOrgPeers = network.getChannel().getEndorsers(mspId);
+    return new MyTransactionEventHandler(transactionId, network, myOrgPeers);
 }
 
-const connectOptions = {
+const connectOptions: GatewayOptions = {
     transaction: {
         strategy: createTransactionEventhandler
     }
@@ -172,20 +179,18 @@ const connectOptions = {
 const gateway = new Gateway();
 await gateway.connect(connectionProfile, connectOptions);
 </code></pre>
-<p>For more details on <em>Event Handling Options</em>, see <a href="module-fabric-network.Gateway.html#~TransactionOptions__anchor">TransactionOptions</a>.</p>
-<p>The <em>transaction event handler</em> object returned must implement the following functions.</p>
-<pre class="prettyprint source lang-javascript"><code>class MyTransactionEventHandler {
+<p>The <em>transaction event handler</em> object returned must implement the following
+functions:</p>
+<pre class="prettyprint source lang-javascript"><code>import { TxEventHandler } from 'fabric-network';
+
+class MyTransactionEventHandler implements TxEventHandler {
     /**
      * Called to initiate listening for transaction events.
-     * @async
-     * @throws {Error} if not in a state where the handling strategy can be satified and the transaction should
-     * be aborted. For example, if insufficient event hubs are available.
      */
     async startListening() { /* Your implementation here */ }
 
     /**
-     * Wait until enough events have been received from the event hubs to satisfy the event handling strategy.
-     * @async
+     * Wait until enough events have been received from peers to satisfy the event handling strategy.
      * @throws {Error} if the transaction commit is not successfully confirmed.
      */
     async waitForEvents() { /* Your implementation here */ }
@@ -196,7 +201,11 @@ await gateway.connect(connectionProfile, connectOptions);
     cancelListening() { /* Your implementation here */ }
 }
 </code></pre>
-<p>For a complete sample plug-in event handler implementation, see <a href="https://github.com/hyperledger/fabric-sdk-node/blob/master/test/ts-scenario/config/handlers/sample-transaction-event-handler.ts">sample-transaction-event-handler.ts</a>.</p>
+<p>The <em>transaction event handler</em> implementation will typically use a commit
+listener to monitor commit events from endorsing peers by calling
+<a href="module-fabric-network.Network.html#addCommitListener">Network.addCommitListener</a>.</p>
+<p>For a complete sample plug-in event handler implementation, see
+<a href="https://github.com/hyperledger/fabric-sdk-node/blob/master/test/ts-scenario/config/handlers/sample-transaction-event-handler.ts">sample-transaction-event-handler.ts</a>.</p>
 </article>
 
 </section>
@@ -234,7 +243,7 @@ await gateway.connect(connectionProfile, connectOptions);
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a>
 	
-		on 2020-02-18T15:37:41+00:00
+		on 2020-02-18T22:05:22+00:00
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>
