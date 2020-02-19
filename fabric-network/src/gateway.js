@@ -6,11 +6,11 @@
 
 'use strict';
 
-const Network = require('./network');
+const {NetworkImpl: Network} = require('./network');
 const NetworkConfig = require('./impl/ccp/networkconfig');
 const {Client} = require('fabric-common');
 const EventStrategies = require('./impl/event/defaulteventhandlerstrategies');
-const QueryStrategies = require('./impl/query/queryhandlerstrategies');
+const QueryStrategies = require('./impl/query/defaultqueryhandlerstrategies');
 
 const logger = require('./logger').getLogger('Gateway');
 
@@ -35,30 +35,10 @@ const logger = require('./logger').getLogger('Gateway');
  * for commit notification to complete.
  * @property {number} [endorseTimeout = 30] The timeout period in seconds to wait
  * for the endorsement to complete.
- * @property {?module:fabric-network.Gateway~TxEventHandlerFactory} [strategy=MSPID_SCOPE_ALLFORTX]
+ * @property {?module:fabric-network.TxEventHandlerFactory} [strategy=MSPID_SCOPE_ALLFORTX]
  * Event handling strategy to identify successful transaction commits. A null value indicates
  * that no event handling is desired. The default is
  * [MSPID_SCOPE_ALLFORTX]{@link module:fabric-network.EventHandlerStrategies}.
- */
-
-/**
- * @typedef {Function} Gateway~TxEventHandlerFactory
- * @memberof module:fabric-network
- * @param {Transaction} transaction The transaction for which the handler should listen for commit events.
- * @param {module:fabric-network.Network} network The network on which this transaction is being submitted.
- * @returns {module:fabric-network.Gateway~TxEventHandler} A transaction event handler.
- */
-
-/**
- * @typedef {Object} Gateway~TxEventHandler
- * @memberof module:fabric-network
- * @property {Function} startListening Async function that resolves when the handler has started listening for
- * transaction commit events. Called after the transaction proposal has been accepted and prior to submission of
- * the transaction to the orderer.
- * @property {Function} waitForEvents Async function that resolves (or rejects) when suitable transaction
- * commit events have been received. Called after submission of the transaction to the orderer.
- * @property {Function} cancelListening Cancel listening. Called if submission of the transaction to the orderer
- * fails.
  */
 
 /**
@@ -66,24 +46,9 @@ const logger = require('./logger').getLogger('Gateway');
  * @memberof module:fabric-network
  * @property {number} [timeout = 30] The timeout period in seconds to wait for the query to
  * complete.
- * @property {module:fabric-network.Gateway~QueryHandlerFactory} [strategy=MSPID_SCOPE_SINGLE]
+ * @property {module:fabric-network.QueryHandlerFactory} [strategy=MSPID_SCOPE_SINGLE]
  * Query handling strategy used to evaluate queries. The default is
  * [MSPID_SCOPE_SINGLE]{@link module:fabric-network.QueryHandlerStrategies}.
- */
-
-/**
- * @typedef {Function} Gateway~QueryHandlerFactory
- * @memberof module:fabric-network
- * @param {module:fabric-network.Network} network The network on which queries are being evaluated.
- * @param {Object} options The request options to use when queries are being evaluated.
- * @returns {module:fabric-network.Gateway~QueryHandler} A query handler.
- */
-
-/**
- * @typedef {Object} Gateway~QueryHandler
- * @memberof module:fabric-network
- * @property {Function} evaluate Async function that takes a [Query]{@link module:fabric-common.Query}
- * and resolves with the result of the query evaluation.
  */
 
 /**

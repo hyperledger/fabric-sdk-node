@@ -13,7 +13,7 @@ import { StateStore } from './utility/stateStore';
 import { createQueryHandler as sampleQueryStrategy } from '../../config/handlers/sample-query-handler';
 import { createTransactionEventHandler as sampleTxnEventStrategy } from '../../config/handlers/sample-transaction-event-handler';
 
-import { DefaultEventHandlerStrategies, QueryHandlerStrategies, Gateway, GatewayOptions, Wallet, Wallets, Identity, Contract, Network, TxEventHandlerFactory, QueryHandlerFactory, Transaction, TransientMap } from 'fabric-network';
+import { DefaultEventHandlerStrategies, DefaultQueryHandlerStrategies, Gateway, GatewayOptions, Wallet, Wallets, Identity, Contract, Network, TxEventHandlerFactory, QueryHandlerFactory, Transaction, TransientMap } from 'fabric-network';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -22,16 +22,16 @@ const txnTypes: string[] = ['evaluate', 'submit'];
 const txnResponseTypes: string[] = ['evaluate', 'error', 'submit'];
 const supportedWallets: string[] = [Constants.FILE_WALLET as string, Constants.MEMORY_WALLET as string, Constants.COUCH_WALLET as string];
 
-const EventStrategies: any = {
+const EventStrategies: { [key: string]: TxEventHandlerFactory } = {
 	MSPID_SCOPE_ALLFORTX : DefaultEventHandlerStrategies.MSPID_SCOPE_ALLFORTX,
 	MSPID_SCOPE_ANYFORTX : DefaultEventHandlerStrategies.MSPID_SCOPE_ANYFORTX,
 	NETWORK_SCOPE_ALLFORTX : DefaultEventHandlerStrategies.NETWORK_SCOPE_ALLFORTX,
 	NETWORK_SCOPE_ANYFORTX : DefaultEventHandlerStrategies.NETWORK_SCOPE_ANYFORTX,
 };
 
-const QueryStrategies: any = {
-	MSPID_SCOPE_SINGLE : QueryHandlerStrategies.MSPID_SCOPE_SINGLE,
-	MSPID_SCOPE_ROUND_ROBIN : QueryHandlerStrategies.MSPID_SCOPE_ROUND_ROBIN,
+const QueryStrategies: { [key: string]: QueryHandlerFactory } = {
+	MSPID_SCOPE_SINGLE : DefaultQueryHandlerStrategies.MSPID_SCOPE_SINGLE,
+	MSPID_SCOPE_ROUND_ROBIN : DefaultQueryHandlerStrategies.MSPID_SCOPE_ROUND_ROBIN,
 };
 
 /**

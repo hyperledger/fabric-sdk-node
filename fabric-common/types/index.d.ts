@@ -52,20 +52,31 @@ export interface UserConfig {
 	roles?: string[];
 }
 
+export interface ConnectionInfo {
+	type: string;
+	name: string;
+	url: string;
+	options: object;
+}
+export interface ServiceError extends Error {
+	connection: ConnectionInfo;
+}
+
 export interface ProposalResponse {
-	errors: Error[];
+	errors: ServiceError[];
 	responses: EndorsementResponse[];
 	queryResults: Buffer[];
 }
 
 export interface EndorsementResponse {
+	connection: ConnectionInfo;
 	response: {
 		status: number;
 		message: string;
 		payload: Buffer;
 	};
 	payload: Buffer;
-	endorsment: {
+	endorsement: {
 		endorser: Buffer;
 		signature: Buffer;
 	};
@@ -113,8 +124,10 @@ export class DiscoveryHandler extends ServiceHandler {
 
 export class ServiceEndpoint {
 	public readonly name: string;
+	public readonly mspid: string;
+	public readonly endpoint: Endpoint;
 	constructor(name: string, client: Client, mspid?: string);
-	public connect(endpoint: Endpoint, options: ConnectOptions): Promise<void>;
+	public connect(endpoint: Endpoint, options?: ConnectOptions): Promise<void>;
 	public disconnect(): void;
 	public checkConnection(): Promise<boolean>;
 	public isTLS(): boolean;
@@ -152,8 +165,8 @@ export class ServiceAction {
 
 export class Commit extends Proposal {
 	constructor(chaincodeName: string, channel: Channel, endorsement: Endorsement);
-	public build(idContext: IdentityContext, request: any): Buffer;
-	public send(request: any, options: any): Promise<any>;
+	public build(idContext: IdentityContext, request?: any): Buffer;
+	public send(request?: any): Promise<any>;
 }
 
 export class Endorsement extends Proposal {
@@ -171,8 +184,8 @@ export class Proposal extends ServiceAction {
 	public buildProposalInterest(): any;
 	public addCollectionInterest(collectionName: string): Proposal;
 	public addChaincodeCollectionsInterest(collectionName: string, collectionNames: string[]): Proposal;
-	public build(idContext: IdentityContext, request: any): Buffer;
-	public send(request: any, options: any): Promise<ProposalResponse>;
+	public build(idContext: IdentityContext, request?: any): Buffer;
+	public send(request?: any): Promise<ProposalResponse>;
 	public verifyProposalResponse(proposalResponse?: any): boolean;
 	public compareProposalResponseResults(proposalResponses: any[]): boolean;
 }
@@ -181,8 +194,8 @@ export class DiscoveryService extends ServiceAction {
 	constructor(chaincodeName: string, channel: Channel);
 	public setDiscoverer(discoverer: Discoverer): DiscoveryService;
 	public newHandler(): DiscoveryHandler;
-	public build(idContext: IdentityContext, request: any): Buffer;
-	public send(request: any): Promise<any>;
+	public build(idContext: IdentityContext, request?: any): Buffer;
+	public send(request?: any): Promise<any>;
 	public getDiscoveryResults(refresh?: boolean): Promise<any>;
 	public close(): void;
 }
@@ -247,6 +260,7 @@ export class Client {
 	public newEndpoint(options: ConnectOptions): Endpoint;
 	public newEndorser(name: string, mspid?: string): Endorser;
 	public getEndorser(name: string, mspid?: string): Endorser;
+	public getEndorsers(mspid?: string): Endorser[];
 	public newCommitter(name: string, mspid?: string): Committer;
 	public getCommitter(name: string, mspid?: string): Committer;
 	public newEventer(name: string, mspid?: string): Eventer;
@@ -270,6 +284,9 @@ export interface ConnectOptions {
 }
 
 export class Channel {
+	readonly name: string;
+	readonly client: Client;
+
 	constructor(name: string, client: Client);
 	public close(): void;
 

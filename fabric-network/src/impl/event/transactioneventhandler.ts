@@ -7,12 +7,11 @@
 import { TimeoutError } from '../../errors/timeouterror';
 import { TransactionEventStrategy } from './transactioneventstrategy';
 // @ts-ignore: no implicit any
-import Network = require('../../network');
+import { Network } from '../../network';
 import { Endorser } from 'fabric-common';
 import { CommitError, CommitEvent, CommitListener } from './commitlistener';
 
-// @ts-ignore no implicit any
-import Logger = require('../../logger');
+import * as Logger from '../../logger';
 const logger = Logger.getLogger('TransactionEventHandler');
 
 export interface TxEventHandler {

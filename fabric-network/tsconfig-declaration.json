@@ -1,17 +1,7 @@
 {
+	"extends": "./tsconfig.json",
 	"compilerOptions": {
-		"alwaysStrict": true,
+		"allowJs": false,
 		"declaration": true,
-		"module": "commonjs",
-		"outDir": "lib",
-		"rootDir": "src",
-		"strict": true,
-		"target": "es2017"
-	},
-	"include": [
-		"src/**/*"
-	],
-	"exclude": [
-		"node_modules/**/*"
-	]
+	}
 }

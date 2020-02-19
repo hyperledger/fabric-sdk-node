@@ -3,16 +3,17 @@
 		"allowJs": true,
 		"alwaysStrict": true,
 		"module": "commonjs",
-		"outDir": "lib",
-		"rootDir": "src",
+		"outDir": "./lib",
+		"rootDir": "./src",
 		"sourceMap": true,
 		"strict": true,
-		"target": "es2017"
+		"target": "es2017",
+		"forceConsistentCasingInFileNames": true
 	},
 	"include": [
-		"src/**/*"
+		"src/"
 	],
 	"exclude": [
-		"node_modules/**/*"
+		"node_modules/"
 	]
 }

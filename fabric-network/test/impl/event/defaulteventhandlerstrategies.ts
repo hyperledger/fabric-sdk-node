@@ -10,7 +10,7 @@ const expect = chai.expect;
 
 import { Channel, Endorser } from 'fabric-common';
 
-import Network = require('fabric-network/lib/network');
+import { Network, NetworkImpl } from '../../../src/network';
 import Gateway = require('fabric-network/lib/gateway');
 
 import { AllForTxStrategy } from '../../../src/impl/event/allfortxstrategy';
@@ -53,7 +53,7 @@ describe('DefaultEventHandlerStrategies', () => {
 			mspId
 		});
 
-		network = sinon.createStubInstance(Network);
+		network = sinon.createStubInstance(NetworkImpl);
 		network.getChannel.returns(channel);
 		network.getGateway.returns(gateway);
 	});

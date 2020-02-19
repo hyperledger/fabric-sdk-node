@@ -11,13 +11,13 @@ const chai = require('chai');
 const expect = chai.expect;
 
 const Gateway = require('fabric-network/lib/gateway');
-const Network = require('fabric-network/lib/network');
+const {NetworkImpl: Network} = require('../../../lib/network');
 const Channel = require('fabric-common').Channel;
-const SingleQueryHandler = require('fabric-network/lib/impl/query/singlequeryhandler');
-const RoundRobinQueryHandler = require('fabric-network/lib/impl/query/roundrobinqueryhandler');
-const QueryStrategies = require('fabric-network/lib/impl/query/queryhandlerstrategies');
+const {SingleQueryHandler} = require('fabric-network/lib/impl/query/singlequeryhandler');
+const {RoundRobinQueryHandler} = require('fabric-network/lib/impl/query/roundrobinqueryhandler');
+const QueryStrategies = require('fabric-network/lib/impl/query/defaultqueryhandlerstrategies');
 
-describe('QueryHandlerStrategies', () => {
+describe('DefaultQueryHandlerStrategies', () => {
 	const expectedStrategyTypes = {
 		'MSPID_SCOPE_SINGLE': SingleQueryHandler,
 		'MSPID_SCOPE_ROUND_ROBIN': RoundRobinQueryHandler

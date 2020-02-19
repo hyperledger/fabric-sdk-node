@@ -6,7 +6,7 @@
 
 'use strict';
 
-const Query = require('./impl/query/query');
+const {QueryImpl: Query} = require('./impl/query/query');
 const logger = require('./logger').getLogger('Transaction');
 const util = require('util');
 
@@ -109,19 +109,6 @@ class Transaction {
 		return this._name;
 	}
 
-	/**
-	 * Override the Gateway option for event handler strategy
-	 * @private
-	 * @param {*} eventHandlerStrategyFactory
-	 */
-	setEventHandlerStrategy(eventHandlerStrategyFactory) {
-		const method = `setEventHandlerStrategy[${this._name}]`;
-		logger.debug('%s - start', method);
-
-		this._eventHandlerStrategyFactory = eventHandlerStrategyFactory;
-
-		return this;
-	}
 	/**
 	 * Set transient data that will be passed to the transaction function
 	 * but will not be stored on the ledger. This can be used to pass

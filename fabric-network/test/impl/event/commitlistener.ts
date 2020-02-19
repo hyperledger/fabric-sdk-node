@@ -6,8 +6,6 @@
 
 import sinon = require('sinon');
 import chai = require('chai');
-import chaiAsPromised = require('chai-as-promised');
-chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 import {
@@ -17,10 +15,11 @@ import {
 } from 'fabric-common';
 import Long = require('long');
 
-import Network = require('../../../src/network');
+import { Network, NetworkImpl } from '../../../src/network';
 import EventServiceManager = require('../../../src/impl/event/eventservicemanager');
-import { Gateway } from 'fabric-network';
+import Gateway = require('../../../src/gateway');
 import { StubEventService } from './stubeventservice';
+import { CommitListener } from '../../../src/impl/event/commitlistener';
 
 describe('commit listener', () => {
 	let eventServiceManager: sinon.SinonStubbedInstance<EventServiceManager>;
@@ -51,8 +50,8 @@ describe('commit listener', () => {
 		gateway = sinon.createStubInstance(Gateway);
 		gateway.identityContext = sinon.createStubInstance(IdentityContext);
 
-		network = new Network(gateway, null);
-		network.eventServiceManager = eventServiceManager;
+		network = new NetworkImpl(gateway, null);
+		(network as any).eventServiceManager = eventServiceManager;
 	});
 
 	afterEach(() => {
@@ -194,5 +193,14 @@ describe('commit listener', () => {
 		network.removeCommitListener(listener);
 
 		sinon.assert.calledTwice(listener);
+	});
+
+	it('error thrown by listener is handled', async () => {
+		const listener = sinon.fake.throws(new Error('LISTENER_ERROR'));
+
+		await network.addCommitListener(listener, peers, transactionId);
+		const f = () => eventService.sendEvent(eventInfo);
+
+		expect(f).to.not.throw();
 	});
 });

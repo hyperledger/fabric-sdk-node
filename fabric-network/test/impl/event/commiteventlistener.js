@@ -14,7 +14,7 @@ const sinon = require('sinon');
 chai.use(require('chai-as-promised'));
 
 const EventService = require('fabric-common/lib/EventService');
-const Network = require('./../../../lib/network');
+const {NetworkImpl: Network} = require('../../../lib/network');
 const EventServiceManager = require('./../../../lib/impl/event/eventservicemanager');
 const CommitEventListener = rewire('fabric-network/lib/impl/event/commiteventlistener');
 const FileSystemCheckpointer = require('./../../../lib/impl/event/filesystemcheckpointer');

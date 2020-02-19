@@ -133,7 +133,7 @@ class Contract {
 		if (eventService) {
 			listener.eventService = eventService;
 		}
-		this.network.saveListener(listener, listener);
+		this.network.saveListener(listener);
 		await listener.register();
 
 		return listener;

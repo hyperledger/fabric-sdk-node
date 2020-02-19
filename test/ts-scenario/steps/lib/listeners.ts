@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { Contract, Gateway, Network } from 'fabric-network';
+import { Contract, Gateway, Network, BlockEvent, BlockListener } from 'fabric-network';
 import { Constants } from '../constants';
 import * as GatewayHelper from './gateway';
 import * as BaseUtils from './utility/baseUtils';
@@ -93,7 +93,7 @@ export async function createBlockListener(gatewayName: string, channelName: stri
 		filtered,
 		listener: {},
 		payloads: [],
-		type: Constants.BLOCK,
+		type: Constants.BLOCK
 	};
 
 	// If no listeners, then create the new map item
@@ -102,45 +102,33 @@ export async function createBlockListener(gatewayName: string, channelName: stri
 	}
 
 	// Create the listener
-	const listener = await (network as any).addBlockListener((err: any, blockNumber: string, block: any) => { // TODO: remove cast
-		if (err) {
-			BaseUtils.logMsg('-> Received a block event error', err);
-			throw err;
-		}
+	const listener: BlockListener = async (blockEvent: BlockEvent) => {
 		BaseUtils.logMsg('->Received a block event', listenerName);
-
-		if (filtered) {
-			BaseUtils.checkProperty(block, 'channel_id', true);
-			BaseUtils.checkProperty(block, 'number', true);
-			BaseUtils.checkProperty(block, 'filtered_transactions', true);
-			blockNumber = block.number;
-		} else {
-			BaseUtils.checkProperty(block, 'header', true);
-			BaseUtils.checkProperty(block, 'data', true);
-			BaseUtils.checkProperty(block, 'metadata', true);
-		}
-
-		if (startBlock) {
-			BaseUtils.checkSizeEquality(Number(blockNumber), Number(startBlock) - 1, true, true);
-		}
-		if (endBlock) {
-			BaseUtils.checkSizeEquality(Number(blockNumber), Number(endBlock) + 1, false, true);
-		}
+		// if (startBlock) {
+		// 	BaseUtils.checkSizeEquality(Number(blockNumber), Number(startBlock) - 1, true, true);
+		// }
+		// if (endBlock) {
+		// 	BaseUtils.checkSizeEquality(Number(blockNumber), Number(endBlock) + 1, false, true);
+		// }
 
 		const tlisteners: any = stateStore.get(Constants.LISTENERS);
 		if (tlisteners) {
 			const listenerUpdate: any = tlisteners.get(listenerName);
 			if (listenerUpdate) {
-				listenerUpdate.payloads.push(block);
+				listenerUpdate.payloads.push(blockEvent);
 				listenerUpdate.calls = listenerUpdate.payloads.length;
 			}
 		}
 
-		return Promise.resolve();
-	}, {filtered, replay, startBlock, endBlock});
+		if (endBlock && blockEvent.blockNumber.greaterThanOrEqual(endBlock)) {
+			network.removeBlockListener(listener);
+		}
+	};
+	await network.addBlockListener(listener);
 
 	// Roll into a listener object to store
 	listenerObject.listener = listener;
+	listenerObject.remove = () => network.removeBlockListener(listener);
 	listeners.set(listenerName, listenerObject);
 	stateStore.set(Constants.LISTENERS, listeners);
 }
@@ -256,9 +244,13 @@ export function checkTransactionListenerDetails(listenerName: string, listenerTy
 	}
 }
 
-export function unregisterListener(listenerName: string): void {
-	const listenerObject: any = getListenerObject(listenerName);
-	const listener: any = listenerObject.listener;
-	listener.unregister();
+export function unregisterListener(listenerName: string) {
+	const listenerObject = getListenerObject(listenerName);
+	if (typeof listenerObject.remove === 'function') {
+		listenerObject.remove();
+	} else {
+		const listener = listenerObject.listener;
+		listener.unregister();
+	}
 	listenerObject.active = false;
 }

@@ -19,7 +19,7 @@ chai.should();
 
 const Contract = rewire('../lib/contract');
 const Gateway = require('../lib/gateway');
-const Network = require('fabric-network/lib/network');
+const {NetworkImpl: Network} = require('../lib/network');
 const Transaction = require('../lib/transaction');
 class FakeListener {
 	constructor(network, listenerName) {
@@ -129,18 +129,18 @@ describe('Contract', () => {
 		it('should create if no options', async () => {
 			const listener = await contract.addContractListener('testEventName', () => {});
 			expect(listener).to.be.instanceof(FakeListener);
-			expect(network.listeners.get(listener)).to.equal(listener);
+			expect(network.oldListeners.has(listener)).to.be.true;
 		});
 		it('should create if options', async () => {
 			const listener = await contract.addContractListener('testEventName', () => {}, {something: 'something'});
 			expect(listener).to.be.instanceof(FakeListener);
-			expect(network.listeners.get(listener)).to.equal(listener);
+			expect(network.oldListeners.has(listener)).to.be.true;
 		});
 
 		it('should create if event service', async () => {
 			const listener = await contract.addContractListener('testEventName', () => {}, null, 'eventService');
 			expect(listener).to.be.instanceof(FakeListener);
-			expect(network.listeners.get(listener)).to.equal(listener);
+			expect(network.oldListeners.has(listener)).to.be.true;
 		});
 	});
 

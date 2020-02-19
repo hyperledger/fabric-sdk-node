@@ -10,7 +10,7 @@ const sinon = require('sinon');
 const expect = require('chai').expect;
 
 const QueryProposal = require('fabric-common/lib/Query');
-const Query = require('fabric-network/lib/impl/query/query');
+const {QueryImpl: Query} = require('fabric-network/lib/impl/query/query');
 
 describe('Query', () => {
 	let queryProposal;

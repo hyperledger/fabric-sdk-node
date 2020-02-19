@@ -18,7 +18,7 @@ chai.use(require('chai-as-promised'));
 
 const Gateway = rewire('../lib/gateway');
 const Client = rewire('fabric-common/lib/Client');
-const QueryStrategies = require('../lib/impl/query/queryhandlerstrategies');
+const QueryStrategies = require('../lib/impl/query/defaultqueryhandlerstrategies');
 
 describe('Gateway', () => {
 	let client;

@@ -9,6 +9,8 @@
 import { Wallet } from '../lib/impl/wallet/wallet';
 import { CommitListener } from '../lib/impl/event/commitlistener';
 import { Identity } from '../lib/impl/wallet/identity';
+import { QueryHandlerFactory } from '../lib/impl/query/queryhandler';
+import { Network } from '../lib/network';
 import { ChaincodeEvent, Channel, Client, Endorser, EventService, IdentityContext, ProposalResponse, User } from 'fabric-common';
 
 export { Wallet };
@@ -21,8 +23,22 @@ export { IdentityProviderRegistry } from '../lib/impl/wallet/identityproviderreg
 export { HsmOptions, HsmX509Provider, HsmX509Identity } from '../lib/impl/wallet/hsmx509identity';
 export { X509Identity } from '../lib/impl/wallet/x509identity';
 export { CommitEvent, CommitError, CommitListener } from '../lib/impl/event/commitlistener';
+export { BlockEvent, BlockListener } from '../lib/impl/event/blocklistener';
 export { FabricError } from '../lib/errors/fabricerror';
 export { TimeoutError } from '../lib/errors/timeouterror';
+export { QueryHandlerFactory };
+export { QueryHandler } from '../lib/impl/query/queryhandler';
+export { Query, QueryResults, QueryResponse } from '../lib/impl/query/query';
+export { Network };
+
+import * as DefaultEventHandlerStrategies from '../lib/impl/event/defaulteventhandlerstrategies';
+export { DefaultEventHandlerStrategies };
+
+import { TxEventHandler, TxEventHandlerFactory } from '../lib/impl/event/transactioneventhandler';
+export { TxEventHandler, TxEventHandlerFactory };
+
+import * as DefaultQueryHandlerStrategies from '../lib/impl/query/defaultqueryhandlerstrategies';
+export { DefaultQueryHandlerStrategies };
 
 // Main fabric network classes
 // -------------------------------------------
@@ -47,41 +63,9 @@ export interface TransactionOptions {
 	strategy?: TxEventHandlerFactory | null;
 }
 
-import * as DefaultEventHandlerStrategies from '../lib/impl/event/defaulteventhandlerstrategies';
-export { DefaultEventHandlerStrategies };
-
-import { TxEventHandler, TxEventHandlerFactory } from '../lib/impl/event/transactioneventhandler';
-export { TxEventHandler, TxEventHandlerFactory };
-
 export interface QueryOptions {
 	strategy?: QueryHandlerFactory;
 	timeout?: number;
-}
-
-export class QueryHandlerStrategies {
-	public static MSPID_SCOPE_ROUND_ROBIN: QueryHandlerFactory;
-	public static MSPID_SCOPE_SINGLE: QueryHandlerFactory;
-}
-
-export type QueryHandlerFactory = (network: Network) => QueryHandler;
-
-export interface QueryHandler {
-	evaluate(query: Query): Promise<Buffer>;
-}
-
-export interface Query {
-	evaluate(targets: Endorser[]): Promise<QueryResults>;
-}
-
-export interface QueryResults {
-	[peerName: string]: Error | QueryResponse;
-}
-
-export interface QueryResponse {
-	isEndorsed: boolean;
-	payload: Buffer;
-	status: number;
-	message: string;
 }
 
 export class Gateway {
@@ -93,14 +77,6 @@ export class Gateway {
 	public getIdentity(): Identity;
 	public getNetwork(channelName: string): Promise<Network>;
 	public getOptions(): GatewayOptions;
-}
-
-export class Network {
-	getGateway(): Gateway;
-	getChannel(): Channel;
-	getContract(chaincodeId: string, name?: string): Contract;
-	addCommitListener(listener: CommitListener, peers: Endorser[], transactionId: string): Promise<CommitListener>;
-	removeCommitListener(listener: CommitListener): void;
 }
 
 export class Contract {

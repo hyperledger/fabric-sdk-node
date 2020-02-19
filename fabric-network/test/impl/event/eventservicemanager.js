@@ -13,12 +13,12 @@ chai.use(require('chai-as-promised'));
 const rewire = require('rewire');
 
 const {Channel, Client, EventService, Endorser, Eventer} = require('fabric-common');
-const Network = require('fabric-network/lib/network');
+const {NetworkImpl: Network} = require('../../../lib/network');
 const Gateway = require('fabric-network/lib/gateway');
 const EventServiceManager = require('fabric-network/lib/impl/event/eventservicemanager');
 const EventServiceManagerRewire = rewire('fabric-network/lib/impl/event/eventservicemanager');
 const EventServiceStrategies = require('fabric-network/lib/impl/event/defaulteventhandlerstrategies');
-const QueryHandlerStrategies = require('fabric-network/lib/impl/query/queryhandlerstrategies');
+const QueryHandlerStrategies = require('fabric-network/lib/impl/query/defaultqueryhandlerstrategies');
 
 describe('EventServiceManager', () => {
 	let sandbox;
@@ -310,37 +310,17 @@ describe('EventServiceManager', () => {
 		});
 
 		describe('#constructor', () => {
-			it('should create an of peers', () => {
+			it('should create an array of peers', () => {
 				expect(pool.peers).to.be.instanceOf(Array);
 				expect(pool.peers).to.deep.equal([peer1, peer2]);
-				expect(pool.lastPeerIndex).to.be.equal(-1);
 			});
 
 			it('should throw error when no peers found', () => {
-				try {
-					// const network2 = sinon.stub();
-					// network2.getChannel = sinon.stub();
-					// network2.getChannel.getEndorsers = sinon.stub().returns([]);
-					// network2.getGateway = sinon.stub().returns(gateway);
+				const f = () => {
 					channel.getEndorsers.returns([]);
 					new RoundRobinPeerPool(network);
-					expect(1, 'should have throw error').to.be.false;
-				} catch (error) {
-					expect(error.message).to.contain('No peers available');
-				}
-			});
-			it('should throw error when no peers found', () => {
-				try {
-					// const network2 = sinon.stub();
-					// network2.getChannel = sinon.stub();
-					// network2.getChannel.getEndorsers = sinon.stub().returns();
-					// network2.getGateway = sinon.stub().returns(gateway);
-					channel.getEndorsers.returns();
-					new RoundRobinPeerPool(network);
-					expect(1, 'should have throw error').to.be.false;
-				} catch (error) {
-					expect(error.message).to.contain('No peers available');
-				}
+				};
+				expect(f).to.throw('No peers available');
 			});
 		});
 

@@ -139,8 +139,8 @@ class BaseEventListener {
 			this.registration = null;
 		}
 
-		if (this.network.listeners.has(this)) {
-			this.network.listeners.delete(this);
+		if (this.network.oldListeners.has(this)) {
+			this.network.oldListeners.delete(this);
 		}
 	}
 
