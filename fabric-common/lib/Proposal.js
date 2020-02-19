@@ -58,9 +58,9 @@ class Proposal extends ServiceAction {
 	}
 
 	/**
-	 * Returns a JSON object representing this proposals chaincodes
-	 * and collections as an interest for the Discovery Service.
-	 * The {@link Discovery} will use the interest to build a query
+	 * Returns an array representing this proposals chaincodes
+	 * and collections as interests for the Discovery Service.
+	 * The {@link Discovery} will use the interests to build a query
 	 * request for an endorsement plan to a Peer's Discovery service.
 	 * Use the {@link Proposal#addCollectionInterest} to add collections
 	 * for the chaincode of this proposal.
@@ -75,24 +75,24 @@ class Proposal extends ServiceAction {
 		const method = `buildProposalInterest[${this.chaincodeId}]`;
 		logger.debug('%s - start', method);
 
-		let interest = [];
+		let interests = [];
 		const chaincode = {};
-		interest.push(chaincode);
+		interests.push(chaincode);
 		chaincode.name = this.chaincodeId;
 		if (this.collectionsInterest.length > 0) {
 			chaincode.collectionNames = this.collectionsInterest;
 		}
 		if (this.chaincodesCollectionsInterest.length > 0) {
-			interest = interest.concat(this.chaincodesCollectionsInterest);
+			interests = interests.concat(this.chaincodesCollectionsInterest);
 		}
 
-		return interest;
+		return interests;
 	}
 
 	/**
 	 * Use this method to add collection names associated
 	 * with this proposal's chaincode name. These will be
-	 * used to build a Discovery interest. {@link Proposal#buildProposalInterest}
+	 * used to build a Discovery interests. {@link Proposal#buildProposalInterest}
 	 * @param {string} collectionName - collection name
 	 */
 	addCollectionInterest(collectionName) {
@@ -110,7 +110,7 @@ class Proposal extends ServiceAction {
 	/**
 	 * Use this method to add a chaincode name and collection names
 	 * that this proposal's chaincode will call. These will be used
-	 * to build a Discovery interest. {@link Proposal#buildProposalInterest}
+	 * to build a Discovery interests. {@link Proposal#buildProposalInterest}
 	 * @param {string} chaincodeId - chaincode name
 	 * @param  {...string} collectionNames - one or more collection names
 	 */

@@ -103,13 +103,13 @@ class DiscoveryService extends ServiceAction {
 	 *  sending to the peer.
 	 * @property {Endorsement} [endorsement] - Optional. Include the endorsement
 	 *  instance to build the discovery request based on the proposal.
-	 *  This will get the discovery interest (chaincode names and collections)
+	 *  This will get the discovery interests (chaincode names and collections)
 	 *  from the endorsement instance. Use the {@link Proposal#addCollectionInterest}
 	 *  to add collections to the endorsement's chaincode. Use the
 	 *  {@link Proposal#addChaincodeCollectionsInterest} to add chaincodes
 	 *  and collections that will be called by the endorsement's chaincode.
-	 * @property {DiscoveryChaincode} [interest] - Optional. An
-	 *  array of {@link DiscoveryChaincodeInterest} that have chaincodes
+	 * @property {DiscoveryInterest[]} [interests] - Optional. An
+	 *  array of {@link DiscoveryInterest} that have chaincodes
 	 *  and collections to calculate the endorsement plans.
 	 * @example <caption>"single chaincode"</caption>
 	 *  [
@@ -136,13 +136,7 @@ class DiscoveryService extends ServiceAction {
 	 */
 
 	/**
-	 * @typedef {Object} DiscoveryChaincodesInterest
-	 * @property {DiscoveryChaincodeCall[]} interest - An array of
-	 *  {@link DiscoveryChaincodeCall} objects.
-	 */
-
-	/**
-	 * @typedef {Object} DiscoveryChaincodeCall
+	 * @typedef {Object} DiscoveryInterest
 	 * @property {string} name - The name of the chaincode
 	 * @property {string[]} [collection_names] - The names of the related collections
 	 */
@@ -159,7 +153,7 @@ class DiscoveryService extends ServiceAction {
 		logger.debug(`${method} - start`);
 
 		// always get the config, we need the MSPs, do not need local
-		const {config = true, local = false, interest, endorsement} = request;
+		const {config = true, local = false, interests, endorsement} = request;
 		this._reset();
 
 		const discovery_request = new fabprotos.discovery.Request();
@@ -213,23 +207,23 @@ class DiscoveryService extends ServiceAction {
 			query.setCcQuery(cc_query);
 			logger.debug(`${method} - adding proposal chaincodes/collections query`);
 			queries.push(query);
-		} else if (interest) {
+		} else if (interests) {
 			const query = new fabprotos.discovery.Query();
 			query.setChannel(this.channel.name);
 
 			const _interests = [];
-			const proto_interest = this._buildProtoChaincodeInterest(interest);
+			const proto_interest = this._buildProtoChaincodeInterest(interests);
 			_interests.push(proto_interest);
 
 			const cc_query = new fabprotos.discovery.ChaincodeQuery();
 			cc_query.setInterests(_interests);
 			query.setCcQuery(cc_query);
-			logger.debug(`${method} - adding interest chaincodes/collections query`);
+			logger.debug(`${method} - adding interests chaincodes/collections query`);
 			queries.push(query);
 		}
 
 		if (queries.length === 0) {
-			throw Error('No discovery interest provided');
+			throw Error('No discovery interests provided');
 		} else {
 			// be sure to set the array after completely building it
 			discovery_request.setQueries(queries);
@@ -368,15 +362,15 @@ class DiscoveryService extends ServiceAction {
 
 
 	/* internal method
-	 *  Takes an array of {@link DiscoveryChaincodeCall} that represent the
-	 *  chaincodes and associated collections to build an interest.
-	 *  The interest becomes part of the query object needed by the discovery
+	 *  Takes an array of {@link DiscoveryInterest} that represent the
+	 *  chaincodes and associated collections to build an interests.
+	 *  The interests becomes part of the query object needed by the discovery
 	 *  service to calculate the endorsement plan for an invocation.
 	 */
-	_buildProtoChaincodeInterest(interest = []) {
+	_buildProtoChaincodeInterest(interests = []) {
 		logger.debug(`_buildProtoChaincodeInterest[${this.name}] - start`);
 		const chaincode_calls = [];
-		for (const chaincode of interest) {
+		for (const chaincode of interests) {
 			const chaincode_call = new fabprotos.discovery.ChaincodeCall();
 			if (typeof chaincode.name === 'string') {
 				chaincode_call.setName(chaincode.name);

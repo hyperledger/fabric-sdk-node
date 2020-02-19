@@ -64,7 +64,7 @@ describe('Contract', () => {
 		transaction.evaluate.resolves('result');
 
 		endorsement = sinon.createStubInstance(Endorsement);
-		endorsement.buildProposalInterest.returns('interest');
+		endorsement.buildProposalInterest.returns('interests');
 
 		Contract.__set__('ContractEventListener', FakeListener);
 		contract = new Contract(network, chaincodeId, namespace, collections);
@@ -160,6 +160,46 @@ describe('Contract', () => {
 			network.discoveryService = discoveryService;
 			const handler = await contract.getDiscoveryHandler(endorsement);
 			expect(handler).to.equal('handler');
+		});
+		it('should use the discoveryInterests assigned', async () => {
+			network.discoveryService = discoveryService;
+			contract.discoveryInterests = 'appinterests';
+			const handler = await contract.getDiscoveryHandler(endorsement);
+			expect(handler).to.equal('handler');
+			sinon.assert.calledWith(discoveryService.build, 'idx', {interests: 'appinterests'});
+		});
+		it('should use the chaincodeid as interests', async () => {
+			network.discoveryService = discoveryService;
+			const handler = await contract.getDiscoveryHandler(endorsement);
+			expect(handler).to.equal('handler');
+			sinon.assert.calledWith(discoveryService.build, 'idx', {interests: 'interests'});
+		});
+	});
+
+	describe('#setDiscoveryInterests', () => {
+		it('set the interst object', async () => {
+			const discoveryInterests = 'interests';
+			contract.setDiscoveryInterests(discoveryInterests);
+			contract.discoveryInterests.should.equal(discoveryInterests);
+		});
+		it('unset the interst object', async () => {
+			const discoveryInterests = 'interests';
+			contract.setDiscoveryInterests(discoveryInterests);
+			contract.discoveryInterests.should.equal(discoveryInterests);
+			contract.setDiscoveryInterests(null);
+			expect(contract.discoveryInterests).to.be.null;
+		});
+	});
+	describe('#getDiscoveryInterests', () => {
+		it('get the interests object', async () => {
+			const discoveryInterests = 'interests';
+			contract.setDiscoveryInterests(discoveryInterests);
+			const result = contract.getDiscoveryInterests();
+			result.should.equal(discoveryInterests);
+		});
+		it('get and umset interests object', async () => {
+			const result = contract.getDiscoveryInterests();
+			expect(result).to.be.undefined;
 		});
 	});
 });

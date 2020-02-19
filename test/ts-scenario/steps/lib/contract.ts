@@ -158,7 +158,7 @@ export async function cli_lifecycle_chaincode_query_installed(orgName: string): 
 
 /**
  * Use the CLI container to retrieve a package id for lifecycle installed chaincode
- * @param {string} label the chaincode label name of interest
+ * @param {string} label the chaincode label name of interests
  * @param {string} orgName the organization to use
  */
 export async function retrievePackageIdForLabelOnOrg(label: string, orgName: string): Promise<string> {

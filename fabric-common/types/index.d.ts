@@ -111,6 +111,11 @@ export class DiscoveryHandler extends ServiceHandler {
 	query(signedProposal: Buffer, request: any): Promise<any>;
 }
 
+export interface DiscoveryInterest {
+	name: string;
+	collection_names?: string[];
+}
+
 export class ServiceEndpoint {
 	public readonly name: string;
 	constructor(name: string, client: Client, mspid?: string);
@@ -458,11 +463,7 @@ export interface DiscoveryResults {
 	timestamp: number;
 }
 
-export interface DiscoveryChaincodeCall {
+export interface DiscoveryInterest {
 	name: string;
 	collection_names?: string[];
-}
-
-export interface DiscoveryChaincodeInterest {
-	chaincodes: DiscoveryChaincodeCall[];
 }

@@ -176,12 +176,23 @@ class Contract {
 				const targets = this.network.discoveryService.targets;
 				const idx = this.network.gateway.identityContext;
 				const asLocalhost = this.network.gateway.getOptions().discovery.asLocalhost;
-				// this will tell discovery to build a plan based on the chaincode id
-				// and collections names of this contract that the endorsement must
-				// have been assigned.
-				const interest = endorsement.buildProposalInterest();
+				let interests;
+				if (this.discoveryInterests) {
+					// this will tell discovery to build a plan based on what the
+					// application has determined, the application must include all
+					// chaincodes this chaincode may call, including the name of
+					// this chaincode. Included with each chaincode name is the list
+					// of collections names of the chaincode.
+					interests = this.discoveryInterests;
+				} else {
+					// this will tell discovery to build a plan based on the chaincode id
+					// and collections names of this contract that the endorsement must
+					// have been assigned.
+					interests = endorsement.buildProposalInterest();
+				}
 
-				this.discoveryService.build(idx, {interest});
+
+				this.discoveryService.build(idx, {interests});
 				this.discoveryService.sign(idx);
 
 				// go get the endorsement plan from the peer's discovery service
@@ -201,6 +212,30 @@ class Contract {
 		}
 	}
 
+	/**
+	 * Provide the Discovery Interests settings to help the peer's discovery service
+	 * build an endorsement plan. This interests must include this contract's
+	 * chaincode name and any chaincode names that this chaincode may call. Must
+	 * include the collection names the chaincodes may belong.
+	 * @param {DiscoveryIntereset[]} interests - These will be used
+	 * as the interests when the {@link DiscoveryService} builds a discovery request
+	 * if the {@link module:fabric-network.Transaction#submit} is using discovery.
+	 */
+	setDiscoveryInterests(interests) {
+		this.discoveryInterests = interests;
+
+		return this;
+	}
+
+	/**
+	 * Retrieve the Discovery Interests settings that will help the peer's
+	 * discovery service build an endorsement plan.
+	 * @return {DiscoveryIntereset[]} - These will be used
+	 * as the interests when the {@link DiscoveryService} builds a discovery request.
+	 */
+	getDiscoveryInterests() {
+		return this.discoveryInterests;
+	}
 }
 
 module.exports = Contract;

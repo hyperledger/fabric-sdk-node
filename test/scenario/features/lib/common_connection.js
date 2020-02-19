@@ -64,7 +64,7 @@ class CommonConnectionProfile {
 
 	/**
 	 * Retrieve the channel Object based on name
-	 * @param {String} channelName the channel of interest
+	 * @param {String} channelName the channel of interests
 	 * @return {Object} the channel object
 	 */
 	getChannel(channelName) {
@@ -81,7 +81,7 @@ class CommonConnectionProfile {
 
 	/**
 	 * Retrieve the organization object
-	 * @param {String} orgName the organization of interest
+	 * @param {String} orgName the organization of interests
 	 * @return {Object} the organization object
 	 */
 	getOrganization(orgName) {
@@ -90,7 +90,7 @@ class CommonConnectionProfile {
 
 	/**
 	 * Retrieve the organizations included within a channel
-	 * @param {String} channelName the channel of interest
+	 * @param {String} channelName the channel of interests
 	 * @return {String[]} the organizations associated with a channel
 	 */
 	getOrganizationsForChannel(channelName) {
@@ -129,7 +129,7 @@ class CommonConnectionProfile {
 
 	/**
 	 * Retrieve all orderers from a named channel
-	 * @param {String} channelName the channel of interest
+	 * @param {String} channelName the channel of interests
 	 * @return {Object[]} orderers for the named channel
 	 */
 	getOrderersForChannel(channelName) {
@@ -190,7 +190,7 @@ class CommonConnectionProfile {
 
 	/**
 	 * Retrieve all peers for a named channel in the profile
-	 * @param {String} channelName the channel name of interest
+	 * @param {String} channelName the channel name of interests
 	 * @return {String[]} the string array of all peer for the channel
 	 */
 	getPeersForChannel(channelName) {

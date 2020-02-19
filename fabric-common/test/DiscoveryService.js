@@ -207,10 +207,10 @@ describe('DiscoveryService', () => {
 				discovery.build();
 			}).should.throw('Missing idContext parameter');
 		});
-		it('should require an interest endorsement', () => {
+		it('should require interests endorsement', () => {
 			(() => {
 				discovery.build(idx, {config: false});
-			}).should.throw('No discovery interest provided');
+			}).should.throw('No discovery interests provided');
 		});
 		it('should build with default options', () => {
 			discovery.build(idx);
@@ -233,9 +233,9 @@ describe('DiscoveryService', () => {
 			should.exist(discovery._action);
 			should.exist(discovery._payload);
 		});
-		it('should build with an interest option', () => {
-			const interest = [{name: 'mychaincode'}];
-			discovery.build(idx, {local: true, interest: interest});
+		it('should build with interests option', () => {
+			const interests = [{name: 'mychaincode'}];
+			discovery.build(idx, {local: true, interests: interests});
 			should.exist(discovery._action);
 			should.exist(discovery._payload);
 		});
@@ -379,62 +379,62 @@ describe('DiscoveryService', () => {
 	});
 
 	describe('#_buildProtoChaincodeInterest', () => {
-		it('should handle no interest', () => {
+		it('should handle no interests', () => {
 			const results = discovery._buildProtoChaincodeInterest();
 			should.exist(results.chaincodes);
 		});
 		it('should handle one chaincode', () => {
-			const interest = [{name: 'chaincode1'}];
-			const results = discovery._buildProtoChaincodeInterest(interest);
+			const interests = [{name: 'chaincode1'}];
+			const results = discovery._buildProtoChaincodeInterest(interests);
 			should.exist(results.chaincodes);
 		});
 		it('should handle one chaincode one collection', () => {
-			const interest = [{name: 'chaincode1', collection_names: ['collection1']}];
-			const results = discovery._buildProtoChaincodeInterest(interest);
+			const interests = [{name: 'chaincode1', collection_names: ['collection1']}];
+			const results = discovery._buildProtoChaincodeInterest(interests);
 			should.exist(results.chaincodes);
 		});
 		it('should handle two chaincodes', () => {
-			const interest = [{name: 'chaincode1'}, {name: 'chaincode2'}];
-			const results = discovery._buildProtoChaincodeInterest(interest);
+			const interests = [{name: 'chaincode1'}, {name: 'chaincode2'}];
+			const results = discovery._buildProtoChaincodeInterest(interests);
 			should.exist(results.chaincodes);
 		});
 		it('should handle two chaincode two collection', () => {
-			const interest = [
+			const interests = [
 				{name: 'chaincode1', collection_names: ['collection1']},
 				{name: 'chaincode2', collection_names: ['collection2']}
 			];
-			const results = discovery._buildProtoChaincodeInterest(interest);
+			const results = discovery._buildProtoChaincodeInterest(interests);
 			should.exist(results.chaincodes);
 		});
 		it('should handle two chaincode four collection', () => {
-			const interest = [
+			const interests = [
 				{name: 'chaincode1', collection_names: ['collection1', 'collection3']},
 				{name: 'chaincode2', collection_names: ['collection2', 'collection4']}
 			];
-			const results = discovery._buildProtoChaincodeInterest(interest);
+			const results = discovery._buildProtoChaincodeInterest(interests);
 			should.exist(results.chaincodes);
 		});
 		it('should handle two chaincodes same name', () => {
-			const interest = [{name: 'chaincode1'}, {name: 'chaincode1'}];
-			const results = discovery._buildProtoChaincodeInterest(interest);
+			const interests = [{name: 'chaincode1'}, {name: 'chaincode1'}];
+			const results = discovery._buildProtoChaincodeInterest(interests);
 			should.exist(results.chaincodes);
 		});
 		it('should require a idContext', () => {
 			(() => {
-				const interest = [{name: {}}];
-				discovery._buildProtoChaincodeInterest(interest);
+				const interests = [{name: {}}];
+				discovery._buildProtoChaincodeInterest(interests);
 			}).should.throw('Chaincode name must be a string');
 		});
 		it('should require a idContext', () => {
 			(() => {
-				const interest = [{name: 'chaincode1', collection_names: {}}];
-				discovery._buildProtoChaincodeInterest(interest);
+				const interests = [{name: 'chaincode1', collection_names: {}}];
+				discovery._buildProtoChaincodeInterest(interests);
 			}).should.throw('Collection names must be an array of strings');
 		});
 		it('should require a idContext', () => {
 			(() => {
-				const interest = [{name: 'chaincode1', collection_names: [{}]}];
-				discovery._buildProtoChaincodeInterest(interest);
+				const interests = [{name: 'chaincode1', collection_names: [{}]}];
+				discovery._buildProtoChaincodeInterest(interests);
 			}).should.throw('The collection name must be a string');
 		});
 	});

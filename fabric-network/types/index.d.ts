@@ -8,13 +8,12 @@
 
 import { Wallet } from '../lib/impl/wallet/wallet';
 import { CommitListener } from '../lib/impl/event/commitlistener';
-import { Identity } from '../lib/impl/wallet/identity';
-import { ChaincodeEvent, Channel, Client, Endorser, EventService, IdentityContext, ProposalResponse, User } from 'fabric-common';
+import { ChaincodeEvent, Channel, Client, DiscoveryInterest, Endorser, EventService, IdentityContext, ProposalResponse, User } from 'fabric-common';
 
 export { Wallet };
 export { Wallets } from '../lib/impl/wallet/wallets';
 export { WalletStore } from '../lib/impl/wallet/walletstore';
-export { Identity };
+export { Identity } from '../lib/impl/wallet/identity';
 export { IdentityData } from '../lib/impl/wallet/identitydata';
 export { IdentityProvider } from '../lib/impl/wallet/identityprovider';
 export { IdentityProviderRegistry } from '../lib/impl/wallet/identityproviderregistry';
@@ -107,6 +106,7 @@ export class Contract {
 	createTransaction(name: string): Transaction;
 	evaluateTransaction(name: string, ...args: string[]): Promise<Buffer>;
 	submitTransaction(name: string, ...args: string[]): Promise<Buffer>;
+	setDiscoveryInterests(interests: DiscoveryInterest[]): Contract;
 }
 
 export interface TransientMap {

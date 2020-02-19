@@ -22,5 +22,8 @@
 	},
 	"wallet": {
 		"title": "fabric-network: Using wallets to manage identities"
+	},
+	"discocery": {
+		"title": "fabric-network: Using discovery"
 	}
 }

@@ -16,6 +16,7 @@ import { createTransactionEventHandler as sampleTxnEventStrategy } from '../../c
 import { DefaultEventHandlerStrategies, QueryHandlerStrategies, Gateway, GatewayOptions, Wallet, Wallets, Identity, Contract, Network, TxEventHandlerFactory, QueryHandlerFactory, Transaction, TransientMap } from 'fabric-network';
 import * as fs from 'fs';
 import * as path from 'path';
+import { DiscoveryInterest } from 'fabric-common';
 
 const stateStore: StateStore = StateStore.getInstance();
 const txnTypes: string[] = ['evaluate', 'submit'];
@@ -398,6 +399,13 @@ export async function performTransientGatewayTransaction(gatewayName: string, cc
 	const gateway: Gateway = gatewayObj.gateway;
 	const network: Network = await gateway.getNetwork(channelName);
 	const contract: Contract = network.getContract(ccName);
+	const options = gateway.getOptions();
+	if (options.discovery && options.discovery.enabled) {
+		const interests: DiscoveryInterest[] = [
+			{name: ccName}
+		];
+		contract.setDiscoveryInterests(interests);
+	}
 
 	// Build a transaction
 	const transaction: Transaction = contract.createTransaction(func);

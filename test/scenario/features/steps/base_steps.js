@@ -308,7 +308,7 @@ module.exports = function () {
 						testUtil.logAndThrow('Discovery checkConnection test failed');
 					}
 					// pass in an endorsement, this will provide the chaincode name
-					// as an "interest" for the discovery request. The peer's discovery
+					// as an "interests" for the discovery request. The peer's discovery
 					// service will then be able to build an endorsement plan.
 					discovery.build(idx, {endorsement: endorsement});
 					discovery.sign(idx);

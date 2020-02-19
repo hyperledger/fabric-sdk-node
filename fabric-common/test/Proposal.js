@@ -76,36 +76,36 @@ describe('Proposal', () => {
 	});
 
 	describe('#buildProposalInterest', () => {
-		it('should return interest', () => {
-			const interest = proposal.buildProposalInterest();
-			interest.should.deep.equal([{name: 'chaincode'}]);
+		it('should return interests', () => {
+			const interests = proposal.buildProposalInterest();
+			interests.should.deep.equal([{name: 'chaincode'}]);
 		});
-		it('should return interest and collections', () => {
+		it('should return interests and collections', () => {
 			const collections = ['col1', 'col2'];
 			proposal.collectionsInterest = collections;
-			const interest = proposal.buildProposalInterest();
-			interest.should.deep.equal([{name: 'chaincode', collectionNames: collections}]);
+			const interests = proposal.buildProposalInterest();
+			interests.should.deep.equal([{name: 'chaincode', collectionNames: collections}]);
 		});
-		it('should return interest and chaincode and chaincode collections ', () => {
+		it('should return interests and chaincode and chaincode collections ', () => {
 			const chaincode_collection = {name: 'chain2', collectionNames: ['col1', 'col2']};
 			proposal.chaincodesCollectionsInterest = [chaincode_collection];
-			const interest = proposal.buildProposalInterest();
-			interest.should.deep.equal([{name: 'chaincode'}, chaincode_collection]);
+			const interests = proposal.buildProposalInterest();
+			interests.should.deep.equal([{name: 'chaincode'}, chaincode_collection]);
 		});
 	});
 
 	describe('#addCollectionInterest', () => {
-		it('should save collection interest', () => {
+		it('should save collection interests', () => {
 			proposal.addCollectionInterest('col1');
 			proposal.collectionsInterest.should.deep.equal(['col1']);
 		});
-		it('should save collection interest', () => {
+		it('should save collection interests', () => {
 			const collections = ['col1', 'col2'];
 			proposal.addCollectionInterest('col1');
 			proposal.addCollectionInterest('col2');
 			proposal.collectionsInterest.should.deep.equal(collections);
-			const interest = proposal.buildProposalInterest();
-			interest.should.deep.equal([{name: 'chaincode', collectionNames: collections}]);
+			const interests = proposal.buildProposalInterest();
+			interests.should.deep.equal([{name: 'chaincode', collectionNames: collections}]);
 		});
 		it('should require a string collection name', () => {
 			(() => {
@@ -115,19 +115,19 @@ describe('Proposal', () => {
 	});
 
 	describe('#addChaincodeCollectionsInterest', () => {
-		it('should save chaincode collection interest', () => {
+		it('should save chaincode collection interests', () => {
 			const chaincode_collection = {name: 'chain2', collectionNames: ['col1', 'col2']};
 			proposal.addChaincodeCollectionsInterest('chain2', 'col1', 'col2');
 			proposal.chaincodesCollectionsInterest.should.deep.equal([chaincode_collection]);
-			const interest = proposal.buildProposalInterest();
-			interest.should.deep.equal([{name: 'chaincode'}, chaincode_collection]);
+			const interests = proposal.buildProposalInterest();
+			interests.should.deep.equal([{name: 'chaincode'}, chaincode_collection]);
 		});
-		it('should save chaincode only chaincode collection interest', () => {
+		it('should save chaincode only chaincode collection interests', () => {
 			const chaincode_collection = {name: 'chain2'};
 			proposal.addChaincodeCollectionsInterest('chain2');
 			proposal.chaincodesCollectionsInterest.should.deep.equal([chaincode_collection]);
-			const interest = proposal.buildProposalInterest();
-			interest.should.deep.equal([{name: 'chaincode'}, chaincode_collection]);
+			const interests = proposal.buildProposalInterest();
+			interests.should.deep.equal([{name: 'chaincode'}, chaincode_collection]);
 		});
 		it('should require a string chaincode name', () => {
 			(() => {
