@@ -20,7 +20,7 @@ const logger = utils.getLogger('NetworkConfig');
 class NetworkConfig {
 
 	static async loadFromConfig(client, config = {}) {
-		const method = 'buildChannel';
+		const method = 'loadFromConfig';
 		logger.debug('%s - start', method);
 
 		// create peers
@@ -50,17 +50,30 @@ async function buildChannel(client, channel_name, channel_config, config) {
 	const method = 'buildChannel';
 	logger.debug('%s - start - %s', method, channel_name);
 
+	// this will add the channel to the client instance
 	const channel = client.getChannel(channel_name);
-	for (const peer_name in channel_config.peers) {
-		const peer = client.getEndorser(peer_name);
-		channel.addEndorser(peer);
-		logger.debug('%s - added endorsing peer :: %s', method, peer.name);
+	if (channel_config.peers) {
+		// using 'in' as peers is an object
+		for (const peer_name in channel_config.peers) {
+			const peer = client.getEndorser(peer_name);
+			channel.addEndorser(peer);
+			logger.debug('%s - added endorsing peer :: %s', method, peer.name);
+		}
+	} else {
+		logger.debug('%s - no peers in config', method);
 	}
-	for (const orderer_name of channel_config.orderers) {
-		const orderer = client.getCommitter(orderer_name);
-		channel.addCommitter(orderer);
-		logger.debug('%s - added orderer :: %s', method, orderer.name);
+
+	if (channel_config.orderers) {
+		// using 'of' as orderers is an array
+		for (const orderer_name of channel_config.orderers) {
+			const orderer = client.getCommitter(orderer_name);
+			channel.addCommitter(orderer);
+			logger.debug('%s - added orderer :: %s', method, orderer.name);
+		}
+	} else {
+		logger.debug('%s - no orderers in config', method);
 	}
+
 }
 
 async function buildOrderer(client, orderer_name, orderer_config) {
