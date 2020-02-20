@@ -69,6 +69,7 @@ message ImplicitMetaPolicy {
 // ApplicationPolicy captures the diffenrent policy types that
 // are set and evaluted at the application level.
 message ApplicationPolicy {
+    option deprecated = true;
     oneof Type {
         // SignaturePolicy type is used if the policy is specified as
         // a combination (using threshold gates) of signatures from MSP

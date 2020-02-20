@@ -156,6 +156,8 @@ message ChaincodeInterest {
 message ChaincodeCall {
     string name = 1;
     repeated string collection_names = 2;
+    bool no_private_reads = 3; // Indicates we do not need to read from private data
+    bool no_public_writes = 4; // Indicates we do not need to write to the chaincode namespace
 }
 
 // ChaincodeQueryResult contains EndorsementDescriptors for
