@@ -39,16 +39,6 @@ message ConfigEnvelope {
                               // Note that CONFIG_UPDATE has a Payload.Data of a Marshaled ConfigUpdate
 }
 
-message ConfigGroupSchema {
-    map<string, ConfigGroupSchema> groups = 1;
-    map<string, ConfigValueSchema> values = 2;
-    map<string, ConfigPolicySchema> policies = 3;
-}
-
-message ConfigValueSchema {}
-
-message ConfigPolicySchema {}
-
 // Config represents the config for a particular channel
 message Config {
     // Prevent removed tag re-use
