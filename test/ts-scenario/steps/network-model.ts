@@ -49,7 +49,7 @@ When(/^I use the gateway named (.+?) to (.+?) a total of (.+?) transactions with
 });
 
 When(/^I modify (.+?) to (.+?) a transaction with args (.+?) for contract (.+?) instantiated on channel (.+?) using handler option (.+?)$/, { timeout: Constants.STEP_MED as number }, async (gatewayName: string, txnType: string, txnArgs: string, ccName: string, channelName: string, handlerOption: string) => {
-	return await Gateway.performHandledGatewayTransaction(gatewayName, ccName, channelName, txnArgs, txnType, handlerOption);
+	return await Gateway.performGatewayTransaction(gatewayName, ccName, channelName, txnArgs, txnType, handlerOption);
 });
 
 When(/^I modify (.+?) to (.+?) a transaction with transient data using args (.+?) for contract (.+?) instantiated on channel (.+?)$/, { timeout: Constants.STEP_MED as number }, async (gatewayName: string, txnType: string, txnArgs: string, ccName: string, channelName: string) => {

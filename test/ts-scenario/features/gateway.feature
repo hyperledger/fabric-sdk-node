@@ -25,22 +25,26 @@ Feature: Configure Fabric using CLI and submit/evaluate using a network Gateway 
 		Then The gateway named mycouchgateway has a error type response containing Error: You've asked to invoke a function that does not exist: noSuchSubmitTransaction
 		When I use the gateway named mycouchgateway to submit a transaction with args [createCar,9,Ford] for contract fabcar instantiated on channel gatewaychannel
 		Then The gateway named mycouchgateway has a error type response containing Error: Expected 5 parameters, but 2 have been supplied
-		When I use the gateway named mycouchgateway to evaluate a transaction with args [noSuchEvauateTransaction,1001] for contract fabcar instantiated on channel gatewaychannel
-		Then The gateway named mycouchgateway has a error type response containing Error: You've asked to invoke a function that does not exist: noSuchEvauateTransaction
+		When I use the gateway named mycouchgateway to evaluate a transaction with args [noSuchEvaluateTransaction,1001] for contract fabcar instantiated on channel gatewaychannel
+		Then The gateway named mycouchgateway has a error type response containing Error: You've asked to invoke a function that does not exist: noSuchEvaluateTransaction
 		When I use the gateway named mycouchgateway to evaluate a transaction with args [queryCar,because,I,said,so] for contract fabcar instantiated on channel gatewaychannel
 		Then The gateway named mycouchgateway has a error type response containing Error: Expected 1 parameters, but 4 have been supplied
 
 	Scenario: Using a Gateway to submit transactions I can use different event handler strategies
 		When I modify mycouchgateway to submit a transaction with args [createCar,1002,Ford,Mustang,Silver,Andy] for contract fabcar instantiated on channel gatewaychannel using handler option MSPID_SCOPE_ALLFORTX
-		Then The gateway named mycouchgateway has a event type response containing "status":"VALID"
-		When I modify mycouchgateway to submit a transaction with args [createCar,1003,Ford,Mustang,Silver,Andy] for contract fabcar instantiated on channel gatewaychannel using handler option MSPID_SCOPE_ANYFORTX
-		Then The gateway named mycouchgateway has a event type response containing "status":"VALID"
-		When I modify mycouchgateway to submit a transaction with args [createCar,1004,Ford,Mustang,Silver,Andy] for contract fabcar instantiated on channel gatewaychannel using handler option NETWORK_SCOPE_ALLFORTX
-		Then The gateway named mycouchgateway has a event type response containing "status":"VALID"
-		When I modify mycouchgateway to submit a transaction with args [createCar,1005,Ford,Mustang,Silver,Andy] for contract fabcar instantiated on channel gatewaychannel using handler option NETWORK_SCOPE_ANYFORTX
-		Then The gateway named mycouchgateway has a event type response containing "status":"VALID"
-		When I modify mycouchgateway to submit a transaction with args [createCar,1006,Ford,Mustang,Silver,Andy] for contract fabcar instantiated on channel gatewaychannel using handler option custom
-		Then The gateway named mycouchgateway has a event type response containing "status":"VALID"
+		And  I use the gateway named mycouchgateway to evaluate a transaction with args [queryCar,1002] for contract fabcar instantiated on channel gatewaychannel
+	    Then The gateway named mycouchgateway has a evaluate type response matching {"color":"Silver","docType":"car","make":"Ford","model":"Mustang","owner":"Andy"}
+		When I modify mycouchgateway to submit a transaction with args [createCar,1003,Ford,Fiesta,Blue,Heather] for contract fabcar instantiated on channel gatewaychannel using handler option MSPID_SCOPE_ANYFORTX
+		And  I use the gateway named mycouchgateway to evaluate a transaction with args [queryCar,1003] for contract fabcar instantiated on channel gatewaychannel
+	    Then The gateway named mycouchgateway has a evaluate type response matching {"color":"Blue","docType":"car","make":"Ford","model":"Fiesta","owner":"Heather"}
+		When I modify mycouchgateway to submit a transaction with args [createCar,1004,Vauxhall,Corsa,White,Mark] for contract fabcar instantiated on channel gatewaychannel using handler option NETWORK_SCOPE_ALLFORTX
+		And  I use the gateway named mycouchgateway to evaluate a transaction with args [queryCar,1004] for contract fabcar instantiated on channel gatewaychannel
+	    Then The gateway named mycouchgateway has a evaluate type response matching {"color":"White","docType":"car","make":"Vauxhall","model":"Corsa","owner":"Mark"}
+		When I modify mycouchgateway to submit a transaction with args [createCar,1005,Bugatti,Veyron,Black,Bret] for contract fabcar instantiated on channel gatewaychannel using handler option NETWORK_SCOPE_ANYFORTX
+		Then The gateway named mycouchgateway has a submit type response
+		When I modify mycouchgateway to submit a transaction with args [createCar,1006,Lotus,Elise,Pink,Nick] for contract fabcar instantiated on channel gatewaychannel using handler option custom
+		And  I use the gateway named mycouchgateway to evaluate a transaction with args [queryCar,1006] for contract fabcar instantiated on channel gatewaychannel
+	    Then The gateway named mycouchgateway has a evaluate type response matching {"color":"Pink","docType":"car","make":"Lotus","model":"Elise","owner":"Nick"}
 
 	Scenario: Using a Gateway I can use transient data
 		When I modify mycouchgateway to submit a transaction with transient data using args [getTransient,value1,value2] for contract fabcar instantiated on channel gatewaychannel
@@ -54,4 +58,4 @@ Feature: Configure Fabric using CLI and submit/evaluate using a network Gateway 
 		When I modify mycouchgateway to evaluate a transaction with args [queryCar,1001] for contract fabcar instantiated on channel gatewaychannel using handler option MSPID_SCOPE_ROUND_ROBIN
 		Then The gateway named mycouchgateway has a evaluate type response matching {"color":"brown","docType":"car","make":"Trabant","model":"601 Estate","owner":"Simon"}
 		When I modify mycouchgateway to evaluate a transaction with args [queryCar,1001] for contract fabcar instantiated on channel gatewaychannel using handler option custom
-		Then The gateway named mycouchgateway has a evaluate type response containing {"color":"brown","docType":"car","make":"Trabant","model":"601 Estate","owner":"Simon"}
+		Then The gateway named mycouchgateway has a evaluate type response matching {"color":"brown","docType":"car","make":"Trabant","model":"601 Estate","owner":"Simon"}

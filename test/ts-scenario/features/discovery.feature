@@ -33,13 +33,19 @@ Feature: Configure Fabric using CLI and submit/evaluate using a network Gateway 
 
 	Scenario: Using a Gateway to submit transactions I can use different event handler strategies
 		When I modify myDiscoveryGateway to submit a transaction with args [createCar,1002,Ford,Mustang,Silver,Andy] for contract fabcar instantiated on channel discoverychannel using handler option MSPID_SCOPE_ALLFORTX
-		Then The gateway named myDiscoveryGateway has a event type response containing "status":"VALID"
-		When I modify myDiscoveryGateway to submit a transaction with args [createCar,1003,Ford,Mustang,Silver,Andy] for contract fabcar instantiated on channel discoverychannel using handler option MSPID_SCOPE_ANYFORTX
-		Then The gateway named myDiscoveryGateway has a event type response containing "status":"VALID"
-		When I modify myDiscoveryGateway to submit a transaction with args [createCar,1004,Ford,Mustang,Silver,Andy] for contract fabcar instantiated on channel discoverychannel using handler option NETWORK_SCOPE_ALLFORTX
-		Then The gateway named myDiscoveryGateway has a event type response containing "status":"VALID"
-		When I modify myDiscoveryGateway to submit a transaction with args [createCar,1005,Ford,Mustang,Silver,Andy] for contract fabcar instantiated on channel discoverychannel using handler option NETWORK_SCOPE_ANYFORTX
-		Then The gateway named myDiscoveryGateway has a event type response containing "status":"VALID"
+		And  I use the gateway named myDiscoveryGateway to evaluate a transaction with args [queryCar,1002] for contract fabcar instantiated on channel discoverychannel
+	    Then The gateway named myDiscoveryGateway has a evaluate type response matching {"color":"Silver","docType":"car","make":"Ford","model":"Mustang","owner":"Andy"}
+		When I modify myDiscoveryGateway to submit a transaction with args [createCar,1003,Ford,Fiesta,Blue,Heather] for contract fabcar instantiated on channel discoverychannel using handler option MSPID_SCOPE_ANYFORTX
+		And  I use the gateway named myDiscoveryGateway to evaluate a transaction with args [queryCar,1003] for contract fabcar instantiated on channel discoverychannel
+	    Then The gateway named myDiscoveryGateway has a evaluate type response matching {"color":"Blue","docType":"car","make":"Ford","model":"Fiesta","owner":"Heather"}
+		When I modify myDiscoveryGateway to submit a transaction with args [createCar,1004,Vauxhall,Corsa,White,Mark] for contract fabcar instantiated on channel discoverychannel using handler option NETWORK_SCOPE_ALLFORTX
+		And  I use the gateway named myDiscoveryGateway to evaluate a transaction with args [queryCar,1004] for contract fabcar instantiated on channel discoverychannel
+	    Then The gateway named myDiscoveryGateway has a evaluate type response matching {"color":"White","docType":"car","make":"Vauxhall","model":"Corsa","owner":"Mark"}
+		When I modify myDiscoveryGateway to submit a transaction with args [createCar,1005,Bugatti,Veyron,Black,Bret] for contract fabcar instantiated on channel discoverychannel using handler option NETWORK_SCOPE_ANYFORTX
+		Then The gateway named myDiscoveryGateway has a submit type response
+		When I modify myDiscoveryGateway to submit a transaction with args [createCar,1006,Lotus,Elise,Pink,Nick] for contract fabcar instantiated on channel discoverychannel using handler option custom
+		And  I use the gateway named myDiscoveryGateway to evaluate a transaction with args [queryCar,1006] for contract fabcar instantiated on channel discoverychannel
+	    Then The gateway named myDiscoveryGateway has a evaluate type response matching {"color":"Pink","docType":"car","make":"Lotus","model":"Elise","owner":"Nick"}
 
 	Scenario: Using a Gateway to evaluate transactions I can use different query handler strategies
 		When I modify myDiscoveryGateway to evaluate a transaction with args [queryCar,1001] for contract fabcar instantiated on channel discoverychannel using handler option MSPID_SCOPE_SINGLE

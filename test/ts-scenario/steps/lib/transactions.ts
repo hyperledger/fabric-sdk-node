@@ -5,26 +5,12 @@
 'use strict';
 
 import { Constants } from '../constants';
-import * as GatewayHelper from './gateway';
-import * as Listeners from './listeners';
 import * as BaseUtils from './utility/baseUtils';
 import { StateStore } from './utility/stateStore';
 
-import { Contract, Gateway, Transaction } from 'fabric-network';
+import { Transaction } from 'fabric-network';
 
 const stateStore: StateStore = StateStore.getInstance();
-
-export async function createTransaction(gatewayName: string, transactionName: string, mappedFcnName: string, contractId: string, channelName: string): Promise<void> {
-	const gateway: Gateway | undefined = GatewayHelper.getGateway(gatewayName);
-
-	if (gateway) {
-		const contract: Contract = await GatewayHelper.retrieveContractFromGateway(gateway, channelName, contractId);
-		const transaction: Transaction = contract.createTransaction(mappedFcnName);
-		addTransactionToStateStore(transactionName, transaction);
-	} else {
-		BaseUtils.logAndThrow(`Unable to retrieve Gateway named ${gatewayName}`);
-	}
-}
 
 export function addTransactionToStateStore(transactionName: string, transaction: Transaction): void {
 	// Map of maps
@@ -55,24 +41,5 @@ export function retrieveTransactionFromStateStore(transactionName: string): Tran
 		}
 	} else {
 		throw new Error('Unable to retrieveTransactionFromStateStore');
-	}
-}
-
-export async function createCommitListener(transactionName: string, listenerName: string): Promise<void> {
-	const transaction: Transaction | undefined  = retrieveTransactionFromStateStore(transactionName);
-	if (transaction) {
-		await Listeners.createTransactionCommitListener(transaction, listenerName);
-	} else {
-		throw new Error(`Unable to createTransactionCommitListener on undefined Transaction`);
-	}
-}
-
-export async function submitExistingTransaction(transactionName: string, args: string): Promise<Buffer> {
-	const transaction: Transaction | undefined = retrieveTransactionFromStateStore(transactionName);
-	const argsSplit: string[] = args.slice(1, -1).split(', ');
-	if (transaction) {
-		return await transaction.submit(...argsSplit);
-	} else {
-		throw new Error(`Unable to submit on undefined Transaction`);
 	}
 }
