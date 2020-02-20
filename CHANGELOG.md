@@ -1,3 +1,20 @@
+## v1.4.6
+Thu 20 Feb 2020 16:31:33 GMT
+
+* [24649b5c](https://github.com/hyperledger/fabric-sdk-node/commit/24649b5c) [[FABN-1481](https://jira.hyperledger.org/browse/FABN-1481)] Remove node 8 support and add node 12 (#118)
+* [f19cd915](https://github.com/hyperledger/fabric-sdk-node/commit/f19cd915) [[FABN-1039] Port dependencies clean up to release-1](https://jira.hyperledger.org/browse/FABN-1039] Port dependencies clean up to release-1).4 (#117)
+* [b746ce5d](https://github.com/hyperledger/fabric-sdk-node/commit/b746ce5d) [[FABN-1039](https://jira.hyperledger.org/browse/FABN-1039)] Remove gulp from release1.4 (#107)
+* [fbda3e6c](https://github.com/hyperledger/fabric-sdk-node/commit/fbda3e6c) [[FABN-1430](https://jira.hyperledger.org/browse/FABN-1430)] Fix type for IServiceResponse (#62) (#114)
+* [66a385e8](https://github.com/hyperledger/fabric-sdk-node/commit/66a385e8) add jsdoc for peer responses in exception (#113)
+* [aa4e7a09](https://github.com/hyperledger/fabric-sdk-node/commit/aa4e7a09) Fix some broken docs links (#112)
+* [ecf9ecad](https://github.com/hyperledger/fabric-sdk-node/commit/ecf9ecad) [FABN-1451](https://jira.hyperledger.org/browse/FABN-1451) add peer responses to error (#108)
+* [046fe8cd](https://github.com/hyperledger/fabric-sdk-node/commit/046fe8cd) [FABN-1463](https://jira.hyperledger.org/browse/FABN-1463) NodeSDK make waitForReady optional (#103)
+* [287ff71a](https://github.com/hyperledger/fabric-sdk-node/commit/287ff71a) [[FABN-1039](https://jira.hyperledger.org/browse/FABN-1039)] Cherry pick of changes delivered under "Create eslint task" (#101)
+* [8c5c4fa4](https://github.com/hyperledger/fabric-sdk-node/commit/8c5c4fa4) [FABN-1460](https://jira.hyperledger.org/browse/FABN-1460) NodeSDK set release 1.4 snapshot (#100)
+* [f7d89081](https://github.com/hyperledger/fabric-sdk-node/commit/f7d89081) [FABN-1446](https://jira.hyperledger.org/browse/FABN-1446): Specific compatibility matrix for 1.4 (#92)
+* [6817c70d](https://github.com/hyperledger/fabric-sdk-node/commit/6817c70d) [[FABCI-482](https://jira.hyperledger.org/browse/FABCI-482)] Update Nexus URLs to Artifactory (#82)
+* [95319fac](https://github.com/hyperledger/fabric-sdk-node/commit/95319fac) [FABN-1450](https://jira.hyperledger.org/browse/FABN-1450) NodeSDK publish 1.4.5 (#90)
+
 ## v1.4.5
 Wed Jan 15 10:27:45 EST 2020
 
