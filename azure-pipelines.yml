@@ -59,6 +59,8 @@ stages:
           displayName: Install Node.js
         - script: npm install
           displayName: npm install
+        - script: npm run copyFabricClient
+          displayName: Copy fabric-client to fabric-ca-client
         - script: scripts/ci_scripts/azurePublishNpmPackages.sh
           displayName: Publish packages
           env:
@@ -75,6 +77,8 @@ stages:
           displayName: Install Node.js
         - script: npm install
           displayName: npm install
+        - script: npm run copyFabricClient
+          displayName: Copy fabric-client to fabric-ca-client
         - script: scripts/ci_scripts/azurePublishApiDocs.sh
           displayName: Publish API docs
           env:
