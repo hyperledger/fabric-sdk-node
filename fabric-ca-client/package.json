@@ -5,8 +5,8 @@
     "hyperledger",
     "blockchain"
   ],
-  "version": "1.4.6-snapshot",
-  "tag": "unstable-1.4",
+  "version": "1.4.7",
+  "tag": "latest",
   "main": "index.js",
   "scripts": {
     "test": "nyc mocha --exclude 'test/data/**/*.js' --recursive  -t 10000"

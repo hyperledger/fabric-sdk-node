@@ -1,8 +1,14 @@
+## v1.4.7
+Tue 25 Feb 2020 10:18:49 GMT
+
+* [303a4535](https://github.com/hyperledger/fabric-sdk-node/commit/303a4535) [[FABN-1500]](https://jira.hyperledger.org/browse/FABN-1500) Fix fabric-ca-client builds (#142)
+* [e5cc66cb](https://github.com/hyperledger/fabric-sdk-node/commit/e5cc66cb) [[FABN-1487]](https://jira.hyperledger.org/browse/FABN-1487) Revert release-1.4 branch to release snapshots (#141)
+
 ## v1.4.6
 Thu 20 Feb 2020 16:31:33 GMT
 
-* [24649b5c](https://github.com/hyperledger/fabric-sdk-node/commit/24649b5c) [[FABN-1481](https://jira.hyperledger.org/browse/FABN-1481)] Remove node 8 support and add node 12 (#118)
-* [f19cd915](https://github.com/hyperledger/fabric-sdk-node/commit/f19cd915) [[FABN-1039] Port dependencies clean up to release-1](https://jira.hyperledger.org/browse/FABN-1039] Port dependencies clean up to release-1).4 (#117)
+* [24649b5c](https://github.com/hyperledger/fabric-sdk-node/commit/24649b5c) [[FABN-1481]](https://jira.hyperledger.org/browse/FABN-1481) Remove node 8 support and add node 12 (#118)
+* [f19cd915](https://github.com/hyperledger/fabric-sdk-node/commit/f19cd915) [[FABN-1039]](https://jira.hyperledger.org/browse/FABN-1039) Port dependencies clean up to release-1.4 (#117)
 * [b746ce5d](https://github.com/hyperledger/fabric-sdk-node/commit/b746ce5d) [[FABN-1039](https://jira.hyperledger.org/browse/FABN-1039)] Remove gulp from release1.4 (#107)
 * [fbda3e6c](https://github.com/hyperledger/fabric-sdk-node/commit/fbda3e6c) [[FABN-1430](https://jira.hyperledger.org/browse/FABN-1430)] Fix type for IServiceResponse (#62) (#114)
 * [66a385e8](https://github.com/hyperledger/fabric-sdk-node/commit/66a385e8) add jsdoc for peer responses in exception (#113)
