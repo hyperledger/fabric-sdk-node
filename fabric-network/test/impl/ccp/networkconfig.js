@@ -164,13 +164,23 @@ describe('NetworkConfig', () => {
 			client.getCommitter = sinon.stub().returns('orderer');
 			channel.addEndorser = sinon.stub();
 			channel.addCommitter = sinon.stub();
-			buildChannel(client, 'name', config.channels.mychannel);
+			await buildChannel(client, 'name', config.channels.mychannel);
 			sinon.assert.calledWith(client.getEndorser, 'peer0.org1.example.com');
 			sinon.assert.calledWith(client.getEndorser, 'peer0.org2.example.com');
 			sinon.assert.calledWith(client.getCommitter, 'orderer.example.com');
 			sinon.assert.calledWith(client.getChannel, 'name');
 			sinon.assert.calledWith(channel.addEndorser, 'peer');
 			sinon.assert.calledWith(channel.addCommitter, 'orderer');
+		});
+		it('should run with only channel defined', async () => {
+			const channel = sinon.stub();
+			client.getChannel = sinon.stub().returns(channel);
+			await buildChannel(client, 'name', {mychannel: {}});
+		});
+		it('should run with only chaincodes defined', async () => {
+			const channel = sinon.stub();
+			client.getChannel = sinon.stub().returns(channel);
+			await buildChannel(client, 'name', {mychannel: {chaincodes: []}});
 		});
 	});
 
