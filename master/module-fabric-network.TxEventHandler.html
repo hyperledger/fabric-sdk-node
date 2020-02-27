@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Hyperledger Fabric SDK for node.js Class: Query</title>
+	<title>Hyperledger Fabric SDK for node.js Interface: TxEventHandler</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -93,18 +93,16 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Class: Query</h1>
+	<h1 class="page-title">Interface: TxEventHandler</h1>
 <section>
 
 <header>
     
         <h2>
-        Query
-        </h2>
+            <span class="ancestors"><a href="module-fabric-network.html">fabric-network</a>.</span>
         
-            <div class="class-description">This class represents a Query definition.
-This class allows an application to contain all proposal attributes and
-artifacts in one place during a query.</div>
+        TxEventHandler
+        </h2>
         
     
 </header>
@@ -114,9 +112,73 @@ artifacts in one place during a query.</div>
     <div class="container-overview">
     
         
+            <div class="description">Handler used to wait for commit events when a transaction is submitted.</div>
+        
+
+        
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        <dl>
+            
 <hr>
 <dt>
-    <h4 class="name" id="Query"><span class="type-signature"></span>new Query(chaincodeId, channel)</h4>
+    <h4 class="name" id="cancelListening"><span class="type-signature"></span>cancelListening()</h4>
     
     
 </dt>
@@ -124,7 +186,7 @@ artifacts in one place during a query.</div>
 
     
     <div class="description">
-        Construct a Proposal object.
+        Called if submission of the transaction to the orderer fails.
     </div>
     
 
@@ -133,80 +195,6 @@ artifacts in one place during a query.</div>
     
 
     
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>chaincodeId</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The chaincode this proposal will execute</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>channel</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="Channel.html">Channel</a></span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The channel of this proposal</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
     
 
     
@@ -263,10 +251,6 @@ artifacts in one place during a query.</div>
     <h5>Returns:</h5>
     
             
-<div class="param-desc">
-    The Proposal instance.
-</div>
-
 
 
 <dl>
@@ -275,7 +259,7 @@ artifacts in one place during a query.</div>
     </dt>
     <dd>
         
-<span class="param-type"><a href="Proposal.html">Proposal</a></span>
+<span class="param-type">void</span>
 
 
 
@@ -288,29 +272,11 @@ artifacts in one place during a query.</div>
     
 </dd>
 
-    
-    </div>
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-        <h3 class="subsection-title">Methods</h3>
-
-        <dl>
+        
             
 <hr>
 <dt>
-    <h4 class="name" id="toString"><span class="type-signature"></span>toString()</h4>
+    <h4 class="name" id="startListening"><span class="type-signature">&lt;async> </span>startListening()</h4>
     
     
 </dt>
@@ -318,7 +284,8 @@ artifacts in one place during a query.</div>
 
     
     <div class="description">
-        return a printable representation of this object
+        Resolves when the handler has started listening for transaction commit events. Called after the transaction proposal
+has been accepted and prior to submission of the transaction to the orderer.
     </div>
     
 
@@ -380,6 +347,125 @@ artifacts in one place during a query.</div>
     
 
     
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise.&lt;void></span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="waitForEvents"><span class="type-signature">&lt;async> </span>waitForEvents()</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Resolves (or rejects) when suitable transaction commit events have been received. Called after submission of the
+transaction to the orderer.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise.&lt;void></span>
+
+
+
+    </dd>
+</dl>
+
+
+        
 
     
 </dd>

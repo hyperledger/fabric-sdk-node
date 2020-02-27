@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Hyperledger Fabric SDK for node.js Class: Query</title>
+	<title>Hyperledger Fabric SDK for node.js Interface: QueryHandler</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -93,18 +93,16 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Class: Query</h1>
+	<h1 class="page-title">Interface: QueryHandler</h1>
 <section>
 
 <header>
     
         <h2>
-        Query
-        </h2>
+            <span class="ancestors"><a href="module-fabric-network.html">fabric-network</a>.</span>
         
-            <div class="class-description">This class represents a Query definition.
-This class allows an application to contain all proposal attributes and
-artifacts in one place during a query.</div>
+        QueryHandler
+        </h2>
         
     
 </header>
@@ -114,9 +112,73 @@ artifacts in one place during a query.</div>
     <div class="container-overview">
     
         
+            <div class="description">Handler used to obtain query results from peers when a transaction is evaluated.</div>
+        
+
+        
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        <dl>
+            
 <hr>
 <dt>
-    <h4 class="name" id="Query"><span class="type-signature"></span>new Query(chaincodeId, channel)</h4>
+    <h4 class="name" id="evaluate"><span class="type-signature">&lt;async> </span>evaluate(query)</h4>
     
     
 </dt>
@@ -124,7 +186,7 @@ artifacts in one place during a query.</div>
 
     
     <div class="description">
-        Construct a Proposal object.
+        Called when a transaction is evaluated to obtain query results from suitable network peers.
     </div>
     
 
@@ -159,13 +221,13 @@ artifacts in one place during a query.</div>
 
         <tr>
             
-                <td class="name"><code>chaincodeId</code></td>
+                <td class="name"><code>query</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">string</span>
+<span class="param-type"><a href="module-fabric-network.Query.html">module:fabric-network.Query</a></span>
 
 
 
@@ -176,31 +238,8 @@ artifacts in one place during a query.</div>
 
             
 
-            <td class="description last">The chaincode this proposal will execute</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>channel</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="Channel.html">Channel</a></span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The channel of this proposal</td>
+            <td class="description last">Query object that can be used by the handler to send the query to
+specific peers.</td>
         </tr>
 
     
@@ -263,10 +302,6 @@ artifacts in one place during a query.</div>
     <h5>Returns:</h5>
     
             
-<div class="param-desc">
-    The Proposal instance.
-</div>
-
 
 
 <dl>
@@ -275,7 +310,7 @@ artifacts in one place during a query.</div>
     </dt>
     <dd>
         
-<span class="param-type"><a href="Proposal.html">Proposal</a></span>
+<span class="param-type">Promise.&lt;Buffer></span>
 
 
 
@@ -284,102 +319,6 @@ artifacts in one place during a query.</div>
 
 
         
-
-    
-</dd>
-
-    
-    </div>
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-        <h3 class="subsection-title">Methods</h3>
-
-        <dl>
-            
-<hr>
-<dt>
-    <h4 class="name" id="toString"><span class="type-signature"></span>toString()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        return a printable representation of this object
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
 
     
 </dd>

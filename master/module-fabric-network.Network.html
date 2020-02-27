@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Hyperledger Fabric SDK for node.js Class: Network</title>
+	<title>Hyperledger Fabric SDK for node.js Interface: Network</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -40,14 +40,14 @@
 			<li class="dropdown">
 				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="AffiliationService.html">AffiliationService</a></li><li><a href="BaseClient.html">BaseClient</a></li><li><a href="BlockDecoder.html">BlockDecoder</a></li><li><a href="global.html#ChaincodeEvent">ChaincodeEvent</a></li><li><a href="Channel.html">Channel</a></li><li><a href="Client.html">Client</a></li><li><a href="Commit.html">Commit</a></li><li><a href="Committer.html">Committer</a></li><li><a href="CouchDBKeyValueStore.html">CouchDBKeyValueStore</a></li><li><a href="CryptoKeyStore.html">CryptoKeyStore</a></li><li><a href="CryptoSuite.html">CryptoSuite</a></li><li><a href="CryptoSuite_ECDSA_AES.html">CryptoSuite_ECDSA_AES</a></li><li><a href="CryptoSuite_PKCS11.html">CryptoSuite_PKCS11</a></li><li><a href="Discoverer.html">Discoverer</a></li><li><a href="DiscoveryHandler.html">DiscoveryHandler</a></li><li><a href="DiscoveryService.html">DiscoveryService</a></li><li><a href="ECDSA_KEY.html">ECDSA_KEY</a></li><li><a href="global.html#Endorsement">Endorsement</a></li><li><a href="Endorser.html">Endorser</a></li><li><a href="Endpoint.html">Endpoint</a></li><li><a href="Eventer.html">Eventer</a></li><li><a href="global.html#EventInfo">EventInfo</a></li><li><a href="EventService.html">EventService</a></li><li><a href="FabricCAClient.html">FabricCAClient</a></li><li><a href="FabricCAServices.html">FabricCAServices</a></li><li><a href="FileKeyValueStore.html">FileKeyValueStore</a></li><li><a href="Hash.html">Hash</a></li><li><a href="Identity.html">Identity</a></li><li><a href="IdentityContext.html">IdentityContext</a></li><li><a href="IdentityService.html">IdentityService</a></li><li><a href="Key.html">Key</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="module.exports_module.exports.html">module.exports#module.exports</a></li><li><a href="module-fabric-network.Contract.html">fabric-network.Contract</a></li><li><a href="module-fabric-network.FabricError.html">fabric-network.FabricError</a></li><li><a href="module-fabric-network.Gateway.html">fabric-network.Gateway</a></li><li><a href="module-fabric-network.HsmX509Provider.html">fabric-network.HsmX509Provider</a></li><li><a href="module-fabric-network.IdentityProviderRegistry.html">fabric-network.IdentityProviderRegistry</a></li><li><a href="module-fabric-network.Network.html">fabric-network.Network</a></li><li><a href="module-fabric-network.Query.html">fabric-network.Query</a></li><li><a href="module-fabric-network.TimeoutError.html">fabric-network.TimeoutError</a></li><li><a href="module-fabric-network.Transaction.html">fabric-network.Transaction</a></li><li><a href="module-fabric-network.Wallet.html">fabric-network.Wallet</a></li><li><a href="module-fabric-network.Wallets.html">fabric-network.Wallets</a></li><li><a href="NetworkConfig.html">NetworkConfig</a></li><li><a href="PKCS11_ECDSA_KEY.html">PKCS11_ECDSA_KEY</a></li><li><a href="Proposal.html">Proposal</a></li><li><a href="Query.html">Query</a></li><li><a href="ServiceAction.html">ServiceAction</a></li><li><a href="ServiceEndpoint.html">ServiceEndpoint</a></li><li><a href="ServiceHandler.html">ServiceHandler</a></li><li><a href="Signer.html">Signer</a></li><li><a href="SigningIdentity.html">SigningIdentity</a></li><li><a href="User.html">User</a></li>
+					<li><a href="AffiliationService.html">AffiliationService</a></li><li><a href="BaseClient.html">BaseClient</a></li><li><a href="BlockDecoder.html">BlockDecoder</a></li><li><a href="global.html#ChaincodeEvent">ChaincodeEvent</a></li><li><a href="Channel.html">Channel</a></li><li><a href="Client.html">Client</a></li><li><a href="Commit.html">Commit</a></li><li><a href="Committer.html">Committer</a></li><li><a href="CouchDBKeyValueStore.html">CouchDBKeyValueStore</a></li><li><a href="CryptoKeyStore.html">CryptoKeyStore</a></li><li><a href="CryptoSuite.html">CryptoSuite</a></li><li><a href="CryptoSuite_ECDSA_AES.html">CryptoSuite_ECDSA_AES</a></li><li><a href="CryptoSuite_PKCS11.html">CryptoSuite_PKCS11</a></li><li><a href="Discoverer.html">Discoverer</a></li><li><a href="DiscoveryHandler.html">DiscoveryHandler</a></li><li><a href="DiscoveryService.html">DiscoveryService</a></li><li><a href="ECDSA_KEY.html">ECDSA_KEY</a></li><li><a href="global.html#Endorsement">Endorsement</a></li><li><a href="Endorser.html">Endorser</a></li><li><a href="Endpoint.html">Endpoint</a></li><li><a href="Eventer.html">Eventer</a></li><li><a href="global.html#EventInfo">EventInfo</a></li><li><a href="EventService.html">EventService</a></li><li><a href="FabricCAClient.html">FabricCAClient</a></li><li><a href="FabricCAServices.html">FabricCAServices</a></li><li><a href="FileKeyValueStore.html">FileKeyValueStore</a></li><li><a href="Hash.html">Hash</a></li><li><a href="Identity.html">Identity</a></li><li><a href="IdentityContext.html">IdentityContext</a></li><li><a href="IdentityService.html">IdentityService</a></li><li><a href="Key.html">Key</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="module.exports_module.exports.html">module.exports#module.exports</a></li><li><a href="module-fabric-network.Contract.html">fabric-network.Contract</a></li><li><a href="module-fabric-network.FabricError.html">fabric-network.FabricError</a></li><li><a href="module-fabric-network.Gateway.html">fabric-network.Gateway</a></li><li><a href="module-fabric-network.HsmX509Provider.html">fabric-network.HsmX509Provider</a></li><li><a href="module-fabric-network.IdentityProviderRegistry.html">fabric-network.IdentityProviderRegistry</a></li><li><a href="module-fabric-network.TimeoutError.html">fabric-network.TimeoutError</a></li><li><a href="module-fabric-network.Transaction.html">fabric-network.Transaction</a></li><li><a href="module-fabric-network.Wallet.html">fabric-network.Wallet</a></li><li><a href="module-fabric-network.Wallets.html">fabric-network.Wallets</a></li><li><a href="NetworkConfig.html">NetworkConfig</a></li><li><a href="PKCS11_ECDSA_KEY.html">PKCS11_ECDSA_KEY</a></li><li><a href="Proposal.html">Proposal</a></li><li><a href="Query.html">Query</a></li><li><a href="ServiceAction.html">ServiceAction</a></li><li><a href="ServiceEndpoint.html">ServiceEndpoint</a></li><li><a href="ServiceHandler.html">ServiceHandler</a></li><li><a href="Signer.html">Signer</a></li><li><a href="SigningIdentity.html">SigningIdentity</a></li><li><a href="User.html">User</a></li>
 				</ul>
 			</li>
 			
 			<li class="dropdown">
 				<a href="interfaces.list.html" class="dropdown-toggle" data-toggle="dropdown">Interfaces<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="module-fabric-network.WalletStore.html">fabric-network.WalletStore</a></li>
+					<li><a href="module-fabric-network.Network.html">fabric-network.Network</a></li><li><a href="module-fabric-network.Query.html">fabric-network.Query</a></li><li><a href="module-fabric-network.QueryHandler.html">fabric-network.QueryHandler</a></li><li><a href="module-fabric-network.TxEventHandler.html">fabric-network.TxEventHandler</a></li><li><a href="module-fabric-network.WalletStore.html">fabric-network.WalletStore</a></li>
 				</ul>
 			</li>
 			
@@ -93,20 +93,16 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Class: Network</h1>
+	<h1 class="page-title">Interface: Network</h1>
 <section>
 
 <header>
     
         <h2>
-            <span class="ancestors"><a href="module-fabric-network.html">fabric-network</a>~</span>
+            <span class="ancestors"><a href="module-fabric-network.html">fabric-network</a>.</span>
         
         Network
         </h2>
-        
-            <div class="class-description">A Network represents the set of peers in a Fabric network.
-Applications should get a Network instance using the
-gateway's <a href="module-fabric-network.Gateway.html#getNetwork">getNetwork</a> method.</div>
         
     
 </header>
@@ -116,21 +112,141 @@ gateway's <a href="module-fabric-network.Gateway.html#getNetwork">getNetwork</a>
     <div class="container-overview">
     
         
+            <div class="description">A Network represents the set of peers in a Fabric network.
+Applications should get a Network instance using the
+gateway's <a href="module-fabric-network.Gateway.html#getNetwork">getNetwork</a> method.</div>
+        
+
+        
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        <dl>
+            
 <hr>
 <dt>
-    <h4 class="name" id="Network"><span class="type-signature"></span>new Network()</h4>
+    <h4 class="name" id="addBlockListener"><span class="type-signature"></span>addBlockListener(listener)</h4>
     
     
 </dt>
 <dd>
 
     
-
+    <div class="description">
+        Add a listener to receive block events for this network. Blocks will be received in order and without duplication.
+    </div>
     
 
     
 
     
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>listener</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">module:fabric-network.Network~BlockListener</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A block listener callback function.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
     
 
     
@@ -184,33 +300,49 @@ gateway's <a href="module-fabric-network.Gateway.html#getNetwork">getNetwork</a>
     
 
     
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    The added listener.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">module:fabric-network.Network~BlockListener</span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+        <h5>Example</h5>
+        
+    <pre class="sunlight-highlight-javascript">const listener: BlockListener = async (event) =&gt; {
+    // Handle block event, then (optionally) remove myself as a listener
+    network.removeBlockListener(listener);
+}
+await network.addBlockListener(listener);</pre>
+
 
     
 </dd>
 
-    
-    </div>
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-        <h3 class="subsection-title">Methods</h3>
-
-        <dl>
+        
             
 <hr>
 <dt>
-    <h4 class="name" id="addCommitListener"><span class="type-signature">&lt;async> </span>addCommitListener(listener, peers, transactionId)</h4>
+    <h4 class="name" id="addCommitListener"><span class="type-signature"></span>addCommitListener(listener, peers, transactionId)</h4>
     
     
 </dt>
@@ -858,6 +990,134 @@ await network.addCommitListener(listener, peers, transactionId);</pre>
             
 <hr>
 <dt>
+    <h4 class="name" id="removeBlockListener"><span class="type-signature"></span>removeBlockListener(listener)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Remove a previously added block listener.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>listener</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">module:fabric-network.Network~BlockListener</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A block listener callback function.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
     <h4 class="name" id="removeCommitListener"><span class="type-signature"></span>removeCommitListener(listener)</h4>
     
     
@@ -866,7 +1126,7 @@ await network.addCommitListener(listener, peers, transactionId);</pre>
 
     
     <div class="description">
-        Removes a previously added transaction commit listener.
+        Remove a previously added transaction commit listener.
     </div>
     
 
@@ -989,6 +1249,73 @@ await network.addCommitListener(listener, peers, transactionId);</pre>
         <h3 class="subsection-title">Type Definitions</h3>
 
         <dl>
+                
+<hr>
+<dt class="name" id="~BlockEvent">
+    <h4 id="~BlockEvent">BlockEvent</h4>
+
+    
+</dt>
+<dd>
+    
+
+    
+        <h5>Type:</h5>
+        <ul>
+            <li>
+                
+<span class="param-type"><a href="global.html#EventInfo">EventInfo</a></span>
+
+
+
+            </li>
+        </ul>
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+</dd>
+
+            
                 
 <hr>
 <dt class="name" id="~CommitError">
@@ -1403,6 +1730,155 @@ is received. Only one of the two arguments will have a value for any given invoc
     
 </dd>
 
+            
+                
+<hr>
+<dt>
+    <h4 class="name" id="~CommitListener"><span class="type-signature">&lt;async> </span>CommitListener(event)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        A callback function that will be invoked when a block event is received. Block events will be received in order and
+without duplication.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>event</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-fabric-network.Network.html#~BlockEvent">module:fabric-network.Network~BlockEvent</a></span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Block event.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise.&lt;void></span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
             </dl>
     
 
@@ -1451,7 +1927,7 @@ is received. Only one of the two arguments will have a value for any given invoc
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a>
 	
-		on 2020-02-26T22:12:08+00:00
+		on 2020-02-27T09:28:40+00:00
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>
