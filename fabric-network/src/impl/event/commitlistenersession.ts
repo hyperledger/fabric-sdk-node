@@ -10,8 +10,7 @@ import {
 	CommitEvent,
 	CommitListener
 } from './commitlistener';
-// @ts-ignore: no typings for EventServiceManager
-import EventServiceManager = require('./eventservicemanager');
+import { EventServiceManager } from './eventservicemanager';
 import {
 	Endorser,
 	EventListener,
@@ -33,7 +32,7 @@ export class CommitListenerSession implements ListenerSession {
 	constructor(listener: CommitListener, eventServiceManager: EventServiceManager, endorsers: Endorser[], transactionId: string) {
 		this.listener = listener;
 		this.eventServiceManager = eventServiceManager;
-		this.eventServices = eventServiceManager.getEventServices(endorsers);
+		this.eventServices = endorsers.map((endorser) => eventServiceManager.getCachedEventService(endorser));
 		this.transactionId = transactionId;
 
 		for (const endorser of endorsers) {

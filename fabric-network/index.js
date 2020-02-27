@@ -255,6 +255,12 @@
  */
 
 /**
+ * @typedef {object} Network~ListenerOptions
+ * @memberof module:fabric-network
+ * @property {number | string | Long} startBlock The block number from which events should be received.
+ */
+
+/**
  * @typedef {EventInfo} Network~BlockEvent
  * @memberof module:fabric-network
  */
@@ -323,6 +329,7 @@
  * @method Network#addBlockListener
  * @memberof module:fabric-network
  * @param {module:fabric-network.Network~BlockListener} listener A block listener callback function.
+ * @param {module:fabric-network.Network~ListenerOptions} [options] Listener options.
  * @returns {module:fabric-network.Network~BlockListener} The added listener.
  * @example
  * const listener: BlockListener = async (event) => {

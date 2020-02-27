@@ -50,7 +50,7 @@ When(/^I unregister the listener named (.+?)$/, {timeout: Constants.STEP_SHORT a
 
 Then(/^I use the gateway named (.+?) to listen for (filtered|unfiltered) block events with a listener named (.+?) on channel (.+?)$/, {timeout: Constants.STEP_SHORT as number}, async (gatewayName: string, isFiltered: string, listenerName: string, channelName: string) => {
 	const replay: boolean = true;
-	return await Listeners.createBlockListener(gatewayName, channelName, listenerName, isFiltered === 'unfiltered', replay, undefined, undefined);
+	return await Listeners.createBlockListener(gatewayName, channelName, listenerName, isFiltered === 'unfiltered', replay);
 });
 
 Then(/^I use the gateway named (.+?) to listen for (filtered|unfiltered) block events between ([0-9]+) and ([0-9]+) with a listener named (.+?) on channel (.+?)$/, {timeout: Constants.STEP_SHORT as number}, async (gatewayName: string, isFiltered: string, startBlock: number, endBlock: number, listenerName: string, channelName: string) => {

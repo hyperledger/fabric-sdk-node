@@ -16,7 +16,7 @@ chai.use(require('chai-as-promised'));
 const EventService = require('fabric-common/lib/EventService');
 const {NetworkImpl: Network} = require('../../../lib/network');
 const Contract = require('./../../../lib/contract');
-const EventServiceManager = require('./../../../lib/impl/event/eventservicemanager');
+const {EventServiceManager} = require('./../../../lib/impl/event/eventservicemanager');
 const ContractEventListener = rewire('fabric-network/lib/impl/event/contracteventlistener');
 const FileSystemCheckpointer = require('./../../../lib/impl/event/filesystemcheckpointer');
 
@@ -54,8 +54,7 @@ describe('ContractEventListener', () => {
 		eventServiceManager.startEventService.resolves();
 		eventService = sandbox.createStubInstance(EventService);
 		eventService.registerChaincodeListener = sinon.stub().returns(baseListener);
-		eventServiceManager.getEventService = sinon.stub().returns(eventService);
-		eventServiceManager.getReplayEventService = sinon.stub().returns(eventService);
+		eventServiceManager.newFailoverEventService = sinon.stub().returns(eventService);
 		network = sandbox.createStubInstance(Network);
 		network.eventServiceManager = eventServiceManager;
 		contract = sandbox.createStubInstance(Contract);

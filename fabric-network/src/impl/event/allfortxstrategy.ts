@@ -6,7 +6,6 @@
 
 import { EventCount, SuccessCallback, FailCallback, TransactionEventStrategy } from './transactioneventstrategy';
 
-// @ts-ignore no implicit any
 import Logger = require('../../logger');
 const logger = Logger.getLogger('AllForTxStrategy');
 

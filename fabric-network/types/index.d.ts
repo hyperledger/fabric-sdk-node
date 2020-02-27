@@ -24,6 +24,7 @@ export { HsmOptions, HsmX509Provider, HsmX509Identity } from '../lib/impl/wallet
 export { X509Identity } from '../lib/impl/wallet/x509identity';
 export { CommitEvent, CommitError, CommitListener } from '../lib/impl/event/commitlistener';
 export { BlockEvent, BlockListener } from '../lib/impl/event/blocklistener';
+export { ListenerOptions } from '../lib/network';
 export { FabricError } from '../lib/errors/fabricerror';
 export { TimeoutError } from '../lib/errors/timeouterror';
 export { QueryHandlerFactory };

@@ -74,7 +74,7 @@ export async function createContractListener(gatewayName: string, channelName: s
 	stateStore.set(Constants.LISTENERS, listeners);
 }
 
-export async function createBlockListener(gatewayName: string, channelName: string, listenerName: string, filtered: boolean, replay: boolean, startBlock: number | undefined, endBlock: number | undefined): Promise<void> {
+export async function createBlockListener(gatewayName: string, channelName: string, listenerName: string, filtered: boolean, replay: boolean, startBlock?: number, endBlock?: number): Promise<void> {
 	if (typeof filtered === 'undefined') {
 		filtered = true;
 	}
@@ -104,12 +104,12 @@ export async function createBlockListener(gatewayName: string, channelName: stri
 	// Create the listener
 	const listener: BlockListener = async (blockEvent: BlockEvent) => {
 		BaseUtils.logMsg('->Received a block event', listenerName);
-		// if (startBlock) {
-		// 	BaseUtils.checkSizeEquality(Number(blockNumber), Number(startBlock) - 1, true, true);
-		// }
-		// if (endBlock) {
-		// 	BaseUtils.checkSizeEquality(Number(blockNumber), Number(endBlock) + 1, false, true);
-		// }
+		if (startBlock) {
+			BaseUtils.checkSizeEquality(Number(blockEvent.blockNumber), Number(startBlock) - 1, true, true);
+		}
+		if (endBlock) {
+			BaseUtils.checkSizeEquality(Number(blockEvent.blockNumber), Number(endBlock) + 1, false, true);
+		}
 
 		const tlisteners: any = stateStore.get(Constants.LISTENERS);
 		if (tlisteners) {
@@ -124,7 +124,7 @@ export async function createBlockListener(gatewayName: string, channelName: stri
 			network.removeBlockListener(listener);
 		}
 	};
-	await network.addBlockListener(listener);
+	await network.addBlockListener(listener, { startBlock });
 
 	// Roll into a listener object to store
 	listenerObject.listener = listener;

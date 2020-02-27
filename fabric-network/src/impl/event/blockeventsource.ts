@@ -7,6 +7,7 @@
 import { BlockEvent, BlockListener } from './blocklistener';
 import { OrderedBlockQueue } from './orderedblockqueue';
 import { AsyncNotifier } from './asyncnotifier';
+import { EventServiceManager } from './eventservicemanager';
 import {
 	EventCallback,
 	EventInfo,
@@ -14,8 +15,6 @@ import {
 	EventRegistrationOptions,
 	EventService
 } from 'fabric-common';
-// @ts-ignore no implicit any
-import EventServiceManager = require('./eventservicemanager');
 import Long = require('long');
 
 import * as Logger from '../../logger';
@@ -78,7 +77,7 @@ export class BlockEventSource {
 		this.started = true;
 
 		try {
-			this.eventService = this.eventServiceManager.getEventService();
+			this.eventService = this.eventServiceManager.newFailoverEventService();
 			this.registerListener(); // Register before start so no events are missed
 			await this.startEventService();
 		} catch (error) {
@@ -106,7 +105,7 @@ export class BlockEventSource {
 
 	private async startEventService() {
 		const options = { startBlock: this.getNextBlockNumber() };
-		await this.eventServiceManager.startEventService(this.eventService, options);
+		await this.eventServiceManager.startEventService(this.eventService!, options);
 	}
 
 	private blockEventCallback(error?: Error, event?: EventInfo)  {

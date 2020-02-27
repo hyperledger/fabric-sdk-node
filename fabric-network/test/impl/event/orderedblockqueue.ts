@@ -22,8 +22,8 @@ describe('OrderedBlockQueue', () => {
 
 	function newBlock(blockNumber: number): BlockEvent {
 		return {
-			blockNumber: Long.fromNumber(blockNumber),
-			eventHub: null
+			eventService: null,
+			blockNumber: Long.fromNumber(blockNumber)
 		};
 	}
 

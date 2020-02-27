@@ -26,7 +26,7 @@ const {NetworkImpl: Network} = require('../lib/network');
 const Gateway = require('../lib/gateway');
 const Contract = require('../lib/contract');
 const EventStrategies = require('fabric-network/lib/impl/event/defaulteventhandlerstrategies');
-const EventServiceManager = require('fabric-network/lib/impl/event/eventservicemanager');
+const {EventServiceManager} = require('fabric-network/lib/impl/event/eventservicemanager');
 
 describe('Network', () => {
 	let channel;
@@ -94,7 +94,7 @@ describe('Network', () => {
 		client.getEndorsers.returns([endorser]);
 
 		eventServiceManager = sinon.createStubInstance(EventServiceManager);
-		eventServiceManager.getEventService.returns(eventService);
+		eventServiceManager.newFailoverEventService.returns(eventService);
 
 		network = new Network(gateway, channel);
 		network.eventServiceManager = eventServiceManager;
@@ -222,10 +222,9 @@ describe('Network', () => {
 			sinon.assert.calledOnce(channel.close);
 		});
 
-		it('calls dispose() on the event service factory', () => {
-			const spy = network.eventServiceManager.dispose;
+		it('calls close() on the event service factory', () => {
 			network._dispose();
-			sinon.assert.called(spy);
+			sinon.assert.called(network.eventServiceManager.close);
 		});
 	});
 });

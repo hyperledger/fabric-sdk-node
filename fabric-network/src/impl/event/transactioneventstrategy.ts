@@ -6,8 +6,7 @@
 
 import { Endorser } from 'fabric-common';
 
-// @ts-ignore no implicit any
-import Logger = require('../../logger');
+import * as Logger from '../../logger';
 const logger = Logger.getLogger('TransactionEventStrategy');
 
 export interface EventCount {
