@@ -6,14 +6,14 @@
 
 // @ts-ignore no implicit any
 import Contract = require('./contract');
-// @ts-ignore no implicit any
-import EventServiceManager = require('./impl/event/eventservicemanager');
+import { EventServiceManager } from './impl/event/eventservicemanager';
 import { ListenerSession } from './impl/event/listenersession';
 import { CommitListener } from './impl/event/commitlistener';
 import { CommitListenerSession } from './impl/event/commitlistenersession';
 import { QueryHandlerFactory } from './impl/query/queryhandler';
 import { BlockListener } from './impl/event/blocklistener';
 import { BlockListenerSession } from './impl/event/blocklistenersession';
+import { BlockEventSource } from './impl/event/blockeventsource';
 // @ts-ignore no implicit any
 import Gateway = require('./gateway');
 // @ts-ignore no implicit any
@@ -21,8 +21,9 @@ import BaseEventListener = require('./impl/event/baseeventlistener');
 
 import { Channel, DiscoveryService, Endorser } from 'fabric-common';
 
+import Long = require('long');
+
 import * as Logger from './logger';
-import { BlockEventSource } from './impl/event/blockeventsource';
 const logger = Logger.getLogger('Network');
 
 /**
@@ -50,8 +51,12 @@ export interface Network {
 	getChannel(): Channel;
 	addCommitListener(listener: CommitListener, peers: Endorser[], transactionId: string): Promise<CommitListener>;
 	removeCommitListener(listener: CommitListener): void;
-	addBlockListener(listener: BlockListener): Promise<BlockListener>;
+	addBlockListener(listener: BlockListener, options?: ListenerOptions): Promise<BlockListener>;
 	removeBlockListener(listener: BlockListener): void;
+}
+
+export interface ListenerOptions {
+	startBlock?: number | string | Long;
 }
 
 async function addListener<T>(listener: T, listenerSessions: Map<T, ListenerSession>, sessionSupplier: () => ListenerSession) {
@@ -80,7 +85,7 @@ export class NetworkImpl implements Network {
 	private readonly contracts = new Map<string, Contract>();
 	private initialized = false;
 	private discoveryService?: DiscoveryService;
-	private eventServiceManager?: EventServiceManager;
+	private eventServiceManager: EventServiceManager;
 	private readonly commitListeners = new Map<CommitListener, CommitListenerSession>();
 	private readonly blockListeners = new Map<BlockListener, BlockListenerSession>();
 	private readonly oldListeners = new Set<BaseEventListener>();
@@ -240,15 +245,15 @@ export class NetworkImpl implements Network {
 		this.blockListeners.forEach((listener) => listener.close());
 		this.blockListeners.clear();
 
-		this.realtimeBlockEventSource?.close();
-		this.eventServiceManager?.dispose();
+		this.realtimeBlockEventSource.close();
+		this.eventServiceManager.close();
 		this.channel.close();
 
 		this.initialized = false;
 	}
 
 	async addCommitListener(listener: CommitListener, peers: Endorser[], transactionId: string) {
-		const sessionSupplier = () => new CommitListenerSession(listener, this.eventServiceManager!, peers, transactionId);
+		const sessionSupplier = () => new CommitListenerSession(listener, this.eventServiceManager, peers, transactionId);
 		return await addListener(listener, this.commitListeners, sessionSupplier);
 	}
 
@@ -256,8 +261,9 @@ export class NetworkImpl implements Network {
 		removeListener(listener, this.commitListeners);
 	}
 
-	async addBlockListener(listener: BlockListener) {
-		const sessionSupplier = () => new BlockListenerSession(listener, this.realtimeBlockEventSource);
+	async addBlockListener(listener: BlockListener, options = {} as ListenerOptions) {
+		const eventSource = this.getBlockEventSource(options);
+		const sessionSupplier = () => new BlockListenerSession(listener, eventSource);
 		return await addListener(listener, this.blockListeners, sessionSupplier);
 	}
 
@@ -267,5 +273,13 @@ export class NetworkImpl implements Network {
 
 	saveListener(listener: BaseEventListener) {
 		this.oldListeners.add(listener);
+	}
+
+	private getBlockEventSource(options: ListenerOptions) {
+		if (options.startBlock) {
+			return new BlockEventSource(this.eventServiceManager, Long.fromValue(options.startBlock));
+		} else {
+			return this.realtimeBlockEventSource;
+		}
 	}
 }

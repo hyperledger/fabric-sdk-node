@@ -19,7 +19,7 @@ import Long = require('long');
 
 import Gateway = require('../../../src/gateway');
 import { Network, NetworkImpl } from '../../../src/network';
-import EventServiceManager = require('../../../src/impl/event/eventservicemanager');
+import { EventServiceManager } from '../../../src/impl/event/eventservicemanager';
 import { TransactionEventStrategy } from '../../../src/impl/event/transactioneventstrategy';
 import { StubEventService } from './stubeventservice';
 import { TransactionEventHandler } from '../../../src/impl/event/transactioneventhandler';
@@ -44,16 +44,16 @@ describe('TransactionEventHandler', () => {
 		eventService = new StubEventService(peer.name);
 
 		eventServiceManager = sinon.createStubInstance(EventServiceManager);
-		eventServiceManager.getEventServices.withArgs([peer]).returns([eventService]);
+		eventServiceManager.getCachedEventService.withArgs(peer).returns(eventService);
 
 		validEventInfo = {
-			eventHub: null,
+			eventService: null,
 			blockNumber: new Long(1),
 			transactionId,
 			status: 'VALID'
 		};
 		invalidEventInfo = {
-			eventHub: null,
+			eventService: null,
 			blockNumber: new Long(1),
 			transactionId,
 			status: 'INVALID'
@@ -68,6 +68,9 @@ describe('TransactionEventHandler', () => {
 		gateway = sinon.createStubInstance(Gateway);
 		gateway.identityContext = sinon.createStubInstance(IdentityContext);
 		gateway.getOptions.returns(options);
+		gateway.getIdentity.returns({
+			mspId: 'mspId'
+		});
 
 		network = new NetworkImpl(gateway, null);
 		(network as any).eventServiceManager = eventServiceManager;

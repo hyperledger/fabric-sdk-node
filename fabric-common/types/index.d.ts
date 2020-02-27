@@ -147,6 +147,7 @@ export class Eventer extends ServiceEndpoint {
 	constructor(name: string, client: Client, mspid: string);
 	public disconnect(): void;
 	public checkConnection(): Promise<boolean>;
+	public setEndpoint(endpoint: Endpoint): void;
 }
 
 export class Discoverer extends ServiceEndpoint {
@@ -209,7 +210,7 @@ export class EventListener {
 export type EventCallback = (error?: Error, event?: EventInfo) => void;
 
 export interface EventInfo {
-	eventHub: EventService;
+	eventService: EventService;
 	blockNumber: Long;
 	transactionId?: string;
 	status?: string;
@@ -234,20 +235,31 @@ export interface ChaincodeEvent {
 	payload: Buffer;
 }
 
+export type BlockType = 'filtered' | 'full' | 'private';
+
 export class EventService extends ServiceAction {
 	public startBlock: Long | string;
-	public endBlock: Long | string;
+	endBlock?: Long | string;
+	blockType: BlockType;
 	constructor(chaincodeName: string, channel: Channel);
 	public setEventer(discoverer: Eventer): EventService;
 	public getLastBlockNumber(): Long;
 	public close(): void;
 	public build(idContext: IdentityContext, request: any): Buffer;
-	public send(request: any): Promise<any>;
+	public send(request: StartRequestOptions): Promise<any>;
 	public isListening(): boolean;
 	public unregisterEventListener(eventListener: EventListener): EventService;
 	public registerTransactionListener(txid: string, callback: EventCallback, options: EventRegistrationOptions): EventListener;
 	public registerChaincodeListener(eventName: string, callback: EventCallback, options: EventRegistrationOptions): EventListener;
 	public registerBlockListener(callback: EventCallback, options: EventRegistrationOptions): EventListener;
+	setTargets(targets: Eventer[]): void;
+	isStarted(): boolean;
+}
+
+export interface StartRequestOptions {
+	blockType?: BlockType;
+	startBlock?: number | string | Long;
+	endBlock?: number | string | Long;
 }
 
 export class Client {

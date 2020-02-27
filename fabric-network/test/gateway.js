@@ -23,7 +23,6 @@ const QueryStrategies = require('../lib/impl/query/defaultqueryhandlerstrategies
 describe('Gateway', () => {
 	let client;
 	let identityContext;
-	let sandbox;
 	let revert;
 	let FakeLogger;
 	let clientHelper;
@@ -32,7 +31,6 @@ describe('Gateway', () => {
 
 	beforeEach(() => {
 		revert = [];
-		sandbox = sinon.createSandbox();
 		FakeLogger = {
 			debug: () => {
 			},
@@ -41,7 +39,7 @@ describe('Gateway', () => {
 			warn: () => {
 			}
 		};
-		sandbox.stub(FakeLogger);
+		sinon.stub(FakeLogger);
 		revert.push(Gateway.__set__('logger', FakeLogger));
 		clientHelper = sinon.stub();
 		clientHelper.loadFromConfig = sinon.stub().resolves('ccp');
@@ -52,13 +50,16 @@ describe('Gateway', () => {
 		client.newIdentityContext.returns(identityContext);
 
 		gateway = new Gateway();
+		gateway.getIdentity = sinon.fake.returns({
+			mspId: 'mspId'
+		});
 	});
 
 	afterEach(() => {
 		if (revert.length) {
 			revert.forEach(Function.prototype.call, Function.prototype.call);
 		}
-		sandbox.restore();
+		sinon.restore();
 	});
 
 	describe('#_mergeOptions', () => {
@@ -452,7 +453,6 @@ describe('Gateway', () => {
 
 	describe('#getNetwork/#disconnect', () => {
 		beforeEach(async () => {
-			gateway = new Gateway();
 			const options = {
 				wallet: 'something',
 				discovery: {

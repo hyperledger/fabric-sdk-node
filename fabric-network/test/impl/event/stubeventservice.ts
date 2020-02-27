@@ -5,6 +5,7 @@
  */
 
 import {
+	BlockType,
 	Eventer,
 	EventCallback,
 	EventListener,
@@ -77,6 +78,7 @@ export class StubEventService implements EventService {
 	readonly name: string;
 	startBlock: string | Long;
 	endBlock: string | Long;
+	blockType: BlockType = 'filtered';
 
 	readonly eventListeners = new Set<EventListener>();
 
@@ -85,6 +87,10 @@ export class StubEventService implements EventService {
 	}
 
 	setEventer(discoverer: Eventer): EventService {
+		throw new Error('Method not implemented.');
+	}
+
+	setTargets(targets: Eventer[]) {
 		throw new Error('Method not implemented.');
 	}
 
@@ -105,6 +111,10 @@ export class StubEventService implements EventService {
 	}
 
 	isListening(): boolean {
+		throw new Error('Method not implemented.');
+	}
+
+	isStarted(): boolean {
 		throw new Error('Method not implemented.');
 	}
 

@@ -6,7 +6,6 @@
 
 import { TimeoutError } from '../../errors/timeouterror';
 import { TransactionEventStrategy } from './transactioneventstrategy';
-// @ts-ignore: no implicit any
 import { Network } from '../../network';
 import { Endorser } from 'fabric-common';
 import { CommitError, CommitEvent, CommitListener } from './commitlistener';

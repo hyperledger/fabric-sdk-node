@@ -56,6 +56,9 @@ describe('Contract', () => {
 				asLocalhost: true
 			}
 		});
+		gateway.getIdentity.returns({
+			mspId: 'mspId'
+		});
 
 		network = new Network(gateway, channel);
 

@@ -11,13 +11,13 @@ const expect = chai.expect;
 import * as testUtils from '../../testutils';
 
 import {
-	EventInfo,
+	EventService,
 	IdentityContext
 } from 'fabric-common';
 import Long = require('long');
 
-import { Network, NetworkImpl } from '../../../src/network';
-import EventServiceManager = require('../../../src/impl/event/eventservicemanager');
+import { Network, NetworkImpl, ListenerOptions } from '../../../src/network';
+import { EventServiceManager } from '../../../src/impl/event/eventservicemanager';
 import Gateway = require('../../../src/gateway');
 import { StubEventService } from './stubeventservice';
 import { BlockEvent, BlockListener } from '../../../src/impl/event/blocklistener';
@@ -30,7 +30,7 @@ interface StubBlockListener extends BlockListener {
 describe('block listener', () => {
 	let eventServiceManager: sinon.SinonStubbedInstance<EventServiceManager>;
 	let eventService: StubEventService;
-	let gateway: Gateway;
+	let gateway: sinon.SinonStubbedInstance<Gateway>;
 	let network: Network;
 	let listener: StubBlockListener;
 
@@ -38,13 +38,17 @@ describe('block listener', () => {
 		eventService = new StubEventService('stub');
 
 		eventServiceManager = sinon.createStubInstance(EventServiceManager);
-		eventServiceManager.getEventService.returns(eventService);
+		eventServiceManager.newFailoverEventService.returns(eventService);
 
 		gateway = sinon.createStubInstance(Gateway);
 		gateway.identityContext = sinon.createStubInstance(IdentityContext);
+		gateway.getIdentity.returns({
+			mspId: 'mspId'
+		});
 
 		network = new NetworkImpl(gateway, null);
-		(network as any).realtimeBlockEventSource = new BlockEventSource(eventServiceManager);
+		(network as any).realtimeBlockEventSource = new BlockEventSource(eventServiceManager as any);
+		(network as any).eventServiceManager = eventServiceManager;
 
 		listener = testUtils.newAsyncListener<BlockEvent>();
 	});
@@ -55,7 +59,7 @@ describe('block listener', () => {
 
 	function newEvent(blockNumber: number) {
 		return {
-			eventHub: null,
+			eventService,
 			blockNumber: new Long(blockNumber)
 		};
 	}
@@ -210,5 +214,30 @@ describe('block listener', () => {
 
 		await startListener.completePromise;
 		sinon.assert.calledWith(eventServiceManager.startEventService, eventService, sinon.match.has('startBlock', Long.fromNumber(2)));
+	});
+
+	it('replay listener sends start block to event service', async () => {
+		const options: ListenerOptions = {
+			startBlock: 2
+		};
+		await network.addBlockListener(listener, options);
+
+		sinon.assert.calledWith(eventServiceManager.startEventService, eventService, sinon.match.has('startBlock', Long.fromNumber(2)));
+	});
+
+	it('replay listener does not receive events earlier than start block', async () => {
+		listener = testUtils.newAsyncListener<BlockEvent>(1);
+		const event1 = newEvent(1);
+		const event2 = newEvent(2);
+
+		const options: ListenerOptions = {
+			startBlock: 2
+		};
+		await network.addBlockListener(listener, options);
+		eventService.sendEvent(event1);
+		eventService.sendEvent(event2);
+
+		const actual = await listener.completePromise;
+		expect(actual).to.deep.equal([event2]);
 	});
 });

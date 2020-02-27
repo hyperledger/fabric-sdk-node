@@ -12,7 +12,7 @@ const sinon = require('sinon');
 
 const EventService = require('fabric-common/lib/EventService');
 const {NetworkImpl: Network} = require('../../../lib/network');
-const EventServiceManager = require('./../../../lib/impl/event/eventservicemanager');
+const {EventServiceManager} = require('./../../../lib/impl/event/eventservicemanager');
 const BaseEventListener = require('./../../../lib/impl/event/baseeventlistener');
 const FileSystemCheckpointer = require('./../../../lib/impl/event/filesystemcheckpointer');
 
@@ -32,8 +32,7 @@ describe('BaseEventListener', () => {
 		eventServiceManager = sandbox.createStubInstance(EventServiceManager);
 		eventServiceManager.startEventService.resolves();
 		eventService = sandbox.createStubInstance(EventService);
-		eventServiceManager.getEventService = sinon.stub().returns(eventService);
-		eventServiceManager.getReplayEventService = sinon.stub().returns(eventService);
+		eventServiceManager.newFailoverEventService = sinon.stub().returns(eventService);
 		network = sandbox.createStubInstance(Network);
 		network.eventServiceManager = eventServiceManager;
 
@@ -132,7 +131,7 @@ describe('BaseEventListener', () => {
 			testListener.replay = true;
 			await testListener.register();
 			expect(testListener.eventService).to.be.equal(eventService);
-			sinon.assert.calledOnce(eventServiceManager.getReplayEventService);
+			sinon.assert.calledOnce(eventServiceManager.newFailoverEventService);
 		});
 
 		it('should get non replay event service', async () => {
@@ -141,14 +140,14 @@ describe('BaseEventListener', () => {
 			testListener.replay = false;
 			await testListener.register();
 			expect(testListener.eventService).to.be.equal(eventService);
-			sinon.assert.calledOnce(eventServiceManager.getEventService);
+			sinon.assert.calledOnce(eventServiceManager.newFailoverEventService);
 			sinon.assert.calledOnce(eventServiceManager.startEventService);
 		});
 
 		it('should throw if no event services available', async () => {
 			testListener.eventService = null;
 			testListener.replay = false;
-			eventServiceManager.getEventService = sinon.stub().returns(null);
+			eventServiceManager.newFailoverEventService = sinon.stub().returns(null);
 			try {
 				await testListener.register();
 				expect(1, 'should have gotten an error').to.be.false;

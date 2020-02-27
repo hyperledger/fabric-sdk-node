@@ -7,7 +7,6 @@
 import { AllForTxStrategy } from './allfortxstrategy';
 import { AnyForTxStrategy } from './anyfortxstrategy';
 import { TxEventHandlerFactory, TransactionEventHandler } from './transactioneventhandler';
-// @ts-ignore no implicit any
 import { Network } from '../../network';
 import { Endorser } from 'fabric-common';
 

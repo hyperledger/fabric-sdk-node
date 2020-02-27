@@ -59,13 +59,13 @@ Feature: Node SDK Events
 		And I use the gateway named event_gateway to submit a total of 5 transactions with args [createValue] for contract events instantiated on channel eventschannel
 		Then I receive 0 events from the listener named filteredBlockListener
 
-#	Scenario: Using a Contract I can listen to unfiltered block events emitted by networks between a start and end block
-#		When I use the gateway named event_gateway to listen for unfiltered block events between 0 and 2 with a listener named unfilteredNumberedBlockListener on channel eventschannel
-#		And I use the gateway named event_gateway to submit a total of 10 transactions with args [createValue] for contract events instantiated on channel eventschannel
-#		Then I receive a minimum 2 events from the listener unfilteredNumberedBlockListener
+	Scenario: Using a Contract I can listen to filtered block events emitted by networks between a start and end block
+		When I use the gateway named event_gateway to listen for filtered block events between 0 and 2 with a listener named filteredNumberedBlockListener on channel eventschannel
+		And I use the gateway named event_gateway to submit a total of 10 transactions with args [createValue] for contract events instantiated on channel eventschannel
+		Then I receive a minimum 2 events from the listener filteredNumberedBlockListener
 
-#	Scenario: Using a Contract I can stop listening to unfiltered block events emitted by networks between a start and end block
-#		Given I am listening for unfiltered block events with a listener named unfilteredNumberedBlockListener
-#		When I unregister the listener named unfilteredNumberedBlockListener
-#		And I use the gateway named event_gateway to submit a total of 5 transactions with args [createValue] for contract events instantiated on channel eventschannel
-#		Then I receive 0 events from the listener named unfilteredNumberedBlockListener
+	Scenario: Using a Contract I can stop listening to filtered block events emitted by networks between a start and end block
+		Given I am listening for filtered block events with a listener named filteredNumberedBlockListener
+		When I unregister the listener named filteredNumberedBlockListener
+		And I use the gateway named event_gateway to submit a total of 5 transactions with args [createValue] for contract events instantiated on channel eventschannel
+		Then I receive 0 events from the listener named filteredNumberedBlockListener

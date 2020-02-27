@@ -16,17 +16,16 @@ import {
 import Long = require('long');
 
 import { Network, NetworkImpl } from '../../../src/network';
-import EventServiceManager = require('../../../src/impl/event/eventservicemanager');
+import { EventServiceManager } from '../../../src/impl/event/eventservicemanager';
 import Gateway = require('../../../src/gateway');
 import { StubEventService } from './stubeventservice';
-import { CommitListener } from '../../../src/impl/event/commitlistener';
 
 describe('commit listener', () => {
 	let eventServiceManager: sinon.SinonStubbedInstance<EventServiceManager>;
 	let eventService: StubEventService;
 	let peer: Endorser;
 	let peers: Endorser[];
-	let gateway: Gateway;
+	let gateway: sinon.SinonStubbedInstance<Gateway>;
 	let network: Network;
 	let eventInfo: EventInfo;
 	const transactionId = 'TX_ID';
@@ -39,16 +38,19 @@ describe('commit listener', () => {
 		eventService = new StubEventService(peer.name);
 
 		eventServiceManager = sinon.createStubInstance(EventServiceManager);
-		eventServiceManager.getEventServices.withArgs(peers).returns([eventService]);
+		eventServiceManager.getCachedEventService.withArgs(peer).returns(eventService);
 
 		eventInfo = {
-			eventHub: null,
+			eventService,
 			blockNumber: new Long(1),
 			transactionId
 		};
 
 		gateway = sinon.createStubInstance(Gateway);
 		gateway.identityContext = sinon.createStubInstance(IdentityContext);
+		gateway.getIdentity.returns({
+			mspId: 'mspId'
+		});
 
 		network = new NetworkImpl(gateway, null);
 		(network as any).eventServiceManager = eventServiceManager;

@@ -74,7 +74,7 @@ class EventService extends ServiceAction {
 		this.lastBlockNumber = null;
 
 		this.startBlock = NEWEST;
-		this.endBlock = null;
+		this.endBlock = undefined;
 		this._end_block_seen = false;
 
 		this._eventListenerRegistrations = new Map();
@@ -91,7 +91,7 @@ class EventService extends ServiceAction {
 
 		// remember the blockType this EventService is listening
 		// will be set during the .build call
-		this.blockType = null;
+		this.blockType = FILTERED_BLOCK;
 		this.replay = false;
 
 		this.myNumber = count++;
