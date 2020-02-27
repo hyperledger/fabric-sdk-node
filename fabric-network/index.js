@@ -143,11 +143,208 @@
  * @returns {Promise<void>}
  */
 
+/**
+ * Factory function to obtain transaction event handler instances. Called on every transaction submit.
+ * @typedef {Function} TxEventHandlerFactory
+ * @memberof module:fabric-network
+ * @param {string} transactionId The ID of the transaction being submitted.
+ * @param {module:fabric-network.Network} network The network on which this transaction is being submitted.
+ * @returns {module:fabric-network.TxEventHandler} A transaction event handler.
+ */
+
+/**
+ * Handler used to wait for commit events when a transaction is submitted.
+ * @interface TxEventHandler
+ * @memberof module:fabric-network
+ */
+/**
+ * Resolves when the handler has started listening for transaction commit events. Called after the transaction proposal
+ * has been accepted and prior to submission of the transaction to the orderer.
+ * @function module:fabric-network.TxEventHandler#startListening
+ * @async
+ * @returns {Promise<void>}
+ */
+/**
+ * Resolves (or rejects) when suitable transaction commit events have been received. Called after submission of the
+ * transaction to the orderer.
+ * @function module:fabric-network.TxEventHandler#waitForEvents
+ * @async
+ * @returns {Promise<void>}
+ */
+/**
+ * Called if submission of the transaction to the orderer fails.
+ * @function module:fabric-network.TxEventHandler#cancelListening
+ * @returns {void}
+ */
+
+/**
+ * Factory function to obtain query handler instances. Called on every network creation.
+ * @typedef {Function} QueryHandlerFactory
+ * @memberof module:fabric-network
+ * @param {module:fabric-network.Network} network The network on which queries are being evaluated.
+ * @returns {module:fabric-network.QueryHandler} A query handler.
+ */
+
+/**
+ * Handler used to obtain query results from peers when a transaction is evaluated.
+ * @interface QueryHandler
+ * @memberof module:fabric-network
+ */
+/**
+ * Called when a transaction is evaluated to obtain query results from suitable network peers.
+ * @function module:fabric-network.QueryHandler#evaluate
+ * @async
+ * @param {module:fabric-network.Query} query Query object that can be used by the handler to send the query to
+ * specific peers.
+ * @returns {Promise<Buffer>}
+ */
+
+/**
+ * Used by query handler implementations to evaluate transactions on peers of their choosing.
+ * @interface Query
+ * @memberof module:fabric-network
+ */
+/**
+ * Get query results from specified peers.
+ * @function module:fabric-network.Query#evaluate
+ * @async
+ * @param {Endorser[]} peers
+ * @returns {Promise<Array<module:fabric-network.Query~QueryResponse | Error>>}
+ */
+
+/**
+ * @typedef {Object} Query~QueryResponse
+ * @memberof module:fabric-network
+ * @property {boolean} isEndorsed True if the proposal was endorsed by the peer.
+ * @property {number} status The status value from the endorsement. This attriibute will be set by the chaincode.
+ * @property {Buffer} payload The payload value from the endorsement. This attribute may be considered the query value
+ * if the proposal was endorsed by the peer.
+ * @property {string} message The message value from the endorsement. This property contains the error message from
+ * the peer if it did not endorse the proposal.
+ */
+
+/**
+ * A callback function that will be invoked when either a peer communication error occurs or a transaction commit event
+ * is received. Only one of the two arguments will have a value for any given invocation.
+ * @callback Network~CommitListener
+ * @memberof module:fabric-network
+ * @param {module:fabric-network.Network~CommitError} [error] Peer communication error.
+ * @param {module:fabric-network.Network~CommitEvent} [event] Transaction commit event from a specific peer.
+ */
+
+/**
+ * @typedef {Error} Network~CommitError
+ * @memberof module:fabric-network
+ * @property {Endorser} peer The peer that raised this error.
+ */
+
+/**
+ * @typedef {EventInfo} Network~CommitEvent
+ * @memberof module:fabric-network
+ * @property {Endorser} peer The peer that raised this error.
+ */
+
+/**
+ * A callback function that will be invoked when a block event is received. Block events will be received in order and
+ * without duplication.
+ * @callback Network~CommitListener
+ * @memberof module:fabric-network
+ * @async
+ * @param {module:fabric-network.Network~BlockEvent} event Block event.
+ * @returns {Promise<void>}
+ */
+
+/**
+ * @typedef {EventInfo} Network~BlockEvent
+ * @memberof module:fabric-network
+ */
+
+/**
+ * A Network represents the set of peers in a Fabric network.
+ * Applications should get a Network instance using the
+ * gateway's [getNetwork]{@link module:fabric-network.Gateway#getNetwork} method.
+ * @interface Network
+ * @memberof module:fabric-network
+ */
+
+/**
+ * Get the owning Gateway connection.
+ * @method Network#getGateway
+ * @memberof module:fabric-network
+ * @returns {module:fabric-network.Gateway} A Gateway.
+ */
+
+/**
+ * Get an instance of a contract (chaincode) on the current network.
+ * @method Network#getContract
+ * @memberof module:fabric-network
+ * @param {string} chaincodeId - the chaincode identifier.
+ * @param {string} [name] - the name of the contract.
+ * @param {string[]} [collections] - the names of collections defined for this chaincode.
+ * @returns {module:fabric-network.Contract} the contract.
+ */
+
+/**
+ * Get the underlying channel object representation of this network.
+ * @method Network#getChannel
+ * @memberof module:fabric-network
+ * @returns {Channel} A channel.
+ */
+
+/**
+ * Add a listener to receive transaction commit and peer disconnect events for a set of peers.
+ * @method Network#addCommitListener
+ * @memberof module:fabric-network
+ * @param {module:fabric-network.Network~CommitListener} listener A transaction commit listener callback function.
+ * @param {Endorser[]} peers The peers from which to receive events.
+ * @param {string} transactionId A transaction ID.
+ * @returns {module:fabric-network.Network~CommitListener} The added listener.
+ * @example
+ * const listener: CommitListener = (error, event) => {
+ *     if (error) {
+ *         // Handle peer communication error
+ *     } else {
+ *         // Handle transaction commit event
+ *     }
+ * }
+ * const peers = network.channel.getEndorsers();
+ * await network.addCommitListener(listener, peers, transactionId);
+ */
+
+/**
+ * Remove a previously added transaction commit listener.
+ * @method Network#removeCommitListener
+ * @memberof module:fabric-network
+ * @param {module:fabric-network.Network~CommitListener} listener A transaction commit listener callback function.
+ */
+
+/**
+ * Add a listener to receive block events for this network. Blocks will be received in order and without duplication.
+ * @method Network#addBlockListener
+ * @memberof module:fabric-network
+ * @param {module:fabric-network.Network~BlockListener} listener A block listener callback function.
+ * @returns {module:fabric-network.Network~BlockListener} The added listener.
+ * @example
+ * const listener: BlockListener = async (event) => {
+ *     // Handle block event, then (optionally) remove myself as a listener
+ *     network.removeBlockListener(listener);
+ * }
+ * await network.addBlockListener(listener);
+ */
+
+/**
+ * Remove a previously added block listener.
+ * @method Network#removeBlockListener
+ * @memberof module:fabric-network
+ * @param listener {module:fabric-network.Network~BlockListener} A block listener callback function.
+ */
+
+
 module.exports.Gateway = require('./lib/gateway');
 module.exports.Wallet = require('./lib/impl/wallet/wallet').Wallet;
 module.exports.Wallets = require('./lib/impl/wallet/wallets').Wallets;
 module.exports.IdentityProviderRegistry = require('./lib/impl/wallet/identityproviderregistry').IdentityProviderRegistry;
 module.exports.HsmX509Provider = require('./lib/impl/wallet/hsmx509identity').HsmX509Provider;
 module.exports.DefaultEventHandlerStrategies = require('./lib/impl/event/defaulteventhandlerstrategies');
-module.exports.QueryHandlerStrategies = require('./lib/impl/query/queryhandlerstrategies');
+module.exports.DefaultQueryHandlerStrategies = require('./lib/impl/query/defaultqueryhandlerstrategies');
 module.exports.TimeoutError = require('./lib/errors/timeouterror').TimeoutError;

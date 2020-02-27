@@ -4,26 +4,33 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
+import { Query as CommonQuery, Endorser } from 'fabric-common';
 
-const logger = require('../../logger').getLogger('Query');
+import * as Logger from '../../logger';
+const logger = Logger.getLogger('Query');
+
+export interface QueryResults {
+	[peerName: string]: Error | QueryResponse;
+}
+
+export interface QueryResponse {
+	isEndorsed: boolean;
+	payload: Buffer;
+	status: number;
+	message: string;
+}
+
+export interface Query {
+	evaluate(peers: Endorser[]): Promise<QueryResults>;
+}
 
 /**
- * @typedef {Object} Query~QueryResponse
- * @memberof module:fabric-network
- * @property {number} status - The status value from the endorsement. This attriibute
- * will be set by the chaincode.
- * @property {Buffer} payload - The payload value from the endorsement. This attribute
- * may be considered the query value if the status code is exceptable.
- * @property {Buffer} payload - The message value from the endorsement. This attribute
- * will have a value when there is not a payload and status value indicates an issue
- * with determining the payload (the query value).
+ * @private
  */
-/**
- * Used by query handler implementations to evaluate transactions on peers of their choosing.
- * @memberof module:fabric-network
- */
-class Query {
+export class QueryImpl implements Query {
+	private readonly query: CommonQuery;
+	private readonly requestTimeout: number;
+
 	/**
 	 * Builds a Query instance to send and then work with the results returned
 	 * by the fabric-common/Query.
@@ -31,7 +38,7 @@ class Query {
 	 * @returns {Object} options - options to be used when sending the request to
 	 * fabric-common service endpoint {Endorser} peer.
 	 */
-	constructor(query, options = {}) {
+	constructor(query: CommonQuery, options: any = {}) {
 		this.query = query;
 		this.requestTimeout = 3000; // default 3 seconds
 		if (Number.isInteger(options.timeout)) {
@@ -46,11 +53,11 @@ class Query {
 	 * @returns {Object.<String, (QueryResponse | Error)>} Object with peer name keys and associated values that are either
 	 * QueryResponse objects or Error objects.
 	 */
-	async evaluate(peers) {
+	async evaluate(peers: Endorser[]): Promise<QueryResults> {
 		const method = 'evaluate';
 		logger.debug('%s - start', method);
 
-		const results = {};
+		const results: QueryResults = {};
 		try {
 			const responses = await this.query.send({targets: peers, requestTimeout: this.requestTimeout});
 			if (responses) {
@@ -61,17 +68,18 @@ class Query {
 					}
 				}
 				if (responses.responses) {
-					for (const peer_response of responses.responses) {
-						if (peer_response.response) {
-							const response = {};
-							response.status = peer_response.response.status;
-							response.payload = peer_response.response.payload;
-							response.message = peer_response.response.message;
-							response.isEndorsed = peer_response.endorsement ? true : false;
-							results[peer_response.connection.name] = response;
+					for (const peerResponse of responses.responses) {
+						if (peerResponse.response) {
+							const response: QueryResponse = {
+								status: peerResponse.response.status,
+								payload: peerResponse.response.payload,
+								message: peerResponse.response.message,
+								isEndorsed: peerResponse.endorsement ? true : false
+							};
+							results[peerResponse.connection.name] = response;
 							logger.debug('%s - have results - peer: %s with status:%s',
 								method,
-								peer_response.connection.name,
+								peerResponse.connection.name,
 								response.status);
 						}
 					}
@@ -99,5 +107,3 @@ class Query {
 		return results;
 	}
 }
-
-module.exports = Query;

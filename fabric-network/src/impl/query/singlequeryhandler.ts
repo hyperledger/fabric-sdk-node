@@ -4,33 +4,38 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
+import { FabricError } from '../../errors/fabricerror';
+import { QueryHandler } from './queryhandler';
+import { Query } from './query';
 
-const {FabricError} = require('../../errors/fabricerror');
+import { Endorser } from 'fabric-common';
 
-const util = require('util');
+import util = require('util');
 
-const logger = require('../../logger').getLogger('SingleQueryHandler');
+import * as Logger from '../../logger';
+const logger = Logger.getLogger('SingleQueryHandler');
 
-class SingleQueryHandler {
-	constructor(peers) {
+export class SingleQueryHandler implements QueryHandler {
+	private readonly peers: Endorser[];
+	private currentPeerIndex = 0;
+
+	constructor(peers: Endorser[]) {
 		logger.debug('constructor: peers=%j', peers.map((peer) => peer.name));
-		this._peers = peers;
-		this._currentPeerIndex = 0;
+		this.peers = peers;
 	}
 
-	async evaluate(query) {
+	async evaluate(query: Query) {
 		const method = 'evaluate';
 		logger.debug('%s - start', method);
 
-		const startPeerIndex = this._currentPeerIndex;
+		const startPeerIndex = this.currentPeerIndex;
 		const errorMessages = [];
 
-		for (let i = 0; i < this._peers.length; i++) {
-			const peerIndex = (startPeerIndex + i) % this._peers.length;
-			this._currentPeerIndex = peerIndex;
+		for (let i = 0; i < this.peers.length; i++) {
+			const peerIndex = (startPeerIndex + i) % this.peers.length;
+			this.currentPeerIndex = peerIndex;
 
-			const peer = this._peers[peerIndex];
+			const peer = this.peers[peerIndex];
 			logger.debug('%s - sending to peer %s', method, peer.name);
 
 			const results = await query.evaluate([peer]);
@@ -54,5 +59,3 @@ class SingleQueryHandler {
 		throw error;
 	}
 }
-
-module.exports = SingleQueryHandler;

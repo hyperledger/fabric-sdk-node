@@ -18,7 +18,7 @@ import {
 import Long = require('long');
 
 import Gateway = require('../../../src/gateway');
-import Network = require('../../../src/network');
+import { Network, NetworkImpl } from '../../../src/network';
 import EventServiceManager = require('../../../src/impl/event/eventservicemanager');
 import { TransactionEventStrategy } from '../../../src/impl/event/transactioneventstrategy';
 import { StubEventService } from './stubeventservice';
@@ -69,8 +69,8 @@ describe('TransactionEventHandler', () => {
 		gateway.identityContext = sinon.createStubInstance(IdentityContext);
 		gateway.getOptions.returns(options);
 
-		network = new Network(gateway, null);
-		network.eventServiceManager = eventServiceManager;
+		network = new NetworkImpl(gateway, null);
+		(network as any).eventServiceManager = eventServiceManager;
 
 		stubStrategy = sinon.createStubInstance(TransactionEventStrategy);
 		stubStrategy.getPeers.returns([peer]);

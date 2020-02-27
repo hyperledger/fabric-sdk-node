@@ -8,6 +8,15 @@
 
 const logger = require('../../logger').getLogger('EventServiceManager');
 
+function getOrganizationPeers(network) {
+	const mspId = network.getGateway().getIdentity().mspId;
+	return network.getChannel().getEndorsers(mspId);
+}
+
+function getNetworkPeers(network) {
+	return network.getChannel().getEndorsers();
+}
+
 /**
  * The Event Service Manager is responsible for creating and distributing {@link EventService} instances.
  * It uses the event Service factory to reuse event Services that exists, and maintains
@@ -251,18 +260,16 @@ class EventServiceManager {
  * spreads out the load onto different event services from the same organization
  */
 class RoundRobinPeerPool {
-	/*
-	 * Constructor.
-	 * @param {Endorser[]} peers The list of peers that the strategy can choose from
-	 */
 	constructor(network) {
-		const mspId = network.getGateway().getIdentity().mspId;
-		const peers = network.getChannel().getEndorsers(mspId);
-		if (!peers || peers.length === 0) {
+		let peers = getOrganizationPeers(network);
+		if (peers.length === 0) {
+			peers = getNetworkPeers(network);
+		}
+		if (peers.length === 0) {
 			throw Error('No peers available');
 		}
 		this.peers = peers;
-		this.lastPeerIndex = -1;
+		this.currentPeerIndex = 0;
 	}
 
 	/*
@@ -270,12 +277,9 @@ class RoundRobinPeerPool {
 	 * @returns {Endorser}
 	 */
 	getNextPeer() {
-		this.lastPeerIndex++;
-		if (this.lastPeerIndex >= this.peers.length) {
-			this.lastPeerIndex = 0;
-		}
-
-		return this.peers[this.lastPeerIndex];
+		const peer = this.peers[this.currentPeerIndex];
+		this.currentPeerIndex = (this.currentPeerIndex + 1) % this.peers.length;
+		return peer;
 	}
 
 	/*
@@ -287,14 +291,9 @@ class RoundRobinPeerPool {
 	 * @returns {Endorser[]}
 	 */
 	getNextPeers() {
-		const peers = [];
-		for (let count = 0; count < this.peers.length; count++) {
-			peers.push(this.getNextPeer());
-		}
-		// call one more time to move the index so the next call will
-		// start on the next peer after the start index of this call.
+		const peers = this.peers.map(() => this.getNextPeer());
+		// Move the peer index along so a subsequent call to this function will start at a different peer
 		this.getNextPeer();
-
 		return peers;
 	}
 

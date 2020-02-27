@@ -19,10 +19,10 @@
 		});
 		*/
 
-const Endorser = require('fabric-common/lib/Endorser');
-const Query = require('fabric-network/lib/impl/query/query');
-const SingleQueryHandler = require('fabric-network/lib/impl/query/singlequeryhandler');
-const RoundRobinQueryHandler = require('fabric-network/lib/impl/query/roundrobinqueryhandler');
+const {Endorser} = require('fabric-common');
+const {QueryImpl: Query} = require('fabric-network/lib/impl/query/query');
+const {SingleQueryHandler} = require('fabric-network/lib/impl/query/singlequeryhandler');
+const {RoundRobinQueryHandler} = require('fabric-network/lib/impl/query/roundrobinqueryhandler');
 
 const sinon = require('sinon');
 const chai = require('chai');
@@ -168,15 +168,15 @@ describe('QueryHandlers', () => {
 			query.evaluate.withArgs([endorser2]).resolves(s400ProposalResponse2);
 
 			let result = await handler.evaluate(query);
-			expect(handler._currentPeerIndex).to.be.equal(0);
+			expect(handler.currentPeerIndex).to.be.equal(0);
 			expect(result).to.be.equal('peer1-200');
 
 			result = await handler.evaluate(query);
-			expect(handler._currentPeerIndex).to.be.equal(0);
+			expect(handler.currentPeerIndex).to.be.equal(0);
 			expect(result).to.be.equal('peer1-200');
 
 			result = await handler.evaluate(query);
-			expect(handler._currentPeerIndex).to.be.equal(0);
+			expect(handler.currentPeerIndex).to.be.equal(0);
 			expect(result).to.be.equal('peer1-200');
 		});
 		it('continues to use second peer', async () => {
@@ -184,15 +184,15 @@ describe('QueryHandlers', () => {
 			query.evaluate.withArgs([endorser1]).resolves(errorProposalResponse1);
 
 			let result = await handler.evaluate(query);
-			expect(handler._currentPeerIndex).to.be.equal(1);
+			expect(handler.currentPeerIndex).to.be.equal(1);
 			expect(result).to.be.equal('peer2-200');
 
 			result = await handler.evaluate(query);
-			expect(handler._currentPeerIndex).to.be.equal(1);
+			expect(handler.currentPeerIndex).to.be.equal(1);
 			expect(result).to.be.equal('peer2-200');
 
 			result = await handler.evaluate(query);
-			expect(handler._currentPeerIndex).to.be.equal(1);
+			expect(handler.currentPeerIndex).to.be.equal(1);
 			expect(result).to.be.equal('peer2-200');
 		});
 		it('switches to second peer after error', async () => {
@@ -200,21 +200,21 @@ describe('QueryHandlers', () => {
 			query.evaluate.withArgs([endorser2]).resolves(s200ProposalResponse2);
 
 			let result = await handler.evaluate(query);
-			expect(handler._currentPeerIndex).to.be.equal(0);
+			expect(handler.currentPeerIndex).to.be.equal(0);
 			expect(result).to.be.equal('peer1-200');
 
 			result = await handler.evaluate(query);
-			expect(handler._currentPeerIndex).to.be.equal(0);
+			expect(handler.currentPeerIndex).to.be.equal(0);
 			expect(result).to.be.equal('peer1-200');
 
 
 			query.evaluate.withArgs([endorser1]).resolves(errorProposalResponse1);
 			result = await handler.evaluate(query);
-			expect(handler._currentPeerIndex).to.be.equal(1);
+			expect(handler.currentPeerIndex).to.be.equal(1);
 			expect(result).to.be.equal('peer2-200');
 
 			result = await handler.evaluate(query);
-			expect(handler._currentPeerIndex).to.be.equal(1);
+			expect(handler.currentPeerIndex).to.be.equal(1);
 			expect(result).to.be.equal('peer2-200');
 		});
 		it('returns an error with the both peers 500 results', async () => {
@@ -346,7 +346,7 @@ describe('QueryHandlers', () => {
 			query.evaluate.withArgs([endorser2]).resolves(s400ProposalResponse2);
 
 			let result = await handler.evaluate(query);
-			expect(handler._currentPeerIndex).to.be.equal(1);
+			expect(handler.currentPeerIndex).to.be.equal(1);
 			expect(result).to.be.equal('peer1-200');
 
 			try {
@@ -356,7 +356,7 @@ describe('QueryHandlers', () => {
 			}
 
 			result = await handler.evaluate(query);
-			expect(handler._currentPeerIndex).to.be.equal(1);
+			expect(handler.currentPeerIndex).to.be.equal(1);
 			expect(result).to.be.equal('peer1-200');
 		});
 		it('switches between peers', async () => {
@@ -364,19 +364,19 @@ describe('QueryHandlers', () => {
 			query.evaluate.withArgs([endorser1]).resolves(s200ProposalResponse1);
 
 			let result = await handler.evaluate(query);
-			expect(handler._currentPeerIndex).to.be.equal(1);
+			expect(handler.currentPeerIndex).to.be.equal(1);
 			expect(result).to.be.equal('peer1-200');
 
 			result = await handler.evaluate(query);
-			expect(handler._currentPeerIndex).to.be.equal(0);
+			expect(handler.currentPeerIndex).to.be.equal(0);
 			expect(result).to.be.equal('peer2-200');
 
 			result = await handler.evaluate(query);
-			expect(handler._currentPeerIndex).to.be.equal(1);
+			expect(handler.currentPeerIndex).to.be.equal(1);
 			expect(result).to.be.equal('peer1-200');
 
 			result = await handler.evaluate(query);
-			expect(handler._currentPeerIndex).to.be.equal(0);
+			expect(handler.currentPeerIndex).to.be.equal(0);
 			expect(result).to.be.equal('peer2-200');
 		});
 		it('continues to use second peer', async () => {
@@ -384,15 +384,15 @@ describe('QueryHandlers', () => {
 			query.evaluate.withArgs([endorser1]).resolves(errorProposalResponse1);
 
 			let result = await handler.evaluate(query);
-			expect(handler._currentPeerIndex).to.be.equal(1);
+			expect(handler.currentPeerIndex).to.be.equal(1);
 			expect(result).to.be.equal('peer2-200');
 
 			result = await handler.evaluate(query);
-			expect(handler._currentPeerIndex).to.be.equal(0);
+			expect(handler.currentPeerIndex).to.be.equal(0);
 			expect(result).to.be.equal('peer2-200');
 
 			result = await handler.evaluate(query);
-			expect(handler._currentPeerIndex).to.be.equal(1);
+			expect(handler.currentPeerIndex).to.be.equal(1);
 			expect(result).to.be.equal('peer2-200');
 		});
 		it('stays with second peer after error', async () => {
@@ -400,21 +400,21 @@ describe('QueryHandlers', () => {
 			query.evaluate.withArgs([endorser2]).resolves(s200ProposalResponse2);
 
 			let result = await handler.evaluate(query);
-			expect(handler._currentPeerIndex).to.be.equal(1);
+			expect(handler.currentPeerIndex).to.be.equal(1);
 			expect(result).to.be.equal('peer1-200');
 
 			result = await handler.evaluate(query);
-			expect(handler._currentPeerIndex).to.be.equal(0);
+			expect(handler.currentPeerIndex).to.be.equal(0);
 			expect(result).to.be.equal('peer2-200');
 
 
 			query.evaluate.withArgs([endorser1]).resolves(errorProposalResponse1);
 			result = await handler.evaluate(query);
-			expect(handler._currentPeerIndex).to.be.equal(1);
+			expect(handler.currentPeerIndex).to.be.equal(1);
 			expect(result).to.be.equal('peer2-200');
 
 			result = await handler.evaluate(query);
-			expect(handler._currentPeerIndex).to.be.equal(0);
+			expect(handler.currentPeerIndex).to.be.equal(0);
 			expect(result).to.be.equal('peer2-200');
 		});
 		it('returns an error with the both peers 500 results', async () => {

@@ -22,12 +22,11 @@ const should = chai.should;
 should();
 chai.use(require('chai-as-promised'));
 
-const Network = require('../lib/network');
+const {NetworkImpl: Network} = require('../lib/network');
 const Gateway = require('../lib/gateway');
 const Contract = require('../lib/contract');
 const EventStrategies = require('fabric-network/lib/impl/event/defaulteventhandlerstrategies');
 const EventServiceManager = require('fabric-network/lib/impl/event/eventservicemanager');
-const BlockEventListener = require('fabric-network/lib/impl/event/blockeventlistener');
 
 describe('Network', () => {
 	let channel;
@@ -110,7 +109,7 @@ describe('Network', () => {
 	describe('#_initializeInternalChannel', () => {
 		it('should initialize with no discovery', async () => {
 			await network._initializeInternalChannel({enabled:false});
-			expect(network.discoveryService).to.equal(null);
+			expect(network.discoveryService).to.not.exist;
 		});
 
 		it('should initialize the network using the discovery with user specified targets', async () => {
@@ -228,39 +227,5 @@ describe('Network', () => {
 			network._dispose();
 			sinon.assert.called(spy);
 		});
-
-		it('calls unregister on its listeners', () => {
-			const listener = sinon.createStubInstance(BlockEventListener);
-			network.listeners.set('listener', listener);
-			network._dispose();
-			sinon.assert.calledOnce(listener.unregister);
-		});
 	});
-
-	describe('#addBlockListener', () => {
-		let callback;
-		beforeEach(() => {
-			callback = () => {};
-		});
-
-		it('should create options if the options param is undefined', async () => {
-			const listener = await network.addBlockListener(callback);
-			listener.should.to.be.instanceof(BlockEventListener);
-			network.listeners.get(listener).should.to.equal(listener);
-		});
-
-		it('should create an instance of BlockEventListener and add it to the list of listeners', async () => {
-			const listener = await network.addBlockListener(callback, {});
-			listener.should.to.be.instanceof(BlockEventListener);
-			network.listeners.get(listener).should.to.equal(listener);
-		});
-
-		it('should create an instance of BlockEventListener and add it to the list of listeners', async () => {
-			const listener = await network.addBlockListener(callback, {}, eventService);
-			listener.should.to.be.instanceof(BlockEventListener);
-			network.listeners.get(listener).should.to.equal(listener);
-			listener.eventService.should.to.equal(eventService);
-		});
-	});
-
 });

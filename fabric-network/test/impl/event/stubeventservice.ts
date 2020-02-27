@@ -51,6 +51,28 @@ class StubTransactionEventListener implements EventListener {
 	}
 }
 
+class StubBlockEventListener implements EventListener {
+	readonly callback: EventCallback;
+	readonly options: EventRegistrationOptions;
+	private readonly eventService: EventService;
+
+	constructor(eventService: EventService, callback: EventCallback, options: EventRegistrationOptions) {
+		this.eventService = eventService;
+		this.callback = callback;
+		this.options = options;
+	}
+
+	onEvent(error: Error, event: EventInfo) {
+		if (error || event.blockNumber) {
+			this.callback(error, event);
+		}
+	}
+
+	unregisterEventListener() {
+		this.eventService.unregisterEventListener(this);
+	}
+}
+
 export class StubEventService implements EventService {
 	readonly name: string;
 	startBlock: string | Long;
@@ -71,7 +93,7 @@ export class StubEventService implements EventService {
 	}
 
 	close() {
-		throw new Error('Method not implemented.');
+		this.eventListeners.clear();
 	}
 
 	build(idContext: IdentityContext, request: any): Buffer {
@@ -105,7 +127,9 @@ export class StubEventService implements EventService {
 	}
 
 	registerBlockListener(callback: EventCallback, options: EventRegistrationOptions): EventListener {
-		throw new Error('Method not implemented.');
+		const listener = new StubBlockEventListener(this, callback, options);
+		this.eventListeners.add(listener);
+		return listener;
 	}
 
 	sign(parm: IdentityContext | Buffer): ServiceAction {

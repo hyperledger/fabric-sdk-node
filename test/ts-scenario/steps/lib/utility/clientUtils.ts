@@ -198,7 +198,7 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 			};
 
 			// Send the signed endorsement to the requested peers.
-			const endorsementResponse: ProposalResponse = await endorsement.send(endorsementRequest, {});
+			const endorsementResponse: ProposalResponse = await endorsement.send(endorsementRequest);
 			assertNoErrors(endorsementResponse);
 
 			// Connect to 'Eventer'
@@ -279,7 +279,7 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 
 			try {
 				// Send commit, having started the event listener, wait for all
-				const commitSubmission: any =  commit.send(commitRequest, {});
+				const commitSubmission: any =  commit.send(commitRequest);
 				const commitResults: any[] = await Promise.all([eventListener, commitSubmission]);
 
 				requestObject.results = {
@@ -382,7 +382,7 @@ export async function submitChannelRequest(clientName: string, channelName: stri
 			// Send query to target peers
 			const queryObject: any = {};
 			try {
-				const queryResponse: ProposalResponse = await query.send(queryRequest, {});
+				const queryResponse: ProposalResponse = await query.send(queryRequest);
 
 				if (queryResponse.errors.length > 0) {
 					// failure

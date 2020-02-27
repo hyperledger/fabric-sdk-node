@@ -11,7 +11,7 @@ const expect = chai.expect;
 const sinon = require('sinon');
 
 const EventService = require('fabric-common/lib/EventService');
-const Network = require('./../../../lib/network');
+const {NetworkImpl: Network} = require('../../../lib/network');
 const EventServiceManager = require('./../../../lib/impl/event/eventservicemanager');
 const BaseEventListener = require('./../../../lib/impl/event/baseeventlistener');
 const FileSystemCheckpointer = require('./../../../lib/impl/event/filesystemcheckpointer');
@@ -184,24 +184,24 @@ describe('BaseEventListener', () => {
 			testListener.registration = sinon.stub();
 			testListener.registration.eventService = sinon.stub();
 			testListener.registration.eventService.unregisterEventListener = sinon.stub();
-			network.listeners = new Map();
-			network.listeners.set(testListener, testListener);
+			network.oldListeners = new Map();
+			network.oldListeners.set(testListener, testListener);
 			testListener.unregister();
-			expect(network.listeners.has(testListener)).to.be.false;
+			expect(network.oldListeners.has(testListener)).to.be.false;
 		});
 		it('should unregister with no registration', () => {
 			testListener.registration = null;
-			network.listeners = new Map();
-			network.listeners.set(testListener, testListener);
+			network.oldListeners = new Map();
+			network.oldListeners.set(testListener, testListener);
 			testListener.unregister();
-			expect(network.listeners.has(testListener)).to.be.false;
+			expect(network.oldListeners.has(testListener)).to.be.false;
 		});
 		it('should unregister with listener on the network', () => {
 			testListener.registration = sinon.stub();
 			testListener.registration.eventService = sinon.stub();
 			testListener.registration.eventService.unregisterEventListener = sinon.stub();
-			network.listeners = new Map();
-			network.listeners.set(testListener, testListener);
+			network.oldListeners = new Map();
+			network.oldListeners.set(testListener, testListener);
 			testListener.unregister();
 			expect(testListener.registration).to.be.null;
 		});
@@ -209,7 +209,7 @@ describe('BaseEventListener', () => {
 			testListener.registration = sinon.stub();
 			testListener.registration.eventService = sinon.stub();
 			testListener.registration.eventService.unregisterEventListener = sinon.stub();
-			network.listeners = new Map();
+			network.oldListeners = new Map();
 			testListener.unregister();
 			expect(testListener.registration).to.be.null;
 		});

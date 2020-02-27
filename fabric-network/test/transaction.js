@@ -22,12 +22,12 @@ const DiscoveryHandler = require('fabric-common/lib/DiscoveryHandler');
 const Committer = require('fabric-common/lib/Committer');
 
 const Contract = require('fabric-network/lib/contract');
-const Network = require('fabric-network/lib/network');
+const {NetworkImpl: Network} = require('../lib/network');
 const Gateway = require('fabric-network/lib/gateway');
 const Transaction = require('fabric-network/lib/transaction');
 const {TransactionEventHandler} = require('fabric-network/lib/impl/event/transactioneventhandler');
-const Query = require('fabric-network/lib/impl/query/query');
-const QueryStrategies = require('fabric-network/lib/impl/query/queryhandlerstrategies');
+const {QueryImpl: Query} = require('fabric-network/lib/impl/query/query');
+const QueryStrategies = require('fabric-network/lib/impl/query/defaultqueryhandlerstrategies');
 
 describe('Transaction', () => {
 	const transactionName = 'TRANSACTION_NAME';
@@ -174,15 +174,6 @@ describe('Transaction', () => {
 		});
 	});
 
-	describe('#setEventHandlerStrategy', () => {
-		it('returns this', () => {
-			const stubEventHandler = sinon.createStubInstance(TransactionEventHandler);
-			const stubEventHandlerFactoryFn = () => stubEventHandler;
-			const result = transaction.setEventHandlerStrategy(stubEventHandlerFactoryFn);
-			expect(result).to.equal(transaction);
-		});
-	});
-
 	describe('#setTransient', () => {
 		it('returns this', () => {
 			const result = transaction.setTransient(new Map());
@@ -276,16 +267,6 @@ describe('Transaction', () => {
 			commit.send.resolves({status});
 			const promise = transaction.submit();
 			return expect(promise).to.be.rejectedWith(status);
-		});
-
-		it('uses a supplied event handler strategy', async () => {
-			const stubEventHandler = sinon.createStubInstance(TransactionEventHandler);
-			const stubEventHandlerFactoryFn = sinon.stub().withArgs(transactionId, network).returns(stubEventHandler);
-
-			await transaction.setEventHandlerStrategy(stubEventHandlerFactoryFn).submit();
-
-			sinon.assert.called(stubEventHandler.startListening);
-			sinon.assert.called(stubEventHandler.waitForEvents);
 		});
 
 		it('uses event handler strategy from gateway options', async () => {
