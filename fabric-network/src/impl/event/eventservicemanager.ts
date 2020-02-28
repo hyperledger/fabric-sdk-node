@@ -13,7 +13,7 @@ import {
 	StartRequestOptions
 } from 'fabric-common';
 
-function shuffle<T>(array: Array<T>) {
+function shuffle(array: Array<unknown>) {
 	for (let i = array.length - 1; i > 0; i--) {
 		const j = Math.floor(Math.random() * (i + 1));
 		[array[i], array[j]] = [array[j], array[i]];
@@ -68,7 +68,7 @@ export class EventServiceManager {
 		await eventService.send(options);
 	}
 
-	newFailoverEventService() {
+	newDefaultEventService() {
 		const peers = this.getEventPeers();
 		shuffle(peers);
 		return this.newEventService(peers);

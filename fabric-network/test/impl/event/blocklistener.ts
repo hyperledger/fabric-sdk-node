@@ -11,8 +11,11 @@ const expect = chai.expect;
 import * as testUtils from '../../testutils';
 
 import {
-	EventService,
-	IdentityContext
+	IdentityContext,
+	Channel,
+	Eventer,
+	Client,
+	Endorser
 } from 'fabric-common';
 import Long = require('long');
 
@@ -28,17 +31,15 @@ interface StubBlockListener extends BlockListener {
 }
 
 describe('block listener', () => {
-	let eventServiceManager: sinon.SinonStubbedInstance<EventServiceManager>;
+	let eventServiceManager: EventServiceManager;
 	let eventService: StubEventService;
 	let gateway: sinon.SinonStubbedInstance<Gateway>;
 	let network: Network;
+	let channel: sinon.SinonStubbedInstance<Channel>;
 	let listener: StubBlockListener;
 
 	beforeEach(async () => {
 		eventService = new StubEventService('stub');
-
-		eventServiceManager = sinon.createStubInstance(EventServiceManager);
-		eventServiceManager.newFailoverEventService.returns(eventService);
 
 		gateway = sinon.createStubInstance(Gateway);
 		gateway.identityContext = sinon.createStubInstance(IdentityContext);
@@ -46,9 +47,21 @@ describe('block listener', () => {
 			mspId: 'mspId'
 		});
 
-		network = new NetworkImpl(gateway, null);
-		(network as any).realtimeBlockEventSource = new BlockEventSource(eventServiceManager as any);
-		(network as any).eventServiceManager = eventServiceManager;
+		channel = sinon.createStubInstance(Channel);
+		channel.newEventService.returns(eventService);
+
+		const endorser = sinon.createStubInstance(Endorser);
+		(endorser as any).name = 'endorser';
+		channel.getEndorsers.returns([endorser]);
+
+		const client = sinon.createStubInstance(Client);
+		const eventer = sinon.createStubInstance(Eventer);
+		client.newEventer.returns(eventer);
+		(channel as any).client = client;
+
+		network = new NetworkImpl(gateway, channel);
+
+		eventServiceManager = (network as any).eventServiceManager;
 
 		listener = testUtils.newAsyncListener<BlockEvent>();
 	});
@@ -192,41 +205,40 @@ describe('block listener', () => {
 
 	it('errors trigger reconnect of event service with no start block if no events received', async () => {
 		await network.addBlockListener(listener);
-		eventServiceManager.startEventService.resetHistory();
-		const startListener = testUtils.newAsyncListener<void>(1);
-		eventServiceManager.startEventService.callsFake(() => startListener());
+		const startListener = testUtils.newAsyncListener<void>();
+		const stub = sinon.stub(eventServiceManager, 'startEventService').callsFake(() => startListener());
 
 		eventService.sendError(new Error('DISCONNECT'));
 
 		await startListener.completePromise;
-		sinon.assert.calledWith(eventServiceManager.startEventService, eventService);
-		sinon.assert.neverCalledWith(eventServiceManager.startEventService, sinon.match.any, sinon.match.has('startBlock', sinon.match.number));
+		sinon.assert.calledWith(stub, eventService);
+		sinon.assert.neverCalledWith(stub, sinon.match.any, sinon.match.has('startBlock', sinon.match.number));
 	});
 
 	it('errors trigger reconnect of event service with next block as start block if events received', async () => {
 		await network.addBlockListener(listener);
-		eventServiceManager.startEventService.resetHistory();
-		const startListener = testUtils.newAsyncListener<void>(1);
-		eventServiceManager.startEventService.callsFake(() => startListener());
+		const startListener = testUtils.newAsyncListener<void>();
+		const stub = sinon.stub(eventServiceManager, 'startEventService').callsFake(() => startListener());
 
 		eventService.sendEvent(newEvent(1));
 		eventService.sendError(new Error('DISCONNECT'));
 
 		await startListener.completePromise;
-		sinon.assert.calledWith(eventServiceManager.startEventService, eventService, sinon.match.has('startBlock', Long.fromNumber(2)));
+		sinon.assert.calledWith(stub, eventService, sinon.match.has('startBlock', Long.fromNumber(2)));
 	});
 
 	it('replay listener sends start block to event service', async () => {
+		const stub = sinon.stub(eventServiceManager, 'startEventService');
+
 		const options: ListenerOptions = {
 			startBlock: 2
 		};
 		await network.addBlockListener(listener, options);
 
-		sinon.assert.calledWith(eventServiceManager.startEventService, eventService, sinon.match.has('startBlock', Long.fromNumber(2)));
+		sinon.assert.calledWith(stub, eventService, sinon.match.has('startBlock', Long.fromNumber(2)));
 	});
 
 	it('replay listener does not receive events earlier than start block', async () => {
-		listener = testUtils.newAsyncListener<BlockEvent>(1);
 		const event1 = newEvent(1);
 		const event2 = newEvent(2);
 
@@ -239,5 +251,41 @@ describe('block listener', () => {
 
 		const actual = await listener.completePromise;
 		expect(actual).to.deep.equal([event2]);
+	});
+
+	it('replay listener does not miss start block if later block arrive first', async () => {
+		const event1 = newEvent(1);
+		const event2 = newEvent(2);
+
+		const options: ListenerOptions = {
+			startBlock: 1
+		};
+		await network.addBlockListener(listener, options);
+		eventService.sendEvent(event2);
+		eventService.sendEvent(event1);
+
+		const actual = await listener.completePromise;
+		expect(actual).to.deep.equal([event1]);
+	});
+
+	it('remove of realtime listener does not close shared event service', async () => {
+		const stub = sinon.stub(eventService, 'close');
+
+		await network.addBlockListener(listener);
+		network.removeBlockListener(listener);
+
+		sinon.assert.notCalled(stub);
+	});
+
+	it('remove of replay listener closes isolated event service', async () => {
+		const stub = sinon.stub(eventService, 'close');
+
+		const options: ListenerOptions = {
+			startBlock: 1
+		};
+		await network.addBlockListener(listener, options);
+		network.removeBlockListener(listener);
+
+		sinon.assert.called(stub);
 	});
 });

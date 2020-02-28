@@ -32,7 +32,7 @@ describe('BaseEventListener', () => {
 		eventServiceManager = sandbox.createStubInstance(EventServiceManager);
 		eventServiceManager.startEventService.resolves();
 		eventService = sandbox.createStubInstance(EventService);
-		eventServiceManager.newFailoverEventService = sinon.stub().returns(eventService);
+		eventServiceManager.newDefaultEventService = sinon.stub().returns(eventService);
 		network = sandbox.createStubInstance(Network);
 		network.eventServiceManager = eventServiceManager;
 
@@ -131,7 +131,7 @@ describe('BaseEventListener', () => {
 			testListener.replay = true;
 			await testListener.register();
 			expect(testListener.eventService).to.be.equal(eventService);
-			sinon.assert.calledOnce(eventServiceManager.newFailoverEventService);
+			sinon.assert.calledOnce(eventServiceManager.newDefaultEventService);
 		});
 
 		it('should get non replay event service', async () => {
@@ -140,14 +140,14 @@ describe('BaseEventListener', () => {
 			testListener.replay = false;
 			await testListener.register();
 			expect(testListener.eventService).to.be.equal(eventService);
-			sinon.assert.calledOnce(eventServiceManager.newFailoverEventService);
+			sinon.assert.calledOnce(eventServiceManager.newDefaultEventService);
 			sinon.assert.calledOnce(eventServiceManager.startEventService);
 		});
 
 		it('should throw if no event services available', async () => {
 			testListener.eventService = null;
 			testListener.replay = false;
-			eventServiceManager.newFailoverEventService = sinon.stub().returns(null);
+			eventServiceManager.newDefaultEventService = sinon.stub().returns(null);
 			try {
 				await testListener.register();
 				expect(1, 'should have gotten an error').to.be.false;

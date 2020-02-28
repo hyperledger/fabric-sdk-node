@@ -34,7 +34,7 @@
     "dockerReady": "npm run dockerClean && node -e 'require(\"./scripts/npm_scripts/dockerReady.js\").dockerReady()'",
     "tapeIntegration": "./scripts/npm_scripts/runTape.sh",
     "tapeIntegrationNoHSM": "./scripts/npm_scripts/runTape.sh noHSM",
-    "cucumberScenario": "npm run setupCucumbers && export HFC_LOGGING='{\"debug\":\"test/temp/debugc.log\"}' && npm run test:cucumber && npm run dockerClean && nyc --check-coverage --statements 63 --branches 38 --functions 58 --lines 63 npm run test:ts-cucumber",
+    "cucumberScenario": "npm run setupCucumbers && export HFC_LOGGING='{\"debug\":\"test/temp/debugc.log\"}' && npm run test:cucumber && npm run dockerClean && nyc --check-coverage --statements 64 --branches 39 --functions 61 --lines 64 npm run test:ts-cucumber",
     "setupCucumbers": "node -e 'require(\"./scripts/npm_scripts/testFunctions.js\").createCucumberLogFile()'",
     "test:cucumber": "cucumber-js ./test/scenario/features/*.feature",
     "test:ts-cucumber": "cucumber-js -f node_modules/cucumber-pretty ./test/ts-scenario/features/*.feature --require './test/ts-scenario/steps/**/*.ts' --require './test/ts-scenario/support/**/*.ts' --require-module ts-node/register",

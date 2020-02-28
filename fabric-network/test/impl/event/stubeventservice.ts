@@ -80,6 +80,8 @@ export class StubEventService implements EventService {
 	endBlock: string | Long;
 	blockType: BlockType = 'filtered';
 
+	started = false;
+
 	readonly eventListeners = new Set<EventListener>();
 
 	constructor(name: string) {
@@ -91,7 +93,7 @@ export class StubEventService implements EventService {
 	}
 
 	setTargets(targets: Eventer[]) {
-		throw new Error('Method not implemented.');
+		// No-op
 	}
 
 	getLastBlockNumber(): Long {
@@ -103,11 +105,11 @@ export class StubEventService implements EventService {
 	}
 
 	build(idContext: IdentityContext, request: any): Buffer {
-		throw new Error('Method not implemented.');
+		return Buffer.from('');
 	}
 
 	send(request: any): Promise<any> {
-		throw new Error('Method not implemented.');
+		return null;
 	}
 
 	isListening(): boolean {
@@ -115,7 +117,7 @@ export class StubEventService implements EventService {
 	}
 
 	isStarted(): boolean {
-		throw new Error('Method not implemented.');
+		return this.started;
 	}
 
 	unregisterEventListener(eventListener: EventListener): EventService {
@@ -143,7 +145,7 @@ export class StubEventService implements EventService {
 	}
 
 	sign(parm: IdentityContext | Buffer): ServiceAction {
-		throw new Error('Method not implemented.');
+		return null;
 	}
 
 	getSignedProposal() {

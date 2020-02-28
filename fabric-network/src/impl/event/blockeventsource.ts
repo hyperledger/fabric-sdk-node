@@ -77,7 +77,7 @@ export class BlockEventSource {
 		this.started = true;
 
 		try {
-			this.eventService = this.eventServiceManager.newFailoverEventService();
+			this.eventService = this.eventServiceManager.newDefaultEventService();
 			this.registerListener(); // Register before start so no events are missed
 			await this.startEventService();
 		} catch (error) {

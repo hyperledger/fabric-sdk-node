@@ -93,10 +93,10 @@ class BaseEventListener {
 
 		if (!this.eventService) {
 			if (this.replay) {
-				this.eventService = this.eventServiceManager.newFailoverEventService();
+				this.eventService = this.eventServiceManager.newDefaultEventService();
 				// TODO should we check to see if running and then reset ???
 			} else {
-				this.eventService = this.eventServiceManager.newFailoverEventService(this.eventServiceOptions.blockType);
+				this.eventService = this.eventServiceManager.newDefaultEventService(this.eventServiceOptions.blockType);
 			}
 		}
 
