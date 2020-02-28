@@ -11,7 +11,10 @@ Check the coding styles, run the following command and make sure no ESLint viola
 * `npm run lint`
 
 Run the full test bucket and make sure 100% are passing.  You can also run each test individually to isolate any failures:
-* `npm test`
+* [Prerequisite](./README.md#Build and Test)
+* [Unit Test](./README.md#Run unit tests)
+* [Integration Test](./README.md#Run Integration Tests)
+* [Configure HSM Test](./test/README.md#Configuring and running Hardware Security Module tests)
 
 ## Test Delivery
 

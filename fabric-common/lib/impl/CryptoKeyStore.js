@@ -13,12 +13,12 @@ const KEYUTIL = jsrsasign.KEYUTIL;
 const ECDSAKey = require('./ecdsa/key.js');
 const KeyValueStore = require('../KeyValueStore');
 
-const _getKeyIndex = (ski, isPrivateKey) => {
-	if (isPrivateKey) {
-		return ski + '-priv';
-	} else {
-		return ski + '-pub';
-	}
+const _getPrivateKeyIndex = (ski) => {
+	return ski + '-priv';
+};
+
+const _getPublicKeyIndex = (ski) => {
+	return ski + '-pub';
 };
 
 /**
@@ -55,7 +55,7 @@ class CryptoKeyStore extends KeyValueStore {
 	async getKey(ski) {
 		// first try the private key entry, since it encapsulates both
 		// the private key and public key
-		const raw = await this.getValue(_getKeyIndex(ski, true));
+		const raw = await this.getValue(_getPrivateKeyIndex(ski));
 
 		if (raw !== null) {
 			const privKey = KEYUTIL.getKeyFromPlainPrivatePKCS8PEM(raw);
@@ -65,7 +65,7 @@ class CryptoKeyStore extends KeyValueStore {
 
 		// didn't find the private key entry matching the SKI
 		// next try the public key entry
-		const key = await this.getValue(_getKeyIndex(ski, false));
+		const key = await this.getValue(_getPublicKeyIndex(ski));
 		if (key instanceof ECDSAKey) {
 			return key;
 		}
@@ -77,7 +77,7 @@ class CryptoKeyStore extends KeyValueStore {
 	}
 
 	async putKey(key) {
-		const idx = _getKeyIndex(key.getSKI(), key.isPrivate());
+		const idx = key.isPrivate() ? _getPrivateKeyIndex(key.getSKI()) : _getPublicKeyIndex(key.getSKI());
 		const pem = key.toBytes();
 		await this.setValue(idx, pem);
 		return key;
