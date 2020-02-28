@@ -8,11 +8,13 @@
 import Contract = require('./contract');
 import { EventServiceManager } from './impl/event/eventservicemanager';
 import { ListenerSession } from './impl/event/listenersession';
+import { addListener, removeListener } from './impl/event/listenersession';
 import { CommitListener } from './impl/event/commitlistener';
 import { CommitListenerSession } from './impl/event/commitlistenersession';
 import { QueryHandlerFactory } from './impl/query/queryhandler';
 import { BlockListener } from './impl/event/blocklistener';
-import { BlockListenerSession } from './impl/event/blocklistenersession';
+import { SharedBlockListenerSession } from './impl/event/sharedblocklistenersession';
+import { IsolatedBlockListenerSession } from './impl/event/isolatedblocklistenersession';
 import { BlockEventSource } from './impl/event/blockeventsource';
 // @ts-ignore no implicit any
 import Gateway = require('./gateway');
@@ -59,25 +61,6 @@ export interface ListenerOptions {
 	startBlock?: number | string | Long;
 }
 
-async function addListener<T>(listener: T, listenerSessions: Map<T, ListenerSession>, sessionSupplier: () => ListenerSession) {
-	if (!listenerSessions.has(listener)) {
-		const session = sessionSupplier();
-		// Store listener before starting in case start fires error events that trigger remove of the listener
-		listenerSessions.set(listener, session);
-		await session.start();
-	}
-	return listener;
-
-}
-
-function removeListener<T>(listener: T, listenerSessions: Map<T, ListenerSession>) {
-	const session = listenerSessions.get(listener);
-	if (session) {
-		session.close();
-		listenerSessions.delete(listener);
-	}
-}
-
 export class NetworkImpl implements Network {
 	public queryHandler?: QueryHandlerFactory;
 	private readonly gateway: Gateway;
@@ -86,8 +69,8 @@ export class NetworkImpl implements Network {
 	private initialized = false;
 	private discoveryService?: DiscoveryService;
 	private eventServiceManager: EventServiceManager;
-	private readonly commitListeners = new Map<CommitListener, CommitListenerSession>();
-	private readonly blockListeners = new Map<BlockListener, BlockListenerSession>();
+	private readonly commitListeners = new Map<CommitListener, ListenerSession>();
+	private readonly blockListeners = new Map<BlockListener, ListenerSession>();
 	private readonly oldListeners = new Set<BaseEventListener>();
 	private readonly realtimeBlockEventSource: BlockEventSource;
 
@@ -262,8 +245,7 @@ export class NetworkImpl implements Network {
 	}
 
 	async addBlockListener(listener: BlockListener, options = {} as ListenerOptions) {
-		const eventSource = this.getBlockEventSource(options);
-		const sessionSupplier = () => new BlockListenerSession(listener, eventSource);
+		const sessionSupplier = () => this.newBlockListenerSession(listener, options);
 		return await addListener(listener, this.blockListeners, sessionSupplier);
 	}
 
@@ -275,11 +257,12 @@ export class NetworkImpl implements Network {
 		this.oldListeners.add(listener);
 	}
 
-	private getBlockEventSource(options: ListenerOptions) {
+	private newBlockListenerSession(listener: BlockListener, options: ListenerOptions) {
 		if (options.startBlock) {
-			return new BlockEventSource(this.eventServiceManager, Long.fromValue(options.startBlock));
+			const blockSource = new BlockEventSource(this.eventServiceManager, Long.fromValue(options.startBlock));
+			return new IsolatedBlockListenerSession(listener, blockSource);
 		} else {
-			return this.realtimeBlockEventSource;
+			return new SharedBlockListenerSession(listener, this.realtimeBlockEventSource);
 		}
 	}
 }

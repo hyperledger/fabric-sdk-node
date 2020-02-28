@@ -11,7 +11,10 @@ const expect = chai.expect;
 import {
 	Endorser,
 	EventInfo,
-	IdentityContext
+	IdentityContext,
+	Channel,
+	Client,
+	Eventer
 } from 'fabric-common';
 import Long = require('long');
 
@@ -21,12 +24,13 @@ import Gateway = require('../../../src/gateway');
 import { StubEventService } from './stubeventservice';
 
 describe('commit listener', () => {
-	let eventServiceManager: sinon.SinonStubbedInstance<EventServiceManager>;
+	let eventServiceManager: EventServiceManager;
 	let eventService: StubEventService;
 	let peer: Endorser;
 	let peers: Endorser[];
 	let gateway: sinon.SinonStubbedInstance<Gateway>;
 	let network: Network;
+	let channel: sinon.SinonStubbedInstance<Channel>;
 	let eventInfo: EventInfo;
 	const transactionId = 'TX_ID';
 
@@ -36,9 +40,6 @@ describe('commit listener', () => {
 		peers = [peer];
 
 		eventService = new StubEventService(peer.name);
-
-		eventServiceManager = sinon.createStubInstance(EventServiceManager);
-		eventServiceManager.getCachedEventService.withArgs(peer).returns(eventService);
 
 		eventInfo = {
 			eventService,
@@ -52,8 +53,17 @@ describe('commit listener', () => {
 			mspId: 'mspId'
 		});
 
-		network = new NetworkImpl(gateway, null);
-		(network as any).eventServiceManager = eventServiceManager;
+		channel = sinon.createStubInstance(Channel);
+		channel.newEventService.returns(eventService);
+
+		const client = sinon.createStubInstance(Client);
+		const eventer = sinon.createStubInstance(Eventer);
+		client.newEventer.withArgs(peer.name).returns(eventer);
+		(channel as any).client = client;
+
+		network = new NetworkImpl(gateway, channel);
+
+		eventServiceManager = (network as any).eventServiceManager;
 	});
 
 	afterEach(() => {
@@ -153,7 +163,7 @@ describe('commit listener', () => {
 	it('listener receives errors starting event service', async () => {
 		const listener = sinon.fake();
 		const error = new Error('EVENT_SERVICE_START_ERROR');
-		eventServiceManager.startEventService.rejects(error);
+		sinon.stub(eventServiceManager, 'startEventService').rejects(error);
 
 		await network.addCommitListener(listener, peers, transactionId);
 
@@ -163,7 +173,7 @@ describe('commit listener', () => {
 	it('errors starting event service include endorser', async () => {
 		const listener = sinon.fake();
 		const error = new Error('EVENT_SERVICE_START_ERROR');
-		eventServiceManager.startEventService.rejects(error);
+		sinon.stub(eventServiceManager, 'startEventService').rejects(error);
 
 		await network.addCommitListener(listener, peers, transactionId);
 
@@ -177,7 +187,7 @@ describe('commit listener', () => {
 			}
 		});
 		const error = new Error('EVENT_SERVICE_START_ERROR');
-		eventServiceManager.startEventService.rejects(error);
+		sinon.stub(eventServiceManager, 'startEventService').rejects(error);
 
 		await network.addCommitListener(listener, peers, transactionId);
 		// listener should have removed itself

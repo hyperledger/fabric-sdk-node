@@ -8,7 +8,7 @@ import { ListenerSession } from './listenersession';
 import { BlockListener } from './blocklistener';
 import { BlockEventSource } from './blockeventsource';
 
-export class BlockListenerSession implements ListenerSession {
+export class SharedBlockListenerSession implements ListenerSession {
 	private readonly listener: BlockListener;
 	private readonly eventSource: BlockEventSource;
 
@@ -23,5 +23,6 @@ export class BlockListenerSession implements ListenerSession {
 
 	public close() {
 		this.eventSource.removeBlockListener(this.listener);
+		// Don't close the shared event source
 	}
 }

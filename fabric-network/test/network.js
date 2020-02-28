@@ -94,7 +94,7 @@ describe('Network', () => {
 		client.getEndorsers.returns([endorser]);
 
 		eventServiceManager = sinon.createStubInstance(EventServiceManager);
-		eventServiceManager.newFailoverEventService.returns(eventService);
+		eventServiceManager.newDefaultEventService.returns(eventService);
 
 		network = new Network(gateway, channel);
 		network.eventServiceManager = eventServiceManager;
