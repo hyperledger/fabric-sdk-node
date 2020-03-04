@@ -24,7 +24,6 @@ import { EventServiceManager } from '../../../src/impl/event/eventservicemanager
 import Gateway = require('../../../src/gateway');
 import { StubEventService } from './stubeventservice';
 import { BlockEvent, BlockListener } from '../../../src/impl/event/blocklistener';
-import { BlockEventSource } from '../../../src/impl/event/blockeventsource';
 
 interface StubBlockListener extends BlockListener {
 	completePromise: Promise<BlockEvent[]>;

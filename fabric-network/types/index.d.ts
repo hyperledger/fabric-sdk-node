@@ -8,6 +8,7 @@
 
 import { Wallet } from '../lib/impl/wallet/wallet';
 import { CommitListener } from '../lib/impl/event/commitlistener';
+import { ContractListener } from '../lib/impl/event/contractlistener';
 import { Identity } from '../lib/impl/wallet/identity';
 import { QueryHandlerFactory } from '../lib/impl/query/queryhandler';
 import { Network } from '../lib/network';
@@ -24,6 +25,8 @@ export { HsmOptions, HsmX509Provider, HsmX509Identity } from '../lib/impl/wallet
 export { X509Identity } from '../lib/impl/wallet/x509identity';
 export { CommitEvent, CommitError, CommitListener } from '../lib/impl/event/commitlistener';
 export { BlockEvent, BlockListener } from '../lib/impl/event/blocklistener';
+export { ContractListener };
+export { ContractEvent } from '../lib/impl/event/contractlistener';
 export { ListenerOptions } from '../lib/network';
 export { FabricError } from '../lib/errors/fabricerror';
 export { TimeoutError } from '../lib/errors/timeouterror';
@@ -84,6 +87,8 @@ export class Contract {
 	createTransaction(name: string): Transaction;
 	evaluateTransaction(name: string, ...args: string[]): Promise<Buffer>;
 	submitTransaction(name: string, ...args: string[]): Promise<Buffer>;
+	addContractListener(listener: ContractListener): Promise<ContractListener>;
+	removeContractListener(listener: ContractListener): void;
 }
 
 export interface TransientMap {

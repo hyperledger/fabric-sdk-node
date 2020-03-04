@@ -10,7 +10,8 @@ import {
 	Endorser,
 	EventService,
 	IdentityContext,
-	StartRequestOptions
+	StartRequestOptions,
+	Eventer
 } from 'fabric-common';
 
 function shuffle(array: Array<unknown>) {
@@ -88,7 +89,7 @@ export class EventServiceManager {
 	 *  a list of {@link Eventer} service endpoints that will be used as the
 	 *  targets of the new EventService.
 	 */
-	private newEventService(peers: Endorser[]) {
+	private newEventService(peers: Endorser[]): EventService {
 		const serviceName = this.createName(peers);
 		const eventService = this.channel.newEventService(serviceName);
 
@@ -98,7 +99,7 @@ export class EventServiceManager {
 		return eventService;
 	}
 
-	private newEventer(peer: Endorser) {
+	private newEventer(peer: Endorser): Eventer {
 		const eventer = this.channel.client.newEventer(peer.name);
 		eventer.setEndpoint(peer.endpoint);
 		return eventer;

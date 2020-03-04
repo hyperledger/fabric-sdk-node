@@ -6,26 +6,23 @@
 
 // @ts-ignore no implicit any
 import Contract = require('./contract');
-import { EventServiceManager } from './impl/event/eventservicemanager';
-import { ListenerSession } from './impl/event/listenersession';
-import { addListener, removeListener } from './impl/event/listenersession';
+import { Channel, DiscoveryService, Endorser } from 'fabric-common';
+import { BlockEventSource } from './impl/event/blockeventsource';
+import { BlockListener } from './impl/event/blocklistener';
 import { CommitListener } from './impl/event/commitlistener';
 import { CommitListenerSession } from './impl/event/commitlistenersession';
-import { QueryHandlerFactory } from './impl/query/queryhandler';
-import { BlockListener } from './impl/event/blocklistener';
-import { SharedBlockListenerSession } from './impl/event/sharedblocklistenersession';
+import { EventServiceManager } from './impl/event/eventservicemanager';
 import { IsolatedBlockListenerSession } from './impl/event/isolatedblocklistenersession';
-import { BlockEventSource } from './impl/event/blockeventsource';
+import { addListener, ListenerSession, removeListener } from './impl/event/listenersession';
+import { SharedBlockListenerSession } from './impl/event/sharedblocklistenersession';
+import { QueryHandlerFactory } from './impl/query/queryhandler';
+import * as Logger from './logger';
 // @ts-ignore no implicit any
 import Gateway = require('./gateway');
 // @ts-ignore no implicit any
 import BaseEventListener = require('./impl/event/baseeventlistener');
-
-import { Channel, DiscoveryService, Endorser } from 'fabric-common';
-
 import Long = require('long');
 
-import * as Logger from './logger';
 const logger = Logger.getLogger('Network');
 
 /**
@@ -251,10 +248,6 @@ export class NetworkImpl implements Network {
 
 	removeBlockListener(listener: BlockListener) {
 		removeListener(listener, this.blockListeners);
-	}
-
-	saveListener(listener: BaseEventListener) {
-		this.oldListeners.add(listener);
 	}
 
 	private newBlockListenerSession(listener: BlockListener, options: ListenerOptions) {

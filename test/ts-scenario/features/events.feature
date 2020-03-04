@@ -15,16 +15,17 @@ Feature: Node SDK Events
 		And I use the cli to deploy a node smart contract named events at version 1.0.0 for all organizations on channel eventschannel with endorsement policy 1ofAny and arguments ["initLedger"]
 		And I have a memory backed gateway named event_gateway with discovery set to true for user User1 using the connection profile named ccp-tls.json
 
- 	Scenario: Using a Contract I can listen to unfiltered contract create events emitted by instantiated chaincodes
-	 	Given I use the gateway named event_gateway to listen for unfiltered contract events of type create with a listener named createValueListener for the smart contract named events on channel eventschannel
-		When I use the gateway named event_gateway to submit a total of 5 transactions with args [createValue] for contract events instantiated on channel eventschannel
-		Then I receive 5 events from the listener named createValueListener
 
-	Scenario: Using a Contract I can stop listening to unfiltered contract create events emitted by instantiated chaincodes
-		Given I am listening for unfiltered contract events of type create with a listener named createValueListener
-		When I unregister the listener named createValueListener
-		And I use the gateway named event_gateway to submit a total of 5 transactions with args [createValue] for contract events instantiated on channel eventschannel
-		Then I receive 0 events from the listener named createValueListener
+ 	# Scenario: Using a Contract I can listen to unfiltered contract create events emitted by instantiated chaincodes
+	#  	Given I use the gateway named event_gateway to listen for unfiltered contract events of type create with a listener named createValueListener for the smart contract named events on channel eventschannel
+	# 	When I use the gateway named event_gateway to submit a total of 5 transactions with args [createValue] for contract events instantiated on channel eventschannel
+	# 	Then I receive 5 events from the listener named createValueListener
+
+	# Scenario: Using a Contract I can stop listening to unfiltered contract create events emitted by instantiated chaincodes
+	# 	Given I am listening for unfiltered contract events of type create with a listener named createValueListener
+	# 	When I unregister the listener named createValueListener
+	# 	And I use the gateway named event_gateway to submit a total of 5 transactions with args [createValue] for contract events instantiated on channel eventschannel
+	# 	Then I receive 0 events from the listener named createValueListener
 
  	Scenario: Using a Contract I can listen to filtered contract disconnect events emitted by instantiated chaincodes
 	 	Given I use the gateway named event_gateway to listen for filtered contract events of type dc with a listener named dcValueListener for the smart contract named events on channel eventschannel
