@@ -23,7 +23,7 @@ variables:
 stages:
   - stage: SetupRunTests
     displayName: Setup and Run Tests
-    jobs: 
+    jobs:
     - job: SetupRunTests
       displayName: Install Node.js and run tests on
       strategy:
@@ -43,8 +43,6 @@ stages:
           displayName: Install SoftHSM
         - script: npm install
           displayName: npm install
-        - script: npm run retrieveImages
-          displayName: 'Pull Docker images'
         - script: npm run installAndGenerateCerts
           displayName: 'Generate credentials'
         - script: npm test

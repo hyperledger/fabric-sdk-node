@@ -180,7 +180,7 @@ test('\n\n ** HFCAIdentityService Test **\n\n', (t) => {
 			t.end();
 		})
 		.catch((e) => {
-			t.fail(e.message);
+			t.fail(e.stack);
 			t.end();
 		});
 });

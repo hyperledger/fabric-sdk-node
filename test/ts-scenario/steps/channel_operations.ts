@@ -4,52 +4,52 @@
 
 'use strict';
 
-import { Constants } from './constants';
-import * as AdminUtils from './lib/utility/adminUtils';
+// import { Constants } from './constants';
+// import * as AdminUtils from './lib/utility/adminUtils';
 import * as BaseUtils from './lib/utility/baseUtils';
 import { CommonConnectionProfileHelper } from './lib/utility/commonConnectionProfileHelper';
 import { StateStore } from './lib/utility/stateStore';
 
-import { When } from 'cucumber';
+// import { When } from 'cucumber';
 import * as path from 'path';
 
-const stateStore: StateStore = StateStore.getInstance();
-const ccpNonTls: CommonConnectionProfileHelper = new CommonConnectionProfileHelper(path.join(__dirname, '../config', 'ccp.json'), true);
-const ccpTls: CommonConnectionProfileHelper = new CommonConnectionProfileHelper(path.join(__dirname, '../config', 'ccp-tls.json'), true);
+// const stateStore: StateStore = StateStore.getInstance();
+// const ccpNonTls: CommonConnectionProfileHelper = new CommonConnectionProfileHelper(path.join(__dirname, '../config', 'ccp.json'), true);
+// const ccpTls: CommonConnectionProfileHelper = new CommonConnectionProfileHelper(path.join(__dirname, '../config', 'ccp-tls.json'), true);
 
-When(/^I perform a (.+?) operation on channel (.+?) with (.+?) the response (includes|matches|mirrors) fields (.+?)$/, { timeout: Constants.HUGE_TIME as number }, async (queryOperation: string, channelName: string, orgName: string, compareType: 'includes' | 'matches' | 'mirrors', expectedResponse: string) => {
+// When(/^I perform a (.+?) operation on channel (.+?) with (.+?) the response (includes|matches|mirrors) fields (.+?)$/, { timeout: Constants.HUGE_TIME as number }, async (queryOperation: string, channelName: string, orgName: string, compareType: 'includes' | 'matches' | 'mirrors', expectedResponse: string) => {
 
-	const fabricState: any = stateStore.get(Constants.FABRIC_STATE);
-	if (!fabricState) {
-		throw new Error('Unable to create/join channel: no Fabric network deployed');
-	}
-	const tls: boolean = (fabricState.type.localeCompare('tls') === 0);
-	const ccp: CommonConnectionProfileHelper = tls ? ccpTls : ccpNonTls;
+// 	const fabricState: any = stateStore.get(Constants.FABRIC_STATE);
+// 	if (!fabricState) {
+// 		throw new Error('Unable to create/join channel: no Fabric network deployed');
+// 	}
+// 	const tls: boolean = (fabricState.type.localeCompare('tls') === 0);
+// 	const ccp: CommonConnectionProfileHelper = tls ? ccpTls : ccpNonTls;
 
-	// Perform query
-	const response: any = await AdminUtils.performChannelQueryOperation(queryOperation, channelName, orgName, ccp, undefined);
+// 	// Perform query
+// 	const response: any = await AdminUtils.performChannelQueryOperation(queryOperation, channelName, orgName, ccp, undefined);
 
-	// check response
-	BaseUtils.logMsg(`Recursively checking response object from ${queryOperation}`);
-	validateObjectKeyMatch(JSON.parse(expectedResponse), response, compareType);
+// 	// check response
+// 	BaseUtils.logMsg(`Recursively checking response object from ${queryOperation}`);
+// 	validateObjectKeyMatch(JSON.parse(expectedResponse), response, compareType);
 
-});
+// });
 
-When(/^I perform a (.+?) operation with arguments (.+?) on channel (.+?) with (.+?) the response (includes|matches|mirrors) fields (.+?)$/, { timeout: Constants.HUGE_TIME as number }, async (queryOperation: string, args: string, channelName: string, orgName: string, compareType: 'includes' | 'matches' | 'mirrors' , expectedResponse: string) => {
+// When(/^I perform a (.+?) operation with arguments (.+?) on channel (.+?) with (.+?) the response (includes|matches|mirrors) fields (.+?)$/, { timeout: Constants.HUGE_TIME as number }, async (queryOperation: string, args: string, channelName: string, orgName: string, compareType: 'includes' | 'matches' | 'mirrors' , expectedResponse: string) => {
 
-	const fabricState: any = stateStore.get(Constants.FABRIC_STATE);
-	if (!fabricState) {
-		throw new Error('Unable to create/join channel: no Fabric network deployed');
-	}
-	const tls: boolean = (fabricState.type.localeCompare('tls') === 0);
-	const ccp: CommonConnectionProfileHelper = tls ? ccpTls : ccpNonTls;
+// 	const fabricState: any = stateStore.get(Constants.FABRIC_STATE);
+// 	if (!fabricState) {
+// 		throw new Error('Unable to create/join channel: no Fabric network deployed');
+// 	}
+// 	const tls: boolean = (fabricState.type.localeCompare('tls') === 0);
+// 	const ccp: CommonConnectionProfileHelper = tls ? ccpTls : ccpNonTls;
 
-	const response: any = await AdminUtils.performChannelQueryOperation(queryOperation, channelName, orgName, ccp, JSON.parse(args));
+// 	const response: any = await AdminUtils.performChannelQueryOperation(queryOperation, channelName, orgName, ccp, JSON.parse(args));
 
-	// check response
-	BaseUtils.logMsg(`Recursively checking response object from ${queryOperation}`);
-	validateObjectKeyMatch(JSON.parse(expectedResponse), response, compareType);
-});
+// 	// check response
+// 	BaseUtils.logMsg(`Recursively checking response object from ${queryOperation}`);
+// 	validateObjectKeyMatch(JSON.parse(expectedResponse), response, compareType);
+// });
 
 /**
  * Validate two passed items against a match requirement:

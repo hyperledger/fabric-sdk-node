@@ -5,8 +5,7 @@
  */
 'use strict';
 
-const Client = require('fabric-client');
-const Utils = require('fabric-common/lib/Utils.js');
+const FabricCAClient = require('fabric-ca-client');
 
 class IDManager {
 	constructor(ccp, hsmOptions) {
@@ -16,13 +15,21 @@ class IDManager {
 	}
 
 	async initialize() {
-		this.defaultClient = await Client.loadFromConfig(this.ccp);
-		this.defaultClient.setCryptoSuite(Utils.newCryptoSuite());
+		FabricCAClient.addConfigFile(this.ccp);
+		const orgs = FabricCAClient.getConfigSetting('test-network');
+		const caUrl = orgs.org1.ca.url;
+		const caName = orgs.org1.ca.name;
+		const tlsOptions = {
+			trustedRoots: [],
+			verify: false
+		};
 
-		this.hsmClient = await Client.loadFromConfig(this.ccp);
-		const hsmCryptoSuite = Utils.newCryptoSuite(this.hsmOptions);
+		this.defaultClient = new FabricCAClient(caUrl, tlsOptions, caName);
+
+		this.hsmClient = new FabricCAClient(caUrl, tlsOptions, caName);
+		const hsmCryptoSuite = FabricCAClient.newCryptoSuite(this.hsmOptions);
 		// Setting a key store triggers enrollment using this crypto suite to store the generated private key in the HSM
-		hsmCryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: '/tmp'}));
+		hsmCryptoSuite.setCryptoKeyStore(FabricCAClient.newCryptoKeyStore());
 		this.hsmClient.setCryptoSuite(hsmCryptoSuite);
 	}
 
@@ -70,19 +77,19 @@ class IDManager {
 			});
 		}
 
-		const userSecret = await this.defaultClient.getCertificateAuthority().register(registerRequest, user);
+		const userSecret = await this.defaultClient.register(registerRequest, user);
 		return userSecret;
 	}
 
 	async enroll(userID, secret) {
 		const options = {enrollmentID: userID, enrollmentSecret: secret};
-		return await this.defaultClient.getCertificateAuthority().enroll(options);
+		return await this.defaultClient.enroll(options);
 	}
 
 	async enrollToHsm(userID, secret) {
 		const options = {enrollmentID: userID, enrollmentSecret: secret};
 		// Enrollment also stores the generated private key in the HSM
-		return await this.hsmClient.getCertificateAuthority().enroll(options);
+		return await this.hsmClient.enroll(options);
 	}
 
 	closeHsmSession() {

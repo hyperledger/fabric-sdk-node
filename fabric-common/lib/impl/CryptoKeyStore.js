@@ -6,12 +6,12 @@
 */
 
 'use strict';
-const {Utils} = require('../../');
 const jsrsasign = require('jsrsasign');
 const KEYUTIL = jsrsasign.KEYUTIL;
 
 const ECDSAKey = require('./ecdsa/key.js');
 const KeyValueStore = require('../KeyValueStore');
+const InMemoryKeyValueStore = require('./InMemoryKeyValueStore');
 
 const _getKeyIndex = (ski, isPrivateKey) => {
 	if (isPrivateKey) {
@@ -94,26 +94,8 @@ class CryptoKeyStore extends KeyValueStore {
  * @return {CryptoKeyStore}
  */
 const newInstance = (KVSImplClass, opts) => {
-	let superClass;
-
-	if (typeof KVSImplClass !== 'function') {
-		let impl_class = Utils.getConfigSetting('crypto-value-store');
-		if (!impl_class) {
-			impl_class = Utils.getConfigSetting('key-value-store');
-		}
-		superClass = require(impl_class);
-	} else {
-		superClass = KVSImplClass;
-	}
-
-	if (KVSImplClass !== null && typeof opts === 'undefined') {
-		// the function is called with only one argument for the 'opts'
-		opts = KVSImplClass;
-	}
-
-	const keyValueStore = new superClass(opts);
-
-	return new CryptoKeyStore(keyValueStore);
+	const keyValueStore = typeof KVSImplClass === 'function' ? new KVSImplClass(opts) : new InMemoryKeyValueStore();
+	return Promise.resolve(new CryptoKeyStore(keyValueStore));
 };
 
 

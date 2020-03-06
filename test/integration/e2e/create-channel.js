@@ -43,8 +43,6 @@ test('\n\n***** SDK Built config update create flow *****\n\n', async (t) => {
 	// Acting as a client in org1 when creating the channel
 	const org = ORGS.org1.name;
 
-	utils.setConfigSetting('key-value-store', 'fabric-common/lib/impl/FileKeyValueStore.js');
-
 	const tlsInfo = await e2eUtils.tlsEnroll('org1');
 	t.pass('Successfully retrieved TLS certificate');
 	client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);

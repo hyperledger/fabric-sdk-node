@@ -76,7 +76,7 @@ export async function sdk_chaincode_install_for_org(ccType: 'golang' | 'car' | '
 		const metadataPath: string = path.join(chaincodePath, 'metadata');
 
 		// send proposal to endorser
-		const request: Client.ChaincodeInstallRequestv1 = {
+		const request: Client.ChaincodeInstallRequest = {
 			chaincodeId,
 			chaincodePath,
 			chaincodeType: ccType,

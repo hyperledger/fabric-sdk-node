@@ -6,10 +6,9 @@
 
 const TYPE = 'Client';
 
-const path = require('path');
 const crypto = require('crypto');
 
-const {checkParameter, getLogger, pemToDER, getConfig, setConfigSetting,
+const {checkParameter, getLogger, pemToDER, setConfigSetting,
 	getConfigSetting, newCryptoSuite} = require('./Utils.js');
 const Channel = require('./Channel');
 const Endpoint = require('./Endpoint');
@@ -19,11 +18,6 @@ const Eventer = require('./Eventer');
 const Discoverer = require('./Discoverer');
 const IdentityContext = require('./IdentityContext');
 const logger = getLogger(TYPE);
-
-const config = getConfig();
-// setup the location of the default config shipped with code
-const default_config = path.resolve(__dirname, '../config/default.json');
-config.reorderFileStores(default_config); // make sure this default has precedences
 
 /**
  * @classdesc

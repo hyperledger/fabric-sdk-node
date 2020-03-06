@@ -36,7 +36,6 @@ module.exports.setCryptoConfigSettings = () => {
 	Utils.setConfigSetting('crypto-suite-software', {'EC': 'fabric-common/lib/impl/CryptoSuite_ECDSA_AES.js'});
 	Utils.setConfigSetting('crypto-hash-algo', 'SHA2');
 	Utils.setConfigSetting('crypto-keysize', 256);
-	Utils.setConfigSetting('key-value-store', 'fabric-common/lib/impl/FileKeyValueStore.js');
 };
 
 module.exports.setHFCLogging = (value) => {
