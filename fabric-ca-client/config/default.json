@@ -4,12 +4,5 @@
 	"crypto-hash-algo": "SHA2",
 	"crypto-keysize": 256,
 	"crypto-hsm": false,
-	"crypto-suite-software": {
-		"EC": "fabric-common/lib/impl/CryptoSuite_ECDSA_AES.js"
-	},
-	"crypto-suite-hsm": {
-		"EC": "fabric-common/lib/impl/bccsp_pkcs11.js"
-	},
-	"key-value-store": "fabric-common/lib/impl/FileKeyValueStore.js",
 	"connection-timeout": 3000
 }

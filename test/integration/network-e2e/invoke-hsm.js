@@ -7,6 +7,7 @@
 const tape = require('tape');
 const _test = require('tape-promise').default;
 const test = _test(tape);
+
 const {Gateway, HsmX509Provider, Wallets} = require('fabric-network');
 const fs = require('fs-extra');
 
@@ -16,7 +17,7 @@ const channelName = testUtils.NETWORK_END2END.channel;
 const chaincodeId = testUtils.NETWORK_END2END.chaincodeId;
 
 const fixtures = process.cwd() + '/test/fixtures';
-const ccp = fs.readFileSync(fixtures + '/profiles/network.json');
+const ccp = fixtures + '/profiles/network.json';
 
 const common_pkcs_pathnames = [
 	'/usr/lib/softhsm/libsofthsm2.so',								// Ubuntu
@@ -60,7 +61,7 @@ const walletPromise = (async () => {
 	const hsmProvider = new HsmX509Provider(hsmOptions);
 	wallet.getProviderRegistry().addProvider(hsmProvider);
 
-	const idManager = new IDManager(JSON.parse(ccp.toString()), hsmOptions);
+	const idManager = new IDManager(ccp, hsmOptions);
 	await idManager.initialize();
 
 	const adminEnrollment = await idManager.enroll(adminUser, adminSecret);
@@ -92,7 +93,8 @@ const walletPromise = (async () => {
 })();
 
 async function createContract(t, gateway, gatewayOptions) {
-	await gateway.connect(JSON.parse(ccp.toString()), gatewayOptions);
+	const ccpData = await fs.promises.readFile(ccp);
+	await gateway.connect(JSON.parse(ccpData.toString()), gatewayOptions);
 	t.pass('Connected to the gateway');
 
 	const network = await gateway.getNetwork(channelName);

@@ -14,12 +14,48 @@ const path = require('path');
 const os = require('os');
 
 const Config = require('./Config');
+const InMemoryKeyValueStore = require('./impl/InMemoryKeyValueStore');
 const sjcl = require('sjcl');
 const yn = require('yn');
 
+const fabricCommonConfigProperty = 'fabric-common-config';
 //
 // The following methods are for loading the proper implementation of an extensible APIs.
 //
+
+function isOldPropertyValue(value) {
+	return typeof value === 'string' && value.startsWith('fabric-client/');
+}
+
+function isOldCryptoSuiteImpl(csImpl) {
+	for (const key of Object.getOwnPropertyNames(csImpl)) {
+		if (isOldPropertyValue(csImpl[key])) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+function getSoftwareCryptoSuiteImpl() {
+	let result = exports.getConfigSetting('crypto-suite-software');
+	if (!result || isOldCryptoSuiteImpl(result)) {
+		result = {
+			EC: 'fabric-common/lib/impl/CryptoSuite_ECDSA_AES'
+		};
+	}
+	return result;
+}
+
+function getHsmCryptoSuiteImpl() {
+	let result = exports.getConfigSetting('crypto-suite-hsm');
+	if (!result || isOldCryptoSuiteImpl(result)) {
+		result = {
+			EC: 'fabric-common/lib/impl/bccsp_pkcs11'
+		};
+	}
+	return result;
+}
 
 /**
  * Returns a new instance of the CryptoSuite API implementation. Supports the following:
@@ -45,7 +81,7 @@ module.exports.newCryptoSuite = (setting) => {
 		useHSM = yn(exports.getConfigSetting('crypto-hsm'));
 	}
 
-	csImpl = useHSM ? exports.getConfigSetting('crypto-suite-hsm') : exports.getConfigSetting('crypto-suite-software');
+	csImpl = useHSM ? getHsmCryptoSuiteImpl() : getSoftwareCryptoSuiteImpl();
 
 	// step 1: what's the cryptosuite impl to use, key size and algo
 	if (setting && setting.keysize && typeof setting === 'object' && typeof setting.keysize === 'number') {
@@ -84,12 +120,7 @@ module.exports.newCryptoSuite = (setting) => {
 
 // Provide a keyValueStore for couchdb, etc.
 module.exports.newKeyValueStore = async (options) => {
-	// initialize the correct KeyValueStore
-	const kvsEnv = exports.getConfigSetting('key-value-store');
-	const Store = require(kvsEnv);
-	const store = new Store(options);
-	await store.initialize();
-	return store;
+	return new InMemoryKeyValueStore();
 };
 
 //
@@ -289,21 +320,28 @@ exports.getConfigSetting = (name, default_value) => {
 	return config.get(name, default_value);
 };
 
+function ensureFabricCommonConfigLoaded(config) {
+	if (!config.get(fabricCommonConfigProperty)) {
+		const default_config = path.resolve(__dirname, '../config/default.json');
+		config.reorderFileStores(default_config);
+		config.set(fabricCommonConfigProperty, true);
+	}
+}
+
 //
 // Internal method to get the configuration settings singleton
 //
 exports.getConfig = () => {
-	if (global.hfc && global.hfc.config) {
-		return global.hfc.config;
+	if (!global.hfc) {
+		global.hfc = {};
 	}
-	const config = new Config();
-	if (global.hfc) {
-		global.hfc.config = config;
-	} else {
-		global.hfc = {config: config};
+	if (!global.hfc.config) {
+		global.hfc.config = new Config();
 	}
 
-	return config;
+	ensureFabricCommonConfigLoaded(global.hfc.config);
+
+	return global.hfc.config;
 };
 
 //
@@ -410,55 +448,17 @@ module.exports.getDefaultKeyStorePath = () => {
 };
 
 const CryptoKeyStore = function (KVSImplClass, opts) {
-	this.logger = module.exports.getLogger('utils.CryptoKeyStore');
-	this.logger.debug('CryptoKeyStore, constructor - start');
-	if (KVSImplClass && typeof opts === 'undefined') {
-		if (typeof KVSImplClass === 'function') {
-			// the super class module was passed in, but not the 'opts'
-			opts = null;
-		} else {
-			// called with only one argument for the 'opts' but KVSImplClass was skipped
-			opts = KVSImplClass;
-			KVSImplClass = null;
-		}
-	}
-
-	if (typeof opts === 'undefined' || opts === null) {
-		opts = {
-			path: module.exports.getDefaultKeyStorePath()
-		};
-	}
-	let superClass;
-	if (typeof KVSImplClass !== 'undefined' && KVSImplClass !== null) {
-		superClass = KVSImplClass;
-	} else {
-		// no super class specified, use the default key value store implementation
-		superClass = require(exports.getConfigSetting('key-value-store'));
-		this.logger.debug('constructor, no super class specified, using config: ' + module.exports.getConfigSetting('key-value-store'));
-	}
-
-	this._store = null;
-	this._storeConfig = {
-		superClass: superClass,
-		opts: opts
-
-	};
+	let store;
 
 	this._getKeyStore = async function () {
-		const CKS = require('./impl/CryptoKeyStore');
-
-		if (this._store === null) {
-			this.logger.debug(util.format('This class requires a CryptoKeyStore to save keys, using the store: %j', this._storeConfig));
-
-			this._store = await CKS(this._storeConfig.superClass, this._storeConfig.opts);
-			await this._store.initialize();
-			return this._store;
-		} else {
-			this.logger.debug('_getKeyStore returning store');
-			return this._store;
+		if (!store) {
+			const newInstance = require('./impl/CryptoKeyStore');
+			store = await newInstance(KVSImplClass, opts);
+			await store.initialize();
 		}
-	};
 
+		return store;
+	};
 };
 
 module.exports.newCryptoKeyStore = (KVSImplClass, opts) => {

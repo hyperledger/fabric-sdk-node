@@ -9,8 +9,8 @@ import { Constants } from '../constants';
 import * as AdminUtils from './utility/adminUtils';
 import * as BaseUtils from './utility/baseUtils';
 
-import * as fs from 'fs';
-import * as path from 'path';
+// import * as fs from 'fs';
+// import * as path from 'path';
 import { CommonConnectionProfileHelper } from './utility/commonConnectionProfileHelper';
 
 export async function commitProposal(proposalType: string, txId: Client.TransactionId, proposalResponses: any, proposal: any, channel: Client.Channel): Promise<void> {
@@ -82,333 +82,333 @@ export async function commitProposal(proposalType: string, txId: Client.Transact
 	}
 }
 
-export async function packageContractForOrg(orgName: string, contractName: string, contractType: string, contractVersion: string,  initRequired: boolean, ccp: CommonConnectionProfileHelper): Promise<void> {
-	const contractSaveName: string = `contract-${orgName}-${contractName}`;
+// export async function packageContractForOrg(orgName: string, contractName: string, contractType: string, contractVersion: string,  initRequired: boolean, ccp: CommonConnectionProfileHelper): Promise<void> {
+// 	const contractSaveName: string = `contract-${orgName}-${contractName}`;
 
-	// Determine path for contract and metadata
-	let contractPath: string;
-	let metadataPath: string;
-	if (contractType === 'golang') {
-		contractPath = path.join(Constants.GO_PRE_PEND, contractName);
-		metadataPath = path.join(contractPath, 'metadata');
-	} else {
-		contractPath = path.join(__dirname, Constants.LIB_TO_CHAINCODE, contractType, contractName);
-		metadataPath = path.join(contractPath, 'metadata');
-	}
+// 	// Determine path for contract and metadata
+// 	let contractPath: string;
+// 	let metadataPath: string;
+// 	if (contractType === 'golang') {
+// 		contractPath = path.join(Constants.GO_PRE_PEND, contractName);
+// 		metadataPath = path.join(contractPath, 'metadata');
+// 	} else {
+// 		contractPath = path.join(__dirname, Constants.LIB_TO_CHAINCODE, contractType, contractName);
+// 		metadataPath = path.join(contractPath, 'metadata');
+// 	}
 
-	// Get the Client for passed Org (bare profile)
-	const clientPath: string = path.join(__dirname, Constants.LIB_TO_CONFIG, orgName + '.yaml');
-	const orgClient: Client = await Client.loadFromConfig(clientPath);
+// 	// Get the Client for passed Org (bare profile)
+// 	const clientPath: string = path.join(__dirname, Constants.LIB_TO_CONFIG, orgName + '.yaml');
+// 	const orgClient: Client = await Client.loadFromConfig(clientPath);
 
-	// Augment it with full CCP
-	await AdminUtils.assignOrgAdmin(orgClient, orgName, ccp);
+// 	// Augment it with full CCP
+// 	await AdminUtils.assignOrgAdmin(orgClient, orgName, ccp);
 
-	// Use client to perform chaincode package
-	const chaincode: Client.Chaincode = orgClient.newChaincode(contractName, contractVersion);
+// 	// Use client to perform chaincode package
+// 	const chaincode: Client.Chaincode = orgClient.newChaincode(contractName, contractVersion);
 
-	// Conditionally add init flag (old/new contract style)
-	if (initRequired) {
-		chaincode.setInitRequired(true);
-		BaseUtils.logMsg(` -- packaging step setting init required for ${contractType} named ${contractName}`);
-	} else {
-		BaseUtils.logMsg(` -- packaging step NO init required for ${contractType} named ${contractName}`);
-	}
+// 	// Conditionally add init flag (old/new contract style)
+// 	if (initRequired) {
+// 		chaincode.setInitRequired(true);
+// 		BaseUtils.logMsg(` -- packaging step setting init required for ${contractType} named ${contractName}`);
+// 	} else {
+// 		BaseUtils.logMsg(` -- packaging step NO init required for ${contractType} named ${contractName}`);
+// 	}
 
-	const request: Client.ChaincodePackageRequest = {
-		chaincodePath: contractPath,
-		chaincodeType: contractType as 'golang' | 'car' | 'java' | 'node',
-	};
+// 	const request: Client.ChaincodePackageRequest = {
+// 		chaincodePath: contractPath,
+// 		chaincodeType: contractType as 'golang' | 'car' | 'java' | 'node',
+// 	};
 
-	// conditionally add goPath
-	if (contractType === 'golang') {
-		request.goPath = path.join(__dirname, Constants.GO_PATH);
-	}
-	// conditionally add metadata path
-	if (fs.existsSync(metadataPath)) {
-		request.metadataPath = metadataPath;
-	}
+// 	// conditionally add goPath
+// 	if (contractType === 'golang') {
+// 		request.goPath = path.join(__dirname, Constants.GO_PATH);
+// 	}
+// 	// conditionally add metadata path
+// 	if (fs.existsSync(metadataPath)) {
+// 		request.metadataPath = metadataPath;
+// 	}
 
-	// Package
-	BaseUtils.logMsg(`About to package ${contractType} smart contract named ${contractName}`);
-	try {
-		await chaincode.package(request);
-		BaseUtils.logMsg(`Successfully packaged ${contractType} smart contract named ${contractName}`);
-	} catch (error) {
-		BaseUtils.logAndThrow('Package Error :: ' + error);
-	}
+// 	// Package
+// 	BaseUtils.logMsg(`About to package ${contractType} smart contract named ${contractName}`);
+// 	try {
+// 		await chaincode.package(request);
+// 		BaseUtils.logMsg(`Successfully packaged ${contractType} smart contract named ${contractName}`);
+// 	} catch (error) {
+// 		BaseUtils.logAndThrow('Package Error :: ' + error);
+// 	}
 
-	// save it for later use
-	Client.setConfigSetting(contractSaveName, {value: chaincode});
-}
+// 	// save it for later use
+// 	Client.setConfigSetting(contractSaveName, {value: chaincode});
+// }
 
-export async function installPackagedContractForOrg(orgName: string, contractName: string, ccp: CommonConnectionProfileHelper): Promise<void> {
-	const contractSaveName: string = `contract-${orgName}-${contractName}`;
+// export async function installPackagedContractForOrg(orgName: string, contractName: string, ccp: CommonConnectionProfileHelper): Promise<void> {
+// 	const contractSaveName: string = `contract-${orgName}-${contractName}`;
 
-	// Get the Client for passed Org
-	const orgClient: Client = await Client.loadFromConfig(ccp.getProfile());
+// 	// Get the Client for passed Org
+// 	const orgClient: Client = await Client.loadFromConfig(ccp.getProfile());
 
-	// Get the first target peer for our org
-	const peer: Client.Peer = orgClient.getPeersForOrg(orgName + 'MSP')[0];
+// 	// Get the first target peer for our org
+// 	const peer: Client.Peer = orgClient.getPeersForOrg(orgName + 'MSP')[0];
 
-	const chaincode: Client.Chaincode = Client.getConfigSetting(contractSaveName).value;
+// 	const chaincode: Client.Chaincode = Client.getConfigSetting(contractSaveName).value;
 
-	const request: Client.ChaincodeInstallRequest = {
-		request_timeout: Constants.INSTALL_TIMEOUT as number,
-		target: peer,
-	};
+// 	const request: Client.ChaincodeInstallRequest = {
+// 		request_timeout: Constants.INSTALL_TIMEOUT as number,
+// 		target: peer,
+// 	};
 
-	// Install
-	try {
-		BaseUtils.logMsg(`About to perform install for the smart contract named ${contractName} on org ${orgName}`);
-		const packageId: string = await chaincode.install(request);
-		BaseUtils.logMsg(`Installed the smart contract with package ID of ${packageId} on org ${orgName}`);
-	} catch (error) {
-		BaseUtils.logAndThrow('Install Error :: ' + error);
-	}
-}
+// 	// Install
+// 	try {
+// 		BaseUtils.logMsg(`About to perform install for the smart contract named ${contractName} on org ${orgName}`);
+// 		const packageId: string = await chaincode.install(request);
+// 		BaseUtils.logMsg(`Installed the smart contract with package ID of ${packageId} on org ${orgName}`);
+// 	} catch (error) {
+// 		BaseUtils.logAndThrow('Install Error :: ' + error);
+// 	}
+// }
 
-export async function approveInstalledContractForOrg(orgName: string, contractName: string, channelName: string, ccp: CommonConnectionProfileHelper, policyType: string): Promise<void> {
-	const contractSaveName: string = `contract-${orgName}-${contractName}`;
+// export async function approveInstalledContractForOrg(orgName: string, contractName: string, channelName: string, ccp: CommonConnectionProfileHelper, policyType: string): Promise<void> {
+// 	const contractSaveName: string = `contract-${orgName}-${contractName}`;
 
-	// Get the Client for passed Org
-	const orgClient: Client = await Client.loadFromConfig(ccp.getProfile());
-	await AdminUtils.getSubmitter(orgClient, true, orgName, ccp);
+// 	// Get the Client for passed Org
+// 	const orgClient: Client = await Client.loadFromConfig(ccp.getProfile());
+// 	await AdminUtils.getSubmitter(orgClient, true, orgName, ccp);
 
-	// Get the first target peer for our org
-	const peer: Client.Peer = orgClient.getPeersForOrg(orgName + 'MSP')[0];
-	const channel: Client.Channel = orgClient.getChannel(channelName);
+// 	// Get the first target peer for our org
+// 	const peer: Client.Peer = orgClient.getPeersForOrg(orgName + 'MSP')[0];
+// 	const channel: Client.Channel = orgClient.getChannel(channelName);
 
-	const chaincode: Client.Chaincode = Client.getConfigSetting(contractSaveName).value;
+// 	const chaincode: Client.Chaincode = Client.getConfigSetting(contractSaveName).value;
 
-	// Conditionally act on passed policy
-	if (policyType.localeCompare('default') !== 0) {
-		const policy: any = require(path.join(__dirname, Constants.LIB_TO_POLICIES))[policyType];
-		chaincode.setEndorsementPolicyDefinition(policy);
-	}
+// 	// Conditionally act on passed policy
+// 	if (policyType.localeCompare('default') !== 0) {
+// 		const policy: any = require(path.join(__dirname, Constants.LIB_TO_POLICIES))[policyType];
+// 		chaincode.setEndorsementPolicyDefinition(policy);
+// 	}
 
-	// replace the saved one with the one updated with endorsement policy
-	Client.setConfigSetting(contractSaveName, {value: chaincode});
+// 	// replace the saved one with the one updated with endorsement policy
+// 	Client.setConfigSetting(contractSaveName, {value: chaincode});
 
-	const txId: Client.TransactionId = orgClient.newTransactionID(true);
+// 	const txId: Client.TransactionId = orgClient.newTransactionID(true);
 
-	const request: Client.ChaincodeRequest = {
-		chaincode,
-		request_timeout: 60000,
-		targets: [peer],
-		txId,
-	};
+// 	const request: Client.ChaincodeRequest = {
+// 		chaincode,
+// 		request_timeout: 60000,
+// 		targets: [peer],
+// 		txId,
+// 	};
 
-	try {
-		BaseUtils.logMsg('Chaincode approve - building request');
-		// A P P R O V E  for  O R G
-		const {proposalResponses, proposal} = await channel.approveChaincodeForOrg(request);
-		if (proposalResponses) {
-			for (const response of proposalResponses) {
-				BaseUtils.logMsg('Processing approve endorsement response from peer ...');
-				if (response instanceof Error) {
-					BaseUtils.logAndThrow(response);
-				} else if (response.response && response.response.status) {
-					if (response.response.status === 200) {
-						BaseUtils.logMsg(`Chaincode approve - Good peer response status :: ${response.response.status}`);
-					} else {
-						BaseUtils.logAndThrow(`Chaincode approve - Problem with the chaincode approval :: ${response.response.status} ${response.response.message}`);
-					}
-				} else {
-					BaseUtils.logAndThrow('Chaincode approve - Problem with the chaincode approval no response(s) returned');
-				}
-			}
+// 	try {
+// 		BaseUtils.logMsg('Chaincode approve - building request');
+// 		// A P P R O V E  for  O R G
+// 		const {proposalResponses, proposal} = await channel.approveChaincodeForOrg(request);
+// 		if (proposalResponses) {
+// 			for (const response of proposalResponses) {
+// 				BaseUtils.logMsg('Processing approve endorsement response from peer ...');
+// 				if (response instanceof Error) {
+// 					BaseUtils.logAndThrow(response);
+// 				} else if (response.response && response.response.status) {
+// 					if (response.response.status === 200) {
+// 						BaseUtils.logMsg(`Chaincode approve - Good peer response status :: ${response.response.status}`);
+// 					} else {
+// 						BaseUtils.logAndThrow(`Chaincode approve - Problem with the chaincode approval :: ${response.response.status} ${response.response.message}`);
+// 					}
+// 				} else {
+// 					BaseUtils.logAndThrow('Chaincode approve - Problem with the chaincode approval no response(s) returned');
+// 				}
+// 			}
 
-			// commit this endorsement like any other
-			await commitProposal(Constants.APPROVE, txId, proposalResponses, proposal, channel);
-			BaseUtils.logMsg(`Chaincode approval complete`);
-		} else {
-			BaseUtils.logAndThrow('No chaincode approval proposalResponses was returned');
-		}
-	} catch (error) {
-		BaseUtils.logAndThrow(error);
-	}
-}
+// 			// commit this endorsement like any other
+// 			await commitProposal(Constants.APPROVE, txId, proposalResponses, proposal, channel);
+// 			BaseUtils.logMsg(`Chaincode approval complete`);
+// 		} else {
+// 			BaseUtils.logAndThrow('No chaincode approval proposalResponses was returned');
+// 		}
+// 	} catch (error) {
+// 		BaseUtils.logAndThrow(error);
+// 	}
+// }
 
-export async function queryCommitReadinessAsOrgOnChannel(orgName: string, contractName: string, channelName: string, ccp: CommonConnectionProfileHelper, expectedStatus: any): Promise<void> {
-	const contractSaveName: string = `contract-${orgName}-${contractName}`;
+// export async function queryCommitReadinessAsOrgOnChannel(orgName: string, contractName: string, channelName: string, ccp: CommonConnectionProfileHelper, expectedStatus: any): Promise<void> {
+// 	const contractSaveName: string = `contract-${orgName}-${contractName}`;
 
-	// Get the Client for passed Org
-	const orgClient: Client = await Client.loadFromConfig(ccp.getProfile());
-	await AdminUtils.getSubmitter(orgClient, true, orgName, ccp);
+// 	// Get the Client for passed Org
+// 	const orgClient: Client = await Client.loadFromConfig(ccp.getProfile());
+// 	await AdminUtils.getSubmitter(orgClient, true, orgName, ccp);
 
-	// Get the first target peer for our org
-	const target: Client.Peer = orgClient.getPeersForOrg(orgName + 'MSP')[0];
-	const channel: Client.Channel = orgClient.getChannel(channelName);
+// 	// Get the first target peer for our org
+// 	const target: Client.Peer = orgClient.getPeersForOrg(orgName + 'MSP')[0];
+// 	const channel: Client.Channel = orgClient.getChannel(channelName);
 
-	const chaincode: Client.Chaincode = Client.getConfigSetting(contractSaveName).value;
+// 	const chaincode: Client.Chaincode = Client.getConfigSetting(contractSaveName).value;
 
-	const txId: Client.TransactionId = orgClient.newTransactionID(true);
+// 	const txId: Client.TransactionId = orgClient.newTransactionID(true);
 
-	const request: Client.QueryApprovalStatusRequest = {
-		chaincode,
-		target,
-		txId,
-	};
+// 	const request: Client.QueryApprovalStatusRequest = {
+// 		chaincode,
+// 		target,
+// 		txId,
+// 	};
 
-	try {
-		BaseUtils.logMsg(`About to checkCommitReadiness on channel ${channelName} for org ${orgName}`);
-		const results: Client.QueryApprovalStatusResponse = await channel.checkCommitReadiness(request);
-		if (typeof results === 'object' && Object.prototype.hasOwnProperty.call(results, 'approvals')) {
-			const approvals: Client.QueryApprovalStatusResults = results.approvals;
-			for (const key of Object.keys(expectedStatus)) {
-				if (!Object.prototype.hasOwnProperty.call(approvals, key)) {
-					BaseUtils.logAndThrow(`Missing approval response for ${key}`);
-				}
-				if (results.approvals[key] !== expectedStatus[key]) {
-					BaseUtils.logAndThrow(`Unexpected approval response from  ${key}: expected ${expectedStatus[key]} but had ${results.approvals[key]}`);
-				}
-			}
-			BaseUtils.logMsg(`Query commit status - Good peer response, the commit status map: ${results}`);
-		} else {
-			BaseUtils.logAndThrow(`Problem with the channel.checkCommitReadiness(request) response ${results}`);
-		}
-	} catch (error) {
-		BaseUtils.logAndThrow(`Problem with the Query commit ${error}`);
-	}
-}
+// 	try {
+// 		BaseUtils.logMsg(`About to checkCommitReadiness on channel ${channelName} for org ${orgName}`);
+// 		const results: Client.QueryApprovalStatusResponse = await channel.checkCommitReadiness(request);
+// 		if (typeof results === 'object' && Object.prototype.hasOwnProperty.call(results, 'approvals')) {
+// 			const approvals: Client.QueryApprovalStatusResults = results.approvals;
+// 			for (const key of Object.keys(expectedStatus)) {
+// 				if (!Object.prototype.hasOwnProperty.call(approvals, key)) {
+// 					BaseUtils.logAndThrow(`Missing approval response for ${key}`);
+// 				}
+// 				if (results.approvals[key] !== expectedStatus[key]) {
+// 					BaseUtils.logAndThrow(`Unexpected approval response from  ${key}: expected ${expectedStatus[key]} but had ${results.approvals[key]}`);
+// 				}
+// 			}
+// 			BaseUtils.logMsg(`Query commit status - Good peer response, the commit status map: ${results}`);
+// 		} else {
+// 			BaseUtils.logAndThrow(`Problem with the channel.checkCommitReadiness(request) response ${results}`);
+// 		}
+// 	} catch (error) {
+// 		BaseUtils.logAndThrow(`Problem with the Query commit ${error}`);
+// 	}
+// }
 
-export async function retrieveContractPackageAsOrgOnChannel(orgName: string, contractName: string, channelName: string, ccp: CommonConnectionProfileHelper): Promise<Client.GetInstalledChaincodePackageResult | undefined> {
-	const contractSaveName: string = `contract-${orgName}-${contractName}`;
+// export async function retrieveContractPackageAsOrgOnChannel(orgName: string, contractName: string, channelName: string, ccp: CommonConnectionProfileHelper): Promise<Client.GetInstalledChaincodePackageResult | undefined> {
+// 	const contractSaveName: string = `contract-${orgName}-${contractName}`;
 
-	// Get the Client for passed Org
-	const orgClient: Client = await Client.loadFromConfig(ccp.getProfile());
-	await AdminUtils.getSubmitter(orgClient, true, orgName, ccp);
+// 	// Get the Client for passed Org
+// 	const orgClient: Client = await Client.loadFromConfig(ccp.getProfile());
+// 	await AdminUtils.getSubmitter(orgClient, true, orgName, ccp);
 
-	// Get the first target peer for our org
-	const peer: Client.Peer = orgClient.getPeersForOrg(orgName + 'MSP')[0];
-	const channel: Client.Channel = orgClient.getChannel(channelName);
+// 	// Get the first target peer for our org
+// 	const peer: Client.Peer = orgClient.getPeersForOrg(orgName + 'MSP')[0];
+// 	const channel: Client.Channel = orgClient.getChannel(channelName);
 
-	const txId: Client.TransactionId = orgClient.newTransactionID(true);
-	const chaincode: Client.Chaincode = Client.getConfigSetting(contractSaveName).value;
+// 	const txId: Client.TransactionId = orgClient.newTransactionID(true);
+// 	const chaincode: Client.Chaincode = Client.getConfigSetting(contractSaveName).value;
 
-	const request: Client.GetInstalledChaincodePackageRequest = {
-		package_id: chaincode.getPackageId(),
-		target : peer,
-		txId,
-	};
+// 	const request: Client.GetInstalledChaincodePackageRequest = {
+// 		package_id: chaincode.getPackageId(),
+// 		target : peer,
+// 		txId,
+// 	};
 
-	// Run method
-	let result: any;
-	try {
-		BaseUtils.logMsg(`About to getInstalledChaincodePackage on channel ${channelName} for org ${orgName}`);
-		result = await channel.getInstalledChaincodePackage(request);
-	} catch (error) {
-		BaseUtils.logError('Problem with executing channel.getInstalledChaincodePackage(request): ', error);
-		throw error;
-	}
+// 	// Run method
+// 	let result: any;
+// 	try {
+// 		BaseUtils.logMsg(`About to getInstalledChaincodePackage on channel ${channelName} for org ${orgName}`);
+// 		result = await channel.getInstalledChaincodePackage(request);
+// 	} catch (error) {
+// 		BaseUtils.logError('Problem with executing channel.getInstalledChaincodePackage(request): ', error);
+// 		throw error;
+// 	}
 
-	if (result && Object.prototype.hasOwnProperty.call(result, 'chaincode_install_package')) {
-		BaseUtils.logMsg('Successfully retrieved chaincode_install_package');
-		return result;
-	} else {
-		BaseUtils.logAndThrow('Problem with executing channel.getInstalledChaincodePackage(request): no response returned');
-	}
-}
+// 	if (result && Object.prototype.hasOwnProperty.call(result, 'chaincode_install_package')) {
+// 		BaseUtils.logMsg('Successfully retrieved chaincode_install_package');
+// 		return result;
+// 	} else {
+// 		BaseUtils.logAndThrow('Problem with executing channel.getInstalledChaincodePackage(request): no response returned');
+// 	}
+// }
 
-export async function queryForDefinedContractAsOrgOnChannel(orgName: string, contractName: string, channelName: string, ccp: CommonConnectionProfileHelper, expected: any): Promise<void> {
-	const contractSaveName: string = `contract-${orgName}-${contractName}`;
+// export async function queryForDefinedContractAsOrgOnChannel(orgName: string, contractName: string, channelName: string, ccp: CommonConnectionProfileHelper, expected: any): Promise<void> {
+// 	const contractSaveName: string = `contract-${orgName}-${contractName}`;
 
-	// Get the Client for passed Org
-	const orgClient: Client = await Client.loadFromConfig(ccp.getProfile());
-	await AdminUtils.getSubmitter(orgClient, true, orgName, ccp);
+// 	// Get the Client for passed Org
+// 	const orgClient: Client = await Client.loadFromConfig(ccp.getProfile());
+// 	await AdminUtils.getSubmitter(orgClient, true, orgName, ccp);
 
-	// Get the first target peer for our org
-	const peer: Client.Peer = orgClient.getPeersForOrg(orgName + 'MSP')[0] as Client.Peer;
-	const channel: Client.Channel = orgClient.getChannel(channelName) as any;
+// 	// Get the first target peer for our org
+// 	const peer: Client.Peer = orgClient.getPeersForOrg(orgName + 'MSP')[0] as Client.Peer;
+// 	const channel: Client.Channel = orgClient.getChannel(channelName) as any;
 
-	const txId: Client.TransactionId = orgClient.newTransactionID(true);
-	const chaincode: Client.Chaincode = Client.getConfigSetting(contractSaveName).value;
+// 	const txId: Client.TransactionId = orgClient.newTransactionID(true);
+// 	const chaincode: Client.Chaincode = Client.getConfigSetting(contractSaveName).value;
 
-	const request: Client.QueryChaincodeDefinitionRequest = {
-		chaincodeId: chaincode.getName(),
-		target : peer,
-		txId,
-	};
+// 	const request: Client.QueryChaincodeDefinitionRequest = {
+// 		chaincodeId: chaincode.getName(),
+// 		target : peer,
+// 		txId,
+// 	};
 
-	// Run method
-	let result: any;
-	try {
-		BaseUtils.logMsg(`About to queryChaincodeDefinition on channel ${channelName} for org ${orgName}`);
-		result = await channel.queryChaincodeDefinition(request);
+// 	// Run method
+// 	let result: any;
+// 	try {
+// 		BaseUtils.logMsg(`About to queryChaincodeDefinition on channel ${channelName} for org ${orgName}`);
+// 		result = await channel.queryChaincodeDefinition(request);
 
-		// We might want to actually check what is in the response result
-		if (expected && result) {
-			for (const key of Object.keys(expected)) {
-				if (!Object.prototype.hasOwnProperty.call(result, key)) {
-					BaseUtils.logAndThrow(`Missing approval response for ${key}`);
-				}
-				if (result[key] !== expected[key]) {
-					BaseUtils.logAndThrow(`Unexpected chaincode definition for ${key}: expected ${expected[key]} but had ${result[key]}`);
-				}
-			}
-		} else {
-			if (result) {
-				BaseUtils.logMsg(`queryChaincodeDefinition on channel succeeded, no options passed to compare result against`);
-			} else {
-				BaseUtils.logAndThrow('Problem with the chaincode query for definition no response returned');
-			}
-		}
-	} catch (error) {
-		BaseUtils.logError('Problem with executing channel.queryChaincodeDefinition(request): ', error);
-		throw error;
-	}
-}
+// 		// We might want to actually check what is in the response result
+// 		if (expected && result) {
+// 			for (const key of Object.keys(expected)) {
+// 				if (!Object.prototype.hasOwnProperty.call(result, key)) {
+// 					BaseUtils.logAndThrow(`Missing approval response for ${key}`);
+// 				}
+// 				if (result[key] !== expected[key]) {
+// 					BaseUtils.logAndThrow(`Unexpected chaincode definition for ${key}: expected ${expected[key]} but had ${result[key]}`);
+// 				}
+// 			}
+// 		} else {
+// 			if (result) {
+// 				BaseUtils.logMsg(`queryChaincodeDefinition on channel succeeded, no options passed to compare result against`);
+// 			} else {
+// 				BaseUtils.logAndThrow('Problem with the chaincode query for definition no response returned');
+// 			}
+// 		}
+// 	} catch (error) {
+// 		BaseUtils.logError('Problem with executing channel.queryChaincodeDefinition(request): ', error);
+// 		throw error;
+// 	}
+// }
 
-export async function performContractCommitWithOrgOnChannel(contractName: string, orgName: string, channelName: string, ccp: CommonConnectionProfileHelper): Promise<void> {
-	const contractSaveName: string = `contract-${orgName}-${contractName}`;
+// export async function performContractCommitWithOrgOnChannel(contractName: string, orgName: string, channelName: string, ccp: CommonConnectionProfileHelper): Promise<void> {
+// 	const contractSaveName: string = `contract-${orgName}-${contractName}`;
 
-	// Get the Client for passed Org
-	const orgClient: Client = await Client.loadFromConfig(ccp.getProfile());
-	await AdminUtils.getSubmitter(orgClient, true, orgName, ccp);
+// 	// Get the Client for passed Org
+// 	const orgClient: Client = await Client.loadFromConfig(ccp.getProfile());
+// 	await AdminUtils.getSubmitter(orgClient, true, orgName, ccp);
 
-	// get all the peers
-	const targets: Client.Peer[] = AdminUtils.getPeerObjectsForClientOnChannel(orgClient, channelName, ccp);
+// 	// get all the peers
+// 	const targets: Client.Peer[] = AdminUtils.getPeerObjectsForClientOnChannel(orgClient, channelName, ccp);
 
-	const channel: Client.Channel = orgClient.getChannel(channelName);
-	const txId: Client.TransactionId = orgClient.newTransactionID(true);
-	const chaincode: Client.Chaincode = Client.getConfigSetting(contractSaveName).value;
+// 	const channel: Client.Channel = orgClient.getChannel(channelName);
+// 	const txId: Client.TransactionId = orgClient.newTransactionID(true);
+// 	const chaincode: Client.Chaincode = Client.getConfigSetting(contractSaveName).value;
 
-	const request: any = {
-		chaincode,
-		request_timeout: Constants.INSTALL_TIMEOUT,
-		targets,
-		txId,
-	};
+// 	const request: any = {
+// 		chaincode,
+// 		request_timeout: Constants.INSTALL_TIMEOUT,
+// 		targets,
+// 		txId,
+// 	};
 
-	try {
-		BaseUtils.logMsg('About to perform channel.commitChaincode(request)');
-		// C O M M I T   for   C H A N N E L
-		const {proposalResponses, proposal} = await channel.commitChaincode(request);
-		if (proposalResponses) {
-			for (const response of proposalResponses) {
-				BaseUtils.logMsg(`Checking proposal response messages ...`);
-				if (response instanceof Error) {
-					BaseUtils.logAndThrow(response);
-				} else if (response.response && response.response.status) {
-					if (response.response.status === 200) {
-						BaseUtils.logMsg(`Valid response status: ${response.response.status}`);
-					} else {
-						BaseUtils.logAndThrow(`Problem with the chaincode commit :: status: ${response.response.status} message: ${response.response.message}`);
-					}
-				} else {
-					BaseUtils.logAndThrow('Problem with the chaincode commit no response returned');
-				}
-			}
-		} else {
-			BaseUtils.logAndThrow('No chaincode commit proposalResponses was returned');
-		}
+// 	try {
+// 		BaseUtils.logMsg('About to perform channel.commitChaincode(request)');
+// 		// C O M M I T   for   C H A N N E L
+// 		const {proposalResponses, proposal} = await channel.commitChaincode(request);
+// 		if (proposalResponses) {
+// 			for (const response of proposalResponses) {
+// 				BaseUtils.logMsg(`Checking proposal response messages ...`);
+// 				if (response instanceof Error) {
+// 					BaseUtils.logAndThrow(response);
+// 				} else if (response.response && response.response.status) {
+// 					if (response.response.status === 200) {
+// 						BaseUtils.logMsg(`Valid response status: ${response.response.status}`);
+// 					} else {
+// 						BaseUtils.logAndThrow(`Problem with the chaincode commit :: status: ${response.response.status} message: ${response.response.message}`);
+// 					}
+// 				} else {
+// 					BaseUtils.logAndThrow('Problem with the chaincode commit no response returned');
+// 				}
+// 			}
+// 		} else {
+// 			BaseUtils.logAndThrow('No chaincode commit proposalResponses was returned');
+// 		}
 
-		// if we get this far, commit this endorsement to the ledger like any other
-		await commitProposal(Constants.COMMIT, txId, proposalResponses, proposal, channel);
-	} catch (error) {
-		BaseUtils.logAndThrow(error);
-	}
-}
+// 		// if we get this far, commit this endorsement to the ledger like any other
+// 		await commitProposal(Constants.COMMIT, txId, proposalResponses, proposal, channel);
+// 	} catch (error) {
+// 		BaseUtils.logAndThrow(error);
+// 	}
+// }
 
 export async function performContractTransactionForOrg(contract: string, contractFunction: string, contractArgs: any, orgName: string, channelName: string, ccp: CommonConnectionProfileHelper, isSubmit: boolean, expectedResult: any, expectedError: any): Promise<any> {
 

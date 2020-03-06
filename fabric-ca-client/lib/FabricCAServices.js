@@ -13,16 +13,15 @@ const FabricCAClient = require('./FabricCAClient');
 
 const {normalizeX509} = BaseClient;
 const util = require('util');
-const parseURL = require('./helper').parseURL;
 const path = require('path');
+const parseURL = require('./helper').parseURL;
 const checkRegistrar = require('./helper').checkRegistrar;
 const getSubjectCommonName = require('./helper').getSubjectCommonName;
-const config = utils.getConfig();
 const logger = utils.getLogger('FabricCAClientService.js');
 
 // setup the location of the default config shipped with code
 const default_config = path.resolve(__dirname, '../config/default.json');
-config.reorderFileStores(default_config, true); // make sure this one is under the fabric-common
+utils.getConfig().reorderFileStores(default_config, true);
 
 /**
  * @typedef {Object} TLSOptions
@@ -216,13 +215,13 @@ const FabricCAServices = class extends BaseClient {
 					}
 					logger.debug('successfully generated key pairs');
 				} catch (err) {
-					throw new Error(util.format('Failed to generate key for enrollment due to error [%s]', err));
+					throw new Error(util.format('Failed to generate key for enrollment due to error [%s]: %s', err, err.stack));
 				}
 				try {
 					csr = privateKey.generateCSR('CN=' + req.enrollmentID);
 					logger.debug('successfully generated csr');
 				} catch (err) {
-					throw new Error(util.format('Failed to generate CSR for enrollment due to error [%s]', err));
+					throw new Error(util.format('Failed to generate CSR for enrollment due to error [%s]: %s', err, err.stack));
 				}
 			}
 
@@ -317,7 +316,7 @@ const FabricCAServices = class extends BaseClient {
 						}
 					},
 					(err) => {
-						return reject(new Error(util.format('Failed to generate key for enrollment due to error [%s]', err)));
+						return reject(new Error(util.format('Failed to generate key for enrollment due to error [%s]: %s', err, err.stack)));
 					}
 				);
 
