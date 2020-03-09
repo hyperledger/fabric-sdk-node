@@ -985,6 +985,68 @@ test('\n\n***** Network End-to-end flow: specify endorsing peers *****\n\n', asy
 	t.end();
 });
 
+test('\n\n***** Network End-to-end flow: specify not enough endorsing orgs *****\n\n', async (t: any) => {
+	const gateway = new Gateway();
+	try {
+		const contract = await createContract(t, gateway, {
+			clientTlsIdentity: 'tlsId',
+			discovery: {
+				asLocalhost: true,
+				enabled: true,
+			},
+			identity: 'User1@org1.example.com',
+			wallet: inMemoryWallet,
+		});
+
+		await contract.createTransaction('echo')
+			.setEndorsingOrganizations('Org2MSP')
+			.submit('RESULT');
+		t.fail('Transaction was successfully submitted with insufficient endorsing orgs');
+	} catch (error) {
+		if (error.message.includes('Endorsement has failed')) {
+			t.pass('Transaction correctly failed endorsement with a single endorsing org specified');
+		} else {
+			const stacktrace = error.stack;
+			t.fail('Transaction failed with unexpected error: ' + stacktrace || error);
+		}
+	} finally {
+		gateway.disconnect();
+	}
+
+	t.end();
+});
+
+test('\n\n***** Network End-to-end flow: specify correct endorsing orgs *****\n\n', async (t: any) => {
+	const gateway = new Gateway();
+	try {
+		const contract = await createContract(t, gateway, {
+			clientTlsIdentity: 'tlsId',
+			discovery: {
+				asLocalhost: true,
+				enabled: true,
+			},
+			identity: 'User1@org1.example.com',
+			wallet: inMemoryWallet,
+		});
+
+		await contract.createTransaction('echo')
+			.setEndorsingOrganizations('Org1MSP', 'Org2MSP')
+			.submit('RESULT');
+		t.pass('Transaction was successfully submitted with sufficient endorsing orgs');
+	} catch (error) {
+		if (error.message.includes('Endorsement has failed')) {
+			t.pass('Transaction incorrectly failed endorsement with sufficient orgs specified');
+		} else {
+			const stacktrace = error.stack;
+			t.fail('Transaction failed with unexpected error: ' + stacktrace || error);
+		}
+	} finally {
+		gateway.disconnect();
+	}
+
+	t.end();
+});
+
 test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and no event strategy *****\n\n', async (t: any) => {
 	const gateway = new Gateway();
 

@@ -295,6 +295,15 @@ describe('Transaction', () => {
 			expectedProposal.targets = endorsingPeers;
 			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal));
 		});
+		it('sends proposal to specified organisations', async () => {
+			const endorsingOrgs = ['msp1', 'msp2'];
+
+			transaction.setEndorsingOrganizations(...endorsingOrgs).submit();
+
+			expectedProposal.requiredOrgs = endorsingOrgs;
+			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal));
+		});
+
 	});
 
 	describe('#evaluate', () => {
