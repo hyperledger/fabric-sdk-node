@@ -61,6 +61,7 @@ class Network {
 		this.contracts = new Map();
 		this.initialized = false;
 		this.listeners = new Map();
+		this.discoveryEnabled = false;
 	}
 
 	/**
@@ -76,6 +77,7 @@ class Network {
 
 		let ledgerPeers;
 		if (discovery.enabled) {
+			this.discoveryEnabled = true;
 			const client = this.gateway.getClient();
 			ledgerPeers = client.getPeersForOrg();
 			if (ledgerPeers.length === 0) {
@@ -179,6 +181,15 @@ class Network {
 			this.contracts.set(key, contract);
 		}
 		return contract;
+	}
+
+	/**
+	 * Returns whether discovery is enabled or not
+	 * @returns {boolean} true if discovery is enabled
+	 * @private
+	 */
+	_isDiscoveryEnabled() {
+		return this.discoveryEnabled;
 	}
 
 	_dispose() {

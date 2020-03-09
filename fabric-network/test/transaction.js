@@ -23,6 +23,8 @@ const Query = require('fabric-network/lib/impl/query/query');
 const Transaction = require('fabric-network/lib/transaction');
 const TransactionEventHandler = require('fabric-network/lib/impl/event/transactioneventhandler');
 const TransactionID = require('fabric-client/lib/TransactionID');
+const FabricConstants = require('fabric-client/lib/Constants');
+
 
 describe('Transaction', () => {
 	const transactionName = 'TRANSACTION_NAME';
@@ -144,6 +146,14 @@ describe('Transaction', () => {
 
 	describe('#submit', () => {
 		let expectedProposal;
+
+		const createPeer = (name, mspid, isEndorser) => {
+			const peer = sinon.createStubInstance(ChannelPeer);
+			peer.name = name; // required to be able to differentiate between channelpeer stubs
+			peer.isInOrg.returns(false).withArgs(mspid).returns(true);
+			peer.isInRole.withArgs(FabricConstants.NetworkConfig.ENDORSING_PEER_ROLE).returns(isEndorser);
+			return peer;
+		};
 
 		beforeEach(() => {
 			expectedProposal = {
@@ -293,6 +303,45 @@ describe('Transaction', () => {
 			await transaction.setEndorsingPeers(endorsingPeers).submit();
 
 			expectedProposal.targets = endorsingPeers;
+			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal));
+		});
+		it('sends proposal to specified organisations if discovery enabled', async () => {
+			const endorsingOrgs = ['msp1', 'msp2'];
+
+			network._isDiscoveryEnabled.returns(true);
+			transaction.setEndorsingOrganizations(...endorsingOrgs).submit();
+
+			expectedProposal.requiredOrgs = endorsingOrgs;
+			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal));
+		});
+
+		it('sends proposal to specified organisations if discovery not enabled', async () => {
+			const endorsingOrgs = ['msp1', 'msp3'];
+
+			const channelPeers = [];
+			const expectedUsedPeers = [];
+
+			let peer = createPeer('peermsp11', 'msp1', true);
+			channelPeers.push(peer);
+			expectedUsedPeers.push(peer);
+			channelPeers.push(createPeer('peermsp12', 'msp1', false));
+			peer = createPeer('peermsp13', 'msp1', true);
+			channelPeers.push(peer);
+			expectedUsedPeers.push(peer);
+			channelPeers.push(createPeer('peermsp21', 'msp2', true));
+			channelPeers.push(createPeer('peermsp22', 'msp2', false));
+			channelPeers.push(createPeer('peermsp23', 'msp2', true));
+			channelPeers.push(createPeer('peermsp31', 'msp3', false));
+			peer = createPeer('peermsp32', 'msp3', true);
+			channelPeers.push(peer);
+			expectedUsedPeers.push(peer);
+
+			channel.getChannelPeers.returns(channelPeers);
+
+			network._isDiscoveryEnabled.returns(false);
+			transaction.setEndorsingOrganizations(...endorsingOrgs).submit();
+
+			expectedProposal.targets = expectedUsedPeers;
 			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal));
 		});
 	});
