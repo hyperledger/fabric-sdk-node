@@ -108,6 +108,24 @@ class Transaction {
 	 */
 	setEndorsingPeers(peers) {
 		this._endorsingPeers = peers;
+		this._endorsingOrgs = null;
+		return this;
+	}
+
+    /**
+	 * Set the organizations that should be used for endorsement when this
+	 * transaction is submitted to the ledger.
+	 * Peers that are in the organizations will be used for the endorsement.
+	 * This will override the setEndorsingPeers if previously called. Setting
+	 * the endorsing organizations will not override discovery, however it will
+	 * filter the peers provided by discovery to be those in these organizatons.
+	 * This api can only be used if discovery is being used.
+	 * @param {...string} orgs - Endorsing organizations.
+	 * @returns {module:fabric-network.Transaction} This object, to allow function chaining.
+	 */
+	setEndorsingOrganizations(...orgs) {
+		this._endorsingOrgs = orgs;
+		this._endorsingPeers = null;
 		return this;
 	}
 
@@ -142,6 +160,8 @@ class Transaction {
 		const request = this._buildRequest(args);
 		if (this._endorsingPeers) {
 			request.targets = this._endorsingPeers;
+		} else if (this._endorsingOrgs) {
+			request.requiredOrgs = this._endorsingOrgs;
 		}
 
 		const commitTimeout = options.commitTimeout * 1000; // in ms

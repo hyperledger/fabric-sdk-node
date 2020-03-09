@@ -290,11 +290,23 @@ describe('Transaction', () => {
 			const peer = sinon.createStubInstance(ChannelPeer);
 			const endorsingPeers = [peer];
 
-			await transaction.setEndorsingPeers(endorsingPeers).submit();
+			const result = await transaction.setEndorsingPeers(endorsingPeers).submit();
+			expect(result).to.equal(transaction);
 
 			expectedProposal.targets = endorsingPeers;
 			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal));
 		});
+		it('sends proposal to specified organisations', async () => {
+			const peer = sinon.createStubInstance(ChannelPeer);
+			const endorsingOrgs = [msp1, msp2];
+
+			const result = await transaction.setEndorsingOrganisations(...endorsingOrgs).submit();
+			expect(result).to.equal(transaction);
+
+			expectedProposal.requiredOrgs = endorsingOrgs;
+			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal));
+		});
+
 	});
 
 	describe('#evaluate', () => {

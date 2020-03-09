@@ -985,6 +985,41 @@ test('\n\n***** Network End-to-end flow: specify endorsing peers *****\n\n', asy
 	t.end();
 });
 
+test('\n\n***** Network End-to-end flow: specify endorsing orgs *****\n\n', async (t: any) => {
+	const gateway = new Gateway();
+	try {
+		const contract = await createContract(t, gateway, {
+			clientTlsIdentity: 'tlsId',
+			discovery: {
+				enabled: false,
+			},
+			identity: 'User1@org1.example.com',
+			wallet: inMemoryWallet,
+		});
+
+		const network = await gateway.getNetwork(channelName);
+		const channel = network.getChannel();
+		const endorsingPeer = channel.getChannelPeer('peer0.org1.example.com');
+
+		await contract.createTransaction('echo')
+			.setEndorsingOrganizations('Org2MSP')
+			.submit('RESULT');
+		t.fail('Transaction was successfully submitted with insufficient endorsing orgs');
+	} catch (error) {
+		if (error.message.includes('ENDORSEMENT_POLICY_FAILURE')) {
+			t.pass('Transaction correctly failed endorsement with a single endorsing org specified');
+		} else {
+			const stacktrace = error.stack;
+			t.fail('Transaction failed with unexpected error: ' + stacktrace || error);
+		}
+	} finally {
+		gateway.disconnect();
+	}
+
+	t.end();
+});
+
+
 test('\n\n***** Network End-to-end flow: invoke transaction to move money using in memory wallet and no event strategy *****\n\n', async (t: any) => {
 	const gateway = new Gateway();
 
