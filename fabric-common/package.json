@@ -33,7 +33,7 @@
 		"nconf": "^0.10.0",
 		"promise-settle": "^0.3.0",
 		"sjcl": "1.0.7",
-		"winston": "^2.2.0",
+		"winston": "^2.4.0",
 		"yn": "^3.1.0"
 	},
 	"optionalDependencies": {
@@ -45,7 +45,7 @@
 		"mocha": "^5.2.0",
 		"nyc": "^15.0.0",
 		"rewire": "^4.0.1",
-		"sinon": "^6.1.3",
+		"sinon": "^6.3.5",
 		"sinon-chai": "^3.4.0"
 	},
 	"nyc": {
