@@ -4,22 +4,20 @@
 
 'use strict';
 
-import * as BaseUtils from './baseUtils';
+import * as FabricCAServices from 'fabric-ca-client';
+import { Channel, Client, Commit, Committer, Endorsement, Endorser, Endpoint, Eventer, EventService, IdentityContext, ProposalResponse, Query, User } from 'fabric-common';
+import * as fs from 'fs';
 import { Constants } from '../../constants';
+import * as BaseUtils from './baseUtils';
 import { CommonConnectionProfileHelper } from './commonConnectionProfileHelper';
 import { StateStore } from './stateStore';
-
-import * as fs from 'fs';
-import * as FabricCAServices from 'fabric-ca-client';
-import { Client, User, Channel, Endorser, Committer, Eventer, IdentityContext, Endpoint, Endorsement, ProposalResponse, EventService, Commit, Query } from 'fabric-common';
-import { stringify } from 'querystring';
 
 const stateStore: StateStore = StateStore.getInstance();
 
 function assertNoErrors(endorsementResults: ProposalResponse): void {
 	if (endorsementResults.errors && endorsementResults.errors.length > 0) {
 		for (const error of endorsementResults.errors) {
-			BaseUtils.logMsg(`Failed to get endorsement : ${error.message}`);
+			BaseUtils.logMsg(`Failed to get endorsement with error: ${error.message} and proposal response:`, endorsementResults);
 		}
 		throw Error('failed endorsement');
 	}
@@ -194,7 +192,7 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 			// Build an endorsement request
 			const endorsementRequest: any = {
 				targets: targetPeers,
-				requestTimeout: Constants.INC_LONG
+				requestTimeout: Constants.HUGE_TIME
 			};
 
 			// Send the signed endorsement to the requested peers.

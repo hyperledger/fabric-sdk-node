@@ -3,17 +3,10 @@
 	"crypto-hash-algo": "SHA2",
 	"crypto-keysize": 256,
 	"crypto-hsm": false,
-	"crypto-suite-software": {
-		"EC": "fabric-common/lib/impl/CryptoSuite_ECDSA_AES.js"
-	},
-	"crypto-suite-hsm": {
-		"EC": "fabric-common/lib/impl/bccsp_pkcs11.js"
-	},
 	"channel-name-regx-checker":{
 		"pattern":"^[a-z][a-z0-9.-]*$",
 		"flags":""
 	},
-	"key-value-store": "fabric-common/lib/impl/FileKeyValueStore.js",
 	"certificate-authority-client": "fabric-ca-client",
 	"nonce-size" : 24,
 	"grpc-ssl-cipher-suites": "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384",
@@ -28,7 +21,7 @@
 		"grpc-wait-for-ready-timeout": 3000,
 		"request-timeout" : 45000
 	},
-	
+
 	"discovery-as-localhost": false,
 	"discovery-cache-life": 300000,
 	"discovery-override-protocol": null

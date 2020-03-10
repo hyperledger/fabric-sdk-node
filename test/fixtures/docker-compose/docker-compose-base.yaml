@@ -15,7 +15,7 @@ version: '2'
 
 services:
   ca0:
-    image: hyperledger/fabric-ca${DOCKER_IMG_TAG}
+    image: hyperledger/fabric-ca${FABRIC_CA_TAG}
     environment:
       - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
       - FABRIC_CA_SERVER_CA_NAME=ca-org1
@@ -29,7 +29,7 @@ services:
     container_name: ca_peerOrg1
 
   ca1:
-    image: hyperledger/fabric-ca${DOCKER_IMG_TAG}
+    image: hyperledger/fabric-ca${FABRIC_CA_TAG}
     environment:
       - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
       - FABRIC_CA_SERVER_CA_NAME=ca-org2

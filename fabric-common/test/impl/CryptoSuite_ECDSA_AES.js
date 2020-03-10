@@ -7,13 +7,11 @@
 'use strict';
 
 const {Utils} = require('../../');
-const path = require('path');
 const ECDSAKey = require('../../lib/impl/ecdsa/key');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const sinonChai = require('sinon-chai');
 const testUtils = require('../TestUtils');
-const fs = require('fs-extra');
 const elliptic = require('elliptic');
 const Signature = require('elliptic/lib/elliptic/ec/signature.js');
 
@@ -105,12 +103,15 @@ describe('CryptoSuite_ECDSA_AES', () => {
 			key.getSKI().should.equal(testUtils.TEST_PUBLIC_KEY_SKI);
 		});
 
-		it('should store the imported public key in the correct directory', async () => {
+		it('should store the imported public key in the key store', async () => {
 			const cryptoSuite = Utils.newCryptoSuite();
-			cryptoSuite.setCryptoKeyStore(Utils.newCryptoKeyStore());
+			const keyStore = Utils.newCryptoKeyStore();
+			cryptoSuite.setCryptoKeyStore(keyStore);
 			await cryptoSuite.importKey(testUtils.certificateAsPEM);
-			const keyDir = path.join(Utils.getDefaultKeyStorePath(), 'f7b61538c52260e83cf4f2693d11019f73e7495056c5b54f1e05bae80e9402a7-pub');
-			fs.existsSync(keyDir).should.equal(true);
+
+			const realKeyStore = await keyStore._getKeyStore();
+			const cert = realKeyStore.getValue('f7b61538c52260e83cf4f2693d11019f73e7495056c5b54f1e05bae80e9402a7-pub');
+			cert.should.exist;
 		});
 
 		it('should return a private key', async () => {
@@ -123,10 +124,13 @@ describe('CryptoSuite_ECDSA_AES', () => {
 
 		it('should store the imported private key in the correct directory', async () => {
 			const cryptoSuite = Utils.newCryptoSuite();
-			cryptoSuite.setCryptoKeyStore(Utils.newCryptoKeyStore());
+			const keyStore = Utils.newCryptoKeyStore();
+			cryptoSuite.setCryptoKeyStore(keyStore);
 			await cryptoSuite.importKey(testUtils.keyAsPEM);
-			const keyDir = path.join(Utils.getDefaultKeyStorePath(), 'bced195e7aacb5705bbad45598535d2f41564953680c5cf696becbb2dfebf39c-priv');
-			fs.existsSync(keyDir).should.equal(true);
+
+			const realKeyStore = await keyStore._getKeyStore();
+			const key = realKeyStore.getValue('bced195e7aacb5705bbad45598535d2f41564953680c5cf696becbb2dfebf39c-priv');
+			key.should.exist;
 		});
 
 		it('should throw an error when the cryptoKeyStore property has not been set', async () => {

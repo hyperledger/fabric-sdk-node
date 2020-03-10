@@ -31,8 +31,7 @@ runTape() {
     test/integration/fabric-ca-certificate-service-tests.js \
     test/integration/fabric-ca-services-tests.js \
     test/integration/e2e.js \
-    ${HSM_SCRIPT} \
-    | npx tap-colorize
+    ${HSM_SCRIPT}
 }
 
-runTape $*
+runTape $@

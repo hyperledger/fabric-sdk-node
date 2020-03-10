@@ -219,14 +219,17 @@ async function instantiateChaincode(ccName, ccId, ccType, args, version, upgrade
 		if (upgrade) {
 			results = await channel.sendUpgradeProposal(proposalRequest);
 		} else {
-			results = await channel.sendInstantiateProposal(proposalRequest);
+			results = await channel.sendInstantiateProposal(proposalRequest, 100000);
 		}
 
 		const proposalResponses = results[0];
 		const proposal = results[1];
+
 		for (const i in proposalResponses) {
+
 			if (!(proposalResponses && proposalResponses[i].response && proposalResponses[i].response.status === 200)) {
-				Promise.reject(type + ' proposal was bad: ' + JSON.stringify(proposalResponses[i]));
+				testUtil.logMsg('Proposal result:', proposal);
+				throw new Error(type + ' proposal was bad: ' + JSON.stringify(proposalResponses[i]));
 			}
 		}
 

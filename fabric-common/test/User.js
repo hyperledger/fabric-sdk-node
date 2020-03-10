@@ -15,8 +15,6 @@ chai.use(chaiAsPromised);
 const User = rewire('../lib/User');
 const TestUtils = require('./TestUtils');
 const {Utils} = require('..');
-const path = require('path');
-const fs = require('fs-extra');
 
 describe('User', () => {
 	TestUtils.setCryptoConfigSettings();
@@ -129,10 +127,12 @@ describe('User', () => {
 			};
 			// manufacture an error condition where the private key does not exist for the SKI, and only the public key does
 			const cryptoSuite = Utils.newCryptoSuite();
-			cryptoSuite.setCryptoKeyStore(Utils.newCryptoKeyStore());
+			const keyStore = Utils.newCryptoKeyStore();
+			cryptoSuite.setCryptoKeyStore(keyStore);
 			await cryptoSuite.importKey(cert);
 
-			fs.removeSync(path.join(Utils.getDefaultKeyStorePath(), '0e67f7fa577fd76e487ea3b660e1a3ff15320dbc95e396d8b0ff616c87f8c81a-priv'));
+			const realKeyStore = await keyStore._getKeyStore();
+			await realKeyStore.setValue(`${testUserEnrollment.enrollment.signingIdentity}-priv`, undefined);
 
 			const user = new User('admin2');
 			user.setCryptoSuite(cryptoSuite);

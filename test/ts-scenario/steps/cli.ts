@@ -109,34 +109,36 @@ Given(/^I use the cli to lifecycle deploy a (.+?) smart contract named (.+?) at 
 
 	try {
 		// Skip if already committed on channel
-		const isCommitted: boolean = await AdminUtils.isOrgChaincodeLifecycleCommittedOnChannel(Object.keys(ccp.getOrganizations())[0], ccp, ccName, ccReference, channelName);
-		if (isCommitted) {
-			BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} has already been committed on channel ${channelName} as ${ccReference} `);
-		} else {
-			// Package on each org
-			for (const orgName of orgNames) {
-				await Contract.cli_lifecycle_chaincode_package(ccType, ccName, orgName.toLowerCase());
-			}
-
-			// Install on each org
-			for (const orgName of orgNames) {
-				const isInstalled: boolean = await AdminUtils.isOrgChaincodeLifecycleInstalledOnChannel(orgName, ccp, ccName, channelName);
-				if (isInstalled) {
-					BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} has already been lifecycle installed on the peers for organization ${orgName}`);
-				} else {
-					await Contract.cli_lifecycle_chaincode_install(ccName, orgName.toLowerCase());
-				}
-			}
-
-			// Approve on each org
-			for (const orgName of orgNames) {
-				const packageId: string = await Contract.retrievePackageIdForLabelOnOrg(ccName, orgName.toLowerCase()) as any;
-				await Contract.cli_lifecycle_chaincode_approve(ccReference, ccVersion, orgName.toLowerCase(), channelName, packageId, '1', tls);
-			}
-
-			// Commit on single org
-			await Contract.cli_lifecycle_chaincode_commit(ccReference, ccVersion, orgNames[0].toLowerCase(), channelName, ccp, '1', tls);
+		// TODO: Use CLI
+		// const isCommitted: boolean = await AdminUtils.isOrgChaincodeLifecycleCommittedOnChannel(Object.keys(ccp.getOrganizations())[0], ccp, ccName, ccReference, channelName);
+		// if (isCommitted) {
+		// 	BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} has already been committed on channel ${channelName} as ${ccReference} `);
+		// } else {
+		// Package on each org
+		for (const orgName of orgNames) {
+			await Contract.cli_lifecycle_chaincode_package(ccType, ccName, orgName.toLowerCase());
 		}
+
+		// Install on each org
+		for (const orgName of orgNames) {
+			// TODO: Use CLI
+			// const isInstalled: boolean = await AdminUtils.isOrgChaincodeLifecycleInstalledOnChannel(orgName, ccp, ccName, channelName);
+			// if (isInstalled) {
+			// 	BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} has already been lifecycle installed on the peers for organization ${orgName}`);
+			// } else {
+			await Contract.cli_lifecycle_chaincode_install(ccName, orgName.toLowerCase());
+			// }
+		}
+
+		// Approve on each org
+		for (const orgName of orgNames) {
+			const packageId: string = await Contract.retrievePackageIdForLabelOnOrg(ccName, orgName.toLowerCase()) as any;
+			await Contract.cli_lifecycle_chaincode_approve(ccReference, ccVersion, orgName.toLowerCase(), channelName, packageId, '1', tls);
+		}
+
+		// Commit on single org
+		await Contract.cli_lifecycle_chaincode_commit(ccReference, ccVersion, orgNames[0].toLowerCase(), channelName, ccp, '1', tls);
+		// }
 	} catch (err) {
 		return Promise.reject(err);
 	}
