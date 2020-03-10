@@ -24,7 +24,8 @@
     "fabric-common": "file:../fabric-common",
     "jsrsasign": "^7.2.2",
     "url": "^0.11.0",
-    "util": "^0.10.3"
+    "util": "^0.10.3",
+    "winston": "^2.4.0"
   },
   "devDependencies": {
     "chai": "^4.1.2",
@@ -32,7 +33,7 @@
     "mocha": "^5.2.0",
     "nyc": "^15.0.0",
     "rewire": "^4.0.1",
-    "sinon": "^6.1.3"
+    "sinon": "^6.3.5"
   },
   "license": "Apache-2.0",
   "licenses": [

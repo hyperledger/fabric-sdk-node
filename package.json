@@ -78,7 +78,7 @@
     "ts-node": "^8.6.2",
     "tslint": "5.19.0",
     "typescript": "^3.8.2",
-    "winston": "^2.2.0"
+    "winston": "^2.4.0"
   },
   "license": "Apache-2.0",
   "licenses": [

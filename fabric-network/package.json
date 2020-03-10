@@ -30,7 +30,8 @@
     "fabric-common": "file:../fabric-common",
     "fs-extra": "^8.1.0",
     "long": "^4.0.0",
-    "nano": "^8.1.0"
+    "nano": "^8.1.0",
+    "winston": "^2.4.0"
   },
   "devDependencies": {
     "@types/chai": "^4.2.0",
@@ -41,7 +42,7 @@
     "nyc": "^15.0.0",
     "rewire": "^4.0.1",
     "rimraf": "^2.6.2",
-    "sinon": "^5.0.7"
+    "sinon": "^6.3.5"
   },
   "nyc": {
     "exclude": [
