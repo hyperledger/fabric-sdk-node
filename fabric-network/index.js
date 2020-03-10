@@ -261,8 +261,19 @@
  */
 
 /**
- * @typedef {EventInfo} Network~BlockEvent
+ * @typedef {object} Network~BlockEvent
  * @memberof module:fabric-network
+ * @property {Long} blockNumber The number of the block this event represents.
+ * @property {('filtered'|'full'|'private')} type Type of block event. The type will dictate the actual implementation
+ * sub-type for this event.
+ * @see module:fabric-network.Network~FilteredBlockEvent
+ */
+
+/**
+ * @typedef {module:fabric-network.Network~BlockEvent} Network~FilteredBlockEvent
+ * @memberof module:fabric-network
+ * @property {"filtered"} type Type of block event.
+ * @property {FilteredBlock} blockData The raw filtered block data.
  */
 
 /**
@@ -333,10 +344,17 @@
  * @returns {module:fabric-network.Network~BlockListener} The added listener.
  * @example
  * const listener: BlockListener = async (event) => {
- *     // Handle block event, then (optionally) remove myself as a listener
- *     network.removeBlockListener(listener);
+ *     // Handle block event
+ *
+ *     // Listener may remove itself if desired
+ *     if (event.blockNumber === endBlock) {
+ *         network.removeBlockListener(listener);
+ *     }
  * }
- * await network.addBlockListener(listener);
+ * const options: ListenerOptions = {
+ *     startBlock: 1
+ * };
+ * await network.addBlockListener(listener, options);
  */
 
 /**
@@ -344,6 +362,14 @@
  * @method Network#removeBlockListener
  * @memberof module:fabric-network
  * @param listener {module:fabric-network.Network~BlockListener} A block listener callback function.
+ */
+
+/**
+ * A callback function that will be invoked when either a peer communication error occurs or a transaction commit event
+ * is received. Only one of the two arguments will have a value for any given invocation.
+ * @callback Network~BlockListener
+ * @memberof module:fabric-network
+ * @param {module:fabric-network.Network~BlockEvent} event A block event.
  */
 
 

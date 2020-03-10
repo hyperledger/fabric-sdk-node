@@ -4,7 +4,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { EventInfo } from 'fabric-common';
+import { FilteredBlock } from 'fabric-common';
+import Long = require('long');
 
-export type BlockEvent = EventInfo;
+export interface BlockEvent {
+	type: string;
+	blockNumber: Long;
+}
+
+export interface FilteredBlockEvent extends BlockEvent {
+	type: 'filtered';
+	blockData: FilteredBlock;
+}
+
 export type BlockListener = (event: BlockEvent) => Promise<void>;

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { BlockEvent, BlockListener } from './blocklistener';
+import { BlockEvent, BlockListener, FilteredBlockEvent } from './blocklistener';
 import { OrderedBlockQueue } from './orderedblockqueue';
 import { AsyncNotifier } from './asyncnotifier';
 import { EventServiceManager } from './eventservicemanager';
@@ -16,6 +16,7 @@ import {
 	EventService
 } from 'fabric-common';
 import Long = require('long');
+import util = require('util');
 
 import * as Logger from '../../logger';
 const logger = Logger.getLogger('BlockEventSource');
@@ -117,10 +118,24 @@ export class BlockEventSource {
 		}
 	}
 
-	private onBlockEvent(event: EventInfo) {
-		this.blockQueue.addBlock(event!);
+	private onBlockEvent(eventInfo: EventInfo) {
+		const blockEvent = this.newBlockEvent(eventInfo);
+		this.blockQueue.addBlock(blockEvent);
 		if (this.blockQueue.size() > 0) {
 			this.asyncNotifier.notify();
+		}
+	}
+
+	private newBlockEvent(eventInfo: EventInfo): BlockEvent {
+		if (eventInfo.filteredBlock) {
+			const blockEvent: FilteredBlockEvent = {
+				type: 'filtered',
+				blockNumber: eventInfo.blockNumber,
+				blockData: eventInfo.filteredBlock
+			};
+			return blockEvent;
+		} else {
+			throw new Error('Unexpected block event info: ' + util.inspect(eventInfo));
 		}
 	}
 

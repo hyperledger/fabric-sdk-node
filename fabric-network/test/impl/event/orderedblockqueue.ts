@@ -22,7 +22,7 @@ describe('OrderedBlockQueue', () => {
 
 	function newBlock(blockNumber: number): BlockEvent {
 		return {
-			eventService: null,
+			type: 'filtered',
 			blockNumber: Long.fromNumber(blockNumber)
 		};
 	}
