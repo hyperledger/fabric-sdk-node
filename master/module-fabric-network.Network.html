@@ -231,7 +231,7 @@ gateway's <a href="module-fabric-network.Gateway.html#getNetwork">getNetwork</a>
             <td class="type">
             
                 
-<span class="param-type">module:fabric-network.Network~BlockListener</span>
+<span class="param-type"><a href="module-fabric-network.Network.html#~BlockListener">module:fabric-network.Network~BlockListener</a></span>
 
 
 
@@ -359,7 +359,7 @@ gateway's <a href="module-fabric-network.Gateway.html#getNetwork">getNetwork</a>
     </dt>
     <dd>
         
-<span class="param-type">module:fabric-network.Network~BlockListener</span>
+<span class="param-type"><a href="module-fabric-network.Network.html#~BlockListener">module:fabric-network.Network~BlockListener</a></span>
 
 
 
@@ -373,10 +373,17 @@ gateway's <a href="module-fabric-network.Gateway.html#getNetwork">getNetwork</a>
         <h5>Example</h5>
         
     <pre class="sunlight-highlight-javascript">const listener: BlockListener = async (event) =&gt; {
-    // Handle block event, then (optionally) remove myself as a listener
-    network.removeBlockListener(listener);
+    // Handle block event
+
+    // Listener may remove itself if desired
+    if (event.blockNumber === endBlock) {
+        network.removeBlockListener(listener);
+    }
 }
-await network.addBlockListener(listener);</pre>
+const options: ListenerOptions = {
+    startBlock: 1
+};
+await network.addBlockListener(listener, options);</pre>
 
 
     
@@ -1083,7 +1090,7 @@ await network.addCommitListener(listener, peers, transactionId);</pre>
             <td class="type">
             
                 
-<span class="param-type">module:fabric-network.Network~BlockListener</span>
+<span class="param-type"><a href="module-fabric-network.Network.html#~BlockListener">module:fabric-network.Network~BlockListener</a></span>
 
 
 
@@ -1308,12 +1315,220 @@ await network.addCommitListener(listener, peers, transactionId);</pre>
         <ul>
             <li>
                 
-<span class="param-type"><a href="global.html#EventInfo">EventInfo</a></span>
+<span class="param-type">object</span>
 
 
 
             </li>
         </ul>
+    
+
+    
+<dl class="details">
+    
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    <dl>
+
+<table class="props table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>blockNumber</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Long</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The number of the block this event represents.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>type</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">'filtered'</span>
+|
+
+<span class="param-type">'full'</span>
+|
+
+<span class="param-type">'private'</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Type of block event. The type will dictate the actual implementation
+sub-type for this event.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+</dl>
+
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+	<dt class="tag-see method-doc-label method-doc-details-label">See:</dt>
+	<dd class="tag-see">
+		<ul>
+			<li><a href="module-fabric-network.Network.html#~FilteredBlockEvent">module:fabric-network.Network~FilteredBlockEvent</a></li>
+			</ul>
+	</dd>
+	
+
+	
+</dl>
+
+
+    
+</dd>
+
+            
+                
+<hr>
+<dt>
+    <h4 class="name" id="~BlockListener"><span class="type-signature"></span>BlockListener(event)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        A callback function that will be invoked when either a peer communication error occurs or a transaction commit event
+is received. Only one of the two arguments will have a value for any given invocation.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>event</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-fabric-network.Network.html#~BlockEvent">module:fabric-network.Network~BlockEvent</a></span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A block event.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
     
 
     
@@ -1355,6 +1570,18 @@ await network.addCommitListener(listener, peers, transactionId);</pre>
 	
 </dl>
 
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
 
     
 </dd>
@@ -1926,6 +2153,150 @@ without duplication.
             
                 
 <hr>
+<dt class="name" id="~FilteredBlockEvent">
+    <h4 id="~FilteredBlockEvent">FilteredBlockEvent</h4>
+
+    
+</dt>
+<dd>
+    
+
+    
+        <h5>Type:</h5>
+        <ul>
+            <li>
+                
+<span class="param-type"><a href="module-fabric-network.Network.html#~BlockEvent">module:fabric-network.Network~BlockEvent</a></span>
+
+
+
+            </li>
+        </ul>
+    
+
+    
+<dl class="details">
+    
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    <dl>
+
+<table class="props table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>type</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">"filtered"</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Type of block event.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>blockData</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">FilteredBlock</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The raw filtered block data.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+</dl>
+
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+</dd>
+
+            
+                
+<hr>
 <dt class="name" id="~ListenerOptions">
     <h4 id="~ListenerOptions">ListenerOptions</h4>
 
@@ -2097,7 +2468,7 @@ without duplication.
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a>
 	
-		on 2020-03-10T16:25:36+00:00
+		on 2020-03-10T17:19:56+00:00
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>
