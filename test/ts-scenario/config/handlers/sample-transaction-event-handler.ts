@@ -82,11 +82,11 @@ class SampleTransactionEventHandler implements TxEventHandler {
 	}
 
 	private eventCallback(error?: CommitError, event?: CommitEvent) {
-		if (event && event.status !== 'VALID') {
-			return this.fail(new Error(event.status));
+		if (event && event.getStatus() !== 'VALID') {
+			return this.fail(new Error(event.getStatus()));
 		}
 
-		const peer = error?.peer || event!.peer;
+		const peer = error?.peer || event!.getPeer();
 		this.unrespondedPeers.delete(peer);
 
 		if (this.unrespondedPeers.size === 0) {

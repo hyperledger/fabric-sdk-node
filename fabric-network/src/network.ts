@@ -8,8 +8,7 @@
 import Contract = require('./contract');
 import { Channel, DiscoveryService, Endorser } from 'fabric-common';
 import { BlockEventSource } from './impl/event/blockeventsource';
-import { BlockListener } from './impl/event/blocklistener';
-import { CommitListener } from './impl/event/commitlistener';
+import { BlockListener, CommitListener, ListenerOptions } from './events';
 import { CommitListenerSession } from './impl/event/commitlistenersession';
 import { EventServiceManager } from './impl/event/eventservicemanager';
 import { IsolatedBlockListenerSession } from './impl/event/isolatedblocklistenersession';
@@ -52,10 +51,6 @@ export interface Network {
 	removeCommitListener(listener: CommitListener): void;
 	addBlockListener(listener: BlockListener, options?: ListenerOptions): Promise<BlockListener>;
 	removeBlockListener(listener: BlockListener): void;
-}
-
-export interface ListenerOptions {
-	startBlock?: number | string | Long;
 }
 
 export class NetworkImpl implements Network {

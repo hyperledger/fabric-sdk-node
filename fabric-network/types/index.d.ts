@@ -7,12 +7,11 @@
 /* tslint:disable:max-classes-per-file */
 
 import { Wallet } from '../lib/impl/wallet/wallet';
-import { CommitListener } from '../lib/impl/event/commitlistener';
-import { ContractListener } from '../lib/impl/event/contractlistener';
+import { ContractListener } from '../lib/events';
 import { Identity } from '../lib/impl/wallet/identity';
 import { QueryHandlerFactory } from '../lib/impl/query/queryhandler';
 import { Network } from '../lib/network';
-import { ChaincodeEvent, Channel, Client, Endorser, EventService, IdentityContext, ProposalResponse, User } from 'fabric-common';
+import { Client, Endorser, EventService, IdentityContext } from 'fabric-common';
 
 export { Wallet };
 export { Wallets } from '../lib/impl/wallet/wallets';
@@ -23,11 +22,7 @@ export { IdentityProvider } from '../lib/impl/wallet/identityprovider';
 export { IdentityProviderRegistry } from '../lib/impl/wallet/identityproviderregistry';
 export { HsmOptions, HsmX509Provider, HsmX509Identity } from '../lib/impl/wallet/hsmx509identity';
 export { X509Identity } from '../lib/impl/wallet/x509identity';
-export { CommitEvent, CommitError, CommitListener } from '../lib/impl/event/commitlistener';
-export { BlockEvent, BlockListener } from '../lib/impl/event/blocklistener';
-export { ContractListener };
-export { ContractEvent } from '../lib/impl/event/contractlistener';
-export { ListenerOptions } from '../lib/network';
+export * from '../lib/events';
 export { FabricError } from '../lib/errors/fabricerror';
 export { TimeoutError } from '../lib/errors/timeouterror';
 export { QueryHandlerFactory };

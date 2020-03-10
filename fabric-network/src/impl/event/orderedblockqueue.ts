@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { BlockEvent } from './blocklistener';
+import { BlockEvent } from '../../events';
 import Long = require('long');
 
 export class OrderedBlockQueue {
@@ -16,7 +16,7 @@ export class OrderedBlockQueue {
 	}
 
 	addBlock(event: BlockEvent) {
-		const blockNumber = event.blockNumber;
+		const blockNumber = event.getBlockNumber();
 		if (!this.isNewBlockNumber(blockNumber)) {
 			return;
 		}

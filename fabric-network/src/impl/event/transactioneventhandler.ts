@@ -8,7 +8,7 @@ import { TimeoutError } from '../../errors/timeouterror';
 import { TransactionEventStrategy } from './transactioneventstrategy';
 import { Network } from '../../network';
 import { Endorser } from 'fabric-common';
-import { CommitError, CommitEvent, CommitListener } from './commitlistener';
+import { CommitError, CommitEvent, CommitListener } from '../../events';
 
 import * as Logger from '../../logger';
 const logger = Logger.getLogger('TransactionEventHandler');
@@ -119,12 +119,12 @@ export class TransactionEventHandler implements TxEventHandler {
 	}
 
 	private eventCallback(error?: CommitError, event?: CommitEvent) {
-		if (event && event.status !== 'VALID') {
-			const message = `Commit of transaction ${this.transactionId} failed on peer ${event.peer.name} with status ${event.status}`;
+		if (event && event.getStatus() !== 'VALID') {
+			const message = `Commit of transaction ${this.transactionId} failed on peer ${event.getPeer().name} with status ${event.getStatus()}`;
 			this.strategyFail(new Error(message));
 		}
 
-		const peer = error?.peer || event!.peer;
+		const peer = error?.peer || event!.getPeer();
 		if (!this.unrespondedPeers.delete(peer)) {
 			// Already seen a response from this peer
 			return;
