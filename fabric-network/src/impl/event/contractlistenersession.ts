@@ -6,7 +6,7 @@
 
 import * as Logger from '../../logger';
 import { Network } from '../../network';
-import { BlockEvent, BlockListener } from './blocklistener';
+import { BlockListener, FilteredBlockEvent, BlockEvent } from './blocklistener';
 import { ContractEvent, ContractListener } from './contractlistener';
 import { ListenerSession } from './listenersession';
 // @ts-ignore no implicit any
@@ -23,7 +23,7 @@ export class ContractListenerSession implements ListenerSession {
 		this.listener = listener;
 		this.chaincodeId = chaincodeId;
 		this.network = network;
-		this.blockListener = (blockEvent: BlockEvent) => this.getContractEventsforFilteredBlock(blockEvent);
+		this.blockListener = (blockEvent: BlockEvent) => this.onBlockEvent(blockEvent);
 	}
 
 	public async start() {
@@ -34,13 +34,21 @@ export class ContractListenerSession implements ListenerSession {
 		this.network.removeBlockListener(this.blockListener);
 	}
 
-	private async getContractEventsforFilteredBlock(blockEvent: BlockEvent) {
+	private async onBlockEvent(blockEvent: BlockEvent): Promise<void> {
+		if (blockEvent.type === 'filtered') {
+			await this.getContractEventsforFilteredBlock(blockEvent as FilteredBlockEvent);
+		} else {
+			throw new Error(`Unexpected block event type: ${blockEvent.type}`);
+		}
+	}
+
+	private async getContractEventsforFilteredBlock(blockEvent: FilteredBlockEvent) {
 
 		// For filtered blocks
-		if (blockEvent.filteredBlock && blockEvent.filteredBlock.filtered_transactions) {
+		if (blockEvent.blockData.filtered_transactions) {
 			// const blockNumber: string = blockEvent.filteredBlock.number;
 
-			for (const filteredTransaction of blockEvent.filteredBlock.filtered_transactions) {
+			for (const filteredTransaction of blockEvent.blockData.filtered_transactions) {
 
 				// const transactionId: string = filteredTransaction.txid;
 				// const transactionValidationCode: string = this.getTransactionValidationCode(filteredTransaction);
