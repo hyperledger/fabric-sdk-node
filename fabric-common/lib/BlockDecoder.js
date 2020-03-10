@@ -25,7 +25,7 @@ const logger = utils.getLogger('BlockDecoder.js');
  *
  * @class
  */
-const BlockDecoder = class {
+class BlockDecoder {
 	/**
 	 * An object of a fully decoded protobuf message "Block".
 	 * <br><br>
@@ -564,7 +564,7 @@ payload -- {}
 
 		return processed_transaction;
 	}
-};
+}
 
 function decodeBlockHeader(proto_block_header) {
 	const block_header = {};

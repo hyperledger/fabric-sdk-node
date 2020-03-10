@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { Contract, Gateway, Network, BlockEvent, BlockListener } from 'fabric-network';
+import { BlockEvent, BlockListener, Contract, ContractEvent, ContractListener, Gateway, Network } from 'fabric-network';
 import { Constants } from '../constants';
 import * as GatewayHelper from './gateway';
 import * as BaseUtils from './utility/baseUtils';
@@ -41,35 +41,37 @@ export async function createContractListener(gatewayName: string, channelName: s
 		stateStore.set(Constants.LISTENERS, listeners);
 	}
 
-	// Create the listener
-	const listener = await (contract as any).addContractListener(eventName, (err: Error, ...args: any[]) => { // TODO: remove cast
-		if (err) {
-			BaseUtils.logMsg('-> Detected a contract event error', err);
-			throw err;
-		}
+	const contractListener: ContractListener = async (event: ContractEvent) => {
 		BaseUtils.logMsg(`-> Received a contract event for listener [${listenerName}] of type ${eventName}`);
 
-		if (!filtered) {
-			const [event]: any = args as any;
-			if (event && Object.prototype.hasOwnProperty.call(event, 'payload')) {
-				BaseUtils.checkString(event.payload.toString('utf8'), 'content', true);
-			}
+		if (event.eventName !== eventName) {
+			return;
 		}
+
+		// TODO: support for full blocks
+		// if (!filtered) {
+		// 	const [event]: any = args as any;
+		// 	if (event && Object.prototype.hasOwnProperty.call(event, 'payload')) {
+		// 		BaseUtils.checkString(event.payload.toString('utf8'), 'content', true);
+		// 	}
+		// }
 
 		const tlisteners: any = stateStore.get(Constants.LISTENERS);
 		if (tlisteners) {
 			const listenerUpdate: any = tlisteners.get(listenerName);
 			if (listenerUpdate) {
-				listenerUpdate.payloads.push(args);
+				listenerUpdate.payloads.push(event);
 				listenerUpdate.calls = listenerUpdate.payloads.length;
 			}
 		}
+	};
 
-		return Promise.resolve();
-	}, {replay, filtered});
+	// Create the listener
+	await contract.addContractListener(contractListener);
 
 	// Roll into a listener object to store
-	listenerObject.listener = listener;
+	listenerObject.listener = contractListener;
+	listenerObject.remove = () => contract.removeContractListener(contractListener);
 	listeners.set(listenerName, listenerObject);
 	stateStore.set(Constants.LISTENERS, listeners);
 }
@@ -246,11 +248,6 @@ export function checkTransactionListenerDetails(listenerName: string, listenerTy
 
 export function unregisterListener(listenerName: string) {
 	const listenerObject = getListenerObject(listenerName);
-	if (typeof listenerObject.remove === 'function') {
-		listenerObject.remove();
-	} else {
-		const listener = listenerObject.listener;
-		listener.unregister();
-	}
+	listenerObject.remove();
 	listenerObject.active = false;
 }

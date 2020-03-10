@@ -21,12 +21,6 @@ const Contract = rewire('../lib/contract');
 const Gateway = require('../lib/gateway');
 const {NetworkImpl: Network} = require('../lib/network');
 const Transaction = require('../lib/transaction');
-class FakeListener {
-	constructor(network, listenerName) {
-		this.listenerName = listenerName;
-	}
-	register() {}
-}
 
 describe('Contract', () => {
 	const chaincodeId = 'CHAINCODE_ID';
@@ -69,7 +63,6 @@ describe('Contract', () => {
 		endorsement = sinon.createStubInstance(Endorsement);
 		endorsement.buildProposalInterest.returns('interest');
 
-		Contract.__set__('ContractEventListener', FakeListener);
 		contract = new Contract(network, chaincodeId, namespace, collections);
 	});
 
@@ -124,26 +117,6 @@ describe('Contract', () => {
 			contract.createTransaction = sinon.stub().returns(transaction);
 			const result = await contract.evaluateTransaction('name', ...args);
 			result.should.equal('result');
-		});
-	});
-
-
-	describe('#addContractListener', () => {
-		it('should create if no options', async () => {
-			const listener = await contract.addContractListener('testEventName', () => {});
-			expect(listener).to.be.instanceof(FakeListener);
-			expect(network.oldListeners.has(listener)).to.be.true;
-		});
-		it('should create if options', async () => {
-			const listener = await contract.addContractListener('testEventName', () => {}, {something: 'something'});
-			expect(listener).to.be.instanceof(FakeListener);
-			expect(network.oldListeners.has(listener)).to.be.true;
-		});
-
-		it('should create if event service', async () => {
-			const listener = await contract.addContractListener('testEventName', () => {}, null, 'eventService');
-			expect(listener).to.be.instanceof(FakeListener);
-			expect(network.oldListeners.has(listener)).to.be.true;
 		});
 	});
 

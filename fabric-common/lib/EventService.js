@@ -1081,13 +1081,12 @@ class EventService extends ServiceAction {
 								logger.debug('%s - full block chaincode_event %s', method, chaincode_event);
 
 								const txStatusCodes = full_block.metadata.metadata[fabprotos.common.BlockMetadataIndex.TRANSACTIONS_FILTER];
-								const channelHeader = full_block.data.data[index].payload.header.channel_header;
 								const val_code = txStatusCodes[index];
 
 								this._queueChaincodeEvent(
 									chaincode_event,
 									full_block.header.number,
-									channelHeader.tx_id,
+									channel_header.tx_id,
 									val_code,
 									all_events);
 							}

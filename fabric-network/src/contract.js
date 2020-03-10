@@ -7,8 +7,8 @@
 'use strict';
 
 const Transaction = require('./transaction');
-const ContractEventListener = require('./impl/event/contracteventlistener');
-
+const {ContractListenerSession} = require('./impl/event/contractlistenersession');
+const ListenerSession = require('./impl/event/listenersession');
 const logger = require('./logger').getLogger('Contract');
 const util = require('util');
 
@@ -60,6 +60,7 @@ class Contract {
 		this.gateway = network.gateway;
 		this.namespace = namespace;
 		this.discoveryService = null;
+		this.contractListeners = new Map();
 	}
 
 	/**
@@ -114,29 +115,16 @@ class Contract {
 		return this.createTransaction(name).evaluate(...args);
 	}
 
-	/**
-	 * Create a commit event listener for this transaction.
-	 * @param {Function} callback - This callback will be triggered when
-	 * a transaction commit event is emitted. It takes parameters
-	 * of Error, Long, ChaincodeEvent[].
-	 * NOTE: All contract events contained within the block that match the
-	 * eventName will be provided at one time to the callback.
-	 * @param {module:fabric-network.Network~EventListenerOptions} [options] - Optional. Options on
-	 * registrations allowing start and end block numbers and an application event checkpointer
-	 * @param {EventService} [eventService] - Optional. Used to override the event service selection
-	 * @returns {module:fabric-network~ContractEventListener}
-	 * @async
-	 * @private
-	 */
-	async addContractListener(eventName, callback, options = {}, eventService) {
-		const listener = new ContractEventListener(this, eventName, callback, options);
-		if (eventService) {
-			listener.eventService = eventService;
-		}
-		this.network.saveListener(listener);
-		await listener.register();
+	// TODO: fix comment above
+	async addContractListener(listener) {
+		const sessionSupplier = () => new ContractListenerSession(listener, this.chaincodeId, this.network);
+		const contractListener = await ListenerSession.addListener(listener, this.contractListeners, sessionSupplier);
+		return contractListener;
+	}
 
-		return listener;
+	// TODO: add comment above
+	removeContractListener(listener) {
+		ListenerSession.removeListener(listener, this.contractListeners);
 	}
 
 	/**
