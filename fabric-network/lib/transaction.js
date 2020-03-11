@@ -7,6 +7,7 @@
 'use strict';
 
 const Query = require('fabric-network/lib/impl/query/query');
+const FabricConstants = require('fabric-client/lib/Constants');
 
 const logger = require('fabric-network/lib/logger').getLogger('Transaction');
 const util = require('util');
@@ -108,6 +109,26 @@ class Transaction {
 	 */
 	setEndorsingPeers(peers) {
 		this._endorsingPeers = peers;
+		this._endorsingOrgs = null;
+		return this;
+	}
+
+    /**
+	 * Set the organizations that should be used for endorsement when this
+	 * transaction is submitted to the ledger.
+	 * Peers that are in the organizations will be used for the endorsement.
+	 * This will override the setEndorsingPeers if previously called. Setting
+	 * the endorsing organizations will not override discovery, however it will
+	 * filter the peers provided by discovery to be those in these organizatons.
+	 * If discovery is not used then this will target all endorsing peers in each of the
+	 * specified organizations. Use setEndorsingPeers instead when not using discovery if you
+	 * don't want all peers targetted in an organization.
+	 * @param {...string} orgs - Endorsing organizations.
+	 * @returns {module:fabric-network.Transaction} This object, to allow function chaining.
+	 */
+	setEndorsingOrganizations(...orgs) {
+		this._endorsingOrgs = orgs;
+		this._endorsingPeers = null;
 		return this;
 	}
 
@@ -144,6 +165,12 @@ class Transaction {
 		const request = this._buildRequest(args);
 		if (this._endorsingPeers) {
 			request.targets = this._endorsingPeers;
+		} else if (this._endorsingOrgs) {
+			if (network._isDiscoveryEnabled()) {
+				request.requiredOrgs = this._endorsingOrgs;
+			} else {
+				request.targets = this._getEndorsingPeersForOrgs(channel);
+			}
 		}
 
 		const commitTimeout = options.commitTimeout * 1000; // in ms
@@ -250,6 +277,21 @@ class Transaction {
 		}
 
 		return {validResponses, invalidResponses: errorResponses};
+	}
+
+	/**
+	 * Get all endorsring peers for the specific mspids on the specified channel
+	 * @param {module:fabric-client.Channel} channel
+	 * @returns {module:fabric-client.Channel.ChannelPeer[]} the filtered endorsing peers
+	 * @private
+	 */
+	_getEndorsingPeersForOrgs(channel) {
+        const channelPeers = channel.getChannelPeers();
+        const filteredPeers = channelPeers.filter((channelPeer) => {
+			return channelPeer.isInRole(FabricConstants.NetworkConfig.ENDORSING_PEER_ROLE) &&
+				this._endorsingOrgs.some((org) => channelPeer.isInOrg(org));
+		});
+		return filteredPeers;
 	}
 
 	/**

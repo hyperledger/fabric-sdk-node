@@ -87,7 +87,9 @@ describe('Network', () => {
 
 		mockGateway = sinon.createStubInstance(Gateway);
 		mockGateway.getOptions.returns({
-			useDiscovery: false,
+			discovery: {
+				enabled: false
+			},
 			eventHandlerOptions: {
 				commitTimeout: 300,
 				strategy: EventStrategies.MSPID_SCOPE_ALLFORTX
@@ -128,12 +130,14 @@ describe('Network', () => {
 		it('should initialize the network using the first peer', async () => {
 			mockChannel.initialize.resolves();
 			await network._initializeInternalChannel({enabled:false, asLocalhost: false});
+			network._isDiscoveryEnabled().should.equal(false);
 			sinon.assert.calledOnce(mockChannel.initialize);
 		});
 
 		it('should initialize the network using the first peer with discovery', async () => {
 			mockChannel.initialize.resolves();
 			await network._initializeInternalChannel({enabled:true});
+			network._isDiscoveryEnabled().should.equal(true);
 			sinon.assert.calledOnce(mockChannel.initialize);
 		});
 
