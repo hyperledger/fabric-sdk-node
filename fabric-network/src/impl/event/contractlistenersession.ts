@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { BlockEvent, BlockListener, ContractEvent, ContractListener } from '../../events';
+import { BlockEvent, BlockListener, ContractEvent, ContractListener, ListenerOptions } from '../../events';
 import * as Logger from '../../logger';
 import { Network } from '../../network';
 import { ListenerSession } from './listenersession';
@@ -15,16 +15,18 @@ export class ContractListenerSession implements ListenerSession {
 	private chaincodeId: string;
 	private network: Network;
 	private blockListener: BlockListener;
+	private options: ListenerOptions | undefined;
 
-	constructor(listener: ContractListener, chaincodeId: string, network: Network) {
+	constructor(listener: ContractListener, chaincodeId: string, network: Network, options?: ListenerOptions) {
 		this.listener = listener;
 		this.chaincodeId = chaincodeId;
 		this.network = network;
 		this.blockListener = (blockEvent: BlockEvent) => this.onBlockEvent(blockEvent);
+		this.options = options;
 	}
 
 	public async start() {
-		await this.network.addBlockListener(this.blockListener);
+		await this.network.addBlockListener(this.blockListener, this.options);
 	}
 
 	public close() {

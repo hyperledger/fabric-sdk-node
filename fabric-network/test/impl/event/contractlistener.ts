@@ -11,7 +11,7 @@ import Long = require('long');
 
 import { Channel, Client, Endorser, Eventer, EventInfo, FilteredBlock, FilteredTransaction, IdentityContext } from 'fabric-common';
 import * as protos from 'fabric-protos';
-import { BlockEvent, ContractEvent, ContractListener } from '../../../src/events';
+import { BlockEvent, ContractEvent, ContractListener, ListenerOptions } from '../../../src/events';
 import { Network, NetworkImpl } from '../../../src/network';
 import * as testUtils from '../../testutils';
 import { StubEventService } from './stubeventservice';
@@ -187,6 +187,7 @@ describe('contract event listener', () => {
 		eventService.sendEvent(secondEvent);
 		const actual = await listener.completePromise;
 
+		expect(actual.length).to.equal(1);
 		expect(actual[0].getChaincodeId()).to.equal(chaincodeID);
 		expect(actual[0].getEventName()).to.equal(eventName);
 	});
@@ -233,6 +234,28 @@ describe('contract event listener', () => {
 
 		expect(actual[1].getChaincodeId()).to.equal(chaincodeID);
 		expect(actual[1].getEventName()).to.equal(eventName);
+	});
+
+	it('replay contract listener does not receive events earlier than start block', async () => {
+		listener = testUtils.newAsyncListener<ContractEvent>(1);
+
+		const event1 = newEvent(1);
+		addTransaction(event1, newFilteredTransaction());
+		const event2 = newEvent(2);
+		addTransaction(event2, newFilteredTransaction());
+
+		const options: ListenerOptions = {
+			startBlock: 2
+		};
+
+		await contract.addContractListener(listener, options);
+		eventService.sendEvent(event1);
+		eventService.sendEvent(event2);
+		const actual = await listener.completePromise;
+
+		expect(actual.length).to.equal(1);
+		expect(actual[0].getChaincodeId()).to.equal(chaincodeID);
+		expect(actual[0].getEventName()).to.equal(eventName);
 	});
 
 });

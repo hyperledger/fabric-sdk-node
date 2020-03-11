@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { BlockEvent, BlockListener, Contract, ContractEvent, ContractListener, Gateway, Network } from 'fabric-network';
+import { BlockEvent, BlockListener, Contract, ContractEvent, ContractListener, Gateway, Network, ListenerOptions } from 'fabric-network';
 import { Constants } from '../constants';
 import * as GatewayHelper from './gateway';
 import * as BaseUtils from './utility/baseUtils';
@@ -12,12 +12,9 @@ import { StateStore } from './utility/stateStore';
 
 const stateStore: StateStore = StateStore.getInstance();
 
-export async function createContractListener(gatewayName: string, channelName: string, ccName: string, eventName: string, listenerName: string, filtered: boolean, replay: boolean): Promise<void> {
+export async function createContractListener(gatewayName: string, channelName: string, ccName: string, eventName: string, listenerName: string, filtered: boolean, replay: boolean, startBlock?: number): Promise<void> {
 	if (typeof filtered === 'undefined') {
 		filtered = true;
-	}
-	if (typeof replay === 'undefined') {
-		replay = false;
 	}
 
 	const gateways: Map<string, any> = stateStore.get(Constants.GATEWAYS);
@@ -66,8 +63,19 @@ export async function createContractListener(gatewayName: string, channelName: s
 		}
 	};
 
+	let listenerOptions: ListenerOptions = {};
+	if (replay) {
+		// Populate listenerOptions if replay has been specified
+		if (!startBlock) {
+			throw new Error(`For replay tests, please specify a start block to replay events from`);
+		}
+		listenerOptions = {
+			startBlock: startBlock
+		};
+	}
+
 	// Create the listener
-	await contract.addContractListener(contractListener);
+	await contract.addContractListener(contractListener, listenerOptions);
 
 	// Roll into a listener object to store
 	listenerObject.listener = contractListener;
@@ -79,9 +87,6 @@ export async function createContractListener(gatewayName: string, channelName: s
 export async function createBlockListener(gatewayName: string, channelName: string, listenerName: string, filtered: boolean, replay: boolean, startBlock?: number, endBlock?: number): Promise<void> {
 	if (typeof filtered === 'undefined') {
 		filtered = true;
-	}
-	if (typeof replay === 'undefined') {
-		replay = false;
 	}
 
 	const gateways: Map<string, any> = stateStore.get(Constants.GATEWAYS);

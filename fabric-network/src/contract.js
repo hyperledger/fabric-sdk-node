@@ -116,8 +116,8 @@ class Contract {
 	}
 
 	// TODO: fix comment above
-	async addContractListener(listener) {
-		const sessionSupplier = () => new ContractListenerSession(listener, this.chaincodeId, this.network);
+	async addContractListener(listener, options) {
+		const sessionSupplier = () => new ContractListenerSession(listener, this.chaincodeId, this.network, options);
 		const contractListener = await ListenerSession.addListener(listener, this.contractListeners, sessionSupplier);
 		return contractListener;
 	}
