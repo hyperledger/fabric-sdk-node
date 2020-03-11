@@ -21,7 +21,8 @@
   },
   "types": "./types/index.d.ts",
   "dependencies": {
-    "grpc": "1.23.3",
+    "grpc": "1.24.2",
+    "lodash.clone": "4.5.0",
     "jsrsasign": "^7.2.2",
     "url": "^0.11.0",
     "util": "^0.10.3",
