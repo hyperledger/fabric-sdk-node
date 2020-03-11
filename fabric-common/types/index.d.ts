@@ -359,7 +359,8 @@ export interface FilteredTransaction {
 	Data: string;
 	txid: string;
 	type: string;
-	transaction_actions: any[];
+	transaction_actions: any;
+	tx_validation_code: number;
 }
 
 export interface KeyOpts {

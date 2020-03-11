@@ -11,8 +11,7 @@ import Long = require('long');
 
 import { Channel, Client, Endorser, Eventer, EventInfo, FilteredBlock, FilteredTransaction, IdentityContext } from 'fabric-common';
 import * as protos from 'fabric-protos';
-import { BlockEvent } from '../../../src/impl/event/blocklistener';
-import { ContractEvent, ContractListener } from '../../../src/impl/event/contractlistener';
+import { BlockEvent, ContractEvent, ContractListener } from '../../../src/events';
 import { Network, NetworkImpl } from '../../../src/network';
 import * as testUtils from '../../testutils';
 import { StubEventService } from './stubeventservice';
@@ -113,13 +112,6 @@ describe('contract event listener', () => {
 		return chaincodeEvent;
 	}
 
-	// Used to create a new contractEvent for comparison with what listeners return
-	function createContractEvent() {
-		const contractEvent = new ContractEvent(contract.chaincodeId, eventName, undefined);
-		delete (contractEvent as any).payload;
-		return contractEvent;
-	}
-
 	it('add listener returns the listener', async () => {
 		const result = await contract.addContractListener(listener);
 		expect(result).to.equal(listener);
@@ -146,8 +138,8 @@ describe('contract event listener', () => {
 		eventService.sendEvent(event);
 		const actual = await listener.completePromise;
 
-		const expectedContractEvent = createContractEvent();
-		expect(actual[0]).to.include(expectedContractEvent);
+		expect(actual[0].getChaincodeId()).to.equal(chaincodeID);
+		expect(actual[0].getEventName()).to.equal(eventName);
 	});
 
 	it('stops listening for events after the listener has been removed', async () => {
@@ -176,9 +168,11 @@ describe('contract event listener', () => {
 		eventService.sendEvent(event1);
 		const actual = await listener.completePromise;
 
-		const expectedContractEvent = createContractEvent();
-		expect(actual[0]).to.include(expectedContractEvent);
-		expect(actual[1]).to.include(expectedContractEvent);
+		expect(actual[0].getChaincodeId()).to.equal(chaincodeID);
+		expect(actual[0].getEventName()).to.equal(eventName);
+
+		expect(actual[1].getChaincodeId()).to.equal(chaincodeID);
+		expect(actual[1].getEventName()).to.equal(eventName);
 	});
 
 	it('listener only receives events matching its chaincode id', async () => {
@@ -193,8 +187,8 @@ describe('contract event listener', () => {
 		eventService.sendEvent(secondEvent);
 		const actual = await listener.completePromise;
 
-		const expectedContractEvent = createContractEvent();
-		expect(actual[0]).to.include(expectedContractEvent);
+		expect(actual[0].getChaincodeId()).to.equal(chaincodeID);
+		expect(actual[0].getEventName()).to.equal(eventName);
 	});
 
 	it('error thrown by listener does not disrupt other listeners', async () => {
@@ -212,9 +206,11 @@ describe('contract event listener', () => {
 		eventService.sendEvent(event2);
 		const actual = await listener.completePromise;
 
-		const expectedContractEvent = createContractEvent();
-		expect(actual[0]).to.include(expectedContractEvent);
-		expect(actual[1]).to.include(expectedContractEvent);
+		expect(actual[0].getChaincodeId()).to.equal(chaincodeID);
+		expect(actual[0].getEventName()).to.equal(eventName);
+
+		expect(actual[1].getChaincodeId()).to.equal(chaincodeID);
+		expect(actual[1].getEventName()).to.equal(eventName);
 	});
 
 	it('error thrown by listener does not prevent subsequent contract events being processed', async () => {
@@ -232,9 +228,11 @@ describe('contract event listener', () => {
 		eventService.sendEvent(event1);
 		const actual = await listener.completePromise;
 
-		const expectedContractEvent = createContractEvent();
-		expect(actual[0]).to.include(expectedContractEvent);
-		expect(actual[1]).to.include(expectedContractEvent);
+		expect(actual[0].getChaincodeId()).to.equal(chaincodeID);
+		expect(actual[0].getEventName()).to.equal(eventName);
+
+		expect(actual[1].getChaincodeId()).to.equal(chaincodeID);
+		expect(actual[1].getEventName()).to.equal(eventName);
 	});
 
 });

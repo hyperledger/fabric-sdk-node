@@ -9,7 +9,7 @@ import {
 	CommitError,
 	CommitEvent,
 	CommitListener
-} from './commitlistener';
+} from '../../events';
 import { EventServiceManager } from './eventservicemanager';
 import {
 	Endorser,
@@ -19,6 +19,7 @@ import {
 } from 'fabric-common';
 
 import * as Logger from '../../logger';
+import { newCommitEvent } from './filteredevents';
 const logger = Logger.getLogger('CommitListenerSession');
 
 export class CommitListenerSession implements ListenerSession {
@@ -86,16 +87,10 @@ export class CommitListenerSession implements ListenerSession {
 	}
 
 	private registerTransactionListener(eventService: EventService): EventListener {
-		const endorser = this.getEndorserForEventService(eventService);
+		const peer = this.getEndorserForEventService(eventService);
 		const callback: EventCallback = (error, event) => {
-			const commitError = error as CommitError;
-			if (commitError) {
-				commitError.peer = endorser;
-			}
-			const commitEvent = event as CommitEvent;
-			if (commitEvent) {
-				commitEvent.peer = endorser;
-			}
+			const commitError = error ? Object.assign(error, { peer }) : undefined;
+			const commitEvent = event ? newCommitEvent(peer, event) : undefined;
 			this.notifyListener(commitError, commitEvent);
 		};
 
@@ -106,7 +101,7 @@ export class CommitListenerSession implements ListenerSession {
 		return eventService.registerTransactionListener(this.transactionId,	callback, registrationOptions);
 	}
 
-	private notifyListener(commitError: CommitError, commitEvent: CommitEvent) {
+	private notifyListener(commitError?: CommitError, commitEvent?: CommitEvent) {
 		try {
 			this.listener(commitError, commitEvent);
 		} catch (error) {

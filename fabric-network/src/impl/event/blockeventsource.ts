@@ -4,10 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { BlockEvent, BlockListener, FilteredBlockEvent } from './blocklistener';
+import { BlockEvent, BlockListener } from '../../events';
 import { OrderedBlockQueue } from './orderedblockqueue';
 import { AsyncNotifier } from './asyncnotifier';
 import { EventServiceManager } from './eventservicemanager';
+import { newFilteredBlockEvent } from './filteredevents';
 import {
 	EventCallback,
 	EventInfo,
@@ -128,12 +129,7 @@ export class BlockEventSource {
 
 	private newBlockEvent(eventInfo: EventInfo): BlockEvent {
 		if (eventInfo.filteredBlock) {
-			const blockEvent: FilteredBlockEvent = {
-				type: 'filtered',
-				blockNumber: eventInfo.blockNumber,
-				blockData: eventInfo.filteredBlock
-			};
-			return blockEvent;
+			return newFilteredBlockEvent(eventInfo);
 		} else {
 			throw new Error('Unexpected block event info: ' + util.inspect(eventInfo));
 		}

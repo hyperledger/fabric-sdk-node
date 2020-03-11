@@ -22,6 +22,7 @@ import { Network, NetworkImpl } from '../../../src/network';
 import { EventServiceManager } from '../../../src/impl/event/eventservicemanager';
 import Gateway = require('../../../src/gateway');
 import { StubEventService } from './stubeventservice';
+import { CommitEvent } from '../../../src/events';
 
 describe('commit listener', () => {
 	let eventServiceManager: EventServiceManager;
@@ -85,7 +86,9 @@ describe('commit listener', () => {
 		eventService.sendEvent(eventInfo);
 
 		sinon.assert.calledOnce(listener);
-		sinon.assert.calledWithMatch(listener, undefined, eventInfo);
+		sinon.assert.calledWith(listener, undefined, sinon.match((event: CommitEvent) => {
+			return event.getTransactionId() === eventInfo.transactionId;
+		}));
 	});
 
 	it('events include endorser', async () => {
@@ -94,7 +97,9 @@ describe('commit listener', () => {
 		await network.addCommitListener(listener, peers, transactionId);
 		eventService.sendEvent(eventInfo);
 
-		sinon.assert.calledWithMatch(listener, undefined, { peer });
+		sinon.assert.calledWith(listener, undefined, sinon.match((event: CommitEvent) => {
+			return event.getPeer() === peer;
+		}));
 	});
 
 	it('listener receives errors', async () => {

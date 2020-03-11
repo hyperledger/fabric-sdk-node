@@ -5,7 +5,7 @@
  */
 
 import { ListenerSession } from './listenersession';
-import { BlockListener } from './blocklistener';
+import { BlockListener } from '../../events';
 import { BlockEventSource } from './blockeventsource';
 
 export class IsolatedBlockListenerSession implements ListenerSession {

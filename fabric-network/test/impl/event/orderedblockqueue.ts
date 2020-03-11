@@ -5,7 +5,7 @@
  */
 
 import { OrderedBlockQueue } from '../../../src/impl/event/orderedblockqueue';
-import { BlockEvent } from '../../../src/impl/event/blocklistener';
+import { BlockEvent } from '../../../src/events';
 import Long = require('long');
 
 import chai = require('chai');
@@ -22,8 +22,9 @@ describe('OrderedBlockQueue', () => {
 
 	function newBlock(blockNumber: number): BlockEvent {
 		return {
-			type: 'filtered',
-			blockNumber: Long.fromNumber(blockNumber)
+			getType: () => 'filtered',
+			getBlockNumber: () => Long.fromNumber(blockNumber),
+			getTransactionEvents: () => []
 		};
 	}
 
@@ -137,7 +138,7 @@ describe('OrderedBlockQueue', () => {
 		queue.addBlock(block);
 		const result = queue.getNextBlockNumber();
 
-		expect(result?.toString()).to.equal(block.blockNumber.toString());
+		expect(result?.toString()).to.equal(block.getBlockNumber().toString());
 	});
 
 	it('next block number is last retrieved block number plus one', () => {
@@ -147,7 +148,7 @@ describe('OrderedBlockQueue', () => {
 		queue.getNextBlock();
 		const result = queue.getNextBlockNumber();
 
-		const expected = block.blockNumber.add(1).toString();
-		expect(result?.toString()).to.equal(expected);
+		const expected = block.getBlockNumber().add(1);
+		expect(result?.toString()).to.equal(expected.toString());
 	});
 });
