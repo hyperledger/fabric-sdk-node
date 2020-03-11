@@ -82,7 +82,7 @@ class SampleTransactionEventHandler implements TxEventHandler {
 	}
 
 	private eventCallback(error?: CommitError, event?: CommitEvent) {
-		if (event && event.getStatus() !== 'VALID') {
+		if (event && !event.isValid()) {
 			return this.fail(new Error(event.getStatus()));
 		}
 

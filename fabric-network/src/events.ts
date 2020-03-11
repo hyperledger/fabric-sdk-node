@@ -24,6 +24,7 @@ export interface TransactionEvent {
 	getStatus(): string;
 	getBlockEvent(): BlockEvent;
 	getContractEvents(): ContractEvent[];
+	isValid(): boolean;
 }
 
 export interface FilteredTransactionEvent extends TransactionEvent {

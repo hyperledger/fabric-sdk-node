@@ -18,6 +18,7 @@ function getCodeToStatusMap(): { [code: number]: string } {
 }
 
 const codeToStatusMap = getCodeToStatusMap();
+const validStatus = 'VALID';
 
 export function newFilteredBlockEvent(eventInfo: EventInfo): FilteredBlockEvent {
 	let transactionEvents: FilteredTransactionEvent[] | undefined;
@@ -63,7 +64,8 @@ export function newCommitEvent(peer: Endorser, eventInfo: EventInfo): CommitEven
 		getTransactionId: () => transactionId,
 		getStatus: () => eventInfo.status!,
 		getContractEvents: () => getTransactionEvent().getContractEvents(),
-		getTransactionData: () => getTransactionEvent().getTransactionData()
+		getTransactionData: () => getTransactionEvent().getTransactionData(),
+		isValid: () => eventInfo.status === validStatus
 	};
 }
 
@@ -89,7 +91,8 @@ function newFilteredTransactionEvent(blockEvent: FilteredBlockEvent, filteredTra
 		getTransactionId: () => filteredTransaction.txid,
 		getStatus: () => status,
 		getContractEvents: () => getContractEvents(transactionEvent),
-		getTransactionData: () => filteredTransaction
+		getTransactionData: () => filteredTransaction,
+		isValid: () => status === validStatus
 	};
 
 	return transactionEvent;

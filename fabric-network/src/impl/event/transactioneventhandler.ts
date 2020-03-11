@@ -119,7 +119,7 @@ export class TransactionEventHandler implements TxEventHandler {
 	}
 
 	private eventCallback(error?: CommitError, event?: CommitEvent) {
-		if (event && event.getStatus() !== 'VALID') {
+		if (event && !event.isValid()) {
 			const message = `Commit of transaction ${this.transactionId} failed on peer ${event.getPeer().name} with status ${event.getStatus()}`;
 			this.strategyFail(new Error(message));
 		}
