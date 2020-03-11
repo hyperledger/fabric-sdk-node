@@ -88,7 +88,6 @@ class Contract {
 	 * will be evaluated on the endorsing peers and then submitted to the ordering service
 	 * for committing to the ledger.
 	 * This function is equivalent to calling <code>createTransaction(name).submit()</code>.
-	 * @async
      * @param {string} name Transaction function name.
 	 * @param {...string} [args] Transaction function arguments.
 	 * @returns {Buffer} Payload response from the transaction function.
@@ -106,7 +105,6 @@ class Contract {
 	 * the ordering service and hence will not be committed to the ledger.
 	 * This is used for querying the world state.
 	 * This function is equivalent to calling <code>createTransaction(name).evaluate()</code>.
-	 * @async
      * @param {string} name Transaction function name.
      * @param {...string} [args] Transaction function arguments.
      * @returns {Buffer} Payload response from the transaction function.
@@ -115,14 +113,23 @@ class Contract {
 		return this.createTransaction(name).evaluate(...args);
 	}
 
-	// TODO: fix comment above
+	/**
+	 * Add a listener to receive all contract events emitted by the smart contract.
+	 * @param {module:fabric-network.ContractListener} listener A contract listener callback function.
+	 * @param {module:fabric-network.ListenerOptions} [options] Listener options.
+	 * @returns {Promise<module:fabric-network.ContractListener>} The added listener.
+	 */
 	async addContractListener(listener, options) {
 		const sessionSupplier = () => new ContractListenerSession(listener, this.chaincodeId, this.network, options);
 		const contractListener = await ListenerSession.addListener(listener, this.contractListeners, sessionSupplier);
 		return contractListener;
 	}
 
-	// TODO: add comment above
+	/**
+	 * Remove a previously added contract listener.
+	 * @param {module:fabric-network.ContractListener} listener A contract listener callback function.
+	 * @returns {Promise<void>}
+	 */
 	removeContractListener(listener) {
 		ListenerSession.removeListener(listener, this.contractListeners);
 	}

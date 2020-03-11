@@ -87,7 +87,7 @@ describe('commit listener', () => {
 
 		sinon.assert.calledOnce(listener);
 		sinon.assert.calledWith(listener, undefined, sinon.match((event: CommitEvent) => {
-			return event.getTransactionId() === eventInfo.transactionId;
+			return event.transactionId === eventInfo.transactionId;
 		}));
 	});
 
@@ -98,7 +98,7 @@ describe('commit listener', () => {
 		eventService.sendEvent(eventInfo);
 
 		sinon.assert.calledWith(listener, undefined, sinon.match((event: CommitEvent) => {
-			return event.getPeer() === peer;
+			return event.peer === peer;
 		}));
 	});
 

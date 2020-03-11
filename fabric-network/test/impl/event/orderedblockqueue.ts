@@ -22,8 +22,8 @@ describe('OrderedBlockQueue', () => {
 
 	function newBlock(blockNumber: number): BlockEvent {
 		return {
-			getType: () => 'filtered',
-			getBlockNumber: () => Long.fromNumber(blockNumber),
+			type: 'filtered',
+			blockNumber: Long.fromNumber(blockNumber),
 			getTransactionEvents: () => []
 		};
 	}
@@ -138,7 +138,7 @@ describe('OrderedBlockQueue', () => {
 		queue.addBlock(block);
 		const result = queue.getNextBlockNumber();
 
-		expect(result?.toString()).to.equal(block.getBlockNumber().toString());
+		expect(result?.toString()).to.equal(block.blockNumber.toString());
 	});
 
 	it('next block number is last retrieved block number plus one', () => {
@@ -148,7 +148,7 @@ describe('OrderedBlockQueue', () => {
 		queue.getNextBlock();
 		const result = queue.getNextBlockNumber();
 
-		const expected = block.getBlockNumber().add(1);
+		const expected = block.blockNumber.add(1);
 		expect(result?.toString()).to.equal(expected.toString());
 	});
 });

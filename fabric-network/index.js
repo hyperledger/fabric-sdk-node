@@ -226,55 +226,144 @@
 /**
  * A callback function that will be invoked when either a peer communication error occurs or a transaction commit event
  * is received. Only one of the two arguments will have a value for any given invocation.
- * @callback Network~CommitListener
+ * @callback CommitListener
  * @memberof module:fabric-network
- * @param {module:fabric-network.Network~CommitError} [error] Peer communication error.
- * @param {module:fabric-network.Network~CommitEvent} [event] Transaction commit event from a specific peer.
+ * @param {module:fabric-network.CommitError} [error] Peer communication error.
+ * @param {module:fabric-network.CommitEvent} [event] Transaction commit event from a specific peer.
  */
 
 /**
- * @typedef {Error} Network~CommitError
- * @memberof module:fabric-network
- * @property {Endorser} peer The peer that raised this error.
- */
-
-/**
- * @typedef {EventInfo} Network~CommitEvent
+ * @typedef {Error} CommitError
  * @memberof module:fabric-network
  * @property {Endorser} peer The peer that raised this error.
  */
 
 /**
- * A callback function that will be invoked when a block event is received. Block events will be received in order and
- * without duplication.
- * @callback Network~CommitListener
+ * @interface CommitEvent
+ * @implements {module:fabric-network.FilteredTransactionEvent}
+ * @memberof module:fabric-network
+ * @property {Endorser} peer The endorsing peer that produced this event.
+ */
+
+
+/**
+ * A callback function that will be invoked when a block event is received.
+ * @callback BlockListener
  * @memberof module:fabric-network
  * @async
- * @param {module:fabric-network.Network~BlockEvent} event Block event.
+ * @param {module:fabric-network.BlockEvent} event A block event.
  * @returns {Promise<void>}
  */
 
 /**
- * @typedef {object} Network~ListenerOptions
+ * @typedef ListenerOptions
  * @memberof module:fabric-network
  * @property {number | string | Long} startBlock The block number from which events should be received.
  */
 
 /**
- * @typedef {object} Network~BlockEvent
+ * Event representing a block on the ledger.
+ * @interface BlockEvent
  * @memberof module:fabric-network
+ * @see module:fabric-network.FilteredBlockEvent
+ * @property {('filtered'|'full'|'private')} type The type of this block event. The type is based on the type of the
+ * raw event data: filtered, full block or including private data. Each type has its own specialized sub-type,
+ * providing type information and functions specific to the raw event data.
  * @property {Long} blockNumber The number of the block this event represents.
- * @property {('filtered'|'full'|'private')} type Type of block event. The type will dictate the actual implementation
- * sub-type for this event.
- * @see module:fabric-network.Network~FilteredBlockEvent
  */
 
 /**
- * @typedef {module:fabric-network.Network~BlockEvent} Network~FilteredBlockEvent
+ * Get the transactions included in this block.
+ * @method BlockEvent#getTransactionEvents
  * @memberof module:fabric-network
- * @property {"filtered"} type Type of block event.
- * @property {FilteredBlock} blockData The raw filtered block data.
+ * @returns {module:fabric-network.TransactionEvent[]} Transaction events.
  */
+
+
+/**
+ * The type for BlockEvent objects with a type of <code>filtered</code>.
+ * @interface FilteredBlockEvent
+ * @implements {module:fabric-network.BlockEvent}
+ * @memberof module:fabric-network
+ * @property {'filtered'} type The type of this block event.
+ * @property {FilteredBlock} blockData The raw block event protobuf.
+ */
+
+/**
+ * Get the transactions included in this block.
+ * @method FilteredBlockEvent#getTransactionEvents
+ * @memberof module:fabric-network
+ * @returns {module:fabric-network.FilteredTransactionEvent[]} Transaction events.
+ */
+
+
+/**
+ * Event representing a transaction processed within a block.
+ * @interface TransactionEvent
+ * @memberof module:fabric-network
+ * @property {string} transactionId The ID of the transaction this event represents.
+ * @property {string} status The status of this transaction.
+ * @property {boolean} isValid Whether this transaction was successfully committed to the ledger. <code>true</code> if
+ * the transaction was commited; otherwise <code>false</code>. The status will provide a more specific reason why an
+ * invalid transaction was not committed.
+ */
+
+/**
+ * Get the parent block event for this event.
+ * @method TransactionEvent#getBlockEvent
+ * @memberof module:fabric-network
+ * @returns {module:fabric-network.BlockEvent} A block event.
+ */
+
+/**
+ * Get the contract events emitted by this transaction.
+ * @method TransactionEvent#getContractEvents
+ * @memberof module:fabric-network
+ * @returns {module:fabric-network.ContractEvent[]} Contract events.
+ */
+
+
+/**
+ * @interface FilteredTransactionEvent
+ * @implements {module:fabric-network.TransactionEvent}
+ * @memberof module:fabric-network
+ * @property {FilteredTransaction} transactionData The raw transaction event protobuf.
+ */
+
+/**
+ * Get the parent block event for this event.
+ * @method FilteredTransactionEvent#getBlockEvent
+ * @memberof module:fabric-network
+ * @returns {module:fabric-network.FilteredBlockEvent} Transaction event protobuf.
+ */
+
+
+/**
+ * Event representing a contract event emitted by a smart contract.
+ * @interface ContractEvent
+ * @memberof module:fabric-network
+ * @property {string} chaincodeId The chaincode ID of the smart contract that emitted this event.
+ * @property {string} eventName The name of the emitted event.
+ * @property {Buffer} payload The payload data associated with this event by the smart contract.
+ */
+
+/**
+ * Get the parent transaction event of this event.
+ * @method ContractEvent#getTransactionEvent
+ * @memberof module:fabric-network
+ * @returns {module:fabric-network.TransactionEvent} A transaction event.
+ */
+
+
+/**
+ * A callback function that will be invoked when a block event is received.
+ * @callback ContractListener
+ * @memberof module:fabric-network
+ * @async
+ * @param {module:fabric-network.ContractEvent} event Contract event.
+ * @returns {Promise<void>}
+ */
+
 
 /**
  * A Network represents the set of peers in a Fabric network.
@@ -312,10 +401,10 @@
  * Add a listener to receive transaction commit and peer disconnect events for a set of peers.
  * @method Network#addCommitListener
  * @memberof module:fabric-network
- * @param {module:fabric-network.Network~CommitListener} listener A transaction commit listener callback function.
+ * @param {module:fabric-network.CommitListener} listener A transaction commit listener callback function.
  * @param {Endorser[]} peers The peers from which to receive events.
  * @param {string} transactionId A transaction ID.
- * @returns {module:fabric-network.Network~CommitListener} The added listener.
+ * @returns {module:fabric-network.CommitListener} The added listener.
  * @example
  * const listener: CommitListener = (error, event) => {
  *     if (error) {
@@ -332,22 +421,23 @@
  * Remove a previously added transaction commit listener.
  * @method Network#removeCommitListener
  * @memberof module:fabric-network
- * @param {module:fabric-network.Network~CommitListener} listener A transaction commit listener callback function.
+ * @param {module:fabric-network.CommitListener} listener A transaction commit listener callback function.
  */
 
 /**
  * Add a listener to receive block events for this network. Blocks will be received in order and without duplication.
  * @method Network#addBlockListener
  * @memberof module:fabric-network
- * @param {module:fabric-network.Network~BlockListener} listener A block listener callback function.
- * @param {module:fabric-network.Network~ListenerOptions} [options] Listener options.
- * @returns {module:fabric-network.Network~BlockListener} The added listener.
+ * @async
+ * @param {module:fabric-network.BlockListener} listener A block listener callback function.
+ * @param {module:fabric-network.ListenerOptions} [options] Listener options.
+ * @returns {Promise<module:fabric-network.BlockListener>} The added listener.
  * @example
  * const listener: BlockListener = async (event) => {
  *     // Handle block event
  *
  *     // Listener may remove itself if desired
- *     if (event.blockNumber === endBlock) {
+ *     if (event.getBlockNumber().equals(endBlock)) {
  *         network.removeBlockListener(listener);
  *     }
  * }
@@ -361,15 +451,7 @@
  * Remove a previously added block listener.
  * @method Network#removeBlockListener
  * @memberof module:fabric-network
- * @param listener {module:fabric-network.Network~BlockListener} A block listener callback function.
- */
-
-/**
- * A callback function that will be invoked when either a peer communication error occurs or a transaction commit event
- * is received. Only one of the two arguments will have a value for any given invocation.
- * @callback Network~BlockListener
- * @memberof module:fabric-network
- * @param {module:fabric-network.Network~BlockEvent} event A block event.
+ * @param listener {module:fabric-network.BlockListener} A block listener callback function.
  */
 
 

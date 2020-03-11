@@ -44,7 +44,7 @@ export class ContractListenerSession implements ListenerSession {
 	}
 
 	private isMatch(event: ContractEvent): boolean {
-		return event.getChaincodeId() === this.chaincodeId;
+		return event.chaincodeId === this.chaincodeId;
 	}
 
 	private async notifyListener(event: ContractEvent): Promise<void> {
