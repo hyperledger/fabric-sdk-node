@@ -11,7 +11,7 @@ import { ContractListener, ListenerOptions } from '../lib/events';
 import { Identity } from '../lib/impl/wallet/identity';
 import { QueryHandlerFactory } from '../lib/impl/query/queryhandler';
 import { Network } from '../lib/network';
-import { Client, Endorser, EventService, IdentityContext } from 'fabric-common';
+import { Client, Endorser, IdentityContext } from 'fabric-common';
 
 export { Wallet };
 export { Wallets } from '../lib/impl/wallet/wallets';
@@ -90,17 +90,10 @@ export interface TransientMap {
 	[key: string]: Buffer;
 }
 export class Transaction {
-	evaluate(...args: string[]): Promise<Buffer>;
 	getName(): string;
 	setEndorsingPeers(peers: Endorser[]): this;
+	setEndorsingOrganizations(...orgs: string[]): this;
 	setTransient(transientMap: TransientMap): this;
 	submit(...args: string[]): Promise<Buffer>;
-}
-
-export class EventServiceManager {
-	constructor();
-	public getEventService(peer: Endorser): EventService;
-	public getEventServices(peers: Endorser[]): EventService[];
-	public getReplayEventService(peer: Endorser): EventService;
-	public getReplayEventServices(peers: Endorser[]): EventService[];
+	evaluate(...args: string[]): Promise<Buffer>;
 }
