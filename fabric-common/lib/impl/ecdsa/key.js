@@ -104,7 +104,7 @@ module.exports = class ECDSA_KEY extends Key {
 	/**
 	 * Generates a CSR/PKCS#10 certificate signing request for this key
 	 * @param {string} subjectDN The X500Name for the certificate request in LDAP(RFC 2253) format
-	 * @param {Object[]} extensions Additional X.509v3 extensions for the certificate signing request
+	 * @param {Object[]} [extensions] Additional X.509v3 extensions for the certificate signing request
 	 * @returns {string} PEM-encoded PKCS#10 certificate signing request
 	 * @throws Will throw an error if this is not a private key
 	 * @throws Will throw an error if CSR generation fails for any other reason
