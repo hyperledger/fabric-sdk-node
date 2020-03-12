@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Hyperledger Fabric SDK for node.js Class: BlockDecoder</title>
+	<title>Hyperledger Fabric SDK for node.js Interface: CommitEvent</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -93,17 +93,16 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Class: BlockDecoder</h1>
+	<h1 class="page-title">Interface: CommitEvent</h1>
 <section>
 
 <header>
     
         <h2>
-        BlockDecoder
-        </h2>
+            <span class="ancestors"><a href="module-fabric-network.html">fabric-network</a>.</span>
         
-            <div class="class-description">Utility class to convert a protobuf encoded byte array of a Hyperledger Fabric block
-message into a pure Javascript object</div>
+        CommitEvent
+        </h2>
         
     
 </header>
@@ -113,123 +112,16 @@ message into a pure Javascript object</div>
     <div class="container-overview">
     
         
-<hr>
-<dt>
-    <h4 class="name" id="BlockDecoder"><span class="type-signature"></span>new BlockDecoder()</h4>
-    
-    
-</dt>
-<dd>
 
-    
-
-    
-
-    
-
-    
-    
-
-    
+        
 <dl class="details">
     
 
-	
+    <h5 class="subsection-title">Properties:</h5>
 
-	
+    <dl>
 
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-    
-    </div>
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-        <h3 class="subsection-title">Methods</h3>
-
-        <dl>
-            
-<hr>
-<dt>
-    <h4 class="name" id=".decode"><span class="type-signature">&lt;static> </span>decode(block_bytes)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Constructs a JSON object containing all decoded values from the
-protobuf encoded `Block` bytes.
-    </div>
-    
-
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
+<table class="props table table-striped">
     <thead>
     <tr>
         
@@ -251,13 +143,13 @@ protobuf encoded `Block` bytes.
 
         <tr>
             
-                <td class="name"><code>block_bytes</code></td>
+                <td class="name"><code>peer</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Array.&lt;byte></span>
+<span class="param-type"><a href="Endorser.html">Endorser</a></span>
 
 
 
@@ -268,17 +160,14 @@ protobuf encoded `Block` bytes.
 
             
 
-            <td class="description last">The encoded bytes of a Block protobuf message</td>
+            <td class="description last">The endorsing peer that produced this event.</td>
         </tr>
 
     
     </tbody>
 </table>
+</dl>
 
-    
-
-    
-<dl class="details">
     
 
 	
@@ -291,6 +180,13 @@ protobuf encoded `Block` bytes.
 
     
 
+    
+    <dt class="implements">Implements:</dt>
+    <dd class="implements"><ul>
+        
+            <li><a href="module-fabric-network.FilteredTransactionEvent.html">module:fabric-network.FilteredTransactionEvent</a></li>
+        
+    </ul></dd>
     
 
     
@@ -317,158 +213,9 @@ protobuf encoded `Block` bytes.
 </dl>
 
 
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    An object of the Block
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
         
-<span class="param-type"><a href="global.html#Block">Block</a></span>
-
-
-
-    </dd>
-</dl>
-
-
-        
-
     
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id=".decodeBlock"><span class="type-signature">&lt;static> </span>decodeBlock(block_data)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Constructs an object containing all decoded values from the
-protobuf encoded `Block` object
     </div>
-    
-
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>block_data</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Object</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">an object that represents the protobuf common.Block</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
 
     
 
@@ -481,189 +228,7 @@ protobuf encoded `Block` object
     
 
     
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    An object of the fully decoded protobuf common.Block
-</div>
 
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type"><a href="global.html#Block">Block</a></span>
-
-
-
-    </dd>
-</dl>
-
-
-        
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id=".decodeTransaction"><span class="type-signature">&lt;static> </span>decodeTransaction(processed_transaction_bytes)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Constructs an object containing all decoded values from the
-protobuf encoded "ProcessedTransaction" bytes
-    </div>
-    
-
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>processed_transaction_bytes</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Array.&lt;byte></span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The encode bytes of a protobuf
-                                              message "ProcessedTransaction"</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    A fully decoded ProcessedTransaction object
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type"><a href="global.html#ProcessedTransaction">ProcessedTransaction</a></span>
-
-
-
-    </dd>
-</dl>
-
-
-        
-
-    
-</dd>
-
-        </dl>
     
 
     

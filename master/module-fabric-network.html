@@ -47,7 +47,7 @@
 			<li class="dropdown">
 				<a href="interfaces.list.html" class="dropdown-toggle" data-toggle="dropdown">Interfaces<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="module-fabric-network.Network.html">fabric-network.Network</a></li><li><a href="module-fabric-network.Query.html">fabric-network.Query</a></li><li><a href="module-fabric-network.QueryHandler.html">fabric-network.QueryHandler</a></li><li><a href="module-fabric-network.TxEventHandler.html">fabric-network.TxEventHandler</a></li><li><a href="module-fabric-network.WalletStore.html">fabric-network.WalletStore</a></li>
+					<li><a href="module-fabric-network.BlockEvent.html">fabric-network.BlockEvent</a></li><li><a href="module-fabric-network.CommitEvent.html">fabric-network.CommitEvent</a></li><li><a href="module-fabric-network.ContractEvent.html">fabric-network.ContractEvent</a></li><li><a href="module-fabric-network.FilteredBlockEvent.html">fabric-network.FilteredBlockEvent</a></li><li><a href="module-fabric-network.FilteredTransactionEvent.html">fabric-network.FilteredTransactionEvent</a></li><li><a href="module-fabric-network.Network.html">fabric-network.Network</a></li><li><a href="module-fabric-network.Query.html">fabric-network.Query</a></li><li><a href="module-fabric-network.QueryHandler.html">fabric-network.QueryHandler</a></li><li><a href="module-fabric-network.TransactionEvent.html">fabric-network.TransactionEvent</a></li><li><a href="module-fabric-network.TxEventHandler.html">fabric-network.TxEventHandler</a></li><li><a href="module-fabric-network.WalletStore.html">fabric-network.WalletStore</a></li>
 				</ul>
 			</li>
 			
@@ -252,6 +252,597 @@ const transientResult = await contract.createTransaction(transactionName)
         <h3 class="subsection-title">Type Definitions</h3>
 
         <dl>
+                
+<hr>
+<dt>
+    <h4 class="name" id=".BlockListener"><span class="type-signature">&lt;async> </span>BlockListener(event)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        A callback function that will be invoked when a block event is received.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>event</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-fabric-network.BlockEvent.html">module:fabric-network.BlockEvent</a></span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A block event.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise.&lt;void></span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+            
+                
+<hr>
+<dt class="name" id=".CommitError">
+    <h4 id=".CommitError">CommitError</h4>
+
+    
+</dt>
+<dd>
+    
+
+    
+        <h5>Type:</h5>
+        <ul>
+            <li>
+                
+<span class="param-type">Error</span>
+
+
+
+            </li>
+        </ul>
+    
+
+    
+<dl class="details">
+    
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    <dl>
+
+<table class="props table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>peer</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Endorser.html">Endorser</a></span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The peer that raised this error.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+</dl>
+
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+</dd>
+
+            
+                
+<hr>
+<dt>
+    <h4 class="name" id=".CommitListener"><span class="type-signature"></span>CommitListener( [error] [, event])</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        A callback function that will be invoked when either a peer communication error occurs or a transaction commit event
+is received. Only one of the two arguments will have a value for any given invocation.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>error</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-fabric-network.html#.CommitError">module:fabric-network.CommitError</a></span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Peer communication error.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>event</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-fabric-network.CommitEvent.html">module:fabric-network.CommitEvent</a></span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Transaction commit event from a specific peer.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+            
+                
+<hr>
+<dt>
+    <h4 class="name" id=".ContractListener"><span class="type-signature">&lt;async> </span>ContractListener(event)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        A callback function that will be invoked when a block event is received.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>event</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-fabric-network.ContractEvent.html">module:fabric-network.ContractEvent</a></span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Contract event.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise.&lt;void></span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+            
                 
 <hr>
 <dt class="name" id=".DefaultEventHandlerStrategies">
@@ -1292,6 +1883,121 @@ within wallet stores, and configures the client with a given identity.
             
                 
 <hr>
+<dt class="name" id=".ListenerOptions">
+    <h4 id=".ListenerOptions">ListenerOptions</h4>
+
+    
+</dt>
+<dd>
+    
+
+    
+
+    
+<dl class="details">
+    
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    <dl>
+
+<table class="props table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>startBlock</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+|
+
+<span class="param-type">string</span>
+|
+
+<span class="param-type">Long</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The block number from which events should be received.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+</dl>
+
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+</dd>
+
+            
+                
+<hr>
 <dt>
     <h4 class="name" id=".QueryHandlerFactory"><span class="type-signature"></span>QueryHandlerFactory(network)</h4>
     
@@ -1844,7 +2550,7 @@ within wallet stores, and configures the client with a given identity.
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a>
 	
-		on 2020-03-11T15:47:21+00:00
+		on 2020-03-12T12:12:57+00:00
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>

@@ -47,7 +47,7 @@
 			<li class="dropdown">
 				<a href="interfaces.list.html" class="dropdown-toggle" data-toggle="dropdown">Interfaces<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="module-fabric-network.Network.html">fabric-network.Network</a></li><li><a href="module-fabric-network.Query.html">fabric-network.Query</a></li><li><a href="module-fabric-network.QueryHandler.html">fabric-network.QueryHandler</a></li><li><a href="module-fabric-network.TxEventHandler.html">fabric-network.TxEventHandler</a></li><li><a href="module-fabric-network.WalletStore.html">fabric-network.WalletStore</a></li>
+					<li><a href="module-fabric-network.BlockEvent.html">fabric-network.BlockEvent</a></li><li><a href="module-fabric-network.CommitEvent.html">fabric-network.CommitEvent</a></li><li><a href="module-fabric-network.ContractEvent.html">fabric-network.ContractEvent</a></li><li><a href="module-fabric-network.FilteredBlockEvent.html">fabric-network.FilteredBlockEvent</a></li><li><a href="module-fabric-network.FilteredTransactionEvent.html">fabric-network.FilteredTransactionEvent</a></li><li><a href="module-fabric-network.Network.html">fabric-network.Network</a></li><li><a href="module-fabric-network.Query.html">fabric-network.Query</a></li><li><a href="module-fabric-network.QueryHandler.html">fabric-network.QueryHandler</a></li><li><a href="module-fabric-network.TransactionEvent.html">fabric-network.TransactionEvent</a></li><li><a href="module-fabric-network.TxEventHandler.html">fabric-network.TxEventHandler</a></li><li><a href="module-fabric-network.WalletStore.html">fabric-network.WalletStore</a></li>
 				</ul>
 			</li>
 			
@@ -207,6 +207,202 @@ networks's <a href="module-fabric-network.Network.html#getContract">getContract<
         <h3 class="subsection-title">Methods</h3>
 
         <dl>
+            
+<hr>
+<dt>
+    <h4 class="name" id="addContractListener"><span class="type-signature">&lt;async> </span>addContractListener(listener [, options])</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Add a listener to receive all contract events emitted by the smart contract.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>listener</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-fabric-network.html#.ContractListener">module:fabric-network.ContractListener</a></span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">A contract listener callback function.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-fabric-network.html#.ListenerOptions">module:fabric-network.ListenerOptions</a></span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Listener options.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    The added listener.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise.&lt;<a href="module-fabric-network.html#.ContractListener">module:fabric-network.ContractListener</a>></span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
             
 <hr>
 <dt>
@@ -568,6 +764,154 @@ This function is equivalent to calling <code>createTransaction(name).evaluate()<
             
 <hr>
 <dt>
+    <h4 class="name" id="removeContractListener"><span class="type-signature"></span>removeContractListener(listener)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Remove a previously added contract listener.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>listener</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-fabric-network.html#.ContractListener">module:fabric-network.ContractListener</a></span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A contract listener callback function.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise.&lt;void></span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
     <h4 class="name" id="submitTransaction"><span class="type-signature">&lt;async> </span>submitTransaction(name [, args])</h4>
     
     
@@ -844,7 +1188,7 @@ timed out before a commit event was received from peers.
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a>
 	
-		on 2020-03-11T15:47:21+00:00
+		on 2020-03-12T12:12:57+00:00
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>

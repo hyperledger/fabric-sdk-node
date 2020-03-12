@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Hyperledger Fabric SDK for node.js Class: BlockDecoder</title>
+	<title>Hyperledger Fabric SDK for node.js Interface: TransactionEvent</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -93,17 +93,16 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Class: BlockDecoder</h1>
+	<h1 class="page-title">Interface: TransactionEvent</h1>
 <section>
 
 <header>
     
         <h2>
-        BlockDecoder
-        </h2>
+            <span class="ancestors"><a href="module-fabric-network.html">fabric-network</a>.</span>
         
-            <div class="class-description">Utility class to convert a protobuf encoded byte array of a Hyperledger Fabric block
-message into a pure Javascript object</div>
+        TransactionEvent
+        </h2>
         
     
 </header>
@@ -113,25 +112,114 @@ message into a pure Javascript object</div>
     <div class="container-overview">
     
         
-<hr>
-<dt>
-    <h4 class="name" id="BlockDecoder"><span class="type-signature"></span>new BlockDecoder()</h4>
-    
-    
-</dt>
-<dd>
+            <div class="description">Event representing a transaction processed within a block.</div>
+        
 
-    
-
-    
-
-    
-
-    
-    
-
-    
+        
 <dl class="details">
+    
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    <dl>
+
+<table class="props table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>transactionId</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The ID of the transaction this event represents.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>status</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The status of this transaction.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>isValid</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Whether this transaction was successfully committed to the ledger. <code>true</code> if
+the transaction was commited; otherwise <code>false</code>. The status will provide a more specific reason why an
+invalid transaction was not committed.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+</dl>
+
     
 
 	
@@ -170,21 +258,7 @@ message into a pure Javascript object</div>
 </dl>
 
 
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
+        
     
     </div>
 
@@ -207,7 +281,7 @@ message into a pure Javascript object</div>
             
 <hr>
 <dt>
-    <h4 class="name" id=".decode"><span class="type-signature">&lt;static> </span>decode(block_bytes)</h4>
+    <h4 class="name" id="getBlockEvent"><span class="type-signature"></span>getBlockEvent()</h4>
     
     
 </dt>
@@ -215,8 +289,7 @@ message into a pure Javascript object</div>
 
     
     <div class="description">
-        Constructs a JSON object containing all decoded values from the
-protobuf encoded `Block` bytes.
+        Get the parent block event for this event.
     </div>
     
 
@@ -225,56 +298,6 @@ protobuf encoded `Block` bytes.
     
 
     
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>block_bytes</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Array.&lt;byte></span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The encoded bytes of a Block protobuf message</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
     
 
     
@@ -332,7 +355,7 @@ protobuf encoded `Block` bytes.
     
             
 <div class="param-desc">
-    An object of the Block
+    A block event.
 </div>
 
 
@@ -343,7 +366,7 @@ protobuf encoded `Block` bytes.
     </dt>
     <dd>
         
-<span class="param-type"><a href="global.html#Block">Block</a></span>
+<span class="param-type"><a href="module-fabric-network.BlockEvent.html">module:fabric-network.BlockEvent</a></span>
 
 
 
@@ -360,7 +383,7 @@ protobuf encoded `Block` bytes.
             
 <hr>
 <dt>
-    <h4 class="name" id=".decodeBlock"><span class="type-signature">&lt;static> </span>decodeBlock(block_data)</h4>
+    <h4 class="name" id="getContractEvents"><span class="type-signature"></span>getContractEvents()</h4>
     
     
 </dt>
@@ -368,8 +391,7 @@ protobuf encoded `Block` bytes.
 
     
     <div class="description">
-        Constructs an object containing all decoded values from the
-protobuf encoded `Block` object
+        Get the contract events emitted by this transaction.
     </div>
     
 
@@ -378,56 +400,6 @@ protobuf encoded `Block` object
     
 
     
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>block_data</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Object</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">an object that represents the protobuf common.Block</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
     
 
     
@@ -485,7 +457,7 @@ protobuf encoded `Block` object
     
             
 <div class="param-desc">
-    An object of the fully decoded protobuf common.Block
+    Contract events.
 </div>
 
 
@@ -496,161 +468,7 @@ protobuf encoded `Block` object
     </dt>
     <dd>
         
-<span class="param-type"><a href="global.html#Block">Block</a></span>
-
-
-
-    </dd>
-</dl>
-
-
-        
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id=".decodeTransaction"><span class="type-signature">&lt;static> </span>decodeTransaction(processed_transaction_bytes)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Constructs an object containing all decoded values from the
-protobuf encoded "ProcessedTransaction" bytes
-    </div>
-    
-
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>processed_transaction_bytes</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Array.&lt;byte></span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The encode bytes of a protobuf
-                                              message "ProcessedTransaction"</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    A fully decoded ProcessedTransaction object
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type"><a href="global.html#ProcessedTransaction">ProcessedTransaction</a></span>
+<span class="param-type">Array.&lt;<a href="module-fabric-network.ContractEvent.html">module:fabric-network.ContractEvent</a>></span>
 
 
 
