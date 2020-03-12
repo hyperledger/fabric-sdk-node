@@ -8,34 +8,34 @@ import { FilteredBlock, FilteredTransaction, Endorser, EventInfo } from 'fabric-
 import Long = require('long');
 
 export interface BlockEvent {
-	getType(): 'filtered' | 'full' | 'private';
-	getBlockNumber(): Long;
+	readonly type: 'filtered' | 'full' | 'private';
+	readonly blockNumber: Long;
 	getTransactionEvents(): TransactionEvent[];
 }
 
 export interface FilteredBlockEvent extends BlockEvent {
-	getType(): 'filtered';
-	getBlockData(): FilteredBlock;
+	readonly type: 'filtered';
+	readonly blockData: FilteredBlock;
 	getTransactionEvents(): FilteredTransactionEvent[];
 }
 
 export interface TransactionEvent {
-	getTransactionId(): string;
-	getStatus(): string;
+	readonly transactionId: string;
+	readonly status: string;
+	readonly isValid: boolean;
 	getBlockEvent(): BlockEvent;
 	getContractEvents(): ContractEvent[];
-	isValid(): boolean;
 }
 
 export interface FilteredTransactionEvent extends TransactionEvent {
-	getTransactionData(): FilteredTransaction;
+	readonly transactionData: FilteredTransaction;
 	getBlockEvent(): FilteredBlockEvent;
 }
 
 export interface ContractEvent {
-	getChaincodeId(): string;
-	getEventName(): string;
-	getPayload(): Buffer;
+	readonly chaincodeId: string;
+	readonly eventName: string;
+	readonly payload: Buffer;
 	getTransactionEvent(): TransactionEvent;
 }
 
@@ -51,7 +51,7 @@ export interface CommitError extends Error {
 }
 
 export interface CommitEvent extends FilteredTransactionEvent {
-	getPeer(): Endorser;
+	readonly peer: Endorser;
 }
 
 export type CommitListener = (error?: CommitError, event?: CommitEvent) => void;

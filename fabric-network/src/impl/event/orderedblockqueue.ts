@@ -16,7 +16,7 @@ export class OrderedBlockQueue {
 	}
 
 	addBlock(event: BlockEvent) {
-		const blockNumber = event.getBlockNumber();
+		const blockNumber = event.blockNumber;
 		if (!this.isNewBlockNumber(blockNumber)) {
 			return;
 		}

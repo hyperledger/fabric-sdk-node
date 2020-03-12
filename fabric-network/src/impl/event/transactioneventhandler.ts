@@ -119,12 +119,12 @@ export class TransactionEventHandler implements TxEventHandler {
 	}
 
 	private eventCallback(error?: CommitError, event?: CommitEvent) {
-		if (event && !event.isValid()) {
-			const message = `Commit of transaction ${this.transactionId} failed on peer ${event.getPeer().name} with status ${event.getStatus()}`;
+		if (event && !event.isValid) {
+			const message = `Commit of transaction ${this.transactionId} failed on peer ${event.peer.name} with status ${event.status}`;
 			this.strategyFail(new Error(message));
 		}
 
-		const peer = error?.peer || event!.getPeer();
+		const peer = error?.peer || event!.peer;
 		if (!this.unrespondedPeers.delete(peer)) {
 			// Already seen a response from this peer
 			return;

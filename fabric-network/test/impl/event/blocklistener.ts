@@ -87,7 +87,7 @@ describe('block listener', () => {
 		eventService.sendEvent(event);
 
 		const actual = await listener.completePromise;
-		expect(actual[0].getBlockNumber()).to.equal(event.blockNumber);
+		expect(actual[0].blockNumber).to.equal(event.blockNumber);
 	});
 
 	it('removed listener does not receive events', async () => {
@@ -154,7 +154,7 @@ describe('block listener', () => {
 		const actual = await listener.completePromise;
 		network.removeBlockListener(listener);
 
-		const blockNumbers = actual.map((e) => e.getBlockNumber());
+		const blockNumbers = actual.map((e) => e.blockNumber);
 		expect(blockNumbers).to.deep.equal([event1.blockNumber, event2.blockNumber]);
 	});
 
@@ -170,7 +170,7 @@ describe('block listener', () => {
 		eventService.sendEvent(event2);
 
 		const actual = await listener.completePromise;
-		const blockNumbers = actual.map((e) => e.getBlockNumber());
+		const blockNumbers = actual.map((e) => e.blockNumber);
 		expect(blockNumbers).to.deep.equal([event1.blockNumber, event2.blockNumber]);
 	});
 
@@ -186,7 +186,7 @@ describe('block listener', () => {
 		eventService.sendEvent(event2);
 
 		const actual = await listener.completePromise;
-		const blockNumbers = actual.map((e) => e.getBlockNumber());
+		const blockNumbers = actual.map((e) => e.blockNumber);
 		expect(blockNumbers).to.deep.equal([event1.blockNumber, event2.blockNumber, event3.blockNumber]);
 	});
 
@@ -202,7 +202,7 @@ describe('block listener', () => {
 		eventService.sendEvent(event3);
 
 		const actual = await listener.completePromise;
-		const blockNumbers = actual.map((e) => e.getBlockNumber());
+		const blockNumbers = actual.map((e) => e.blockNumber);
 		expect(blockNumbers).to.deep.equal([event2.blockNumber, event3.blockNumber]);
 	});
 
@@ -253,7 +253,7 @@ describe('block listener', () => {
 		eventService.sendEvent(event2);
 
 		const actual = await listener.completePromise;
-		expect(actual[0].getBlockNumber()).to.equal(event2.blockNumber);
+		expect(actual[0].blockNumber).to.equal(event2.blockNumber);
 	});
 
 	it('replay listener does not miss start block if later block arrive first', async () => {
@@ -268,7 +268,7 @@ describe('block listener', () => {
 		eventService.sendEvent(event1);
 
 		const actual = await listener.completePromise;
-		expect(actual[0].getBlockNumber()).to.equal(event1.blockNumber);
+		expect(actual[0].blockNumber).to.equal(event1.blockNumber);
 	});
 
 	it('remove of realtime listener does not close shared event service', async () => {

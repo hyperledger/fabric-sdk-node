@@ -138,8 +138,8 @@ describe('contract event listener', () => {
 		eventService.sendEvent(event);
 		const actual = await listener.completePromise;
 
-		expect(actual[0].getChaincodeId()).to.equal(chaincodeID);
-		expect(actual[0].getEventName()).to.equal(eventName);
+		expect(actual[0].chaincodeId).to.equal(chaincodeID);
+		expect(actual[0].eventName).to.equal(eventName);
 	});
 
 	it('stops listening for events after the listener has been removed', async () => {
@@ -168,11 +168,11 @@ describe('contract event listener', () => {
 		eventService.sendEvent(event1);
 		const actual = await listener.completePromise;
 
-		expect(actual[0].getChaincodeId()).to.equal(chaincodeID);
-		expect(actual[0].getEventName()).to.equal(eventName);
+		expect(actual[0].chaincodeId).to.equal(chaincodeID);
+		expect(actual[0].eventName).to.equal(eventName);
 
-		expect(actual[1].getChaincodeId()).to.equal(chaincodeID);
-		expect(actual[1].getEventName()).to.equal(eventName);
+		expect(actual[1].chaincodeId).to.equal(chaincodeID);
+		expect(actual[1].eventName).to.equal(eventName);
 	});
 
 	it('listener only receives events matching its chaincode id', async () => {
@@ -188,8 +188,8 @@ describe('contract event listener', () => {
 		const actual = await listener.completePromise;
 
 		expect(actual.length).to.equal(1);
-		expect(actual[0].getChaincodeId()).to.equal(chaincodeID);
-		expect(actual[0].getEventName()).to.equal(eventName);
+		expect(actual[0].chaincodeId).to.equal(chaincodeID);
+		expect(actual[0].eventName).to.equal(eventName);
 	});
 
 	it('error thrown by listener does not disrupt other listeners', async () => {
@@ -207,11 +207,11 @@ describe('contract event listener', () => {
 		eventService.sendEvent(event2);
 		const actual = await listener.completePromise;
 
-		expect(actual[0].getChaincodeId()).to.equal(chaincodeID);
-		expect(actual[0].getEventName()).to.equal(eventName);
+		expect(actual[0].chaincodeId).to.equal(chaincodeID);
+		expect(actual[0].eventName).to.equal(eventName);
 
-		expect(actual[1].getChaincodeId()).to.equal(chaincodeID);
-		expect(actual[1].getEventName()).to.equal(eventName);
+		expect(actual[1].chaincodeId).to.equal(chaincodeID);
+		expect(actual[1].eventName).to.equal(eventName);
 	});
 
 	it('error thrown by listener does not prevent subsequent contract events being processed', async () => {
@@ -229,11 +229,11 @@ describe('contract event listener', () => {
 		eventService.sendEvent(event1);
 		const actual = await listener.completePromise;
 
-		expect(actual[0].getChaincodeId()).to.equal(chaincodeID);
-		expect(actual[0].getEventName()).to.equal(eventName);
+		expect(actual[0].chaincodeId).to.equal(chaincodeID);
+		expect(actual[0].eventName).to.equal(eventName);
 
-		expect(actual[1].getChaincodeId()).to.equal(chaincodeID);
-		expect(actual[1].getEventName()).to.equal(eventName);
+		expect(actual[1].chaincodeId).to.equal(chaincodeID);
+		expect(actual[1].eventName).to.equal(eventName);
 	});
 
 	it('replay contract listener does not receive events earlier than start block', async () => {
@@ -254,8 +254,8 @@ describe('contract event listener', () => {
 		const actual = await listener.completePromise;
 
 		expect(actual.length).to.equal(1);
-		expect(actual[0].getChaincodeId()).to.equal(chaincodeID);
-		expect(actual[0].getEventName()).to.equal(eventName);
+		expect(actual[0].chaincodeId).to.equal(chaincodeID);
+		expect(actual[0].eventName).to.equal(eventName);
 	});
 
 });

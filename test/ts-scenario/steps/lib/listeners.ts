@@ -41,7 +41,7 @@ export async function createContractListener(gatewayName: string, channelName: s
 	const contractListener: ContractListener = async (event: ContractEvent) => {
 		BaseUtils.logMsg(`-> Received a contract event for listener [${listenerName}] of type ${eventName}`);
 
-		if (event.getEventName() !== eventName) {
+		if (event.eventName !== eventName) {
 			return;
 		}
 
@@ -112,10 +112,10 @@ export async function createBlockListener(gatewayName: string, channelName: stri
 	const listener: BlockListener = async (blockEvent: BlockEvent) => {
 		BaseUtils.logMsg('->Received a block event', listenerName);
 		if (startBlock) {
-			BaseUtils.checkSizeEquality(blockEvent.getBlockNumber().toNumber(), startBlock - 1, true, true);
+			BaseUtils.checkSizeEquality(blockEvent.blockNumber.toNumber(), startBlock - 1, true, true);
 		}
 		if (endBlock) {
-			BaseUtils.checkSizeEquality(blockEvent.getBlockNumber().toNumber(), endBlock + 1, false, true);
+			BaseUtils.checkSizeEquality(blockEvent.blockNumber.toNumber(), endBlock + 1, false, true);
 		}
 
 		const tlisteners: any = stateStore.get(Constants.LISTENERS);
@@ -127,7 +127,7 @@ export async function createBlockListener(gatewayName: string, channelName: stri
 			}
 		}
 
-		if (endBlock && blockEvent.getBlockNumber().greaterThanOrEqual(endBlock)) {
+		if (endBlock && blockEvent.blockNumber.greaterThanOrEqual(endBlock)) {
 			network.removeBlockListener(listener);
 		}
 	};

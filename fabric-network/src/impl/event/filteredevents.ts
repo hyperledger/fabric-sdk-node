@@ -30,9 +30,9 @@ export function newFilteredBlockEvent(eventInfo: EventInfo): FilteredBlockEvent 
 	}
 
 	const blockEvent: FilteredBlockEvent = {
-		getType: () => 'filtered',
-		getBlockNumber: () => eventInfo.blockNumber,
-		getBlockData: () => eventInfo.filteredBlock!,
+		type: 'filtered',
+		blockNumber: eventInfo.blockNumber,
+		blockData: eventInfo.filteredBlock!,
 		getTransactionEvents: () => getTransactionEvents(blockEvent)
 	};
 
@@ -53,24 +53,26 @@ export function newCommitEvent(peer: Endorser, eventInfo: EventInfo): CommitEven
 	let transactionEvent: FilteredTransactionEvent | undefined;
 	function getTransactionEvent() {
 		if (!transactionEvent) {
-			transactionEvent = getBlockEvent().getTransactionEvents().find((tx) => tx.getTransactionId() === transactionId)!;
+			transactionEvent = getBlockEvent().getTransactionEvents().find((tx) => tx.transactionId === transactionId)!;
 		}
 		return transactionEvent;
 	}
 
 	return {
-		getPeer: () => peer,
-		getBlockEvent,
-		getTransactionId: () => transactionId,
-		getStatus: () => eventInfo.status!,
-		getContractEvents: () => getTransactionEvent().getContractEvents(),
-		getTransactionData: () => getTransactionEvent().getTransactionData(),
-		isValid: () => eventInfo.status === validStatus
+		peer: peer,
+		transactionId: transactionId,
+		status: eventInfo.status!,
+		get transactionData() {
+			return getTransactionEvent().transactionData;
+		},
+		isValid: eventInfo.status === validStatus,
+		getBlockEvent: () => getBlockEvent(),
+		getContractEvents: () => getTransactionEvent().getContractEvents()
 	};
 }
 
 function newFilteredTransactionEvents(blockEvent: FilteredBlockEvent): FilteredTransactionEvent[] {
-	const filteredTransactions = blockEvent.getBlockData().filtered_transactions || [];
+	const filteredTransactions = blockEvent.blockData.filtered_transactions || [];
 	return filteredTransactions.map((tx) => newFilteredTransactionEvent(blockEvent, tx));
 }
 
@@ -87,27 +89,27 @@ function newFilteredTransactionEvent(blockEvent: FilteredBlockEvent, filteredTra
 	}
 
 	const transactionEvent: FilteredTransactionEvent = {
+		transactionId: filteredTransaction.txid,
+		status,
+		transactionData: filteredTransaction,
+		isValid: status === validStatus,
 		getBlockEvent: () => blockEvent,
-		getTransactionId: () => filteredTransaction.txid,
-		getStatus: () => status,
-		getContractEvents: () => getContractEvents(transactionEvent),
-		getTransactionData: () => filteredTransaction,
-		isValid: () => status === validStatus
+		getContractEvents: () => getContractEvents(transactionEvent)
 	};
 
 	return transactionEvent;
 }
 
 function newContractEvents(transactionEvent: FilteredTransactionEvent): ContractEvent[] {
-	const chaincodeActions: any[] = transactionEvent.getTransactionData().transaction_actions?.chaincode_actions || [];
+	const chaincodeActions: any[] = transactionEvent.transactionData.transaction_actions?.chaincode_actions || [];
 	return chaincodeActions.map((ccAction) => newContractEvent(transactionEvent, ccAction.chaincode_event));
 }
 
 function newContractEvent(transactionEvent: FilteredTransactionEvent, chaincodeEvent: any): ContractEvent {
 	return {
-		getChaincodeId: () => chaincodeEvent.chaincode_id,
-		getEventName: () => chaincodeEvent.event_name,
-		getPayload: () => chaincodeEvent.payload,
+		chaincodeId: chaincodeEvent.chaincode_id,
+		eventName: chaincodeEvent.event_name,
+		payload: chaincodeEvent.payload,
 		getTransactionEvent: () => transactionEvent
 	};
 }
