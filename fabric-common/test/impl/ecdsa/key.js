@@ -12,7 +12,7 @@ const jsrsa = require('jsrsasign');
 const KEYUTIL = jsrsa.KEYUTIL;
 
 const chai = require('chai');
-const should = chai.should();
+chai.should();
 const sinon = require('sinon');
 
 describe('ECDSA_KEY', () => {
