@@ -31,7 +31,8 @@
     }
   ],
   "dependencies": {
-    "grpc": "1.23.3",
+    "grpc": "1.24.2",
+    "lodash.clone": "4.5.0",
     "protobufjs": "^5.0.3"
   },
   "devDependencies": {
