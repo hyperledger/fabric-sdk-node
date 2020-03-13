@@ -136,7 +136,7 @@ const PKCS11_ECDSA_KEY = class extends Key {
 		throw new Error('Not implemented');
 	}
 
-	generateCSR(subjectDN) {
+	generateCSR(subjectDN, extensions) {
 		// check to see if this is a private key
 		if (!this.isPrivate()) {
 			throw new Error('A CSR cannot be generated from a public key');
@@ -146,7 +146,8 @@ const PKCS11_ECDSA_KEY = class extends Key {
 			subject: {str: asn1.x509.X500Name.ldapToOneline(subjectDN)},
 			sbjpubkey: this._pub,
 			sigalg: 'SHA256withECDSA',
-			sbjprvkey: this
+			sbjprvkey: this,
+			ext: extensions
 		});
 		return csr;
 	}

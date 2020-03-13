@@ -104,11 +104,12 @@ module.exports = class ECDSA_KEY extends Key {
 	/**
 	 * Generates a CSR/PKCS#10 certificate signing request for this key
 	 * @param {string} subjectDN The X500Name for the certificate request in LDAP(RFC 2253) format
+	 * @param {Object[]} [extensions] Additional X.509v3 extensions for the certificate signing request
 	 * @returns {string} PEM-encoded PKCS#10 certificate signing request
 	 * @throws Will throw an error if this is not a private key
 	 * @throws Will throw an error if CSR generation fails for any other reason
 	 */
-	generateCSR(subjectDN) {
+	generateCSR(subjectDN, extensions) {
 
 		// check to see if this is a private key
 		if (!this.isPrivate()) {
@@ -119,7 +120,8 @@ module.exports = class ECDSA_KEY extends Key {
 			subject: {str: asn1.x509.X500Name.ldapToOneline(subjectDN)},
 			sbjpubkey: this.getPublicKey()._key,
 			sigalg: 'SHA256withECDSA',
-			sbjprvkey: this._key
+			sbjprvkey: this._key,
+			ext: extensions
 		});
 		return csr;
 	}

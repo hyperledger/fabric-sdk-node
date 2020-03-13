@@ -181,6 +181,33 @@ describe('ECDSA_KEY', () => {
 			csr.should.equal('your PEM sir');
 			sinon.assert.calledOnce(pemStub);
 		});
+
+		it('should call into jsrsa lib if extensions are passed', () => {
+
+			const extensions = [{subjectAltName: {array: [{dns: 'host1'}, {dns: 'host2'}]}}];
+			const pemStub = sinon.stub().returns('your PEM sir');
+			const fakeAnsn1 = {
+				csr: {
+					CSRUtil: {
+						newCSRPEM: pemStub
+					}
+				},
+				x509: {
+					X500Name: {
+						ldapToOneline: sinon.stub()
+					}
+				}
+			};
+
+			revert = ECDSA_KEY_REWIRE.__set__('asn1', fakeAnsn1);
+			const fakeKey = {type: 'EC', prvKeyHex: 'privateKey', pubKeyHex: 'publicKey'};
+			const myKey = new ECDSA_KEY_REWIRE(fakeKey);
+			myKey.isPrivate = sinon.stub().returns(true);
+			const csr = myKey.generateCSR('CN=publickey', extensions);
+
+			csr.should.equal('your PEM sir');
+			sinon.assert.calledOnceWithExactly(pemStub, sinon.match.has('ext', extensions));
+		});
 	});
 
 	describe('#generateX509Certificate', () => {
