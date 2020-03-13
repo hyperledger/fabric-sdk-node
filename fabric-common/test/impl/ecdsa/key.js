@@ -206,12 +206,7 @@ describe('ECDSA_KEY', () => {
 			const csr = myKey.generateCSR('CN=publickey', extensions);
 
 			csr.should.equal('your PEM sir');
-			sinon.assert.calledOnce(pemStub);
-
-			should.exist(pemStub.args[0]);
-			should.exist(pemStub.args[0][0]);
-			should.exist(pemStub.args[0][0].ext);
-			should.equal(pemStub.args[0][0].ext, extensions);
+			sinon.assert.calledOnceWithExactly(pemStub, sinon.match.has('ext', extensions));
 		});
 	});
 
