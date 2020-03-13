@@ -218,22 +218,22 @@ export async function performGatewayTransaction(gatewayName: string, contractNam
 		if (submit) {
 			// add event handler options
 			if (handlerOption.localeCompare('custom') === 0) {
-				currentOptions.transaction = {
+				currentOptions.eventHandlerOptions = {
 					strategy: sampleTxnEventStrategy as TxEventHandlerFactory
 				};
 			} else {
-				currentOptions.transaction = {
+				currentOptions.eventHandlerOptions = {
 					strategy: EventStrategies[handlerOption]
 				};
 			}
 		} else {
 			// Add queryHandlerOptions
 			if (handlerOption.localeCompare('custom') === 0) {
-				currentOptions.query = {
+				currentOptions.queryHandlerOptions = {
 					strategy: sampleQueryStrategy as QueryHandlerFactory
 				};
 			} else {
-				currentOptions.query = {
+				currentOptions.queryHandlerOptions = {
 					strategy: QueryStrategies[handlerOption]
 				};
 			}

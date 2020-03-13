@@ -97,11 +97,11 @@ class Gateway {
 
 		// initial options - override with the connect()
 		this.options = {
-			query: {
+			queryHandlerOptions: {
 				timeout: 30, // 30 seconds
 				strategy: QueryStrategies.MSPID_SCOPE_SINGLE
 			},
-			transaction: {
+			eventHandlerOptions: {
 				endorseTimeout: 30, // 30 seconds
 				commitTimeout: 300, // 5 minutes
 				strategy: EventStrategies.MSPID_SCOPE_ALLFORTX

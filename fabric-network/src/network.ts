@@ -171,8 +171,8 @@ export class NetworkImpl implements Network {
 		this.initialized = true;
 
 		// Must be created after channel initialization to ensure discovery has located the peers
-		const queryOptions = this.gateway.getOptions().query;
-		this.queryHandler = queryOptions.strategy(this, queryOptions);
+		const queryOptions = this.gateway.getOptions().queryHandlerOptions;
+		this.queryHandler = queryOptions.strategy(this);
 		logger.debug('%s - end', method);
 	}
 

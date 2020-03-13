@@ -45,7 +45,7 @@ describe('Contract', () => {
 		gateway = sinon.createStubInstance(Gateway);
 		gateway.identityContext = 'idx';
 		gateway.getOptions.returns({
-			transaction: 'options',
+			eventHandlerOptions: 'options',
 			discovery: {
 				asLocalhost: true
 			}

@@ -36,7 +36,7 @@ export function newFilteredBlockEvent(eventInfo: EventInfo): FilteredBlockEvent 
 		getTransactionEvents: () => getTransactionEvents(blockEvent)
 	};
 
-	return blockEvent;
+	return Object.freeze(blockEvent);
 }
 
 export function newCommitEvent(peer: Endorser, eventInfo: EventInfo): CommitEvent {
@@ -58,7 +58,7 @@ export function newCommitEvent(peer: Endorser, eventInfo: EventInfo): CommitEven
 		return transactionEvent;
 	}
 
-	return {
+	const commitEvent: CommitEvent = {
 		peer: peer,
 		transactionId: transactionId,
 		status: eventInfo.status!,
@@ -69,6 +69,8 @@ export function newCommitEvent(peer: Endorser, eventInfo: EventInfo): CommitEven
 		getBlockEvent: () => getBlockEvent(),
 		getContractEvents: () => getTransactionEvent().getContractEvents()
 	};
+
+	return Object.freeze(commitEvent);
 }
 
 function newFilteredTransactionEvents(blockEvent: FilteredBlockEvent): FilteredTransactionEvent[] {

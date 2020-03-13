@@ -66,7 +66,7 @@ export class TransactionEventHandler implements TxEventHandler {
 		const defaultOptions: any = {
 			commitTimeout: 30
 		};
-		this.options = Object.assign(defaultOptions, network.getGateway().getOptions().transaction);
+		this.options = Object.assign(defaultOptions, network.getGateway().getOptions().eventHandlerOptions);
 
 		logger.debug('%s: transactionId = %s, options = %j', method, this.transactionId, this.options);
 
