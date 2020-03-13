@@ -74,12 +74,12 @@ describe('Network', () => {
 		gateway.identityContext = identityContext;
 		gateway.getOptions.returns({
 			useDiscovery: false,
-			transaction: {
+			eventHandlerOptions: {
 				endorseTimeout: 30,
 				commitTimeout: 300,
 				strategy: EventStrategies.MSPID_SCOPE_ALLFORTX
 			},
-			query: {
+			queryHandlerOptions: {
 				timeout: 3,
 				strategy: (theNetwork) => {
 					queryHandler.network = theNetwork;

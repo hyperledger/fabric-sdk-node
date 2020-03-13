@@ -91,7 +91,7 @@ class Transaction {
 		this._name = name;
 		this._transientMap = null;
 		this._options = contract.gateway.getOptions();
-		this._eventHandlerStrategyFactory = this._options.transaction.strategy || noOpEventHandlerStrategyFactory;
+		this._eventHandlerStrategyFactory = this._options.eventHandlerOptions.strategy || noOpEventHandlerStrategyFactory;
 		this._isInvoked = false;
 		this.queryHandler = contract.network.queryHandler;
 		this._endorsingPeers = null; // for user assigned endorsements
@@ -180,9 +180,11 @@ class Transaction {
 		logger.debug('%s - start', method);
 
 		const channel = this.contract.network.channel;
+		const transactionOptions = this._options.eventHandlerOptions;
+
 		const endorsementOptions = this._buildEndorsementOptions(args);
-		if (Number.isInteger(this._options.transaction.endorseTimeout)) {
-			endorsementOptions.requestTimeout = this._options.transaction.endorseTimeout * 1000; // in ms;
+		if (Number.isInteger(transactionOptions.endorseTimeout)) {
+			endorsementOptions.requestTimeout = transactionOptions.endorseTimeout * 1000; // in ms;
 		}
 
 		// This is the object that will centralize this endorsement activities
@@ -237,8 +239,8 @@ class Transaction {
 			await eventHandler.startListening();
 
 			const commitOptions = {};
-			if (Number.isInteger(this._options.transaction.commitTimeout)) {
-				commitOptions.requestTimeout = this._options.transaction.commitTimeout * 1000; // in ms;
+			if (Number.isInteger(transactionOptions.commitTimeout)) {
+				commitOptions.requestTimeout = transactionOptions.commitTimeout * 1000; // in ms;
 			}
 			if (endorsementOptions.handler) {
 				logger.debug('%s - use discovery to commit', method);
@@ -306,9 +308,11 @@ class Transaction {
 		const method = `evaluate[${this._name}]`;
 		logger.debug('%s - start', method);
 
+		const queryOptions = this._options.queryHandlerOptions;
+
 		const request = this._buildEndorsementOptions(args);
-		if (Number.isInteger(this._options.query.timeout)) {
-			request.requestTimeout = this._options.query.timeout * 1000; // in ms;
+		if (Number.isInteger(queryOptions.timeout)) {
+			request.requestTimeout = queryOptions.timeout * 1000; // in ms;
 		}
 
 		const queryProposal = this.contract.network.channel.newQuery(this.contract.chaincodeId);
@@ -317,7 +321,6 @@ class Transaction {
 		queryProposal.build(this.identityContext, request);
 		queryProposal.sign(this.identityContext);
 
-		const queryOptions = this.contract.gateway.getOptions().query;
 		const query = new Query(queryProposal, queryOptions);
 
 		logger.debug('%s - handler will send', method);

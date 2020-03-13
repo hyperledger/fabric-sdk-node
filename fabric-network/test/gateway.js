@@ -368,28 +368,30 @@ describe('Gateway', () => {
 				wallet
 			};
 			await gateway.connect('ccp', options);
-			gateway.options.transaction.strategy.should.be.a('Function');
+			gateway.getOptions().eventHandlerOptions.strategy.should.be.a('Function');
 		});
 
 		it('allows transaction event handling strategy to be specified', async () => {
 			const stubStrategyFn = function stubStrategyFn() { };
 			const options = {
 				wallet,
-				eventStrategy: stubStrategyFn
+				eventHandlerOptions: {
+					strategy: stubStrategyFn
+				}
 			};
 			await gateway.connect('ccp', options);
-			gateway.options.eventStrategy.should.equal(stubStrategyFn);
+			gateway.getOptions().eventHandlerOptions.strategy.should.equal(stubStrategyFn);
 		});
 
 		it('allows null transaction event handling strategy to be set', async () => {
 			const options = {
 				wallet,
-				transaction: {
+				eventHandlerOptions: {
 					strategy: null
 				}
 			};
 			await gateway.connect('ccp', options);
-			should.equal(gateway.options.transaction.strategy, null);
+			should.equal(gateway.getOptions().eventHandlerOptions.strategy, null);
 		});
 
 		it('should assign connection options to the client', async () => {
@@ -437,13 +439,13 @@ describe('Gateway', () => {
 			it('should return the options', () => {
 				const expectedOptions = {
 					wallet: 'something',
-					query: {
+					queryHandlerOptions: {
 						timeout: 30,
 						strategy: QueryStrategies.MSPID_SCOPE_SINGLE
 					}
 				};
 				gateway.getOptions().should.deep.include(expectedOptions);
-				gateway.getOptions().transaction.should.include({
+				gateway.getOptions().eventHandlerOptions.should.include({
 					commitTimeout: 300
 				});
 			});

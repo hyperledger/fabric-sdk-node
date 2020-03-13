@@ -136,10 +136,10 @@ describe('Transaction', () => {
 		mockGateway.identityContext = idx;
 
 		gatewayOptions = {
-			query: {
+			queryHandlerOptions: {
 				strategy: QueryStrategies.MSPID_SCOPE_SINGLE
 			},
-			transaction: {
+			eventHandlerOptions: {
 				strategy: null
 			},
 			discovery: {
@@ -272,7 +272,7 @@ describe('Transaction', () => {
 		it('uses event handler strategy from gateway options', async () => {
 			const stubEventHandler = sinon.createStubInstance(TransactionEventHandler);
 			const stubEventHandlerFactoryFn = sinon.stub().withArgs(transactionId, network).returns(stubEventHandler);
-			gatewayOptions.transaction.strategy = stubEventHandlerFactoryFn;
+			gatewayOptions.eventHandlerOptions.strategy = stubEventHandlerFactoryFn;
 			transaction = new Transaction(contract, transactionName);
 
 			await transaction.submit();
@@ -296,7 +296,7 @@ describe('Transaction', () => {
 		});
 
 		it('sends proposal using endorsement timeout from gateway options', async () => {
-			gatewayOptions.transaction.endorseTimeout = 55;
+			gatewayOptions.eventHandlerOptions.endorseTimeout = 55;
 
 			await transaction.submit();
 
@@ -361,7 +361,7 @@ describe('Transaction', () => {
 		});
 
 		it('commits using timeout from gateway options', async () => {
-			gatewayOptions.transaction.commitTimeout = 55;
+			gatewayOptions.eventHandlerOptions.commitTimeout = 55;
 
 			await transaction.submit();
 
@@ -436,7 +436,7 @@ describe('Transaction', () => {
 		});
 
 		it('builds correct request with timeout from gateway options', async () => {
-			gatewayOptions.query.timeout = 55;
+			gatewayOptions.queryHandlerOptions.timeout = 55;
 
 			await transaction.evaluate();
 

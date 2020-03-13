@@ -46,30 +46,27 @@ export interface GatewayOptions {
 	identity: string;
 	clientTlsIdentity?: string;
 	discovery?: DiscoveryOptions;
-	transaction?: TransactionOptions;
-	query?: QueryOptions;
+	eventHandlerOptions?: DefaultEventHandlerOptions;
+	queryHandlerOptions?: DefaultQueryHandlerOptions;
 }
 
 export interface DiscoveryOptions {
 	asLocalhost?: boolean;
 	enabled?: boolean;
-	maxAge?: number;
 }
 
-export interface TransactionOptions {
+export interface DefaultEventHandlerOptions {
 	commitTimeout?: number;
 	endorseTimeout?: number;
 	strategy?: TxEventHandlerFactory | null;
 }
 
-export interface QueryOptions {
+export interface DefaultQueryHandlerOptions {
 	strategy?: QueryHandlerFactory;
 	timeout?: number;
 }
 
 export class Gateway {
-	public client: Client;
-	public identityContext: IdentityContext;
 	constructor();
 	public connect(config: Client | string | object, options: GatewayOptions): Promise<void>;
 	public disconnect(): void;

@@ -86,7 +86,7 @@ describe('TransactionEventHandler', () => {
 
 	describe('#constructor', () => {
 		it('has a default timeout', () => {
-			options.transaction = {};
+			options.eventHandlerOptions = {};
 			const test: any = new TransactionEventHandler(transactionId, network, strategy);
 			expect(test.options.commitTimeout).to.equal(30);
 		});
@@ -243,7 +243,7 @@ describe('TransactionEventHandler', () => {
 		});
 
 		it('fails on timeout if timeout set', async () => {
-			options.transaction = {commitTimeout: 418};
+			options.eventHandlerOptions = {commitTimeout: 418};
 			handler = new TransactionEventHandler(transactionId, network, strategy);
 
 			await handler.startListening();
@@ -255,7 +255,7 @@ describe('TransactionEventHandler', () => {
 
 		it('does not timeout if timeout set to zero', async () => {
 			stubStrategy.eventReceived.callsArg(0);
-			options.transaction = {commitTimeout: 0};
+			options.eventHandlerOptions = {commitTimeout: 0};
 			handler = new TransactionEventHandler(transactionId, network, strategy);
 
 			await handler.startListening();
@@ -266,7 +266,7 @@ describe('TransactionEventHandler', () => {
 		});
 
 		it('timeout failure message includes peers that have not responded', async () => {
-			options.transaction = {commitTimeout: 418};
+			options.eventHandlerOptions = {commitTimeout: 418};
 			handler = new TransactionEventHandler(transactionId, network, strategy);
 
 			await handler.startListening();
@@ -278,7 +278,7 @@ describe('TransactionEventHandler', () => {
 
 		it('does not timeout if no peers', async () => {
 			stubStrategy.getPeers.returns([]);
-			options.transaction = {commitTimeout: 418};
+			options.eventHandlerOptions = {commitTimeout: 418};
 			handler = new TransactionEventHandler(transactionId, network, strategy);
 
 			await handler.startListening();
@@ -288,7 +288,7 @@ describe('TransactionEventHandler', () => {
 		});
 
 		it('timeout failure error has transaction ID property', async () => {
-			options.transaction = {commitTimeout: 418};
+			options.eventHandlerOptions = {commitTimeout: 418};
 			handler = new TransactionEventHandler(transactionId, network, strategy);
 
 			await handler.startListening();
