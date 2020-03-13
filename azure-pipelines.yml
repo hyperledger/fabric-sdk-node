@@ -9,7 +9,6 @@ trigger:
 
 pr:
 - master
-- release-*
 
 pool:
   vmImage: 'ubuntu-18.04'
