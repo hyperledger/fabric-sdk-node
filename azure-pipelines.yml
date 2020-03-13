@@ -7,6 +7,9 @@
 trigger:
 - release-1.4
 
+pr:
+  - release-1.4
+
 pool:
   vmImage: 'ubuntu-18.04'
 
@@ -23,7 +26,7 @@ variables:
 stages:
   - stage: SetupRunTests
     displayName: Setup and Run Tests
-    jobs: 
+    jobs:
     - job: SetupRunTests
       displayName: Install Node.js and run tests on
       strategy:
