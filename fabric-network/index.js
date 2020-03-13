@@ -366,9 +366,17 @@
 
 
 /**
- * A Network represents the set of peers in a Fabric network.
+ * <p>A Network represents the set of peers in a Fabric network.
  * Applications should get a Network instance using the
- * gateway's [getNetwork]{@link module:fabric-network.Gateway#getNetwork} method.
+ * gateway's [getNetwork]{@link module:fabric-network.Gateway#getNetwork} method.</p>
+ *
+ * <p>The Network object provides the ability for applications to:</p>
+ * <ul>
+ *   <li>Obtain a specific smart contract deployed to the network using [getContract]{@link module:fabric-network.Network#getContract},
+ *       in order to submit and evaluate transactions for that smart contract.</li>
+ *   <li>Listen to new block events and replay previous block events using
+ *       [addBlockListener]{@link module:fabric-network.Network#addBlockListener}.</li>
+ * </ul>
  * @interface Network
  * @memberof module:fabric-network
  */
@@ -398,7 +406,8 @@
  */
 
 /**
- * Add a listener to receive transaction commit and peer disconnect events for a set of peers.
+ * Add a listener to receive transaction commit and peer disconnect events for a set of peers. This is typically used
+ * only within the implementation of a custom [transaction commit event handler]{@tutorial transaction-commit-events}.
  * @method Network#addCommitListener
  * @memberof module:fabric-network
  * @param {module:fabric-network.CommitListener} listener A transaction commit listener callback function.

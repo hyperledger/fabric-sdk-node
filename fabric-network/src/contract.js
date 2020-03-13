@@ -41,9 +41,23 @@ function verifyNamespace(namespace) {
 }
 
 /**
- * Represents a smart contract (chaincode) instance in a network.
+ * <p>Represents a smart contract (chaincode) instance in a network.
  * Applications should get a Contract instance using the
- * networks's [getContract]{@link module:fabric-network.Network#getContract} method.
+ * networks's [getContract]{@link module:fabric-network.Network#getContract} method.</p>
+ *
+ * <p>The Contract allows applications to:</p>
+ * <ul>
+ *   <li>Submit transactions that store state to the ledger using
+ *       [submitTransaction]{@link module:fabric-network.Contract#submitTransaction}.</li>
+ *   <li>Evaluate transactions that query state from the ledger using
+ *       [evaluateTransaction]{@link module:fabric-network.Contract#evaluateTransaction}.</li>
+ *   <li>Listen for new events and replay previous events emitted by the smart contract using
+ *       [addContractListener]{@link module:fabric-network.Contract#addContractListener}.</li>
+ * </ul>
+ *
+ * <p>If more control over transaction invocation is required, such as including transient data,
+ * [createTransaction]{@link module:fabric-network.Contract#createTransaction} can be used to build a transaction
+ * request that is submitted to or evaluated by the smart contract.</p>
  * @memberof module:fabric-network
  * @hideconstructor
  */
@@ -118,6 +132,14 @@ class Contract {
 	 * @param {module:fabric-network.ContractListener} listener A contract listener callback function.
 	 * @param {module:fabric-network.ListenerOptions} [options] Listener options.
 	 * @returns {Promise<module:fabric-network.ContractListener>} The added listener.
+	 * @example
+	 * const listener: ContractListener = async (event) => {
+	 *     if (event.eventName ===  'newOrder') {
+	 *         const details = event.payload.toString('utf8');
+	 *         // Run business process to handle orders
+	 *     }
+	 * };
+	 * contract.addContractListener(listener);
 	 */
 	async addContractListener(listener, options) {
 		const sessionSupplier = () => new ContractListenerSession(listener, this.chaincodeId, this.network, options);
