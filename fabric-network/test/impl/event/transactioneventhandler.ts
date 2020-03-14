@@ -44,7 +44,7 @@ describe('TransactionEventHandler', () => {
 		eventService = new StubEventService(peer.name);
 
 		eventServiceManager = sinon.createStubInstance(EventServiceManager);
-		eventServiceManager.getCachedEventService.withArgs(peer).returns(eventService);
+		eventServiceManager.getCommitEventService.withArgs(peer).returns(eventService);
 
 		validEventInfo = {
 			eventService: null,

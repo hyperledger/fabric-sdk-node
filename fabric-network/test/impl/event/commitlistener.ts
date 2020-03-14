@@ -45,7 +45,8 @@ describe('commit listener', () => {
 		eventInfo = {
 			eventService,
 			blockNumber: new Long(1),
-			transactionId
+			transactionId,
+			status: 'VALID'
 		};
 
 		gateway = sinon.createStubInstance(Gateway);

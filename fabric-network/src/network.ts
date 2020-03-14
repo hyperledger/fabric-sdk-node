@@ -8,7 +8,7 @@
 import Contract = require('./contract');
 import { Channel, DiscoveryService, Endorser } from 'fabric-common';
 import { BlockEventSource } from './impl/event/blockeventsource';
-import { BlockListener, CommitListener, ListenerOptions } from './events';
+import { BlockListener, CommitListener, ListenerOptions, EventType } from './events';
 import { CommitListenerSession } from './impl/event/commitlistenersession';
 import { EventServiceManager } from './impl/event/eventservicemanager';
 import { IsolatedBlockListenerSession } from './impl/event/isolatedblocklistenersession';
@@ -24,24 +24,12 @@ import Long = require('long');
 
 const logger = Logger.getLogger('Network');
 
-/**
- * @typedef {Object} Network~EventListenerOptions
- * @private
- * @memberof module:fabric-network
- * @property {Object} checkpointer - a checkpointer instance
- * @property {boolean} [replay=false] - event replay on listener
- * @property {boolean} [filtered=true] - used to receive filtered block events or not
- * @property {boolean} [privateData=false] - when receiving full blocks (filtered=false)
- * include this user's private data, will be ignored when receiving filtered blocks and
- * will only include private data this user is allowed to see
- * @property {boolean} [unregister] - unregisters the listener after first event is received
- * @property {number} [startBlock] - the first block to play events
- * @property {number} [endBlock] - the final block to play events
- * @property {string} [transactionId] - the transactionId to monitor for commit
- * events. Only used for transaction commit events and will be ignored for other
- * event types. The default is to call the application commit event listener on
- * every transaction committed to the ledger.
- */
+function listenerOptionsWithDefaults(options: ListenerOptions): ListenerOptions {
+	const defaultOptions = {
+		type: 'full'
+	};
+	return Object.assign(defaultOptions, options);
+}
 
 export interface Network {
 	getGateway(): Gateway;
@@ -63,8 +51,8 @@ export class NetworkImpl implements Network {
 	private eventServiceManager: EventServiceManager;
 	private readonly commitListeners = new Map<CommitListener, ListenerSession>();
 	private readonly blockListeners = new Map<BlockListener, ListenerSession>();
-	private readonly oldListeners = new Set<BaseEventListener>();
-	private readonly realtimeBlockEventSource: BlockEventSource;
+	private readonly realtimeFilteredBlockEventSource: BlockEventSource;
+	private readonly realtimeFullBlockEventSource: BlockEventSource;
 
 	/*
 	 * Network constructor for internal use only.
@@ -78,7 +66,8 @@ export class NetworkImpl implements Network {
 		this.gateway = gateway;
 		this.channel = channel;
 		this.eventServiceManager = new EventServiceManager(this);
-		this.realtimeBlockEventSource = new BlockEventSource(this.eventServiceManager);
+		this.realtimeFilteredBlockEventSource = new BlockEventSource(this.eventServiceManager, { type: 'filtered' });
+		this.realtimeFullBlockEventSource = new BlockEventSource(this.eventServiceManager, { type: 'full' });
 	}
 
 	/**
@@ -211,16 +200,14 @@ export class NetworkImpl implements Network {
 
 		this.contracts.clear();
 
-		this.oldListeners.forEach((listener) => listener.unregister());
-		this.oldListeners.clear();
-
 		this.commitListeners.forEach((listener) => listener.close());
 		this.commitListeners.clear();
 
 		this.blockListeners.forEach((listener) => listener.close());
 		this.blockListeners.clear();
 
-		this.realtimeBlockEventSource.close();
+		this.realtimeFilteredBlockEventSource.close();
+		this.realtimeFullBlockEventSource.close();
 		this.eventServiceManager.close();
 		this.channel.close();
 
@@ -246,11 +233,27 @@ export class NetworkImpl implements Network {
 	}
 
 	private newBlockListenerSession(listener: BlockListener, options: ListenerOptions) {
+		options = listenerOptionsWithDefaults(options);
+
 		if (options.startBlock) {
-			const blockSource = new BlockEventSource(this.eventServiceManager, Long.fromValue(options.startBlock));
-			return new IsolatedBlockListenerSession(listener, blockSource);
+			return this.newIsolatedBlockListenerSession(listener, options);
 		} else {
-			return new SharedBlockListenerSession(listener, this.realtimeBlockEventSource);
+			return this.newSharedBlockListenerSession(listener, options.type);
+		}
+	}
+
+	private newIsolatedBlockListenerSession(listener: BlockListener, options: ListenerOptions) {
+		const blockSource = new BlockEventSource(this.eventServiceManager, options);
+		return new IsolatedBlockListenerSession(listener, blockSource);
+	}
+
+	private newSharedBlockListenerSession(listener: BlockListener, type?: EventType) {
+		if (type === 'filtered') {
+			return new SharedBlockListenerSession(listener, this.realtimeFilteredBlockEventSource);
+		} else if (type === 'full') {
+			return new SharedBlockListenerSession(listener, this.realtimeFullBlockEventSource);
+		} else {
+			throw new Error('Unsupported event listener type: ' + type);
 		}
 	}
 }

@@ -258,7 +258,17 @@
 /**
  * @typedef ListenerOptions
  * @memberof module:fabric-network
- * @property {number | string | Long} startBlock The block number from which events should be received.
+ * @property {number | string | Long} [startBlock] The block number from which events should be received. Leaving this
+ * value undefined starts listening from the current block.
+ * @property {module:fabric-network.EventType} [type] The type of events to be received.
+ */
+
+/**
+ * The type of an event. The type is based on the type of the raw event data: filtered, full block or including
+ * private data. For each type value there is a corresponding event sub-type, providing type information and functions
+ * specific to the raw event data.
+ * @typedef {('filtered' | 'full' | 'private')} EventType
+ * @memberof module:fabric-network
  */
 
 /**
@@ -266,9 +276,7 @@
  * @interface BlockEvent
  * @memberof module:fabric-network
  * @see module:fabric-network.FilteredBlockEvent
- * @property {('filtered'|'full'|'private')} type The type of this block event. The type is based on the type of the
- * raw event data: filtered, full block or including private data. Each type has its own specialized sub-type,
- * providing type information and functions specific to the raw event data.
+ * @property {module:fabric-network.EventType} type The type of this block event.
  * @property {Long} blockNumber The number of the block this event represents.
  */
 
@@ -301,6 +309,8 @@
  * Event representing a transaction processed within a block.
  * @interface TransactionEvent
  * @memberof module:fabric-network
+ * @see module:fabric-network.FilteredTransactionEvent
+ * @property {module:fabric-network.EventType} type The type of this transaction event.
  * @property {string} transactionId The ID of the transaction this event represents.
  * @property {string} status The status of this transaction.
  * @property {boolean} isValid Whether this transaction was successfully committed to the ledger. <code>true</code> if
@@ -327,6 +337,7 @@
  * @interface FilteredTransactionEvent
  * @implements {module:fabric-network.TransactionEvent}
  * @memberof module:fabric-network
+ * @property {'filtered'} type The type of this transaction event.
  * @property {FilteredTransaction} transactionData The raw transaction event protobuf.
  */
 
@@ -337,14 +348,22 @@
  * @returns {module:fabric-network.FilteredBlockEvent} Transaction event protobuf.
  */
 
+/**
+ * Get the contract events emitted by this transaction.
+ * @method TransactionEvent#getContractEvents
+ * @memberof module:fabric-network
+ * @returns {module:fabric-network.FilteredContractEvent[]} Contract events.
+ */
+
 
 /**
  * Event representing a contract event emitted by a smart contract.
  * @interface ContractEvent
  * @memberof module:fabric-network
+ * @see module:fabric-network.FilteredContractEvent
+ * @property {module:fabric-network.EventType} type The type of this contract event.
  * @property {string} chaincodeId The chaincode ID of the smart contract that emitted this event.
  * @property {string} eventName The name of the emitted event.
- * @property {Buffer} payload The payload data associated with this event by the smart contract.
  */
 
 /**
@@ -352,6 +371,22 @@
  * @method ContractEvent#getTransactionEvent
  * @memberof module:fabric-network
  * @returns {module:fabric-network.TransactionEvent} A transaction event.
+ */
+
+
+/**
+ * Event representing a contract event emitted by a smart contract.
+ * @interface FilteredContractEvent
+ * @implements {module:fabric-network.ContractEvent}
+ * @memberof module:fabric-network
+ * @property {'filtered'} type The type of this contract event.
+ */
+
+/**
+ * Get the parent transaction event of this event.
+ * @method ContractEvent#getTransactionEvent
+ * @memberof module:fabric-network
+ * @returns {module:fabric-network.FilteredTransactionEvent} A transaction event.
  */
 
 
@@ -435,6 +470,7 @@
 
 /**
  * Add a listener to receive block events for this network. Blocks will be received in order and without duplication.
+ * The default is to listen for full block events from the current block position.
  * @method Network#addBlockListener
  * @memberof module:fabric-network
  * @async

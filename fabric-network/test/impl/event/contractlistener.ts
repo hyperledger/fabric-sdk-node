@@ -9,7 +9,7 @@ import chai = require('chai');
 const expect = chai.expect;
 import Long = require('long');
 
-import { Channel, Client, Endorser, Eventer, EventInfo, FilteredBlock, FilteredTransaction, IdentityContext } from 'fabric-common';
+import { Channel, Client, Endorser, Eventer, EventInfo, FilteredBlock, FilteredTransaction, IdentityContext, Block } from 'fabric-common';
 import * as protos from 'fabric-protos';
 import { BlockEvent, ContractEvent, ContractListener, ListenerOptions } from '../../../src/events';
 import { Network, NetworkImpl } from '../../../src/network';
@@ -29,9 +29,10 @@ describe('contract event listener', () => {
 	let network: Network;
 	let channel: sinon.SinonStubbedInstance<Channel>;
 	let listener: StubContractListener;
+	let spyListener: sinon.SinonSpy<[ContractEvent], Promise<void>>;
 	let contract: Contract;
 	const eventName: string = 'eventName';
-	const chaincodeID: string = 'bourbons';
+	const chaincodeId: string = 'bourbons';
 
 	beforeEach(async () => {
 		eventService = new StubEventService('stub');
@@ -57,10 +58,11 @@ describe('contract event listener', () => {
 		network = new NetworkImpl(gateway, channel);
 
 		listener = testUtils.newAsyncListener<ContractEvent>();
+		spyListener = sinon.spy(listener);
 
 		const namespace: string = 'biscuitContract';
 		const collections: string[] = ['collection1', 'collection2'];
-		contract = new ContractImpl(network, chaincodeID, namespace, collections);
+		contract = new ContractImpl(network, chaincodeId, namespace, collections);
 	});
 
 	afterEach(() => {
@@ -72,12 +74,90 @@ describe('contract event listener', () => {
 		return {
 			eventService,
 			blockNumber: new Long(blockNumber),
-			filteredBlock: newFilteredBlock(blockNumber)
+			block: newFullBlock(blockNumber)
 		};
 	}
 
-	function addTransaction(event: EventInfo, filteredTransaction: FilteredTransaction): void {
-		event.filteredBlock.filtered_transactions.push(filteredTransaction);
+	function newFullBlock(blockNumber: number): Block {
+		const block = new protos.common.Block();
+		block.data = new protos.common.BlockData();
+		block.metadata = new protos.common.BlockMetadata();
+		block.metadata.metadata = [];
+		block.metadata.metadata[protos.common.BlockMetadataIndex.TRANSACTIONS_FILTER] = [];
+		return block;
+	}
+
+	function addTransaction(event: EventInfo, transaction: any, statusCode: number = protos.protos.TxValidationCode.VALID): void {
+		event.block.data.data.push(newEnvelope(transaction));
+
+		const transactionStatusCodes = event.block.metadata.metadata[protos.common.BlockMetadataIndex.TRANSACTIONS_FILTER];
+		transactionStatusCodes.push(statusCode);
+	}
+
+	function newEnvelope(transaction: any): any {
+		const channelHeader = new protos.common.ChannelHeader();
+		channelHeader.type = protos.common.HeaderType.ENDORSER_TRANSACTION;
+
+		const payload = new protos.common.Payload();
+		payload.header = new protos.common.Header();
+		payload.header.channel_header = channelHeader;
+		payload.data = transaction;
+
+		const envelope = new protos.common.Envelope();
+		envelope.payload = payload;
+
+		return envelope;
+	}
+
+	function newTransaction(ccId: string = contract.chaincodeId): any {
+		const transaction = new protos.protos.Transaction();
+		transaction.actions.push(newTransactionAction(ccId));
+		return transaction;
+	}
+
+	function newTransactionAction(ccId: string): any {
+		const transactionAction = new protos.protos.TransactionAction();
+		transactionAction.payload = newChaincodeActionPayload(ccId);
+		return transactionAction;
+	}
+
+	function newChaincodeActionPayload(ccId: string): any {
+		const chaincodeActionPayload = new protos.protos.ChaincodeActionPayload();
+		chaincodeActionPayload.action = newChaincodeEndorsedAction(ccId);
+		return chaincodeActionPayload;
+	}
+
+	function newChaincodeEndorsedAction(ccId: string): any {
+		const endorsedAction = new protos.protos.ChaincodeEndorsedAction();
+		endorsedAction.proposal_response_payload = newProposalResponsePayload(ccId);
+		return endorsedAction;
+	}
+
+	function newProposalResponsePayload(ccId: string): any {
+		const proposalResponsePayload = new protos.protos.ProposalResponsePayload();
+		proposalResponsePayload.extension = newChaincodeAction(ccId);
+		return proposalResponsePayload;
+	}
+
+	function newChaincodeAction(ccId: string): any {
+		const chaincodeAction = new protos.protos.ChaincodeAction();
+		chaincodeAction.events = newChaincodeEvent(ccId);
+		return chaincodeAction;
+	}
+
+	function newChaincodeEvent(ccId: string): any {
+		const chaincodeEvent = new protos.protos.ChaincodeEvent();
+		chaincodeEvent.chaincode_id = ccId;
+		chaincodeEvent.event_name = eventName;
+		return chaincodeEvent;
+	}
+
+	function newFilteredEvent(blockNumber: number): EventInfo {
+		return {
+			eventService,
+			blockNumber: new Long(blockNumber),
+			filteredBlock: newFilteredBlock(blockNumber)
+		};
 	}
 
 	function newFilteredBlock(blockNumber: number): FilteredBlock {
@@ -87,29 +167,27 @@ describe('contract event listener', () => {
 		return filteredBlock;
 	}
 
-	function newFilteredTransaction(chaincodeId: string = contract.chaincodeId): FilteredTransaction {
+	function addFilteredTransaction(event: EventInfo, filteredTransaction: FilteredTransaction): void {
+		event.filteredBlock.filtered_transactions.push(filteredTransaction);
+	}
+
+	function newFilteredTransaction(ccId: string = contract.chaincodeId): FilteredTransaction {
 		const filteredTransaction = new protos.protos.FilteredTransaction();
-		filteredTransaction.transaction_actions = newFilteredTransactionAction(chaincodeId);
+		filteredTransaction.tx_validation_code = 'VALID';
+		filteredTransaction.transaction_actions = newFilteredTransactionAction(ccId);
 		return filteredTransaction;
 	}
 
-	function newFilteredTransactionAction(chaincodeId: string): any {
+	function newFilteredTransactionAction(ccId: string): any {
 		const filteredTransactionAction = new protos.protos.FilteredTransactionActions();
-		filteredTransactionAction.chaincode_actions = [newFilteredChaincodeAction(chaincodeId)];
+		filteredTransactionAction.chaincode_actions = [newFilteredChaincodeAction(ccId)];
 		return filteredTransactionAction;
 	}
 
-	function newFilteredChaincodeAction(chaincodeId: string): any {
+	function newFilteredChaincodeAction(ccId: string): any {
 		const filteredChaincodeAction = new protos.protos.FilteredChaincodeAction();
-		filteredChaincodeAction.chaincode_event = newChaincodeEvent(chaincodeId);
+		filteredChaincodeAction.chaincode_event = newChaincodeEvent(ccId);
 		return filteredChaincodeAction;
-	}
-
-	function newChaincodeEvent(chaincodeId: string): any {
-		const chaincodeEvent = new protos.protos.ChaincodeEvent();
-		chaincodeEvent.chaincode_id = chaincodeId;
-		chaincodeEvent.event_name = eventName;
-		return chaincodeEvent;
 	}
 
 	it('add listener returns the listener', async () => {
@@ -119,130 +197,122 @@ describe('contract event listener', () => {
 
 	it('listener not called if block contains no chaincode events', async () => {
 		const event = newEvent(1); // Block event with no chaincode events
-		const spy = sinon.spy(listener);
 		const blockListener = testUtils.newAsyncListener<BlockEvent>();
 
-		await contract.addContractListener(spy);
+		await contract.addContractListener(spyListener);
 		await network.addBlockListener(blockListener);
 		eventService.sendEvent(event);
 		await blockListener.completePromise;
 
-		sinon.assert.notCalled(spy);
+		sinon.assert.notCalled(spyListener);
 	});
 
 	it('listener receives events', async () => {
 		const event = newEvent(1);
-		addTransaction(event, newFilteredTransaction());
+		addTransaction(event, newTransaction());
 
-		await contract.addContractListener(listener);
+		await contract.addContractListener(spyListener);
 		eventService.sendEvent(event);
-		const actual = await listener.completePromise;
+		await listener.completePromise;
 
-		expect(actual[0].chaincodeId).to.equal(chaincodeID);
-		expect(actual[0].eventName).to.equal(eventName);
+		sinon.assert.calledOnceWithExactly(spyListener, sinon.match({ chaincodeId, eventName }));
 	});
 
 	it('stops listening for events after the listener has been removed', async () => {
 		const event = newEvent(1);
-		addTransaction(event, newFilteredTransaction());
-
-		const spy = sinon.spy(listener);
+		addTransaction(event, newTransaction());
 		const blockListener = testUtils.newAsyncListener<BlockEvent>();
-		await contract.addContractListener(spy);
-		contract.removeContractListener(spy);
+
+		await contract.addContractListener(spyListener);
+		contract.removeContractListener(spyListener);
 		await network.addBlockListener(blockListener);
 		eventService.sendEvent(event);
 		await blockListener.completePromise;
 
-		sinon.assert.notCalled(spy);
+		sinon.assert.notCalled(spyListener);
 	});
 
 	it('listener is invoked for each contract event in a block', async () => {
 		listener = testUtils.newAsyncListener<ContractEvent>(2);
+		spyListener = sinon.spy(listener);
 
-		const event1 = newEvent(1);
-		addTransaction(event1, newFilteredTransaction());
-		addTransaction(event1, newFilteredTransaction());
+		const event = newEvent(1);
+		const transaction = newTransaction();
+		addTransaction(event, transaction);
+		addTransaction(event, transaction);
 
-		await contract.addContractListener(listener);
-		eventService.sendEvent(event1);
-		const actual = await listener.completePromise;
+		await contract.addContractListener(spyListener);
+		eventService.sendEvent(event);
+		await listener.completePromise;
 
-		expect(actual[0].chaincodeId).to.equal(chaincodeID);
-		expect(actual[0].eventName).to.equal(eventName);
-
-		expect(actual[1].chaincodeId).to.equal(chaincodeID);
-		expect(actual[1].eventName).to.equal(eventName);
+		sinon.assert.calledWith(spyListener.getCall(0), sinon.match({ chaincodeId, eventName }));
+		sinon.assert.calledWith(spyListener.getCall(1), sinon.match({ chaincodeId, eventName }));
 	});
 
 	it('listener only receives events matching its chaincode id', async () => {
-		const event = newEvent(1);
-		addTransaction(event, newFilteredTransaction('fabCar')); // event for another contract
+		const badEvent = newEvent(1);
+		addTransaction(badEvent, newTransaction('fabCar')); // Event for another contract
 
-		const secondEvent = newEvent(2);
-		addTransaction(secondEvent, newFilteredTransaction());
+		const goodEvent = newEvent(2);
+		addTransaction(goodEvent, newTransaction());
 
-		await contract.addContractListener(listener);
-		eventService.sendEvent(event);
-		eventService.sendEvent(secondEvent);
-		const actual = await listener.completePromise;
+		await contract.addContractListener(spyListener);
+		eventService.sendEvent(badEvent);
+		eventService.sendEvent(goodEvent);
+		await listener.completePromise;
 
-		expect(actual.length).to.equal(1);
-		expect(actual[0].chaincodeId).to.equal(chaincodeID);
-		expect(actual[0].eventName).to.equal(eventName);
+		sinon.assert.calledOnceWithExactly(spyListener, sinon.match({ chaincodeId, eventName }));
 	});
 
 	it('error thrown by listener does not disrupt other listeners', async () => {
 		listener = testUtils.newAsyncListener<ContractEvent>(2);
+		spyListener = sinon.spy(listener);
 		const errorListener = sinon.fake.rejects(new Error('LISTENER_ERROR'));
 
+		const transaction = newTransaction();
+
 		const event1 = newEvent(1);
-		addTransaction(event1, newFilteredTransaction());
+		addTransaction(event1, transaction);
+
 		const event2 = newEvent(2);
-		addTransaction(event2, newFilteredTransaction());
+		addTransaction(event1, transaction);
 
 		await contract.addContractListener(errorListener);
-		await contract.addContractListener(listener);
+		await contract.addContractListener(spyListener);
 		eventService.sendEvent(event1);
 		eventService.sendEvent(event2);
-		const actual = await listener.completePromise;
+		await listener.completePromise;
 
-		expect(actual[0].chaincodeId).to.equal(chaincodeID);
-		expect(actual[0].eventName).to.equal(eventName);
-
-		expect(actual[1].chaincodeId).to.equal(chaincodeID);
-		expect(actual[1].eventName).to.equal(eventName);
+		sinon.assert.calledTwice(spyListener);
 	});
 
 	it('error thrown by listener does not prevent subsequent contract events being processed', async () => {
 		listener = testUtils.newAsyncListener<ContractEvent>(2);
-		const fake = sinon.fake(async (event) => {
-			await listener(event);
+		const fake = sinon.fake(async (e) => {
+			await listener(e);
 			throw new Error('LISTENER_ERROR');
 		});
 
-		const event1 = newEvent(1);
-		addTransaction(event1, newFilteredTransaction());
-		addTransaction(event1, newFilteredTransaction());
+		const event = newEvent(1);
+		const transaction = newTransaction();
+		addTransaction(event, transaction);
+		addTransaction(event, transaction);
 
 		await contract.addContractListener(fake);
-		eventService.sendEvent(event1);
-		const actual = await listener.completePromise;
+		eventService.sendEvent(event);
+		await listener.completePromise;
 
-		expect(actual[0].chaincodeId).to.equal(chaincodeID);
-		expect(actual[0].eventName).to.equal(eventName);
-
-		expect(actual[1].chaincodeId).to.equal(chaincodeID);
-		expect(actual[1].eventName).to.equal(eventName);
+		sinon.assert.calledTwice(fake);
 	});
 
 	it('replay contract listener does not receive events earlier than start block', async () => {
-		listener = testUtils.newAsyncListener<ContractEvent>(1);
+		const transaction = newTransaction();
 
 		const event1 = newEvent(1);
-		addTransaction(event1, newFilteredTransaction());
+		addTransaction(event1, transaction);
+
 		const event2 = newEvent(2);
-		addTransaction(event2, newFilteredTransaction());
+		addTransaction(event2, transaction);
 
 		const options: ListenerOptions = {
 			startBlock: 2
@@ -251,11 +321,52 @@ describe('contract event listener', () => {
 		await contract.addContractListener(listener, options);
 		eventService.sendEvent(event1);
 		eventService.sendEvent(event2);
-		const actual = await listener.completePromise;
+		const args = await listener.completePromise;
 
-		expect(actual.length).to.equal(1);
-		expect(actual[0].chaincodeId).to.equal(chaincodeID);
-		expect(actual[0].eventName).to.equal(eventName);
+		const blockNumber = args[0].getTransactionEvent().getBlockEvent().blockNumber.toNumber();
+		expect(blockNumber).to.equal(options.startBlock);
 	});
 
+	it('listener defaults to full blocks', async () => {
+		const eventServiceManager = (network as any).eventServiceManager;
+		const stub = sinon.stub(eventServiceManager, 'startEventService');
+
+		await contract.addContractListener(listener);
+
+		sinon.assert.calledOnceWithExactly(stub, sinon.match.any, sinon.match.has('blockType', 'full'));
+	});
+
+	it('listener can receive filtered blocks', async () => {
+		const eventServiceManager = (network as any).eventServiceManager;
+		const stub = sinon.stub(eventServiceManager, 'startEventService');
+		const event = newFilteredEvent(1);
+		addFilteredTransaction(event, newFilteredTransaction());
+
+		const options: ListenerOptions = {
+			type: 'filtered'
+		};
+		await contract.addContractListener(listener, options);
+		eventService.sendEvent(event);
+		const contractEvents = await listener.completePromise;
+
+		sinon.assert.calledOnceWithExactly(stub, sinon.match.any, sinon.match.has('blockType', options.type));
+		expect(contractEvents[0]).to.include({
+			type: options.type
+		});
+	});
+
+	it('listener does not receive events for invalid transactions', async () => {
+		const badEvent = newEvent(1);
+		addTransaction(badEvent, newTransaction(), protos.protos.TxValidationCode.MVCC_READ_CONFLICT);
+
+		const goodEvent = newEvent(2);
+		addTransaction(badEvent, newTransaction());
+
+		await contract.addContractListener(listener);
+		eventService.sendEvent(badEvent);
+		eventService.sendEvent(goodEvent);
+
+		const contractEvents = await listener.completePromise;
+		expect(contractEvents[0].getTransactionEvent()).to.include({ isValid: true }); // tslint:disable-line: no-unused-expression
+	});
 });

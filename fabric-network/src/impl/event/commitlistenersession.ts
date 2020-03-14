@@ -19,7 +19,7 @@ import {
 } from 'fabric-common';
 
 import * as Logger from '../../logger';
-import { newCommitEvent } from './filteredevents';
+import { newCommitEvent } from './commiteventfactory';
 const logger = Logger.getLogger('CommitListenerSession');
 
 export class CommitListenerSession implements ListenerSession {
@@ -33,7 +33,7 @@ export class CommitListenerSession implements ListenerSession {
 	constructor(listener: CommitListener, eventServiceManager: EventServiceManager, endorsers: Endorser[], transactionId: string) {
 		this.listener = listener;
 		this.eventServiceManager = eventServiceManager;
-		this.eventServices = endorsers.map((endorser) => eventServiceManager.getCachedEventService(endorser));
+		this.eventServices = endorsers.map((endorser) => eventServiceManager.getCommitEventService(endorser));
 		this.transactionId = transactionId;
 
 		for (const endorser of endorsers) {
@@ -105,7 +105,7 @@ export class CommitListenerSession implements ListenerSession {
 		try {
 			this.listener(commitError, commitEvent);
 		} catch (error) {
-			logger.error('Error notifying listener:', error);
+			logger.warn('Error notifying listener:', error);
 		}
 	}
 }
