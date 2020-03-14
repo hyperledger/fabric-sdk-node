@@ -7,8 +7,10 @@
 import { FilteredBlock, FilteredTransaction, Endorser, EventInfo } from 'fabric-common';
 import Long = require('long');
 
+export type EventType = 'filtered' | 'full' | 'private';
+
 export interface BlockEvent {
-	readonly type: 'filtered' | 'full' | 'private';
+	readonly type: EventType;
 	readonly blockNumber: Long;
 	getTransactionEvents(): TransactionEvent[];
 }
@@ -20,6 +22,7 @@ export interface FilteredBlockEvent extends BlockEvent {
 }
 
 export interface TransactionEvent {
+	readonly type: EventType;
 	readonly transactionId: string;
 	readonly status: string;
 	readonly isValid: boolean;
@@ -28,15 +31,22 @@ export interface TransactionEvent {
 }
 
 export interface FilteredTransactionEvent extends TransactionEvent {
+	readonly type: 'filtered';
 	readonly transactionData: FilteredTransaction;
 	getBlockEvent(): FilteredBlockEvent;
+	getContractEvents(): FilteredContractEvent[];
 }
 
 export interface ContractEvent {
+	readonly type: EventType;
 	readonly chaincodeId: string;
 	readonly eventName: string;
-	readonly payload: Buffer;
 	getTransactionEvent(): TransactionEvent;
+}
+
+export interface FilteredContractEvent extends ContractEvent {
+	readonly type: 'filtered';
+	getTransactionEvent(): FilteredTransactionEvent;
 }
 
 export type BlockListener = (event: BlockEvent) => Promise<void>;

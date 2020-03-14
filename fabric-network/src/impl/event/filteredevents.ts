@@ -5,7 +5,7 @@
  */
 
 import { EventInfo, FilteredTransaction, Endorser } from 'fabric-common';
-import { ContractEvent, FilteredBlockEvent, FilteredTransactionEvent, CommitEvent } from '../../events';
+import { FilteredContractEvent, FilteredBlockEvent, FilteredTransactionEvent, CommitEvent } from '../../events';
 // @ts-ignore no implicit any
 import protos = require('fabric-protos');
 
@@ -59,6 +59,7 @@ export function newCommitEvent(peer: Endorser, eventInfo: EventInfo): CommitEven
 	}
 
 	const commitEvent: CommitEvent = {
+		type: 'filtered',
 		peer: peer,
 		transactionId: transactionId,
 		status: eventInfo.status!,
@@ -82,15 +83,16 @@ function newFilteredTransactionEvent(blockEvent: FilteredBlockEvent, filteredTra
 	const code = filteredTransaction.tx_validation_code;
 	const status = codeToStatusMap[code];
 
-	let contractEvents: ContractEvent[] | undefined;
+	let contractEvents: FilteredContractEvent[] | undefined;
 	function getContractEvents(transaction: FilteredTransactionEvent) {
 		if (!contractEvents) {
-			contractEvents = newContractEvents(transaction);
+			contractEvents = newFilteredContractEvents(transaction);
 		}
 		return contractEvents;
 	}
 
 	const transactionEvent: FilteredTransactionEvent = {
+		type: 'filtered',
 		transactionId: filteredTransaction.txid,
 		status,
 		transactionData: filteredTransaction,
@@ -99,19 +101,20 @@ function newFilteredTransactionEvent(blockEvent: FilteredBlockEvent, filteredTra
 		getContractEvents: () => getContractEvents(transactionEvent)
 	};
 
-	return transactionEvent;
+	return Object.freeze(transactionEvent);
 }
 
-function newContractEvents(transactionEvent: FilteredTransactionEvent): ContractEvent[] {
+function newFilteredContractEvents(transactionEvent: FilteredTransactionEvent): FilteredContractEvent[] {
 	const chaincodeActions: any[] = transactionEvent.transactionData.transaction_actions?.chaincode_actions || [];
-	return chaincodeActions.map((ccAction) => newContractEvent(transactionEvent, ccAction.chaincode_event));
+	return chaincodeActions.map((ccAction) => newFilteredContractEvent(transactionEvent, ccAction.chaincode_event));
 }
 
-function newContractEvent(transactionEvent: FilteredTransactionEvent, chaincodeEvent: any): ContractEvent {
-	return {
+function newFilteredContractEvent(transactionEvent: FilteredTransactionEvent, chaincodeEvent: any): FilteredContractEvent {
+	const contractEvent: FilteredContractEvent = {
+		type: 'filtered',
 		chaincodeId: chaincodeEvent.chaincode_id,
 		eventName: chaincodeEvent.event_name,
-		payload: chaincodeEvent.payload,
 		getTransactionEvent: () => transactionEvent
 	};
+	return Object.freeze(contractEvent);
 }
