@@ -1,3 +1,14 @@
+## v1.4.8
+Mon 16 Mar 2020 12:05:37 GMT
+
+* [396f9b3e](https://github.com/hyperledger/fabric-sdk-node/commit/396f9b3e) [FABN-1515](https://jira.hyperledger.org/browse/FABN-1515): consume CKS as a synchronus function (#172)
+* [971b0dfe](https://github.com/hyperledger/fabric-sdk-node/commit/971b0dfe) Trigger for PR builds (release-1.4) (#174)
+* [a4ee5d4b](https://github.com/hyperledger/fabric-sdk-node/commit/a4ee5d4b) [FABN-1510](https://jira.hyperledger.org/browse/FABN-1510) Update grpc levels to 1.24.2 (#164)
+* [74486cb4](https://github.com/hyperledger/fabric-sdk-node/commit/74486cb4) [FABN-1508](https://jira.hyperledger.org/browse/FABN-1508) setEndorsingOrganizations support (#163)
+* [2cd7570d](https://github.com/hyperledger/fabric-sdk-node/commit/2cd7570d) [FABN-1481](https://jira.hyperledger.org/browse/FABN-1481): Add Node 12 to compatibility matrix (#155)
+* [a271a379](https://github.com/hyperledger/fabric-sdk-node/commit/a271a379) [FABN-1505](https://jira.hyperledger.org/browse/FABN-1505) List winston as dependency for all packages (#153)
+* [edeca68b](https://github.com/hyperledger/fabric-sdk-node/commit/edeca68b) Revert to releasing snapshots after 1.4.7 (#146)
+
 ## v1.4.7
 Tue 25 Feb 2020 10:18:49 GMT
 
