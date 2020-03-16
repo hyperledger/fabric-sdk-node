@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Hyperledger Fabric SDK for node.js Interface: CommitEvent</title>
+	<title>Hyperledger Fabric SDK for node.js Interface: FilteredContractEvent</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -93,7 +93,7 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Interface: CommitEvent</h1>
+	<h1 class="page-title">Interface: FilteredContractEvent</h1>
 <section>
 
 <header>
@@ -101,7 +101,7 @@
         <h2>
             <span class="ancestors"><a href="module-fabric-network.html">fabric-network</a>.</span>
         
-        CommitEvent
+        FilteredContractEvent
         </h2>
         
     
@@ -111,6 +111,8 @@
 <article>
     <div class="container-overview">
     
+        
+            <div class="description">Event representing a contract event emitted by a smart contract.</div>
         
 
         
@@ -143,13 +145,13 @@
 
         <tr>
             
-                <td class="name"><code>peer</code></td>
+                <td class="name"><code>type</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type"><a href="Endorser.html">Endorser</a></span>
+<span class="param-type">'filtered'</span>
 
 
 
@@ -160,7 +162,7 @@
 
             
 
-            <td class="description last">The endorsing peer that produced this event.</td>
+            <td class="description last">The type of this contract event.</td>
         </tr>
 
     
@@ -184,7 +186,7 @@
     <dt class="implements">Implements:</dt>
     <dd class="implements"><ul>
         
-            <li><a href="module-fabric-network.FilteredTransactionEvent.html">module:fabric-network.FilteredTransactionEvent</a></li>
+            <li><a href="module-fabric-network.ContractEvent.html">module:fabric-network.ContractEvent</a></li>
         
     </ul></dd>
     
