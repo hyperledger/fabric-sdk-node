@@ -6,7 +6,7 @@
     "blockchain"
   ],
   "version": "1.4.8",
-  "tag": "unstable-1.4",
+  "tag": "latest",
   "main": "index.js",
   "repository": {
     "type": "git",
