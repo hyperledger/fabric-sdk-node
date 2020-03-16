@@ -5,8 +5,8 @@
     "hyperledger",
     "blockchain"
   ],
-  "version": "1.4.8",
-  "tag": "latest",
+  "version": "1.4.9-snapshot",
+  "tag": "unstable-1.4",
   "main": "index.js",
   "repository": {
     "type": "git",
