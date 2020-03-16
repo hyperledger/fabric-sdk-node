@@ -1,3 +1,38 @@
+## v2.0.0-beta.4
+Mon 16 Mar 2020 15:27:54 GMT
+
+* [daf40d7f](https://github.com/hyperledger/fabric-sdk-node/commit/daf40d7f) [FABN-1518](https://jira.hyperledger.org/browse/FABN-1518): Full block event listening (#176)
+* [18f110f2](https://github.com/hyperledger/fabric-sdk-node/commit/18f110f2) [FABN-1513](https://jira.hyperledger.org/browse/FABN-1513): Add a new "extensions" param to generateCSR (#167)
+* [2ea18d36](https://github.com/hyperledger/fabric-sdk-node/commit/2ea18d36) Match fabric-network API to v1.4 as closely as possible (#171)
+* [0eb8838f](https://github.com/hyperledger/fabric-sdk-node/commit/0eb8838f) [FABN-1506](https://jira.hyperledger.org/browse/FABN-1506): JSDoc improvements (#170)
+* [0c0c6869](https://github.com/hyperledger/fabric-sdk-node/commit/0c0c6869) Re-enable coverage reporting for unit tests (#169)
+* [32665337](https://github.com/hyperledger/fabric-sdk-node/commit/32665337) [FABN-1495](https://jira.hyperledger.org/browse/FABN-1495) Remove unused event code (#168)
+* [4ecca00a](https://github.com/hyperledger/fabric-sdk-node/commit/4ecca00a) [FABN-1506](https://jira.hyperledger.org/browse/FABN-1506): JSDoc for block, contract and commit events (#166)
+* [ac93f729](https://github.com/hyperledger/fabric-sdk-node/commit/ac93f729) [FABN-1492](https://jira.hyperledger.org/browse/FABN-1492): Add isValid() convenience method to transaction events (#165)
+* [c3320963](https://github.com/hyperledger/fabric-sdk-node/commit/c3320963) [FABN-1494](https://jira.hyperledger.org/browse/FABN-1494) Replay contract events (#161)
+* [aad140bf](https://github.com/hyperledger/fabric-sdk-node/commit/aad140bf) [FABN-1492](https://jira.hyperledger.org/browse/FABN-1492): Refactor block, contract and commit events (#162)
+* [fea01f0d](https://github.com/hyperledger/fabric-sdk-node/commit/fea01f0d) [FABN-1492](https://jira.hyperledger.org/browse/FABN-1492): Define a specific BlockEvent type (#160)
+* [94c9a2ef](https://github.com/hyperledger/fabric-sdk-node/commit/94c9a2ef) [FABN-835](https://jira.hyperledger.org/browse/FABN-835): Refactor CryptoKeyStore (#150)
+* [53b77783](https://github.com/hyperledger/fabric-sdk-node/commit/53b77783) [FABN-1505](https://jira.hyperledger.org/browse/FABN-1505) Port changes for winston dep into master (#159)
+* [d953eaa0](https://github.com/hyperledger/fabric-sdk-node/commit/d953eaa0) [FABN-1492](https://jira.hyperledger.org/browse/FABN-1492) Realtime contract event listening (#152)
+* [04beb82a](https://github.com/hyperledger/fabric-sdk-node/commit/04beb82a) [FABN-1439](https://jira.hyperledger.org/browse/FABN-1439): Add Node 10 as tested platform in compatibility matrix (#156)
+* [fb39badb](https://github.com/hyperledger/fabric-sdk-node/commit/fb39badb) [FABN-1507](https://jira.hyperledger.org/browse/FABN-1507) Use published fabric 2.0 docker images and increase cucumber timeouts on commit and endorse (#154)
+* [0507138d](https://github.com/hyperledger/fabric-sdk-node/commit/0507138d) [FABN-1493](https://jira.hyperledger.org/browse/FABN-1493): Ensure non-shared event services are closed (#149)
+* [ff3f86d6](https://github.com/hyperledger/fabric-sdk-node/commit/ff3f86d6) [FABN-1493](https://jira.hyperledger.org/browse/FABN-1493): Block event replay (#147)
+* [ddf1d715](https://github.com/hyperledger/fabric-sdk-node/commit/ddf1d715) [FABN-1491](https://jira.hyperledger.org/browse/FABN-1491): Updated realtime block event listening (#144)
+* [c31fa5ea](https://github.com/hyperledger/fabric-sdk-node/commit/c31fa5ea) [FABN-835](https://jira.hyperledger.org/browse/FABN-835): Refactor CryptoKeyStore (#145)
+* [373a6a8d](https://github.com/hyperledger/fabric-sdk-node/commit/373a6a8d) [FABN-1498](https://jira.hyperledger.org/browse/FABN-1498) NodeSDK ccp handle missing orderers (#137)
+* [8156c0d5](https://github.com/hyperledger/fabric-sdk-node/commit/8156c0d5) [FABN-1499](https://jira.hyperledger.org/browse/FABN-1499) NodeSDK update protos v2.0.0 (#139)
+* [d37dc852](https://github.com/hyperledger/fabric-sdk-node/commit/d37dc852) [FABN-1396](https://jira.hyperledger.org/browse/FABN-1396) Even more test/scenario cleanup (#135)
+* [c201b5fd](https://github.com/hyperledger/fabric-sdk-node/commit/c201b5fd) [FABN-1489](https://jira.hyperledger.org/browse/FABN-1489) Clean up cucumber scenario tests for commit event handlers (#128)
+* [8f3ca2e1](https://github.com/hyperledger/fabric-sdk-node/commit/8f3ca2e1) [FABN-1486](https://jira.hyperledger.org/browse/FABN-1486): Update sample transaction event handler (#136)
+* [ef36a919](https://github.com/hyperledger/fabric-sdk-node/commit/ef36a919) [FABN-1489](https://jira.hyperledger.org/browse/FABN-1489) Clean up integration tests (#134)
+* [8d07f263](https://github.com/hyperledger/fabric-sdk-node/commit/8d07f263) [FABN-1485](https://jira.hyperledger.org/browse/FABN-1485): Use commit event listener in TransactionEventHandler (#129)
+* [49ef338c](https://github.com/hyperledger/fabric-sdk-node/commit/49ef338c) [FABN-1478](https://jira.hyperledger.org/browse/FABN-1478): Rework Network.addCommitListener() (#126)
+* [45cf6f59](https://github.com/hyperledger/fabric-sdk-node/commit/45cf6f59) [FABN-1496](https://jira.hyperledger.org/browse/FABN-1496): NodeSDK use fabric-shim 2.0.0 (#133)
+* [c66e1ed6](https://github.com/hyperledger/fabric-sdk-node/commit/c66e1ed6) [FABN-1497](https://jira.hyperledger.org/browse/FABN-1497) NodeSDK return master to snapshots (#131)
+* [440564e2](https://github.com/hyperledger/fabric-sdk-node/commit/440564e2) [FABN-1396](https://jira.hyperledger.org/browse/FABN-1396) Remove unused chaincode contracts from test/scenario (#130)
+
 ## v2.0.0-beta.3
 Thu Feb 13 17:31:21 EST 2020
 

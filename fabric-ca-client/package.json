@@ -5,8 +5,8 @@
     "hyperledger",
     "blockchain"
   ],
-  "version": "2.0.0-snapshot",
-  "tag": "unstable",
+  "version": "2.0.0-beta.4",
+  "tag": "beta",
   "main": "index.js",
   "scripts": {
     "test": "nyc mocha --recursive  -t 10000"
