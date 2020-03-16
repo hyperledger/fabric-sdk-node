@@ -107,8 +107,8 @@
     "cache": true,
     "check-coverage": true,
     "statements": 82,
-    "branches": 76,
+    "branches": 74,
     "functions": 77,
-    "lines": 84
+    "lines": 83
   }
 }

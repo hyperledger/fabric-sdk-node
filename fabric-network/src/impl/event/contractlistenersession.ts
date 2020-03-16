@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { BlockEvent, BlockListener, ContractEvent, ContractListener, ListenerOptions } from '../../events';
+import { BlockEvent, BlockListener, ContractEvent, ContractListener, ListenerOptions, TransactionEvent } from '../../events';
 import * as Logger from '../../logger';
 import { Network } from '../../network';
 import { ListenerSession } from './listenersession';
@@ -35,10 +35,22 @@ export class ContractListenerSession implements ListenerSession {
 
 	private async onBlockEvent(blockEvent: BlockEvent): Promise<void> {
 		for (const transactionEvent of blockEvent.getTransactionEvents()) {
-			for (const contractEvent of transactionEvent.getContractEvents()) {
-				if (this.isMatch(contractEvent)) {
-					await this.notifyListener(contractEvent);
-				}
+			await this.onTransactionEvent(transactionEvent);
+		}
+	}
+
+	private async onTransactionEvent(transactionEvent: TransactionEvent): Promise<void> {
+		if (transactionEvent.isValid) {
+			await this.onValidTransactionEvent(transactionEvent);
+		} else {
+			logger.debug('Ignored contract events for invalid transaction:', transactionEvent);
+		}
+	}
+
+	private async onValidTransactionEvent(transactionEvent: TransactionEvent): Promise<void> {
+		for (const contractEvent of transactionEvent.getContractEvents()) {
+			if (this.isMatch(contractEvent)) {
+				await this.notifyListener(contractEvent);
 			}
 		}
 	}

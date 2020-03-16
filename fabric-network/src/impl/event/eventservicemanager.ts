@@ -41,7 +41,7 @@ export class EventServiceManager {
 	 * @param peer Peer from which to receive events.
 	 * @returns An event service.
 	 */
-	getCachedEventService(peer: Endorser) {
+	getCommitEventService(peer: Endorser): EventService {
 		let eventService = this.eventServices.get(peer);
 		if (!eventService) {
 			eventService = this.newEventService([peer]);
@@ -58,7 +58,7 @@ export class EventServiceManager {
 	 * @param eventService EventService to be started if it not already started.
 	 * @param options The options to start the event service.
 	 */
-	async startEventService(eventService: EventService, options = {} as StartRequestOptions) {
+	async startEventService(eventService: EventService, options = {} as StartRequestOptions): Promise<void> {
 		if (eventService.isStarted()) {
 			return this.assertValidOptionsForStartedService(options, eventService);
 		}
@@ -69,13 +69,13 @@ export class EventServiceManager {
 		await eventService.send(options);
 	}
 
-	newDefaultEventService() {
+	newDefaultEventService(): EventService {
 		const peers = this.getEventPeers();
 		shuffle(peers);
 		return this.newEventService(peers);
 	}
 
-	close() {
+	close(): void {
 		this.eventServices.forEach((eventService) => eventService.close());
 	}
 
@@ -105,11 +105,11 @@ export class EventServiceManager {
 		return eventer;
 	}
 
-	private createName(peers: Endorser[]) {
+	private createName(peers: Endorser[]): string {
 		return peers.map((peer) => peer.name).join(',');
 	}
 
-	private assertValidOptionsForStartedService(options: StartRequestOptions, eventService: EventService) {
+	private assertValidOptionsForStartedService(options: StartRequestOptions, eventService: EventService): void {
 		if (options.blockType && options.blockType !== eventService.blockType) {
 			throw new Error('EventService is not receiving the correct blockType');
 		}
@@ -118,16 +118,16 @@ export class EventServiceManager {
 		}
 	}
 
-	private getEventPeers() {
+	private getEventPeers(): Endorser[] {
 		const orgPeers = this.getOrganizationPeers();
 		return orgPeers.length > 0 ? orgPeers : this.getNetworkPeers();
 	}
 
-	private getOrganizationPeers() {
+	private getOrganizationPeers(): Endorser[] {
 		return this.channel.getEndorsers(this.mspId);
 	}
 
-	private getNetworkPeers() {
+	private getNetworkPeers(): Endorser[] {
 		return this.channel.getEndorsers();
 	}
 }

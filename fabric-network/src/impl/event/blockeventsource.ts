@@ -4,17 +4,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { BlockEvent, BlockListener } from '../../events';
+import { BlockEvent, BlockListener, ListenerOptions, EventType } from '../../events';
 import { OrderedBlockQueue } from './orderedblockqueue';
 import { AsyncNotifier } from './asyncnotifier';
 import { EventServiceManager } from './eventservicemanager';
-import { newFilteredBlockEvent } from './filteredevents';
+import { newFilteredBlockEvent } from './filteredeventfactory';
+import { newFullBlockEvent } from './fulleventfactory';
 import {
 	EventCallback,
 	EventInfo,
 	EventListener,
 	EventRegistrationOptions,
-	EventService
+	EventService,
+	StartRequestOptions
 } from 'fabric-common';
 import Long = require('long');
 import util = require('util');
@@ -37,22 +39,26 @@ function allSettled<T>(promises: Promise<T>[]) {
 	return Promise.all(promises.map((promise) => settle(promise)));
 }
 
+const defaultBlockType: EventType = 'filtered';
+
 export class BlockEventSource {
 	private readonly eventServiceManager: EventServiceManager;
 	private eventService?: EventService;
-	private listeners = new Set<BlockListener>();
+	private readonly listeners = new Set<BlockListener>();
 	private eventListener?: EventListener;
 	private readonly blockQueue: OrderedBlockQueue;
 	private readonly asyncNotifier: AsyncNotifier<BlockEvent>;
+	private readonly blockType: EventType;
 	private started = false;
 
-	constructor(eventServiceManager: EventServiceManager, startBlock?: Long) {
+	constructor(eventServiceManager: EventServiceManager, options: ListenerOptions = {}) {
 		this.eventServiceManager = eventServiceManager;
-		this.blockQueue = new OrderedBlockQueue(startBlock);
+		this.blockQueue = this.newBlockQueue(options);
 		this.asyncNotifier = new AsyncNotifier(
 			this.blockQueue.getNextBlock.bind(this.blockQueue),
 			this.notifyListeners.bind(this)
 		);
+		this.blockType = options.type || defaultBlockType;
 	}
 
 	async addBlockListener(listener: BlockListener): Promise<BlockListener> {
@@ -69,6 +75,14 @@ export class BlockEventSource {
 		this.unregisterListener();
 		this.eventService?.close();
 		this.started = false;
+	}
+
+	private newBlockQueue(options: ListenerOptions): OrderedBlockQueue {
+		if (options.startBlock) {
+			return new OrderedBlockQueue(Long.fromValue(options.startBlock));
+		} else {
+			return new OrderedBlockQueue();
+		}
 	}
 
 	private async start() {
@@ -106,7 +120,10 @@ export class BlockEventSource {
 	}
 
 	private async startEventService() {
-		const options = { startBlock: this.getNextBlockNumber() };
+		const options: StartRequestOptions = {
+			blockType: this.blockType,
+			startBlock: this.getNextBlockNumber()
+		};
 		await this.eventServiceManager.startEventService(this.eventService!, options);
 	}
 
@@ -128,10 +145,12 @@ export class BlockEventSource {
 	}
 
 	private newBlockEvent(eventInfo: EventInfo): BlockEvent {
-		if (eventInfo.filteredBlock) {
+		if (this.blockType === 'filtered') {
 			return newFilteredBlockEvent(eventInfo);
+		} else if (this.blockType === 'full') {
+			return newFullBlockEvent(eventInfo);
 		} else {
-			throw new Error('Unexpected block event info: ' + util.inspect(eventInfo));
+			throw new Error('Unsupported event type: ' + this.blockType);
 		}
 	}
 
@@ -141,7 +160,7 @@ export class BlockEventSource {
 
 		for (const result of results) {
 			if (result.status === 'rejected') {
-				logger.error('Error notifying listener', result.reason);
+				logger.warn('Error notifying listener', result.reason);
 			}
 		}
 	}

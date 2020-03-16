@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { BlockEvent, BlockListener, Contract, ContractEvent, ContractListener, Gateway, Network, ListenerOptions } from 'fabric-network';
+import { BlockEvent, BlockListener, Contract, ContractEvent, ContractListener, Gateway, Network, ListenerOptions, EventType } from 'fabric-network';
 import { Constants } from '../constants';
 import * as GatewayHelper from './gateway';
 import * as BaseUtils from './utility/baseUtils';
@@ -12,11 +12,7 @@ import { StateStore } from './utility/stateStore';
 
 const stateStore: StateStore = StateStore.getInstance();
 
-export async function createContractListener(gatewayName: string, channelName: string, ccName: string, eventName: string, listenerName: string, filtered: boolean, replay: boolean, startBlock?: number): Promise<void> {
-	if (typeof filtered === 'undefined') {
-		filtered = true;
-	}
-
+export async function createContractListener(gatewayName: string, channelName: string, ccName: string, eventName: string, listenerName: string, type: EventType, startBlock?: number): Promise<void> {
 	const gateways: Map<string, any> = stateStore.get(Constants.GATEWAYS);
 	const gateway: Gateway  = gateways.get(gatewayName).gateway;
 	const contract: Contract = await GatewayHelper.retrieveContractFromGateway(gateway, channelName, ccName);
@@ -26,7 +22,7 @@ export async function createContractListener(gatewayName: string, channelName: s
 		active: true,
 		calls: 0,
 		eventName,
-		filtered,
+		eventType: type,
 		listener: {},
 		payloads: [],
 		type: Constants.CONTRACT,
@@ -63,18 +59,11 @@ export async function createContractListener(gatewayName: string, channelName: s
 		}
 	};
 
-	let listenerOptions: ListenerOptions = {};
-	if (replay) {
-		// Populate listenerOptions if replay has been specified
-		if (!startBlock) {
-			throw new Error(`For replay tests, please specify a start block to replay events from`);
-		}
-		listenerOptions = {
-			startBlock: startBlock
-		};
-	}
-
 	// Create the listener
+	const listenerOptions: ListenerOptions = {
+		startBlock,
+		type
+	};
 	await contract.addContractListener(contractListener, listenerOptions);
 
 	// Roll into a listener object to store
@@ -84,11 +73,7 @@ export async function createContractListener(gatewayName: string, channelName: s
 	stateStore.set(Constants.LISTENERS, listeners);
 }
 
-export async function createBlockListener(gatewayName: string, channelName: string, listenerName: string, filtered: boolean, replay: boolean, startBlock?: number, endBlock?: number): Promise<void> {
-	if (typeof filtered === 'undefined') {
-		filtered = true;
-	}
-
+export async function createBlockListener(gatewayName: string, channelName: string, listenerName: string, type: EventType, startBlock?: number, endBlock?: number): Promise<void> {
 	const gateways: Map<string, any> = stateStore.get(Constants.GATEWAYS);
 	const gateway: Gateway = gateways.get(gatewayName).gateway;
 	const network: Network = await gateway.getNetwork(channelName);
@@ -97,7 +82,7 @@ export async function createBlockListener(gatewayName: string, channelName: stri
 	const listenerObject: any = {
 		active: true,
 		calls: 0,
-		filtered,
+		eventType: type,
 		listener: {},
 		payloads: [],
 		type: Constants.BLOCK
@@ -131,7 +116,11 @@ export async function createBlockListener(gatewayName: string, channelName: stri
 			network.removeBlockListener(listener);
 		}
 	};
-	await network.addBlockListener(listener, { startBlock });
+	const listenerOptions: ListenerOptions = {
+		startBlock,
+		type
+	};
+	await network.addBlockListener(listener, listenerOptions);
 
 	// Roll into a listener object to store
 	listenerObject.listener = listener;
@@ -221,22 +210,22 @@ export async function checkListenerCallNumber(listenerName: string, compareNumbe
 	}
 }
 
-export function checkContractListenerDetails(listenerName: string, listenerType: string, filtered: boolean, eventName: string, isActive: boolean): void {
+export function checkContractListenerDetails(listenerName: string, listenerType: string, eventType: EventType, eventName: string, isActive: boolean): void {
 	const listenerObject: any = getListenerObject(listenerName);
 
 	// Check the listener properties
-	if ( (listenerObject.active !== isActive) || (listenerObject.type.localeCompare(listenerType) !== 0) || (listenerObject.eventName.localeCompare(eventName) !== 0) || (listenerObject.filtered !== filtered)) {
-		const msg: string = `Listener named ${listenerName} does not have the expected properties [type: ${listenerType}, eventName: ${eventName}, filtered: ${filtered}, active: ${isActive}]`;
+	if ( (listenerObject.active !== isActive) || (listenerObject.type.localeCompare(listenerType) !== 0) || (listenerObject.eventName.localeCompare(eventName) !== 0) || (listenerObject.eventType !== eventType)) {
+		const msg: string = `Listener named ${listenerName} does not have the expected properties [type: ${listenerType}, eventName: ${eventName}, eventType: ${eventType}, active: ${isActive}]`;
 		BaseUtils.logAndThrow(msg);
 	}
 }
 
-export function checkBlockListenerDetails(listenerName: string, listenerType: string, filtered: boolean, isActive: boolean): void {
+export function checkBlockListenerDetails(listenerName: string, listenerType: string, eventType: EventType, isActive: boolean): void {
 	const listenerObject: any = getListenerObject(listenerName);
 
 	// Check the listener properties
-	if ( (listenerObject.active !== isActive) || (listenerObject.type.localeCompare(listenerType) !== 0) || (listenerObject.filtered !== filtered)) {
-		const msg: string = `Listener named ${listenerName} does not have the expected properties [type: ${listenerType}, filtered: ${filtered}, active: ${isActive}]`;
+	if ( (listenerObject.active !== isActive) || (listenerObject.type.localeCompare(listenerType) !== 0) || (listenerObject.eventType !== eventType)) {
+		const msg: string = `Listener named ${listenerName} does not have the expected properties [type: ${listenerType}, eventType: ${eventType}, active: ${isActive}]`;
 		BaseUtils.logAndThrow(msg);
 	}
 }

@@ -360,7 +360,7 @@ export interface FilteredTransaction {
 	txid: string;
 	type: string;
 	transaction_actions: any;
-	tx_validation_code: number;
+	tx_validation_code: string;
 }
 
 export interface KeyOpts {

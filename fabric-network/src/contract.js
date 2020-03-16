@@ -129,6 +129,7 @@ class Contract {
 
 	/**
 	 * Add a listener to receive all contract events emitted by the smart contract.
+     * The default is to listen for full contract events from the current block position.
 	 * @param {module:fabric-network.ContractListener} listener A contract listener callback function.
 	 * @param {module:fabric-network.ListenerOptions} [options] Listener options.
 	 * @returns {Promise<module:fabric-network.ContractListener>} The added listener.
@@ -150,7 +151,6 @@ class Contract {
 	/**
 	 * Remove a previously added contract listener.
 	 * @param {module:fabric-network.ContractListener} listener A contract listener callback function.
-	 * @returns {Promise<void>}
 	 */
 	removeContractListener(listener) {
 		ListenerSession.removeListener(listener, this.contractListeners);
