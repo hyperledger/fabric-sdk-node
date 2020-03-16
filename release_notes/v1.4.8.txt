@@ -1,0 +1,23 @@
+Release Notes
+-------------
+
+fabric-sdk-node 1.4.8 is a maintenance release containing bug fixes and documentation improvements.
+
+
+Known Vulnerabilities
+---------------------
+none
+
+
+Resolved Vulnerabilities
+------------------------
+none
+
+
+Known Issues & Workarounds
+--------------------------
+
+
+Change Log
+----------
+https://github.com/hyperledger/fabric-sdk-node/blob/release-1.4/CHANGELOG.md#v148
