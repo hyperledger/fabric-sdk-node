@@ -5,6 +5,7 @@
  */
 
 import nano = require('nano');
+import { URL } from 'url';
 
 import { WalletStore } from './walletstore';
 
@@ -21,6 +22,19 @@ export class CouchDBWalletStore implements WalletStore {
 			await client.db.get(dbName); // Throws if database does not exist
 		} catch (error) {
 			await client.db.create(dbName);
+			// Set security
+			const url = new URL(client.config.url);
+			if (url.username) {
+				await client.request({
+					db: dbName,
+					method: 'PUT',
+					path: '/_security',
+					body: {
+						admins: { names: [url.username], roles: [] },
+						members: { names: [url.username], roles: [] },
+					},
+				});
+            }
 		}
 		const db = client.use<WalletDocument>(dbName);
 		return new CouchDBWalletStore(db);
