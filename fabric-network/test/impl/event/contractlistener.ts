@@ -31,8 +31,9 @@ describe('contract event listener', () => {
 	let listener: StubContractListener;
 	let spyListener: sinon.SinonSpy<[ContractEvent], Promise<void>>;
 	let contract: Contract;
-	const eventName: string = 'eventName';
-	const chaincodeId: string = 'bourbons';
+	const eventName = 'eventName';
+	const chaincodeId = 'bourbons';
+	const eventPayload = 'payload';
 
 	beforeEach(async () => {
 		eventService = new StubEventService('stub');
@@ -149,6 +150,7 @@ describe('contract event listener', () => {
 		const chaincodeEvent = new protos.protos.ChaincodeEvent();
 		chaincodeEvent.chaincode_id = ccId;
 		chaincodeEvent.event_name = eventName;
+		chaincodeEvent.payload = Buffer.from(eventPayload, 'utf8');
 		return chaincodeEvent;
 	}
 
@@ -368,5 +370,75 @@ describe('contract event listener', () => {
 
 		const contractEvents = await listener.completePromise;
 		expect(contractEvents[0].getTransactionEvent()).to.include({ isValid: true }); // tslint:disable-line: no-unused-expression
+	});
+
+	it('filtered events do not contain payload', async () => {
+		const event = newFilteredEvent(1);
+		addFilteredTransaction(event, newFilteredTransaction());
+
+		const options: ListenerOptions = {
+			type: 'filtered'
+		};
+		await contract.addContractListener(listener, options);
+		eventService.sendEvent(event);
+		const contractEvents = await listener.completePromise;
+
+		expect(contractEvents[0].payload).to.be.undefined; // tslint:disable-line: no-unused-expression
+	});
+
+	it('full events contain payload', async () => {
+		const event = newEvent(1);
+		addTransaction(event, newTransaction());
+
+		const options: ListenerOptions = {
+			type: 'full'
+		};
+		await contract.addContractListener(listener, options);
+		eventService.sendEvent(event);
+		const contractEvents = await listener.completePromise;
+
+		expect(contractEvents[0].payload?.toString()).to.equal(eventPayload);
+	});
+
+	it('can navigate event heirarchy for filtered events', async () => {
+		const event = newFilteredEvent(1);
+		addFilteredTransaction(event, newFilteredTransaction());
+
+		const options: ListenerOptions = {
+			type: 'filtered'
+		};
+		await contract.addContractListener(listener, options);
+		eventService.sendEvent(event);
+		const contractEvents = await listener.completePromise;
+
+		const contractEvent = contractEvents[0];
+		const transactionEvent = contractEvent.getTransactionEvent();
+		expect(transactionEvent).to.exist; // tslint:disable-line: no-unused-expression
+		expect(transactionEvent.getContractEvents()).to.contain(contractEvent);
+
+		const blockEvent = transactionEvent.getBlockEvent();
+		expect(blockEvent).to.exist; // tslint:disable-line: no-unused-expression
+		expect(blockEvent.getTransactionEvents()).to.contain(transactionEvent);
+	});
+
+	it('can navigate event heirarchy for full events', async () => {
+		const event = newEvent(1);
+		addTransaction(event, newTransaction());
+
+		const options: ListenerOptions = {
+			type: 'full'
+		};
+		await contract.addContractListener(listener, options);
+		eventService.sendEvent(event);
+		const contractEvents = await listener.completePromise;
+
+		const contractEvent = contractEvents[0];
+		const transactionEvent = contractEvent.getTransactionEvent();
+		expect(transactionEvent).to.exist; // tslint:disable-line: no-unused-expression
+		expect(transactionEvent.getContractEvents()).to.contain(contractEvent);
+
+		const blockEvent = transactionEvent.getBlockEvent();
+		expect(blockEvent).to.exist; // tslint:disable-line: no-unused-expression
+		expect(blockEvent.getTransactionEvents()).to.contain(transactionEvent);
 	});
 });

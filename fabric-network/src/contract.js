@@ -128,14 +128,14 @@ class Contract {
 	}
 
 	/**
-	 * Add a listener to receive all contract events emitted by the smart contract.
-     * The default is to listen for full contract events from the current block position.
+	 * Add a listener to receive all contract events emitted by the smart contract as part of successfully committed
+	 * transactions. The default is to listen for full contract events from the current block position.
 	 * @param {module:fabric-network.ContractListener} listener A contract listener callback function.
 	 * @param {module:fabric-network.ListenerOptions} [options] Listener options.
 	 * @returns {Promise<module:fabric-network.ContractListener>} The added listener.
 	 * @example
 	 * const listener: ContractListener = async (event) => {
-	 *     if (event.eventName ===  'newOrder') {
+	 *     if (event.eventName === 'newOrder') {
 	 *         const details = event.payload.toString('utf8');
 	 *         // Run business process to handle orders
 	 *     }
