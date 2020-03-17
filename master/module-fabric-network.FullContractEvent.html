@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Hyperledger Fabric SDK for node.js Class: Signer</title>
+	<title>Hyperledger Fabric SDK for node.js Interface: FullContractEvent</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -93,16 +93,16 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Class: Signer</h1>
+	<h1 class="page-title">Interface: FullContractEvent</h1>
 <section>
 
 <header>
     
         <h2>
-        Signer
-        </h2>
+            <span class="ancestors"><a href="module-fabric-network.html">fabric-network</a>.</span>
         
-            <div class="class-description">Signer is an interface for an opaque private key that can be used for signing operations</div>
+        FullContractEvent
+        </h2>
         
     
 </header>
@@ -112,26 +112,18 @@
     <div class="container-overview">
     
         
-<hr>
-<dt>
-    <h4 class="name" id="Signer"><span class="type-signature"></span>new Signer(cryptoSuite, key)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
+            <div class="description">The type for TransactionEvent objects with a type of <code>full</code>.</div>
         
 
-<table class="params table table-striped">
+        
+<dl class="details">
+    
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    <dl>
+
+<table class="props table table-striped">
     <thead>
     <tr>
         
@@ -153,13 +145,13 @@
 
         <tr>
             
-                <td class="name"><code>cryptoSuite</code></td>
+                <td class="name"><code>type</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">module:api.CryptoSuite</span>
+<span class="param-type">'full'</span>
 
 
 
@@ -170,21 +162,20 @@
 
             
 
-            <td class="description last">The underlying <a href="CryptoSuite.html">CryptoSuite</a> implementation for the digital
-signature algorithm</td>
+            <td class="description last">The type of this contract event.</td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>key</code></td>
+                <td class="name"><code>payload</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">module:api.Key</span>
+<span class="param-type">Buffer</span>
 
 
 
@@ -195,17 +186,14 @@ signature algorithm</td>
 
             
 
-            <td class="description last">The private key</td>
+            <td class="description last">The data associated with this event by the smart contract.</td>
         </tr>
 
     
     </tbody>
 </table>
+</dl>
 
-    
-
-    
-<dl class="details">
     
 
 	
@@ -218,6 +206,13 @@ signature algorithm</td>
 
     
 
+    
+    <dt class="implements">Implements:</dt>
+    <dd class="implements"><ul>
+        
+            <li><a href="module-fabric-network.ContractEvent.html">module:fabric-network.ContractEvent</a></li>
+        
+    </ul></dd>
     
 
     
@@ -244,21 +239,7 @@ signature algorithm</td>
 </dl>
 
 
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
+        
     
     </div>
 
@@ -281,7 +262,7 @@ signature algorithm</td>
             
 <hr>
 <dt>
-    <h4 class="name" id="getPublicKey"><span class="type-signature"></span>getPublicKey()</h4>
+    <h4 class="name" id="getTransactionEvent"><span class="type-signature"></span>getTransactionEvent()</h4>
     
     
 </dt>
@@ -289,7 +270,7 @@ signature algorithm</td>
 
     
     <div class="description">
-        Returns the public key corresponding to the opaque, private key
+        Get the parent transaction event of this event.
     </div>
     
 
@@ -314,6 +295,13 @@ signature algorithm</td>
 
     
 
+    
+    <dt class="implements">Implements:</dt>
+    <dd class="implements"><ul>
+        
+            <li><a href="module-fabric-network.ContractEvent.html#getTransactionEvent">module:fabric-network.ContractEvent#getTransactionEvent</a></li>
+        
+    </ul></dd>
     
 
     
@@ -355,7 +343,7 @@ signature algorithm</td>
     
             
 <div class="param-desc">
-    The public key corresponding to the private key
+    A transaction event.
 </div>
 
 
@@ -366,7 +354,7 @@ signature algorithm</td>
     </dt>
     <dd>
         
-<span class="param-type">module:api.Key</span>
+<span class="param-type"><a href="module-fabric-network.FullTransactionEvent.html">module:fabric-network.FullTransactionEvent</a></span>
 
 
 
@@ -375,167 +363,6 @@ signature algorithm</td>
 
 
         
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="sign"><span class="type-signature"></span>sign(digest, opts)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Signs digest with the private key.
-
-Hash implements the SignerOpts interface and, in most cases, one can
-simply pass in the hash function used as opts. Sign may also attempt
-to type assert opts to other types in order to obtain algorithm
-specific values.
-
-Note that when a signature of a hash of a larger message is needed,
-the caller is responsible for hashing the larger message and passing
-the hash (as digest) and the hash function (as opts) to Sign.
-    </div>
-    
-
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>digest</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Array.&lt;byte></span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The message to sign</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>opts</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Object</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">hashingFunction: the function to use to hash</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
 
     
 </dd>
