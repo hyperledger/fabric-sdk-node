@@ -54,11 +54,13 @@ export interface ContractEvent {
 	readonly type: EventType;
 	readonly chaincodeId: string;
 	readonly eventName: string;
+	readonly payload?: Buffer;
 	getTransactionEvent(): TransactionEvent;
 }
 
 export interface FilteredContractEvent extends ContractEvent {
 	readonly type: 'filtered';
+	readonly payload: undefined;
 	getTransactionEvent(): FilteredTransactionEvent;
 }
 

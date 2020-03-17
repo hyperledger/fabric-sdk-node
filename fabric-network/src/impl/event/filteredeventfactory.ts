@@ -69,6 +69,7 @@ function newFilteredContractEvent(transactionEvent: FilteredTransactionEvent, ch
 		type: 'filtered',
 		chaincodeId: chaincodeEvent.chaincode_id,
 		eventName: chaincodeEvent.event_name,
+		payload: undefined,
 		getTransactionEvent: () => transactionEvent
 	};
 	return Object.freeze(contractEvent);

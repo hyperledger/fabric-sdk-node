@@ -34,20 +34,14 @@ export class ContractListenerSession implements ListenerSession {
 	}
 
 	private async onBlockEvent(blockEvent: BlockEvent): Promise<void> {
-		for (const transactionEvent of blockEvent.getTransactionEvents()) {
-			await this.onTransactionEvent(transactionEvent);
-		}
+		const transactionPromises = blockEvent.getTransactionEvents()
+			.filter((transactionEvent) => transactionEvent.isValid)
+			.map((transactionEvent) => this.onTransactionEvent(transactionEvent));
+
+		await Promise.all(transactionPromises);
 	}
 
 	private async onTransactionEvent(transactionEvent: TransactionEvent): Promise<void> {
-		if (transactionEvent.isValid) {
-			await this.onValidTransactionEvent(transactionEvent);
-		} else {
-			logger.debug('Ignored contract events for invalid transaction:', transactionEvent);
-		}
-	}
-
-	private async onValidTransactionEvent(transactionEvent: TransactionEvent): Promise<void> {
 		for (const contractEvent of transactionEvent.getContractEvents()) {
 			if (this.isMatch(contractEvent)) {
 				await this.notifyListener(contractEvent);
