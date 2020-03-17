@@ -131,6 +131,7 @@ export class ServiceEndpoint {
 	public disconnect(): void;
 	public checkConnection(): Promise<boolean>;
 	public isTLS(): boolean;
+	public setEndpoint(endpoint: Endpoint): void;
 }
 
 export class Committer extends ServiceEndpoint {
@@ -147,7 +148,6 @@ export class Eventer extends ServiceEndpoint {
 	constructor(name: string, client: Client, mspid: string);
 	public disconnect(): void;
 	public checkConnection(): Promise<boolean>;
-	public setEndpoint(endpoint: Endpoint): void;
 }
 
 export class Discoverer extends ServiceEndpoint {
