@@ -240,7 +240,7 @@
 
 /**
  * @interface CommitEvent
- * @implements {module:fabric-network.FilteredTransactionEvent}
+ * @implements {module:fabric-network.TransactionEvent}
  * @memberof module:fabric-network
  * @property {Endorser} peer The endorsing peer that produced this event.
  */
@@ -258,15 +258,15 @@
 /**
  * @typedef ListenerOptions
  * @memberof module:fabric-network
- * @property {number | string | Long} [startBlock] The block number from which events should be received. Leaving this
+ * @property {(number | string | Long)} [startBlock] The block number from which events should be received. Leaving this
  * value undefined starts listening from the current block.
  * @property {module:fabric-network.EventType} [type] The type of events to be received.
  */
 
 /**
  * The type of an event. The type is based on the type of the raw event data: filtered, full block or including
- * private data. For each type value there is a corresponding event sub-type, providing type information and functions
- * specific to the raw event data.
+ * private data. The presence of optional fields and the type of raw protobuf data associated with events is dictated
+ * by this value.
  * @typedef {('filtered' | 'full' | 'private')} EventType
  * @memberof module:fabric-network
  */
@@ -275,10 +275,8 @@
  * Event representing a block on the ledger.
  * @interface BlockEvent
  * @memberof module:fabric-network
- * @see module:fabric-network.FilteredBlockEvent
- * @see module:fabric-network.FullBlockEvent
- * @property {module:fabric-network.EventType} type The type of this block event.
  * @property {Long} blockNumber The number of the block this event represents.
+ * @property {(FilteredBlock | Block)} blockData The raw block event protobuf.
  */
 
 /**
@@ -290,51 +288,17 @@
 
 
 /**
- * The type for BlockEvent objects with a type of <code>filtered</code>.
- * @interface FilteredBlockEvent
- * @implements {module:fabric-network.BlockEvent}
- * @memberof module:fabric-network
- * @property {'filtered'} type The type of this block event.
- * @property {FilteredBlock} blockData The raw block event protobuf.
- */
-
-/**
- * Get the transactions included in this block.
- * @method FilteredBlockEvent#getTransactionEvents
- * @memberof module:fabric-network
- * @returns {module:fabric-network.FilteredTransactionEvent[]} Transaction events.
- */
-
-
-/**
- * The type for BlockEvent objects with a type of <code>full</code>.
- * @interface FullBlockEvent
- * @implements {module:fabric-network.BlockEvent}
- * @memberof module:fabric-network
- * @property {'full'} type The type of this block event.
- * @property {Block} blockData The raw block event protobuf.
- */
-
-/**
- * Get the transactions included in this block.
- * @method FilteredBlockEvent#getTransactionEvents
- * @memberof module:fabric-network
- * @returns {module:fabric-network.FullTransactionEvent[]} Transaction events.
- */
-
-
-/**
  * Event representing a transaction processed within a block.
  * @interface TransactionEvent
  * @memberof module:fabric-network
- * @see module:fabric-network.FilteredTransactionEvent
- * @see module:fabric-network.FullTransactionEvent
- * @property {module:fabric-network.EventType} type The type of this transaction event.
  * @property {string} transactionId The ID of the transaction this event represents.
  * @property {string} status The status of this transaction.
  * @property {boolean} isValid Whether this transaction was successfully committed to the ledger. <code>true</code> if
  * the transaction was commited; otherwise <code>false</code>. The status will provide a more specific reason why an
  * invalid transaction was not committed.
+ * @property {(FilteredTransaction | any)} transactionData The raw transaction event protobuf.
+ * @property {any} [privateData] Private data read/write sets associated with this transaction. Only present if
+ * listening to <strong>private</strong> events and there is private data associated with the transaction.
  */
 
 /**
@@ -353,64 +317,13 @@
 
 
 /**
- * The type for TransactionEvent objects with a type of <code>filtered</code>.
- * @interface FilteredTransactionEvent
- * @implements {module:fabric-network.TransactionEvent}
- * @memberof module:fabric-network
- * @property {'filtered'} type The type of this transaction event.
- * @property {FilteredTransaction} transactionData The raw transaction event protobuf.
- */
-
-/**
- * Get the parent block event for this event.
- * @method FilteredTransactionEvent#getBlockEvent
- * @memberof module:fabric-network
- * @returns {module:fabric-network.FilteredBlockEvent} Transaction event protobuf.
- */
-
-/**
- * Get the contract events emitted by this transaction.
- * @method FilteredTransactionEvent#getContractEvents
- * @memberof module:fabric-network
- * @returns {module:fabric-network.FilteredContractEvent[]} Contract events.
- */
-
-
-/**
- * The type for TransactionEvent objects with a type of <code>full</code>.
- * @interface FullTransactionEvent
- * @implements {module:fabric-network.TransactionEvent}
- * @memberof module:fabric-network
- * @property {'full'} type The type of this transaction event.
- * @property {any} transactionData The raw transaction event protobuf.
- */
-
-/**
- * Get the parent block event for this event.
- * @method FullTransactionEvent#getBlockEvent
- * @memberof module:fabric-network
- * @returns {module:fabric-network.FullBlockEvent} Transaction event protobuf.
- */
-
-/**
- * Get the contract events emitted by this transaction.
- * @method FullTransactionEvent#getContractEvents
- * @memberof module:fabric-network
- * @returns {module:fabric-network.FullContractEvent[]} Contract events.
- */
-
-
-/**
  * Event representing a contract event emitted by a smart contract.
  * @interface ContractEvent
  * @memberof module:fabric-network
- * @see module:fabric-network.FilteredContractEvent
- * @see module:fabric-network.FullContractEvent
- * @property {module:fabric-network.EventType} type The type of this contract event.
  * @property {string} chaincodeId The chaincode ID of the smart contract that emitted this event.
  * @property {string} eventName The name of the emitted event.
- * @property {Buffer} [payload] The data associated with this event by the smart contract. Note that filtered events
- * do not include any payload data.
+ * @property {Buffer} [payload] The data associated with this event by the smart contract. Note that
+ * <strong>filtered</strong> events do not include any payload data.
  */
 
 /**
@@ -418,40 +331,6 @@
  * @method ContractEvent#getTransactionEvent
  * @memberof module:fabric-network
  * @returns {module:fabric-network.TransactionEvent} A transaction event.
- */
-
-
-/**
- * The type for ContractEvent objects with a type of <code>filtered</code>.
- * @interface FilteredContractEvent
- * @implements {module:fabric-network.ContractEvent}
- * @memberof module:fabric-network
- * @property {'filtered'} type The type of this contract event.
- * @property {undefined} payload Filtered events do not incude any payload data.
- */
-
-/**
- * Get the parent transaction event of this event.
- * @method FilteredContractEvent#getTransactionEvent
- * @memberof module:fabric-network
- * @returns {module:fabric-network.FilteredTransactionEvent} A transaction event.
- */
-
-
-/**
- * The type for TransactionEvent objects with a type of <code>full</code>.
- * @interface FullContractEvent
- * @implements {module:fabric-network.ContractEvent}
- * @memberof module:fabric-network
- * @property {'full'} type The type of this contract event.
- * @property {Buffer} payload The data associated with this event by the smart contract.
- */
-
-/**
- * Get the parent transaction event of this event.
- * @method FullContractEvent#getTransactionEvent
- * @memberof module:fabric-network
- * @returns {module:fabric-network.FullTransactionEvent} A transaction event.
  */
 
 

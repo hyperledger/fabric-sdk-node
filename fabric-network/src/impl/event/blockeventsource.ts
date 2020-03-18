@@ -4,40 +4,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { BlockEvent, BlockListener, ListenerOptions, EventType } from '../../events';
-import { OrderedBlockQueue } from './orderedblockqueue';
+import { EventCallback, EventInfo, EventListener, EventRegistrationOptions, EventService, StartRequestOptions } from 'fabric-common';
+import { BlockEvent, BlockListener, EventType, ListenerOptions } from '../../events';
+import * as Logger from '../../logger';
+import * as GatewayUtils from '../gatewayutils';
 import { AsyncNotifier } from './asyncnotifier';
 import { EventServiceManager } from './eventservicemanager';
-import { newFilteredBlockEvent } from './filteredeventfactory';
-import { newFullBlockEvent } from './fulleventfactory';
-import {
-	EventCallback,
-	EventInfo,
-	EventListener,
-	EventRegistrationOptions,
-	EventService,
-	StartRequestOptions
-} from 'fabric-common';
+import { newFilteredBlockEvent } from './filteredblockeventfactory';
+import { newFullBlockEvent } from './fullblockeventfactory';
+import { OrderedBlockQueue } from './orderedblockqueue';
+import { newPrivateBlockEvent } from './privateblockeventfactory';
 import Long = require('long');
 import util = require('util');
 
-import * as Logger from '../../logger';
 const logger = Logger.getLogger('BlockEventSource');
-
-function settle<T>(promise: Promise<T>): Promise<{ status: 'fulfilled', value: T } | { status: 'rejected',	reason: Error }> {
-	return promise.then(
-		(value: T) => {
-			return { status: 'fulfilled', value };
-		},
-		(reason: Error) => {
-			return { status: 'rejected', reason };
-		}
-	);
-}
-
-function allSettled<T>(promises: Promise<T>[]) {
-	return Promise.all(promises.map((promise) => settle(promise)));
-}
 
 const defaultBlockType: EventType = 'filtered';
 
@@ -149,6 +129,8 @@ export class BlockEventSource {
 			return newFilteredBlockEvent(eventInfo);
 		} else if (this.blockType === 'full') {
 			return newFullBlockEvent(eventInfo);
+		} else if (this.blockType === 'private') {
+			return newPrivateBlockEvent(eventInfo);
 		} else {
 			throw new Error('Unsupported event type: ' + this.blockType);
 		}
@@ -156,7 +138,7 @@ export class BlockEventSource {
 
 	private async notifyListeners(event: BlockEvent) {
 		const promises = Array.from(this.listeners).map((listener) => listener(event));
-		const results = await allSettled(promises);
+		const results = await GatewayUtils.allSettled(promises);
 
 		for (const result of results) {
 			if (result.status === 'rejected') {

@@ -87,10 +87,18 @@ describe('block listener', () => {
 			blockNumber: longBlockNumber,
 			block: {
 				header: undefined,
-				data: undefined,
+				data: {
+					data: []
+				},
 				metadata: undefined
 			}
 		};
+	}
+
+	function newPrivateBlockEventInfo(blockNumber: number | Long): EventInfo {
+		return Object.assign(newFullBlockEventInfo(blockNumber), {
+			privateData: 'PRIVATE_DATA'
+		});
 	}
 
 	it('add listener returns the listener', async () => {
@@ -203,10 +211,10 @@ describe('block listener', () => {
 		await network.addBlockListener(listener2, listenerOptions);
 		eventService.sendEvent(event);
 
-		const actual1 = await listener.completePromise;
-		const actual2 = await listener2.completePromise;
-		expect(actual1[0].blockNumber).to.deep.equal(event.blockNumber);
-		expect(actual2[0].blockNumber).to.deep.equal(event.blockNumber);
+		const [actual1] = await listener.completePromise;
+		const [actual2] = await listener2.completePromise;
+		expect(actual1.blockNumber).to.deep.equal(event.blockNumber);
+		expect(actual2.blockNumber).to.deep.equal(event.blockNumber);
 	});
 
 	it('listener receives blocks in order', async () => {
@@ -289,8 +297,8 @@ describe('block listener', () => {
 		eventService.sendEvent(event1);
 		eventService.sendEvent(event2);
 
-		const actual = await listener.completePromise;
-		expect(actual[0].blockNumber).to.equal(event2.blockNumber);
+		const [actual] = await listener.completePromise;
+		expect(actual.blockNumber).to.equal(event2.blockNumber);
 	});
 
 	it('replay listener does not miss start block if later block arrive first', async () => {
@@ -347,32 +355,10 @@ describe('block listener', () => {
 		await network.addBlockListener(fake2, listenerOptions);
 		eventService.sendEvent(event);
 
-		const actual1 = await listener.completePromise;
-		const actual2 = await listener2.completePromise;
-		expect(actual1[0].blockNumber).to.deep.equal(event.blockNumber);
-		expect(actual2[0].blockNumber).to.deep.equal(event.blockNumber);
-	});
-
-	it('filtered listener receives filtered blocks', async () => {
-		listenerOptions = {
-			type: 'filtered'
-		};
-		await network.addBlockListener(listener, listenerOptions);
-		eventService.sendEvent(newFilteredBlockEventInfo(1));
-
-		const actual = await listener.completePromise;
-		expect(actual[0].type).to.equal(listenerOptions.type);
-	});
-
-	it('full listener receives full blocks', async () => {
-		listenerOptions = {
-			type: 'full'
-		};
-		await network.addBlockListener(listener, listenerOptions);
-		eventService.sendEvent(newFullBlockEventInfo(1));
-
-		const actual = await listener.completePromise;
-		expect(actual[0].type).to.equal(listenerOptions.type);
+		const [actual1] = await listener.completePromise;
+		const [actual2] = await listener2.completePromise;
+		expect(actual1.blockNumber).to.deep.equal(event.blockNumber);
+		expect(actual2.blockNumber).to.deep.equal(event.blockNumber);
 	});
 
 	it('remove of realtime full listener does not close shared event service', async () => {
@@ -401,5 +387,27 @@ describe('block listener', () => {
 		await network.addBlockListener(listener);
 
 		sinon.assert.calledOnceWithExactly(stub, sinon.match.any, sinon.match.has('startBlock', undefined));
+	});
+
+	it('listener can specify filtered blocks', async () => {
+		const stub = sinon.stub(eventServiceManager, 'startEventService');
+
+		listenerOptions = {
+			type: 'filtered'
+		};
+		await network.addBlockListener(listener, listenerOptions);
+
+		sinon.assert.calledOnceWithExactly(stub, sinon.match.any, sinon.match.has('blockType', 'filtered'));
+	});
+
+	it('listener can specify private blocks', async () => {
+		const stub = sinon.stub(eventServiceManager, 'startEventService');
+
+		listenerOptions = {
+			type: 'private'
+		};
+		await network.addBlockListener(listener, listenerOptions);
+
+		sinon.assert.calledOnceWithExactly(stub, sinon.match.any, sinon.match.has('blockType', 'private'));
 	});
 });

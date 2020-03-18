@@ -53,6 +53,7 @@ export class NetworkImpl implements Network {
 	private readonly blockListeners = new Map<BlockListener, ListenerSession>();
 	private readonly realtimeFilteredBlockEventSource: BlockEventSource;
 	private readonly realtimeFullBlockEventSource: BlockEventSource;
+	private readonly realtimePrivateBlockEventSource: BlockEventSource;
 
 	/*
 	 * Network constructor for internal use only.
@@ -68,6 +69,7 @@ export class NetworkImpl implements Network {
 		this.eventServiceManager = new EventServiceManager(this);
 		this.realtimeFilteredBlockEventSource = new BlockEventSource(this.eventServiceManager, { type: 'filtered' });
 		this.realtimeFullBlockEventSource = new BlockEventSource(this.eventServiceManager, { type: 'full' });
+		this.realtimePrivateBlockEventSource = new BlockEventSource(this.eventServiceManager, { type: 'private' });
 	}
 
 	/**
@@ -208,6 +210,7 @@ export class NetworkImpl implements Network {
 
 		this.realtimeFilteredBlockEventSource.close();
 		this.realtimeFullBlockEventSource.close();
+		this.realtimePrivateBlockEventSource.close();
 		this.eventServiceManager.close();
 		this.channel.close();
 
@@ -252,6 +255,8 @@ export class NetworkImpl implements Network {
 			return new SharedBlockListenerSession(listener, this.realtimeFilteredBlockEventSource);
 		} else if (type === 'full') {
 			return new SharedBlockListenerSession(listener, this.realtimeFullBlockEventSource);
+		} else if (type === 'private') {
+			return new SharedBlockListenerSession(listener, this.realtimePrivateBlockEventSource);
 		} else {
 			throw new Error('Unsupported event listener type: ' + type);
 		}

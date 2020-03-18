@@ -5,9 +5,10 @@
  */
 
 import { Endorser, EventInfo } from 'fabric-common';
-import { CommitEvent, FilteredBlockEvent, FilteredTransactionEvent } from '../../events';
+import { CommitEvent } from '../../events';
+import { cachedResult } from '../gatewayutils';
+import { newFilteredBlockEvent } from './filteredblockeventfactory';
 import * as TransactionStatus from './transactionstatus';
-import { newFilteredBlockEvent } from './filteredeventfactory';
 import util = require('util');
 
 export function newCommitEvent(peer: Endorser, eventInfo: EventInfo): CommitEvent {
@@ -16,28 +17,17 @@ export function newCommitEvent(peer: Endorser, eventInfo: EventInfo): CommitEven
 	}
 
 	const transactionId = eventInfo.transactionId;
-
-	let blockEvent: FilteredBlockEvent | undefined;
-	function getBlockEvent() {
-		if (!blockEvent) {
-			blockEvent = newFilteredBlockEvent(eventInfo);
-		}
-		return blockEvent;
-	}
-
-	let transactionEvent: FilteredTransactionEvent | undefined;
-	function getTransactionEvent() {
+	const getBlockEvent = cachedResult(() => newFilteredBlockEvent(eventInfo));
+	const getTransactionEvent = cachedResult(() => {
+		const blockEvent = getBlockEvent();
+		const transactionEvent = blockEvent.getTransactionEvents().find((tx) => tx.transactionId === transactionId);
 		if (!transactionEvent) {
-			transactionEvent = getBlockEvent().getTransactionEvents().find((tx) => tx.transactionId === transactionId);
-			if (!transactionEvent) {
-				throw new Error(`Transaction ${transactionId} does not exist in block: ${util.inspect(getBlockEvent())}`);
-			}
+			throw new Error(`Transaction ${transactionId} does not exist in block: ${util.inspect(blockEvent)}`);
 		}
 		return transactionEvent;
-	}
+	});
 
 	const commitEvent: CommitEvent = {
-		type: 'filtered',
 		peer,
 		transactionId,
 		status: eventInfo.status,
@@ -45,7 +35,7 @@ export function newCommitEvent(peer: Endorser, eventInfo: EventInfo): CommitEven
 			return getTransactionEvent().transactionData;
 		},
 		isValid: eventInfo.status === TransactionStatus.VALID_STATUS,
-		getBlockEvent: () => getBlockEvent(),
+		getBlockEvent,
 		getContractEvents: () => getTransactionEvent().getContractEvents()
 	};
 

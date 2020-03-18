@@ -9,7 +9,7 @@ import chai = require('chai');
 const expect = chai.expect;
 import Long = require('long');
 
-import { Channel, Client, Endorser, Eventer, EventInfo, FilteredBlock, FilteredTransaction, IdentityContext, Block } from 'fabric-common';
+import { Block, Channel, Client, Endorser, Eventer, EventInfo, FilteredBlock, FilteredTransaction, IdentityContext } from 'fabric-common';
 import * as protos from 'fabric-protos';
 import { BlockEvent, ContractEvent, ContractListener, ListenerOptions } from '../../../src/events';
 import { Network, NetworkImpl } from '../../../src/network';
@@ -74,9 +74,15 @@ describe('contract event listener', () => {
 	function newEvent(blockNumber: number): EventInfo {
 		return {
 			eventService,
-			blockNumber: new Long(blockNumber),
+			blockNumber: Long.fromNumber(blockNumber),
 			block: newFullBlock(blockNumber)
 		};
+	}
+
+	function newPrivateEvent(blockNumber: number): EventInfo {
+		return Object.assign(newEvent(blockNumber), {
+			privateData: 'PRIVATE_DATA'
+		});
 	}
 
 	function newFullBlock(blockNumber: number): Block {
@@ -190,6 +196,16 @@ describe('contract event listener', () => {
 		const filteredChaincodeAction = new protos.protos.FilteredChaincodeAction();
 		filteredChaincodeAction.chaincode_event = newChaincodeEvent(ccId);
 		return filteredChaincodeAction;
+	}
+
+	function assertCanNavigateEvents(contractEvent: ContractEvent) {
+		const transactionEvent = contractEvent.getTransactionEvent();
+		expect(transactionEvent).to.exist; // tslint:disable-line: no-unused-expression
+		expect(transactionEvent.getContractEvents()).to.contain(contractEvent);
+
+		const blockEvent = transactionEvent.getBlockEvent();
+		expect(blockEvent).to.exist; // tslint:disable-line: no-unused-expression
+		expect(blockEvent.getTransactionEvents()).to.contain(transactionEvent);
 	}
 
 	it('add listener returns the listener', async () => {
@@ -349,12 +365,25 @@ describe('contract event listener', () => {
 		};
 		await contract.addContractListener(listener, options);
 		eventService.sendEvent(event);
-		const contractEvents = await listener.completePromise;
+		await listener.completePromise;
 
 		sinon.assert.calledOnceWithExactly(stub, sinon.match.any, sinon.match.has('blockType', options.type));
-		expect(contractEvents[0]).to.include({
-			type: options.type
-		});
+	});
+
+	it('listener can receive private blocks', async () => {
+		const eventServiceManager = (network as any).eventServiceManager;
+		const stub = sinon.stub(eventServiceManager, 'startEventService');
+		const event = newPrivateEvent(1);
+		addTransaction(event, newTransaction());
+
+		const options: ListenerOptions = {
+			type: 'private'
+		};
+		await contract.addContractListener(listener, options);
+		eventService.sendEvent(event);
+		await listener.completePromise;
+
+		sinon.assert.calledOnceWithExactly(stub, sinon.match.any, sinon.match.has('blockType', options.type));
 	});
 
 	it('listener does not receive events for invalid transactions', async () => {
@@ -409,16 +438,9 @@ describe('contract event listener', () => {
 		};
 		await contract.addContractListener(listener, options);
 		eventService.sendEvent(event);
-		const contractEvents = await listener.completePromise;
+		const [contractEvent] = await listener.completePromise;
 
-		const contractEvent = contractEvents[0];
-		const transactionEvent = contractEvent.getTransactionEvent();
-		expect(transactionEvent).to.exist; // tslint:disable-line: no-unused-expression
-		expect(transactionEvent.getContractEvents()).to.contain(contractEvent);
-
-		const blockEvent = transactionEvent.getBlockEvent();
-		expect(blockEvent).to.exist; // tslint:disable-line: no-unused-expression
-		expect(blockEvent.getTransactionEvents()).to.contain(transactionEvent);
+		assertCanNavigateEvents(contractEvent);
 	});
 
 	it('can navigate event heirarchy for full events', async () => {
@@ -430,15 +452,22 @@ describe('contract event listener', () => {
 		};
 		await contract.addContractListener(listener, options);
 		eventService.sendEvent(event);
-		const contractEvents = await listener.completePromise;
+		const [contractEvent] = await listener.completePromise;
 
-		const contractEvent = contractEvents[0];
-		const transactionEvent = contractEvent.getTransactionEvent();
-		expect(transactionEvent).to.exist; // tslint:disable-line: no-unused-expression
-		expect(transactionEvent.getContractEvents()).to.contain(contractEvent);
+		assertCanNavigateEvents(contractEvent);
+	});
 
-		const blockEvent = transactionEvent.getBlockEvent();
-		expect(blockEvent).to.exist; // tslint:disable-line: no-unused-expression
-		expect(blockEvent.getTransactionEvents()).to.contain(transactionEvent);
+	it('can navigate event heirarchy for private events', async () => {
+		const event = newPrivateEvent(1);
+		addTransaction(event, newTransaction());
+
+		const options: ListenerOptions = {
+			type: 'private'
+		};
+		await contract.addContractListener(listener, options);
+		eventService.sendEvent(event);
+		const [contractEvent] = await listener.completePromise;
+
+		assertCanNavigateEvents(contractEvent);
 	});
 });

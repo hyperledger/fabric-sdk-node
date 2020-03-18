@@ -5,6 +5,7 @@
  */
 
 import { Network } from '../../network';
+import * as GatewayUtils from '../gatewayutils';
 import {
 	Channel,
 	Endorser,
@@ -13,13 +14,6 @@ import {
 	StartRequestOptions,
 	Eventer
 } from 'fabric-common';
-
-function shuffle(array: Array<unknown>) {
-	for (let i = array.length - 1; i > 0; i--) {
-		const j = Math.floor(Math.random() * (i + 1));
-		[array[i], array[j]] = [array[j], array[i]];
-	}
-}
 
 export class EventServiceManager {
 	private readonly network: Network;
@@ -71,7 +65,7 @@ export class EventServiceManager {
 
 	newDefaultEventService(): EventService {
 		const peers = this.getEventPeers();
-		shuffle(peers);
+		GatewayUtils.shuffle(peers);
 		return this.newEventService(peers);
 	}
 
