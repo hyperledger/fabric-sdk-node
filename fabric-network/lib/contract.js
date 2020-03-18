@@ -59,6 +59,7 @@ class Contract {
 		this.gateway = gateway;
 		this.namespace = namespace;
 		this.checkpointer = checkpointer;
+		this.discoveryInterests = [{name: chaincodeId}];
 	}
 
 	/**
@@ -197,6 +198,43 @@ class Contract {
 		return listener;
 	}
 
+	/**
+	 * Provide a Discovery Interest settings to help the peer's discovery service
+	 * build an endorsement plan. This chaincode Id will be include by default in
+	 * the list of discovery interests. If this contract's chaincode is in one or
+	 * more collections then use this method with this chaincode Id to change the
+	 * default discovery interest to include those collection names.
+	 * @param {DiscoveryInterest} interest - These will be added to the
+	 * existing discovery interests to be used as the "endorsement_hint"
+	 * attribute of the [request]{@link ChaincodeInvokeRequest}
+	 * when the {@link module:fabric-network.Transaction#submit}
+	 * performs a {@link Channel#sendTransactionProposal}
+	 */
+	addDiscoveryInterest(interest) {
+		if (!(typeof interest === 'object')) {
+			throw Error('"interest" parameter must be a DiscoveryInterest object');
+		}
+
+		const existingIndex = this.discoveryInterests.findIndex((entry) => entry.name === interest.name);
+		if (existingIndex >= 0) {
+			this.discoveryInterests[existingIndex] = interest;
+		} else {
+			this.discoveryInterests.push(interest);
+		}
+
+		return this;
+	}
+
+	/**
+	 * Retrieve the Discovery Interest settings that will help the peer's
+	 * discovery service build an endorsement plan.
+	 * @return {DiscoveryInterest[]} - This will be used
+	 * as the endorsement_hint when the Channel performs the
+	 * {@link Channel#sendTransactionProposal}
+	 */
+	getDiscoveryInterests() {
+		return this.discoveryInterests;
+	}
 }
 
 module.exports = Contract;

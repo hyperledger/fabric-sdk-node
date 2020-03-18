@@ -257,4 +257,47 @@ describe('Contract', () => {
 			sinon.assert.calledWith(contract.getCheckpointer, {checkpointer: sinon.match.instanceOf(BaseCheckpointer), replay: true});
 		});
 	});
+
+	describe('#add/get DiscoveryInterests', () => {
+		let defaultDiscoveryIntrerst;
+		beforeEach(() => {
+			defaultDiscoveryIntrerst = [{name: chaincodeId}];
+		});
+		it('throws if interest is missing', () => {
+			(() => contract.addDiscoveryInterest())
+				.should.throw(/"interest" parameter must be a DiscoveryInterest object/);
+		});
+		it('throws if interest is string', () => {
+			(() => contract.addDiscoveryInterest('bad'))
+				.should.throw(/"interest" parameter must be a DiscoveryInterest object/);
+		});
+		it('get default interests object', () => {
+			const result = contract.getDiscoveryInterests();
+			expect(result).to.be.deep.equal(defaultDiscoveryIntrerst);
+		});
+		it('add an interest chaincode', () => {
+			const interest = {name: 'n1'};
+			contract.addDiscoveryInterest(interest);
+			defaultDiscoveryIntrerst.push(interest);
+			const result = contract.getDiscoveryInterests();
+			expect(result).to.be.deep.equal(defaultDiscoveryIntrerst);
+		});
+		it('update contract chaincode interest', () => {
+			const interest = {name: chaincodeId, collectionNames: ['c1, c2']};
+			contract.addDiscoveryInterest(interest);
+			defaultDiscoveryIntrerst[0] = interest;
+			const result = contract.getDiscoveryInterests();
+			expect(result).to.be.deep.equal(defaultDiscoveryIntrerst);
+		});
+		it('update and add chaincode interest with collections', () => {
+			const interest = {name: chaincodeId, collectionNames: ['c1, c2']};
+			const interest2 = {name: 'n2', collectionNames: ['c1, c2']};
+			contract.addDiscoveryInterest(interest);
+			contract.addDiscoveryInterest(interest2);
+			defaultDiscoveryIntrerst[0] = interest;
+			defaultDiscoveryIntrerst[1] = interest2;
+			const result = contract.getDiscoveryInterests();
+			expect(result).to.be.deep.equal(defaultDiscoveryIntrerst);
+		});
+	});
 });

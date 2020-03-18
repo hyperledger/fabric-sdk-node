@@ -20,6 +20,9 @@
 	"discovery" : {
 		"title": "fabric-client: How to use the discovery service"
 	},
+	"discovery-fabric-network" : {
+		"title": "fabric-network: How to use the discovery service"
+	},
 	"logging" : {
 		"title": "fabric-client: How to use logging"
 	},

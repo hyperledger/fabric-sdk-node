@@ -45,6 +45,11 @@ export interface DiscoveryOptions {
 	enabled?: boolean;
 }
 
+export interface DiscoveryInterest {
+	name: string;
+	collectionNames?: string[];
+}
+
 export interface DefaultEventHandlerOptions {
 	commitTimeout?: number;
 	strategy?: TxEventHandlerFactory | null;
@@ -111,6 +116,7 @@ export interface Contract {
 	evaluateTransaction(name: string, ...args: string[]): Promise<Buffer>;
 	submitTransaction(name: string, ...args: string[]): Promise<Buffer>;
 	addContractListener(listenerName: string, eventName: string, callback: (error: Error, event?: Client.ChaincodeEvent | Client.ChaincodeEvent[], blockNumber ?: string, transactionId ?: string, status ?: string) => Promise <void> | void , options ?: EventListenerOptions): Promise<ContractEventListener>;
+	addDiscoveryInterest(interest: DiscoveryInterest): Contract;
 }
 
 export interface TransientMap {

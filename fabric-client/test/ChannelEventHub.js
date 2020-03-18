@@ -523,7 +523,7 @@ describe('ChannelEventHub', () => {
 		});
 
 		it('should log on entry', () => {
-			hub._connect_running = true;
+			hub._connect_running = false;
 			hub._connect();
 			sinon.assert.calledWith(FakeLogger.debug, '_connect - start - %s');
 		});

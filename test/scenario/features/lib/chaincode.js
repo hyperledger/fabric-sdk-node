@@ -142,7 +142,7 @@ async function installChaincode(ccName, ccId, ccType, ccVersion, tls, ccp, orgNa
  * @param {String} policy The endorsement policy object from the configuration file.
  * @return {Promise} The return promise.
  */
-async function instantiateChaincode(ccName, ccId, ccType, args, version, upgrade, tls, ccp, orgName, channelName, policy) {
+async function instantiateChaincode(ccName, ccId, ccType, args, version, upgrade, tls, ccp, orgName, channelName, policy, collections) {
 	if (!supportedLanguageTypes.includes(ccType)) {
 		Promise.reject('Unsupported test ccType: ' + ccType);
 	}
@@ -213,7 +213,7 @@ async function instantiateChaincode(ccName, ccId, ccType, args, version, upgrade
 
 		const transientMap = {'test': 'transientValue'};
 		const ccPath = path.join(__dirname, chaincodePath, ccName, ccType);
-		const proposalRequest = buildChaincodeProposal(client, ccId, ccPath, version, ccType, args, upgrade, transientMap, policy);
+		const proposalRequest = buildChaincodeProposal(client, ccId, ccPath, version, ccType, args, upgrade, transientMap, policy, collections);
 
 		let results;
 		if (upgrade) {
@@ -277,7 +277,7 @@ async function instantiateChaincode(ccName, ccId, ccType, args, version, upgrade
 	}
 }
 
-function buildChaincodeProposal(client, ccId, ccPath, version, ccType, args, upgrade, transientMap, policy) {
+function buildChaincodeProposal(client, ccId, ccPath, version, ccType, args, upgrade, transientMap, policy, collections) {
 	const tx_id = client.newTransactionID();
 
 	// args is a string array for the arguments to pass [function, arg0, arg1, arg2, ..., argn]
@@ -294,7 +294,8 @@ function buildChaincodeProposal(client, ccId, ccPath, version, ccType, args, upg
 		args: funcArgs,
 		txId: tx_id,
 		chaincodeType: ccType,
-		'endorsement-policy': policy
+		'endorsement-policy': policy,
+		'collections-config': collections
 	};
 
 	if (upgrade) {

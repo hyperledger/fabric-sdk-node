@@ -53,9 +53,10 @@ async function inMemoryIdentitySetup(inMemoryWallet, ccp, orgName, userName) {
  * @param {String} userName the user name to perform actinos with
  * @param {String} orgName the Organization to which the user belongs
  * @param {String} gatewayName the name of the gateway
+ * @param {boolean} useDiscovery use discovery
  * @return {Gateway} the connected gateway
  */
-async function connectGateway(ccp, tls, userName, orgName, gatewayName) {
+async function connectGateway(ccp, tls, userName, orgName, gatewayName, useDiscovery) {
 
 	const gateway = new Gateway();
 	const inMemoryWallet = new InMemoryWallet();
@@ -75,6 +76,13 @@ async function connectGateway(ccp, tls, userName, orgName, gatewayName) {
 		identity: userIdentity,
 		discovery: {enabled: false}
 	};
+
+	if (useDiscovery) {
+		opts.discovery = {
+			enabled: true,
+			asLocalhost: true
+		};
+	}
 
 	if (tls) {
 		opts.clientTlsIdentity = 'tlsId';
@@ -149,7 +157,7 @@ async function retrieveContractFromGateway(gateway, channelName, chaincodeId) {
  * @param {Boolean} submit flag to idicate if a submit transaction (true) or evaluate (false)
  * @return {Object} resolved Promise if a submit transaction; evaluate result if not
  */
-async function performGatewayTransaction(gatewayName, ccName, channelName, args, submit) {
+async function performGatewayTransaction(gatewayName, ccName, channelName, args, submit, collection) {
 	// Get contract from Gateway
 	const gateway = gateways.get(gatewayName).gateway;
 	const contract = await retrieveContractFromGateway(gateway, channelName, ccName);
@@ -158,6 +166,12 @@ async function performGatewayTransaction(gatewayName, ccName, channelName, args,
 	const argArray = args.slice(1, -1).split(',');
 	const func = argArray[0];
 	const funcArgs = argArray.slice(1);
+
+	if (collection) {
+		const discoveryInterest = {name: ccName, collectionNames:[collection]};
+		contract.addDiscoveryInterest(discoveryInterest);
+	}
+
 	try {
 		if (submit) {
 			testUtil.logMsg('Submitting transaction [' + func + '] ...');

@@ -418,6 +418,10 @@ const Channel = class {
 			const peers = discovery_results.peers_by_org[msp_id].peers;
 			for (const peer of peers) {
 				for (const chaincode of peer.chaincodes) {
+					// just skip this special chaincode
+					if (chaincode.name === '_lifecycle') {
+						continue;
+					}
 					const interest = this._buildDiscoveryInterest(chaincode.name);
 					const plan_id = JSON.stringify(interest);
 					logger.debug('%s - looking at adding plan_id of  %s', method, plan_id);
@@ -690,7 +694,7 @@ const Channel = class {
 		}
 
 		if (endorsement_plan) {
-			return JSON.parse(JSON.stringify(endorsement_plan));
+			return endorsement_plan;
 		} else {
 			logger.debug('%s - plan not found in known plans', method, plan_id);
 			return null;
@@ -1535,19 +1539,9 @@ const Channel = class {
 			if (typeof chaincode.name === 'string') {
 				chaincode_call.setName(chaincode.name);
 				if (chaincode.collection_names) {
-					if (Array.isArray(chaincode.collection_names)) {
-						const collection_names = [];
-						chaincode.collection_names.map(name => {
-							if (typeof name === 'string') {
-								collection_names.push(name);
-							} else {
-								throw Error('The collection name must be a string');
-							}
-						});
-						chaincode_call.setCollectionNames(collection_names);
-					} else {
-						throw Error('collection_names must be an array of strings');
-					}
+					_getCollectionNames(chaincode.collection_names, chaincode_call);
+				} else if (chaincode.collectionNames) {
+					_getCollectionNames(chaincode.collectionNames, chaincode_call);
 				}
 				chaincode_calls.push(chaincode_call);
 			} else {
@@ -4101,6 +4095,22 @@ function decodeCollectionsConfig(payload) {
 		configs.push(collectionConfig);
 	});
 	return configs;
+}
+
+function _getCollectionNames(names, chaincode_call) {
+	if (Array.isArray(names)) {
+		const collection_names = [];
+		names.map(name => {
+			if (typeof name === 'string') {
+				collection_names.push(name);
+			} else {
+				throw Error('The collection name must be a string');
+			}
+		});
+		chaincode_call.setCollectionNames(collection_names);
+	} else {
+		throw Error('Collection names must be an array of strings');
+	}
 }
 
 module.exports = Channel;

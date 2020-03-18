@@ -38,6 +38,7 @@
     "cucumberScenario": "npm run setupCucumbers && export HFC_LOGGING='{\"debug\":\"test/temp/debugc.log\"}' && nyc --check-coverage --statements 55 --branches 41 --functions 57 --lines 55 npm run test:cucumber",
     "setupCucumbers": "node -e 'require(\"./scripts/npm_scripts/testFunctions.js\").createCucumberLogFile()'",
     "test:cucumber": "cucumber-js ./test/scenario/features/*.feature",
+    "test:network": "cucumber-js ./test/scenario/features/network_api.feature",
     "testHeadless": "run-s cleanUp compile copyFabricClient lint unitTest:allNoHSM",
     "tapeAndCucumber": "run-s tapeIntegration dockerClean cucumberScenario"
   },

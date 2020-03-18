@@ -174,6 +174,14 @@ describe('Transaction', () => {
 			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal));
 		});
 
+		it('sends proposal with endorsemewnt hint', async () => {
+			stubContract.getDiscoveryInterests.returns('interests');
+			expectedProposal.endorsement_hint = {chaincodes: 'interests'};
+
+			await transaction.submit();
+			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal));
+		});
+
 		it('sends proposal with arguments', async () => {
 			const args = ['one', 'two', 'three'];
 			expectedProposal.args = args;
