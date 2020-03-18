@@ -547,7 +547,7 @@
  *     // Handle block event
  *
  *     // Listener may remove itself if desired
- *     if (event.getBlockNumber().equals(endBlock)) {
+ *     if (event.blockNumber.equals(endBlock)) {
  *         network.removeBlockListener(listener);
  *     }
  * }
