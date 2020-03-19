@@ -30,7 +30,7 @@ class NetworkConfig {
 			}
 		}
 		// create orderers
-		if (config.peers) {
+		if (config.orderers) {
 			for (const orderer_name in config.orderers) {
 				await buildOrderer(client, orderer_name, config.orderers[orderer_name]);
 			}
