@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { OrderedBlockQueue } from '../../../src/impl/event/orderedblockqueue';
 import { BlockEvent } from '../../../src/events';
+import { OrderedBlockQueue } from '../../../src/impl/event/orderedblockqueue';
 import Long = require('long');
 
 import chai = require('chai');
@@ -22,8 +22,12 @@ describe('OrderedBlockQueue', () => {
 
 	function newBlock(blockNumber: number): BlockEvent {
 		return {
-			type: 'filtered',
 			blockNumber: Long.fromNumber(blockNumber),
+			blockData: {
+				channel_id: 'channel_id',
+				number: 'number',
+				filtered_transactions: []
+			},
 			getTransactionEvents: () => []
 		};
 	}

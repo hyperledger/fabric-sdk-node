@@ -346,7 +346,7 @@ export interface Block {
 }
 
 export interface PrivateData {
-	data: any;
+	[txIndexInBlock: number]: any;
 }
 
 export interface FilteredBlock {

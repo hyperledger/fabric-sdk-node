@@ -8,6 +8,7 @@ import { BlockEvent, BlockListener, ContractEvent, ContractListener, ListenerOpt
 import * as Logger from '../../logger';
 import { Network } from '../../network';
 import { ListenerSession } from './listenersession';
+import * as GatewayUtils from '../gatewayutils';
 const logger = Logger.getLogger('ContractListenerSession');
 
 export class ContractListenerSession implements ListenerSession {
@@ -38,7 +39,8 @@ export class ContractListenerSession implements ListenerSession {
 			.filter((transactionEvent) => transactionEvent.isValid)
 			.map((transactionEvent) => this.onTransactionEvent(transactionEvent));
 
-		await Promise.all(transactionPromises);
+		// Don't use Promise.all() as it returns early if any promises are rejected
+		await GatewayUtils.allSettled(transactionPromises);
 	}
 
 	private async onTransactionEvent(transactionEvent: TransactionEvent): Promise<void> {
