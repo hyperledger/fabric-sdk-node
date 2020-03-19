@@ -5,10 +5,10 @@
  */
 
 import { Block } from 'fabric-common';
-import { BlockEvent, ContractEvent, TransactionEvent } from '../../events';
+import { BlockEvent, TransactionEvent } from '../../events';
 import { cachedResult } from '../gatewayutils';
+import { newFullContractEvents } from './fullcontracteventfactory';
 import * as TransactionStatus from './transactionstatus';
-import util = require('util');
 // @ts-ignore no implicit any
 import protos = require('fabric-protos');
 
@@ -47,22 +47,4 @@ export function newFullTransactionEvent(blockEvent: BlockEvent, txEnvelopeIndex:
 	};
 
 	return Object.freeze(transactionEvent);
-}
-
-function newFullContractEvents(transactionEvent: TransactionEvent): ContractEvent[] {
-	const transactionActions: any[] = transactionEvent.transactionData.actions || [];
-	return transactionActions.map((transactionAction) => {
-		const chaincodeEvent = transactionAction.payload.action.proposal_response_payload.extension.events;
-		return newFullContractEvent(transactionEvent, chaincodeEvent);
-	});
-}
-
-function newFullContractEvent(transactionEvent: TransactionEvent, chaincodeEvent: any): ContractEvent {
-	const contractEvent: ContractEvent = {
-		chaincodeId: chaincodeEvent.chaincode_id,
-		eventName: chaincodeEvent.event_name,
-		payload: chaincodeEvent.payload,
-		getTransactionEvent: () => transactionEvent
-	};
-	return Object.freeze(contractEvent);
 }
