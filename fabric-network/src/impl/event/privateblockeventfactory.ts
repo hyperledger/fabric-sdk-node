@@ -5,14 +5,15 @@
  */
 
 import { Block, EventInfo, PrivateData } from 'fabric-common';
-import { BlockEvent, TransactionEvent, ContractEvent } from '../../events';
+import { BlockEvent, TransactionEvent } from '../../events';
 import { cachedResult } from '../gatewayutils';
 import { newFullBlockEvent } from './fullblockeventfactory';
+import { newFullContractEvents } from './fullcontracteventfactory';
 import { getTransactionEnvelopeIndexes, newFullTransactionEvent } from './fulltransactioneventfactory';
-
-import util = require('util');
 // @ts-ignore no implicit any
 import protos = require('fabric-protos');
+
+import util = require('util');
 
 export function newPrivateBlockEvent(eventInfo: EventInfo): BlockEvent {
 	const privateData = eventInfo.privateData;
@@ -46,20 +47,8 @@ function newPrivateTransactionEvent(blockEvent: BlockEvent, index: number, priva
 		isValid: fullTransactionEvent.isValid,
 		privateData,
 		getBlockEvent: () => blockEvent,
-		getContractEvents: cachedResult(() => fullTransactionEvent.getContractEvents()
-			.map((contractEvent) => newPrivateContractEvent(contractEvent, privateTransactionEvent)))
+		getContractEvents: cachedResult(() => newFullContractEvents(privateTransactionEvent))
 	};
 
 	return Object.freeze(privateTransactionEvent);
-}
-
-function newPrivateContractEvent(contractEvent: ContractEvent, transactionEvent: TransactionEvent): ContractEvent {
-	const privateContractEvent: ContractEvent = {
-		chaincodeId: contractEvent.chaincodeId,
-		eventName: contractEvent.eventName,
-		payload: contractEvent.payload,
-		getTransactionEvent: () => transactionEvent
-	};
-
-	return Object.freeze(privateContractEvent);
 }

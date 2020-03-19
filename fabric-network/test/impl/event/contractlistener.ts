@@ -81,7 +81,9 @@ describe('contract event listener', () => {
 
 	function newPrivateEvent(blockNumber: number): EventInfo {
 		return Object.assign(newEvent(blockNumber), {
-			privateData: 'PRIVATE_DATA'
+			privateData: [
+				'PRIVATE_DATA'
+			]
 		});
 	}
 
@@ -469,5 +471,6 @@ describe('contract event listener', () => {
 		const [contractEvent] = await listener.completePromise;
 
 		assertCanNavigateEvents(contractEvent);
+		expect(contractEvent.getTransactionEvent().privateData).to.equal(event.privateData[0]);
 	});
 });
