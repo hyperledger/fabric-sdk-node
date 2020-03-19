@@ -9,7 +9,7 @@ Feature: Use the Node SDK to install/instantiate/Upgrade chaincode with the depr
 
 	Background:
 		Given I place a scenario start message DEPRECATED SDK FEATURE
-		Given I deploy a tls Fabric network
+		Given I deploy a tls Fabric network at 2.0 version
 		And I use the cli to create and join the channel named deprecatedchannel on the deployed network
 
  	Scenario: Using the deprecated API I can install and instantate a smart contract that may subsequently be used through a Gateway

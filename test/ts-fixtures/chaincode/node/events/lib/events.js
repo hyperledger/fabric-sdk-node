@@ -17,6 +17,27 @@ class Events extends Contract {
 		stub.setEvent('create', Buffer.from('content'));
 	}
 
+	async privateValuePut(ctx) {
+		const {stub} = ctx;
+		const privateValue = Buffer.from('myprivatedata');
+		console.info('put private data of length ==>' + privateValue.length + '<==');
+		console.info('put private data of ==>' + privateValue.toString('utf8') + '<==');
+
+		await stub.putPrivateData('collectionEvents', 'myprivatekey', privateValue);
+
+		stub.setEvent('dc', Buffer.from('content'));
+	}
+
+	async privateValueGet(ctx) {
+		const {stub} = ctx;
+
+		const privateValue = await stub.getPrivateData('collectionEvents', 'myprivatekey');
+		console.info('get private data of length ==>' + privateValue.length + '<==');
+		console.info('get private data of ==>' + privateValue.toString('utf8') + '<==');
+
+		stub.setEvent('dc', Buffer.from('content'));
+	}
+
 	async createValueDisconnect(ctx) {
 		const {stub} = ctx;
 		stub.setEvent('dc', Buffer.from('content'));

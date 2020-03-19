@@ -16,5 +16,4 @@ echo "Creating new channel update tx blocks from within directory ${BASEDIR}"
 export FABRIC_CFG_PATH="$BASEDIR"
 configtxgen -profile TwoOrgsChannel -outputAnchorPeersUpdate "${BASEDIR}/../channel-config/baseapichannel-anchor.tx" -channelID baseapichannel -asOrg Org1MSP
 configtxgen -profile TwoOrgsChannel -outputAnchorPeersUpdate "${BASEDIR}/../channel-config/discoverychannel-anchor.tx" -channelID discoverychannel -asOrg Org1MSP
-configtxgen -profile TwoOrgsChannel -outputAnchorPeersUpdate "${BASEDIR}/../channel-config/eventschannel-anchor.tx" -channelID eventschannel -asOrg Org1MSP
-
+#configtxgen -profile TwoOrgsChannel -outputAnchorPeersUpdate "${BASEDIR}/../channel-config/eventschannel-anchor.tx" -channelID eventschannel -asOrg Org1MSP

@@ -8,6 +8,8 @@ import { Constants } from './constants';
 import * as BaseUtils from './lib/utility/baseUtils';
 import { CommandRunner } from './lib/utility/commandRunner';
 import { StateStore } from './lib/utility/stateStore';
+// const os = require('os');
+import * as os from 'os';
 
 import { Given } from 'cucumber';
 import * as path from 'path';
@@ -18,7 +20,12 @@ const stateStore: StateStore = StateStore.getInstance();
 const nonTlsNetwork: string = '../../ts-fixtures/docker-compose/docker-compose.yaml';
 const tlsNetwork: string = '../../ts-fixtures/docker-compose/docker-compose-tls.yaml';
 
-Given(/^I deploy a (.+?) Fabric network/, { timeout: Constants.STEP_LONG as number }, async (type: string) => {
+Given(/^I deploy a (.+?) Fabric network at (.+?) version/, { timeout: Constants.STEP_LONG as number }, async (type: string, version: string) => {
+	// set the fabric peer and orderer docker image tag
+	process.env.DOCKER_IMG_TAG = `:${version}`;
+
+	// TODO set the fabric-ca docker image tag
+	// process.env.FABRIC_CA_TAG = `:${version}`; let default to latest for now
 
 	const fabricState: any = stateStore.get(Constants.FABRIC_STATE);
 

@@ -532,18 +532,41 @@ rule
 	}
 
 	/**
+	 * Constructs an object containing all decoded values from the
+	 * protobuf encoded `BlockAndPrivateData` object
+	 *
+	 * @param {Object} block_with_private_data - an object that represents the protobuf common.BlockAndPrivateData
+	 * @returns {Object} An object with the fully decoded protobuf common.Block and the private data map
+	 */
+	static decodeBlockWithPrivateData(block_with_private_data_proto) {
+		if (!block_with_private_data_proto) {
+			throw new Error('Block with private data input data is missing');
+		}
+		const block_with_private_data = {};
+		try {
+			block_with_private_data.block = this.decodeBlock(block_with_private_data_proto.block);
+			block_with_private_data.private_data_map = decodePrivateData(block_with_private_data_proto.private_data_map);
+		} catch (error) {
+			logger.error('decode - ::' + (error.stack ? error.stack : error));
+			throw new Error('Block with private data decode has failed with ' + error.toString());
+		}
+
+		return block_with_private_data;
+	}
+
+	/**
 	 * @typedef {Object} ProcessedTransaction
 	 * @property {number} validationCode - See [this list]{@link https://github.com/hyperledger/fabric/blob/v1.0.0/protos/peer/transaction.proto#L125}
-	 *                                     for all the defined validation codes
+	 * for all the defined validation codes
 	 * @property {Object} transactionEnvelope - Encapsulates the transaction and the signature over it.
-	 *                                          It has the following structure:
-<br><pre>
-signature -- {byte[]}
-payload -- {}
-	header -- {{@link Header}}
-	data -- {{@link Transaction}}
-</pre>
-	 */
+	 * It has the following structure:
+		<br><pre>
+		signature -- {byte[]}
+		payload -- {}
+		header -- {{@link Header}}
+		data -- {{@link Transaction}}
+		</pre>
+	*/
 
 	/**
 	 * Constructs an object containing all decoded values from the
@@ -564,6 +587,35 @@ payload -- {}
 
 		return processed_transaction;
 	}
+}
+
+function decodePrivateData(private_data_map_proto) {
+	if (!private_data_map_proto) {
+		return {};
+	}
+	const private_data_map = {};
+	for (const txIndex in private_data_map_proto) {
+		const txPvtReadWriteSet = {};
+		const txPvtReadWriteSet_proto = private_data_map_proto[txIndex];
+
+		txPvtReadWriteSet.data_model = txPvtReadWriteSet_proto.data_model;
+		txPvtReadWriteSet.ns_pvt_rwset = [];
+		for (const ns_pvt_rwset_proto of txPvtReadWriteSet_proto.ns_pvt_rwset) {
+			const ns_pvt_rwset = {};
+			ns_pvt_rwset.namespace = ns_pvt_rwset_proto.namespace;
+			ns_pvt_rwset.collection_pvt_rwset = [];
+			for (const collection_pvt_rwset_proto of ns_pvt_rwset_proto.collection_pvt_rwset) {
+				const collection_pvt_rwset = {};
+				collection_pvt_rwset.collection_name = collection_pvt_rwset_proto.collection_name;
+				collection_pvt_rwset.rwset = decodeKVRWSet(collection_pvt_rwset_proto.rwset);
+				ns_pvt_rwset.collection_pvt_rwset.push(collection_pvt_rwset);
+			}
+			txPvtReadWriteSet.ns_pvt_rwset.push(ns_pvt_rwset);
+		}
+		private_data_map[txIndex] = txPvtReadWriteSet;
+	}
+
+	return private_data_map;
 }
 
 function decodeBlockHeader(proto_block_header) {
@@ -693,54 +745,6 @@ function decodeEndorserTransaction(trans_bytes) {
 		}
 	} catch (error) {
 		logger.error(' Unable to decodeEndorserTransaction :: %s', error);
-	}
-
-	return data;
-}
-
-function decodeTokenTransaction(trans_bytes) {
-	logger.debug('decodeTokenTransaction start');
-
-	const data = {};
-	try {
-		const transaction = fabprotos.token.TokenTransaction.decode(trans_bytes);
-
-		if (transaction && transaction.token_action) {
-			const token_action = transaction.token_action;
-			const action_data = token_action[token_action.data];
-
-			// decode output tokens in action_data
-			const tokens = [];
-			for (const proto_token of action_data.outputs) {
-				const token = {};
-				if (proto_token.owner) {
-					// owner can be null for redeem
-					token.owner = {type: proto_token.owner.type, raw: proto_token.owner.raw.toBuffer()};
-				}
-				token.type = proto_token.type;
-				token.quantity = proto_token.quantity;
-				tokens.push(token);
-			}
-
-			// decode input token ids in action_data
-			const tokenIds = [];
-			if (action_data.inputs) {
-				for (const proto_input of action_data.inputs) {
-					const tokenId = {index: proto_input.index, tx_id: proto_input.tx_id};
-					tokenIds.push(tokenId);
-				}
-			}
-
-			// construct decoded data to return
-			data.token_action = {data: token_action.data};
-			if (tokenIds.length > 0) {
-				data.token_action[token_action.data] = {inputs: tokenIds, outputs: tokens};
-			} else {
-				data.token_action[token_action.data] = {outputs: tokens};
-			}
-		}
-	} catch (error) {
-		logger.error(' Unable to decodeTokenTransaction :: %s', error);
 	}
 
 	return data;
@@ -1594,8 +1598,7 @@ const type_as_string = {
 	3: 'ENDORSER_TRANSACTION', // Used by the SDK to submit endorser based transactions
 	4: 'ORDERER_TRANSACTION', // Used internally by the orderer for management
 	5: 'DELIVER_SEEK_INFO', // Used as the type for Envelope messages submitted to instruct the Deliver API to seek
-	6: 'CHAINCODE_PACKAGE', // Used for packaging chaincode artifacts for install
-	9: 'TOKEN_TRANSACTION' // Used by the SDK to submit token transactions
+	6: 'CHAINCODE_PACKAGE' // Used for packaging chaincode artifacts for install
 };
 
 const HeaderType = class {
@@ -1623,9 +1626,6 @@ const HeaderType = class {
 				break;
 			case 3:
 				result = decodeEndorserTransaction(proto_data);
-				break;
-			case 9:
-				result = decodeTokenTransaction(proto_data);
 				break;
 			default:
 				logger.debug(' ***** found a header type of %s :: %s', type, HeaderType.convertToString(type));

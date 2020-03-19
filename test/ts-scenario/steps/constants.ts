@@ -53,7 +53,7 @@ export enum Constants {
 
 	// CLI command verbosity (true/false)
 	CLI_VERBOSITY = 'false',
-	CLI_TIMEOUT = '120s',
+	CLI_TIMEOUT = '240s',
 
 	// State store items
 	WALLET = 'WALLET',				// StateStore key to retrieve a wallet that contains users

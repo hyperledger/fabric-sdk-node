@@ -432,38 +432,35 @@ class EventService extends ServiceAction {
 				logger.debug('on.data - resolve the promise');
 				resolve(eventer);
 
-				if (deliverResponse.Type === 'block' || deliverResponse.Type === 'filtered_block' || deliverResponse.Type === 'private_data') {
+				if (deliverResponse.Type === 'block' || deliverResponse.Type === 'filtered_block' || deliverResponse.Type === 'block_and_private_data') {
 					try {
 						let block = null;
-						let full_block = null;
 						let filtered_block = null;
 						let private_data = null;
 						let block_num = null;
 						if (deliverResponse.Type === 'block') {
 							logger.debug('on.data - have full block data');
-							full_block = BlockDecoder.decodeBlock(deliverResponse.block);
-							block = full_block;
+							block = BlockDecoder.decodeBlock(deliverResponse.block);
 							block_num = convertToLong(block.header.number);
 						} else if (deliverResponse.Type === 'filtered_block') {
 							logger.debug('on.data - have filtered block data');
-							block = JSON.parse(JSON.stringify(deliverResponse.filtered_block));
-							filtered_block = block;
-							block_num = convertToLong(block.number);
-						} else if (deliverResponse.Type === 'private_data') {
-							logger.debug('on.data - have private full block data');
-							full_block = JSON.parse(JSON.stringify(deliverResponse.filtered_block));
-							block = full_block;
-							private_data = block; // FIX ME get the private data
-							block_num = convertToLong(block.number);
+							filtered_block = JSON.parse(JSON.stringify(deliverResponse.filtered_block));
+							block_num = convertToLong(filtered_block.number);
+						} else if (deliverResponse.Type === 'block_and_private_data') {
+							logger.debug('on.data - have full block data with private data');
+							const private_block = BlockDecoder.decodeBlockWithPrivateData(deliverResponse.block_and_private_data);
+							private_data = private_block.private_data_map;
+							block = private_block.block;
+							block_num = convertToLong(block.header.number);
 						} else {
 							throw Error(`Unknown block type "${deliverResponse.Type}`);
 						}
 
 						this.lastBlockNumber = block_num;
 						logger.debug(`on.data - incoming block number ${this.lastBlockNumber}`);
-						this._processBlockEvents(full_block, filtered_block, private_data, block_num);
-						this._processTxEvents(full_block, filtered_block);
-						this._processChaincodeEvents(full_block, filtered_block);
+						this._processBlockEvents(block, filtered_block, private_data, block_num);
+						this._processTxEvents(block, filtered_block);
+						this._processChaincodeEvents(block, filtered_block);
 						this._processEndBlock(block_num);
 
 						// check to see if we should shut things down
@@ -484,14 +481,17 @@ class EventService extends ServiceAction {
 						logger.debug('%s - on.data received type status of SUCCESS', method);
 						if (this._end_block_seen) {
 							// this is normal after the last block comes in when we set an ending block
-							logger.debug('on.data - status received after last block seen: %s block_num: %s', deliverResponse.status, this.lastBlockNumber.toNumber());
+							logger.debug('on.data - status received after last block seen: %s block_num: %s',
+								deliverResponse.status, this.lastBlockNumber.toNumber());
 						} else if (this.endBlock === NEWEST) {
 							// this is normal after the last block comes in when we set to newest as an ending block
-							logger.debug('on.data - status received when newest block seen: %s block_num: %s', deliverResponse.status, this.lastBlockNumber.toNumber());
+							logger.debug('on.data - status received when newest block seen: %s block_num: %s',
+								deliverResponse.status, this.lastBlockNumber.toNumber());
 							this._close(new Error(`Newest block received:${this.lastBlockNumber.toNumber()} status:${deliverResponse.status}`));
 						} else if (this.endBlock) {
 							logger.debug('on.data - status received before the endblock has been seen');
-							this._close(new Error(`End block of ${this.endBlock.toNumber()} not received. Last block received ${this.lastBlockNumber.toNumber()}`));
+							this._close(new Error(`End block of ${this.endBlock.toNumber()}` +
+								`not received. Last block received ${this.lastBlockNumber.toNumber()}`));
 						}
 					} else {
 						// tell all registered users that something is wrong and shutting down

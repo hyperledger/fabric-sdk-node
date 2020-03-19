@@ -104,6 +104,10 @@ describe('EventService', () => {
 		],
 		number: 1
 	};
+	const block_and_private_data = {
+		block: block,
+		private_data_map: 'fake-private-map'
+	};
 
 	beforeEach(() => {
 		revert = [];
@@ -321,6 +325,30 @@ describe('EventService', () => {
 				eventService.build(idx, options);
 			}).should.throw('Invalid blockType bad');
 		});
+		it('blocktype full', () => {
+			const options = {
+				blockType: 'full'
+			};
+			eventService.build(idx, options);
+			should.exist(eventService._payload);
+			should.equal(eventService.blockType, 'full');
+		});
+		it('blocktype filtered', () => {
+			const options = {
+				blockType: 'filtered'
+			};
+			eventService.build(idx, options);
+			should.exist(eventService._payload);
+			should.equal(eventService.blockType, 'filtered');
+		});
+		it('blocktype private', () => {
+			const options = {
+				blockType: 'private'
+			};
+			eventService.build(idx, options);
+			should.exist(eventService._payload);
+			should.equal(eventService.blockType, 'private');
+		});
 		it('should build with default options', () => {
 			eventService.build(idx);
 			should.exist(eventService._payload);
@@ -440,9 +468,11 @@ describe('EventService', () => {
 		let eventProtoDeliverStub;
 		let deliverFilteredStub;
 		let deliverStub;
+		let deliverWithPrivateDataStub;
 		let onStub;
 		let isStreamReadyStub;
 		let decodeBlockStub;
+		let decodeBlockWithPrivateData;
 
 		beforeEach(() => {
 			isStreamReadyStub = sandbox.stub();
@@ -450,11 +480,19 @@ describe('EventService', () => {
 			decodeBlockStub = sandbox.stub();
 			decodeBlockStub.returns(block);
 			revert.push(EventService.__set__(' BlockDecoder.decodeBlock', decodeBlockStub));
+			decodeBlockWithPrivateData = sandbox.stub();
+			decodeBlockWithPrivateData.returns(block_and_private_data);
+			revert.push(EventService.__set__(' BlockDecoder.decodeBlockWithPrivateData', decodeBlockWithPrivateData));
 
 			onStub = sandbox.stub();
+			deliverWithPrivateDataStub = sandbox.stub().returns({on: onStub});
 			deliverFilteredStub = sandbox.stub().returns({on: onStub});
 			deliverStub = sandbox.stub().returns({on: onStub});
-			eventProtoDeliverStub = sandbox.stub().returns({deliverFiltered: deliverFilteredStub, deliver: deliverStub});
+			eventProtoDeliverStub = sandbox.stub().returns({
+				deliverFiltered: deliverFilteredStub,
+				deliver: deliverStub,
+				deliverWithPrivateData: deliverWithPrivateDataStub
+			});
 			revert.push(EventService.__set__('fabprotos.protos.Deliver', eventProtoDeliverStub));
 
 			eventService = new EventService('myhub', channel);
@@ -548,11 +586,36 @@ describe('EventService', () => {
 			eventer1.waitForReady = sandbox.stub().resolves();
 			await eventer1.connect(endpoint);
 			eventService.blockType = 'full';
-			onStub.yields({Type: 'block', block: 'place holder'});
-			// TEST CALL
+			onStub.yields({Type: 'block', block: block});
+			// TEST CALL for full block
 			await eventService._startService(eventer1, {}, 3000);
 			sinon.assert.called(deliverStub);
-			sinon.assert.calledWith(FakeLogger.debug, 'on.data - incoming block number 1');
+			sinon.assert.calledWith(FakeLogger.debug, 'on.data - have full block data');
+		});
+		it('should call stream on data and log about a filtered block response with no listeners', async () => {
+			const eventer1 = client.newEventer('eventer1');
+			eventer1.checkConnection = sinon.stub().returns(true);
+			eventer1.waitForReady = sandbox.stub().resolves();
+			await eventer1.connect(endpoint);
+			eventService.blockType = 'filtered';
+			onStub.yields({Type: 'filtered_block', filtered_block: filtered_block});
+			// TEST CALL for filtered data
+			await eventService._startService(eventer1, {}, 3000);
+			sinon.assert.called(deliverFilteredStub);
+			sinon.assert.calledWith(FakeLogger.debug, 'on.data - have filtered block data');
+		});
+		it('should call stream on data and log about a private block response with no listeners', async () => {
+			const eventer1 = client.newEventer('eventer1');
+			eventer1.checkConnection = sinon.stub().returns(true);
+			eventer1.waitForReady = sandbox.stub().resolves();
+			await eventer1.connect(endpoint);
+			eventService.blockType = 'private';
+			onStub.yields({Type: 'block_and_private_data', block_and_private_data: block_and_private_data});
+			// TEST CALL for private data
+			await eventService._startService(eventer1, {}, 3000);
+			sinon.assert.called(deliverWithPrivateDataStub);
+			sinon.assert.called(decodeBlockWithPrivateData);
+			sinon.assert.calledWith(FakeLogger.debug, 'on.data - have full block data with private data');
 		});
 		it('should call stream on data and log about a block response with matching endblock', async () => {
 			const eventer1 = client.newEventer('eventer1');

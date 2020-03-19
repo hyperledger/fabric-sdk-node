@@ -7,7 +7,7 @@ Feature: Use base API to perform core operations
 
 Background:
     Given I place a scenario start message BASE API FEATURE
-    Given I deploy a tls Fabric network
+    Given I deploy a tls Fabric network at 2.0 version
     And I use the cli to create and join the channel named baseapichannel on the deployed network
     And I use the cli to deploy a node smart contract named fabcar at version 1.0.0 for all organizations on channel baseapichannel with endorsement policy 1of and arguments ["initLedger"]
 
