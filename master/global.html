@@ -47,7 +47,7 @@
 			<li class="dropdown">
 				<a href="interfaces.list.html" class="dropdown-toggle" data-toggle="dropdown">Interfaces<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="module-fabric-network.BlockEvent.html">fabric-network.BlockEvent</a></li><li><a href="module-fabric-network.CommitEvent.html">fabric-network.CommitEvent</a></li><li><a href="module-fabric-network.ContractEvent.html">fabric-network.ContractEvent</a></li><li><a href="module-fabric-network.FilteredBlockEvent.html">fabric-network.FilteredBlockEvent</a></li><li><a href="module-fabric-network.FilteredContractEvent.html">fabric-network.FilteredContractEvent</a></li><li><a href="module-fabric-network.FilteredTransactionEvent.html">fabric-network.FilteredTransactionEvent</a></li><li><a href="module-fabric-network.FullBlockEvent.html">fabric-network.FullBlockEvent</a></li><li><a href="module-fabric-network.FullContractEvent.html">fabric-network.FullContractEvent</a></li><li><a href="module-fabric-network.FullTransactionEvent.html">fabric-network.FullTransactionEvent</a></li><li><a href="module-fabric-network.Network.html">fabric-network.Network</a></li><li><a href="module-fabric-network.Query.html">fabric-network.Query</a></li><li><a href="module-fabric-network.QueryHandler.html">fabric-network.QueryHandler</a></li><li><a href="module-fabric-network.TransactionEvent.html">fabric-network.TransactionEvent</a></li><li><a href="module-fabric-network.TxEventHandler.html">fabric-network.TxEventHandler</a></li><li><a href="module-fabric-network.WalletStore.html">fabric-network.WalletStore</a></li>
+					<li><a href="module-fabric-network.BlockEvent.html">fabric-network.BlockEvent</a></li><li><a href="module-fabric-network.CommitEvent.html">fabric-network.CommitEvent</a></li><li><a href="module-fabric-network.ContractEvent.html">fabric-network.ContractEvent</a></li><li><a href="module-fabric-network.Network.html">fabric-network.Network</a></li><li><a href="module-fabric-network.Query.html">fabric-network.Query</a></li><li><a href="module-fabric-network.QueryHandler.html">fabric-network.QueryHandler</a></li><li><a href="module-fabric-network.TransactionEvent.html">fabric-network.TransactionEvent</a></li><li><a href="module-fabric-network.TxEventHandler.html">fabric-network.TxEventHandler</a></li><li><a href="module-fabric-network.WalletStore.html">fabric-network.WalletStore</a></li>
 				</ul>
 			</li>
 			
@@ -61,7 +61,7 @@
 			<li class="dropdown">
 				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="global.html#bitsToBytes">bitsToBytes</a></li><li><a href="global.html#bytesToBits">bytesToBits</a></li><li><a href="global.html#CLIENT">CLIENT</a></li><li><a href="global.html#crypto">crypto</a></li><li><a href="global.html#HFAFFILIATIONMGR">HFAFFILIATIONMGR</a></li><li><a href="global.html#HFGENCRL">HFGENCRL</a></li><li><a href="global.html#HFINTERMEDIATECA">HFINTERMEDIATECA</a></li><li><a href="global.html#HFREGISTRARATTRIBUTES">HFREGISTRARATTRIBUTES</a></li><li><a href="global.html#HFREGISTRARDELEGATEROLES">HFREGISTRARDELEGATEROLES</a></li><li><a href="global.html#HFREGISTRARROLES">HFREGISTRARROLES</a></li><li><a href="global.html#HFREVOKER">HFREVOKER</a></li><li><a href="global.html#newCryptoSuite">newCryptoSuite</a></li><li><a href="global.html#newInstance">newInstance</a></li><li><a href="global.html#ORDERER">ORDERER</a></li><li><a href="global.html#PEER">PEER</a></li><li><a href="global.html#setLogger">setLogger</a></li><li><a href="global.html#TYPE">TYPE</a></li><li><a href="global.html#USER">USER</a></li>
+					<li><a href="global.html#allSettled">allSettled</a></li><li><a href="global.html#bitsToBytes">bitsToBytes</a></li><li><a href="global.html#bytesToBits">bytesToBits</a></li><li><a href="global.html#cachedResult">cachedResult</a></li><li><a href="global.html#CLIENT">CLIENT</a></li><li><a href="global.html#crypto">crypto</a></li><li><a href="global.html#HFAFFILIATIONMGR">HFAFFILIATIONMGR</a></li><li><a href="global.html#HFGENCRL">HFGENCRL</a></li><li><a href="global.html#HFINTERMEDIATECA">HFINTERMEDIATECA</a></li><li><a href="global.html#HFREGISTRARATTRIBUTES">HFREGISTRARATTRIBUTES</a></li><li><a href="global.html#HFREGISTRARDELEGATEROLES">HFREGISTRARDELEGATEROLES</a></li><li><a href="global.html#HFREGISTRARROLES">HFREGISTRARROLES</a></li><li><a href="global.html#HFREVOKER">HFREVOKER</a></li><li><a href="global.html#newCryptoSuite">newCryptoSuite</a></li><li><a href="global.html#newInstance">newInstance</a></li><li><a href="global.html#ORDERER">ORDERER</a></li><li><a href="global.html#PEER">PEER</a></li><li><a href="global.html#setLogger">setLogger</a></li><li><a href="global.html#shuffle">shuffle</a></li><li><a href="global.html#TYPE">TYPE</a></li><li><a href="global.html#USER">USER</a></li>
 				</ul>
 			</li>
 			
@@ -2136,6 +2136,146 @@ SPDX-License-Identifier: Apache-2.0
             
 <hr>
 <dt>
+    <h4 class="name" id="allSettled"><span class="type-signature"></span>allSettled(promises)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Implementation of <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled">Promise.allSettled()</a>
+for use in Node versions prior to 12.9.0, where this was introduced.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>promises</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Iterable.&lt;Promise></span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Iterable promises.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    An array of promises.
+</div>
+
+
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
     <h4 class="name" id="bitsToBytes"><span class="type-signature"></span>bitsToBytes(arr)</h4>
     
     
@@ -2406,6 +2546,129 @@ SPDX-License-Identifier: Apache-2.0
 
 
         
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="cachedResult"><span class="type-signature"></span>cachedResult(f)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Wrap a function call with a cache. On first call the wrapped function is invoked to obtain a result. Subsequent
+calls return the cached result.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>f</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A function whose result should be cached.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
 
     
 </dd>
@@ -2797,6 +3060,134 @@ in configurations in the following format:
 
             <td class="description last">a logger instance that defines the following methods: debug(), info(), warn(), error() with
 string interpolation methods like <a href="https://nodejs.org/api/util.html#util_util_format_format">util.format</a>.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="shuffle"><span class="type-signature"></span>shuffle(array)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Knuth shuffle of array elements. The supplied array is directly modified.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>array</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">array</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">An array to shufle.</td>
         </tr>
 
     
@@ -11467,7 +11858,7 @@ actions {array}
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a>
 	
-		on 2020-03-18T12:35:23+00:00
+		on 2020-03-19T01:25:10+00:00
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>
