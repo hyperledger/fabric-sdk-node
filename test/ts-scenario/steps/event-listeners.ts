@@ -26,14 +26,6 @@ Given(/^I am listening for transaction events with a listener named (.+?)$/, {ti
 	Listeners.checkTransactionListenerDetails(listenerName, Constants.TRANSACTION, isActive);
 });
 
-// private data check
-Given(/^I check event private data has (.+?) with a listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number }, async (privateData: string, listenerName: string) => {
-	// wait for events to catch up
-	await BaseUtils.sleep(Constants.INC_SHORT);
-
-	Listeners.checkBlockListenerPrivatePayloads(listenerName, privateData);
-});
-
 // Contract events
 When(/^I use the gateway named (.+?) to listen for (filtered|full) contract events named (.+?) with a listener named (.+?) for the smart contract named (.+?) on channel (.+?)$/, {timeout: Constants.STEP_SHORT as number}, async (gatewayName: string, eventType: EventType, eventName: string, listenerName: string, ccName: string, channelName: string) => {
 	return await Listeners.createContractListener(gatewayName, channelName, ccName, eventName, listenerName, eventType);
@@ -59,15 +51,16 @@ When(/^I unregister the listener named (.+?)$/, {timeout: Constants.STEP_SHORT a
 
 Then(/^I receive ([0-9]+) events from the listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number }, async (calls: number, listenerName: string) => {
 	await Listeners.checkListenerCallNumber(listenerName, calls, Constants.EXACT);
-	Listeners.resetListenerCalls(listenerName);
 });
 
 Then(/^I receive a minimum ([0-9]+) events from the listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number }, async (calls: number, listenerName: string) => {
 	await Listeners.checkListenerCallNumber(listenerName, calls, Constants.GREATER_THAN);
-	Listeners.resetListenerCalls(listenerName);
 });
 
 Then(/^I receive a maximum ([0-9]+) events from the listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number }, async (calls: number, listenerName: string) => {
 	await Listeners.checkListenerCallNumber(listenerName, calls, Constants.LESS_THAN);
-	Listeners.resetListenerCalls(listenerName);
+});
+
+Then('the listener named {word} should have private data containing {string}', {timeout: Constants.STEP_SHORT as number }, async (listenerName: string, privateData: string) => {
+	Listeners.checkBlockListenerPrivatePayloads(listenerName, privateData);
 });

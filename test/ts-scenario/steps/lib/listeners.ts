@@ -17,10 +17,8 @@ export async function createContractListener(gatewayName: string, channelName: s
 	const gateway: Gateway  = gateways.get(gatewayName).gateway;
 	const contract: Contract = await GatewayHelper.retrieveContractFromGateway(gateway, channelName, ccName);
 
-	let listeners: Map<string, any> = stateStore.get(Constants.LISTENERS);
 	const listenerObject: any = {
 		active: true,
-		calls: 0,
 		eventName,
 		eventType: type,
 		listener: {},
@@ -28,38 +26,12 @@ export async function createContractListener(gatewayName: string, channelName: s
 		type: Constants.CONTRACT,
 	};
 
-	// If no listeners, then create the new map item
-	if (!listeners) {
-		listeners = new Map();
-		stateStore.set(Constants.LISTENERS, listeners);
-	}
-
 	const contractListener: ContractListener = async (event: ContractEvent) => {
 		BaseUtils.logMsg(`-> Received a contract event for listener [${listenerName}] of eventName ${eventName}`);
-
-		if (event.eventName !== eventName) {
-			return;
-		}
-
-		// TODO: support for full blocks
-		// if (!filtered) {
-		// 	const [event]: any = args as any;
-		// 	if (event && Object.prototype.hasOwnProperty.call(event, 'payload')) {
-		// 		BaseUtils.checkString(event.payload.toString('utf8'), 'content', true);
-		// 	}
-		// }
-
-		const tlisteners: any = stateStore.get(Constants.LISTENERS);
-		if (tlisteners) {
-			const listenerUpdate: any = tlisteners.get(listenerName);
-			if (listenerUpdate) {
-				listenerUpdate.payloads.push(event);
-				listenerUpdate.calls = listenerUpdate.payloads.length;
-			}
+		if (event.eventName === eventName) {
+			listenerObject.payloads.push(event);
 		}
 	};
-
-	// Create the listener
 	const listenerOptions: ListenerOptions = {
 		startBlock,
 		type
@@ -69,8 +41,7 @@ export async function createContractListener(gatewayName: string, channelName: s
 	// Roll into a listener object to store
 	listenerObject.listener = contractListener;
 	listenerObject.remove = () => contract.removeContractListener(contractListener);
-	listeners.set(listenerName, listenerObject);
-	stateStore.set(Constants.LISTENERS, listeners);
+	putListenerObject(listenerName, listenerObject);
 }
 
 export async function createBlockListener(gatewayName: string, channelName: string, listenerName: string, type: EventType, startBlock?: number, endBlock?: number): Promise<void> {
@@ -78,20 +49,13 @@ export async function createBlockListener(gatewayName: string, channelName: stri
 	const gateway: Gateway = gateways.get(gatewayName).gateway;
 	const network: Network = await gateway.getNetwork(channelName);
 
-	let listeners: Map<string, any> = stateStore.get(Constants.LISTENERS);
 	const listenerObject: any = {
 		active: true,
-		calls: 0,
 		eventType: type,
 		listener: {},
 		payloads: [],
 		type: Constants.BLOCK
 	};
-
-	// If no listeners, then create the new map item
-	if (!listeners) {
-		listeners = new Map();
-	}
 
 	// Create the listener
 	const listener: BlockListener = async (blockEvent: BlockEvent) => {
@@ -103,21 +67,12 @@ export async function createBlockListener(gatewayName: string, channelName: stri
 			BaseUtils.checkSizeEquality(blockEvent.blockNumber.toNumber(), endBlock + 1, false, true);
 		}
 
-		const tlisteners: any = stateStore.get(Constants.LISTENERS);
-		if (tlisteners) {
-			const listenerUpdate: any = tlisteners.get(listenerName);
-			if (listenerUpdate) {
-				listenerUpdate.payloads.push(blockEvent);
-				listenerUpdate.calls = listenerUpdate.payloads.length;
-				BaseUtils.logMsg('->Received a block event - added blockevent to payloads', listenerName);
-				const transactionEvents = blockEvent.getTransactionEvents();
-				for (const transactionEvent of transactionEvents) {
-					if (transactionEvent.privateData) {
-						BaseUtils.logMsg('->Received a block event - blockevent has privateData', JSON.stringify(transactionEvent.privateData));
-					}
-				}
-			} else {
-				BaseUtils.logMsg('->Received a block event - did not find the listener', listenerName);
+		listenerObject.payloads.push(blockEvent);
+		BaseUtils.logMsg('->Received a block event - added blockevent to payloads', listenerName);
+		const transactionEvents = blockEvent.getTransactionEvents();
+		for (const transactionEvent of transactionEvents) {
+			if (transactionEvent.privateData) {
+				BaseUtils.logMsg('->Received a block event - blockevent has privateData', JSON.stringify(transactionEvent.privateData));
 			}
 		}
 
@@ -134,26 +89,32 @@ export async function createBlockListener(gatewayName: string, channelName: stri
 	// Roll into a listener object to store
 	listenerObject.listener = listener;
 	listenerObject.remove = () => network.removeBlockListener(listener);
-	listeners.set(listenerName, listenerObject);
+	putListenerObject(listenerName, listenerObject);
 	BaseUtils.logMsg('->Stored a block event listener:', listenerName);
-
-	stateStore.set(Constants.LISTENERS, listeners);
 }
 
-export function getListenerObject(listenerName: string): any {
-	const listeners: Map<string, any> = stateStore.get(Constants.LISTENERS);
-	if (!listeners || !listeners.has(listenerName)) {
+function getListenerObject(listenerName: string): any {
+	const listener = getListeners().get(listenerName);
+	if (!listener) {
 		const msg: string = `Unable to find listener with name ${listenerName}`;
 		BaseUtils.logAndThrow(msg);
 	} else {
-		return listeners.get(listenerName);
+		return listener;
 	}
 }
 
-export function resetListenerCalls(listenerName: string): void {
-	const listener: any = getListenerObject(listenerName);
-	listener.payloads = [];
-	listener.calls = 0;
+function putListenerObject(name: string, listener: any): void {
+	getListeners().set(name, listener);
+}
+
+function getListeners(): Map<string, any> {
+	let listeners: Map<string, any> = stateStore.get(Constants.LISTENERS);
+	if (!listeners) {
+		listeners = new Map();
+		stateStore.set(Constants.LISTENERS, listeners);
+	}
+
+	return listeners;
 }
 
 export async function checkListenerCallNumber(listenerName: string, compareNumber: number, type: string): Promise<void> {
@@ -163,13 +124,13 @@ export async function checkListenerCallNumber(listenerName: string, compareNumbe
 			let condition: boolean;
 			switch (type) {
 				case Constants.EXACT:
-					condition = Number(getListenerObject(listenerName).calls) === Number(compareNumber);
+					condition = Number(getListenerObject(listenerName).payloads.length) === Number(compareNumber);
 					break;
 				case Constants.GREATER_THAN:
-					condition = Number(getListenerObject(listenerName).calls) >= Number(compareNumber);
+					condition = Number(getListenerObject(listenerName).payloads.length) >= Number(compareNumber);
 					break;
 				case Constants.LESS_THAN:
-					condition = Number(getListenerObject(listenerName).calls) <= Number(compareNumber);
+					condition = Number(getListenerObject(listenerName).payloads.length) <= Number(compareNumber);
 					break;
 				default:
 					throw new Error(`Unknown condition type ${type} passed to checkListenerCallNumber()`);
@@ -189,7 +150,7 @@ export async function checkListenerCallNumber(listenerName: string, compareNumbe
 		}, Constants.STEP_SHORT);
 	});
 
-	const gatewayListenerCalls: number = getListenerObject(listenerName).calls;
+	const gatewayListenerCalls: number = getListenerObject(listenerName).payloads.length;
 	switch (type) {
 		case Constants.EXACT:
 			if (Number(gatewayListenerCalls) !== Number(compareNumber)) {
@@ -242,19 +203,19 @@ export function checkBlockListenerDetails(listenerName: string, listenerType: st
 }
 
 export function checkBlockListenerPrivatePayloads(listenerName: string, checkData: string): void {
-	const listenerObject: any = getListenerObject(listenerName);
-	let found = false;
-	for (const payload of listenerObject.payloads) {
-		const transactionEvents = payload.getTransactionEvents();
-		for (const transactionEvent of transactionEvents) {
-			if (transactionEvent.privateData) {
-				BaseUtils.logMsg('->Transaction Payload has privateData', JSON.stringify(transactionEvent.privateData));
-				if (JSON.stringify(transactionEvent.privateData).includes(checkData)) {
-					found = true;
-				}
-			}
-		}
-	}
+	const listenerObject = getListenerObject(listenerName);
+	const blockEvents: BlockEvent[] = listenerObject.payloads;
+
+	const found = blockEvents.some((blockEvent) => {
+		return blockEvent.getTransactionEvents()
+			.filter((transactionEvent) => transactionEvent.privateData)
+			.map((transactionEvent) => JSON.stringify(transactionEvent.privateData))
+			.some((privateDataJson) => {
+				BaseUtils.logMsg('->Transaction Payload has privateData', privateDataJson);
+				return privateDataJson.includes(checkData);
+			});
+	});
+
 	if (found) {
 		BaseUtils.logMsg('->Transaction Payload privateData checks out', listenerName);
 	} else {
@@ -277,4 +238,5 @@ export function unregisterListener(listenerName: string) {
 	const listenerObject = getListenerObject(listenerName);
 	listenerObject.remove();
 	listenerObject.active = false;
+	listenerObject.payloads = [];
 }

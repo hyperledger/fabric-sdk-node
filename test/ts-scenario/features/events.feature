@@ -79,8 +79,8 @@ Feature: Node SDK Events
 	Scenario: Using a gateway I can listen to private block events emitted by networks
 		When I use the gateway named event_gateway to listen for private block events with a listener named privateBlockListener on channel eventschannel
 		And I use the gateway named event_gateway to submit a transaction with args [privateValuePut] for contract events instantiated on channel eventschannel
-		Then I check event private data has myprivatedata with a listener named privateBlockListener
 		Then I receive a minimum 1 events from the listener named privateBlockListener
+		And the listener named privateBlockListener should have private data containing "myprivatedata"
 
 	Scenario: Using a gateway I can stop listening to private block events emitted by networks
 		Given I am listening for private block events with a listener named privateBlockListener
