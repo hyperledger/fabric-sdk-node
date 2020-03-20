@@ -1,4 +1,7 @@
 {
+	"migration": {
+		"title": "Migrating client applications from v1.4 to v2.0"
+	},
 	"app-dev-env-setup": {
 		"title": "Setting up the Application Developer's Environment"
 	},
