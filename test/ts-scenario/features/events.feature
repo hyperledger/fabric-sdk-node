@@ -76,14 +76,14 @@ Feature: Node SDK Events
 		And I use the gateway named event_gateway to submit a total of 5 transactions with args [createValue] for contract events instantiated on channel eventschannel
 		Then I receive 0 events from the listener named filteredNumberedBlockListener
 
-	#Scenario: Using a Contract I can listen to unfiltered block events with private data emitted by networks
-	#	When I use the gateway named event_gateway to listen for unfiltered private events with a listener named unfilteredPrivateBlockListener on channel eventschannel
-	#	When I use the gateway named event_gateway to submit a transaction with args [privateValuePut] for contract events instantiated on channel eventschannel
-	#	When I use the gateway named event_gateway to submit a transaction with args [privateValueGet] for contract events instantiated on channel eventschannel
-	#	Then I receive a minimum 2 events from the listener unfilteredPrivateBlockListener
+	Scenario: Using a gateway I can listen to private block events emitted by networks
+		When I use the gateway named event_gateway to listen for private block events with a listener named privateBlockListener on channel eventschannel
+		And I use the gateway named event_gateway to submit a transaction with args [privateValuePut] for contract events instantiated on channel eventschannel
+		Then I check event private data has myprivatedata with a listener named privateBlockListener
+		Then I receive a minimum 1 events from the listener named privateBlockListener
 
-	#Scenario: Using a Contract I can stop listening to unfiltered block events emitted by networks
-	#	Given I am listening for unfiltered block events with a listener named unfilteredPrivateBlockListener
-	#	When I unregister the listener named unfilteredPrivateBlockListener
-	#	And I use the gateway named event_gateway to submit a total of 5 transactions with args [createValue] for contract events instantiated on channel eventschannel
-	#	Then I receive 0 events from the listener named unfilteredPrivateBlockListener
+	Scenario: Using a gateway I can stop listening to private block events emitted by networks
+		Given I am listening for private block events with a listener named privateBlockListener
+		When I unregister the listener named privateBlockListener
+		And I use the gateway named event_gateway to submit a total of 5 transactions with args [privateValuePut] for contract events instantiated on channel eventschannel
+		Then I receive 0 events from the listener named privateBlockListener

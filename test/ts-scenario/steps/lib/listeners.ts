@@ -35,7 +35,7 @@ export async function createContractListener(gatewayName: string, channelName: s
 	}
 
 	const contractListener: ContractListener = async (event: ContractEvent) => {
-		BaseUtils.logMsg(`-> Received a contract event for listener [${listenerName}] of type ${eventName}`);
+		BaseUtils.logMsg(`-> Received a contract event for listener [${listenerName}] of eventName ${eventName}`);
 
 		if (event.eventName !== eventName) {
 			return;
@@ -109,6 +109,15 @@ export async function createBlockListener(gatewayName: string, channelName: stri
 			if (listenerUpdate) {
 				listenerUpdate.payloads.push(blockEvent);
 				listenerUpdate.calls = listenerUpdate.payloads.length;
+				BaseUtils.logMsg('->Received a block event - added blockevent to payloads', listenerName);
+				const transactionEvents = blockEvent.getTransactionEvents();
+				for (const transactionEvent of transactionEvents) {
+					if (transactionEvent.privateData) {
+						BaseUtils.logMsg('->Received a block event - blockevent has privateData', JSON.stringify(transactionEvent.privateData));
+					}
+				}
+			} else {
+				BaseUtils.logMsg('->Received a block event - did not find the listener', listenerName);
 			}
 		}
 
@@ -126,6 +135,8 @@ export async function createBlockListener(gatewayName: string, channelName: stri
 	listenerObject.listener = listener;
 	listenerObject.remove = () => network.removeBlockListener(listener);
 	listeners.set(listenerName, listenerObject);
+	BaseUtils.logMsg('->Stored a block event listener:', listenerName);
+
 	stateStore.set(Constants.LISTENERS, listeners);
 }
 
@@ -226,6 +237,28 @@ export function checkBlockListenerDetails(listenerName: string, listenerType: st
 	// Check the listener properties
 	if ( (listenerObject.active !== isActive) || (listenerObject.type.localeCompare(listenerType) !== 0) || (listenerObject.eventType !== eventType)) {
 		const msg: string = `Listener named ${listenerName} does not have the expected properties [type: ${listenerType}, eventType: ${eventType}, active: ${isActive}]`;
+		BaseUtils.logAndThrow(msg);
+	}
+}
+
+export function checkBlockListenerPrivatePayloads(listenerName: string, checkData: string): void {
+	const listenerObject: any = getListenerObject(listenerName);
+	let found = false;
+	for (const payload of listenerObject.payloads) {
+		const transactionEvents = payload.getTransactionEvents();
+		for (const transactionEvent of transactionEvents) {
+			if (transactionEvent.privateData) {
+				BaseUtils.logMsg('->Transaction Payload has privateData', JSON.stringify(transactionEvent.privateData));
+				if (JSON.stringify(transactionEvent.privateData).includes(checkData)) {
+					found = true;
+				}
+			}
+		}
+	}
+	if (found) {
+		BaseUtils.logMsg('->Transaction Payload privateData checks out', listenerName);
+	} else {
+		const msg: string = `Listener named ${listenerName} does not have the expected private data payload [${checkData}]`;
 		BaseUtils.logAndThrow(msg);
 	}
 }

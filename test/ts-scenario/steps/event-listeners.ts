@@ -5,6 +5,7 @@
 'use strict';
 
 import { Constants } from './constants';
+import * as BaseUtils from './lib/utility/baseUtils';
 import * as Listeners from './lib/listeners';
 
 import { Given, Then, When } from 'cucumber';
@@ -15,7 +16,7 @@ Given(/^I am listening for (filtered|full) contract events named (.+?) with a li
 	Listeners.checkContractListenerDetails(listenerName, Constants.CONTRACT, type, eventName, isActive);
 });
 
-Given(/^I am listening for (filtered|full) block events with a listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number }, async (type: EventType, listenerName: string) => {
+Given(/^I am listening for (filtered|full|private) block events with a listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number }, async (type: EventType, listenerName: string) => {
 	const isActive: boolean = true;
 	Listeners.checkBlockListenerDetails(listenerName, Constants.BLOCK, type, isActive);
 });
@@ -23,6 +24,14 @@ Given(/^I am listening for (filtered|full) block events with a listener named (.
 Given(/^I am listening for transaction events with a listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number }, async (listenerName: string) => {
 	const isActive: boolean = true;
 	Listeners.checkTransactionListenerDetails(listenerName, Constants.TRANSACTION, isActive);
+});
+
+// private data check
+Given(/^I check event private data has (.+?) with a listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number }, async (privateData: string, listenerName: string) => {
+	// wait for events to catch up
+	await BaseUtils.sleep(Constants.INC_SHORT);
+
+	Listeners.checkBlockListenerPrivatePayloads(listenerName, privateData);
 });
 
 // Contract events
@@ -35,11 +44,11 @@ When(/^I use the gateway named (.+?) to replay (filtered|full) contract events n
 });
 
 // Block events
-When(/^I use the gateway named (.+?) to listen for (filtered|full) block events with a listener named (.+?) on channel (.+?)$/, {timeout: Constants.STEP_SHORT as number}, async (gatewayName: string, eventType: EventType, listenerName: string, channelName: string) => {
+When(/^I use the gateway named (.+?) to listen for (filtered|full|private) block events with a listener named (.+?) on channel (.+?)$/, {timeout: Constants.STEP_SHORT as number}, async (gatewayName: string, eventType: EventType, listenerName: string, channelName: string) => {
 	return await Listeners.createBlockListener(gatewayName, channelName, listenerName, eventType);
 });
 
-When(/^I use the gateway named (.+?) to listen for (filtered|full) block events between ([0-9]+) and ([0-9]+) with a listener named (.+?) on channel (.+?)$/, {timeout: Constants.STEP_SHORT as number}, async (gatewayName: string, eventType: EventType, startBlock: number, endBlock: number, listenerName: string, channelName: string) => {
+When(/^I use the gateway named (.+?) to listen for (filtered|full|private) block events between ([0-9]+) and ([0-9]+) with a listener named (.+?) on channel (.+?)$/, {timeout: Constants.STEP_SHORT as number}, async (gatewayName: string, eventType: EventType, startBlock: number, endBlock: number, listenerName: string, channelName: string) => {
 	return await Listeners.createBlockListener(gatewayName, channelName, listenerName, eventType, startBlock, endBlock);
 });
 
