@@ -5,7 +5,6 @@
 'use strict';
 
 import { Constants } from './constants';
-import * as BaseUtils from './lib/utility/baseUtils';
 import * as Listeners from './lib/listeners';
 
 import { Given, Then, When } from 'cucumber';
@@ -63,4 +62,8 @@ Then(/^I receive a maximum ([0-9]+) events from the listener named (.+?)$/, {tim
 
 Then('the listener named {word} should have private data containing {string}', {timeout: Constants.STEP_SHORT as number }, async (listenerName: string, privateData: string) => {
 	Listeners.checkBlockListenerPrivatePayloads(listenerName, privateData);
+});
+
+Then('the listener named {word} should have contract events with payload containing {string}', {timeout: Constants.STEP_SHORT as number }, async (listenerName: string, payload: string) => {
+	Listeners.checkContractListenerPayloads(listenerName, payload);
 });

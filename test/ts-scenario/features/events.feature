@@ -19,6 +19,7 @@ Feature: Node SDK Events
 	 	When I use the gateway named event_gateway to listen for full contract events named create with a listener named createValueListener for the smart contract named events on channel eventschannel
 		And I use the gateway named event_gateway to submit a total of 5 transactions with args [createValue] for contract events instantiated on channel eventschannel
 		Then I receive 5 events from the listener named createValueListener
+		And the listener named createValueListener should have contract events with payload containing "createValueTransactionContent"
 
 	Scenario: Using a Contract I can stop listening to full contract create events emitted by instantiated chaincodes
 		Given I am listening for full contract events named create with a listener named createValueListener
@@ -27,28 +28,28 @@ Feature: Node SDK Events
 		Then I receive 0 events from the listener named createValueListener
 
  	Scenario: Using a Contract I can listen to filtered contract events emitted by instantiated chaincodes
-	 	When I use the gateway named event_gateway to listen for filtered contract events named dc with a listener named dcValueListener for the smart contract named events on channel eventschannel
+	 	When I use the gateway named event_gateway to listen for filtered contract events named publicDC with a listener named dcValueListener for the smart contract named events on channel eventschannel
 		And I use the gateway named event_gateway to submit a total of 5 transactions with args [createValueDisconnect] for contract events instantiated on channel eventschannel
 		Then I receive 5 events from the listener named dcValueListener
 
 	Scenario: Using a Contract I can stop listening to filtered contract events emitted by instantiated chaincodes
-		Given I am listening for filtered contract events named dc with a listener named dcValueListener
+		Given I am listening for filtered contract events named publicDC with a listener named dcValueListener
 		When I unregister the listener named dcValueListener
 		And I use the gateway named event_gateway to submit a total of 5 transactions with args [createValueDisconnect] for contract events instantiated on channel eventschannel
 		Then I receive 0 events from the listener named dcValueListener
 
 	Scenario: Using a Contract I can replay filtered contract events emitted by instantiated chaincodes
 		When I use the gateway named event_gateway to submit a total of 1 transactions with args [createValueDisconnect] for contract events instantiated on channel eventschannel
-        And I use the gateway named event_gateway to replay filtered contract events named dc from starting block 1 with a listener named filteredContractReplayListener for the smart contract named events on channel eventschannel
+        And I use the gateway named event_gateway to replay filtered contract events named publicDC from starting block 1 with a listener named filteredContractReplayListener for the smart contract named events on channel eventschannel
         Then I receive a minimum 1 events from the listener named filteredContractReplayListener
 		And I unregister the listener named filteredContractReplayListener
 
-	Scenario: Using a Contract I can listen to full block events emitted by networks
+	Scenario: Using a gateway I can listen to full block events emitted by networks
 		When I use the gateway named event_gateway to listen for full block events with a listener named fullBlockListener on channel eventschannel
 		When I use the gateway named event_gateway to submit a transaction with args [createValue] for contract events instantiated on channel eventschannel
 		Then I receive a minimum 1 events from the listener named fullBlockListener
 
-	Scenario: Using a Contract I can stop listening to full block events emitted by networks
+	Scenario: Using a gateway I can stop listening to full block events emitted by networks
 		Given I am listening for full block events with a listener named fullBlockListener
 		When I unregister the listener named fullBlockListener
 		And I use the gateway named event_gateway to submit a total of 5 transactions with args [createValue] for contract events instantiated on channel eventschannel

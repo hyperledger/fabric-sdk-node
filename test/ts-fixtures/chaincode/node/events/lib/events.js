@@ -14,7 +14,7 @@ class Events extends Contract {
 
 	async createValue(ctx) {
 		const {stub} = ctx;
-		stub.setEvent('create', Buffer.from('content'));
+		stub.setEvent('create', Buffer.from('createValueTransactionContent'));
 	}
 
 	async privateValuePut(ctx) {
@@ -40,7 +40,7 @@ class Events extends Contract {
 
 	async createValueDisconnect(ctx) {
 		const {stub} = ctx;
-		stub.setEvent('dc', Buffer.from('content'));
+		stub.setEvent('publicDC', Buffer.from('createValueDisconnectContent'));
 	}
 }
 

@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { BlockEvent, BlockListener, Contract, ContractEvent, ContractListener, Gateway, Network, ListenerOptions, EventType } from 'fabric-network';
+import { BlockEvent, BlockListener, Contract, ContractEvent, ContractListener, EventType, Gateway, ListenerOptions, Network, TransactionEvent } from 'fabric-network';
 import { Constants } from '../constants';
 import * as GatewayHelper from './gateway';
 import * as BaseUtils from './utility/baseUtils';
@@ -220,6 +220,25 @@ export function checkBlockListenerPrivatePayloads(listenerName: string, checkDat
 		BaseUtils.logMsg('->Transaction Payload privateData checks out', listenerName);
 	} else {
 		const msg: string = `Listener named ${listenerName} does not have the expected private data payload [${checkData}]`;
+		BaseUtils.logAndThrow(msg);
+	}
+}
+
+export function checkContractListenerPayloads(listenerName: string, checkData: string): void {
+	const listenerObject = getListenerObject(listenerName);
+	const contractEvents: ContractEvent[] = listenerObject.payloads;
+
+	const found = contractEvents.some((contractEvent) => {
+		if (contractEvent.payload) {
+			// Check a contract event payload is what we expect
+			return contractEvent.payload.toString() === checkData;
+		}
+	});
+
+	if (found) {
+		BaseUtils.logMsg('->Contract Event payload matches what we expect:', checkData);
+	} else {
+		const msg: string = `Listener named ${listenerName} does not have the expected contract event payload [${checkData}]`;
 		BaseUtils.logAndThrow(msg);
 	}
 }
