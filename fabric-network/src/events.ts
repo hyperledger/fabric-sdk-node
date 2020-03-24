@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { FilteredBlock, FilteredTransaction, Endorser, Block, BlockType, PrivateData } from 'fabric-common';
+import { FilteredBlock, FilteredTransaction, Endorser, Block, BlockType } from 'fabric-common';
 import Long = require('long');
 
 export type EventType = BlockType;

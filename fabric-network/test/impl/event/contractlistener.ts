@@ -75,7 +75,7 @@ describe('contract event listener', () => {
 		return {
 			eventService,
 			blockNumber: Long.fromNumber(blockNumber),
-			block: newFullBlock(blockNumber)
+			block: newFullBlock()
 		};
 	}
 
@@ -87,7 +87,7 @@ describe('contract event listener', () => {
 		});
 	}
 
-	function newFullBlock(blockNumber: number): Block {
+	function newFullBlock(): Block {
 		const block = new protos.common.Block();
 		block.data = new protos.common.BlockData();
 		block.metadata = new protos.common.BlockMetadata();
