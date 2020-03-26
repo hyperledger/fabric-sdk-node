@@ -11,11 +11,13 @@
  * client applications to interact with smart contracts deployed to a Hyperledger Fabric blockchain network.</p>
  *
  * <p>Note that administrative capabilities, such as installing and starting smart contracts, are not currently provided
- * by this API. For these tasks or other specific advanced usage, the lower level <em>fabric-common</em> API
- * should be used. Access to related <em>fabric-common</em> objects is provided through the <em>fabric-network</em>
- * API objects.</p>
+ * by this API. For only specific advanced usage, the lower level <em>fabric-common</em> API can be used. Access to
+ * related <em>fabric-common</em> objects is provided through the <em>fabric-network</em> API objects.</p>
  *
- * [TypeScript]{@link http://www.typescriptlang.org/} definitions are included in this module.
+ * <p>If migrating a client application from an earlier version of the API, consult the
+ * [migration tutorial]{@tutorial migration} for details of potentially breaking changes and recommended actions.</p>
+ *
+ * <p>[TypeScript]{@link http://www.typescriptlang.org/} definitions are included in this module.</p>
  *
  * <h3>Getting started</h3>
  *
@@ -25,11 +27,15 @@
  * [Networks]{@link module:fabric-network.Network} (channels) for which that peer is a member. This in turn
  * provides access to Smart [Contracts]{@link module:fabric-network.Contract} (chaincode) running within that
  * blockchain network, and to which [Transactions]{@link module:fabric-network.Transaction} can be
- * [submitted]{@link module:fabric-network.Transaction#submit} or queries can be
- * [evaluated]{@link module:fabric-network.Transaction#evaluate}.</p>
+ * [submitted]{@link module:fabric-network.Contract#submitTransaction} or queries can be
+ * [evaluated]{@link module:fabric-network.Contract#evaluateTransaction}.</p>
  *
  * <p>Private data can be submitted to transactions as [transient]{@link module:fabric-network.Transaction#setTransient}
  * data to prevent it from being recorded on the ledger.</p>
+ *
+ * Client applications can initiate actions or business processes in response to events emitted by smart contract
+ * transactions using [smart contract event listeners]{@link module:fabric-network.Contract}. All updates to the ledger
+ * can be observed using [block event listeners]{@link module:fabric-network.Network}.
  *
  * @example
  * // Obtain the smart contract with which our application wants to interact
