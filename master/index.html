@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Hyperledger Fabric SDK for node.js Index</title>
+	<title>Hyperledger Fabric SDK for Node.js Index</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -20,7 +20,7 @@
 <div class="navbar navbar-default navbar-fixed-top ">
 <div class="container">
 	<div class="navbar-header">
-		<a class="navbar-brand" href="index.html">Hyperledger Fabric SDK for node.js</a>
+		<a class="navbar-brand" href="index.html">Hyperledger Fabric SDK for Node.js</a>
 		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
 			<span class="icon-bar"></span>
 			<span class="icon-bar"></span>
@@ -119,63 +119,19 @@
 <p>Hyperledger Fabric is the operating system of an enterprise-strength permissioned blockchain network. For a high-level overview of the fabric, visit <a href="http://hyperledger-fabric.readthedocs.io/en/latest/">http://hyperledger-fabric.readthedocs.io/en/latest/</a>.</p>
 <p>Applications can be developed to interact with the blockchain network on behalf of the users. APIs are available to:</p>
 <ul>
-<li>invoke transactions by calling the chaincode</li>
-<li>receive events based on new blocks added to the ledger</li>
+<li>invoke transactions by calling the chaincode.</li>
+<li>receive events based on new blocks added to the ledger.</li>
 </ul>
 <h3>How Different Components of the Fabric Work Together</h3>
 <p>The <a href="http://hyperledger-fabric.readthedocs.io/en/latest/txflow.html">Transaction Flow</a> document provides an excellent description of the application/SDK, peers, and orderers working together to process transactions and producing blocks.</p>
 <p>Security on the Fabric is enforced with digital signatures. All requests made to the fabric must be signed by users with appropriate enrollment certificates. For a user's enrollment certificate to be considered valid on the Fabric, it must be signed by a trusted Certificate Authority (CA). Fabric supports any standard CAs. In addition, Fabric provides a CA server. See this <a href="http://hyperledger-fabric-ca.readthedocs.io/en/latest/users-guide.html#overview">overview</a>.</p>
 <h3>Features of the SDK for Node.js</h3>
-<p>The Hyperledger Fabric SDK for Node.js is designed in an Object-Oriented programming style. Its modular construction enables application developers to plug in alternative implementations of  crypto suites and handling endorsements.</p>
-<p>The SDK's list of features include:</p>
+<p>The Hyperledger Fabric SDK for Node.js is designed in an Object-Oriented programming style. Its modular construction enables application developers to plug in alternative implementations for handling transaction commit events, transaction evaluation (query), and other behaviors.</p>
+<p>The SDK is composed of several modules:</p>
 <ul>
-<li>
-<p><a href="module-fabric-network.html"><strong>fabric-network</strong></a> (the recommended API for):</p>
-<ul>
-<li><a href="module-fabric-network.Transaction.html">Submitting transactions</a> to a smart contract.</li>
-<li><a href="module-fabric-network.Transaction.html#evaluate">Querying</a> a smart contract for the latest application state.</li>
-</ul>
-</li>
-<li>
-<p><strong>fabric-common</strong>:</p>
-<ul>
-<li>submitting a transaction</li>
-<li>query a chaincode for the latest application state</li>
-<li>monitoring events:
-<ul>
-<li>connect to a peer's event stream</li>
-<li>listen on block events</li>
-<li>listen on transactions events and find out if the transaction was successfully committed to the ledger or marked invalid</li>
-<li>listen on custom events produced by chaincodes</li>
-</ul>
-</li>
-<li>hierarchical configuration settings with multiple layers of overrides: files, environment variable, program arguments, in-memory settings</li>
-<li>logging utility with a built-in logger (winston) and can be overriden with a number of popular loggers including log4js and bunyan</li>
-<li>pluggable interface describe the cryptographic operations required for successful interactions with the Fabric. Two implementations are provided out of box:
-<ul>
-<li><a href="CryptoSuite_ECDSA_AES.html">Software-based ECDSA</a></li>
-<li><a href="CryptoSuite_PKCS11.html">PKCS#11-compliant ECDSA</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p><strong>fabric-ca-client</strong>:</p>
-<ul>
-<li><a href="FabricCAServices.html#register">register</a> a new user</li>
-<li><a href="FabricCAServices.html#enroll">enroll</a> a user to obtain the enrollment certificate signed by the Fabric CA</li>
-<li><a href="FabricCAServices.html#revoke">revoke</a> an existing user by enrollment ID or revoke a specific certificate</li>
-<li><a href="FabricCAServices.html">customizable persistence store</a></li>
-</ul>
-</li>
-</ul>
-<h3>API Reference</h3>
-<p>The SDK is made up of modules that can be accessed through the navigation menu <strong>Modules</strong>:</p>
-<ul>
-<li><a href="module-fabric-network.html"><strong>fabric-network</strong></a>: Provides high level APIs for client applications to submit transactions and evaluate queries for a smart contract (chaincode).</li>
-<li><strong>api</strong>: Pluggable APIs for application developers to supply alternative implementations of key interfaces used by the SDK. For each interface there are built-in default implementations.</li>
-<li><strong>fabric-common</strong>: Provides APIs to interact with the core components of a Hyperledger Fabric network, namely the peers, orderers and event streams.</li>
-<li><strong>fabric-ca-client</strong>: Provides APIs to interact with the optional component, fabric-ca, that contains services for membership management.</li>
+<li><a href="module-fabric-network.html"><strong>fabric-network</strong></a>: Provides high level APIs for client applications to interact with smart contracts (chaincode), and is the recommended API for building client applications.</li>
+<li><strong>fabric-ca-client</strong>: Provides APIs to interact with the optional Certificate Authority component, fabric-ca, that contains services for membership management.</li>
+<li><strong>fabric-common</strong>: A low-level API, used to implement <em>fabric-network</em> capability, that provides APIs to interact with the core components of a Hyperledger Fabric network, namely the peers, orderers and event streams.</li>
 </ul>
 <h3>Compatibility</h3>
 <p>The following tables show versions of Fabric, Node and other dependencies that are explicitly tested and that are supported for use with version 2.0 of the Fabric SDK for Node.</p>
@@ -205,6 +161,45 @@
 </tr>
 </tbody>
 </table>
+<h3>API reference</h3>
+<p>This section provides more detail on the capabilities provided by each of the modules that make up the Hyperledger Fabric SDK for Node.js.</p>
+<h4>fabric-network</h4>
+<p>This is the recommended API for client application to use for:</p>
+<ul>
+<li><a href="module-fabric-network.Contract.html">Submitting transactions</a> to a smart contract.</li>
+<li><a href="module-fabric-network.Contract.html#evaluateTransaction">Querying</a> a smart contract for the latest application state.</li>
+<li>Listening for and replay of both <a href="module-fabric-network.Contract.html">smart contract events</a> and <a href="module-fabric-network.Network.html">block events</a>, with easy access to related transaction information.</li>
+</ul>
+<h4>fabric-ca-client</h4>
+<p>Provides the following capabilities for interacting with the Certificate Authority to manage user identities:</p>
+<ul>
+<li><a href="FabricCAServices.html#register">register</a> a new user.</li>
+<li><a href="FabricCAServices.html#enroll">enroll</a> a user to obtain the enrollment certificate signed by the Fabric CA.</li>
+<li><a href="FabricCAServices.html#revoke">revoke</a> an existing user by enrollment ID or revoke a specific certificate</li>
+<li><a href="FabricCAServices.html">customizable persistence store</a>.</li>
+</ul>
+<h4>fabric-common</h4>
+<p>Provides the following capabilities and for use in the implementation of the <em>fabric-network</em> API:</p>
+<ul>
+<li>Submitting transactions.</li>
+<li>querying chaincode for the latest application state.</li>
+<li>monitoring events:
+<ul>
+<li>connect to a peer's event stream</li>
+<li>listen on block events</li>
+<li>listen on transactions events and find out if the transaction was successfully committed to the ledger or marked invalid.</li>
+<li>listen on custom events produced by chaincodes.</li>
+</ul>
+</li>
+<li>hierarchical configuration settings with multiple layers of overrides: files, environment variable, program arguments, in-memory settings</li>
+<li>logging utility with a built-in logger (winston) and can be overridden with a number of popular loggers including log4js and bunyan</li>
+<li>pluggable interface describe the cryptographic operations required for successful interactions with the Fabric. Two implementations are provided out of box:
+<ul>
+<li><a href="CryptoSuite_ECDSA_AES.html">Software-based ECDSA</a></li>
+<li><a href="CryptoSuite_PKCS11.html">PKCS#11-compliant ECDSA</a></li>
+</ul>
+</li>
+</ul>
 <p><a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.</p></article>
     </section>
 
@@ -251,7 +246,7 @@
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a>
 	
-		on 2020-03-24T14:37:40+00:00
+		on 2020-03-26T13:47:23+00:00
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>
