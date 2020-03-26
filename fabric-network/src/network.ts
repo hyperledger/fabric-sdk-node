@@ -7,20 +7,18 @@
 // @ts-ignore no implicit any
 import Contract = require('./contract');
 import { Channel, DiscoveryService, Endorser } from 'fabric-common';
+import { BlockListener, CommitListener, EventType, ListenerOptions } from './events';
 import { BlockEventSource } from './impl/event/blockeventsource';
-import { BlockListener, CommitListener, ListenerOptions, EventType } from './events';
 import { CommitListenerSession } from './impl/event/commitlistenersession';
 import { EventServiceManager } from './impl/event/eventservicemanager';
 import { IsolatedBlockListenerSession } from './impl/event/isolatedblocklistenersession';
+import { newCheckpointBlockListener } from './impl/event/listeners';
 import { addListener, ListenerSession, removeListener } from './impl/event/listenersession';
 import { SharedBlockListenerSession } from './impl/event/sharedblocklistenersession';
 import { QueryHandlerFactory } from './impl/query/queryhandler';
 import * as Logger from './logger';
 // @ts-ignore no implicit any
 import Gateway = require('./gateway');
-// @ts-ignore no implicit any
-import BaseEventListener = require('./impl/event/baseeventlistener');
-import Long = require('long');
 
 const logger = Logger.getLogger('Network');
 
@@ -28,7 +26,14 @@ function listenerOptionsWithDefaults(options: ListenerOptions): ListenerOptions 
 	const defaultOptions = {
 		type: 'full'
 	};
-	return Object.assign(defaultOptions, options);
+	const result = Object.assign(defaultOptions, options);
+
+	const checkpointBlock = options.checkpointer?.getBlockNumber();
+	if (checkpointBlock) {
+		result.startBlock = checkpointBlock;
+	}
+
+	return result;
 }
 
 export interface Network {
@@ -237,6 +242,10 @@ export class NetworkImpl implements Network {
 
 	private newBlockListenerSession(listener: BlockListener, options: ListenerOptions) {
 		options = listenerOptionsWithDefaults(options);
+
+		if (options.checkpointer) {
+			listener = newCheckpointBlockListener(listener, options.checkpointer);
+		}
 
 		if (options.startBlock) {
 			return this.newIsolatedBlockListenerSession(listener, options);

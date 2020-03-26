@@ -4,7 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { FilteredBlock, FilteredTransaction, Endorser, Block, BlockType } from 'fabric-common';
+import { Block, BlockType, Endorser, FilteredBlock, FilteredTransaction } from 'fabric-common';
+import { Checkpointer } from './checkpointer';
 import Long = require('long');
 
 export type EventType = BlockType;
@@ -38,6 +39,7 @@ export type ContractListener = (event: ContractEvent) => Promise<void>;
 export interface ListenerOptions {
 	startBlock?: number | string | Long;
 	type?: EventType;
+	checkpointer?: Checkpointer;
 }
 
 export interface CommitError extends Error {

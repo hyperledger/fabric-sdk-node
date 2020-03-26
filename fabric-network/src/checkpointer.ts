@@ -1,0 +1,14 @@
+/**
+ * Copyright 2020 IBM All Rights Reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import Long = require('long');
+
+export interface Checkpointer {
+	addTransactionId(transactionId: string): Promise<void>;
+	getBlockNumber(): Long | undefined;
+	getTransactionIds(): Set<string>;
+	setBlockNumber(blockNumber: Long): Promise<void>;
+}
