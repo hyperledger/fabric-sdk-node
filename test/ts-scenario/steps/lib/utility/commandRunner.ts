@@ -7,6 +7,7 @@ import { logMsg } from './baseUtils';
 
 import { ChildProcess, exec } from 'child_process';
 import stripAnsi from 'strip-ansi';
+import * as BaseUtils from '../utility/baseUtils';
 
 export class CommandRunner {
 
@@ -29,6 +30,8 @@ export class CommandRunner {
 	 * @return {Promise} - Promise that will be resolved or rejected with an error
 	 */
 	public runShellCommand(pass: any, cmd: string, verbose: boolean = true): Promise<any> {
+		BaseUtils.logMsg(` -- runShellCommand ==>${cmd}<==`);
+
 		if (typeof cmd !== 'string') {
 			return Promise.reject('Command passed to function was not a string');
 		} else {

@@ -94,6 +94,10 @@ export async function buildChannelRequest(requestName: string, contractName: str
 
 	// We have arguments
 	const argArray: string[] = requestArgs.slice(1, -1).split(',');
+	let initRequired: boolean = false;
+	if (argArray[0].includes('init')) {
+		initRequired = true;
+	}
 
 	// The peers and orderers will be built by the client so that common
 	// connection information will come from the client object, like the mutual TLS cert/key
@@ -146,7 +150,8 @@ export async function buildChannelRequest(requestName: string, contractName: str
 		// endorsement will have the values needed by the chaincode
 		// to perform the endorsement (invoke)
 		const endorsementRequest: any = {
-			args: [...argArray]
+			args: [...argArray],
+			init: initRequired
 		};
 
 		// The endorsement object has the building of the request, the signing

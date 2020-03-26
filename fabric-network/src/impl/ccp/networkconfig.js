@@ -135,11 +135,13 @@ function findPeerMspid(name, config) {
 function buildOptions(endpoint_config) {
 	const method = 'buildOptions';
 	logger.debug(`${method} - start`);
-	const pem = getPEMfromConfig(endpoint_config.tlsCACerts);
 	const options = {
-		url: endpoint_config.url,
-		pem: pem
+		url: endpoint_config.url
 	};
+	const pem = getPEMfromConfig(endpoint_config.tlsCACerts);
+	if (pem) {
+		options.pem = pem;
+	}
 	Object.assign(options, endpoint_config.grpcOptions);
 
 	if (options['request-timeout'] && !options.requestTimeout) {

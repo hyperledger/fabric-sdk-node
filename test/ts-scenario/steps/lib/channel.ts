@@ -25,12 +25,6 @@ export async function cli_channel_create(channelName: string, tls: boolean): Pro
 		// Use CLI container to create a channel
 		BaseUtils.logMsg(`Attempting to create channel ${channelName} of type ${tls ? 'tls' : 'non-tls'}`);
 
-		// Do not create already existing channels
-		if (AdminUtils.isChannelCreated(channelName)) {
-			BaseUtils.logMsg(`Channel ${channelName} already exists, skipping creation`);
-			return;
-		}
-
 		let tlsOptions: string[];
 		if (tls) {
 			tlsOptions = ['--tls', 'true', '--cafile', '/etc/hyperledger/configtx/crypto-config/ordererOrganizations/example.com/tlsca/tlsca.example.com-cert.pem'];
@@ -91,6 +85,42 @@ export async function cli_join_org_to_channel(orgName: string, channelName: stri
 		BaseUtils.logMsg(`Channel ${channelName} has been joined by organization ${orgName}`);
 	} catch (err) {
 		BaseUtils.logError('Join Channel failure: ', err);
+		return Promise.reject(err);
+	}
+}
+
+/**
+ * Gets a list of channels the peer has joined.
+ * @param {String} orgName the name of the org to join to the named chanel
+ * @param {Boolean} tls true if a tls network; false if not
+ * @async
+ */
+export async function cli_get_channels(orgName: string, tls: boolean): Promise<string> {
+
+	try {
+		// Use CLI container to join org to channel
+		BaseUtils.logMsg(`Attempting to get list of channels for organization ${orgName} of type ${tls ? 'tls' : 'non-tls'}`);
+
+		let tlsOptions: string[];
+		if (tls) {
+			tlsOptions = ['--tls', '--cafile', '/etc/hyperledger/configtx/crypto-config/ordererOrganizations/example.com/tlsca/tlsca.example.com-cert.pem'];
+		} else {
+			tlsOptions = [];
+		}
+		let command: string[];
+		command = [
+			'docker', 'exec', `${orgName}_cli`, 'peer', 'channel', 'list'
+		];
+
+		command = command.concat(tlsOptions);
+		const channelNames = await commandRunner.runShellCommand(true, command.join(' '), VERBOSE_CLI) as any;
+
+		const results = channelNames.stdout as string;
+		BaseUtils.logMsg(`Channel names ==>${results}<== have been joined by organization ${orgName}`);
+
+		return results;
+	} catch (err) {
+		BaseUtils.logError('Get channel names failure: ', err);
 		return Promise.reject(err);
 	}
 }
