@@ -15,7 +15,6 @@ import { newFullBlockEvent } from './fullblockeventfactory';
 import { OrderedBlockQueue } from './orderedblockqueue';
 import { newPrivateBlockEvent } from './privateblockeventfactory';
 import Long = require('long');
-import util = require('util');
 
 const logger = Logger.getLogger('BlockEventSource');
 
@@ -58,11 +57,8 @@ export class BlockEventSource {
 	}
 
 	private newBlockQueue(options: ListenerOptions): OrderedBlockQueue {
-		if (options.startBlock) {
-			return new OrderedBlockQueue(Long.fromValue(options.startBlock));
-		} else {
-			return new OrderedBlockQueue();
-		}
+		const startBlock = options.startBlock ? Long.fromValue(options.startBlock) : undefined;
+		return new OrderedBlockQueue(startBlock);
 	}
 
 	private async start() {
