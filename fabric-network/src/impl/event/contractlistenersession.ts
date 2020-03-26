@@ -8,7 +8,7 @@ import { BlockEvent, BlockListener, ContractEvent, ContractListener, ListenerOpt
 import * as Logger from '../../logger';
 import { Network } from '../../network';
 import { ListenerSession } from './listenersession';
-import * as GatewayUtils from '../gatewayutils';
+import * as Listeners from './listeners';
 const logger = Logger.getLogger('ContractListenerSession');
 
 export class ContractListenerSession implements ListenerSession {
@@ -22,7 +22,7 @@ export class ContractListenerSession implements ListenerSession {
 		this.listener = listener;
 		this.chaincodeId = chaincodeId;
 		this.network = network;
-		this.blockListener = (blockEvent: BlockEvent) => this.onBlockEvent(blockEvent);
+		this.blockListener = this.newBlockListener(options);
 		this.options = options;
 	}
 
@@ -34,20 +34,14 @@ export class ContractListenerSession implements ListenerSession {
 		this.network.removeBlockListener(this.blockListener);
 	}
 
-	private async onBlockEvent(blockEvent: BlockEvent): Promise<void> {
-		const transactionPromises = blockEvent.getTransactionEvents()
-			.filter((transactionEvent) => transactionEvent.isValid)
-			.map((transactionEvent) => this.onTransactionEvent(transactionEvent));
-
-		// Don't use Promise.all() as it returns early if any promises are rejected
-		await GatewayUtils.allSettled(transactionPromises);
+	private newBlockListener(options?: ListenerOptions): BlockListener {
+		const callback = this.onContractEvent.bind(this);
+		return Listeners.blockFromContractListener(callback, options?.checkpointer);
 	}
 
-	private async onTransactionEvent(transactionEvent: TransactionEvent): Promise<void> {
-		for (const contractEvent of transactionEvent.getContractEvents()) {
-			if (this.isMatch(contractEvent)) {
-				await this.notifyListener(contractEvent);
-			}
+	private async onContractEvent(event: ContractEvent): Promise<void> {
+		if (this.isMatch(event)) {
+			await this.notifyListener(event);
 		}
 	}
 

@@ -12,7 +12,7 @@ import { BlockEventSource } from './impl/event/blockeventsource';
 import { CommitListenerSession } from './impl/event/commitlistenersession';
 import { EventServiceManager } from './impl/event/eventservicemanager';
 import { IsolatedBlockListenerSession } from './impl/event/isolatedblocklistenersession';
-import { newCheckpointBlockListener } from './impl/event/listeners';
+import { checkpointBlockListener } from './impl/event/listeners';
 import { addListener, ListenerSession, removeListener } from './impl/event/listenersession';
 import { SharedBlockListenerSession } from './impl/event/sharedblocklistenersession';
 import { QueryHandlerFactory } from './impl/query/queryhandler';
@@ -22,13 +22,13 @@ import Gateway = require('./gateway');
 
 const logger = Logger.getLogger('Network');
 
-function listenerOptionsWithDefaults(options: ListenerOptions): ListenerOptions {
+async function listenerOptionsWithDefaults(options: ListenerOptions): Promise<ListenerOptions> {
 	const defaultOptions = {
 		type: 'full'
 	};
 	const result = Object.assign(defaultOptions, options);
 
-	const checkpointBlock = options.checkpointer?.getBlockNumber();
+	const checkpointBlock = await options.checkpointer?.getBlockNumber();
 	if (checkpointBlock) {
 		result.startBlock = checkpointBlock;
 	}
@@ -223,7 +223,7 @@ export class NetworkImpl implements Network {
 	}
 
 	async addCommitListener(listener: CommitListener, peers: Endorser[], transactionId: string) {
-		const sessionSupplier = () => new CommitListenerSession(listener, this.eventServiceManager, peers, transactionId);
+		const sessionSupplier = async () => new CommitListenerSession(listener, this.eventServiceManager, peers, transactionId);
 		return await addListener(listener, this.commitListeners, sessionSupplier);
 	}
 
@@ -232,7 +232,7 @@ export class NetworkImpl implements Network {
 	}
 
 	async addBlockListener(listener: BlockListener, options = {} as ListenerOptions) {
-		const sessionSupplier = () => this.newBlockListenerSession(listener, options);
+		const sessionSupplier = async () => await this.newBlockListenerSession(listener, options);
 		return await addListener(listener, this.blockListeners, sessionSupplier);
 	}
 
@@ -240,11 +240,11 @@ export class NetworkImpl implements Network {
 		removeListener(listener, this.blockListeners);
 	}
 
-	private newBlockListenerSession(listener: BlockListener, options: ListenerOptions) {
-		options = listenerOptionsWithDefaults(options);
+	private async newBlockListenerSession(listener: BlockListener, options: ListenerOptions): Promise<ListenerSession> {
+		options = await listenerOptionsWithDefaults(options);
 
 		if (options.checkpointer) {
-			listener = newCheckpointBlockListener(listener, options.checkpointer);
+			listener = checkpointBlockListener(listener, options.checkpointer);
 		}
 
 		if (options.startBlock) {

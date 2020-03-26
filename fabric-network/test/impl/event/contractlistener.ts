@@ -18,6 +18,7 @@ import { StubEventService } from './stubeventservice';
 import Contract = require('../../../src/contract');
 import ContractImpl = require('../../../src/contract');
 import Gateway = require('../../../src/gateway');
+import { StubCheckpointer } from './stubcheckpointer';
 
 interface StubContractListener extends ContractListener {
 	completePromise: Promise<ContractEvent[]>;
@@ -96,16 +97,17 @@ describe('contract event listener', () => {
 		return block;
 	}
 
-	function addTransaction(event: EventInfo, transaction: any, statusCode: number = protos.protos.TxValidationCode.VALID): void {
-		event.block.data.data.push(newEnvelope(transaction));
+	function addTransaction(event: EventInfo, transaction: any, statusCode: number = protos.protos.TxValidationCode.VALID, transactionId?: string): void {
+		event.block.data.data.push(newEnvelope(transaction, transactionId));
 
 		const transactionStatusCodes = event.block.metadata.metadata[protos.common.BlockMetadataIndex.TRANSACTIONS_FILTER];
 		transactionStatusCodes.push(statusCode);
 	}
 
-	function newEnvelope(transaction: any): any {
+	function newEnvelope(transaction: any, transactionId?: string): any {
 		const channelHeader = new protos.common.ChannelHeader();
 		channelHeader.type = protos.common.HeaderType.ENDORSER_TRANSACTION;
+		channelHeader.tx_id = transactionId;
 
 		const payload = new protos.common.Payload();
 		payload.header = new protos.common.Header();
@@ -431,7 +433,7 @@ describe('contract event listener', () => {
 		expect(contractEvents[0].payload?.toString()).to.equal(eventPayload);
 	});
 
-	it('can navigate event heirarchy for filtered events', async () => {
+	it('can navigate event hierarchy for filtered events', async () => {
 		const event = newFilteredEvent(1);
 		addFilteredTransaction(event, newFilteredTransaction());
 
@@ -445,7 +447,7 @@ describe('contract event listener', () => {
 		assertCanNavigateEvents(contractEvent);
 	});
 
-	it('can navigate event heirarchy for full events', async () => {
+	it('can navigate event hierarchy for full events', async () => {
 		const event = newEvent(1);
 		addTransaction(event, newTransaction());
 
@@ -459,7 +461,7 @@ describe('contract event listener', () => {
 		assertCanNavigateEvents(contractEvent);
 	});
 
-	it('can navigate event heirarchy for private events', async () => {
+	it('can navigate event hierarchy for private events', async () => {
 		const event = newPrivateEvent(1);
 		addTransaction(event, newTransaction());
 
@@ -472,5 +474,88 @@ describe('contract event listener', () => {
 
 		assertCanNavigateEvents(contractEvent);
 		expect(contractEvent.getTransactionEvent().privateData).to.equal(event.privateData[0]);
+	});
+
+	describe('checkpoint', () => {
+		it('new checkpoint listener receives events', async () => {
+			const checkpointer = new StubCheckpointer();
+			const event = newEvent(1);
+			addTransaction(event, newTransaction());
+
+			const options: ListenerOptions = {
+				checkpointer
+			};
+			await contract.addContractListener(spyListener, options);
+			eventService.sendEvent(event);
+			await listener.completePromise;
+
+			sinon.assert.calledOnceWithExactly(spyListener, sinon.match({ chaincodeId, eventName }));
+		});
+
+		it('checkpoint listener receives events from checkpoint block number', async () => {
+			const checkpointer = new StubCheckpointer();
+			await checkpointer.setBlockNumber(Long.fromNumber(2));
+
+			const transaction = newTransaction();
+			const event1 = newEvent(1);
+			addTransaction(event1, transaction);
+			const event2 = newEvent(2);
+			addTransaction(event2, transaction);
+
+			const options: ListenerOptions = {
+				checkpointer
+			};
+			await contract.addContractListener(listener, options);
+			eventService.sendEvent(event1);
+			eventService.sendEvent(event2);
+			const [args] = await listener.completePromise;
+
+			const blockNumber = args.getTransactionEvent().getBlockEvent().blockNumber.toNumber();
+			expect(blockNumber).to.equal(2);
+		});
+
+		it('checkpointer records block numbers', async () => {
+			listener = testUtils.newAsyncListener<ContractEvent>(2);
+			const checkpointer = new StubCheckpointer();
+
+			const transaction = newTransaction();
+			const event1 = newEvent(1);
+			addTransaction(event1, transaction);
+			const event2 = newEvent(2);
+			addTransaction(event2, transaction);
+
+			const options: ListenerOptions = {
+				checkpointer
+			};
+			await contract.addContractListener(listener, options);
+			eventService.sendEvent(event1);
+			eventService.sendEvent(event2);
+			await listener.completePromise;
+
+			const blockNumber = await checkpointer.getBlockNumber();
+			expect(blockNumber.toNumber()).to.be.oneOf([1, 2]);
+		});
+
+		it('checkpointer records transaction IDs', async () => {
+			listener = testUtils.newAsyncListener<ContractEvent>(2);
+			const checkpointer = new StubCheckpointer();
+			const spy = sinon.spy(checkpointer, 'addTransactionId');
+
+			const transaction = newTransaction();
+			const event1 = newEvent(1);
+			addTransaction(event1, transaction, undefined, 'TX1');
+			const event2 = newEvent(2);
+			addTransaction(event2, transaction, undefined, 'TX2');
+
+			const options: ListenerOptions = {
+				checkpointer
+			};
+			await contract.addContractListener(listener, options);
+			eventService.sendEvent(event1);
+			eventService.sendEvent(event2);
+			await listener.completePromise;
+
+			sinon.assert.calledWith(spy, 'TX1');
+		});
 	});
 });

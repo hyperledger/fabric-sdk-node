@@ -18,7 +18,8 @@ import { StubEventService } from './stubeventservice';
 import Long = require('long');
 
 import Gateway = require('../../../src/gateway');
-import { InMemoryCheckpointer } from './inmemorycheckpointer';
+import { StubCheckpointer } from './stubcheckpointer';
+import { Checkpointer } from '../../../src/checkpointer';
 
 interface StubBlockListener extends BlockListener {
 	completePromise: Promise<BlockEvent[]>;
@@ -104,458 +105,408 @@ describe('block listener', () => {
 		});
 	}
 
-	it('add listener returns the listener', async () => {
-		const result = await network.addBlockListener(listener, listenerOptions);
-		expect(result).to.equal(listener);
-	});
-
-	it('listener receives events', async () => {
-		const event = newFilteredBlockEventInfo(1);
-		await network.addBlockListener(listener, listenerOptions);
-		eventService.sendEvent(event);
-
-		const actual = await listener.completePromise;
-		expect(actual[0].blockNumber).to.equal(event.blockNumber);
-	});
-
-	it('removed listener does not receive events', async () => {
-		const removedListener = sinon.spy(testUtils.newAsyncListener<BlockEvent>());
-
-		await network.addBlockListener(listener, listenerOptions);
-		await network.addBlockListener(removedListener, listenerOptions);
-		network.removeBlockListener(removedListener);
-		eventService.sendEvent(newFilteredBlockEventInfo(1));
-
-		await listener.completePromise;
-		sinon.assert.notCalled(removedListener);
-	});
-
-	it('add listener multiple times has no effect', async () => {
-		const spy = sinon.spy(listener);
-
-		await network.addBlockListener(spy, listenerOptions);
-		await network.addBlockListener(spy, listenerOptions);
-		eventService.sendEvent(newFilteredBlockEventInfo(1));
-
-		await listener.completePromise;
-		sinon.assert.calledOnce(spy);
-	});
-
-	it('remove listener multiple times has no effect', async () => {
-		const removedListener = sinon.spy(testUtils.newAsyncListener<BlockEvent>());
-
-		await network.addBlockListener(listener, listenerOptions);
-		await network.addBlockListener(removedListener, listenerOptions);
-		network.removeBlockListener(removedListener);
-		network.removeBlockListener(removedListener);
-		eventService.sendEvent(newFilteredBlockEventInfo(1));
-
-		await listener.completePromise;
-		sinon.assert.notCalled(removedListener);
-	});
-
-	it('listener can remove itself when receiving event', async () => {
-		listener = testUtils.newAsyncListener<BlockEvent>(2);
-		const fake = sinon.fake(async (event: BlockEvent) => {
-			network.removeBlockListener(fake);
+	describe('common behavior', () => {
+		it('add listener returns the listener', async () => {
+			const result = await network.addBlockListener(listener, listenerOptions);
+			expect(result).to.equal(listener);
 		});
 
-		await network.addBlockListener(listener, listenerOptions);
-		await network.addBlockListener(fake, listenerOptions);
-		eventService.sendEvent(newFilteredBlockEventInfo(1));
-		// fake listener should have removed itself
-		eventService.sendEvent(newFilteredBlockEventInfo(2));
+		it('listener receives events', async () => {
+			const event = newFilteredBlockEventInfo(1);
+			await network.addBlockListener(listener, listenerOptions);
+			eventService.sendEvent(event);
 
-		await listener.completePromise;
-		sinon.assert.calledOnce(fake);
-	});
-
-	it('listener does not auto-unregister when receiving events', async () => {
-		listener = testUtils.newAsyncListener<BlockEvent>(2);
-		const event1 = newFilteredBlockEventInfo(1);
-		const event2 = newFilteredBlockEventInfo(2);
-
-		await network.addBlockListener(listener, listenerOptions);
-		eventService.sendEvent(event1);
-		eventService.sendEvent(event2);
-
-		const actual = await listener.completePromise;
-		network.removeBlockListener(listener);
-
-		const blockNumbers = actual.map((e) => e.blockNumber);
-		expect(blockNumbers).to.deep.equal([event1.blockNumber, event2.blockNumber]);
-	});
-
-	it('error thrown by listener does not stop subsequent events being delivered', async () => {
-		listener = testUtils.newAsyncListener<BlockEvent>(2);
-		const errorListener = sinon.fake(async (event) => {
-			await listener(event);
-			throw new Error('LISTENER_ERROR');
+			const actual = await listener.completePromise;
+			expect(actual[0].blockNumber).to.equal(event.blockNumber);
 		});
-		const event1 = newFilteredBlockEventInfo(1);
-		const event2 = newFilteredBlockEventInfo(2);
 
-		await network.addBlockListener(errorListener, listenerOptions);
-		eventService.sendEvent(event1);
-		eventService.sendEvent(event2);
+		it('removed listener does not receive events', async () => {
+			const removedListener = sinon.spy(testUtils.newAsyncListener<BlockEvent>());
 
-		const actual = await listener.completePromise;
-		const blockNumbers = actual.map((e) => e.blockNumber);
-		expect(blockNumbers).to.deep.equal([event1.blockNumber, event2.blockNumber]);
-	});
+			await network.addBlockListener(listener, listenerOptions);
+			await network.addBlockListener(removedListener, listenerOptions);
+			network.removeBlockListener(removedListener);
+			eventService.sendEvent(newFilteredBlockEventInfo(1));
 
-	it('error thrown by listener does not stop other listeners being notified', async () => {
-		const listener2 = testUtils.newAsyncListener<BlockEvent>();
-		const errorListener = sinon.fake.rejects(new Error('LISTENER_ERROR'));
-		const event = newFilteredBlockEventInfo(1);
-
-		await network.addBlockListener(listener, listenerOptions);
-		await network.addBlockListener(errorListener, listenerOptions);
-		await network.addBlockListener(listener2, listenerOptions);
-		eventService.sendEvent(event);
-
-		const [actual1] = await listener.completePromise;
-		const [actual2] = await listener2.completePromise;
-		expect(actual1.blockNumber).to.deep.equal(event.blockNumber);
-		expect(actual2.blockNumber).to.deep.equal(event.blockNumber);
-	});
-
-	it('listener receives blocks in order', async () => {
-		listener = testUtils.newAsyncListener<BlockEvent>(3);
-		const event1 = newFilteredBlockEventInfo(1);
-		const event2 = newFilteredBlockEventInfo(2);
-		const event3 = newFilteredBlockEventInfo(3);
-
-		await network.addBlockListener(listener, listenerOptions);
-		eventService.sendEvent(event1);
-		eventService.sendEvent(event3);
-		eventService.sendEvent(event2);
-
-		const actual = await listener.completePromise;
-		const blockNumbers = actual.map((e) => e.blockNumber);
-		expect(blockNumbers).to.deep.equal([event1.blockNumber, event2.blockNumber, event3.blockNumber]);
-	});
-
-	it('listener does not receive old blocks', async () => {
-		listener = testUtils.newAsyncListener<BlockEvent>(2);
-		const event1 = newFilteredBlockEventInfo(1);
-		const event2 = newFilteredBlockEventInfo(2);
-		const event3 = newFilteredBlockEventInfo(3);
-
-		await network.addBlockListener(listener, listenerOptions);
-		eventService.sendEvent(event2);
-		eventService.sendEvent(event1); // Ignored as older than first block received
-		eventService.sendEvent(event3);
-
-		const actual = await listener.completePromise;
-		const blockNumbers = actual.map((e) => e.blockNumber);
-		expect(blockNumbers).to.deep.equal([event2.blockNumber, event3.blockNumber]);
-	});
-
-	it('errors trigger reconnect of event service with no start block if no events received', async () => {
-		await network.addBlockListener(listener, listenerOptions);
-		const startListener = testUtils.newAsyncListener<void>();
-		const stub = sinon.stub(eventServiceManager, 'startEventService').callsFake(() => startListener());
-
-		eventService.sendError(new Error('DISCONNECT'));
-
-		await startListener.completePromise;
-		sinon.assert.calledWith(stub, eventService);
-		sinon.assert.neverCalledWith(stub, sinon.match.any, sinon.match.has('startBlock', sinon.match.number));
-	});
-
-	it('errors trigger reconnect of event service with next block as start block if events received', async () => {
-		await network.addBlockListener(listener, listenerOptions);
-		const startListener = testUtils.newAsyncListener<void>();
-		const stub = sinon.stub(eventServiceManager, 'startEventService').callsFake(() => startListener());
-
-		eventService.sendEvent(newFilteredBlockEventInfo(1));
-		eventService.sendError(new Error('DISCONNECT'));
-
-		await startListener.completePromise;
-		sinon.assert.calledWith(stub, eventService, sinon.match.has('startBlock', Long.fromNumber(2)));
-	});
-
-	it('replay listener sends start block to event service', async () => {
-		const stub = sinon.stub(eventServiceManager, 'startEventService');
-
-		listenerOptions.startBlock = 2;
-		await network.addBlockListener(listener, listenerOptions);
-
-		sinon.assert.calledWith(stub, eventService, sinon.match.has('startBlock', Long.fromNumber(2)));
-	});
-
-	it('replay listener does not receive events earlier than start block', async () => {
-		const event1 = newFilteredBlockEventInfo(1);
-		const event2 = newFilteredBlockEventInfo(2);
-
-		listenerOptions.startBlock = 2;
-		await network.addBlockListener(listener, listenerOptions);
-		eventService.sendEvent(event1);
-		eventService.sendEvent(event2);
-
-		const [actual] = await listener.completePromise;
-		expect(actual.blockNumber).to.equal(event2.blockNumber);
-	});
-
-	it('replay listener does not miss start block if later block arrive first', async () => {
-		const event1 = newFilteredBlockEventInfo(1);
-		const event2 = newFilteredBlockEventInfo(2);
-
-		listenerOptions.startBlock = 1;
-		await network.addBlockListener(listener, listenerOptions);
-		eventService.sendEvent(event2);
-		eventService.sendEvent(event1);
-
-		const actual = await listener.completePromise;
-		expect(actual[0].blockNumber).to.equal(event1.blockNumber);
-	});
-
-	it('remove of realtime filtered listener does not close shared event service', async () => {
-		const stub = sinon.stub(eventService, 'close');
-
-		await network.addBlockListener(listener, listenerOptions);
-		network.removeBlockListener(listener);
-
-		sinon.assert.notCalled(stub);
-	});
-
-	it('remove of replay listener closes isolated event service', async () => {
-		const stub = sinon.stub(eventService, 'close');
-
-		listenerOptions.startBlock = 1;
-		await network.addBlockListener(listener, listenerOptions);
-		network.removeBlockListener(listener);
-
-		sinon.assert.called(stub);
-	});
-
-	it('listener changing event data does not affect other listeners', async () => {
-		const fake1 = sinon.fake(async (e) => {
-			await listener(e);
-			e.blockNumber = Long.ONE;
+			await listener.completePromise;
+			sinon.assert.notCalled(removedListener);
 		});
-		const listener2 = testUtils.newAsyncListener<BlockEvent>();
-		const fake2 = sinon.fake(async (e) => {
-			await listener2(e);
-			e.blockNumber = Long.fromNumber(2);
+
+		it('add listener multiple times has no effect', async () => {
+			const spy = sinon.spy(listener);
+
+			await network.addBlockListener(spy, listenerOptions);
+			await network.addBlockListener(spy, listenerOptions);
+			eventService.sendEvent(newFilteredBlockEventInfo(1));
+
+			await listener.completePromise;
+			sinon.assert.calledOnce(spy);
 		});
-		const event = newFilteredBlockEventInfo(0);
 
-		await network.addBlockListener(fake1, listenerOptions);
-		await network.addBlockListener(fake2, listenerOptions);
-		eventService.sendEvent(event);
+		it('remove listener multiple times has no effect', async () => {
+			const removedListener = sinon.spy(testUtils.newAsyncListener<BlockEvent>());
 
-		const [actual1] = await listener.completePromise;
-		const [actual2] = await listener2.completePromise;
-		expect(actual1.blockNumber).to.deep.equal(event.blockNumber);
-		expect(actual2.blockNumber).to.deep.equal(event.blockNumber);
+			await network.addBlockListener(listener, listenerOptions);
+			await network.addBlockListener(removedListener, listenerOptions);
+			network.removeBlockListener(removedListener);
+			network.removeBlockListener(removedListener);
+			eventService.sendEvent(newFilteredBlockEventInfo(1));
+
+			await listener.completePromise;
+			sinon.assert.notCalled(removedListener);
+		});
+
+		it('listener can remove itself when receiving event', async () => {
+			listener = testUtils.newAsyncListener<BlockEvent>(2);
+			const fake = sinon.fake(async (event: BlockEvent) => {
+				network.removeBlockListener(fake);
+			});
+
+			await network.addBlockListener(listener, listenerOptions);
+			await network.addBlockListener(fake, listenerOptions);
+			eventService.sendEvent(newFilteredBlockEventInfo(1));
+			// fake listener should have removed itself
+			eventService.sendEvent(newFilteredBlockEventInfo(2));
+
+			await listener.completePromise;
+			sinon.assert.calledOnce(fake);
+		});
+
+		it('listener does not auto-unregister when receiving events', async () => {
+			listener = testUtils.newAsyncListener<BlockEvent>(2);
+			const event1 = newFilteredBlockEventInfo(1);
+			const event2 = newFilteredBlockEventInfo(2);
+
+			await network.addBlockListener(listener, listenerOptions);
+			eventService.sendEvent(event1);
+			eventService.sendEvent(event2);
+
+			const actual = await listener.completePromise;
+			network.removeBlockListener(listener);
+
+			const blockNumbers = actual.map((e) => e.blockNumber);
+			expect(blockNumbers).to.deep.equal([event1.blockNumber, event2.blockNumber]);
+		});
+
+		it('error thrown by listener does not stop subsequent events being delivered', async () => {
+			listener = testUtils.newAsyncListener<BlockEvent>(2);
+			const errorListener = sinon.fake(async (event) => {
+				await listener(event);
+				throw new Error('LISTENER_ERROR');
+			});
+			const event1 = newFilteredBlockEventInfo(1);
+			const event2 = newFilteredBlockEventInfo(2);
+
+			await network.addBlockListener(errorListener, listenerOptions);
+			eventService.sendEvent(event1);
+			eventService.sendEvent(event2);
+
+			const actual = await listener.completePromise;
+			const blockNumbers = actual.map((e) => e.blockNumber);
+			expect(blockNumbers).to.deep.equal([event1.blockNumber, event2.blockNumber]);
+		});
+
+		it('error thrown by listener does not stop other listeners being notified', async () => {
+			const listener2 = testUtils.newAsyncListener<BlockEvent>();
+			const errorListener = sinon.fake.rejects(new Error('LISTENER_ERROR'));
+			const event = newFilteredBlockEventInfo(1);
+
+			await network.addBlockListener(listener, listenerOptions);
+			await network.addBlockListener(errorListener, listenerOptions);
+			await network.addBlockListener(listener2, listenerOptions);
+			eventService.sendEvent(event);
+
+			const [actual1] = await listener.completePromise;
+			const [actual2] = await listener2.completePromise;
+			expect(actual1.blockNumber).to.deep.equal(event.blockNumber);
+			expect(actual2.blockNumber).to.deep.equal(event.blockNumber);
+		});
+
+		it('listener receives blocks in order', async () => {
+			listener = testUtils.newAsyncListener<BlockEvent>(3);
+			const event1 = newFilteredBlockEventInfo(1);
+			const event2 = newFilteredBlockEventInfo(2);
+			const event3 = newFilteredBlockEventInfo(3);
+
+			await network.addBlockListener(listener, listenerOptions);
+			eventService.sendEvent(event1);
+			eventService.sendEvent(event3);
+			eventService.sendEvent(event2);
+
+			const actual = await listener.completePromise;
+			const blockNumbers = actual.map((e) => e.blockNumber);
+			expect(blockNumbers).to.deep.equal([event1.blockNumber, event2.blockNumber, event3.blockNumber]);
+		});
+
+		it('listener does not receive old blocks', async () => {
+			listener = testUtils.newAsyncListener<BlockEvent>(2);
+			const event1 = newFilteredBlockEventInfo(1);
+			const event2 = newFilteredBlockEventInfo(2);
+			const event3 = newFilteredBlockEventInfo(3);
+
+			await network.addBlockListener(listener, listenerOptions);
+			eventService.sendEvent(event2);
+			eventService.sendEvent(event1); // Ignored as older than first block received
+			eventService.sendEvent(event3);
+
+			const actual = await listener.completePromise;
+			const blockNumbers = actual.map((e) => e.blockNumber);
+			expect(blockNumbers).to.deep.equal([event2.blockNumber, event3.blockNumber]);
+		});
+
+		it('errors trigger reconnect of event service with no start block if no events received', async () => {
+			await network.addBlockListener(listener, listenerOptions);
+			const startListener = testUtils.newAsyncListener<void>();
+			const stub = sinon.stub(eventServiceManager, 'startEventService').callsFake(() => startListener());
+
+			eventService.sendError(new Error('DISCONNECT'));
+
+			await startListener.completePromise;
+			sinon.assert.calledWith(stub, eventService);
+			sinon.assert.neverCalledWith(stub, sinon.match.any, sinon.match.has('startBlock', sinon.match.number));
+		});
+
+		it('errors trigger reconnect of event service with next block as start block if events received', async () => {
+			await network.addBlockListener(listener, listenerOptions);
+			const startListener = testUtils.newAsyncListener<void>();
+			const stub = sinon.stub(eventServiceManager, 'startEventService').callsFake(() => startListener());
+
+			eventService.sendEvent(newFilteredBlockEventInfo(1));
+			eventService.sendError(new Error('DISCONNECT'));
+
+			await startListener.completePromise;
+			sinon.assert.calledWith(stub, eventService, sinon.match.has('startBlock', Long.fromNumber(2)));
+		});
+
+		it('listener changing event data does not affect other listeners', async () => {
+			const fake1 = sinon.fake(async (e) => {
+				await listener(e);
+				e.blockNumber = Long.ONE;
+			});
+			const listener2 = testUtils.newAsyncListener<BlockEvent>();
+			const fake2 = sinon.fake(async (e) => {
+				await listener2(e);
+				e.blockNumber = Long.fromNumber(2);
+			});
+			const event = newFilteredBlockEventInfo(0);
+
+			await network.addBlockListener(fake1, listenerOptions);
+			await network.addBlockListener(fake2, listenerOptions);
+			eventService.sendEvent(event);
+
+			const [actual1] = await listener.completePromise;
+			const [actual2] = await listener2.completePromise;
+			expect(actual1.blockNumber).to.deep.equal(event.blockNumber);
+			expect(actual2.blockNumber).to.deep.equal(event.blockNumber);
+		});
 	});
 
-	it('remove of realtime full listener does not close shared event service', async () => {
-		const stub = sinon.stub(eventService, 'close');
+	describe('realtime', () => {
+		it('remove of realtime filtered listener does not close shared event service', async () => {
+			const stub = sinon.stub(eventService, 'close');
 
-		listenerOptions = {
-			type: 'full'
-		};
-		await network.addBlockListener(listener, listenerOptions);
-		network.removeBlockListener(listener);
+			await network.addBlockListener(listener, listenerOptions);
+			network.removeBlockListener(listener);
 
-		sinon.assert.notCalled(stub);
+			sinon.assert.notCalled(stub);
+		});
+
+		it('remove of realtime full listener does not close shared event service', async () => {
+			const stub = sinon.stub(eventService, 'close');
+
+			listenerOptions = {
+				type: 'full'
+			};
+			await network.addBlockListener(listener, listenerOptions);
+			network.removeBlockListener(listener);
+
+			sinon.assert.notCalled(stub);
+		});
 	});
 
-	it('listener defaults to full blocks', async () => {
-		const stub = sinon.stub(eventServiceManager, 'startEventService');
+	describe('replay', () => {
+		it('replay listener sends start block to event service', async () => {
+			const stub = sinon.stub(eventServiceManager, 'startEventService');
 
-		await network.addBlockListener(listener);
+			listenerOptions.startBlock = 2;
+			await network.addBlockListener(listener, listenerOptions);
 
-		sinon.assert.calledOnceWithExactly(stub, sinon.match.any, sinon.match.has('blockType', 'full'));
+			sinon.assert.calledWith(stub, eventService, sinon.match.has('startBlock', Long.fromNumber(2)));
+		});
+
+		it('replay listener does not receive events earlier than start block', async () => {
+			const event1 = newFilteredBlockEventInfo(1);
+			const event2 = newFilteredBlockEventInfo(2);
+
+			listenerOptions.startBlock = 2;
+			await network.addBlockListener(listener, listenerOptions);
+			eventService.sendEvent(event1);
+			eventService.sendEvent(event2);
+
+			const [actual] = await listener.completePromise;
+			expect(actual.blockNumber).to.equal(event2.blockNumber);
+		});
+
+		it('replay listener does not miss start block if later block arrive first', async () => {
+			const event1 = newFilteredBlockEventInfo(1);
+			const event2 = newFilteredBlockEventInfo(2);
+
+			listenerOptions.startBlock = 1;
+			await network.addBlockListener(listener, listenerOptions);
+			eventService.sendEvent(event2);
+			eventService.sendEvent(event1);
+
+			const actual = await listener.completePromise;
+			expect(actual[0].blockNumber).to.equal(event1.blockNumber);
+		});
+
+		it('remove of replay listener closes isolated event service', async () => {
+			const stub = sinon.stub(eventService, 'close');
+
+			listenerOptions.startBlock = 1;
+			await network.addBlockListener(listener, listenerOptions);
+			network.removeBlockListener(listener);
+
+			sinon.assert.called(stub);
+		});
 	});
 
-	it('listener defaults to no start block', async () => {
-		const stub = sinon.stub(eventServiceManager, 'startEventService');
+	describe('default options', () => {
+		it('listener defaults to full blocks', async () => {
+			const stub = sinon.stub(eventServiceManager, 'startEventService');
 
-		await network.addBlockListener(listener);
+			await network.addBlockListener(listener);
 
-		sinon.assert.calledOnceWithExactly(stub, sinon.match.any, sinon.match.has('startBlock', undefined));
+			sinon.assert.calledOnceWithExactly(stub, sinon.match.any, sinon.match.has('blockType', 'full'));
+		});
+
+		it('listener defaults to no start block', async () => {
+			const stub = sinon.stub(eventServiceManager, 'startEventService');
+
+			await network.addBlockListener(listener);
+
+			sinon.assert.calledOnceWithExactly(stub, sinon.match.any, sinon.match.has('startBlock', undefined));
+		});
 	});
 
-	it('listener can specify filtered blocks', async () => {
-		const stub = sinon.stub(eventServiceManager, 'startEventService');
+	describe('event types', () => {
+		it('listener can specify filtered blocks', async () => {
+			const stub = sinon.stub(eventServiceManager, 'startEventService');
 
-		listenerOptions = {
-			type: 'filtered'
-		};
-		await network.addBlockListener(listener, listenerOptions);
+			listenerOptions = {
+				type: 'filtered'
+			};
+			await network.addBlockListener(listener, listenerOptions);
 
-		sinon.assert.calledOnceWithExactly(stub, sinon.match.any, sinon.match.has('blockType', 'filtered'));
+			sinon.assert.calledOnceWithExactly(stub, sinon.match.any, sinon.match.has('blockType', 'filtered'));
+		});
+
+		it('listener can specify private blocks', async () => {
+			const stub = sinon.stub(eventServiceManager, 'startEventService');
+
+			listenerOptions = {
+				type: 'private'
+			};
+			await network.addBlockListener(listener, listenerOptions);
+
+			sinon.assert.calledOnceWithExactly(stub, sinon.match.any, sinon.match.has('blockType', 'private'));
+		});
+
+		it('listener receives full block events', async () => {
+			const event = newFullBlockEventInfo(1);
+			listenerOptions = {
+				type: 'full'
+			};
+			await network.addBlockListener(listener, listenerOptions);
+			eventService.sendEvent(event);
+
+			const [actual] = await listener.completePromise;
+			expect(actual.blockNumber).to.equal(event.blockNumber);
+		});
+
+		it('listener receives private block events', async () => {
+			const event = newPrivateBlockEventInfo(1);
+			listenerOptions = {
+				type: 'private'
+			};
+			await network.addBlockListener(listener, listenerOptions);
+			eventService.sendEvent(event);
+
+			const [actual] = await listener.completePromise;
+			expect(actual.blockNumber).to.equal(event.blockNumber);
+		});
 	});
 
-	it('listener can specify private blocks', async () => {
-		const stub = sinon.stub(eventServiceManager, 'startEventService');
+	describe('checkpoint', () => {
+		it('new checkpoint listener receives events', async () => {
+			const event = newFilteredBlockEventInfo(1);
+			listenerOptions.checkpointer = new StubCheckpointer();
 
-		listenerOptions = {
-			type: 'private'
-		};
-		await network.addBlockListener(listener, listenerOptions);
+			await network.addBlockListener(listener, listenerOptions);
+			eventService.sendEvent(event);
 
-		sinon.assert.calledOnceWithExactly(stub, sinon.match.any, sinon.match.has('blockType', 'private'));
-	});
+			const [actual] = await listener.completePromise;
+			expect(actual.blockNumber).to.equal(event.blockNumber);
+		});
 
-	it('listener receives full block events', async () => {
-		const event = newFullBlockEventInfo(1);
-		listenerOptions = {
-			type: 'full'
-		};
-		await network.addBlockListener(listener, listenerOptions);
-		eventService.sendEvent(event);
+		it('checkpoint listener sends block number to event service', async () => {
+			const stub = sinon.stub(eventServiceManager, 'startEventService');
+			const checkpointer = new StubCheckpointer();
+			await checkpointer.setBlockNumber(Long.fromNumber(2));
 
-		const [actual] = await listener.completePromise;
-		expect(actual.blockNumber).to.equal(event.blockNumber);
-	});
+			listenerOptions.checkpointer = checkpointer;
+			await network.addBlockListener(listener, listenerOptions);
 
-	it('listener receives private block events', async () => {
-		const event = newPrivateBlockEventInfo(1);
-		listenerOptions = {
-			type: 'private'
-		};
-		await network.addBlockListener(listener, listenerOptions);
-		eventService.sendEvent(event);
+			sinon.assert.calledWith(stub, eventService, sinon.match.has('startBlock', Long.fromNumber(2)));
+		});
 
-		const [actual] = await listener.completePromise;
-		expect(actual.blockNumber).to.equal(event.blockNumber);
-	});
+		it('checkpoint block number takes precedence over startBlock option', async () => {
+			const stub = sinon.stub(eventServiceManager, 'startEventService');
+			const checkpointer = new StubCheckpointer();
+			await checkpointer.setBlockNumber(Long.fromNumber(2));
 
-	it('new checkpoint listener receives events', async () => {
-		const event = newFilteredBlockEventInfo(1);
-		listenerOptions.checkpointer = new InMemoryCheckpointer();
+			listenerOptions.checkpointer = checkpointer;
+			listenerOptions.startBlock = 1;
+			await network.addBlockListener(listener, listenerOptions);
 
-		await network.addBlockListener(listener, listenerOptions);
-		eventService.sendEvent(event);
+			sinon.assert.calledWith(stub, eventService, sinon.match.has('startBlock', Long.fromNumber(2)));
+		});
 
-		const [actual] = await listener.completePromise;
-		expect(actual.blockNumber).to.equal(event.blockNumber);
-	});
+		it('checkpoint listener receives events from checkpoint block number', async () => {
+			listener = testUtils.newAsyncListener<BlockEvent>(2);
+			const event1 = newFilteredBlockEventInfo(1);
+			const event2 = newFilteredBlockEventInfo(2);
+			const event3 = newFilteredBlockEventInfo(3);
+			const checkpointer = new StubCheckpointer();
+			await checkpointer.setBlockNumber(Long.fromNumber(2));
 
-	it('checkpoint listener sends block number to event service', async () => {
-		const stub = sinon.stub(eventServiceManager, 'startEventService');
-		const checkpointer = new InMemoryCheckpointer();
-		await checkpointer.setBlockNumber(Long.fromNumber(2));
+			listenerOptions.checkpointer = checkpointer;
+			await network.addBlockListener(listener, listenerOptions);
+			eventService.sendEvent(event1);
+			eventService.sendEvent(event3);
+			eventService.sendEvent(event2);
 
-		listenerOptions.checkpointer = checkpointer;
-		await network.addBlockListener(listener, listenerOptions);
+			const [actual1, actual2] = await listener.completePromise;
+			expect(actual1.blockNumber).to.equal(event2.blockNumber);
+			expect(actual2.blockNumber).to.equal(event3.blockNumber);
+		});
 
-		sinon.assert.calledWith(stub, eventService, sinon.match.has('startBlock', Long.fromNumber(2)));
-	});
+		it('new checkpoint listener receives events from startBlock', async () => {
+			listener = testUtils.newAsyncListener<BlockEvent>(2);
+			const event1 = newFilteredBlockEventInfo(1);
+			const event2 = newFilteredBlockEventInfo(2);
+			const event3 = newFilteredBlockEventInfo(3);
 
-	it('checkpoint block number takes precedence over startBlock option', async () => {
-		const stub = sinon.stub(eventServiceManager, 'startEventService');
-		const checkpointer = new InMemoryCheckpointer();
-		await checkpointer.setBlockNumber(Long.fromNumber(2));
+			listenerOptions.checkpointer = new StubCheckpointer();
+			listenerOptions.startBlock = 2;
+			await network.addBlockListener(listener, listenerOptions);
+			eventService.sendEvent(event1);
+			eventService.sendEvent(event3);
+			eventService.sendEvent(event2);
 
-		listenerOptions.checkpointer = checkpointer;
-		listenerOptions.startBlock = 1;
-		await network.addBlockListener(listener, listenerOptions);
-
-		sinon.assert.calledWith(stub, eventService, sinon.match.has('startBlock', Long.fromNumber(2)));
-	});
-
-	it('checkpoint listener receives events from checkpoint block number', async () => {
-		listener = testUtils.newAsyncListener<BlockEvent>(2);
-		const event1 = newFilteredBlockEventInfo(1);
-		const event2 = newFilteredBlockEventInfo(2);
-		const event3 = newFilteredBlockEventInfo(3);
-		const checkpointer = new InMemoryCheckpointer();
-		await checkpointer.setBlockNumber(Long.fromNumber(2));
-
-		listenerOptions.checkpointer = checkpointer;
-		await network.addBlockListener(listener, listenerOptions);
-		eventService.sendEvent(event1);
-		eventService.sendEvent(event3);
-		eventService.sendEvent(event2);
-
-		const [actual1, actual2] = await listener.completePromise;
-		expect(actual1.blockNumber).to.equal(event2.blockNumber);
-		expect(actual2.blockNumber).to.equal(event3.blockNumber);
-	});
-
-	it('new checkpoint listener receives events from startBlock', async () => {
-		listener = testUtils.newAsyncListener<BlockEvent>(2);
-		const event1 = newFilteredBlockEventInfo(1);
-		const event2 = newFilteredBlockEventInfo(2);
-		const event3 = newFilteredBlockEventInfo(3);
-
-		listenerOptions.checkpointer = new InMemoryCheckpointer();
-		listenerOptions.startBlock = 2;
-		await network.addBlockListener(listener, listenerOptions);
-		eventService.sendEvent(event1);
-		eventService.sendEvent(event3);
-		eventService.sendEvent(event2);
-
-		const [actual1, actual2] = await listener.completePromise;
-		expect(actual1.blockNumber).to.equal(event2.blockNumber);
-		expect(actual2.blockNumber).to.equal(event3.blockNumber);
-	});
-
-	it('new checkpoint block number is set after processing event', async () => {
-		const event = newFilteredBlockEventInfo(1);
-		const checkpointer = new InMemoryCheckpointer();
-
-		listenerOptions.checkpointer = checkpointer;
-		await network.addBlockListener(listener, listenerOptions);
-		eventService.sendEvent(event);
-
-		await listener.completePromise;
-		expect(checkpointer.getBlockNumber().toNumber()).to.equal(2);
-	});
-
-	it('checkpoint block number is incremented after processing event', async () => {
-		const event = newFilteredBlockEventInfo(1);
-		const checkpointer = new InMemoryCheckpointer();
-		await checkpointer.setBlockNumber(Long.ONE);
-
-		listenerOptions.checkpointer = checkpointer;
-		await network.addBlockListener(listener, listenerOptions);
-		eventService.sendEvent(event);
-
-		await listener.completePromise;
-		expect(checkpointer.getBlockNumber().toNumber()).to.equal(2);
-	});
-
-	it('checkpoint block number is not incremented on listener failure', async () => {
-		const failListener: BlockListener = async (blockEvent) => {
-			await listener(blockEvent);
-			throw new Error('LISTENER_FAIL');
-		};
-		const event = newFilteredBlockEventInfo(1);
-		const checkpointer = new InMemoryCheckpointer();
-		await checkpointer.setBlockNumber(Long.ONE);
-
-		listenerOptions.checkpointer = checkpointer;
-		await network.addBlockListener(failListener, listenerOptions);
-		eventService.sendEvent(event);
-
-		await listener.completePromise;
-		expect(checkpointer.getBlockNumber().toNumber()).to.equal(1);
-	});
-
-	it('checkpoint listener ignores events with unexpected block numbers', async () => {
-		const event1 = newFilteredBlockEventInfo(1);
-		const event2 = newFilteredBlockEventInfo(2);
-		const checkpointer = new InMemoryCheckpointer();
-		await checkpointer.setBlockNumber(Long.ONE);
-
-		listenerOptions.checkpointer = checkpointer;
-		await network.addBlockListener(listener, listenerOptions);
-
-		// Manipulating checkpointer after registering listener is extremely bad practice but simulates the state after
-		// listener failure when checkpoint block number does not match delivered block number
-		await checkpointer.setBlockNumber(Long.fromNumber(2));
-
-		eventService.sendEvent(event1);
-		eventService.sendEvent(event2);
-
-		const [actual] = await listener.completePromise;
-		expect(actual.blockNumber).to.equal(event2.blockNumber);
+			const [actual1, actual2] = await listener.completePromise;
+			expect(actual1.blockNumber).to.equal(event2.blockNumber);
+			expect(actual2.blockNumber).to.equal(event3.blockNumber);
+		});
 	});
 });
