@@ -17,7 +17,7 @@
         "destination": "docs/gen"
     },
     "templates": {
-        "systemName": "Hyperledger Fabric SDK for node.js",
+        "systemName": "Hyperledger Fabric SDK for Node.js",
         "theme": "cosmo"
     }
 }
