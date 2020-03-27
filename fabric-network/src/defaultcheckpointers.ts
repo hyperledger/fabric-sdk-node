@@ -5,25 +5,24 @@
  */
 
 import { Checkpointer } from './checkpointer';
-
-// TODO: Implement, remove @private tag, and export in both index.js and index.d.ts
+import { FileCheckpointer } from './impl/filecheckpointer';
 
 /**
  * Provides static factory functions used to create instances of default
  * {@link module:fabric-network.Checkpointer|Checkpointer} implementations.
- * @private
+ * @memberof module:fabric-network
  */
 export class DefaultCheckpointers {
 	/**
 	 * Create a checkpointer that uses the specified file to store persistent state. If the file does not exist, it will
 	 * be created and the checkpointer will have an uninitialized state that will accept any events. If the file does
-	 * exist, it must contain valid checkpointer state.
+	 * exist, it must contain valid checkpoint state.
 	 * @param {string} path Path to a file holding persistent checkpoint state.
 	 * @returns {Promise<module:fabric-network.Checkpointer>} A checkpointer.
 	 */
 	static async file(path: string): Promise<Checkpointer> {
-		throw new Error('Not yet implemented');
-		// TODO: Create file system checkpointer and call async initialization to load initial state asynchronously
-		// from the file.
+		const checkpointer = new FileCheckpointer(path);
+		await checkpointer.init();
+		return checkpointer;
 	}
 }

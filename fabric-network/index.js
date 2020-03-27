@@ -285,7 +285,9 @@
 
 /**
  * Persists the current block and transactions within that block to enable event listening to be resumed following an
- * application outage.
+ * application outage. Default implementations can be obtained from
+ * [DefaultCheckpointers]{@link module:fabric-network.DefaultCheckpointers}. Application developers are encouraged to
+ * build their own implementations that use a persistent store suitable to their environment.
  * @interface Checkpointer
  * @memberof module:fabric-network
  */
@@ -489,6 +491,7 @@ module.exports.Wallet = require('./lib/impl/wallet/wallet').Wallet;
 module.exports.Wallets = require('./lib/impl/wallet/wallets').Wallets;
 module.exports.IdentityProviderRegistry = require('./lib/impl/wallet/identityproviderregistry').IdentityProviderRegistry;
 module.exports.HsmX509Provider = require('./lib/impl/wallet/hsmx509identity').HsmX509Provider;
+module.exports.DefaultCheckpointers = require('./lib/defaultcheckpointers').DefaultCheckpointers;
 module.exports.DefaultEventHandlerStrategies = require('./lib/impl/event/defaulteventhandlerstrategies');
 module.exports.DefaultQueryHandlerStrategies = require('./lib/impl/query/defaultqueryhandlerstrategies');
 module.exports.TimeoutError = require('./lib/errors/timeouterror').TimeoutError;

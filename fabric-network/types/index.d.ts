@@ -30,6 +30,7 @@ export { QueryHandler } from '../lib/impl/query/queryhandler';
 export { Query, QueryResults, QueryResponse } from '../lib/impl/query/query';
 export { Network };
 export { Checkpointer } from '../lib/checkpointer';
+export { DefaultCheckpointers } from '../lib/defaultcheckpointers';
 
 import * as DefaultEventHandlerStrategies from '../lib/impl/event/defaulteventhandlerstrategies';
 export { DefaultEventHandlerStrategies };
