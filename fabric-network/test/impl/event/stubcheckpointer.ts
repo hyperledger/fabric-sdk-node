@@ -7,7 +7,7 @@
 import { Checkpointer } from '../../../src/checkpointer';
 import Long = require('long');
 
-export class InMemoryCheckpointer implements Checkpointer {
+export class StubCheckpointer implements Checkpointer {
 	private blockNumber: Long;
 	private readonly transactionIds: Set<string> = new Set();
 
@@ -15,11 +15,11 @@ export class InMemoryCheckpointer implements Checkpointer {
 		this.transactionIds.add(transactionId);
 	}
 
-	getBlockNumber(): Long {
+	async getBlockNumber(): Promise<Long | undefined> {
 		return this.blockNumber;
 	}
 
-	getTransactionIds(): Set<string> {
+	async getTransactionIds(): Promise<Set<string>> {
 		return this.transactionIds;
 	}
 
