@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Hyperledger Fabric SDK for Node.js Interface: QueryHandler</title>
+	<title>Hyperledger Fabric SDK for Node.js Interface: Checkpointer</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -93,7 +93,7 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Interface: QueryHandler</h1>
+	<h1 class="page-title">Interface: Checkpointer</h1>
 <section>
 
 <header>
@@ -101,7 +101,7 @@
         <h2>
             <span class="ancestors"><a href="module-fabric-network.html">fabric-network</a>.</span>
         
-        QueryHandler
+        Checkpointer
         </h2>
         
     
@@ -112,7 +112,8 @@
     <div class="container-overview">
     
         
-            <div class="description">Handler used to obtain query results from peers when a transaction is evaluated.</div>
+            <div class="description">Persists the current block and transactions within that block to enable event listening to be resumed following an
+application outage.</div>
         
 
         
@@ -178,7 +179,7 @@
             
 <hr>
 <dt>
-    <h4 class="name" id="evaluate"><span class="type-signature">&lt;async> </span>evaluate(query)</h4>
+    <h4 class="name" id="addTransactionId"><span class="type-signature">&lt;async> </span>addTransactionId(transactionId)</h4>
     
     
 </dt>
@@ -186,7 +187,7 @@
 
     
     <div class="description">
-        Called when a transaction is evaluated to obtain query results from suitable network peers.
+        Add a transaction ID for the current block. Typically called once a transaction has been processed.
     </div>
     
 
@@ -221,13 +222,13 @@
 
         <tr>
             
-                <td class="name"><code>query</code></td>
+                <td class="name"><code>transactionId</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type"><a href="module-fabric-network.Query.html">module:fabric-network.Query</a></span>
+<span class="param-type">string</span>
 
 
 
@@ -238,8 +239,7 @@
 
             
 
-            <td class="description last">Query object that can be used by the handler to send the query to
-specific peers.</td>
+            <td class="description last">A transaction ID.</td>
         </tr>
 
     
@@ -310,7 +310,360 @@ specific peers.</td>
     </dt>
     <dd>
         
-<span class="param-type">Promise.&lt;Buffer></span>
+<span class="param-type">Promise.&lt;void></span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="getBlockNumber"><span class="type-signature">&lt;async> </span>getBlockNumber()</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Get the current block number, or <code>undefined</code> if there is no previously saved state.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    A block number.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise.&lt;(Long|undefined)></span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="getTransactionIds"><span class="type-signature">&lt;async> </span>getTransactionIds()</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Get the transaction IDs processed within the current block.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    Transaction IDs.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise.&lt;Set.&lt;string>></span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="setBlockNumber"><span class="type-signature">&lt;async> </span>setBlockNumber(blockNumber)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Set the current block number. Also clears the stored transaction IDs. Typically set when the previous block has been
+processed.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>blockNumber</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Long</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A block number.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise.&lt;void></span>
 
 
 
