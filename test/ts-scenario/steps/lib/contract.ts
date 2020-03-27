@@ -257,7 +257,8 @@ export async function cli_lifecycle_chaincode_approve(
 	sequence: string,
 	tls: boolean,
 	ccType: string,
-	ccName: string
+	ccName: string,
+	init: boolean
 	): Promise<void> {
 	try {
 		// Use CLI container to package smart contract
@@ -276,6 +277,9 @@ export async function cli_lifecycle_chaincode_approve(
 			'--collections-config', colPath,
 		];
 
+		if (init) {
+			approveCommand.push('--init-required');
+		}
 		if (tls) {
 			approveCommand.push('--tls', 'true', '--cafile', Constants.CLI_ORDERER_CA_FILE);
 		}
@@ -308,7 +312,7 @@ export async function cli_lifecycle_chaincode_query_commit(
 
 		let command: string[];
 		command = [
-			'docker', 'exec', `${Constants.DEFAULT_CLI_CONTAINER}_cli`, 'peer', 'lifecycle', 'chaincode', 'querycommitted',
+			'docker', 'exec', `${orgName}_cli`, 'peer', 'lifecycle', 'chaincode', 'querycommitted',
 			'--channelID', channelName,
 			'--name', ccName,
 			'--output', 'json'
@@ -352,20 +356,16 @@ export async function cli_lifecycle_chaincode_commit(
 	ccVersion: string,
 	orgName: string,
 	channelName: string,
-	ccp: CommonConnectionProfileHelper,
 	sequence: string,
 	tls: boolean,
 	ccType: string,
-	ccName: string
+	ccName: string,
+	init: boolean
 	): Promise<void> {
 	try {
 		// Use CLI container to commit smart contract
 		BaseUtils.logMsg(`Attempting lifecycle commit of smart contract with reference ${ccReference} for organization ${orgName} using the CLI`);
 
-		const ordererName: string = ccp.getOrderersForChannel(channelName)[0];
-		const ordererUrl: string = ccp.getOrderer(ordererName).url;
-		const ordererPort: string = ordererUrl.substr(ordererUrl.lastIndexOf(':') + 1);
-		const ordererHost: string = ccp.getOrderer(ordererName).grpcOptions['ssl-target-name-override'];
 		const colPath: string = path.join('/', 'opt', 'gopath', 'src', 'github.com', 'chaincode', ccType, ccName, 'metadata/collections.json');
 
 		// --peerAddresses
@@ -373,7 +373,7 @@ export async function cli_lifecycle_chaincode_commit(
 		let commitCommand: string[];
 		commitCommand = [
 			'docker', 'exec', `${orgName}_cli`, 'peer', 'lifecycle', 'chaincode', 'commit',
-			'-o', `${ordererHost}:${ordererPort}`,
+			'-o', 'orderer.example.com:7050',
 			'--channelID', channelName,
 			'--name', ccReference,
 			'--version', ccVersion,
@@ -382,7 +382,9 @@ export async function cli_lifecycle_chaincode_commit(
 			'--waitForEvent',
 			'--collections-config', colPath,
 		];
-
+		if (init) {
+			commitCommand.push('--init-required');
+		}
 		if (tls) {
 			const tlsCerts: string = `${Constants.CLI_ORG1_CA_FILE} ${Constants.CLI_ORG2_CA_FILE}`;
 			commitCommand.push('--tlsRootCertFiles', tlsCerts, '--tls', 'true', '--cafile', Constants.CLI_ORDERER_CA_FILE);

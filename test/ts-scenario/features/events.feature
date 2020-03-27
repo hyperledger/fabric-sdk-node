@@ -12,7 +12,7 @@ Feature: Node SDK Events
 	 	Given I deploy a tls Fabric network at 2.0 version
 	 	And I use the cli to create and join the channel named eventschannel on the deployed network
 		And I use the cli to update the channel with name eventschannel with config file eventschannel-anchor.tx on the deployed network
-		And I use the cli to lifecycle deploy a node smart contract named events at version 1.0.0 as events for all organizations on channel eventschannel with default endorsement policy and arguments ["initLedger"]
+		And I use the cli to lifecycle deploy a node smart contract named events at version 1.0.0 as events for all organizations on channel eventschannel with default endorsement policy and init-required false
 		And I have a memory backed gateway named event_gateway with discovery set to true for user User1 using the connection profile named ccp-tls.json
 
  	Scenario: Using a Contract I can listen to full contract create events emitted by instantiated chaincodes

@@ -24,42 +24,63 @@ Given(/^I deploy a (.+?) Fabric network at (.+?) version/, { timeout: Constants.
 	// set the fabric peer and orderer docker image tag
 	process.env.DOCKER_IMG_TAG = `:${version}`;
 
+	BaseUtils.logMsg(` **** checking for a deployed fabric network of type ${type} version ${version}`);
 	// TODO set the fabric-ca docker image tag
 	// process.env.FABRIC_CA_TAG = `:${version}`; let default to latest for now
 
 	const fabricState: any = stateStore.get(Constants.FABRIC_STATE);
 
+	if (fabricState) {
+		if (fabricState.deployed) {
+			BaseUtils.logMsg(` **** found a deployed fabric network of type ${fabricState.type} version ${fabricState.version}`);
+		} else {
+			BaseUtils.logMsg(` **** found a non deployed fabric network of type ${fabricState.type} version ${fabricState.version}`);
+		}
+	} else {
+		BaseUtils.logMsg(' **** no deployed fabric network found');
+	}
+
 	// If not deployed, deploy the requested type of network
-	if (!fabricState) {
+	if (!fabricState || !fabricState.deployed) {
+		BaseUtils.logMsg(` **** deploying a new fabric network of type ${type} version ${version}`);
 		if (type.localeCompare('non-tls') === 0) {
 			await commandRunner.runShellCommand(true, 'docker-compose -f ' + path.join(__dirname, nonTlsNetwork) + ' -p node up -d');
 		} else {
 			await commandRunner.runShellCommand(true, 'docker-compose -f ' + path.join(__dirname, tlsNetwork) + ' -p node up -d');
 		}
-		stateStore.set(Constants.FABRIC_STATE, {deployed: true, type});
-		return await BaseUtils.sleep(Constants.INC_SHORT);
+		stateStore.set(Constants.FABRIC_STATE, {deployed: true, type, version});
+		await BaseUtils.sleep(Constants.INC_SHORT);
+		BaseUtils.logMsg(` **** deployed a fabric network of type ${type} version ${version}`);
+		return;
 	}
 
-	// If deployed, but the wrong type, pull down and stand up new network
-	if (fabricState && fabricState.type.localeCompare(type) !== 0) {
+	// If deployed, but the wrong type or wrong version, pull down and stand up new network
+	if (fabricState && (fabricState.type.localeCompare(type) !== 0 || fabricState.version.localeCompare(version) !== 0)) {
+		BaseUtils.logMsg(` **** shutting down existing fabric network of type ${fabricState.type} version ${fabricState.version}`);
+
 		await commandRunner.runShellCommand(undefined, 'rm -rf ~/.hlf-checkpoint');
 		await commandRunner.runShellCommand(undefined, 'docker kill $(docker ps -aq); docker rm $(docker ps -aq)');
+		await BaseUtils.sleep(Constants.INC_MED);
+
 		if (type.localeCompare('non-tls') === 0) {
 			await commandRunner.runShellCommand(true, 'docker-compose -f ' + path.join(__dirname, nonTlsNetwork) + ' -p node up -d');
 		} else {
 			await commandRunner.runShellCommand(true, 'docker-compose -f ' + path.join(__dirname, tlsNetwork) + ' -p node up -d');
 		}
-		stateStore.set(Constants.FABRIC_STATE, {deployed: true, type});
-		return await BaseUtils.sleep(Constants.INC_SHORT);
+		stateStore.set(Constants.FABRIC_STATE, {deployed: true, type, version});
+		await BaseUtils.sleep(Constants.INC_SHORT);
+		BaseUtils.logMsg(` **** re-deployed a fabric network of type ${type} version ${version} `);
+		return;
 	}
 
+	BaseUtils.logMsg(` **** Using the deployed fabric network of type ${type} version ${version}`);
 });
 
 Given(/^I forcibly take down all docker containers/, { timeout: Constants.STEP_LONG as number } , async () => {
 	await commandRunner.runShellCommand(undefined, 'rm -rf ~/.hlf-checkpoint');
 	await commandRunner.runShellCommand(undefined, 'docker kill $(docker ps -aq); docker rm $(docker ps -aq)');
 	stateStore.set(Constants.FABRIC_STATE, {deployed: false, type: null});
-	return await BaseUtils.sleep(Constants.INC_SHORT);
+	return await BaseUtils.sleep(Constants.INC_MED);
 });
 
 Given(/^I delete all dev images/, { timeout: Constants.STEP_LONG as number }, async () => {
