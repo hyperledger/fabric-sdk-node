@@ -261,13 +261,18 @@
  * @returns {Promise<void>}
  */
 
+
 /**
  * @typedef ListenerOptions
  * @memberof module:fabric-network
  * @property {(number | string | Long)} [startBlock] The block number from which events should be received. Leaving this
  * value undefined starts listening from the current block.
  * @property {module:fabric-network.EventType} [type] The type of events to be received.
+ * @property {module:fabric-network.Checkpointer} [checkpointer] A checkpointer instance. If the checkpointer has a
+ * current block number set, this takes precendence over the <code>startBlock</code> option. If no current block number
+ * is set, the <code>startBlock</code> option is used if present.
  */
+
 
 /**
  * The type of an event. The type is based on the type of the raw event data: filtered, full block or including
@@ -277,6 +282,46 @@
  * @memberof module:fabric-network
  */
 
+
+/**
+ * Persists the current block and transactions within that block to enable event listening to be resumed following an
+ * application outage.
+ * @interface Checkpointer
+ * @memberof module:fabric-network
+ */
+/**
+ * Add a transaction ID for the current block. Typically called once a transaction has been processed.
+ * @method Checkpointer#addTransactionId
+ * @memberof module:fabric-network
+ * @async
+ * @param {string} transactionId A transaction ID.
+ * @returns {Promise<void>}
+ */
+/**
+ * Get the current block number, or <code>undefined</code> if there is no previously saved state.
+ * @method Checkpointer#getBlockNumber
+ * @memberof module:fabric-network
+ * @async
+ * @returns {Promise<Long | undefined>} A block number.
+ */
+/**
+ * Get the transaction IDs processed within the current block.
+ * @method Checkpointer#getTransactionIds
+ * @memberof module:fabric-network
+ * @async
+ * @returns {Promise<Set<string>>} Transaction IDs.
+ */
+/**
+ * Set the current block number. Also clears the stored transaction IDs. Typically set when the previous block has been
+ * processed.
+ * @method Checkpointer#setBlockNumber
+ * @memberof module:fabric-network
+ * @async
+ * @param {Long} blockNumber A block number.
+ * @returns {Promise<void>}
+ */
+
+
 /**
  * Event representing a block on the ledger.
  * @interface BlockEvent
@@ -284,7 +329,6 @@
  * @property {Long} blockNumber The number of the block this event represents.
  * @property {(FilteredBlock | Block)} blockData The raw block event protobuf.
  */
-
 /**
  * Get the transactions included in this block.
  * @method BlockEvent#getTransactionEvents
@@ -306,14 +350,12 @@
  * @property {any} [privateData] Private data read/write sets associated with this transaction. Only present if
  * listening to <strong>private</strong> events and there is private data associated with the transaction.
  */
-
 /**
  * Get the parent block event for this event.
  * @method TransactionEvent#getBlockEvent
  * @memberof module:fabric-network
  * @returns {module:fabric-network.BlockEvent} A block event.
  */
-
 /**
  * Get the contract events emitted by this transaction.
  * @method TransactionEvent#getContractEvents
@@ -331,7 +373,6 @@
  * @property {Buffer} [payload] The data associated with this event by the smart contract. Note that
  * <strong>filtered</strong> events do not include any payload data.
  */
-
 /**
  * Get the parent transaction event of this event.
  * @method ContractEvent#getTransactionEvent
@@ -365,14 +406,12 @@
  * @interface Network
  * @memberof module:fabric-network
  */
-
 /**
  * Get the owning Gateway connection.
  * @method Network#getGateway
  * @memberof module:fabric-network
  * @returns {module:fabric-network.Gateway} A Gateway.
  */
-
 /**
  * Get an instance of a contract (chaincode) on the current network.
  * @method Network#getContract
@@ -382,14 +421,12 @@
  * @param {string[]} [collections] - the names of collections defined for this chaincode.
  * @returns {module:fabric-network.Contract} the contract.
  */
-
 /**
  * Get the underlying channel object representation of this network.
  * @method Network#getChannel
  * @memberof module:fabric-network
  * @returns {Channel} A channel.
  */
-
 /**
  * Add a listener to receive transaction commit and peer disconnect events for a set of peers. This is typically used
  * only within the implementation of a custom [transaction commit event handler]{@tutorial transaction-commit-events}.
@@ -410,14 +447,12 @@
  * const peers = network.channel.getEndorsers();
  * await network.addCommitListener(listener, peers, transactionId);
  */
-
 /**
  * Remove a previously added transaction commit listener.
  * @method Network#removeCommitListener
  * @memberof module:fabric-network
  * @param {module:fabric-network.CommitListener} listener A transaction commit listener callback function.
  */
-
 /**
  * Add a listener to receive block events for this network. Blocks will be received in order and without duplication.
  * The default is to listen for full block events from the current block position.
@@ -441,7 +476,6 @@
  * };
  * await network.addBlockListener(listener, options);
  */
-
 /**
  * Remove a previously added block listener.
  * @method Network#removeBlockListener
