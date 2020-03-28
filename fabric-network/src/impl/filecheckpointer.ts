@@ -53,7 +53,7 @@ export class FileCheckpointer implements Checkpointer {
 		if (data) {
 			const json = data.toString(encoding);
 			const state = JSON.parse(json);
-			this.loadState(state);
+			this.setState(state);
 		}
 	}
 
@@ -65,7 +65,7 @@ export class FileCheckpointer implements Checkpointer {
 		}
 	}
 
-	private loadState(state: PersistentState): void {
+	private setState(state: PersistentState): void {
 		this.blockNumber = state.blockNumber ? Long.fromString(state.blockNumber) : undefined;
 		this.transactionIds = new Set(state.transactionIds);
 	}
