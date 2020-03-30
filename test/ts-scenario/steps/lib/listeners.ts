@@ -4,58 +4,53 @@
 
 'use strict';
 
-import { BlockEvent, BlockListener, Contract, ContractEvent, ContractListener, EventType, Gateway, ListenerOptions, Network, TransactionEvent } from 'fabric-network';
+import { BlockEvent, BlockListener, Checkpointer, Contract, ContractEvent, ContractListener, EventType, Gateway, ListenerOptions, Network, DefaultCheckpointers } from 'fabric-network';
 import { Constants } from '../constants';
 import * as GatewayHelper from './gateway';
 import * as BaseUtils from './utility/baseUtils';
 import { StateStore } from './utility/stateStore';
+import Long = require('long');
+import fs = require('fs');
+import path = require('path');
+import os = require('os');
 
 const stateStore: StateStore = StateStore.getInstance();
+const CHECKPOINT_FILE_KEY = 'checkpointFile';
 
-export async function createContractListener(gatewayName: string, channelName: string, ccName: string, eventName: string, listenerName: string, type: EventType, startBlock?: number): Promise<void> {
+export async function createContractListener(gatewayName: string, channelName: string, ccName: string, eventName: string, listenerName: string, listenerOptions: ListenerOptions): Promise<void> {
 	const gateways: Map<string, any> = stateStore.get(Constants.GATEWAYS);
 	const gateway: Gateway  = gateways.get(gatewayName).gateway;
 	const contract: Contract = await GatewayHelper.retrieveContractFromGateway(gateway, channelName, ccName);
 
+	const payloads: ContractEvent[] = [];
+
+	const listener: ContractListener = async (event: ContractEvent) => {
+		BaseUtils.logMsg(`-> Received a contract event for listener [${listenerName}] of eventName ${eventName}`);
+		if (event.eventName === eventName) {
+			payloads.push(event);
+		}
+	};
+	await contract.addContractListener(listener, listenerOptions);
+
 	const listenerObject: any = {
 		active: true,
 		eventName,
-		eventType: type,
-		listener: {},
-		payloads: [],
+		eventType: listenerOptions.type,
+		listener,
+		payloads,
 		type: Constants.CONTRACT,
+		remove: () => contract.removeContractListener(listener)
 	};
-
-	const contractListener: ContractListener = async (event: ContractEvent) => {
-		BaseUtils.logMsg(`-> Received a contract event for listener [${listenerName}] of eventName ${eventName}`);
-		if (event.eventName === eventName) {
-			listenerObject.payloads.push(event);
-		}
-	};
-	const listenerOptions: ListenerOptions = {
-		startBlock,
-		type
-	};
-	await contract.addContractListener(contractListener, listenerOptions);
-
-	// Roll into a listener object to store
-	listenerObject.listener = contractListener;
-	listenerObject.remove = () => contract.removeContractListener(contractListener);
 	putListenerObject(listenerName, listenerObject);
 }
 
-export async function createBlockListener(gatewayName: string, channelName: string, listenerName: string, type: EventType, startBlock?: number, endBlock?: number): Promise<void> {
+export async function createBlockListener(gatewayName: string, channelName: string, listenerName: string, listenerOptions: ListenerOptions, endBlock?: number): Promise<void> {
 	const gateways: Map<string, any> = stateStore.get(Constants.GATEWAYS);
 	const gateway: Gateway = gateways.get(gatewayName).gateway;
 	const network: Network = await gateway.getNetwork(channelName);
 
-	const listenerObject: any = {
-		active: true,
-		eventType: type,
-		listener: {},
-		payloads: [],
-		type: Constants.BLOCK
-	};
+	const payloads: BlockEvent[] = [];
+	const startBlock = listenerOptions.startBlock ? Long.fromValue(listenerOptions.startBlock).toNumber() : undefined;
 
 	// Create the listener
 	const listener: BlockListener = async (blockEvent: BlockEvent) => {
@@ -67,7 +62,7 @@ export async function createBlockListener(gatewayName: string, channelName: stri
 			BaseUtils.checkSizeEquality(blockEvent.blockNumber.toNumber(), endBlock + 1, false, true);
 		}
 
-		listenerObject.payloads.push(blockEvent);
+		payloads.push(blockEvent);
 		BaseUtils.logMsg('->Received a block event - added blockevent to payloads', listenerName);
 		const transactionEvents = blockEvent.getTransactionEvents();
 		for (const transactionEvent of transactionEvents) {
@@ -80,17 +75,35 @@ export async function createBlockListener(gatewayName: string, channelName: stri
 			network.removeBlockListener(listener);
 		}
 	};
-	const listenerOptions: ListenerOptions = {
-		startBlock,
-		type
-	};
 	await network.addBlockListener(listener, listenerOptions);
 
-	// Roll into a listener object to store
-	listenerObject.listener = listener;
-	listenerObject.remove = () => network.removeBlockListener(listener);
+	const listenerObject: any = {
+		active: true,
+		eventType: listenerOptions.type,
+		listener,
+		payloads,
+		type: Constants.BLOCK,
+		remove: () => network.removeBlockListener(listener)
+	};
 	putListenerObject(listenerName, listenerObject);
 	BaseUtils.logMsg('->Stored a block event listener:', listenerName);
+}
+
+export async function newFileCheckpointer(): Promise<Checkpointer> {
+	const prefix = os.tmpdir + path.sep;
+	const tmpDir = await fs.promises.mkdtemp(prefix);
+	const file = path.join(tmpDir, 'checkpoint.json');
+	const checkpointer = await DefaultCheckpointers.file(file);
+	stateStore.set(CHECKPOINT_FILE_KEY, file);
+	return checkpointer;
+}
+
+export async function getFileCheckpointer(): Promise<Checkpointer> {
+	const file = stateStore.get(CHECKPOINT_FILE_KEY);
+	if (!file) {
+		throw new Error('Checkpointer does not exist');
+	}
+	return await DefaultCheckpointers.file(file);
 }
 
 function getListenerObject(listenerName: string): any {

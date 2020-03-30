@@ -88,3 +88,21 @@ Feature: Node SDK Events
 		When I unregister the listener named privateBlockListener
 		And I use the gateway named event_gateway to submit a total of 5 transactions with args [privateValuePut] for contract events instantiated on channel eventschannel
 		Then I receive 0 events from the listener named privateBlockListener
+
+	Scenario: Checkpoint block event listening
+		When I use the gateway named event_gateway to listen for full block events with a new file checkpoint listener named checkpointBlockListener on channel eventschannel
+		When I use the gateway named event_gateway to submit a transaction with args [createValue] for contract events instantiated on channel eventschannel
+		Then I receive a minimum 1 events from the listener named checkpointBlockListener
+		When I unregister the listener named checkpointBlockListener
+		When I use the gateway named event_gateway to submit a transaction with args [createValue] for contract events instantiated on channel eventschannel
+		When I use the gateway named event_gateway to listen for full block events with an existing file checkpoint listener named checkpointBlockListener on channel eventschannel
+		Then I receive a minimum 1 events from the listener named checkpointBlockListener
+
+	Scenario: Checkpoint contract event listening
+	 	When I use the gateway named event_gateway to listen for full contract events named create with a new file checkpoint listener named checkpointContractListener for the smart contract named events on channel eventschannel
+		And I use the gateway named event_gateway to submit a transaction with args [createValue] for contract events instantiated on channel eventschannel
+		Then the listener named checkpointContractListener should have contract events with payload containing "createValueTransactionContent"
+		When I unregister the listener named checkpointContractListener
+		And I use the gateway named event_gateway to submit a transaction with args [createValue] for contract events instantiated on channel eventschannel
+	 	And I use the gateway named event_gateway to listen for full contract events named create with an existing file checkpoint listener named checkpointContractListener for the smart contract named events on channel eventschannel
+		Then the listener named checkpointContractListener should have contract events with payload containing "createValueTransactionContent"

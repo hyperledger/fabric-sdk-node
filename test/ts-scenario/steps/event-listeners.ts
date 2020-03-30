@@ -8,7 +8,7 @@ import { Constants } from './constants';
 import * as Listeners from './lib/listeners';
 
 import { Given, Then, When } from 'cucumber';
-import { EventType } from 'fabric-network';
+import { EventType, ListenerOptions } from 'fabric-network';
 
 Given(/^I am listening for (filtered|full) contract events named (.+?) with a listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number }, async (type: EventType, eventName: string, listenerName: string) => {
 	const isActive: boolean = true;
@@ -27,20 +27,66 @@ Given(/^I am listening for transaction events with a listener named (.+?)$/, {ti
 
 // Contract events
 When(/^I use the gateway named (.+?) to listen for (filtered|full) contract events named (.+?) with a listener named (.+?) for the smart contract named (.+?) on channel (.+?)$/, {timeout: Constants.STEP_SHORT as number}, async (gatewayName: string, eventType: EventType, eventName: string, listenerName: string, ccName: string, channelName: string) => {
-	return await Listeners.createContractListener(gatewayName, channelName, ccName, eventName, listenerName, eventType);
+	const options: ListenerOptions = {
+		type: eventType
+	};
+	return await Listeners.createContractListener(gatewayName, channelName, ccName, eventName, listenerName, options);
 });
 
 When(/^I use the gateway named (.+?) to replay (filtered|full) contract events named (.+?) from starting block ([0-9]+) with a listener named (.+?) for the smart contract named (.+?) on channel (.+?)$/, {timeout: Constants.STEP_SHORT as number}, async (gatewayName: string, eventType: EventType, eventName: string, startBlock: number, listenerName: string, ccName: string, channelName: string) => {
-	return await Listeners.createContractListener(gatewayName, channelName, ccName, eventName, listenerName, eventType, startBlock);
+	const options: ListenerOptions = {
+		type: eventType,
+		startBlock
+	};
+	return await Listeners.createContractListener(gatewayName, channelName, ccName, eventName, listenerName, options);
+});
+
+When(/^I use the gateway named (.+?) to listen for (filtered|full) contract events named (.+?) with a new file checkpoint listener named (.+?) for the smart contract named (.+?) on channel (.+?)$/, {timeout: Constants.STEP_SHORT as number}, async (gatewayName: string, eventType: EventType, eventName: string, listenerName: string, ccName: string, channelName: string) => {
+	const options: ListenerOptions = {
+		type: eventType,
+		checkpointer: await Listeners.newFileCheckpointer()
+	};
+	return await Listeners.createContractListener(gatewayName, channelName, ccName, eventName, listenerName, options);
+});
+
+When(/^I use the gateway named (.+?) to listen for (filtered|full) contract events named (.+?) with an existing file checkpoint listener named (.+?) for the smart contract named (.+?) on channel (.+?)$/, {timeout: Constants.STEP_SHORT as number}, async (gatewayName: string, eventType: EventType, eventName: string, listenerName: string, ccName: string, channelName: string) => {
+	const options: ListenerOptions = {
+		type: eventType,
+		checkpointer: await Listeners.getFileCheckpointer()
+	};
+	return await Listeners.createContractListener(gatewayName, channelName, ccName, eventName, listenerName, options);
 });
 
 // Block events
 When(/^I use the gateway named (.+?) to listen for (filtered|full|private) block events with a listener named (.+?) on channel (.+?)$/, {timeout: Constants.STEP_SHORT as number}, async (gatewayName: string, eventType: EventType, listenerName: string, channelName: string) => {
-	return await Listeners.createBlockListener(gatewayName, channelName, listenerName, eventType);
+	const options: ListenerOptions = {
+		type: eventType
+	};
+	return await Listeners.createBlockListener(gatewayName, channelName, listenerName, options);
 });
 
 When(/^I use the gateway named (.+?) to listen for (filtered|full|private) block events between ([0-9]+) and ([0-9]+) with a listener named (.+?) on channel (.+?)$/, {timeout: Constants.STEP_SHORT as number}, async (gatewayName: string, eventType: EventType, startBlock: number, endBlock: number, listenerName: string, channelName: string) => {
-	return await Listeners.createBlockListener(gatewayName, channelName, listenerName, eventType, startBlock, endBlock);
+	const options: ListenerOptions = {
+		type: eventType,
+		startBlock
+	};
+	return await Listeners.createBlockListener(gatewayName, channelName, listenerName, options, endBlock);
+});
+
+When(/^I use the gateway named (.+?) to listen for (filtered|full|private) block events with a new file checkpoint listener named (.+?) on channel (.+?)$/, {timeout: Constants.STEP_SHORT as number}, async (gatewayName: string, eventType: EventType, listenerName: string, channelName: string) => {
+	const options: ListenerOptions = {
+		type: eventType,
+		checkpointer: await Listeners.newFileCheckpointer()
+	};
+	return await Listeners.createBlockListener(gatewayName, channelName, listenerName, options);
+});
+
+When(/^I use the gateway named (.+?) to listen for (filtered|full|private) block events with an existing file checkpoint listener named (.+?) on channel (.+?)$/, {timeout: Constants.STEP_SHORT as number}, async (gatewayName: string, eventType: EventType, listenerName: string, channelName: string) => {
+	const options: ListenerOptions = {
+		type: eventType,
+		checkpointer: await Listeners.getFileCheckpointer()
+	};
+	return await Listeners.createBlockListener(gatewayName, channelName, listenerName, options);
 });
 
 // Unregister
