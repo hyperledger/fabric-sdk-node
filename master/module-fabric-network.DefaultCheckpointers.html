@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Hyperledger Fabric SDK for Node.js Interface: QueryHandler</title>
+	<title>Hyperledger Fabric SDK for Node.js Class: DefaultCheckpointers</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -93,7 +93,7 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Interface: QueryHandler</h1>
+	<h1 class="page-title">Class: DefaultCheckpointers</h1>
 <section>
 
 <header>
@@ -101,8 +101,11 @@
         <h2>
             <span class="ancestors"><a href="module-fabric-network.html">fabric-network</a>.</span>
         
-        QueryHandler
+        DefaultCheckpointers
         </h2>
+        
+            <div class="class-description">Provides static factory functions used to create instances of default
+<a href="module-fabric-network.Checkpointer.html">Checkpointer</a> implementations.</div>
         
     
 </header>
@@ -112,10 +115,24 @@
     <div class="container-overview">
     
         
-            <div class="description">Handler used to obtain query results from peers when a transaction is evaluated.</div>
-        
+<hr>
+<dt>
+    <h4 class="name" id="DefaultCheckpointers"><span class="type-signature"></span>new DefaultCheckpointers()</h4>
+    
+    
+</dt>
+<dd>
 
-        
+    
+
+    
+
+    
+
+    
+    
+
+    
 <dl class="details">
     
 
@@ -155,7 +172,21 @@
 </dl>
 
 
-        
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
     
     </div>
 
@@ -178,7 +209,7 @@
             
 <hr>
 <dt>
-    <h4 class="name" id="evaluate"><span class="type-signature">&lt;async> </span>evaluate(query)</h4>
+    <h4 class="name" id=".file"><span class="type-signature">&lt;async, static> </span>file(path)</h4>
     
     
 </dt>
@@ -186,7 +217,9 @@
 
     
     <div class="description">
-        Called when a transaction is evaluated to obtain query results from suitable network peers.
+        Create a checkpointer that uses the specified file to store persistent state. If the file does not exist, it will
+be created and the checkpointer will have an uninitialized state that will accept any events. If the file does
+exist, it must contain valid checkpoint state.
     </div>
     
 
@@ -221,13 +254,13 @@
 
         <tr>
             
-                <td class="name"><code>query</code></td>
+                <td class="name"><code>path</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type"><a href="module-fabric-network.Query.html">module:fabric-network.Query</a></span>
+<span class="param-type">string</span>
 
 
 
@@ -238,8 +271,7 @@
 
             
 
-            <td class="description last">Query object that can be used by the handler to send the query to
-specific peers.</td>
+            <td class="description last">Path to a file holding persistent checkpoint state.</td>
         </tr>
 
     
@@ -302,6 +334,10 @@ specific peers.</td>
     <h5>Returns:</h5>
     
             
+<div class="param-desc">
+    A checkpointer.
+</div>
+
 
 
 <dl>
@@ -310,7 +346,7 @@ specific peers.</td>
     </dt>
     <dd>
         
-<span class="param-type">Promise.&lt;Buffer></span>
+<span class="param-type">Promise.&lt;<a href="module-fabric-network.Checkpointer.html">module:fabric-network.Checkpointer</a>></span>
 
 
 
