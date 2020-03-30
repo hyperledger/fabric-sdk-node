@@ -124,7 +124,7 @@ describe('Transaction', () => {
 
 		contract.chaincodeId = chaincodeId;
 		discoveryHandler = sinon.createStubInstance(DiscoveryHandler);
-		contract.getDiscoveryHandler.withArgs(sinon.match.instanceOf(Endorsement)).resolves(discoveryHandler);
+		contract.getDiscoveryHandler.resolves(discoveryHandler);
 		committers = [sinon.createStubInstance(Committer)];
 		channel.getCommitters.returns(committers);
 
@@ -350,14 +350,11 @@ describe('Transaction', () => {
 			sinon.assert.calledWithMatch(endorsement.send, {handler: discoveryHandler, requiredOrgs: orgs});
 		});
 
-		it('passes collections from the contract to the endorsement', async () => {
-			contract.collections = ['collection1', 'collection2'];
-
+		it('getm the handler from the contract', async () => {
+			network.discoveryService = sinon.stub();
 			await transaction.submit();
 
-			for (const collection of contract.collections) {
-				sinon.assert.calledWith(endorsement.addCollectionInterest, collection);
-			}
+			sinon.assert.called(contract.getDiscoveryHandler);
 		});
 
 		it('commits using timeout from gateway options', async () => {

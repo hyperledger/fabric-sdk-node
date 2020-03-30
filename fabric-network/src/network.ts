@@ -38,7 +38,7 @@ async function listenerOptionsWithDefaults(options: ListenerOptions): Promise<Li
 
 export interface Network {
 	getGateway(): Gateway;
-	getContract(chaincodeId: string, name?: string, collections?: string[]): Contract;
+	getContract(chaincodeId: string, name?: string): Contract;
 	getChannel(): Channel;
 	addCommitListener(listener: CommitListener, peers: Endorser[], transactionId: string): Promise<CommitListener>;
 	removeCommitListener(listener: CommitListener): void;
@@ -176,7 +176,7 @@ export class NetworkImpl implements Network {
 		return this.gateway;
 	}
 
-	getContract(chaincodeId: string, name = '', collections?: string[]) {
+	getContract(chaincodeId: string, name = '') {
 		const method = 'getContract';
 		logger.debug('%s - start - name %s', method, name);
 
@@ -189,9 +189,9 @@ export class NetworkImpl implements Network {
 			contract = 	new Contract(
 				this,
 				chaincodeId,
-				name,
-				collections
+				name
 			);
+			logger.debug('%s - create new contract %s', method, chaincodeId);
 			this.contracts.set(key, contract);
 		}
 		return contract;

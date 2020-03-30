@@ -190,11 +190,6 @@ class Transaction {
 		// This is the object that will centralize this endorsement activities
 		// with the fabric network
 		const endorsement = channel.newEndorsement(this.contract.chaincodeId);
-		if (this.contract.collections) {
-			for (const collection of this.contract.collections) {
-				endorsement.addCollectionInterest(collection);
-			}
-		}
 
 		if (this._endorsingPeers) {
 			logger.debug('%s - user has assigned targets', method);

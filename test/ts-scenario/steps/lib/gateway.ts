@@ -201,7 +201,7 @@ async function identitySetup(wallet: Wallet, ccp: CommonConnectionProfileHelper,
  * @param {String} txnType the type of transaction (submit/evaluate)
  * @param {String} handlerOption Optional: the handler option to use
  */
-export async function performGatewayTransaction(gatewayName: string, contractName: string, channelName: string, args: string, txnType: string, handlerOption?: string): Promise<void> {
+export async function performGatewayTransaction(gatewayName: string, contractName: string, channelName: string, collectionName: string, args: string, txnType: string, handlerOption?: string): Promise<void> {
 
 	const gatewayObj: any = getGatewayObject(gatewayName);
 	const gateway: Gateway = getGateway(gatewayName);
@@ -244,6 +244,14 @@ export async function performGatewayTransaction(gatewayName: string, contractNam
 	}
 
 	const contract: Contract = await retrieveContractFromGateway(gateway, channelName, contractName);
+
+	const discovery = gateway.getOptions().discovery;
+	if (discovery && discovery.enabled && collectionName.length > 0) {
+		BaseUtils.logMsg(` -- adding a discovery interest colletion name to the contrace ${collectionName}`);
+		const chaincodeId = contract.chaincodeId;
+		contract.resetDiscoveryInterests();
+		contract.addDiscoveryInterest({name: chaincodeId, collectionNames: [collectionName]});
+	}
 
 	// Split args
 	const argArray: string[] = args.slice(1, -1).split(',');

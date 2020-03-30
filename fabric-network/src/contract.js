@@ -62,7 +62,7 @@ function verifyNamespace(namespace) {
  * @hideconstructor
  */
 class Contract {
-	constructor(network, chaincodeId, namespace, collections) {
+	constructor(network, chaincodeId, namespace) {
 		const method = `constructor[${namespace}]`;
 		logger.debug('%s - start', method);
 
@@ -70,11 +70,11 @@ class Contract {
 
 		this.network = network;
 		this.chaincodeId = chaincodeId;
-		this.collections = collections;
 		this.gateway = network.gateway;
 		this.namespace = namespace;
 		this.discoveryService = null;
 		this.contractListeners = new Map();
+		this.discoveryInterests = [{name: chaincodeId}];
 	}
 
 	/**
@@ -164,23 +164,22 @@ class Contract {
 	 * instance will be setup.
 	 * The service will make a discovery request to the same
 	 * target as that used by the Network. The request will include this contract's
-	 * chaincode ID and collection names. This will enable the peer's discovery
+	 * discovery interests. This will enable the peer's discovery
 	 * service to generate an endorsement plan based on the chaincode's
 	 * endorsement policy, the collection configuration, and the current active
 	 * peers.
-	 * Note: It is assumed that the chaincode ID and collection names will not
-	 * change on successive calls. The contract's DiscoveryService will use the
+	 * Note: It is assumed that the discovery interests will not
+	 * change on successive calls. The handler's DiscoveryService will use the
 	 * "refreshAge" discovery option after the first call to determine if the
 	 * endorsement plan should be refreshed by a new call to the peer's
 	 * discovery service.
 	 * @private
-	 * @param {Endorsement} endorsement instance
 	 * @return {DiscoveryHandler} The handler that will work with the discovery
 	 * endorsement plan to send a proposal to be endorsed to the peers as described
 	 * in the plan.
 	 */
-	async getDiscoveryHandler(endorsement) {
-		const method = `getDiscoveryHandler[${this._name}]`;
+	async getDiscoveryHandler() {
+		const method = `getDiscoveryHandler[${this.chaincodeId}]`;
 		logger.debug('%s - start', method);
 		// if the network is using discovery, then this contract will too
 		if (this.network.discoveryService) {
@@ -193,12 +192,9 @@ class Contract {
 				const targets = this.network.discoveryService.targets;
 				const idx = this.network.gateway.identityContext;
 				const asLocalhost = this.network.gateway.getOptions().discovery.asLocalhost;
-				// this will tell discovery to build a plan based on the chaincode id
-				// and collections names of this contract that the endorsement must
-				// have been assigned.
-				const interest = endorsement.buildProposalInterest();
 
-				this.discoveryService.build(idx, {interest});
+				logger.debug('%s - using discovery interest %j', method, this.discoveryInterests);
+				this.discoveryService.build(idx, {interest: this.discoveryInterests});
 				this.discoveryService.sign(idx);
 
 				// go get the endorsement plan from the peer's discovery service
@@ -218,6 +214,59 @@ class Contract {
 		}
 	}
 
+	/**
+	 * Provide a Discovery Interest settings to help the peer's discovery service
+	 * build an endorsement plan. This chaincode Id will be include by default in
+	 * the list of discovery interests. If this contract's chaincode is in one or
+	 * more collections then use this method with this chaincode Id to change the
+	 * default discovery interest to include those collection names.
+	 * @param {DiscoveryInterest} interest - These will be added to the
+	 * existing discovery interests and used when the
+	 * @link module:fabric-network.Transaction#submit} is called.
+	 * @return {Contract} This Contract instance
+	 */
+	addDiscoveryInterest(interest) {
+		const method = `addDiscoveryInterest[${this._name}]`;
+
+		if (!(typeof interest === 'object')) {
+			throw Error('"interest" parameter must be a DiscoveryInterest object');
+		}
+
+		logger.debug('%s - adding %s', method, interest);
+
+		const existingIndex = this.discoveryInterests.findIndex((entry) => entry.name === interest.name);
+		if (existingIndex >= 0) {
+			this.discoveryInterests[existingIndex] = interest;
+		} else {
+			this.discoveryInterests.push(interest);
+		}
+
+		return this;
+	}
+
+	/**
+	 * reset Discovery interest to default of this contracts chaincode name
+	 * and no collection names and no other chaincode names.
+	 *
+	 * @return {Contract} This Contract instance
+	 */
+	resetDiscoveryInterests() {
+		const method = `resetDiscoveryInterest[${this._name}]`;
+		logger.debug('%s - start', method);
+		this.discoveryInterests = [{name: this.chaincodeId}];
+		this.discoveryService = null;
+
+		return this;
+	}
+
+	/**
+	 * Retrieve the Discovery Interest settings that will help the peer's
+	 * discovery service build an endorsement plan.
+	 * @return {DiscoveryInterest[]} - An array of DiscoveryInterest
+	 */
+	getDiscoveryInterests() {
+		return this.discoveryInterests;
+	}
 }
 
 module.exports = Contract;
