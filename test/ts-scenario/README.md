@@ -1,5 +1,6 @@
 # Cucumber Test Scenarios For Fabric-SDK-Node
 
+# comment for test PR - shouldn't be here
 This test suite is intended to provide high level test coverage from a scenario perspective, and tests herein represent those at the top of the test pyramid. Consequently, these test should be added to with due consideration and should encapsulate the completion of a high level user task; for more fine grained testing, the FV or unit test frameworks should be used.
 
 The test suite uses the docker network and crypto files from within `/test/ts-fixtures`. If crypto material does not exist, which is the case if you have recently cloned the repository, it is necessary to run the `installAndGenerateCerts` or `installAndGenerateCertsMac` npm task prior to running the tests.

@@ -12,7 +12,7 @@ Feature: Use the Node SDK to install/instantiate/Upgrade chaincode with the depr
 		Given I deploy a tls Fabric network at 2.0 version
 		And I use the cli to create and join the channel named deprecatedchannel on the deployed network
 
- 	Scenario: Using the deprecated API I can install and instantate a smart contract that may subsequently be used through a Gateway
+ 	Scenario: Using the deprecated API I can install and instantiate a smart contract that may subsequently be used through a Gateway
 		Given I use the deprecated sdk to deploy a node smart contract named fabcar at version 1.0.0 as fabcar for all organizations on channel deprecatedchannel with endorsement policy 1ofAny and arguments [initLedger] with the connection profile named ccp-tls.json
 		And I have a memory backed gateway named myDeprecatedGateway with discovery set to false for user User1 using the connection profile named ccp-tls.json
 		When I use the gateway named myDeprecatedGateway to submit a transaction with args [createCar,1001,Ariel,Atom,red,Nick] for contract fabcar instantiated on channel deprecatedchannel
