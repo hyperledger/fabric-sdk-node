@@ -25,5 +25,8 @@
 	},
 	"wallet": {
 		"title": "fabric-network: Using wallets to manage identities"
+	},
+	"discovery-fabric-network" : {
+		"title": "fabric-network: How to use the discovery service"
 	}
 }

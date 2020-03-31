@@ -224,7 +224,7 @@ class DiscoveryService extends ServiceAction {
 			const cc_query = new fabprotos.discovery.ChaincodeQuery();
 			cc_query.setInterests(_interests);
 			query.setCcQuery(cc_query);
-			logger.debug(`${method} - adding interest chaincodes/collections query`);
+			logger.debug('%s - adding interest chaincodes/collections query %j', method, interest);
 			queries.push(query);
 		}
 
@@ -310,7 +310,7 @@ class DiscoveryService extends ServiceAction {
 			for (const index in response.results) {
 				const result = response.results[index];
 				if (result.result === 'error') {
-					logger.error(`${method} - Channel:${this.name} received discovery error:${result.error.content}`);
+					logger.error(`${method} - Channel:${this.channel.name} received discovery error:${result.error.content}`);
 					error_msg = result.error.content;
 					break;
 				} else {
@@ -381,19 +381,9 @@ class DiscoveryService extends ServiceAction {
 			if (typeof chaincode.name === 'string') {
 				chaincode_call.setName(chaincode.name);
 				if (chaincode.collection_names) {
-					if (Array.isArray(chaincode.collection_names)) {
-						const collection_names = [];
-						chaincode.collection_names.map(name => {
-							if (typeof name === 'string') {
-								collection_names.push(name);
-							} else {
-								throw Error('The collection name must be a string');
-							}
-						});
-						chaincode_call.setCollectionNames(collection_names);
-					} else {
-						throw Error('Collection names must be an array of strings');
-					}
+					_getCollectionNames(chaincode.collection_names, chaincode_call);
+				} else if (chaincode.collectionNames) {
+					_getCollectionNames(chaincode.collectionNames, chaincode_call);
 				}
 				chaincode_calls.push(chaincode_call);
 			} else {
@@ -719,6 +709,22 @@ class DiscoveryService extends ServiceAction {
 	toString() {
 
 		return `DiscoveryService: {name: ${this.name}, channel: ${this.channel.name}}`;
+	}
+}
+
+function _getCollectionNames(names, chaincode_call) {
+	if (Array.isArray(names)) {
+		const collection_names = [];
+		names.map(name => {
+			if (typeof name === 'string') {
+				collection_names.push(name);
+			} else {
+				throw Error('The collection name must be a string');
+			}
+		});
+		chaincode_call.setCollectionNames(collection_names);
+	} else {
+		throw Error('Collection names must be an array of strings');
 	}
 }
 

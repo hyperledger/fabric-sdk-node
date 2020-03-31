@@ -35,7 +35,7 @@
     "setupCucumbers": "node -e 'require(\"./scripts/npm_scripts/testFunctions.js\").createCucumberLogFile()'",
     "test:cucumber": "cucumber-js -f node_modules/cucumber-pretty ./test/scenario/features/*.feature",
     "test:ts-cucumber": "cucumber-js -f node_modules/cucumber-pretty ./test/ts-scenario/features/*.feature --require './test/ts-scenario/steps/**/*.ts' --require './test/ts-scenario/support/**/*.ts' --require-module ts-node/register",
-    "test:ts-cucumber-tagged": "npm run test:ts-cucumber -- --tags @events",
+    "test:ts-cucumber-tagged": "npm run test:ts-cucumber -- --tags @discovery",
     "testHeadless": "run-s cleanUp compile lint unitTest:all",
     "tapeAndCucumber": "run-s tapeIntegration dockerClean cucumberScenario"
   },

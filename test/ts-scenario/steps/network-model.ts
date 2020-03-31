@@ -38,18 +38,22 @@ Given(/^I have a (.+?) backed gateway named (.+?) with discovery set to (.+?) fo
 	}
 });
 
+When(/^I use the discovery gateway named (.+?) to (.+?) a transaction with args (.+?) for contract (.+?) instantiated on channel (.+?) using collection (.+?)$/, { timeout: Constants.STEP_MED as number }, async (gatewayName: string, txnType: string, txnArgs: string, ccName: string, channelName: string, collectionName: string) => {
+	return await Gateway.performGatewayTransaction(gatewayName, ccName, channelName, collectionName, txnArgs, txnType);
+});
+
 When(/^I use the gateway named (.+?) to (.+?) a transaction with args (.+?) for contract (.+?) instantiated on channel (.+?)$/, { timeout: Constants.STEP_MED as number }, async (gatewayName: string, txnType: string, txnArgs: string, ccName: string, channelName: string) => {
-	return await Gateway.performGatewayTransaction(gatewayName, ccName, channelName, txnArgs, txnType);
+	return await Gateway.performGatewayTransaction(gatewayName, ccName, channelName, '', txnArgs, txnType);
 });
 
 When(/^I use the gateway named (.+?) to (.+?) a total of (.+?) transactions with args (.+?) for contract (.+?) instantiated on channel (.+?)$/, {timeout: Constants.STEP_MED as number }, async (gatewayName: string, txnType: string, numTransactions: number, txnArgs: string, ccName: string, channelName: string) => {
 	for (let i: number = 0; i < numTransactions; i++) {
-		await Gateway.performGatewayTransaction(gatewayName, ccName, channelName, txnArgs, txnType);
+		await Gateway.performGatewayTransaction(gatewayName, ccName, channelName, '', txnArgs, txnType);
 	}
 });
 
 When(/^I modify (.+?) to (.+?) a transaction with args (.+?) for contract (.+?) instantiated on channel (.+?) using handler option (.+?)$/, { timeout: Constants.STEP_MED as number }, async (gatewayName: string, txnType: string, txnArgs: string, ccName: string, channelName: string, handlerOption: string) => {
-	return await Gateway.performGatewayTransaction(gatewayName, ccName, channelName, txnArgs, txnType, handlerOption);
+	return await Gateway.performGatewayTransaction(gatewayName, ccName, channelName, '', txnArgs, txnType, handlerOption);
 });
 
 When(/^I modify (.+?) to (.+?) a transaction with transient data using args (.+?) for contract (.+?) instantiated on channel (.+?)$/, { timeout: Constants.STEP_MED as number }, async (gatewayName: string, txnType: string, txnArgs: string, ccName: string, channelName: string) => {

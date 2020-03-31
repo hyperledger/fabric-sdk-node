@@ -61,7 +61,7 @@ describe('Contract', () => {
 		transaction.evaluate.resolves('result');
 
 		endorsement = sinon.createStubInstance(Endorsement);
-		endorsement.buildProposalInterest.returns('interest');
+		endorsement.buildProposalInterest.returns('interests');
 
 		contract = new Contract(network, chaincodeId, namespace, collections);
 	});
@@ -136,6 +136,53 @@ describe('Contract', () => {
 			network.discoveryService = discoveryService;
 			const handler = await contract.getDiscoveryHandler(endorsement);
 			expect(handler).to.equal('handler');
+		});
+	});
+
+	describe('#addDiscoveryInterest', () => {
+		it ('throws when not an interest', () => {
+			(() => contract.addDiscoveryInterest('intersts')).should.throw('"interest" parameter must be a DiscoveryInterest object');
+		});
+		it('add collection', async () => {
+			const interest = {name: chaincodeId, collectionNames: ['c1', 'c2']};
+			contract.addDiscoveryInterest(interest);
+			expect(contract.discoveryInterests).to.deep.equal([
+				interest
+			]);
+		});
+		it('add chaincode', async () => {
+			const other = {name: 'other'};
+			contract.addDiscoveryInterest(other);
+			expect(contract.discoveryInterests).to.deep.equal([
+				{name: chaincodeId},
+				other
+			]);
+		});
+		it('add chaincode and collection', async () => {
+			const other = {name: 'other', collectionNames: ['c1', 'c2']};
+			contract.addDiscoveryInterest(other);
+			expect(contract.discoveryInterests).to.deep.equal([
+				{name: chaincodeId},
+				other
+			]);
+		});
+	});
+
+	describe('#getDiscoveryInterests', () => {
+		it('get default', async () => {
+			contract.getDiscoveryInterests();
+			expect(contract.discoveryInterests).to.deep.equal([
+				{name: chaincodeId}
+			]);
+		});
+		it('get after an add chaincode and collection', async () => {
+			const other = {name: 'other', collectionNames: ['c1', 'c2']};
+			contract.addDiscoveryInterest(other);
+			const interests = contract.getDiscoveryInterests();
+			expect(interests).to.deep.equal([
+				{name: chaincodeId},
+				other
+			]);
 		});
 	});
 });

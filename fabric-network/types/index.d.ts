@@ -57,6 +57,11 @@ export interface DiscoveryOptions {
 	enabled?: boolean;
 }
 
+export interface DiscoveryInterest {
+	name: string;
+	collectionNames?: string[];
+}
+
 export interface DefaultEventHandlerOptions {
 	commitTimeout?: number;
 	endorseTimeout?: number;
@@ -78,11 +83,15 @@ export class Gateway {
 }
 
 export class Contract {
+	readonly chaincodeId: string;
+	readonly namespace: string;
 	createTransaction(name: string): Transaction;
 	evaluateTransaction(name: string, ...args: string[]): Promise<Buffer>;
 	submitTransaction(name: string, ...args: string[]): Promise<Buffer>;
 	addContractListener(listener: ContractListener, options?: ListenerOptions): Promise<ContractListener>;
 	removeContractListener(listener: ContractListener): void;
+	addDiscoveryInterest(interest: DiscoveryInterest): Contract;
+	resetDiscoveryInterests(): Contract;
 }
 
 export interface TransientMap {

@@ -12,11 +12,14 @@ Feature: Configure Fabric using CLI and submit/evaluate using a network Gateway 
 		Given I deploy a tls Fabric network at 2.0 version
 		And I use the cli to create and join the channel named discoverychannel on the deployed network
 		And I use the cli to update the channel with name discoverychannel with config file discoverychannel-anchor.tx on the deployed network
-		And I use the cli to deploy a node smart contract named fabcar at version 1.0.0 for all organizations on channel discoverychannel with endorsement policy 1of and arguments ["initLedger"]
+		#And I use the cli to deploy a node smart contract named fabcar at version 1.0.0 for all organizations on channel discoverychannel with endorsement policy 1of and arguments ["initLedger"]
+		And I use the cli to lifecycle deploy a node smart contract named fabcar at version 1.0.0 as fabcar for all organizations on channel discoverychannel with default endorsement policy and init-required false
 		And I have a file backed gateway named myDiscoveryGateway with discovery set to true for user User1 using the connection profile named ccp-tls.json
 
 	Scenario: Using a Gateway I can submit and evaluate transactions on instantiated node smart contract
-		When I use the gateway named myDiscoveryGateway to submit a transaction with args [createCar,1001,Ariel,Atom,red,Nick] for contract fabcar instantiated on channel discoverychannel
+		When I use the discovery gateway named myDiscoveryGateway to submit a transaction with args [createCar,1001,Ariel,Atom,red,Nick] for contract fabcar instantiated on channel discoverychannel using collection badbad
+		Then The gateway named myDiscoveryGateway has a error type response containing failed constructing descriptor
+		When I use the discovery gateway named myDiscoveryGateway to submit a transaction with args [createCar,1001,Ariel,Atom,red,Nick] for contract fabcar instantiated on channel discoverychannel using collection collectionFabcar
 		Then The gateway named myDiscoveryGateway has a submit type response
 		When I use the gateway named myDiscoveryGateway to evaluate a transaction with args [queryCar,1001] for contract fabcar instantiated on channel discoverychannel
 		Then The gateway named myDiscoveryGateway has a evaluate type response matching {"color":"red","docType":"car","make":"Ariel","model":"Atom","owner":"Nick"}

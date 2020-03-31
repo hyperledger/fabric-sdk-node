@@ -29,7 +29,7 @@ configtxgen -profile TwoOrgsOrdererGenesis -outputBlock "${BASEDIR}/twoorgs.gene
 configtxgen -profile TwoOrgsChannel -outputCreateChannelTx "${BASEDIR}/../channel-config/baseapichannel.tx" -channelID baseapichannel # scenario test base api
 configtxgen -profile TwoOrgsChannel -outputCreateChannelTx "${BASEDIR}/../channel-config/channelopschannel.tx" -channelID channelopschannel # scenario test channel query
 configtxgen -profile TwoOrgsChannel -outputCreateChannelTx "${BASEDIR}/../channel-config/deprecatedchannel.tx" -channelID deprecatedchannel # scenario test deprecated sdk
-configtxgen -profile TwoOrgsChannel -outputCreateChannelTx "${BASEDIR}/../channel-config/discoverychannel.tx" -channelID discoverychannel # sceanrio test discovery feature
+#configtxgen -profile TwoOrgsChannel -outputCreateChannelTx "${BASEDIR}/../channel-config/discoverychannel.tx" -channelID discoverychannel # sceanrio test discovery feature
 #configtxgen -profile TwoOrgsChannel -outputCreateChannelTx "${BASEDIR}/../channel-config/eventschannel.tx" -channelID eventschannel # sceanrio test discovery feature
 #configtxgen -profile TwoOrgsChannel -outputCreateChannelTx "${BASEDIR}/../channel-config/gatewaychannel.tx" -channelID gatewaychannel # sceanrio test gateway feature
 
