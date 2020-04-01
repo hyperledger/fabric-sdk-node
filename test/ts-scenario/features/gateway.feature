@@ -9,7 +9,7 @@ Feature: Configure Fabric using CLI and submit/evaluate using a network Gateway 
 
 	Background:
 		Given I place a scenario start message GATEWAY FEATURE
-	 	Given I deploy a tls Fabric network at 2.0 version
+	 	Given I deploy a tls Fabric network at 2.1 version
 		And I use the cli to create and join the channel named gatewaychannel on the deployed network
 		And I use the cli to update the channel with name gatewaychannel with config file gatewaychannel-anchor.tx on the deployed network
 		And I use the cli to lifecycle deploy a node smart contract named fabcar at version 1.0.0 as fabcar for all organizations on channel gatewaychannel with default endorsement policy and init-required false

@@ -13,6 +13,7 @@
   },
   "scripts": {
     "installAndGenerateCerts": "node ./scripts/npm_scripts/generateCerts.js",
+	"pullFabricImages": "./scripts/utility/fabric_images.sh",
     "test": "run-s checkLicense cleanUp dockerClean compile lint docs unitTest:all dockerReady tapeIntegration cucumberScenario",
     "testNoHSM": "run-s checkLicense cleanUp dockerClean compile lint docs unitTest:all dockerReady tapeIntegrationNoHSM cucumberScenario",
     "checkLicense": "./scripts/npm_scripts/checkLicense.sh",

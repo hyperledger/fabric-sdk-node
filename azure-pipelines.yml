@@ -47,9 +47,11 @@ stages:
         - script: npm install
           displayName: npm install
         - script: npm run installAndGenerateCerts
-          displayName: 'Generate credentials'
+          displayName: Generate credentials
+        - script: npm run pullFabricImages
+          displayName: Pull Fabric Images
         - script: npm test
-          displayName: 'Run tests'
+          displayName: Run tests
 
   - stage: Publish
     displayName: Publish Packages and Docs
