@@ -9,7 +9,7 @@ Feature: Configure Fabric using CLI and submit/evaluate using a network Gateway 
 
 	Background:
 		Given I place a scenario start message DISCOVERY FEATURE
-		Given I deploy a tls Fabric network at 2.0 version
+		Given I deploy a tls Fabric network at 2.1 version
 		And I use the cli to create and join the channel named discoverychannel on the deployed network
 		And I use the cli to update the channel with name discoverychannel with config file discoverychannel-anchor.tx on the deployed network
 		#And I use the cli to deploy a node smart contract named fabcar at version 1.0.0 for all organizations on channel discoverychannel with endorsement policy 1of and arguments ["initLedger"]

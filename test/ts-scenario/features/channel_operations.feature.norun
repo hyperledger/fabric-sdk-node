@@ -8,7 +8,7 @@ Feature: Use the channel query methods
 
 	Background:
 		Given I place a scenario start message CHANNEL FEATURE
-	 	Given I deploy a tls Fabric network at 2.0 version
+	 	Given I deploy a tls Fabric network at 2.1 version
 		And I use the cli to create and join the channel named channelopschannel on the deployed network
 	 	And I use the cli to create and join the channel named channelopschannelvtwo on the deployed network
 		And I use the cli to update the channel with name channelopschannelvtwo with config file channelopschannelvtwo-anchor.tx on the deployed network

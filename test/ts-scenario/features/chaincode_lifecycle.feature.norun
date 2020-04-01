@@ -8,7 +8,7 @@ Feature: Use the v2.0 chaincode lifecycle process to perform lifecycle operation
 
 	Background:
 		Given I place a scenario start message LIFECYCLE SDK FEATURE
-		Given I deploy a tls Fabric network at 2.0 version
+		Given I deploy a tls Fabric network at 2.1 version
 		And I use the cli to create and join the channel named lifecyclechannel on the deployed network
 
 	Scenario: Using the SDK I can run node smart contracts through their lifecycle on a two org network

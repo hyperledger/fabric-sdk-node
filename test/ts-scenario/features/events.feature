@@ -9,7 +9,7 @@ Feature: Node SDK Events
 
 	Background:
 		Given I place a scenario start message EVENTS FEATURE
-	 	Given I deploy a tls Fabric network at 2.0 version
+	 	Given I deploy a tls Fabric network at 2.1 version
 	 	And I use the cli to create and join the channel named eventschannel on the deployed network
 		And I use the cli to update the channel with name eventschannel with config file eventschannel-anchor.tx on the deployed network
 		And I use the cli to lifecycle deploy a node smart contract named events at version 1.0.0 as events for all organizations on channel eventschannel with default endorsement policy and init-required false
