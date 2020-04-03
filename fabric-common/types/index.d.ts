@@ -7,6 +7,7 @@
 
 import { lstatSync } from 'fs';
 import * as Long from 'long';
+import * as ByteBuffer from 'bytebuffer';
 
 export class Utils {
 	public static getLogger(name: string): any;
