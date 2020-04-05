@@ -8,7 +8,6 @@
 'use strict';
 
 const {Utils: utils, BaseClient} = require('fabric-common');
-
 const FabricCAClient = require('./FabricCAClient');
 
 const {normalizeX509} = BaseClient;
@@ -41,18 +40,15 @@ const FabricCAServices = class extends BaseClient {
 	 *
 	 * @param {string | object} url The endpoint URL for Fabric CA services of the form: "http://host:port" or "https://host:port"
 	 When this parameter is an object then it must include the parameters listed as key value pairs.
-	 * @param {TLSOptions} tlsOptions The TLS settings to use when the Fabric CA services endpoint uses "https"
-	 * @param {string} caName The optional name of the CA. Fabric-ca servers support multiple Certificate Authorities from
+	 * @param {TLSOptions} [tlsOptions] The TLS settings to use when the Fabric CA services endpoint uses "https"
+	 * @param {string} [caName] The optional name of the CA. Fabric-ca servers support multiple Certificate Authorities from
 	 *  a single server. If omitted or null or an empty string, then the default CA is the target of requests
-	 * @param {CryptoSuite} cryptoSuite The optional cryptoSuite instance to be used if options other than defaults are needed.
+	 * @param {CryptoSuite|ICryptoSuite} [cryptoSuite] The optional cryptoSuite instance to be used if options other than defaults are needed.
 	 * If not specified, an instance of {@link CryptoSuite} will be constructed based on the current configuration settings:
 	 * <br> - crypto-hsm: use an implementation for Hardware Security Module (if set to true) or software-based key management (if set to false)
 	 * <br> - crypto-keysize: security level, or key size, to use with the digital signature public key algorithm. Currently ECDSA
 	 *  is supported and the valid key sizes are 256 and 384
 	 * <br> - crypto-hash-algo: hashing algorithm
-	 * <br> - key-value-store: some CryptoSuite implementation requires a key store to persist private keys. A {@link CryptoKeyStore}
-	 *  is provided for this purpose, which can be used on top of any implementation of the {@link KeyValueStore} interface,
-	 *  such as a file-based store or a database-based one. The specific implementation is determined by the value of this configuration setting.
 	 */
 	constructor(url, tlsOptions, caName, cryptoSuite) {
 		super();
@@ -119,7 +115,7 @@ const FabricCAServices = class extends BaseClient {
 	 * @param registrar {User}. The identity of the registrar (i.e. who is performing the registration)
 	 * @returns {Promise} The enrollment secret to use when this user enrolls
 	 */
-	register(req, registrar) {
+	async register(req, registrar) {
 		if (!req) {
 			throw new Error('Missing required argument "request"');
 		}
@@ -198,7 +194,7 @@ const FabricCAServices = class extends BaseClient {
 			}
 		}
 
-		const storeKey = this.getCryptoSuite()._cryptoKeyStore ? true : false;
+		const storeKey = !!this.getCryptoSuite()._cryptoKeyStore;
 
 		try {
 			let csr;
@@ -246,11 +242,11 @@ const FabricCAServices = class extends BaseClient {
 	 * Re-enroll the member in cases such as the existing enrollment certificate is about to expire, or
 	 * it has been compromised
 	 * @param {User} currentUser The identity of the current user that holds the existing enrollment certificate
-	 * @param {AttributeRequest[]} Optional an array of {@link AttributeRequest} that indicate attributes to
+	 * @param {AttributeRequest[]} [attr_reqs] Optional an array of {@link AttributeRequest} that indicate attributes to
 	 *                             be included in the certificate
 	 * @returns Promise for an object with "key" for private key and "certificate" for the signed certificate
 	 */
-	reenroll(currentUser, attr_reqs) {
+	async reenroll(currentUser, attr_reqs) {
 		if (!currentUser) {
 			logger.error('Invalid re-enroll request, missing argument "currentUser"');
 			throw new Error('Invalid re-enroll request, missing argument "currentUser"');
@@ -287,40 +283,31 @@ const FabricCAServices = class extends BaseClient {
 		if (!subject) {
 			throw new Error('Failed to parse the enrollment certificate of the current user for its subject');
 		}
-		const self = this;
 
-		return new Promise((resolve, reject) => {
-			// generate enrollment certificate pair for signing
-			self.getCryptoSuite().generateKey()
-				.then(
-					(privateKey) => {
-						// generate CSR using the subject of the current user's certificate
-						try {
-							const csr = privateKey.generateCSR('CN=' + subject);
-							self._fabricCAClient.reenroll(csr, currentUser.getSigningIdentity(), attr_reqs)
-								.then(
-									(response) => {
-										return resolve({
-											key: privateKey,
-											certificate: Buffer.from(response.result.Cert, 'base64').toString(),
-											rootCertificate: Buffer.from(response.result.ServerInfo.CAChain, 'base64').toString()
-										});
-									},
-									(err) => {
-										return reject(err);
-									}
-								);
 
-						} catch (err) {
-							return reject(new Error(util.format('Failed to generate CSR for enrollment due to error [%s]', err)));
-						}
-					},
-					(err) => {
-						return reject(new Error(util.format('Failed to generate key for enrollment due to error [%s]: %s', err, err.stack)));
-					}
-				);
+		// generate enrollment certificate pair for signing
+		let privateKey;
+		try {
+			privateKey = await this.getCryptoSuite().generateKey();
+		} catch (e) {
+			throw Error(`Failed to generate key for enrollment due to error [${e}]: ${e.stack}`);
+		}
 
-		});
+		// generate CSR using the subject of the current user's certificate
+		let csr;
+		try {
+			csr = privateKey.generateCSR('CN=' + subject);
+		} catch (e) {
+			throw Error(`Failed to generate CSR for enrollment due to error [${e}]`);
+		}
+
+		const response = await this._fabricCAClient.reenroll(csr, currentUser.getSigningIdentity(), attr_reqs);
+		return {
+			key: privateKey,
+			certificate: Buffer.from(response.result.Cert, 'base64').toString(),
+			rootCertificate: Buffer.from(response.result.ServerInfo.CAChain, 'base64').toString()
+		};
+
 	}
 
 	/**
@@ -338,7 +325,7 @@ const FabricCAServices = class extends BaseClient {
 	 * @param {User} registrar The identity of the registrar (i.e. who is performing the revocation)
 	 * @returns {Promise} The revocation results
 	 */
-	revoke(request, registrar) {
+	async revoke(request, registrar) {
 		if (!request) {
 			throw new Error('Missing required argument "request"');
 		}
@@ -374,7 +361,7 @@ const FabricCAServices = class extends BaseClient {
 	 * @param {User} registrar The identity of the registrar (i.e. who is performing the revocation)
 	 * @returns {Promise} The Certificate Revocation List (CRL)
 	 */
-	generateCRL(request, registrar) {
+	async generateCRL(request, registrar) {
 		if (!request) {
 			throw new Error('Missing required argument "request"');
 		}

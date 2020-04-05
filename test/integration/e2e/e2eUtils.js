@@ -8,7 +8,7 @@
 // in a happy-path scenario
 'use strict';
 const FabricCAServices = require('../../../fabric-ca-client');
-const {Utils:utils} = require('fabric-common');
+const {Utils: utils} = require('fabric-common');
 const logger = utils.getLogger('E2E testing');
 
 const path = require('path');
@@ -31,7 +31,7 @@ function init() {
 	}
 }
 
-function installChaincodeWithId(org, chaincode_id, chaincode_path, metadata_path, version, language, t, get_admin) {
+const installChaincodeWithId = async (org, chaincode_id, chaincode_path, metadata_path, version, language, t, get_admin) => {
 	init();
 	Client.setConfigSetting('request-timeout', 60000);
 	const channel_name = Client.getConfigSetting('E2E_CONFIGTX_CHANNEL_NAME', testUtil.END2END.channel);
@@ -52,96 +52,88 @@ function installChaincodeWithId(org, chaincode_id, chaincode_path, metadata_path
 	caroots = Client.normalizeX509(caroots);
 	let tlsInfo = null;
 
-	return e2eUtils.tlsEnroll(org)
-		.then((enrollment) => {
-			t.pass('Successfully retrieved TLS certificate');
-			tlsInfo = enrollment;
-			client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
+	const enrollment = await e2eUtils.tlsEnroll(org);
 
-			return Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
-		}).then((store) => {
-			client.setStateStore(store);
+	t.pass('Successfully retrieved TLS certificate');
+	tlsInfo = enrollment;
+	client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 
-			// get the peer org's admin required to send install chaincode requests
-			return testUtil.getSubmitter(client, t, get_admin /* get peer org admin */, org);
-		}).then((admin) => {
-			t.pass('Successfully enrolled user \'admin\' (e2eUtil 1)');
-			the_user = admin;
+	const store = await Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
 
-			channel.addOrderer(
-				client.newOrderer(
-					ORGS.orderer.url,
+	client.setStateStore(store);
+
+	// get the peer org's admin required to send install chaincode requests
+	const admin = await testUtil.getSubmitter(client, t, get_admin /* get peer org admin */, org);
+
+	t.pass('Successfully enrolled user \'admin\' (e2eUtil 1)');
+	the_user = admin;
+
+	channel.addOrderer(
+		client.newOrderer(
+			ORGS.orderer.url,
+			{
+				'pem': caroots,
+				'ssl-target-name-override': ORGS.orderer['server-hostname']
+			}
+		)
+	);
+
+	const targets = [];
+	for (const key in ORGS[org]) {
+		if (Object.prototype.hasOwnProperty.call(ORGS[org], key)) {
+			if (key.indexOf('peer') === 0) {
+				const newData = fs.readFileSync(path.join(__dirname, ORGS[org][key].tls_cacerts));
+				const peer = client.newPeer(
+					ORGS[org][key].requests,
 					{
-						'pem': caroots,
-						'ssl-target-name-override': ORGS.orderer['server-hostname']
+						pem: Buffer.from(newData).toString(),
+						'ssl-target-name-override': ORGS[org][key]['server-hostname']
 					}
-				)
-			);
+				);
 
-			const targets = [];
-			for (const key in ORGS[org]) {
-				if (Object.prototype.hasOwnProperty.call(ORGS[org], key)) {
-					if (key.indexOf('peer') === 0) {
-						const newData = fs.readFileSync(path.join(__dirname, ORGS[org][key].tls_cacerts));
-						const peer = client.newPeer(
-							ORGS[org][key].requests,
-							{
-								pem: Buffer.from(newData).toString(),
-								'ssl-target-name-override': ORGS[org][key]['server-hostname']
-							}
-						);
-
-						targets.push(peer);    // a peer can be the target this way
-						channel.addPeer(peer); // or a peer can be the target this way
-						// you do not have to do both, just one, when there are
-						// 'targets' in the request, those will be used and not
-						// the peers added to the channel
-					}
-				}
+				targets.push(peer);    // a peer can be the target this way
+				channel.addPeer(peer); // or a peer can be the target this way
+				// you do not have to do both, just one, when there are
+				// 'targets' in the request, those will be used and not
+				// the peers added to the channel
 			}
+		}
+	}
 
-			// send proposal to endorser
-			const request = {
-				targets: targets,
-				chaincodePath: chaincode_path,
-				metadataPath: metadata_path,
-				chaincodeId: chaincode_id,
-				chaincodeType: language,
-				chaincodeVersion: version
-			};
+	// send proposal to endorser
+	const request = {
+		targets: targets,
+		chaincodePath: chaincode_path,
+		metadataPath: metadata_path,
+		chaincodeId: chaincode_id,
+		chaincodeType: language,
+		chaincodeVersion: version
+	};
 
-			return client.installChaincode(request);
-		},
-		(err) => {
-			t.fail('Failed to enroll user \'admin\'. ' + err);
-			throw new Error('Failed to enroll user \'admin\'. ' + err);
-		}).then((results) => {
-			const proposalResponses = results[0];
+	const results = await client.installChaincode(request);
 
-			let all_good = true;
-			const errors = [];
-			for (const i in proposalResponses) {
-				let one_good = false;
-				if (proposalResponses && proposalResponses[i].response && proposalResponses[i].response.status === 200) {
-					one_good = true;
-					logger.info('install proposal was good');
-				} else {
-					logger.error('install proposal was bad');
-					errors.push(proposalResponses[i]);
-				}
-				all_good = all_good & one_good;
-			}
-			if (all_good) {
-				t.pass(util.format('Successfully sent install Proposal and received ProposalResponse: Status - %s', proposalResponses[0].response.status));
-			} else {
-				throw new Error(util.format('Failed to send install Proposal or receive valid response: %s', errors));
-			}
-		},
-		(err) => {
-			t.fail('Failed to send install proposal due to error: ' + err.stack ? err.stack : err);
-			throw new Error('Failed to send install proposal due to error: ' + err.stack ? err.stack : err);
-		});
-}
+	const proposalResponses = results[0];
+
+	let all_good = true;
+	const errors = [];
+	for (const i in proposalResponses) {
+		let one_good = false;
+		if (proposalResponses && proposalResponses[i].response && proposalResponses[i].response.status === 200) {
+			one_good = true;
+			logger.info('install proposal was good');
+		} else {
+			logger.error('install proposal was bad');
+			errors.push(proposalResponses[i]);
+		}
+		all_good = all_good & one_good;
+	}
+	if (all_good) {
+		t.pass(util.format('Successfully sent install Proposal and received ProposalResponse: Status - %s', proposalResponses[0].response.status));
+	} else {
+		throw new Error(util.format('Failed to send install Proposal or receive valid response: %s', errors));
+	}
+
+};
 
 module.exports.installChaincodeWithId = installChaincodeWithId;
 
@@ -239,7 +231,7 @@ function instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, versi
 			logger.debug(' orglist:: ', channel.getOrganizations());
 			// the v1 chaincode has Init() method that expects a transient map
 			if (upgrade && badTransient) {
-			// first test that a bad transient map would get the chaincode to return an error
+				// first test that a bad transient map would get the chaincode to return an error
 				request = buildChaincodeProposal(client, the_user, chaincode_id, chaincode_path, version, language, upgrade, badTransientMap);
 				tx_id = request.txId;
 
@@ -265,7 +257,7 @@ function instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, versi
 							if (proposalResponses && proposalResponses.length > 0) {
 								proposalResponses.forEach((response) => {
 									if (response && response instanceof Error &&
-                    response.message.includes('Did not find expected key "test" in the transient map of the proposal')) {
+										response.message.includes('Did not find expected key "test" in the transient map of the proposal')) {
 										success = true;
 									} else {
 										success = false;
@@ -383,6 +375,7 @@ function instantiateChaincodeWithId(userOrg, chaincode_id, chaincode_path, versi
 			t.fail('Failed to instantiate ' + type + ' due to error: ' + err.stack ? err.stack : err);
 		});
 }
+
 module.exports.instantiateChaincodeWithId = instantiateChaincodeWithId;
 
 function buildChaincodeProposal(client, theuser, chaincode_id, chaincode_path, version, type, upgrade, transientMap) {
@@ -428,6 +421,7 @@ function buildChaincodeProposal(client, theuser, chaincode_id, chaincode_path, v
 
 	return request;
 }
+
 module.exports.buildChaincodeProposal = buildChaincodeProposal;
 
 module.exports.sleep = testUtil.sleep;
@@ -461,4 +455,5 @@ function tlsEnroll(orgName) {
 		);
 	}));
 }
+
 module.exports.tlsEnroll = tlsEnroll;

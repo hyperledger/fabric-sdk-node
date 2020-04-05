@@ -29,7 +29,6 @@ const http = require('http');
 const testUtil = require('./util.js');
 
 
-// var keyValStorePath = testUtil.KVS;
 const FabricCAServices = require('fabric-ca-client/lib/FabricCAServices');
 const FabricCAClient = require('fabric-ca-client/lib/FabricCAClient');
 
@@ -107,10 +106,8 @@ test('\n\n ** FabricCAServices: Test enroll() With Dynamic CSR **\n\n', (t) => {
 			t.end();
 		}).then(() => {
 
-			// now test being able to save user to persistence store
-			return FabricCAServices.newDefaultKeyValueStore({
-				path: testUtil.KVS
-			});
+			// default keyValueStore is changed to inMemory
+			return FabricCAServices.newDefaultKeyValueStore();
 		}, () => {
 			t.fail('Failed to configure the user with proper enrollment materials.');
 			t.end();

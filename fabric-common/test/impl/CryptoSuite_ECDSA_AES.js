@@ -109,8 +109,7 @@ describe('CryptoSuite_ECDSA_AES', () => {
 			cryptoSuite.setCryptoKeyStore(keyStore);
 			await cryptoSuite.importKey(testUtils.certificateAsPEM);
 
-			const realKeyStore = await keyStore._getKeyStore();
-			const cert = realKeyStore.getValue('f7b61538c52260e83cf4f2693d11019f73e7495056c5b54f1e05bae80e9402a7-pub');
+			const cert = await keyStore.getValue('f7b61538c52260e83cf4f2693d11019f73e7495056c5b54f1e05bae80e9402a7-pub');
 			cert.should.exist;
 		});
 
@@ -128,8 +127,7 @@ describe('CryptoSuite_ECDSA_AES', () => {
 			cryptoSuite.setCryptoKeyStore(keyStore);
 			await cryptoSuite.importKey(testUtils.keyAsPEM);
 
-			const realKeyStore = await keyStore._getKeyStore();
-			const key = realKeyStore.getValue('bced195e7aacb5705bbad45598535d2f41564953680c5cf696becbb2dfebf39c-priv');
+			const key = await keyStore.getValue('bced195e7aacb5705bbad45598535d2f41564953680c5cf696becbb2dfebf39c-priv');
 			key.should.exist;
 		});
 

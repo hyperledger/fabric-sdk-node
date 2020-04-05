@@ -79,7 +79,7 @@ describe('User', () => {
 		});
 		it('should require a mspid', async () => {
 			const user = new User('user');
-			await user.setEnrollment(key, cert, 'mspid', true);
+			await user.setEnrollment(key, cert, 'mspid');
 		});
 	});
 
@@ -131,8 +131,7 @@ describe('User', () => {
 			cryptoSuite.setCryptoKeyStore(keyStore);
 			await cryptoSuite.importKey(cert);
 
-			const realKeyStore = await keyStore._getKeyStore();
-			await realKeyStore.setValue(`${testUserEnrollment.enrollment.signingIdentity}-priv`, undefined);
+			await keyStore.setValue(`${testUserEnrollment.enrollment.signingIdentity}-priv`, undefined);
 
 			const user = new User('admin2');
 			user.setCryptoSuite(cryptoSuite);

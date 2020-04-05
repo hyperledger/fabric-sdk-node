@@ -41,6 +41,7 @@ const PRIVATE_BLOCK = 'private'; // to receive full blocks and private data
 
 let count = 1;
 let streamCount = 1;
+
 /**
  * EventService is used to monitor for new blocks on a peer's ledger.
  * The class allows the user to register a listener to be notified when a
@@ -753,25 +754,26 @@ class EventService extends ServiceAction {
 	}
 
 	/**
+	 * Callback function that takes two parameters
+	 * @callback EventCallback
+	 * @param {Error} error - The "error" will be null unless this EventService has been shutdown.
+	 *  The shutdown may be caused by a network, connection error,
+	 *  by a call to the "disconnect()" method
+	 *  or when the fabric event service ends the connection to this EventService.
+	 *  This callback will also be called with an Error when the EventService is shutdown
+	 *  due to the last block being received if the service has been setup with an endBlock to be 'newest'
+	 *  or a specific block number that has been seen.
+	 * @param {EventInfo} event - The "event" will be the {@link EventInfo} object.
+	 */
+
+
+	/**
 	 * Register a listener to receive chaincode events.
 	 * @param {string|RegExp} eventName - The exact name of the chaincode event or
 	 *  regular expression that will be matched against the name given to
 	 *  the target chaincode's call
 	 *  <code>stub.SetEvent(name, payload)</code>)
-	 * @param {function} callback - Callback function that takes two parameters:
-	 *  <ul>
-	 *  <li>{Error} error
-	 *  <li>{EventInfo} event
-	 *  </ul>
-	 *  The "error" will be null unless this EventService has been shutdown.
-	 *  The shutdown may be caused by a network, connection error,
-	 *  by a call to the "disconnect()" method or when
-	 *  the fabric event service ends the connection to this EventService.
-	 *  This callback will also be called with an Error when the EventService is
-	 *  shutdown due to the last block being received if the service has been
-	 *  setup with an endBlock to be 'newest' or a specific block number that
-	 *  has been seen.
-	 * <br> The "event" will be the {@link EventInfo} object.
+	 * @param {EventCallback} callback
 	 * @param {EventRegistrationOptions} options - Options on the registrations to allow
 	 *  for start and end block numbers, automatically unregister.
 	 * @returns {EventListener} The EventListener instance to be used to
@@ -795,20 +797,7 @@ class EventService extends ServiceAction {
 	 * The listener's "callback" function gets called on the arrival of every
 	 * block.
 	 *
-	 * @param {function} callback - Callback function that takes two parameters:
-	 *  <ul>
-	 *  <li>{Error} error
-	 *  <li>{Event} Event object
-	 *  </ul>
-	 *  The Error will be null unless this EventService has been shutdown.
-	 *  The shutdown may be caused by a network, connection error,
-	 *  by a call to the "disconnect()" method or when
-	 *  the fabric event service ends the connection to this EventService.
-	 *  This callback will also be called with an Error when the EventService is
-	 *  shutdown due to the last block being received if the service has been
-	 *  setup with an endBlock to be 'newest' or a specific block number that
-	 *  has been seen.
-	 * <br> The Event will be the {@link Event} object.
+	 * @param {EventCallback} callback
 	 * @param {EventRegistrationOptions} options - Options on the registrations to allow
 	 *  for start and end block numbers or to automatically unregister
 	 * @returns {EventListener} The EventListener instance to be used to
@@ -832,20 +821,7 @@ class EventService extends ServiceAction {
 	 * for every transaction written to the ledger.
 	 *
 	 * @param {string} txid - Transaction id string or 'all'
-	 * @param {function} callback - Callback function that takes the parameters:
-	 *  <ul>
-	 *  <li>{Error} error
-	 *  <li>{string} transaction ID
-	 *  <li>{string} status
-	 *  <li>{long} block number
-	 *  </ul>
-	 *  The Error will be null unless this EventService is shutdown.
-	 *  The shutdown may be caused by a network or connection error,
-	 *  by a call to the "disconnect()" method or when
-	 *  the fabric service ends the connection to this EventService.
-	 *  This callback will also be called with an Error when the EventService is
-	 *  shutdown due to the last block being received if replaying and requesting
-	 *  the endBlock to be 'newest' or a specific value.
+	 * @param {EventCallback} callback
 	 * @param {EventRegistrationOptions} options - Options on the registrations to allow
 	 *  for start and end block numbers or to automatically unregister.
 	 * @returns {EventListener} The EventListener instance to be used to
@@ -1211,10 +1187,10 @@ class ChaincodeEvent {
 	/**
 	 * Constructs an object that contains all information from the chaincode event.
 	 * message ChaincodeEvent {
-     *   string chaincode_id = 1;
-     *   string tx_id = 2;
-     *   string event_name = 3;
-     *   bytes payload = 4;
+	 *   string chaincode_id = 1;
+	 *   string tx_id = 2;
+	 *   string event_name = 3;
+	 *   bytes payload = 4;
 	 */
 	constructor(chaincodeId, transactionId, status, eventName, payload) {
 		this.chaincodeId = chaincodeId;
@@ -1224,6 +1200,7 @@ class ChaincodeEvent {
 		this.payload = payload;
 	}
 }
+
 /**
  * @typedef {Object} EventInfo
  * @property {EventService} eventService - This EventService.
