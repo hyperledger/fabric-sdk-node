@@ -99,6 +99,7 @@ export interface TransientMap {
 }
 export class Transaction {
 	getName(): string;
+	getTransactionId(): string | null;
 	setEndorsingPeers(peers: Endorser[]): this;
 	setEndorsingOrganizations(...orgs: string[]): this;
 	setTransient(transientMap: TransientMap): this;

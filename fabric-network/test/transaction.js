@@ -101,14 +101,17 @@ describe('Transaction', () => {
 
 		idx = sinon.createStubInstance(IdentityContext);
 		endorser = sinon.createStubInstance(Endorser);
+
 		queryProposal = sinon.createStubInstance(QueryProposal);
+		queryProposal.send.resolves(newProposalResponse([validEnsorsementResponse]));
+		queryProposal.getTransactionId.returns(transactionId);
 
 		endorsement = sinon.createStubInstance(Endorsement);
 		endorsement.send.resolves(newProposalResponse([validEnsorsementResponse]));
 		endorsement.getTransactionId.returns(transactionId);
-
 		commit = sinon.createStubInstance(Commit);
 		commit.send.resolves({status: 'SUCCESS'});
+		commit.build.returns();
 		endorsement.newCommit.returns(commit);
 
 		channel = sinon.createStubInstance(Channel);
@@ -171,6 +174,25 @@ describe('Transaction', () => {
 		it('return the name', () => {
 			const result = transaction.getName();
 			expect(result).to.equal(transactionName);
+		});
+	});
+
+	describe('#getTransactionId', () => {
+		it('return the transactionId', () => {
+			const result = transaction.getTransactionId();
+			expect(result).to.be.null;
+		});
+		it('return the transactionId built during submit', async () => {
+			await transaction.submit();
+
+			const result = transaction.getTransactionId();
+			expect(result).to.equal(transactionId);
+		});
+		it('return the transactionId built during evaluate', async () => {
+			await transaction.evaluate();
+
+			const result = transaction.getTransactionId();
+			expect(result).to.equal(transactionId);
 		});
 	});
 
