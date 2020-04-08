@@ -1,5 +1,5 @@
 
-This tutorial illustrates the different ways of setting the gRPC settings used on connections to the Hyperledger Fabric network with a Hyperledger Fabric Node.js Client as of 2.0
+This tutorial illustrates the different ways of setting the gRPC settings used on connections to the Hyperledger Fabric network with a Hyperledger Fabric Node.js Client as of 2.1
 
 The following assumes an understanding of the Hyperledger Fabric network
 (orderers and peers),
