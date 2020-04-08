@@ -7,7 +7,6 @@
 import { Constants } from './constants';
 import * as Channel from './lib/channel';
 import * as Contract from './lib/contract';
-import * as AdminUtils from './lib/utility/adminUtils';
 import * as BaseUtils from './lib/utility/baseUtils';
 import { CommonConnectionProfileHelper } from './lib/utility/commonConnectionProfileHelper';
 import { StateStore } from './lib/utility/stateStore';
@@ -79,18 +78,20 @@ Given(/^I use the cli to deploy a (.+?) smart contract named (.+?) at version (.
 	const ccp: CommonConnectionProfileHelper = tls ? ccpTls : ccpNonTls;
 
 	try {
+		let isInstantiated = false;
 		// Install on each org
 		for (const orgName of orgNames) {
-			const isInstalled: boolean = await AdminUtils.isOrgChaincodeInstalled(orgName, ccp, ccName, ccVersion);
+			const isInstalled: boolean = await Contract.cli_is_chaincode_install_for_org(ccName, ccVersion, orgName.toLowerCase());
 			if (isInstalled) {
 				BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} has already been installed on the peers for organization ${orgName}`);
 			} else {
 				await Contract.cli_chaincode_install_for_org(ccType, ccName, ccVersion, orgName.toLowerCase());
 			}
+
+			isInstantiated = await Contract.cli_is_chaincode_instantiated_for_org(channelName, ccName, ccVersion, orgName.toLowerCase());
 		}
 
 		// Instantiate
-		const isInstantiated: boolean = await AdminUtils.isChaincodeInstantiatedOnChannel(Object.keys(ccp.getOrganizations())[0], ccp, channelName, ccName, ccVersion);
 		if (isInstantiated) {
 			BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} has already been instantiated on channel ${channelName} `);
 		} else {

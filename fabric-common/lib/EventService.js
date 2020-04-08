@@ -411,7 +411,7 @@ class EventService extends ServiceAction {
 			logger.debug('%s - create stream based on blockType', method, this.blockType);
 			eventer.setStreamByType(this.blockType);
 
-			// the promise and streams live on and need we need
+			// the promise and streams live on and we need
 			// to check at times to be sure we are working with the
 			// correct one if the target gets restarted
 			const stream = eventer.stream;
@@ -421,7 +421,7 @@ class EventService extends ServiceAction {
 			logger.debug('%s - create stream listening callbacks - onData, onEnd, onStatus, onError', method);
 
 			eventer.stream.on('data', (deliverResponse) => {
-				logger.debug(`on.data - peer:${eventer.endpoint.url} - ${mystreamCount}`);
+				logger.debug(`on.data - peer:${eventer.endpoint.url} - stream:${mystreamCount}`);
 				if (stream !== eventer.stream) {
 					logger.debug('on.data - incoming block was from a cancelled stream');
 					return;
@@ -488,10 +488,24 @@ class EventService extends ServiceAction {
 							logger.debug('on.data - status received when newest block seen: %s block_num: %s',
 								deliverResponse.status, this.lastBlockNumber.toNumber());
 							this._close(new Error(`Newest block received:${this.lastBlockNumber.toNumber()} status:${deliverResponse.status}`));
-						} else if (this.endBlock) {
-							logger.debug('on.data - status received before the endblock has been seen');
-							this._close(new Error(`End block of ${this.endBlock.toNumber()}` +
+						} else if (this.endBlock && this.endBlock.greaterThan(this.lastBlockNumber)) {
+							logger.error('on.data - status SUCCESS received before the configured endblock has been seen');
+							this._close(new Error(`Connection Shutdown. End block of ${this.endBlock.toNumber()}` +
 								`not received. Last block received ${this.lastBlockNumber.toNumber()}`));
+						} else {
+							logger.error('on.data - status SUCCESS received while blocks are required');
+							this._close(new Error('Event Service connection has been shutdown. ' +
+								`Last block received ${this.lastBlockNumber.toNumber()}`));
+						}
+					} else if (deliverResponse.status === 'NOT_FOUND') {
+						logger.debug('%s - on.data received type status of NOT_FOUND', method);
+						if (this.endBlock) {
+							logger.error('on.data - Configured endblock does not exist');
+							this._close(new Error(`End block of ${this.endBlock.toNumber()}` +
+								` does not exist. Last block received ${this.lastBlockNumber.toNumber()}`));
+						} else {
+							logger.error('on.data - NOT_FOUND status received - last block received %s', this.lastBlockNumber.toNumber());
+							this._close(new Error(`Event stream has received an unexpected status message. status:${deliverResponse.status}`));
 						}
 					} else {
 						// tell all registered users that something is wrong and shutting down
@@ -505,11 +519,11 @@ class EventService extends ServiceAction {
 			});
 
 			eventer.stream.on('status', (response) => {
-				logger.debug('on status - status received: %j  peer:%s - %s', response, eventer.endpoint.url, mystreamCount);
+				logger.debug('on status - status received: %j  peer:%s - stream:%s', response, eventer.endpoint.url, mystreamCount);
 			});
 
 			eventer.stream.on('end', () => {
-				logger.debug('on.end - peer:%s - %', eventer.endpoint.url, mystreamCount);
+				logger.debug('on.end - peer:%s - stream:%s', eventer.endpoint.url, mystreamCount);
 				if (stream !== eventer.stream) {
 					logger.debug('on.data - incoming message was from a cancelled stream');
 					return;
@@ -536,7 +550,7 @@ class EventService extends ServiceAction {
 			});
 
 			eventer.stream.on('error', (err) => {
-				logger.debug('on.error - block peer:%s - %s', eventer.endpoint.url, mystreamCount);
+				logger.debug('on.error - block peer:%s - stream:%s', eventer.endpoint.url, mystreamCount);
 				if (stream !== eventer.stream) {
 					logger.debug('%s - on.error - incoming error was from a cancelled stream - %s', method, err);
 					return;
@@ -758,7 +772,7 @@ class EventService extends ServiceAction {
 	 */
 	registerChaincodeListener(chaincodeId = checkParameter('chaincodeId'), eventName = checkParameter('eventName'), callback = checkParameter('callback'), options) {
 		const method = `registerChaincodeListener[${this.name}] - #${this.myNumber}`;
-		logger.debug('%s - start', method);
+		logger.debug('%s - start - %s - %s', method, chaincodeId, eventName);
 
 		const event_name = new RegExp(eventName);
 		const event_reg = new EventListener(this, CHAINCODE, callback, options, event_name, chaincodeId);
@@ -982,9 +996,11 @@ class EventService extends ServiceAction {
 			logger.debug('%s filtered block number=%s', method, filtered_block.number);
 			if (filtered_block.filtered_transactions) {
 				for (const filtered_transaction of filtered_block.filtered_transactions) {
-					this._callTransactionListener(filtered_transaction.txid,
-						filtered_transaction.tx_validation_code,
-						filtered_block.number);
+					if (filtered_transaction.type === 'ENDORSER_TRANSACTION') {
+						this._callTransactionListener(filtered_transaction.txid,
+							filtered_transaction.tx_validation_code,
+							filtered_block.number);
+					}
 				}
 			}
 		} else {
@@ -992,9 +1008,11 @@ class EventService extends ServiceAction {
 			const txStatusCodes = full_block.metadata.metadata[fabprotos.common.BlockMetadataIndex.TRANSACTIONS_FILTER];
 			for (let index = 0; index < full_block.data.data.length; index++) {
 				const channel_header = full_block.data.data[index].payload.header.channel_header;
-				this._callTransactionListener(channel_header.tx_id,
-					txStatusCodes[index],
-					full_block.header.number);
+				if (channel_header.type === fabprotos.common.HeaderType.ENDORSER_TRANSACTION) {
+					this._callTransactionListener(channel_header.tx_id,
+						txStatusCodes[index],
+						full_block.header.number);
+				}
 			}
 		}
 	}
@@ -1052,7 +1070,7 @@ class EventService extends ServiceAction {
 					if (filtered_transaction.transaction_actions) {
 						if (filtered_transaction.transaction_actions.chaincode_actions) {
 							for (const chaincode_action of filtered_transaction.transaction_actions.chaincode_actions) {
-								logger.debug('%s - filtered block chaincode_event %s', method, chaincode_action);
+								logger.debug('%s - filtered block chaincode_event %j', method, chaincode_action);
 								// need to remove the payload since with filtered blocks it
 								// has an empty byte array value which is not the real value
 								// we do not want the listener to think that is the value
@@ -1073,12 +1091,13 @@ class EventService extends ServiceAction {
 				try {
 					const env = full_block.data.data[index];
 					const channel_header = env.payload.header.channel_header;
-					if (channel_header.type === 3) { // only ENDORSER_TRANSACTION have chaincode events
+					// only ENDORSER_TRANSACTION have chaincode events
+					if (channel_header.type === fabprotos.common.HeaderType.ENDORSER_TRANSACTION) {
 						const tx = env.payload.data;
 						if (tx && tx.actions) {
 							for (const {payload} of tx.actions) {
 								const chaincode_event = payload.action.proposal_response_payload.extension.events;
-								logger.debug('%s - full block chaincode_event %s', method, chaincode_event);
+								logger.debug('%s - full block chaincode_event %j', method, chaincode_event);
 
 								const txStatusCodes = full_block.metadata.metadata[fabprotos.common.BlockMetadataIndex.TRANSACTIONS_FILTER];
 								const val_code = txStatusCodes[index];
@@ -1124,13 +1143,14 @@ class EventService extends ServiceAction {
 
 	_queueChaincodeEvent(chaincode_event, block_num, tx_id, val_code, all_events) {
 		const method = `_queueChaincodeEvent[${this.name}] - #${this.myNumber}`;
-		logger.debug('%s - start - chaincode_event %s', method, chaincode_event);
+		logger.debug('%s - start - chaincode_event %j', method, chaincode_event);
 
 		const tx_status = convertValidationCode(val_code);
 
 		logger.debug('%s - txid=%s  val_code=%s', method, tx_id, tx_status);
 
 		for (const chaincode_reg of this._eventListenerRegistrations.values()) {
+			logger.debug('%s - checking regisistered chaincode event %s %s', method, chaincode_reg.event, chaincode_reg.chaincodeId);
 			// check each listener to see if this chaincode event matches
 			if (chaincode_reg.listenerType === CHAINCODE &&
 				chaincode_reg.chaincodeId === chaincode_event.chaincode_id &&
@@ -1152,7 +1172,7 @@ class EventService extends ServiceAction {
 					chaincode_event.payload
 				));
 			} else {
-				logger.debug('%s - NOT queuing chaincode event: %s', method, chaincode_event. event_name);
+				logger.debug('%s - NOT queuing chaincode event: %s', method, chaincode_event.event_name);
 			}
 		}
 	}

@@ -134,7 +134,7 @@ export class StubEventService implements EventService {
 		return listener;
 	}
 
-	registerChaincodeListener(eventName: string, callback: EventCallback, options: EventRegistrationOptions): import('fabric-common').EventListener {
+	registerChaincodeListener(chaincodeId: string, eventName: string, callback: EventCallback, options: EventRegistrationOptions): import('fabric-common').EventListener {
 		throw new Error('Method not implemented.');
 	}
 

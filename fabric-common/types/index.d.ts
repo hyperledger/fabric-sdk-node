@@ -240,9 +240,9 @@ export interface ChaincodeEvent {
 export type BlockType = 'filtered' | 'full' | 'private';
 
 export class EventService extends ServiceAction {
-	public startBlock: Long | string;
-	endBlock?: Long | string;
-	blockType: BlockType;
+	readonly startBlock: Long | string;
+	readonly endBlock?: Long | string;
+	readonly blockType: BlockType;
 	constructor(chaincodeName: string, channel: Channel);
 	public setEventer(discoverer: Eventer): EventService;
 	public getLastBlockNumber(): Long;
@@ -252,21 +252,26 @@ export class EventService extends ServiceAction {
 	public isListening(): boolean;
 	public unregisterEventListener(eventListener: EventListener): EventService;
 	public registerTransactionListener(txid: string, callback: EventCallback, options: EventRegistrationOptions): EventListener;
-	public registerChaincodeListener(eventName: string, callback: EventCallback, options: EventRegistrationOptions): EventListener;
+	public registerChaincodeListener(chaincodeId: string, eventName: string, callback: EventCallback, options: EventRegistrationOptions): EventListener;
 	public registerBlockListener(callback: EventCallback, options: EventRegistrationOptions): EventListener;
 	setTargets(targets: Eventer[]): void;
 	isStarted(): boolean;
 }
 
 export interface StartEventRequest {
-	targets: Eventer[];
-	requestTimeout: number;
+	targets?: Eventer[];
+	requestTimeout?: number;
 }
 
 export interface StartRequestOptions {
 	blockType?: BlockType;
 	startBlock?: number | string | Long;
 	endBlock?: number | string | Long;
+}
+
+export interface SendEventOptions {
+	targets?: Eventer[];
+	requestTimeout?: number;
 }
 
 export class Client {

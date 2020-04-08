@@ -52,6 +52,88 @@ export async function cli_chaincode_install_for_org(ccType: string, ccName: stri
 }
 
 /**
+ * Use the CLI container to check if chaincode is installed on an organization peer
+ * @param {string} ccName The name of the chaincode being checked
+ * @param {string} ccVersion The version of the chaincode being checked
+ * @param {string} orgName The name of the organization to checked
+ */
+export async function cli_is_chaincode_install_for_org(ccName: string, ccVersion: string, orgName: string): Promise<boolean> {
+
+	const persistName: string = `${ccName}@${ccVersion}`;
+
+	try {
+		// Use CLI container check for installed smart contract (no TLS options required)
+		BaseUtils.logMsg(`Attempting to check for install smart contract ${persistName} for organization ${orgName} using the CLI`);
+
+		let command: string[];
+		command = [
+			'docker', 'exec', `${orgName}_cli`, 'peer', 'chaincode', 'list',
+			'--installed',
+			'--connTimeout', Constants.CLI_TIMEOUT as string,
+		];
+
+		const results = await commandRunner.runShellCommand(true, command.join(' '), VERBOSE_CLI) as any;
+		const list = results.stdout as string;
+		BaseUtils.logMsg(`\n CLI found ==>${list}<==`);
+
+		let found = false;
+		let not = 'not';
+		if (list.includes(ccName)) {
+			not = '';
+			found = true;
+		}
+		BaseUtils.logMsg(`Smart contract ${persistName} has ${not} been installed for organization ${orgName} using the CLI`);
+
+		return found;
+	} catch (err) {
+		BaseUtils.logError(`Failed to check if install smart contract ${ccName} using the CLI`, err);
+		return Promise.reject(err);
+	}
+}
+
+/**
+ * Use the CLI container to check if chaincode is instantiated on an organization peer
+ * @param {string} channelName The name of the channel being checked
+ * @param {string} ccName The name of the chaincode being checked
+ * @param {string} ccVersion The version of the chaincode being checked
+ * @param {string} orgName The name of the organization to check
+ */
+export async function cli_is_chaincode_instantiated_for_org(channelName: string, ccName: string, ccVersion: string, orgName: string): Promise<boolean> {
+
+	const persistName: string = `${ccName}@${ccVersion}`;
+
+	try {
+		// Use CLI container check for installed smart contract (no TLS options required)
+		BaseUtils.logMsg(`Attempting to check for instantiated smart contract ${persistName} for organization ${orgName} using the CLI`);
+
+		let command: string[];
+		command = [
+			'docker', 'exec', `${orgName}_cli`, 'peer', 'chaincode', 'list',
+			'--channelID', channelName,
+			'--instantiated',
+			'--connTimeout', Constants.CLI_TIMEOUT as string,
+		];
+
+		const results = await commandRunner.runShellCommand(true, command.join(' '), VERBOSE_CLI) as any;
+		const list = results.stdout as string;
+		BaseUtils.logMsg(`\n CLI found ==>${list}<==`);
+
+		let found = false;
+		let not = 'not';
+		if (list.includes(ccName)) {
+			not = '';
+			found = true;
+		}
+		BaseUtils.logMsg(`Smart contract ${persistName} has ${not} been instantiated for organization ${orgName} using the CLI`);
+
+		return found;
+	} catch (err) {
+		BaseUtils.logError(`Failed to check if instantiated smart contract ${ccName} using the CLI`, err);
+		return Promise.reject(err);
+	}
+}
+
+/**
  * Use the CLI container to instantiate chaincode
  * @param {string} ccType The chaincode type (golang | node | java)
  * @param {string} ccName The name of the chaincode being instantiated

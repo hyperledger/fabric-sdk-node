@@ -72,7 +72,7 @@ class Commit extends Proposal {
 		const endorsements = [];
 		for (const proposalResponse of this._endorsement._proposalResponses) {
 
-			logger.debug('proposalResponse is:', proposalResponse);
+			logger.debug('proposalResponse is:', proposalResponse.status);
 
 			if (proposalResponse && proposalResponse.response && proposalResponse.endorsement) {
 				endorsements.push(proposalResponse.endorsement);

@@ -69,7 +69,7 @@ describe('EventService', () => {
 							]
 						},
 						header: {
-							channel_header: {type: 3, tx_id: 'tx1'}
+							channel_header: {type: 3, tx_id: 'tx1', typeString: 'ENDORSER_TRANSACTION'}
 						}
 					}
 				}
@@ -647,7 +647,7 @@ describe('EventService', () => {
 			sinon.assert.called(eventService._close);
 			sinon.assert.calledWith(FakeLogger.error, '%s EventService has detected an error %s');
 		});
-		it('should call stream on data with status and end block seen', async () => {
+		it('should call close when on data with SUCCESS status and end block seen', async () => {
 			const eventer1 = client.newEventer('eventer1');
 			eventer1.checkConnection = sinon.stub().returns(true);
 			eventer1.waitForReady = sandbox.stub().resolves();
@@ -665,7 +665,7 @@ describe('EventService', () => {
 			sinon.assert.calledWith(FakeLogger.debug, '%s - on.data received type status of SUCCESS');
 			sinon.assert.calledWith(FakeLogger.debug, 'on.data - status received after last block seen: %s block_num: %s');
 		});
-		it('should call stream on data with status and end block seen and newest block seen', async () => {
+		it('should call close when on data with status SUCCESS and end block seen and newest block seen', async () => {
 			const eventer1 = client.newEventer('eventer1');
 			eventer1.checkConnection = sinon.stub().returns(true);
 			eventer1.waitForReady = sandbox.stub().resolves();
@@ -683,7 +683,7 @@ describe('EventService', () => {
 			sinon.assert.calledWith(FakeLogger.debug, '%s - on.data received type status of SUCCESS');
 			sinon.assert.calledWith(FakeLogger.debug, 'on.data - status received when newest block seen: %s block_num: %s');
 		});
-		it('should call stream on data with status and end block not seen', async () => {
+		it('should call close when on data with status SUCCESS and end block not seen', async () => {
 			const eventer1 = client.newEventer('eventer1');
 			eventer1.checkConnection = sinon.stub().returns(true);
 			eventer1.waitForReady = sandbox.stub().resolves();
@@ -699,7 +699,61 @@ describe('EventService', () => {
 			sinon.assert.called(deliverStub);
 			sinon.assert.called(eventService._close);
 			sinon.assert.calledWith(FakeLogger.debug, '%s - on.data received type status of SUCCESS');
-			sinon.assert.calledWith(FakeLogger.debug, 'on.data - status received before the endblock has been seen');
+			sinon.assert.calledWith(FakeLogger.error, 'on.data - status SUCCESS received before the configured endblock has been seen');
+		});
+		it('should close when on data with status of SUCCESS and end block not seen with still need blocks', async () => {
+			const eventer1 = client.newEventer('eventer1');
+			eventer1.checkConnection = sinon.stub().returns(true);
+			eventer1.waitForReady = sandbox.stub().resolves();
+			await eventer1.connect(endpoint);
+			eventService.blockType = 'full';
+			onStub.yields({Type: 'status', status: 'SUCCESS'});
+			eventService._close = sinon.stub();
+			eventService._end_block_seen = false;
+			eventService.lastBlockNumber = Long.fromValue(4);
+			eventService.endBlock = Long.fromValue(3);
+			// TEST CALL
+			await eventService._startService(eventer1, {}, 3000);
+			sinon.assert.called(deliverStub);
+			sinon.assert.called(eventService._close);
+			sinon.assert.calledWith(FakeLogger.debug, '%s - on.data received type status of SUCCESS');
+			sinon.assert.calledWith(FakeLogger.error, 'on.data - status SUCCESS received while blocks are required');
+		});
+		it('should close when on data with status of NOT FOUND end block not seen', async () => {
+			const eventer1 = client.newEventer('eventer1');
+			eventer1.checkConnection = sinon.stub().returns(true);
+			eventer1.waitForReady = sandbox.stub().resolves();
+			await eventer1.connect(endpoint);
+			eventService.blockType = 'full';
+			onStub.yields({Type: 'status', status: 'NOT_FOUND'});
+			eventService._close = sinon.stub();
+			eventService._end_block_seen = false;
+			eventService.lastBlockNumber = Long.fromValue(1);
+			eventService.endBlock = Long.fromValue(3);
+			// TEST CALL
+			await eventService._startService(eventer1, {}, 3000);
+			sinon.assert.called(deliverStub);
+			sinon.assert.called(eventService._close);
+			sinon.assert.calledWith(FakeLogger.debug, '%s - on.data received type status of NOT_FOUND');
+			sinon.assert.calledWith(FakeLogger.error, 'on.data - Configured endblock does not exist');
+		});
+		it('should close when on data with status of NOT FOUND and still need blocks', async () => {
+			const eventer1 = client.newEventer('eventer1');
+			eventer1.checkConnection = sinon.stub().returns(true);
+			eventer1.waitForReady = sandbox.stub().resolves();
+			await eventer1.connect(endpoint);
+			eventService.blockType = 'full';
+			onStub.yields({Type: 'status', status: 'NOT_FOUND'});
+			eventService._close = sinon.stub();
+			eventService._end_block_seen = false;
+			eventService.lastBlockNumber = Long.fromValue(1);
+			eventService.endBlock = null;
+			// TEST CALL
+			await eventService._startService(eventer1, {}, 3000);
+			sinon.assert.called(deliverStub);
+			sinon.assert.called(eventService._close);
+			sinon.assert.calledWith(FakeLogger.debug, '%s - on.data received type status of NOT_FOUND');
+			sinon.assert.calledWith(FakeLogger.error, 'on.data - NOT_FOUND status received - last block received %s');
 		});
 		it('should call stream on data with type status of SUCCESS', async () => {
 			const eventer1 = client.newEventer('eventer1');
@@ -1005,7 +1059,7 @@ describe('EventService', () => {
 			eventService.registerTransactionListener('tx1', sinon.stub(), {unregister: false});
 			const fake_callTransactionListener = sinon.stub();
 			eventService._callTransactionListener = fake_callTransactionListener;
-			eventService._processTxEvents('full', {filtered_transactions: [{txid: 'tx1', tx_validation_code: 'valid'}], number: 1});
+			eventService._processTxEvents('full', {filtered_transactions: [{txid: 'tx1', tx_validation_code: 'valid', type: 'ENDORSER_TRANSACTION'}], number: 1});
 			sinon.assert.calledWith(FakeLogger.debug, '%s filtered block number=%s');
 			sinon.assert.called(fake_callTransactionListener);
 		});
