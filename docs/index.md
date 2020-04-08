@@ -30,11 +30,11 @@ The SDK is composed of several modules:
 
 ### Compatibility
 
-The following tables show versions of Fabric, Node and other dependencies that are explicitly tested and that are supported for use with version 2.0 of the Fabric SDK for Node.
+The following tables show versions of Fabric, Node and other dependencies that are explicitly tested and that are supported for use with version 2.x of the Fabric SDK for Node.
 
 |     | Tested | Supported |
 | --- | ------ | --------- |
-| **Fabric** | 2.0 | 2.0.x |
+| **Fabric** | 2.1 | 2.x |
 | **Node** | 10, 12 | 10.13+, 12.13+ |
 | **Platform** | Ubuntu 18.04 | |
 
