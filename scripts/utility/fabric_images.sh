@@ -4,35 +4,19 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-set -o pipefail
+set -euo pipefail
 
-echo "======== PULL DOCKER IMAGES ========"
+version=2.1
+artifactory_url=hyperledger-fabric.jfrog.io
 
-##########################################################
-# Pull and Tag the fabric and fabric-ca images from Artifactory
-##########################################################
-echo "Fetching images from Artifactory"
-ARTIFACTORY_URL=hyperledger-fabric.jfrog.io
+for image in peer orderer ccenv baseos nodeenv javaenv tools; do
+    artifactory_image="${artifactory_url}/fabric-${image}:amd64-${version}-stable"
+    docker pull -q "${artifactory_image}"
+    docker tag "${artifactory_image}" "hyperledger/fabric-${image}"
+    docker rmi -f "${artifactory_image}" >/dev/null
+done
 
-ARCH=amd64
-STABLE_VERSION=2.1-stable
-STABLE_TAG="${ARCH}-${STABLE_VERSION}"
-VERSION_TAG="${STABLE_VERSION%%-*}"
-echo "---------> STABLE_VERSION: ${STABLE_VERSION}"
-
-dockerTag() {
-    for IMAGE in ca peer orderer ccenv baseos nodeenv javaenv tools; do
-        ARTIFACTORY_IMAGE="${ARTIFACTORY_URL}/fabric-${IMAGE}:${STABLE_TAG}"
-        IMAGE_NAME="fabric-${IMAGE}"
-        docker pull "${ARTIFACTORY_IMAGE}"
-        docker tag "${ARTIFACTORY_IMAGE}" "hyperledger/${IMAGE_NAME}"
-        docker tag "${ARTIFACTORY_IMAGE}" "hyperledger/${IMAGE_NAME}:${VERSION_TAG}"
-        docker rmi -f "${ARTIFACTORY_IMAGE}"
-    done
-}
-
-dockerTag
-
-echo
-docker images | grep "hyperledger*"
-echo
+docker pull -q hyperledger/fabric-couchdb
+docker pull -q hyperledger/fabric-ca:1.4
+docker tag hyperledger/fabric-ca:1.4 hyperledger/fabric-ca
+docker rmi hyperledger/fabric-ca:1.4 >/dev/null

@@ -21,12 +21,8 @@ const nonTlsNetwork: string = '../../ts-fixtures/docker-compose/docker-compose.y
 const tlsNetwork: string = '../../ts-fixtures/docker-compose/docker-compose-tls.yaml';
 
 Given(/^I deploy a (.+?) Fabric network at (.+?) version/, { timeout: Constants.STEP_LONG as number }, async (type: string, version: string) => {
-	// set the fabric peer and orderer docker image tag
-	process.env.DOCKER_IMG_TAG = `:${version}`;
 
 	BaseUtils.logMsg(` **** checking for a deployed fabric network of type ${type} version ${version}`);
-	// TODO set the fabric-ca docker image tag
-	// process.env.FABRIC_CA_TAG = `:${version}`; let default to latest for now
 
 	const fabricState: any = stateStore.get(Constants.FABRIC_STATE);
 
