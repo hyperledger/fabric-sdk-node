@@ -10,6 +10,10 @@ const {QueryImpl: Query} = require('./impl/query/query');
 const logger = require('./logger').getLogger('Transaction');
 const util = require('util');
 
+const SDKassigned = 0;
+const AppAssignedUnCommitted = 1;
+const AppAssignedCommitted = 2;
+
 const noOpEventHandler = {
 	startListening: async () => {},
 	waitForEvents: async () => {},
@@ -99,8 +103,10 @@ class Transaction {
 
 		// the signer of the outbound requests to the fabric network
 		this.identityContext = this.contract.gateway.identityContext;
-		// the transaction ID will be generated during the submit
+		// the transaction ID will be generated during the submit or
+		// when the application calls the newTransactionId()
 		this._transactionId = null;
+		this._transactionIdState = SDKassigned;
 	}
 
 	/**
@@ -129,11 +135,34 @@ class Transaction {
 	}
 
 	/**
-	 * Get the ID that will be used for this transaction invocation.
-	 * This value will be null until the submit is executed.
-	 * @returns {string} Transaction ID that is generated during the submit.
+	 * Get the ID that has been used for the transaction invocation.
+	 * This value will be null until the submit is executed unless
+	 * the newTransactionId() method has been called.
+	 * @returns {string} Transaction ID
 	 */
 	getTransactionId() {
+		return this._transactionId;
+	}
+
+	/**
+	 * This method will generate a new transaction id based on the
+	 * identity context assigned to this transaction and set this
+	 * instance's transactionId.
+	 * Once this method has been called this transaction may only be submitted
+	 * once unless the submit fails.
+	 * Once the submit completes successfully this method must be called again
+	 * to generate a new transaction ID.
+	 * Transaction IDs are only allowed to be submitted once.
+	 * This method should not be used unless the transaction ID is required
+	 * prior to submission of this transaction, for example if the application
+	 * wishes to create their own event listener.
+	 * @return {string} Transaction ID
+	 */
+	newTransactionId() {
+		this.identityContext.calculateTransactionId();
+		this._transactionId = this.identityContext.transactionId;
+		this._transactionIdState = AppAssignedUnCommitted;
+
 		return this._transactionId;
 	}
 
@@ -224,6 +253,17 @@ class Transaction {
 			endorsementOptions.targets = channel.getEndorsers();
 		}
 
+		if (this._transactionId) {
+			if (this._transactionIdState === AppAssignedUnCommitted) {
+				endorsementOptions.transactionId = this._transactionId;
+				logger.debug('%s - using application requested transaction ID');
+			} else if (this._transactionIdState === AppAssignedCommitted) {
+				throw Error('Transaction ID has already been successfully submitted');
+			} else {
+				logger.debug('%s - existing transaction ID will not be used');
+			}
+		}
+
 		// by now we should have targets or a discovery handler to be used
 		// by the send() of the proposal instance
 
@@ -279,6 +319,10 @@ class Transaction {
 				throw new Error(msg);
 			} else {
 				logger.debug('%s - successful commit', method);
+				if (this._transactionIdState === AppAssignedUnCommitted) {
+					this._transactionIdState === AppAssignedCommitted;
+					logger.debug('%s - application requested transaction ID has been successfully committed');
+				}
 			}
 
 			logger.debug('%s - wait for the transaction to be committed on the peer', method);
@@ -322,6 +366,10 @@ class Transaction {
 		const request = this._buildEndorsementOptions(args);
 		if (Number.isInteger(queryOptions.timeout)) {
 			request.requestTimeout = queryOptions.timeout * 1000; // in ms;
+		}
+
+		if (this._transactionId && !this._transactionIdCommitted) {
+			request.transactionId = this._transactionId;
 		}
 
 		const queryProposal = this.contract.network.channel.newQuery(this.contract.chaincodeId);

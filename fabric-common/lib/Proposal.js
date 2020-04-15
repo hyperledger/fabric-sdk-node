@@ -143,6 +143,8 @@ class Proposal extends ServiceAction {
 	 * @property {boolean} [init] - Optional. If this proposal should be an
 	 * chaincode initialization request. This will set the init setting in the
 	 * protobuf object sent to the peer.
+	 * @property {string} [transactionId] - Optional. Application has provided
+	 * transaction ID to use.
 	 */
 
 	/**
@@ -178,7 +180,11 @@ class Proposal extends ServiceAction {
 			this._action.init = init;
 		}
 
-		this._action.transactionId = idContext.calculateTransactionId().transactionId;
+		if (request.transactionId) {
+			this._action.transactionId = request.transactionId;
+		} else {
+			this._action.transactionId = idContext.calculateTransactionId().transactionId;
+		}
 
 		this._action.args = [];
 		if (fcn) {
