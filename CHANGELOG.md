@@ -1,3 +1,34 @@
+## v2.1.0
+Wed 8 Apr 2020 17:06:37 BST
+
+* [4406642f](https://github.com/hyperledger/fabric-sdk-node/commit/4406642f) [FABN-1531](https://jira.hyperledger.org/browse/FABN-1531) Update references to 2.0 and 2.0.0 (#210)
+* [bc50a107](https://github.com/hyperledger/fabric-sdk-node/commit/bc50a107) [FABN-1536](https://jira.hyperledger.org/browse/FABN-1536) NodeSDK add getTransactionId (#209)
+* [03deb129](https://github.com/hyperledger/fabric-sdk-node/commit/03deb129) Import ByteBuffer type to prevent TypeScript error (#206)
+* [e4c8e78c](https://github.com/hyperledger/fabric-sdk-node/commit/e4c8e78c) Use 2.1 Fabric Images (#205)
+* [1abaa4c3](https://github.com/hyperledger/fabric-sdk-node/commit/1abaa4c3) Pull Fabric Images in CI (#204)
+* [361a7adf](https://github.com/hyperledger/fabric-sdk-node/commit/361a7adf) [FABN-1224](https://jira.hyperledger.org/browse/FABN-1224) NodeSDK discovery interests (#203)
+* [0e8dfa88](https://github.com/hyperledger/fabric-sdk-node/commit/0e8dfa88) [FABN-1524](https://jira.hyperledger.org/browse/FABN-1524): Default file checkpointer implementation (#201)
+* [f6e8ae36](https://github.com/hyperledger/fabric-sdk-node/commit/f6e8ae36) [FABN-1524](https://jira.hyperledger.org/browse/FABN-1524): JSDoc for checkpointer (#200)
+* [a2999388](https://github.com/hyperledger/fabric-sdk-node/commit/a2999388) [FABN-1524](https://jira.hyperledger.org/browse/FABN-1524): Checkpoint contract events (#199)
+* [9ba41f8e](https://github.com/hyperledger/fabric-sdk-node/commit/9ba41f8e) [FABN-1532](https://jira.hyperledger.org/browse/FABN-1532 NodeSDK allow for non-)TLS networks (#198)
+* [e415c40c](https://github.com/hyperledger/fabric-sdk-node/commit/e415c40c) [FABN-1523](https://jira.hyperledger.org/browse/FABN-1523): Checkpoint block listening (#197)
+* [d3aee6fc](https://github.com/hyperledger/fabric-sdk-node/commit/d3aee6fc) [FABN-1526](https://jira.hyperledger.org/browse/FABN-1526): Minor doc tweaks based on review feedback (#196)
+* [8c9f8e1d](https://github.com/hyperledger/fabric-sdk-node/commit/8c9f8e1d) [FABN-1526](https://jira.hyperledger.org/browse/FABN-1526): Home page to allow access to v1.4 and v2.0 docs (#195)
+* [ac8c7878](https://github.com/hyperledger/fabric-sdk-node/commit/ac8c7878) [FABN-1526](https://jira.hyperledger.org/browse/FABN-1526) Remove old tutorial (#194)
+* [abe6e78a](https://github.com/hyperledger/fabric-sdk-node/commit/abe6e78a) [FABN-1519](https://jira.hyperledger.org/browse/FABN-1519): More robust private data scenario test (#193)
+* [192678e3](https://github.com/hyperledger/fabric-sdk-node/commit/192678e3) [FABN-1525](https://jira.hyperledger.org/browse/FABN-1525): Application migration tutorial (#191)
+* [4697ea75](https://github.com/hyperledger/fabric-sdk-node/commit/4697ea75) [FABN-1461](https://jira.hyperledger.org/browse/FABN-1461) NodeSDK private data part 2 (#192)
+* [9560c414](https://github.com/hyperledger/fabric-sdk-node/commit/9560c414) [FABN-1519](https://jira.hyperledger.org/browse/FABN-1519): Refactor of full and private event factory (#190)
+* [1f446c66](https://github.com/hyperledger/fabric-sdk-node/commit/1f446c66) [FABN-1522](https://jira.hyperledger.org/browse/FABN-1522): load the value of config.orderers (#189)
+* [ecdbeb94](https://github.com/hyperledger/fabric-sdk-node/commit/ecdbeb94) [FABN-1461](https://jira.hyperledger.org/browse/FABN-1461) NodeSDK add private data event (#102)
+* [c951f2d5](https://github.com/hyperledger/fabric-sdk-node/commit/c951f2d5) [FABN-1519](https://jira.hyperledger.org/browse/FABN-1519): Event listening with private data (#188)
+* [8b1a763b](https://github.com/hyperledger/fabric-sdk-node/commit/8b1a763b) [FABN-1518](https://jira.hyperledger.org/browse/FABN-1518): Correction to example block listener code in JSDoc (#187)
+* [2f3c524a](https://github.com/hyperledger/fabric-sdk-node/commit/2f3c524a) [FABN-1518](https://jira.hyperledger.org/browse/FABN-1518): Update JSDoc for event listening (#185)
+* [07e6d828](https://github.com/hyperledger/fabric-sdk-node/commit/07e6d828) [FABN-1521](https://jira.hyperledger.org/browse/FABN-1521) NodeSDK Add setEndpoint to typscript (#183)
+* [f8aecd73](https://github.com/hyperledger/fabric-sdk-node/commit/f8aecd73) [FABN-1516](https://jira.hyperledger.org/browse/FABN-1516 revert to 2.0.0-)snapshots (#182)
+* [ad42bd14](https://github.com/hyperledger/fabric-sdk-node/commit/ad42bd14) [FABN-1516](https://jira.hyperledger.org/browse/FABN-1516 Release 2.0.0-)beta.4 (#180)
+* [1d276005](https://github.com/hyperledger/fabric-sdk-node/commit/1d276005) [FABN-1510](https://jira.hyperledger.org/browse/FABN-1510) Port grpc update (#181)
+
 ## v2.0.0-beta.4
 Mon 16 Mar 2020 15:27:54 GMT
 
