@@ -1,6 +1,6 @@
 {
   "name": "fabric-sdk-node",
-  "version": "2.1.0",
+  "version": "2.1.1-snapshot",
   "main": "index.js",
   "repository": {
     "type": "git",
@@ -58,7 +58,7 @@
     "elliptic": "^6.3.2",
     "eslint": "^6.8.0",
     "fabric-ca-client": "file:./fabric-ca-client",
-    "fabric-client": "^1.4.7",
+    "fabric-client": "^1.4.8",
     "fabric-common": "file:./fabric-common",
     "fabric-network": "file:./fabric-network",
     "fabric-protos": "file:./fabric-protos",
