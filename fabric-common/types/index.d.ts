@@ -247,7 +247,7 @@ export class EventService extends ServiceAction {
 	public getLastBlockNumber(): Long;
 	public close(): void;
 	public build(idContext: IdentityContext, request: StartRequestOptions): Buffer;
-	public send(request: StartEventRequest): Promise<void>;
+	public send(request?: StartEventRequest): Promise<void>;
 	public isListening(): boolean;
 	public unregisterEventListener(eventListener: EventListener): EventService;
 	public registerTransactionListener(txid: string, callback: EventCallback, options: EventRegistrationOptions): EventListener;
