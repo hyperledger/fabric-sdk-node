@@ -246,8 +246,8 @@ export class EventService extends ServiceAction {
 	public setEventer(discoverer: Eventer): EventService;
 	public getLastBlockNumber(): Long;
 	public close(): void;
-	public build(idContext: IdentityContext, request: any): Buffer;
-	public send(request: StartRequestOptions): Promise<any>;
+	public build(idContext: IdentityContext, request: StartRequestOptions): Buffer;
+	public send(request: StartEventRequest): Promise<void>;
 	public isListening(): boolean;
 	public unregisterEventListener(eventListener: EventListener): EventService;
 	public registerTransactionListener(txid: string, callback: EventCallback, options: EventRegistrationOptions): EventListener;
@@ -255,6 +255,11 @@ export class EventService extends ServiceAction {
 	public registerBlockListener(callback: EventCallback, options: EventRegistrationOptions): EventListener;
 	setTargets(targets: Eventer[]): void;
 	isStarted(): boolean;
+}
+
+export interface StartEventRequest {
+	targets: Eventer[];
+	requestTimeout: number;
 }
 
 export interface StartRequestOptions {
