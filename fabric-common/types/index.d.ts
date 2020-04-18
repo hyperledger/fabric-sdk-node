@@ -326,7 +326,7 @@ export class Channel {
 }
 
 export class IdentityContext {
-	constructor(signerOrUserContext: IIdentity, admin: boolean);
+	constructor(user: User, client: Client);
 	public getTransactionID(): string;
 	public getNonce(): Buffer;
 }
