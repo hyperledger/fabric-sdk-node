@@ -80,8 +80,14 @@ class Orderer extends Remote {
 		super(url, opts);
 
 		logger.debug('Orderer.const - url: %s timeout: %s', url, this._request_timeout);
-		this._ordererClient = new _abProto.AtomicBroadcast(this._endpoint.addr, this._endpoint.creds, this._options);
+		this._createClients();
 		this._sendDeliverConnect = false;
+	}
+
+	_createClients() {
+		if (!this._ordererClient) {
+			this._ordererClient = new _abProto.AtomicBroadcast(this._endpoint.addr, this._endpoint.creds, this._options);
+		}
 	}
 
 	/**
@@ -91,6 +97,7 @@ class Orderer extends Remote {
 		if (this._ordererClient) {
 			logger.debug('close - closing orderer connection ' + this._endpoint.addr);
 			this._ordererClient.close();
+			this._ordererClient = null;
 		}
 	}
 
@@ -329,8 +336,8 @@ class Orderer extends Remote {
 	 */
 	toString() {
 		return 'Orderer:{' +
-            'url:' + this._url +
-            '}';
+			'url:' + this._url +
+			'}';
 	}
 }
 
