@@ -17,14 +17,14 @@ version: '2'
 services:
   clinopeer:
     container_name: cli
-    image: hyperledger/fabric-tools${DOCKER_IMG_TAG}
+    image: hyperledger/fabric-tools
     tty: true
     environment:
       - GOPATH=/opt/gopath
       - FABRIC_CFG_PATH=/etc/hyperledger/config/config-base
 
       # LOGGING SETTINGS
-      - FABRIC_LOGGING_SPEC=${DOCKER_DEBUG}
+      - FABRIC_LOGGING_SPEC=INFO
 
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     command: /bin/bash

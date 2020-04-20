@@ -15,7 +15,7 @@ version: "2"
 
 services:
   ca0:
-    image: hyperledger/fabric-ca${FABRIC_CA_TAG}
+    image: hyperledger/fabric-ca
     environment:
       - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
       - FABRIC_CA_SERVER_CA_NAME=ca-org1
@@ -29,7 +29,7 @@ services:
     container_name: ca_peerOrg1
 
   ca1:
-    image: hyperledger/fabric-ca${FABRIC_CA_TAG}
+    image: hyperledger/fabric-ca
     environment:
       - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
       - FABRIC_CA_SERVER_CA_NAME=ca-org2
@@ -44,9 +44,9 @@ services:
 
   orderer:
     container_name: orderer
-    image: hyperledger/fabric-orderer${DOCKER_IMG_TAG}
+    image: hyperledger/fabric-orderer
     environment:
-      - ORDERER_GENERAL_LOGLEVEL=${DOCKER_DEBUG}
+      - ORDERER_GENERAL_LOGLEVEL=INFO
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
       - ORDERER_GENERAL_GENESISMETHOD=file
       - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/twoorgs.genesis.block
@@ -65,7 +65,7 @@ services:
 
   peer:
     container_name: peer
-    image: hyperledger/fabric-peer${DOCKER_IMG_TAG}
+    image: hyperledger/fabric-peer
     environment:
       - CORE_CHAINCODE_EXECUTETIMEOUT=400s
       - CORE_CHAINCODE_DEPLOYTIMEOUT=400s
@@ -77,14 +77,14 @@ services:
       - CORE_PEER_PROFILE_ENABLED=true
 
       # LOGGING SETTINGS
-      - FABRIC_LOGGING_SPEC=${DOCKER_DEBUG}
+      - FABRIC_LOGGING_SPEC=DEBUG
       #- FABRIC_LOGGING_SPEC=info:transientstore,kvledger,ledgerstorage,pvtdatastorage,gossip.privdata,statecouchdb,stateleveldb,common.deliverevents=debug
-      - CORE_CHAINCODE_LOGGING_LEVEL=${DOCKER_DEBUG}
-      - CORE_LOGGING_MSP=${DOCKER_DEBUG}
-      - CORE_LOGGING_GRPC=${DOCKER_DEBUG}
-      - CORE_LOGGING_LEDGER=${DOCKER_DEBUG}
-      - CORE_LOGGING_GOSSIP=${DOCKER_DEBUG}
-      - CORE_LOGGING_PEER_GOSSIP=${DOCKER_DEBUG}
+      - CORE_CHAINCODE_LOGGING_LEVEL=DEBUG
+      - CORE_LOGGING_MSP=INFO
+      - CORE_LOGGING_GRPC=INFO
+      - CORE_LOGGING_LEDGER=INFO
+      - CORE_LOGGING_GOSSIP=INFO
+      - CORE_LOGGING_PEER_GOSSIP=INFO
 
       # TLS SETTINGS
       - CORE_PEER_TLS_ENABLED=false
@@ -96,6 +96,12 @@ services:
       # # bridge network as the peers
       # # https://docs.docker.com/compose/networking/
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=node_default
+
+      # Chaincode Build and Runtime Environments
+      - CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv
+      - CORE_CHAINCODE_GOLANG_RUNTIME=hyperledger/fabric-baseos
+      - CORE_CHAINCODE_JAVA_RUNTIME=hyperledger/fabric-javaenv
+      - CORE_CHAINCODE_NODE_RUNTIME=hyperledger/fabric-nodeenv
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric
     command: peer node start
     volumes:
@@ -113,7 +119,7 @@ services:
       - CORE_CHAINCODE_KEEPALIVE=10
 
       # LOGGING SETTINGS
-      - FABRIC_LOGGING_SPEC=${DOCKER_DEBUG}
+      - FABRIC_LOGGING_SPEC=INFO
 
       # TLS SETTINGS
       - CORE_PEER_TLS_ENABLED=false
@@ -127,4 +133,4 @@ services:
 
   couchdb:
     container_name: couchdb
-    image: hyperledger/fabric-couchdb${THIRDPARTY_IMG_TAG}
+    image: hyperledger/fabric-couchdb
