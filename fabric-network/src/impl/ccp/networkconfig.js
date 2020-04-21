@@ -53,12 +53,22 @@ async function buildChannel(client, channel_name, channel_config, config) {
 	// this will add the channel to the client instance
 	const channel = client.getChannel(channel_name);
 	if (channel_config.peers) {
-		// using 'in' as peers is an object
-		for (const peer_name in channel_config.peers) {
-			const peer = client.getEndorser(peer_name);
-			channel.addEndorser(peer);
-			logger.debug('%s - added endorsing peer :: %s', method, peer.name);
+		if (Array.isArray(channel_config.peers)) {
+			// using 'of' as peers is an array
+			for (const peer_name of channel_config.peers) {
+				const peer = client.getEndorser(peer_name);
+				channel.addEndorser(peer);
+				logger.debug('%s - added endorsing peer as array :: %s', method, peer.name);
+			}
+		} else {
+			// using 'in' as peers is an object
+			for (const peer_name in channel_config.peers) {
+				const peer = client.getEndorser(peer_name);
+				channel.addEndorser(peer);
+				logger.debug('%s - added endorsing peer as object :: %s', method, peer.name);
+			}
 		}
+
 	} else {
 		logger.debug('%s - no peers in config', method);
 	}

@@ -94,7 +94,16 @@ describe('NetworkConfig', () => {
 					'peer0.org1.example.com': {},
 					'peer0.org2.example.com': {}
 				}
-			}
+			},
+			mychannel2: {
+				orderers: [
+					'orderer.example.com'
+				],
+				peers: [
+					'peer0.org1.example.com',
+					'peer0.org2.example.com'
+				]
+			},
 		},
 		organizations: {
 			Org1: {
@@ -156,7 +165,7 @@ describe('NetworkConfig', () => {
 		});
 	});
 
-	describe('#buildChannel', () => {
+	describe('#buildChannel - peer as object', () => {
 		it('should run with params', async () => {
 			const channel = sinon.stub();
 			client.getChannel = sinon.stub().returns(channel);
@@ -181,6 +190,34 @@ describe('NetworkConfig', () => {
 			const channel = sinon.stub();
 			client.getChannel = sinon.stub().returns(channel);
 			await buildChannel(client, 'name', {mychannel: {chaincodes: []}});
+		});
+	});
+
+	describe('#buildChannel - peer as array', () => {
+		it('should run with params', async () => {
+			const channel = sinon.stub();
+			client.getChannel = sinon.stub().returns(channel);
+			client.getEndorser = sinon.stub().returns('peer');
+			client.getCommitter = sinon.stub().returns('orderer');
+			channel.addEndorser = sinon.stub();
+			channel.addCommitter = sinon.stub();
+			await buildChannel(client, 'name', config.channels.mychannel2);
+			sinon.assert.calledWith(client.getEndorser, 'peer0.org1.example.com');
+			sinon.assert.calledWith(client.getEndorser, 'peer0.org2.example.com');
+			sinon.assert.calledWith(client.getCommitter, 'orderer.example.com');
+			sinon.assert.calledWith(client.getChannel, 'name');
+			sinon.assert.calledWith(channel.addEndorser, 'peer');
+			sinon.assert.calledWith(channel.addCommitter, 'orderer');
+		});
+		it('should run with only channel defined', async () => {
+			const channel = sinon.stub();
+			client.getChannel = sinon.stub().returns(channel);
+			await buildChannel(client, 'name', {mychannel2: {}});
+		});
+		it('should run with only chaincodes defined', async () => {
+			const channel = sinon.stub();
+			client.getChannel = sinon.stub().returns(channel);
+			await buildChannel(client, 'name', {mychannel2: {chaincodes: []}});
 		});
 	});
 

@@ -7,20 +7,10 @@
       "orderers":[
         "orderer.example.com"
       ],
-      "peers":{
-        "peer0.org1.example.com":{
-          "endorsingPeer":true,
-          "chaincodeQuery":true,
-          "ledgerQuery":true,
-          "eventSource":true
-        },
-        "peer0.org2.example.com":{
-          "endorsingPeer":true,
-          "chaincodeQuery":false,
-          "ledgerQuery":true,
-          "eventSource":false
-        }
-      },
+      "peers":[
+        "peer0.org1.example.com",
+        "peer0.org2.example.com"
+		],
       "chaincodes":[
       ]
 	}
