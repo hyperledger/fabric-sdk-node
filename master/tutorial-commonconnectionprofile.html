@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Hyperledger Fabric SDK for Node.js Tutorial: fabric-network: How to select peers for evaluating transactions (queries)</title>
+	<title>Hyperledger Fabric SDK for Node.js Tutorial: commonconnectionprofile</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -96,126 +96,278 @@
 <header>
     
 
-    <h2>fabric-network: How to select peers for evaluating transactions (queries)</h2>
+    <h2>commonconnectionprofile</h2>
 </header>
 
 <article>
-    <p>This tutorial describes how peers are selected when a transaction is evaluated
-and the results are not written to the ledger. The is considered to be a
-query.</p>
-<h3>Query handling strategies</h3>
-<p>The SDK provides two strategies to evaluate transactions.
-The available strategies are defined
-in <code>QueryHandlerStrategies</code>. The desired strategy is (optionally)
-specified as an argument to <code>connect()</code> on the <code>Gateway</code>, and is used for
-all transaction evaluations on Contracts obtained from that Gateway
-instance.</p>
-<p>If no query handling strategy is specified, <code>MSPID_SCOPE_SINGLE</code> is used
-by default. This will evaluate all transactions on the first peer from
-which it can obtain a response, and only switch to another peer if this
-peer fails. The list of peers will be all peers in the contract's <code>Network</code>
-that belong to the gateway's organization.</p>
-<p>There is another query handling strategy provided called <code>MSPID_SCOPE_ROUND_ROBIN</code>.
-This will evaluate a transaction starting with the first peer on the list.
-It will try the peers in order until a response is received or all peers
-have been tried. On the next call the second peer will be tried first and then
-continue on in the list until a response is received. The starting point within
-the list is incremented on each call, this will distribute the work load among all
-responding peers. The list of peers will be all peers in the contract's <code>Network</code>
-that belong to the gateway's organization.</p>
-<pre class="prettyprint source lang-javascript"><code>const { Gateway, QueryHandlerStrategies } = require('fabric-network');
+    <p>This tutorial illustrates the common connection profile. A common connection
+profile describes the Hyperledger Fabric network to the Hyperledger
+Fabric Node.js client.</p>
+<h3>Overview</h3>
+<p>A connection profile contain entries that describe the Hyperledger Fabric network.
+The application will load a configuration file and then it will be used by
+fabric-network to simplify the steps needed to setup and use the network.
+The connection profile has specific addresses and settings of the network endpoints.</p>
+<h3>Loading connection profile configurations</h3>
+<p>The application may build a Javascript object from a yaml or a json
+formatted file.
+The applicatioin will then pass this to the <code>Gateway.connect</code>
+which provides the network configuration.</p>
+<p>The following examples will create a new instance of the <code>Gateway</code> using a
+common connection profile. The common connection profile object may be created
+by reading a json or a yaml formatted file.</p>
+<h4>YAML</h4>
+<pre class="prettyprint source"><code>// read a common connection profile in yaml format
+const data = fs.readFileSync(path);
+const yaml = require('js-yaml');
+const connectionProfile = yaml.safeLoad(data);
 
-const connectOptions = {
-    query: {
-        timeout: 3, // timeout in seconds
-        strategy: QueryHandlerStrategies.MSPID_SCOPE_SINGLE
-    }
-}
-
+// use the loaded connection profile
 const gateway = new Gateway();
-await gateway.connect(connectionProfile, connectOptions);
+await gateway.connect(connectionProfile, gatewayOptions);
+
+const network = await gateway.getNetwork('mychannel');
 </code></pre>
-<h3>Plug-in query handlers</h3>
-<p>If behavior is required that is not provided by the default query handling
-strategies, it is possible to implement your own query handling. This is
-achieved by specifying your own factory function as the query handling
-strategy. The factory function should return a <em>query handler</em>
-object and take one parameter:</p>
-<ol>
-<li>Blockchain network: <code>Network</code> - fabric-network.Network</li>
-</ol>
-<p>The Network instance provides access to peers on which transactions should be
-evaluated.</p>
-<pre class="prettyprint source lang-javascript"><code>// factory function will return the handler
-function createQueryHandler(network) {
-    // use the network to get all endorsing peers
-    // of all organizations
-    const peers = network.getEndorsers();
-    // use the network to get endorsing peers
-    // of my organization (MSPID of the organization)
-    const peers = network.getEndorsers('mymspid');
+<h4>JSON</h4>
+<pre class="prettyprint source"><code>// read a common connection profile in json format
+const data = fs.readFileSync(path);
+const connectionProfile = JSON.parse(data);
 
-    // build and return the query handler
-    return new MyQueryHandler(peers);
-}
+// or
+const connectionProfile = require(path);
 
-const connectOptions = {
-    query: {
-        timeout: 3, // timeout in seconds (optional will default to 3)
-        strategy: createQueryHandler
-    }
- }
-
+// use the loaded connection profile
 const gateway = new Gateway();
-await gateway.connect(connectionProfile, connectOptions);
+await gateway.connect(connectionProfile, gatewayOptions);
+
+const network = await gateway.getNetwork('mychannel');
 </code></pre>
-<p>The <em>query handler</em> object returned must implement the following functions.</p>
-<pre class="prettyprint source lang-javascript"><code>class MyQueryHandler {
-	/**
-	 * Evaluate the supplied query on appropriate peers.
-	 * @param {Query} query - A query object that will send the
-	 * query proposal to the peers and format the responses for this query handler
-	 * @returns {Buffer} Query result.
-	 */
-    async evaluate(query) { /* Your implementation here */ }
+<h3>A common connection profile in YAML</h3>
+<pre class="prettyprint source"><code>name: &quot;Network&quot;
+version: &quot;1.1&quot;
+
+channels:
+  mychannel:
+    orderers:
+      - orderer.example.com
+    peers:
+      - peer0.org1.example.com
+      - peer0.org2.example.com
+
+organizations:
+  Org1:
+    mspid: Org1MSP
+    peers:
+      - peer0.org1.example.com
+
+  Org2:
+    mspid: Org2MSP
+    peers:
+      - peer0.org2.example.com
+
+orderers:
+  orderer.example.com:
+    url: grpcs://localhost:7050
+    grpcOptions:
+      ssl-target-name-override: orderer.example.com
+    tlsCACerts:
+      path: test/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem
+
+peers:
+  peer0.org1.example.com:
+    url: grpcs://localhost:7051
+    grpcOptions:
+      ssl-target-name-override: peer0.org1.example.com
+    tlsCACerts:
+      path: test/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tlscacerts/org1.example.com-cert.pem
+
+  peer0.org2.example.com:
+    url: grpcs://localhost:8051
+    grpcOptions:
+      ssl-target-name-override: peer0.org2.example.com
+    tlsCACerts:
+      path: test/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tlscacerts/org2.example.com-cert.pem
+</code></pre>
+<h3>A common connection profile in JSON</h3>
+<pre class="prettyprint source"><code>{
+  &quot;name&quot;: &quot;Network&quot;,
+  &quot;version&quot;: &quot;1.1&quot;,
+  &quot;channels&quot;: {
+    &quot;mychannel&quot;: {
+      &quot;orderers&quot;: [
+        &quot;orderer.example.com&quot;
+      ],
+      &quot;peers&quot;: [
+        &quot;peer0.org1.example.com&quot;,
+        &quot;peer0.org2.example.com&quot;
+      ]
+    }
+  },
+  &quot;organizations&quot;: {
+    &quot;Org1&quot;: {
+      &quot;mspid&quot;: &quot;Org1MSP&quot;,
+      &quot;peers&quot;: [
+        &quot;peer0.org1.example.com&quot;
+      ]
+    },
+    &quot;Org2&quot;: {
+      &quot;mspid&quot;: &quot;Org2MSP&quot;,
+      &quot;peers&quot;: [
+        &quot;peer0.org2.example.com&quot;
+      ]
+    }
+  },
+  &quot;orderers&quot;: {
+    &quot;orderer.example.com&quot;: {
+      &quot;url&quot;: &quot;grpcs://localhost:7050&quot;,
+      &quot;grpcOptions&quot;: {
+        &quot;ssl-target-name-override&quot;: &quot;orderer.example.com&quot;
+      },
+      &quot;tlsCACerts&quot;: {
+        &quot;path&quot;: &quot;test/ordererOrganizations/example.com/orderers/orderer.example.com/tlscacerts/example.com-cert.pem&quot;
+      }
+    }
+  },
+  &quot;peers&quot;: {
+    &quot;peer0.org1.example.com&quot;: {
+      &quot;url&quot;: &quot;grpcs://localhost:7051&quot;,
+      &quot;grpcOptions&quot;: {
+        &quot;ssl-target-name-override&quot;: &quot;peer0.org1.example.com&quot;
+      },
+      &quot;tlsCACerts&quot;: {
+        &quot;path&quot;: &quot;test/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tlscacerts/org1.example.com-cert.pem&quot;
+      }
+    },
+    &quot;peer0.org2.example.com&quot;: {
+      &quot;url&quot;: &quot;grpcs://localhost:8051&quot;,
+      &quot;grpcOptions&quot;: {
+        &quot;ssl-target-name-override&quot;: &quot;peer0.org2.example.com&quot;
+      },
+      &quot;tlsCACerts&quot;: {
+        &quot;path&quot;: &quot;test/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tlscacerts/org2.example.com-cert.pem&quot;
+      }
+    }
+  }
 }
 </code></pre>
-<p>Use the <code>query</code> instance provided to the <code>evaluate</code> method to make the query call
-to the peer or peers of your Fabric network. The query instance will process
-the peer responses of the endorsement and provide your handler with the results.
-The results will be keyed by peer name and may contain either a <code>QueryResult</code>
-or an <code>Error</code>.</p>
-<p>The QueryResult:</p>
-<pre class="prettyprint source"><code>export interface QueryResponse {
-	isEndorsed: boolean; // indicates a good endorsement, required to have query results
-	payload: Buffer; // The query results
-	status: number; // status of the query, 200 successful, 500 failed
-	message: string; // failed reason message
-}
-</code></pre>
-<p>The following sample code is in TypeScript to show the object types involved.</p>
-<pre class="prettyprint source lang-javascript"><code>	public async evaluate(query: Query): Promise&lt;Buffer> {
-		const errorMessages: string[] = [];
+<h2>Common Connection Profile</h2>
+<p>The common connection profile has the following format:</p>
+<pre class="prettyprint source"><code>#
+# How a channel is defined and the peers and orderers on that channel.
+#
+channels:
+  # name of the channel
+  mychannel:
+    # List of orderers designated by the application to use for transactions on this channel.
+    # The values must be orderer names defined under &quot;orderers&quot; section
+    orderers:
+      - orderer.example.com
 
-		for (const peer of this.peers) {
-			const results: QueryResults = await query.evaluate([peer]);
-			const result = results[peer.name];
-			if (result instanceof Error) {
-				errorMessages.push(result.toString());
-			} else {
-				if (result.isEndorsed) {
-					return result.payload;
-				}
-				errorMessages.push(result.message);
-			}
-		}
+    # List of peers from participating organizations
+    peers:
+      # The values must be peer names defined under &quot;peers&quot; section
+      - peer0.org1.example.com
 
-		const message = util.format('Query failed. Errors: %j', errorMessages);
-		const error = new Error(message);
-		throw error;
-	}
+#
+# list of participating organizations in this network
+#
+organizations:
+  Org1:
+    mspid: Org1MSP
+
+    # The peers that are known to be in this organization
+    peers:
+      - peer0.org1.example.com
+
+    # The following section is only for Fabric-CA servers.
+    certificateAuthorities:
+      - ca-org1
+
+    # If the application is going to make requests that are reserved to organization
+    # administrators, including creating/updating channels, installing/instantiating chaincodes, it
+    # must have access to the admin identity represented by the private key and signing certificate.
+    # Both properties can be the PEM string or local path to the PEM file.
+    #   path: &lt;the path to a file containing the byte string>
+    #    or
+    #   pem: &lt;the byte string>
+    # Note that this is mainly for convenience in development mode, production systems
+    # should not expose sensitive information this way.
+    # The SDK should allow applications to set the org admin identity via APIs, and only use
+    # this route as an alternative when it exists.
+    adminPrivateKey:
+      path: &lt;path to file>
+       or
+      pem: &lt;byte string>
+    signedCert:
+      path: &lt;path to file>
+       or
+      pem: &lt;byte string>
+
+  # the profile will contain public information about organizations other than the one it belongs to.
+  # These are necessary information to make transaction lifecycles work, including MSP IDs and
+  # peers with a public URL to send transaction proposals. The file will not contain private
+  # information reserved for members of the organization, such as admin key and certificate,
+  # fabric-ca registrar enroll ID and secret, etc.
+  Org2:
+    mspid: Org2MSP
+    peers:
+      - peer0.org2.example.com
+    certificateAuthorities:
+      - ca-org2
+    adminPrivateKey:
+      path: &lt;path to file>
+       or
+      pem: &lt;byte string>
+    signedCert:
+      path: &lt;path to file>
+       or
+      pem: &lt;byte string>
+
+#
+# List of orderers to send transaction and channel create/update requests.
+#
+orderers:
+  orderer.example.com:
+    url: grpcs://localhost:7050
+
+    # these are standard properties defined by the gRPC library
+    # they will be passed in as-is to gRPC client constructor
+    grpcOptions:
+      ssl-target-name-override: orderer.example.com
+
+    tlsCACerts:
+      path: &lt;path to file>
+       or
+      pem: &lt;byte string>
+
+#
+# List of peers to send various requests to, including endorsement, query
+# and event listener registration.
+#
+peers:
+  peer0.org1.example.com:
+    # this URL is used to send endorsement and query requests
+    url: grpcs://localhost:7051
+
+    grpcOptions:
+      ssl-target-name-override: peer0.org1.example.com
+      request-timeout: 120001
+
+    tlsCACerts:
+      path: &lt;path to file>
+       or
+      pem: &lt;byte string>
+
+  peer0.org2.example.com:
+    url: grpcs://localhost:8051
+    grpcOptions:
+      ssl-target-name-override: peer0.org2.example.com
+    tlsCACerts:
+      path: &lt;path to file>
+       or
+      pem: &lt;byte string>
 </code></pre>
-<p>For a complete sample plug-in query handler implementation, see <a href="https://github.com/hyperledger/fabric-sdk-node/blob/master/test/ts-scenario/config/handlers/sample-query-handler.ts">sample-query-handler.ts</a>.</p>
+<p><a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.</p>
 </article>
 
 </section>
