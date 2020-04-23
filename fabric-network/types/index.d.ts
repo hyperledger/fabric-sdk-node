@@ -9,16 +9,17 @@
 import { Wallet } from '../lib/impl/wallet/wallet';
 import { ContractListener, ListenerOptions } from '../lib/events';
 import { Identity } from '../lib/impl/wallet/identity';
+import { IdentityProvider } from '../lib/impl/wallet/identityprovider';
 import { QueryHandlerFactory } from '../lib/impl/query/queryhandler';
 import { Network } from '../lib/network';
-import { Client, Endorser, IdentityContext } from 'fabric-common';
+import { Client, Endorser } from 'fabric-common';
 
 export { Wallet };
 export { Wallets } from '../lib/impl/wallet/wallets';
 export { WalletStore } from '../lib/impl/wallet/walletstore';
 export { Identity };
 export { IdentityData } from '../lib/impl/wallet/identitydata';
-export { IdentityProvider } from '../lib/impl/wallet/identityprovider';
+export { IdentityProvider };
 export { IdentityProviderRegistry } from '../lib/impl/wallet/identityproviderregistry';
 export { HsmOptions, HsmX509Provider, HsmX509Identity } from '../lib/impl/wallet/hsmx509identity';
 export { X509Identity } from '../lib/impl/wallet/x509identity';
@@ -44,8 +45,9 @@ export { DefaultQueryHandlerStrategies };
 // Main fabric network classes
 // -------------------------------------------
 export interface GatewayOptions {
-	wallet: Wallet;
-	identity: string;
+	identity: string | Identity;
+	wallet?: Wallet;
+	identityProvider?: IdentityProvider;
 	clientTlsIdentity?: string;
 	discovery?: DiscoveryOptions;
 	eventHandlerOptions?: DefaultEventHandlerOptions;
@@ -97,6 +99,7 @@ export class Contract {
 export interface TransientMap {
 	[key: string]: Buffer;
 }
+
 export class Transaction {
 	getName(): string;
 	getTransactionId(): string | null;

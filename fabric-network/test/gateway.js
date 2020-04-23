@@ -11,6 +11,8 @@ const sinon = require('sinon');
 const rewire = require('rewire');
 
 const {IdentityContext} = require('fabric-common');
+const {X509Provider} = require('../lib/impl/wallet/x509identity');
+const {newDefaultProviderRegistry} = require('../lib/impl/wallet/identityproviderregistry');
 
 const chai = require('chai');
 const should = chai.should();
@@ -24,26 +26,36 @@ describe('Gateway', () => {
 	let client;
 	let identityContext;
 	let revert;
-	let FakeLogger;
 	let clientHelper;
 
 	let gateway;
 
+	let wallet;
+	let provider;
+	let identity;
+	let options;
+
 	beforeEach(() => {
 		revert = [];
-		FakeLogger = {
-			debug: () => {
-			},
-			error: () => {
-			},
-			warn: () => {
-			}
-		};
-		sinon.stub(FakeLogger);
-		revert.push(Gateway.__set__('logger', FakeLogger));
+
 		clientHelper = sinon.stub();
 		clientHelper.loadFromConfig = sinon.stub().resolves('ccp');
-		Gateway.__set__('NetworkConfig', clientHelper);
+		revert.push(Gateway.__set__('NetworkConfig', clientHelper));
+
+		provider = sinon.createStubInstance(X509Provider);
+		provider.getUserContext.callsFake((id, label) => {
+			return {
+				getName: () => label,
+				getMspid: () => id.mspId
+			};
+		});
+
+		const providerRegistry = newDefaultProviderRegistry();
+		const getProviderStub = sinon.stub(providerRegistry, 'getProvider');
+		getProviderStub.callThrough();
+		getProviderStub.withArgs('X.509').returns(provider);
+		revert.push(Gateway.__set__('newDefaultProviderRegistry', () => providerRegistry));
+
 		client = sinon.createStubInstance(Client);
 		client.type = 'Client';
 		identityContext = sinon.createStubInstance(IdentityContext);
@@ -53,12 +65,33 @@ describe('Gateway', () => {
 		gateway.getIdentity = sinon.fake.returns({
 			mspId: 'mspId'
 		});
+
+		identity = {
+			type: 'X.509',
+			mspId: 'mspId',
+			credentials: {
+				certificate: 'certificate',
+				privateKey: 'privateKey'
+			}
+		};
+
+		wallet = {
+			getProviderRegistry: () => providerRegistry
+		};
+
+		options = {
+			wallet,
+			identity: 'identity'
+		};
+
+		wallet.get = sinon.stub();
+		wallet.get.resolves();
+		wallet.get.withArgs(options.identity).resolves(identity);
+
 	});
 
 	afterEach(() => {
-		if (revert.length) {
-			revert.forEach(Function.prototype.call, Function.prototype.call);
-		}
+		revert.forEach((f) => f());
 		sinon.restore();
 	});
 
@@ -278,149 +311,116 @@ describe('Gateway', () => {
 	});
 
 	describe('#connect', () => {
-		let wallet;
-		let provider;
-		const identity = {
-			credentials: {
-				certificate: 'certificate',
-				privateKey: 'privateKey'
-			}
-		};
-		let user;
-
-		beforeEach(() => {
-			user = sinon.stub();
-			user.getName = sinon.stub().returns('user');
-			user.getMspid = sinon.stub().returns('mspid');
-			provider = sinon.stub();
-			provider.getUserContext = sinon.stub().resolves(user);
-			const providerRegistry = sinon.stub();
-			providerRegistry.getProvider = sinon.stub().returns(provider);
-			wallet = sinon.stub();
-			wallet.getProviderRegistry = sinon.stub().returns(providerRegistry);
-			wallet.get = sinon.stub().resolves(identity);
-		});
-
 		it('should fail without options supplied', () => {
 			return gateway.connect()
-				.should.be.rejectedWith(/A wallet must be assigned to a Gateway instance/);
+				.should.be.rejectedWith('An identity must be assigned to a Gateway instance');
 		});
 
-		it('should fail without wallet option supplied', () => {
-			const options = {
+		it('should fail for identity string without wallet', () => {
+			options = {
 				identity: 'identity'
 			};
 			return gateway.connect('ccp', options)
-				.should.be.rejectedWith(/A wallet must be assigned to a Gateway instance/);
+				.should.be.rejectedWith('No wallet supplied from which to retrieve identity label');
 		});
 
-		it('should connect to the gateway with default plugins', async () => {
-			const options = {
-				wallet,
-			};
-			await gateway.connect('ccp', options);
-			sinon.assert.calledWith(FakeLogger.debug, '%s - end');
-		});
-
-		it('should connect to the gateway with identity', async () => {
-			const options = {
-				wallet,
-				identity: 'identity'
-			};
+		it('should connect to the gateway with wallet identity', async () => {
 			await gateway.connect('ccp', options);
 			gateway.client.name.should.equal('gateway client');
-			gateway.identityContext.mspid.should.equal('mspid');
+			gateway.identityContext.mspid.should.equal(identity.mspId);
 		});
 
-		it('should connect to the gateway with identity and set client tls crypto material', async () => {
-			const options = {
-				wallet,
-				identity: 'identity',
-				clientTlsIdentity: 'tls'
+		it('should connect to the gateway with an X.509 identity object', async () => {
+			options = {
+				identity
 			};
+			await gateway.connect('ccp', options);
+			gateway.identityContext.mspid.should.equal(identity.mspId);
+		});
+
+		it('should fail for non-default identity object type without provider', () => {
+			identity.type = 'UNKNOWN_TYPE';
+			options = {
+				identity
+			};
+			return gateway.connect('ccp', options)
+				.should.be.rejectedWith(identity.type);
+		});
+
+		it('should connect to the gateway with non-default identity object type and provider', async () => {
+			identity.type = 'UNKNOWN_TYPE';
+			options = {
+				identity,
+				identityProvider: provider
+			};
+			await gateway.connect('ccp', options);
+			gateway.identityContext.mspid.should.equal(identity.mspId);
+		});
+
+		it('should set client tls credentials', async () => {
+			options.clientTlsIdentity = 'tls';
+			wallet.get.withArgs(options.clientTlsIdentity).resolves(identity);
+
 			await gateway.connect(client, options);
-			sinon.assert.calledOnce(client.setTlsClientCertAndKey);
-			sinon.assert.calledWith(client.setTlsClientCertAndKey,
+			sinon.assert.calledOnceWithExactly(client.setTlsClientCertAndKey,
 				identity.credentials.certificate, identity.credentials.privateKey);
 		});
 
 		it('should connect to the gateway with identity and set client tls crypto material using tlsInfo', async () => {
-			const options = {
-				wallet,
-				identity: 'identity',
-				tlsInfo: {certificate: 'acert', key: 'akey'}
+			options.tlsInfo = {
+				certificate: 'acert',
+				key: 'akey'
 			};
 			await gateway.connect(client, options);
-			sinon.assert.calledOnce(client.setTlsClientCertAndKey);
-			sinon.assert.calledWith(client.setTlsClientCertAndKey, 'acert', 'akey');
+			sinon.assert.calledOnceWithExactly(client.setTlsClientCertAndKey, 'acert', 'akey');
 		});
 
 		it('should connect from an existing client object', async () => {
-			const options = {
-				wallet
-			};
 			await gateway.connect(client, options);
 			gateway.client.should.equal(client);
 		});
 
 		it('has default transaction event handling strategy if none specified', async () => {
-			const options = {
-				wallet
-			};
 			await gateway.connect('ccp', options);
 			gateway.getOptions().eventHandlerOptions.strategy.should.be.a('Function');
 		});
 
 		it('allows transaction event handling strategy to be specified', async () => {
 			const stubStrategyFn = function stubStrategyFn() { };
-			const options = {
-				wallet,
-				eventHandlerOptions: {
-					strategy: stubStrategyFn
-				}
+			options.eventHandlerOptions = {
+				strategy: stubStrategyFn
 			};
 			await gateway.connect('ccp', options);
 			gateway.getOptions().eventHandlerOptions.strategy.should.equal(stubStrategyFn);
 		});
 
 		it('allows null transaction event handling strategy to be set', async () => {
-			const options = {
-				wallet,
-				eventHandlerOptions: {
-					strategy: null
-				}
+			options.eventHandlerOptions = {
+				strategy: null
 			};
 			await gateway.connect('ccp', options);
 			should.equal(gateway.getOptions().eventHandlerOptions.strategy, null);
 		});
 
 		it('should assign connection options to the client', async () => {
-			const options = {
-				wallet,
-				'connection-options': {
-					option1: 'option1',
-					option2: 'option2'
-				}
+			options['connection-options'] = {
+				option1: 'option1',
+				option2: 'option2'
 			};
 			await gateway.connect(client, options);
 			client.centralized_options.option1.should.equal('option1');
 		});
 		it('throws if the identity does not exist', () => {
-			const options = {
+			options = {
 				wallet,
 				identity: 'INVALID_IDENTITY_LABEL'
 			};
-			wallet.get = sinon.stub().resolves(null);
 			return gateway.connect('ccp', options)
 				.should.be.rejectedWith('Identity not found in wallet: INVALID_IDENTITY_LABEL');
 		});
 
 		it('throws if the TLS identity does not exist', () => {
-			const options = {
-				wallet,
-				clientTlsIdentity: 'INVALID_IDENTITY_LABEL'
-			};
-			wallet.get = sinon.stub().resolves(null);
+			options.clientTlsIdentity = 'INVALID_IDENTITY_LABEL';
 			return gateway.connect('ccp', options)
 				.should.be.rejectedWith('Identity not found in wallet: INVALID_IDENTITY_LABEL');
 		});
@@ -428,25 +428,15 @@ describe('Gateway', () => {
 
 	describe('getters', () => {
 		beforeEach(async () => {
-			gateway.identityContext = identityContext;
-			const options = {
-				wallet: 'something'
-			};
 			await gateway.connect(client, options);
 		});
 
 		describe('#getOptions', () => {
 			it('should return the options', () => {
-				const expectedOptions = {
-					wallet: 'something',
-					queryHandlerOptions: {
-						timeout: 30,
-						strategy: QueryStrategies.MSPID_SCOPE_SINGLE
-					}
-				};
-				gateway.getOptions().should.deep.include(expectedOptions);
-				gateway.getOptions().eventHandlerOptions.should.include({
-					commitTimeout: 300
+				gateway.getOptions().should.be.an('object').that.nested.include({
+					'queryHandlerOptions.timeout': 30,
+					'queryHandlerOptions.strategy': QueryStrategies.MSPID_SCOPE_SINGLE,
+					'eventHandlerOptions.commitTimeout': 300
 				});
 			});
 		});
@@ -455,14 +445,11 @@ describe('Gateway', () => {
 
 	describe('#getNetwork/#disconnect', () => {
 		beforeEach(async () => {
-			const options = {
-				wallet: 'something',
-				discovery: {
-					enabled: false
-				},
-				query: {
-					strategy: () => {}
-				}
+			options.discovery = {
+				enabled: false
+			};
+			options.query = {
+				strategy: () => {}
 			};
 			await gateway.connect('ccp', options);
 			gateway.identityContext = identityContext;

@@ -5,7 +5,7 @@
  */
 
 import { Identity } from './identity';
-import { IdentityProviderRegistry } from './identityproviderregistry';
+import { IdentityProviderRegistry, newDefaultProviderRegistry } from './identityproviderregistry';
 import { WalletStore } from './walletstore';
 
 const encoding = 'utf8';
@@ -17,7 +17,7 @@ const encoding = 'utf8';
  * @memberof module:fabric-network
  */
 export class Wallet {
-	private readonly providerRegistry = new IdentityProviderRegistry();
+	private readonly providerRegistry = newDefaultProviderRegistry();
 	private readonly store: WalletStore;
 
 	/**
