@@ -5,7 +5,7 @@
 
 */
 
-const fs = require('fs-extra');
+const fs = require('fs');
 const {Utils: utils} = require('fabric-common');
 
 const logger = utils.getLogger('NetworkConfig');
@@ -91,7 +91,7 @@ async function buildOrderer(client, orderer_name, orderer_config) {
 	logger.debug('%s - start - %s', method, orderer_name);
 
 	const mspid = orderer_config.mspid;
-	const options = buildOptions(orderer_config);
+	const options = await buildOptions(orderer_config);
 	const end_point = client.newEndpoint(options);
 	try {
 		logger.debug('%s - about to connect to committer %s url:%s mspid:%s', method, orderer_name, orderer_config.url, mspid);
@@ -109,7 +109,7 @@ async function buildPeer(client, peer_name, peer_config, config) {
 	logger.debug('%s - start - %s', method, peer_name);
 
 	const mspid = findPeerMspid(peer_name, config);
-	const options = buildOptions(peer_config);
+	const options = await buildOptions(peer_config);
 	const end_point = client.newEndpoint(options);
 	try {
 		logger.debug('%s - about to connect to endorser %s url:%s mspid:%s', method, peer_name, peer_config.url, mspid);
@@ -142,13 +142,13 @@ function findPeerMspid(name, config) {
 	return mspid;
 }
 
-function buildOptions(endpoint_config) {
+async function buildOptions(endpoint_config) {
 	const method = 'buildOptions';
 	logger.debug(`${method} - start`);
 	const options = {
 		url: endpoint_config.url
 	};
-	const pem = getPEMfromConfig(endpoint_config.tlsCACerts);
+	const pem = await getPEMfromConfig(endpoint_config.tlsCACerts);
 	if (pem) {
 		options.pem = pem;
 	}
@@ -161,7 +161,7 @@ function buildOptions(endpoint_config) {
 	return options;
 }
 
-function getPEMfromConfig(config) {
+async function getPEMfromConfig(config) {
 	let result = null;
 	if (config) {
 		if (config.pem) {
@@ -169,7 +169,7 @@ function getPEMfromConfig(config) {
 			result = config.pem;
 		} else if (config.path) {
 			// cert value is in a file
-			const data = fs.readFileSync(config.path);
+			const data = await fs.promises.readFile(config.path);
 			result = Buffer.from(data).toString();
 			result = utils.normalizeX509(result);
 		}

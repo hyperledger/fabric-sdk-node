@@ -11,16 +11,24 @@ const NetworkConfig = require('./impl/ccp/networkconfig');
 const {Client} = require('fabric-common');
 const EventStrategies = require('./impl/event/defaulteventhandlerstrategies');
 const QueryStrategies = require('./impl/query/defaultqueryhandlerstrategies');
+const {newDefaultProviderRegistry} = require('./impl/wallet/identityproviderregistry');
 
 const logger = require('./logger').getLogger('Gateway');
 
 /**
  * @typedef {Object} Gateway~GatewayOptions
  * @memberof module:fabric-network
- * @property {module:fabric-network.Wallet} wallet The identity wallet implementation for use with
- * this Gateway instance.
- * @property {string} identity The identity in the wallet for all interactions on this Gateway instance.
- * @property {string} [clientTlsIdentity] The identity in the wallet to use as the client TLS identity.
+ * @property {(string|module:fabric-network.Identity)} identity The identity used for all interactions on this Gateway
+ * instance. This can be either:
+ * <ul>
+ *   <li>a label matching an identity within the supplied wallet.</li>
+ *   <li>an identity object.</li>
+ * </ul
+ * @property {module:fabric-network.Wallet} [wallet] The identity wallet implementation for use with this Gateway
+ * instance. Required if a label is specified as the <code>identity</code>, or <code>clientTlsIdentity</code> is specified.
+ * @property {module:fabric-network.IdentityProvider} [identityProvider] An identity provider for the supplied identity
+ * object. Required if an identity object is not one of the default supported types.
+ * @property {string} [clientTlsIdentity] The identity within the wallet to use as the client TLS identity.
  * @property {module:fabric-network.Gateway~TransactionOptions} [transaction]
  * Options for the default event handler capability.
  * @property {module:fabric-network.Gateway~QueryOptions} [query]
@@ -116,9 +124,8 @@ class Gateway {
 	/**
      * Connect to the Gateway with a connection profile or a prebuilt Client instance.
      * @async
-     * @param {(string|object|Client)} config The configuration for this Gateway which can be:
+     * @param {(object|Client)} config The configuration for this Gateway which can be:
 	 * <ul>
-	 *   <li>A fully qualified common connection profile file path (String)</li>
 	 *   <li>A common connection profile JSON (Object)</li>
 	 *   <li>A pre-configured client instance</li>
 	 * </ul>
@@ -126,22 +133,17 @@ class Gateway {
 	  * for creating this Gateway instance
 	 * @example
 	 * const gateway = new Gateway();
-	 * const wallet = new FileSystemWallet('./WALLETS/wallet');
-	 * const ccpFile = fs.readFileSync('./network.json');
+	 * const wallet = await Wallets.newFileSystemWallet('./WALLETS/wallet');
+	 * const ccpFile = await fs.promises.readFile('./network.json');
 	 * const ccp = JSON.parse(ccpFile.toString());
 	 * await gateway.connect(ccp, {
-	 *   identity: 'admin',
-	 *   wallet: wallet
+	 *     identity: 'admin',
+	 *     wallet: wallet
 	 * });
      */
-	async connect(config, options) {
+	async connect(config, options = {}) {
 		const method = 'connect';
 		logger.debug('%s - start', method);
-
-		if (!options || !options.wallet) {
-			logger.error('%s - A wallet must be assigned to a Gateway instance', method);
-			throw new Error('A wallet must be assigned to a Gateway instance');
-		}
 
 		Gateway._mergeOptions(this.options, options);
 		logger.debug('connection options: %j', options);
@@ -152,38 +154,39 @@ class Gateway {
 			logger.debug('%s - using existing client object', method);
 			this.client = config;
 		} else {
-			// build a new client and once it has been configured with
-			// the passed in options it will be loaded with the ccp
 			this.client = new Client('gateway client');
 			load_ccp = true;
 		}
 
 		// setup an initial identity for the Gateway
-		if (options.identity) {
-			logger.debug('%s - setting identity', method);
+		if (typeof options.identity === 'string') {
+			logger.debug('%s - setting identity from wallet', method);
 			this.identity = await this._getWalletIdentity(options.identity);
 			const provider = options.wallet.getProviderRegistry().getProvider(this.identity.type);
 			const user = await provider.getUserContext(this.identity, options.identity);
 			this.identityContext = this.client.newIdentityContext(user);
+		} else if (typeof options.identity === 'object') {
+			logger.debug('%s - setting identity using identity object', method);
+			this.identity = options.identity;
+			const provider = options.identityProvider || newDefaultProviderRegistry().getProvider(this.identity.type);
+			const user = await provider.getUserContext(this.identity, 'gateway identity');
+			this.identityContext = this.client.newIdentityContext(user);
+		} else {
+			logger.error('%s - An identity must be assigned to a Gateway instance', method);
+			throw new Error('An identity must be assigned to a Gateway instance');
 		}
 
 		if (options.clientTlsIdentity) {
 			logger.debug('%s - setting tlsIdentity', method);
 			const tlsIdentity = await this._getWalletIdentity(options.clientTlsIdentity);
-			this.client.setTlsClientCertAndKey(tlsIdentity.credentials.certificate, tlsIdentity.credentials.privateKey);
+			const tlsCredentials = tlsIdentity.credentials;
+			this.client.setTlsClientCertAndKey(tlsCredentials.certificate, tlsCredentials.privateKey);
 		} else if (options.tlsInfo) {
 			logger.debug('%s - setting tlsInfo', method);
 			this.client.setTlsClientCertAndKey(options.tlsInfo.certificate, options.tlsInfo.key);
 		} else {
 			logger.debug('%s - using self signed setting for tls', method);
 			this.client.setTlsClientCertAndKey();
-		}
-
-		if (load_ccp) {
-			logger.debug('%s - NetworkConfig loading client from ccp', method);
-			await NetworkConfig.loadFromConfig(this.client, config);
-		} else {
-			logger.debug('%s - no connection profile - using client instance', method);
 		}
 
 		// apply any connection options to the client instance for use
@@ -195,14 +198,25 @@ class Gateway {
 			logger.debug('%s - assigned connection options');
 		}
 
+		// Load connection profile after client configuration has been completed
+		if (load_ccp) {
+			logger.debug('%s - NetworkConfig loading client from ccp', method);
+			await NetworkConfig.loadFromConfig(this.client, config);
+		}
+
 		logger.debug('%s - end', method);
 	}
 
 	async _getWalletIdentity(label) {
+		if (!this.options.wallet) {
+			throw new Error('No wallet supplied from which to retrieve identity label');
+		}
+
 		const identity = await this.options.wallet.get(label);
 		if (!identity) {
 			throw new Error(`Identity not found in wallet: ${label}`);
 		}
+
 		return identity;
 	}
 

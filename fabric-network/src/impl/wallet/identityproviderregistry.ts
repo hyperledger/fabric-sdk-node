@@ -11,20 +11,12 @@ const defaultProviders: IdentityProvider[] = [
 	new X509Provider(),
 ];
 
-function getDefaultProviders(): Map<string, IdentityProvider> {
-	const reducer: any = (accumulator: Map<string, IdentityProvider>, provider: IdentityProvider): Map<string, IdentityProvider> => {
-		accumulator.set(provider.type, provider);
-		return accumulator;
-	};
-	return defaultProviders.reduce(reducer, new Map());
-}
-
 /**
  * Registry of identity providers for use by a wallet.
  * @memberof module:fabric-network
  */
 export class IdentityProviderRegistry {
-	private readonly providers: Map<string, IdentityProvider> = getDefaultProviders();
+	private readonly providers: Map<string, IdentityProvider> = new Map();
 
 	/**
 	 * Get the provider for a given type from the registry. Throws an error if no provider for the type exists.
@@ -46,4 +38,10 @@ export class IdentityProviderRegistry {
 	public addProvider(provider: IdentityProvider): void {
 		this.providers.set(provider.type, provider);
 	}
+}
+
+export function newDefaultProviderRegistry(): IdentityProviderRegistry {
+	const registry = new IdentityProviderRegistry();
+	defaultProviders.forEach((provider) => registry.addProvider(provider));
+	return registry;
 }

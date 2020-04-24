@@ -31,7 +31,6 @@ describe('NetworkConfig', () => {
 	let committer;
 	let endpoint;
 	let FakeLogger;
-	let FakeFS;
 	let revert;
 
 	const PEM = '-----BEGIN CERTIFICATE-----\n' +
@@ -69,18 +68,16 @@ describe('NetworkConfig', () => {
 		sandbox.stub(FakeLogger);
 		revert.push(NetworkConfig.__set__('logger', FakeLogger));
 
-		FakeFS = {
-			readFileSync: () => {}
+		const fakeFS = {
+			promises: {
+				readFile: async () => PEM
+			}
 		};
-		sandbox.stub(FakeFS);
-		FakeFS.readFileSync.returns(PEM);
-		revert.push(NetworkConfig.__set__('fs', FakeFS));
+		revert.push(NetworkConfig.__set__('fs', fakeFS));
 	});
 
 	afterEach(() => {
-		if (revert.length) {
-			revert.forEach(Function.prototype.call, Function.prototype.call);
-		}
+		revert.forEach((f) => f());
 		sandbox.reset();
 	});
 
@@ -261,34 +258,34 @@ describe('NetworkConfig', () => {
 	describe('#buildOptions', () => {
 		it('should run buildOptions with params', async () => {
 			const test = {url: 'url', pem: 'pem', one: 'one', two: 'two'};
-			const options = buildOptions({url: 'url', tlsCACerts: {pem: 'pem'}, grpcOptions: {one: 'one', two: 'two'}});
+			const options = await buildOptions({url: 'url', tlsCACerts: {pem: 'pem'}, grpcOptions: {one: 'one', two: 'two'}});
 			options.should.deep.equal(test);
 		});
 		it('should run buildOptions with only request-timeout', async () => {
-			const options = buildOptions({grpcOptions: {'request-timeout': 2000}});
+			const options = await buildOptions({grpcOptions: {'request-timeout': 2000}});
 			options.requestTimeout.should.be.equal(2000);
 		});
 		it('should run buildOptions with both request-timeout and requestTimeout', async () => {
-			const options = buildOptions({grpcOptions: {'request-timeout': 2000, requestTimeout: 5000}});
+			const options = await buildOptions({grpcOptions: {'request-timeout': 2000, requestTimeout: 5000}});
 			options.requestTimeout.should.be.equal(5000);
 		});
 	});
 
 	describe('#getPEMfromConfig', () => {
 		it('should run getPEMfromConfig with pem param', async () => {
-			const result = getPEMfromConfig({pem: PEM});
+			const result = await getPEMfromConfig({pem: PEM});
 			result.should.equal(PEM);
 		});
 		it('should run getPEMfromConfig with path param', async () => {
-			const result = getPEMfromConfig({path: 'path'});
+			const result = await getPEMfromConfig({path: 'path'});
 			result.should.equal(PEM);
 		});
 		it('should run getPEMfromConfig with no pem config', async () => {
-			const result = getPEMfromConfig({});
+			const result = await getPEMfromConfig({});
 			expect(result).to.be.equal(null);
 		});
 		it('should run getPEMfromConfig with no pem config', async () => {
-			const result = getPEMfromConfig();
+			const result = await getPEMfromConfig();
 			expect(result).to.be.equal(null);
 		});
 	});

@@ -5,7 +5,7 @@
  */
 
 import { IdentityProvider } from '../../../src/impl/wallet/identityprovider';
-import { IdentityProviderRegistry } from '../../../src/impl/wallet/identityproviderregistry';
+import { newDefaultProviderRegistry, IdentityProviderRegistry } from '../../../src/impl/wallet/identityproviderregistry';
 
 import chai = require('chai');
 const expect: Chai.ExpectStatic = chai.expect;
@@ -30,8 +30,8 @@ describe('IdentityProviderRegistry', () => {
 			.to.throw(type);
 	});
 
-	it('Has default X.509 provider', () => {
-		const provider: IdentityProviderRegistry = new IdentityProviderRegistry();
+	it('Default registry has X.509 provider', () => {
+		const provider: IdentityProviderRegistry = newDefaultProviderRegistry();
 		const result: IdentityProvider = provider.getProvider('X.509');
 		expect(result).to.have.property('type', 'X.509');
 	});
