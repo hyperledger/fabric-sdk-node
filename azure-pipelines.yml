@@ -18,6 +18,8 @@ variables:
 - group: npm
 - name: SOFTHSM2_CONF
   value: "$(Build.Repository.LocalPath)/test/fixtures/hsm/softhsm2.conf"
+- name: FABRIC_VERSION
+  value: 2.1
 
 # A Pipeline contains one or more stages
 # A stage is a related collection of jobs. By default stages run sequentially

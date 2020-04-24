@@ -6,7 +6,7 @@
 #
 set -euo pipefail
 
-version=2.1
+version=${FABRIC_VERSION:-2.1}
 artifactory_url=hyperledger-fabric.jfrog.io
 
 for image in peer orderer ccenv baseos nodeenv javaenv tools; do
