@@ -16,14 +16,16 @@ import { NetworkImpl as Network } from './network';
 import { newDefaultProviderRegistry } from './impl/wallet/identityproviderregistry';
 import * as EventStrategies from './impl/event/defaulteventhandlerstrategies';
 import * as QueryStrategies from './impl/query/defaultqueryhandlerstrategies';
+import { getLogger } from './logger';
 
 interface NetworkConfig {
 	loadFromConfig: (client: Client, config: Client | object | string) => void;
 }
 
+// tslint:disable-next-line
 const NetworkConfig: NetworkConfig = require('./impl/ccp/networkconfig');
 
-const logger = require('./logger').getLogger('Gateway');
+const logger = getLogger('Gateway');
 
 export interface DiscoveryOptions {
 	asLocalhost?: boolean;
@@ -121,13 +123,6 @@ export interface GatewayOptions {
  * @memberof module:fabric-network
  */
 export class Gateway {
-	client!: Client;
-	wallet!: Wallet;
-	networks: Map<string, Network>;
-	identity!: Identity;
-	identityContext!: IdentityContext;
-	options: GatewayOptions;
-
 	static _mergeOptions(defaultOptions: any, suppliedOptions: any) {
 		for (const prop in suppliedOptions) {
 			if (typeof suppliedOptions[prop] === 'object' && suppliedOptions[prop] !== null) {
@@ -141,6 +136,13 @@ export class Gateway {
 			}
 		}
 	}
+
+	client!: Client;
+	wallet!: Wallet;
+	networks: Map<string, Network>;
+	identity!: Identity;
+	identityContext!: IdentityContext;
+	options: GatewayOptions;
 
 	constructor() {
 		logger.debug('in Gateway constructor');
@@ -165,15 +167,15 @@ export class Gateway {
 	}
 
 	/**
-     * Connect to the Gateway with a connection profile or a prebuilt Client instance.
-     * @async
-     * @param {(object|Client)} config The configuration for this Gateway which can be:
+	 * Connect to the Gateway with a connection profile or a prebuilt Client instance.
+	 * @async
+	 * @param {(object|Client)} config The configuration for this Gateway which can be:
 	 * <ul>
 	 *   <li>A common connection profile JSON (Object)</li>
 	 *   <li>A pre-configured client instance</li>
 	 * </ul>
-     * @param {module:fabric-network.Gateway~GatewayOptions} options - specific options
-	  * for creating this Gateway instance
+	 * @param {module:fabric-network.Gateway~GatewayOptions} options - specific options
+	 * for creating this Gateway instance
 	 * @example
 	 * const gateway = new Gateway();
 	 * const wallet = await Wallets.newFileSystemWallet('./WALLETS/wallet');
@@ -183,7 +185,7 @@ export class Gateway {
 	 *     identity: 'admin',
 	 *     wallet: wallet
 	 * });
-     */
+	 */
 	async connect(config: Client | string | object, options: GatewayOptions = {}) {
 		const method = 'connect';
 		logger.debug('%s - start', method);
@@ -191,14 +193,14 @@ export class Gateway {
 		Gateway._mergeOptions(this.options, options);
 		logger.debug('connection options: %j', options);
 
-		let load_ccp = false;
+		let loadCCP = false;
 		if (config && (config as any).type === 'Client') {
 			// initialize from an existing Client object instance
 			logger.debug('%s - using existing client object', method);
 			this.client = config as Client;
 		} else {
 			this.client = new Client('gateway client');
-			load_ccp = true;
+			loadCCP = true;
 		}
 
 		// setup an initial identity for the Gateway
@@ -242,7 +244,7 @@ export class Gateway {
 		}
 
 		// Load connection profile after client configuration has been completed
-		if (load_ccp) {
+		if (loadCCP) {
 			logger.debug('%s - NetworkConfig loading client from ccp', method);
 			await NetworkConfig.loadFromConfig(this.client, config);
 		}
@@ -281,8 +283,8 @@ export class Gateway {
 	}
 
 	/**
-     * Clean up and disconnect this Gateway connection in preparation for it to be discarded and garbage collected
-     */
+	 * Clean up and disconnect this Gateway connection in preparation for it to be discarded and garbage collected
+	 */
 	disconnect() {
 		logger.debug('in disconnect');
 		for (const network of this.networks.values()) {

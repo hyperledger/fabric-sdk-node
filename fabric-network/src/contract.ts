@@ -16,6 +16,7 @@ import { ListenerSession as IListenerSession } from './impl/event/listenersessio
 import { getLogger } from './logger';
 import * as util from 'util';
 
+// tslint:disable-next-line
 const Transaction = require('./transaction');
 const logger = getLogger('Contract');
 
@@ -82,6 +83,7 @@ export class Contract {
 	discoveryInterests: DiscoveryInterest[];
 	discoveryService: DiscoveryService | null;
 	private _name!: string;
+
 	constructor(network: NetworkImpl, chaincodeId: string, namespace: string) {
 		const method = `constructor[${namespace}]`;
 		logger.debug('%s - start', method);
@@ -94,7 +96,7 @@ export class Contract {
 		this.namespace = namespace;
 		this.discoveryService = null;
 		this.contractListeners = new Map();
-		this.discoveryInterests = [{name: chaincodeId}];
+		this.discoveryInterests = [{ name: chaincodeId }];
 	}
 
 	/**
@@ -102,9 +104,9 @@ export class Contract {
 	 * function implemented by this contract, and provides more control over
 	 * the transaction invocation. A new transaction object <strong>must</strong>
 	 * be created for each transaction invocation.
-     * @param {String} name Transaction function name.
+	 * @param {String} name Transaction function name.
 	 * @returns {module:fabric-network.Transaction} A transaction object.
-     */
+	 */
 	createTransaction(name: string) {
 		verifyTransactionName(name);
 		const qualifiedName = this._getQualifiedName(name);
@@ -122,12 +124,12 @@ export class Contract {
 	 * will be evaluated on the endorsing peers and then submitted to the ordering service
 	 * for committing to the ledger.
 	 * This function is equivalent to calling <code>createTransaction(name).submit()</code>.
-     * @param {string} name Transaction function name.
+	 * @param {string} name Transaction function name.
 	 * @param {...string} [args] Transaction function arguments.
 	 * @returns {Buffer} Payload response from the transaction function.
 	 * @throws {module:fabric-network.TimeoutError} If the transaction was successfully submitted to the orderer but
 	 * timed out before a commit event was received from peers.
-     */
+	 */
 	async submitTransaction(name: string, ...args: string[]) {
 		return this.createTransaction(name).submit(...args);
 	}
@@ -139,10 +141,10 @@ export class Contract {
 	 * the ordering service and hence will not be committed to the ledger.
 	 * This is used for querying the world state.
 	 * This function is equivalent to calling <code>createTransaction(name).evaluate()</code>.
-     * @param {string} name Transaction function name.
-     * @param {...string} [args] Transaction function arguments.
-     * @returns {Buffer} Payload response from the transaction function.
-     */
+	 * @param {string} name Transaction function name.
+	 * @param {...string} [args] Transaction function arguments.
+	 * @returns {Buffer} Payload response from the transaction function.
+	 */
 	async evaluateTransaction(name: string, ...args: string[]) {
 		return this.createTransaction(name).evaluate(...args);
 	}
@@ -214,12 +216,12 @@ export class Contract {
 				const asLocalhost = this.network.getGateway().getOptions().discovery!.asLocalhost;
 
 				logger.debug('%s - using discovery interest %j', method, this.discoveryInterests);
-				this.discoveryService.build(idx, {interest: this.discoveryInterests});
+				this.discoveryService.build(idx, { interest: this.discoveryInterests });
 				this.discoveryService.sign(idx);
 
 				// go get the endorsement plan from the peer's discovery service
 				// to be ready to be used by the transaction's submit
-				await this.discoveryService.send({asLocalhost, targets});
+				await this.discoveryService.send({ asLocalhost, targets });
 				logger.debug('%s - endorsement plan retrieved', method);
 			}
 
@@ -273,7 +275,7 @@ export class Contract {
 	resetDiscoveryInterests() {
 		const method = `resetDiscoveryInterest[${this._name}]`;
 		logger.debug('%s - start', method);
-		this.discoveryInterests = [{name: this.chaincodeId}];
+		this.discoveryInterests = [{ name: this.chaincodeId }];
 		this.discoveryService = null;
 
 		return this;
