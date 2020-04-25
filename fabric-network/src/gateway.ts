@@ -6,14 +6,55 @@
 
 'use strict';
 
-const {NetworkImpl: Network} = require('./network');
-const NetworkConfig = require('./impl/ccp/networkconfig');
-const {Client} = require('fabric-common');
-const EventStrategies = require('./impl/event/defaulteventhandlerstrategies');
-const QueryStrategies = require('./impl/query/defaultqueryhandlerstrategies');
-const {newDefaultProviderRegistry} = require('./impl/wallet/identityproviderregistry');
+import { Client, IdentityContext } from 'fabric-common';
+import { Identity } from './impl/wallet/identity';
+import { Wallet } from './impl/wallet/wallet';
+import { IdentityProvider } from './impl/wallet/identityprovider';
+import { TxEventHandlerFactory } from './impl/event/transactioneventhandler';
+import { QueryHandlerFactory } from './impl/query/queryhandler';
+import { NetworkImpl as Network } from './network';
+import { newDefaultProviderRegistry } from './impl/wallet/identityproviderregistry';
+import * as EventStrategies from './impl/event/defaulteventhandlerstrategies';
+import * as QueryStrategies from './impl/query/defaultqueryhandlerstrategies';
+
+interface NetworkConfig {
+	loadFromConfig: (client: Client, config: Client | object | string) => void;
+}
+
+const NetworkConfig: NetworkConfig = require('./impl/ccp/networkconfig');
 
 const logger = require('./logger').getLogger('Gateway');
+
+export interface DiscoveryOptions {
+	asLocalhost?: boolean;
+	enabled?: boolean;
+}
+
+export interface DefaultEventHandlerOptions {
+	commitTimeout?: number;
+	endorseTimeout?: number;
+	strategy?: TxEventHandlerFactory | null;
+}
+
+export interface DefaultQueryHandlerOptions {
+	strategy?: QueryHandlerFactory;
+	timeout?: number;
+}
+
+export interface GatewayOptions {
+	identity?: string | Identity;
+	wallet?: Wallet;
+	identityProvider?: IdentityProvider;
+	clientTlsIdentity?: string;
+	discovery?: DiscoveryOptions;
+	eventHandlerOptions?: DefaultEventHandlerOptions;
+	queryHandlerOptions?: DefaultQueryHandlerOptions;
+	tlsInfo?: {
+		certificate: string;
+		key: string;
+	};
+	'connection-options'?: any;
+}
 
 /**
  * @typedef {Object} Gateway~GatewayOptions
@@ -79,9 +120,15 @@ const logger = require('./logger').getLogger('Gateway');
  * [submit transactions]{@link Contract#submitTransaction} to the ledger.
  * @memberof module:fabric-network
  */
-class Gateway {
+export class Gateway {
+	client!: Client;
+	wallet!: Wallet;
+	networks: Map<string, Network>;
+	identity!: Identity;
+	identityContext!: IdentityContext;
+	options: GatewayOptions;
 
-	static _mergeOptions(defaultOptions, suppliedOptions) {
+	static _mergeOptions(defaultOptions: any, suppliedOptions: any) {
 		for (const prop in suppliedOptions) {
 			if (typeof suppliedOptions[prop] === 'object' && suppliedOptions[prop] !== null) {
 				if (defaultOptions[prop] === undefined) {
@@ -97,11 +144,7 @@ class Gateway {
 
 	constructor() {
 		logger.debug('in Gateway constructor');
-		this.client = null;
-		this.wallet = null;
-		this.identityContext = null;
 		this.networks = new Map();
-		this.identity = null;
 
 		// initial options - override with the connect()
 		this.options = {
@@ -141,7 +184,7 @@ class Gateway {
 	 *     wallet: wallet
 	 * });
      */
-	async connect(config, options = {}) {
+	async connect(config: Client | string | object, options: GatewayOptions = {}) {
 		const method = 'connect';
 		logger.debug('%s - start', method);
 
@@ -149,10 +192,10 @@ class Gateway {
 		logger.debug('connection options: %j', options);
 
 		let load_ccp = false;
-		if (config && config.type === 'Client') {
+		if (config && (config as any).type === 'Client') {
 			// initialize from an existing Client object instance
 			logger.debug('%s - using existing client object', method);
-			this.client = config;
+			this.client = config as Client;
 		} else {
 			this.client = new Client('gateway client');
 			load_ccp = true;
@@ -162,7 +205,7 @@ class Gateway {
 		if (typeof options.identity === 'string') {
 			logger.debug('%s - setting identity from wallet', method);
 			this.identity = await this._getWalletIdentity(options.identity);
-			const provider = options.wallet.getProviderRegistry().getProvider(this.identity.type);
+			const provider = options.wallet!.getProviderRegistry().getProvider(this.identity.type);
 			const user = await provider.getUserContext(this.identity, options.identity);
 			this.identityContext = this.client.newIdentityContext(user);
 		} else if (typeof options.identity === 'object') {
@@ -179,14 +222,14 @@ class Gateway {
 		if (options.clientTlsIdentity) {
 			logger.debug('%s - setting tlsIdentity', method);
 			const tlsIdentity = await this._getWalletIdentity(options.clientTlsIdentity);
-			const tlsCredentials = tlsIdentity.credentials;
+			const tlsCredentials = (tlsIdentity as any).credentials;
 			this.client.setTlsClientCertAndKey(tlsCredentials.certificate, tlsCredentials.privateKey);
 		} else if (options.tlsInfo) {
 			logger.debug('%s - setting tlsInfo', method);
 			this.client.setTlsClientCertAndKey(options.tlsInfo.certificate, options.tlsInfo.key);
 		} else {
 			logger.debug('%s - using self signed setting for tls', method);
-			this.client.setTlsClientCertAndKey();
+			(this.client as any).setTlsClientCertAndKey();
 		}
 
 		// apply any connection options to the client instance for use
@@ -194,7 +237,7 @@ class Gateway {
 		// of connection options for an endpoint
 		// these will be merged with those from the config (default.json)
 		if (options['connection-options']) {
-			this.client.centralized_options = options['connection-options'];
+			(this.client as any).centralized_options = options['connection-options'];
 			logger.debug('%s - assigned connection options');
 		}
 
@@ -207,7 +250,7 @@ class Gateway {
 		logger.debug('%s - end', method);
 	}
 
-	async _getWalletIdentity(label) {
+	async _getWalletIdentity(label: string) {
 		if (!this.options.wallet) {
 			throw new Error('No wallet supplied from which to retrieve identity label');
 		}
@@ -253,7 +296,7 @@ class Gateway {
 	 * @param {string} networkName The name of the network (channel name)
 	 * @returns {module:fabric-network.Network}
 	 */
-	async getNetwork(networkName) {
+	async getNetwork(networkName: string) {
 		const method = 'getNetwork';
 		logger.debug('%s - start', method);
 
@@ -271,5 +314,3 @@ class Gateway {
 		return newNetwork;
 	}
 }
-
-module.exports = Gateway;

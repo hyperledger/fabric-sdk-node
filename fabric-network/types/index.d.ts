@@ -7,12 +7,11 @@
 /* tslint:disable:max-classes-per-file */
 
 import { Wallet } from '../lib/impl/wallet/wallet';
-import { ContractListener, ListenerOptions } from '../lib/events';
 import { Identity } from '../lib/impl/wallet/identity';
 import { IdentityProvider } from '../lib/impl/wallet/identityprovider';
 import { QueryHandlerFactory } from '../lib/impl/query/queryhandler';
 import { Network } from '../lib/network';
-import { Client, Endorser } from 'fabric-common';
+import { Endorser } from 'fabric-common';
 
 export { Wallet };
 export { Wallets } from '../lib/impl/wallet/wallets';
@@ -41,60 +40,11 @@ export { TxEventHandler, TxEventHandlerFactory };
 
 import * as DefaultQueryHandlerStrategies from '../lib/impl/query/defaultqueryhandlerstrategies';
 export { DefaultQueryHandlerStrategies };
+export { GatewayOptions, DiscoveryOptions, Gateway, DefaultEventHandlerOptions, DefaultQueryHandlerOptions } from '../lib/gateway';
+export { DiscoveryInterest, Contract } from '../lib/contract';
 
 // Main fabric network classes
 // -------------------------------------------
-export interface GatewayOptions {
-	identity: string | Identity;
-	wallet?: Wallet;
-	identityProvider?: IdentityProvider;
-	clientTlsIdentity?: string;
-	discovery?: DiscoveryOptions;
-	eventHandlerOptions?: DefaultEventHandlerOptions;
-	queryHandlerOptions?: DefaultQueryHandlerOptions;
-}
-
-export interface DiscoveryOptions {
-	asLocalhost?: boolean;
-	enabled?: boolean;
-}
-
-export interface DiscoveryInterest {
-	name: string;
-	collectionNames?: string[];
-}
-
-export interface DefaultEventHandlerOptions {
-	commitTimeout?: number;
-	endorseTimeout?: number;
-	strategy?: TxEventHandlerFactory | null;
-}
-
-export interface DefaultQueryHandlerOptions {
-	strategy?: QueryHandlerFactory;
-	timeout?: number;
-}
-
-export class Gateway {
-	constructor();
-	public connect(config: Client | string | object, options: GatewayOptions): Promise<void>;
-	public disconnect(): void;
-	public getIdentity(): Identity;
-	public getNetwork(channelName: string): Promise<Network>;
-	public getOptions(): GatewayOptions;
-}
-
-export class Contract {
-	readonly chaincodeId: string;
-	readonly namespace: string;
-	createTransaction(name: string): Transaction;
-	evaluateTransaction(name: string, ...args: string[]): Promise<Buffer>;
-	submitTransaction(name: string, ...args: string[]): Promise<Buffer>;
-	addContractListener(listener: ContractListener, options?: ListenerOptions): Promise<ContractListener>;
-	removeContractListener(listener: ContractListener): void;
-	addDiscoveryInterest(interest: DiscoveryInterest): Contract;
-	resetDiscoveryInterests(): Contract;
-}
 
 export interface TransientMap {
 	[key: string]: Buffer;

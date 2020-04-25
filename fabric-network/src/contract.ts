@@ -6,11 +6,23 @@
 
 'use strict';
 
+import { NetworkImpl } from './network';
+import { ContractListener, ListenerOptions } from './events';
+import { Gateway } from './gateway';
+import { DiscoveryService } from 'fabric-common';
+import { ContractListenerSession } from './impl/event/contractlistenersession';
+import * as ListenerSession from './impl/event/listenersession';
+import { ListenerSession as IListenerSession } from './impl/event/listenersession';
+import { getLogger } from './logger';
+import * as util from 'util';
+
 const Transaction = require('./transaction');
-const {ContractListenerSession} = require('./impl/event/contractlistenersession');
-const ListenerSession = require('./impl/event/listenersession');
-const logger = require('./logger').getLogger('Contract');
-const util = require('util');
+const logger = getLogger('Contract');
+
+export interface DiscoveryInterest {
+	name: string;
+	collectionNames?: string[];
+}
 
 /**
  * Ensure transaction name is a non-empty string.
@@ -18,7 +30,7 @@ const util = require('util');
  * @param {*} name Transaction name.
  * @throws {Error} if the name is invalid.
  */
-function verifyTransactionName(name) {
+function verifyTransactionName(name: string) {
 	if (typeof name !== 'string' || name.length === 0) {
 		const msg = util.format('Transaction name must be a non-empty string: %j', name);
 		logger.error('verifyTransactionName:', msg);
@@ -32,7 +44,7 @@ function verifyTransactionName(name) {
  * @param {*} namespace Transaction namespace.
  * @throws {Error} if the namespace is invalid.
  */
-function verifyNamespace(namespace) {
+function verifyNamespace(namespace: string) {
 	if (namespace && typeof namespace !== 'string') {
 		const msg = util.format('Namespace must be a non-empty string: %j', namespace);
 		logger.error('verifyNamespace:', msg);
@@ -61,8 +73,16 @@ function verifyNamespace(namespace) {
  * @memberof module:fabric-network
  * @hideconstructor
  */
-class Contract {
-	constructor(network, chaincodeId, namespace) {
+export class Contract {
+	readonly chaincodeId: string;
+	readonly namespace: string;
+	network: NetworkImpl;
+	gateway: Gateway;
+	contractListeners: Map<ContractListener, IListenerSession>;
+	discoveryInterests: DiscoveryInterest[];
+	discoveryService: DiscoveryService | null;
+	private _name!: string;
+	constructor(network: NetworkImpl, chaincodeId: string, namespace: string) {
 		const method = `constructor[${namespace}]`;
 		logger.debug('%s - start', method);
 
@@ -70,7 +90,7 @@ class Contract {
 
 		this.network = network;
 		this.chaincodeId = chaincodeId;
-		this.gateway = network.gateway;
+		this.gateway = network.getGateway();
 		this.namespace = namespace;
 		this.discoveryService = null;
 		this.contractListeners = new Map();
@@ -85,7 +105,7 @@ class Contract {
      * @param {String} name Transaction function name.
 	 * @returns {module:fabric-network.Transaction} A transaction object.
      */
-	createTransaction(name) {
+	createTransaction(name: string) {
 		verifyTransactionName(name);
 		const qualifiedName = this._getQualifiedName(name);
 		const transaction = new Transaction(this, qualifiedName);
@@ -93,7 +113,7 @@ class Contract {
 		return transaction;
 	}
 
-	_getQualifiedName(name) {
+	_getQualifiedName(name: string) {
 		return (this.namespace ? `${this.namespace}:${name}` : name);
 	}
 
@@ -108,7 +128,7 @@ class Contract {
 	 * @throws {module:fabric-network.TimeoutError} If the transaction was successfully submitted to the orderer but
 	 * timed out before a commit event was received from peers.
      */
-	async submitTransaction(name, ...args) {
+	async submitTransaction(name: string, ...args: string[]) {
 		return this.createTransaction(name).submit(...args);
 	}
 
@@ -123,7 +143,7 @@ class Contract {
      * @param {...string} [args] Transaction function arguments.
      * @returns {Buffer} Payload response from the transaction function.
      */
-	async evaluateTransaction(name, ...args) {
+	async evaluateTransaction(name: string, ...args: string[]) {
 		return this.createTransaction(name).evaluate(...args);
 	}
 
@@ -142,8 +162,8 @@ class Contract {
 	 * };
 	 * contract.addContractListener(listener);
 	 */
-	async addContractListener(listener, options) {
-		const sessionSupplier = () => new ContractListenerSession(listener, this.chaincodeId, this.network, options);
+	async addContractListener(listener: ContractListener, options: ListenerOptions) {
+		const sessionSupplier = async () => new ContractListenerSession(listener, this.chaincodeId, this.network, options);
 		const contractListener = await ListenerSession.addListener(listener, this.contractListeners, sessionSupplier);
 		return contractListener;
 	}
@@ -152,7 +172,7 @@ class Contract {
 	 * Remove a previously added contract listener.
 	 * @param {module:fabric-network.ContractListener} listener A contract listener callback function.
 	 */
-	removeContractListener(listener) {
+	removeContractListener(listener: ContractListener) {
 		ListenerSession.removeListener(listener, this.contractListeners);
 	}
 
@@ -182,16 +202,16 @@ class Contract {
 		const method = `getDiscoveryHandler[${this.chaincodeId}]`;
 		logger.debug('%s - start', method);
 		// if the network is using discovery, then this contract will too
-		if (this.network.discoveryService) {
+		if (this.network.getDiscoveryService()) {
 			// check if we have initialized this contract's discovery
 			if (!this.discoveryService) {
 				logger.debug('%s - setting up contract discovery', method);
 
-				this.discoveryService = this.network.channel.newDiscoveryService(this.chaincodeId);
+				this.discoveryService = this.network.getChannel().newDiscoveryService(this.chaincodeId);
 
-				const targets = this.network.discoveryService.targets;
-				const idx = this.network.gateway.identityContext;
-				const asLocalhost = this.network.gateway.getOptions().discovery.asLocalhost;
+				const targets = (this.network.getDiscoveryService() as any).targets;
+				const idx = this.network.getGateway().identityContext!;
+				const asLocalhost = this.network.getGateway().getOptions().discovery!.asLocalhost;
 
 				logger.debug('%s - using discovery interest %j', method, this.discoveryInterests);
 				this.discoveryService.build(idx, {interest: this.discoveryInterests});
@@ -225,7 +245,7 @@ class Contract {
 	 * @link module:fabric-network.Transaction#submit} is called.
 	 * @return {Contract} This Contract instance
 	 */
-	addDiscoveryInterest(interest) {
+	addDiscoveryInterest(interest: DiscoveryInterest) {
 		const method = `addDiscoveryInterest[${this._name}]`;
 
 		if (!(typeof interest === 'object')) {
@@ -268,5 +288,3 @@ class Contract {
 		return this.discoveryInterests;
 	}
 }
-
-module.exports = Contract;

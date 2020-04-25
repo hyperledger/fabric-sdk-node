@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// @ts-ignore no implicit any
-import Contract = require('./contract');
+import { Contract } from './contract';
+import { Gateway } from './gateway';
 import { Channel, DiscoveryService, Endorser } from 'fabric-common';
 import { BlockListener, CommitListener, EventType, ListenerOptions } from './events';
 import { BlockEventSource } from './impl/event/blockeventsource';
@@ -15,10 +15,8 @@ import { IsolatedBlockListenerSession } from './impl/event/isolatedblocklistener
 import { checkpointBlockListener } from './impl/event/listeners';
 import { addListener, ListenerSession, removeListener } from './impl/event/listenersession';
 import { SharedBlockListenerSession } from './impl/event/sharedblocklistenersession';
-import { QueryHandlerFactory } from './impl/query/queryhandler';
+import { QueryHandler } from './impl/query/queryhandler';
 import * as Logger from './logger';
-// @ts-ignore no implicit any
-import Gateway = require('./gateway');
 
 const logger = Logger.getLogger('Network');
 
@@ -47,7 +45,7 @@ export interface Network {
 }
 
 export class NetworkImpl implements Network {
-	public queryHandler?: QueryHandlerFactory;
+	public queryHandler?: QueryHandler;
 	private readonly gateway: Gateway;
 	private readonly channel: Channel;
 	private readonly contracts = new Map<string, Contract>();
@@ -168,7 +166,7 @@ export class NetworkImpl implements Network {
 
 		// Must be created after channel initialization to ensure discovery has located the peers
 		const queryOptions = this.gateway.getOptions().queryHandlerOptions;
-		this.queryHandler = queryOptions.strategy(this);
+		this.queryHandler = queryOptions!.strategy!(this);
 		logger.debug('%s - end', method);
 	}
 
@@ -199,6 +197,10 @@ export class NetworkImpl implements Network {
 
 	getChannel() {
 		return this.channel;
+	}
+
+	getDiscoveryService() {
+		return this.discoveryService;
 	}
 
 	_dispose() {
