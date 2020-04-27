@@ -67,6 +67,11 @@ export enum Constants {
 	FILE_WALLET = 'file',
 	COUCH_WALLET = 'couchDB',
 	COUCH_WALLET_URL = 'http://localhost:5984',
+	HSM_WALLET = 'HSM',
+
+	// provider types
+	HSM_PROVIDER = 'HSM-X.509',
+	X509_PROVDER = 'X.509',
 
 	// Listener types
 	CONTRACT = 'CONTRACT',

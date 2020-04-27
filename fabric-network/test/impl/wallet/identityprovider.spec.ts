@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { ImportMock, MockManager } from 'ts-mock-imports';
 import {
 	HsmX509Identity,
 	HsmX509Provider,
@@ -16,6 +17,8 @@ import {
 	X509Provider,
 } from '../../../src/impl/wallet/x509identity';
 
+import { Utils } from 'fabric-common';
+ImportMock.mockFunction(Utils, 'newCryptoSuite');
 import chai = require('chai');
 const expect: Chai.ExpectStatic = chai.expect;
 

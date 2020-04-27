@@ -7,20 +7,49 @@
 import { Constants } from '../constants';
 import * as AdminUtils from './utility/adminUtils';
 import * as BaseUtils from './utility/baseUtils';
+import * as ClientUtils from './utility/clientUtils';
 import { CommonConnectionProfileHelper } from './utility/commonConnectionProfileHelper';
 import { StateStore } from './utility/stateStore';
 
 import { createQueryHandler as sampleQueryStrategy } from '../../config/handlers/sample-query-handler';
 import { createTransactionEventHandler as sampleTxnEventStrategy } from '../../config/handlers/sample-transaction-event-handler';
 
-import { DefaultEventHandlerStrategies, DefaultQueryHandlerStrategies, Gateway, GatewayOptions, Wallet, Wallets, Identity, Contract, Network, TxEventHandlerFactory, QueryHandlerFactory, Transaction, TransientMap } from 'fabric-network';
+import {
+	DefaultEventHandlerStrategies,
+	DefaultQueryHandlerStrategies,
+	Gateway,
+	GatewayOptions,
+	Wallet,
+	Wallets,
+	Identity,
+	Contract,
+	Network,
+	TxEventHandlerFactory,
+	QueryHandlerFactory,
+	Transaction,
+	TransientMap,
+	IdentityProvider,
+	HsmX509Provider,
+	HsmOptions,
+	HsmX509Identity
+} from 'fabric-network';
+import * as FabricCAClient from 'fabric-ca-client';
+import { User } from 'fabric-common';
 import * as fs from 'fs';
 import * as path from 'path';
 
 const stateStore: StateStore = StateStore.getInstance();
 const txnTypes: string[] = ['evaluate', 'submit'];
 const txnResponseTypes: string[] = ['evaluate', 'error', 'submit'];
-const supportedWallets: string[] = [Constants.FILE_WALLET as string, Constants.MEMORY_WALLET as string, Constants.COUCH_WALLET as string];
+const supportedWallets: string[] = [
+	Constants.FILE_WALLET as string,
+	Constants.MEMORY_WALLET as string,
+	Constants.COUCH_WALLET as string,
+	Constants.HSM_WALLET as string
+];
+
+const HSM_PROVIDER: string = Constants.HSM_PROVIDER;
+const X509_PROVDER: string = Constants.X509_PROVDER;
 
 const EventStrategies: { [key: string]: TxEventHandlerFactory } = {
 	MSPID_SCOPE_ALLFORTX : DefaultEventHandlerStrategies.MSPID_SCOPE_ALLFORTX,
@@ -52,6 +81,8 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 		BaseUtils.logAndThrow(`Passed wallet type [${walletType}] is not supported, must be one of: ${supportedWallets}`);
 	}
 
+	let useHSM = false;
+
 	const myWalletReference: string = `${Constants.WALLET}_walletType`;
 	let wallet: Wallet = stateStore.get(myWalletReference);
 	if (!wallet) {
@@ -71,6 +102,19 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 			case Constants.COUCH_WALLET:
 				wallet = await Wallets.newCouchDBWallet({url: Constants.COUCH_WALLET_URL as string});
 				break;
+			case Constants.HSM_WALLET:
+				wallet = await Wallets.newInMemoryWallet();
+				useHSM = true;
+
+				const hsmOptions: HsmOptions = {
+					lib: getHSMLibPath(),
+					pin: process.env.PKCS11_PIN || '98765432',
+					slot: Number(process.env.PKCS11_SLOT || '0')
+				};
+
+				const hsmProvider = new HsmX509Provider(hsmOptions);
+				wallet.getProviderRegistry().addProvider(hsmProvider);
+				break;
 			default:
 				BaseUtils.logAndThrow(`Unmatched wallet backing store`);
 		}
@@ -87,11 +131,20 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 		// We have an identity to use
 		BaseUtils.logMsg(`Identity ${userId} already exists in wallet and will be used`);
 	} else {
-		await identitySetup(wallet, ccp, orgName, userName);
+		if (useHSM) {
+			BaseUtils.logMsg(`Will create HSM Identity ${userId}`);
+			await createHSMUser(wallet, ccp, orgName, userName);
+		} else {
+			// User1 is the only user with existing credentials
+			BaseUtils.logMsg(`Will build existing Identity ${userId}`);
+			await identitySetup(wallet, ccp, orgName, userName);
+		}
 
 		if (tls) {
 			const caName: string = ccp.getCertificateAuthoritiesForOrg(orgName)[0];
 			const fabricCAEndpoint: string = ccp.getCertificateAuthority(caName).url;
+			BaseUtils.logMsg(`fabricCAEndpoint ${fabricCAEndpoint} will be used for TLS certificate`);
+
 			const tlsInfo: any = await AdminUtils.tlsEnroll(fabricCAEndpoint, caName);
 			const caOrg: any = ccp.getOrganization(orgName);
 
@@ -101,7 +154,7 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 					privateKey: tlsInfo.key,
 				},
 				mspId: caOrg.mspid,
-				type: 'X.509',
+				type: X509_PROVDER,
 			};
 			await wallet.put('tlsId', tlsIdentity);
 		}
@@ -140,7 +193,7 @@ function addGatewayObjectToStateStore(gatewayName: string, gateway: any): void {
 
 function getGatewayObject(gatewayName: string): any {
 	const gateways: Map<string, any> = stateStore.get(Constants.GATEWAYS);
-	if (gateways.get(gatewayName)) {
+	if (gateways && gateways.get(gatewayName)) {
 		return gateways.get(gatewayName);
 	} else {
 		const msg: string = `Gateway named ${gatewayName} is not present in the state store`;
@@ -156,6 +209,33 @@ function getGateway(gatewayName: string): any {
 		const msg: string = `Gateway named ${gatewayName} is not present in the state store`;
 		BaseUtils.logAndThrow(msg);
 	}
+}
+
+function getHSMLibPath(): string {
+	const pathnames = [
+		'/usr/lib/softhsm/libsofthsm2.so', // Ubuntu
+		'/usr/lib/x86_64-linux-gnu/softhsm/libsofthsm2.so', // Ubuntu  apt-get install
+		'/usr/lib/s390x-linux-gnu/softhsm/libsofthsm2.so', // Ubuntu
+		'/usr/local/lib/softhsm/libsofthsm2.so', // Ubuntu, OSX (tar ball install)
+		'/usr/lib/powerpc64le-linux-gnu/softhsm/libsofthsm2.so', // Power (can't test this)
+		'/usr/lib/libacsp-pkcs11.so' // LinuxOne
+	];
+	let pkcsLibPath: string = 'NOT FOUND';
+	if (typeof process.env.PKCS11_LIB === 'string' && process.env.PKCS11_LIB !== '') {
+		pkcsLibPath  = process.env.PKCS11_LIB;
+	} else {
+		//
+		// Check common locations for PKCS library
+		//
+		for (let i = 0; i < pathnames.length; i++) {
+			if (fs.existsSync(pathnames[i])) {
+				pkcsLibPath = pathnames[i];
+				break;
+			}
+		}
+	}
+
+	return pkcsLibPath;
 }
 
 /**
@@ -185,11 +265,85 @@ async function identitySetup(wallet: Wallet, ccp: CommonConnectionProfileHelper,
 			privateKey: key,
 		},
 		mspId: orgMsp,
-		type: 'X.509',
+		type: X509_PROVDER,
 	};
 
 	BaseUtils.logMsg(`Adding identity for ${identityName} to wallet`);
 	await wallet.put(identityName, identity);
+}
+
+/**
+ * Perform an HSM ID setup
+ * @param {Wallet} wallet the in memory wallet to use
+ * @param {CommonConnectionProfileHelper} ccp The common connection profile
+ * @param {String} orgName the organization name
+ * @param {String} userName the user name
+ * @return {String} the identity name
+ */
+async function createHSMUser(wallet: Wallet, ccp: CommonConnectionProfileHelper, orgName: string, userName: string): Promise<void> {
+	const org: any = ccp.getOrganization(orgName);
+	const orgMsp: string = org.mspid;
+
+	// Setup the CAs and providers
+	const caName: string = ccp.getCertificateAuthoritiesForOrg(orgName)[0];
+	const fabricCAEndpoint: string = ccp.getCertificateAuthority(caName).url;
+	const tlsOptions = {
+		trustedRoots: [],
+		verify: false
+	};
+	const hsmProvider: IdentityProvider = wallet.getProviderRegistry().getProvider(HSM_PROVIDER);
+	const hsmCAClient = new FabricCAClient(fabricCAEndpoint, tlsOptions, caName, hsmProvider.getCryptoSuite());
+	const provider: IdentityProvider = wallet.getProviderRegistry().getProvider(X509_PROVDER);
+	const caClient = new FabricCAClient(fabricCAEndpoint, tlsOptions, caName);
+
+	// first setup the admin user
+	const adminName: string = `admin@${orgName}`;
+
+	const adminOptions = {
+		enrollmentID: 'admin',
+		enrollmentSecret: 'adminpw'
+	};
+	const adminEnrollment = await caClient.enroll(adminOptions);
+	const adminIdentity = {
+		credentials: {
+			certificate: adminEnrollment.certificate,
+			privateKey: adminEnrollment.key.toBytes()
+		},
+		mspId: orgMsp,
+		type: X509_PROVDER
+	};
+	await wallet.put(adminName, adminIdentity);
+	const adminUser = await provider.getUserContext(adminIdentity, 'admin');
+
+	// register the new user using the admin
+	const registerRequest: any = {
+		enrollmentID: userName,
+		affiliation: orgName.toLowerCase(),
+		attrs: [],
+		maxEnrollments: -1, // infinite enrollment by default
+		role: 'client'
+	};
+	const userSecret = await hsmCAClient.register(registerRequest, adminUser);
+
+	// enroll the user -- generate keys and get the certificate
+	//                 -- stores the generated private key in the HSM
+	const options = {
+		enrollmentID: userName,
+		enrollmentSecret: userSecret
+	};
+	const enrollment = await hsmCAClient.enroll(options);
+
+	// set the new identity into the wallet
+	const identityName: string = `${userName}@${orgName}`;
+	const identity = {
+		credentials: {
+			certificate: enrollment.certificate
+		},
+		mspId: orgMsp,
+		type: HSM_PROVIDER
+	};
+	await wallet.put(identityName, identity);
+	BaseUtils.logMsg(`Adding HSM identity for ${userName}@${orgName} to wallet`);
 }
 
 /**

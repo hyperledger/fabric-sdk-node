@@ -17,7 +17,7 @@ variables:
 - group: credentials
 - group: npm
 - name: SOFTHSM2_CONF
-  value: "$(Build.Repository.LocalPath)/test/fixtures/hsm/softhsm2.conf"
+  value: "$(Build.Repository.LocalPath)/test/ts-fixtures/hsm/softhsm2.conf"
 - name: FABRIC_VERSION
   value: 2.1
 

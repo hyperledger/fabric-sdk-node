@@ -437,7 +437,7 @@ export async function submitChannelRequest(clientName: string, channelName: stri
 	}
 }
 
-function createAdminUserForOrg(ccp: CommonConnectionProfileHelper, orgName: string): User {
+export function createAdminUserForOrg(ccp: CommonConnectionProfileHelper, orgName: string): User {
 
 	const org: any = ccp.getOrganization(orgName);
 	if (!org) {

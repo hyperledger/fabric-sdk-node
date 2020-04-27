@@ -11,6 +11,7 @@ import * as ByteBuffer from 'bytebuffer';
 
 export class Utils {
 	public static getLogger(name: string): any;
+	public static newCryptoSuite(optons: any): ICryptoSuite;
 }
 export interface ICryptoKey {
 	getSKI(): string;
