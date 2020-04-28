@@ -42,6 +42,7 @@ export interface HsmOptions {
 export class HsmX509Provider implements IdentityProvider {
 	public readonly type: string = 'HSM-X.509';
 	private readonly options: any;
+	private readonly cryptoSuite: ICryptoSuite;
 
 	/**
 	 * Create a provider instance.
@@ -52,6 +53,11 @@ export class HsmX509Provider implements IdentityProvider {
 		this.options = {};
 		Object.assign(this.options, options);
 		this.options.software = false; // Must be set to enable HSM
+		this.cryptoSuite = User.newCryptoSuite(this.options);
+	}
+
+	public getCryptoSuite(): ICryptoSuite {
+		return this.cryptoSuite;
 	}
 
 	public fromJson(data: IdentityData): HsmX509Identity {
@@ -86,12 +92,11 @@ export class HsmX509Provider implements IdentityProvider {
 	}
 
 	public async getUserContext(identity: HsmX509Identity, name: string): Promise<User> {
-		const cryptoSuite: ICryptoSuite = User.newCryptoSuite(this.options);
 		const user: User = new User(name);
-		user.setCryptoSuite(cryptoSuite);
+		user.setCryptoSuite(this.cryptoSuite);
 
-		const publicKey: ICryptoKey = await cryptoSuite.importKey(identity.credentials.certificate);
-		const privateKeyObj: ICryptoKey = await cryptoSuite.getKey(publicKey.getSKI());
+		const publicKey: ICryptoKey = await this.cryptoSuite.importKey(identity.credentials.certificate);
+		const privateKeyObj: ICryptoKey = await this.cryptoSuite.getKey(publicKey.getSKI());
 		await user.setEnrollment(privateKeyObj, identity.credentials.certificate.toString(), identity.mspId, true);
 
 		return user;

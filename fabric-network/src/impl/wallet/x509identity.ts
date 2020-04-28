@@ -30,6 +30,11 @@ interface X509IdentityDataV1 extends IdentityData {
 
 export class X509Provider implements IdentityProvider {
 	public readonly type: string = 'X.509';
+	private readonly cryptoSuite: ICryptoSuite = User.newCryptoSuite();
+
+	public getCryptoSuite(): ICryptoSuite {
+		return this.cryptoSuite;
+	}
 
 	public fromJson(data: IdentityData): X509Identity {
 		if (data.type !== this.type) {
@@ -65,12 +70,11 @@ export class X509Provider implements IdentityProvider {
 	}
 
 	public async getUserContext(identity: X509Identity, name: string): Promise<User> {
-		const cryptoSuite: ICryptoSuite = User.newCryptoSuite();
 
 		const user: User = new User(name);
-		user.setCryptoSuite(cryptoSuite);
+		user.setCryptoSuite(this.cryptoSuite);
 
-		const importedKey: ICryptoKey = cryptoSuite.createKeyFromRaw(identity.credentials.privateKey.toString());
+		const importedKey: ICryptoKey = this.cryptoSuite.createKeyFromRaw(identity.credentials.privateKey.toString());
 		await user.setEnrollment(importedKey, identity.credentials.certificate.toString(), identity.mspId, true);
 
 		return user;

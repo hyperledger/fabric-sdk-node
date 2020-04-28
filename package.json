@@ -15,7 +15,7 @@
     "installAndGenerateCerts": "node ./scripts/npm_scripts/generateCerts.js",
     "pullFabricImages": "./scripts/utility/fabric_images.sh",
     "test": "run-s checkLicense cleanUp dockerClean compile lint docs unitTest:all dockerReady tapeIntegration cucumberScenario",
-    "testNoHSM": "run-s checkLicense cleanUp dockerClean compile lint docs unitTest:all dockerReady tapeIntegrationNoHSM cucumberScenario",
+    "testNoHSM": "run-s checkLicense cleanUp dockerClean compile lint docs unitTest:all dockerReady tapeIntegration cucumberScenarioNoHSM",
     "checkLicense": "./scripts/npm_scripts/checkLicense.sh",
     "cleanUp": "node -e 'require(\"./scripts/npm_scripts/testFunctions.js\").cleanUp()'",
     "dockerClean": "./scripts/npm_scripts/dockerClean.sh",
@@ -31,12 +31,13 @@
     "unitTest": "mocha --require ts-node/register --reporter list",
     "dockerReady": "npm run dockerClean && (cd test/fixtures/docker-compose && docker-compose -f docker-compose-tls-level-db.yaml -p node up -d && sleep 15 && docker ps -a)",
     "tapeIntegration": "./scripts/npm_scripts/runTape.sh",
-    "tapeIntegrationNoHSM": "./scripts/npm_scripts/runTape.sh noHSM",
     "cucumberScenario": "npm run setupCucumbers && export HFC_LOGGING='{\"debug\":\"test/temp/debugc.log\"}' && npm run test:cucumber && npm run dockerClean && nyc --check-coverage --statements 54 --branches 32 --functions 46 --lines 54 npm run test:ts-cucumber",
+    "cucumberScenarioNoHSM": "npm run setupCucumbers && export HFC_LOGGING='{\"debug\":\"test/temp/debugc.log\"}' && npm run test:cucumber && npm run dockerClean && nyc --check-coverage --statements 54 --branches 32 --functions 46 --lines 54 npm run test:ts-cucumberNoHSM",
     "setupCucumbers": "node -e 'require(\"./scripts/npm_scripts/testFunctions.js\").createCucumberLogFile()'",
     "test:cucumber": "cucumber-js -f node_modules/cucumber-pretty ./test/scenario/features/*.feature",
-    "test:ts-cucumber": "cucumber-js -f node_modules/cucumber-pretty ./test/ts-scenario/features/*.feature --require './test/ts-scenario/steps/**/*.ts' --require './test/ts-scenario/support/**/*.ts' --require-module ts-node/register",
-    "test:ts-cucumber-tagged": "npm run test:ts-cucumber -- --tags @discovery",
+	 "test:ts-cucumber": "cucumber-js -f node_modules/cucumber-pretty ./test/ts-scenario/features/*.feature --require './test/ts-scenario/steps/**/*.ts' --require './test/ts-scenario/support/**/*.ts' --require-module ts-node/register",
+	 "test:ts-cucumberNoHSM": "cucumber-js -f node_modules/cucumber-pretty ./test/ts-scenario/features/*.feature --require './test/ts-scenario/steps/**/*.ts' --require './test/ts-scenario/support/**/*.ts' --require-module ts-node/register --tags 'not @gateway_hsm'",
+    "test:ts-cucumber-tagged": "npm run test:ts-cucumber -- --tags @gateway_hsm",
     "testHeadless": "run-s cleanUp compile lint unitTest:all",
     "tapeAndCucumber": "run-s tapeIntegration dockerClean cucumberScenario"
   },
@@ -89,7 +90,8 @@
     }
   ],
   "dependencies": {
-    "fs-extra": "^8.1.0"
+    "fs-extra": "^8.1.0",
+    "ts-mock-imports": "^1.3.0"
   },
   "nyc": {
     "exclude": [

@@ -1,20 +1,16 @@
 # Fabric-SDK-Node Tests
 
-Welcome to the Fabric-SDK-Node test readme. 
+Welcome to the Fabric-SDK-Node test readme.
 
-There are three types of testing that are used to support Fabric-SDK-Node:
+There are two types of testing that are used to support Fabric-SDK-Node:
  - Unit
- - Functional
  - Scenario
 
 Unit tests are located in a `package/test` directory that mirrors the `package/lib` directory and are Mocha based.
 
-The functional tests are currently written in [Tape](https://github.com/substack/tape), with the intention of testing the Fabric-SDK-Node package capabilities from a user perspective against a live Hyperledger Fabric Network.
-
 The scenario tests are written in typescript and use [Cucumber](https://github.com/cucumber/cucumber-js), with the intention of providing high level test coverage from a scenario perspective. For more information, please refer to the [README](./ts-scenario/README.md) within the scenario directory.
 
 Test certificates are set to expire a year after generation. Due to this the test suite generates new certificates as part of the build process, and is a manual requirement prior to running the tests locally. This process is orchestrated using test scripts that:
- - Download, install and export the path to the 1.4 Hyperledger Fabric binaries used for generating crypto material
  - Generate the crypto-material, matching channel blocks and fabric-ca certificates required by the docker-compose files and test suites
 
 Use the npm task `npm run installAndGenerateCerts` to perform the above on a linux x64 machine, or `npm run installAndGenerateCertsMac` for a mac. This is only required to be performed upon initial project clone, and then yearly afterwards.
@@ -27,13 +23,11 @@ The folder structure is the following:
 test
 │   README.md
 │
-└───fixtures
-└───integration
+└───ts-fixtures
 └───ts-scenario
 ```
 
-- `fixtures` holds all the configuration files used by the integration and scenario tests
-- `integration` contains the integration test suite
+- `ts-fixtures` holds all the configuration files used by the integration and scenario tests
 - `ts-scenario` contains the typescripts scenario test suite
 
 ## Configuring and running Hardware Security Module tests
@@ -65,7 +59,7 @@ Or compiled and installed from source:
 ### Specify the SoftHSM configuration file
 
 ```bash
-export SOFTHSM2_CONF="./test/fixtures/hsm/softhsm2.conf"
+export SOFTHSM2_CONF="./test/ts-fixtures/hsm/softhsm2.conf"
 ```
 
 ### Create a token to store keys in the HSM
@@ -86,4 +80,4 @@ these environment variables to pass in the values:
 * PKCS11_PIN
 * PKCS11_SLOT
 
-To turn these tests off, the npm script `tapeIntegrationNoHSM` should be specified.
+To not run the HSM scenario tests, the npm script `cucumberScenarioNoHSM` should be specified or use the 'testNoHSM' when running executing all tests.
