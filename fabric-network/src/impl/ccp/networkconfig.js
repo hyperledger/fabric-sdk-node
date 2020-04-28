@@ -38,7 +38,7 @@ class NetworkConfig {
 		// build channels
 		if (config.channels) {
 			for (const channel_name in config.channels) {
-				buildChannel(client, channel_name, config.channels[channel_name]);
+				await buildChannel(client, channel_name, config.channels[channel_name]);
 			}
 		}
 
