@@ -7,12 +7,10 @@
 /* tslint:disable:max-classes-per-file */
 
 import { Wallet } from '../lib/impl/wallet/wallet';
-import { ContractListener, ListenerOptions } from '../lib/events';
 import { Identity } from '../lib/impl/wallet/identity';
 import { IdentityProvider } from '../lib/impl/wallet/identityprovider';
 import { QueryHandlerFactory } from '../lib/impl/query/queryhandler';
 import { Network } from '../lib/network';
-import { Client, Endorser } from 'fabric-common';
 
 export { Wallet };
 export { Wallets } from '../lib/impl/wallet/wallets';
@@ -32,6 +30,10 @@ export { Query, QueryResults, QueryResponse } from '../lib/impl/query/query';
 export { Network };
 export { Checkpointer } from '../lib/checkpointer';
 export { DefaultCheckpointers } from '../lib/defaultcheckpointers';
+export { Contract, DiscoveryInterest } from '../lib/contract';
+export { ContractListener, ListenerOptions } from '../lib/events';
+export { Transaction, TransientMap } from '../lib/transaction';
+export { Gateway, GatewayOptions, DiscoveryOptions, DefaultEventHandlerOptions, DefaultQueryHandlerOptions } from '../lib/gateway';
 
 import * as DefaultEventHandlerStrategies from '../lib/impl/event/defaulteventhandlerstrategies';
 export { DefaultEventHandlerStrategies };
@@ -41,71 +43,3 @@ export { TxEventHandler, TxEventHandlerFactory };
 
 import * as DefaultQueryHandlerStrategies from '../lib/impl/query/defaultqueryhandlerstrategies';
 export { DefaultQueryHandlerStrategies };
-
-// Main fabric network classes
-// -------------------------------------------
-export interface GatewayOptions {
-	identity: string | Identity;
-	wallet?: Wallet;
-	identityProvider?: IdentityProvider;
-	clientTlsIdentity?: string;
-	discovery?: DiscoveryOptions;
-	eventHandlerOptions?: DefaultEventHandlerOptions;
-	queryHandlerOptions?: DefaultQueryHandlerOptions;
-}
-
-export interface DiscoveryOptions {
-	asLocalhost?: boolean;
-	enabled?: boolean;
-}
-
-export interface DiscoveryInterest {
-	name: string;
-	collectionNames?: string[];
-}
-
-export interface DefaultEventHandlerOptions {
-	commitTimeout?: number;
-	endorseTimeout?: number;
-	strategy?: TxEventHandlerFactory | null;
-}
-
-export interface DefaultQueryHandlerOptions {
-	strategy?: QueryHandlerFactory;
-	timeout?: number;
-}
-
-export class Gateway {
-	constructor();
-	public connect(config: Client | string | object, options: GatewayOptions): Promise<void>;
-	public disconnect(): void;
-	public getIdentity(): Identity;
-	public getNetwork(channelName: string): Promise<Network>;
-	public getOptions(): GatewayOptions;
-}
-
-export class Contract {
-	readonly chaincodeId: string;
-	readonly namespace: string;
-	createTransaction(name: string): Transaction;
-	evaluateTransaction(name: string, ...args: string[]): Promise<Buffer>;
-	submitTransaction(name: string, ...args: string[]): Promise<Buffer>;
-	addContractListener(listener: ContractListener, options?: ListenerOptions): Promise<ContractListener>;
-	removeContractListener(listener: ContractListener): void;
-	addDiscoveryInterest(interest: DiscoveryInterest): Contract;
-	resetDiscoveryInterests(): Contract;
-}
-
-export interface TransientMap {
-	[key: string]: Buffer;
-}
-
-export class Transaction {
-	getName(): string;
-	getTransactionId(): string | null;
-	setEndorsingPeers(peers: Endorser[]): this;
-	setEndorsingOrganizations(...orgs: string[]): this;
-	setTransient(transientMap: TransientMap): this;
-	submit(...args: string[]): Promise<Buffer>;
-	evaluate(...args: string[]): Promise<Buffer>;
-}

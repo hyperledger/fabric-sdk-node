@@ -1,13 +1,13 @@
-/**
+/*
  * Copyright 2018, 2019 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// @ts-ignore no implicit any
-import Contract = require('./contract');
 import { Channel, DiscoveryService, Endorser } from 'fabric-common';
+import { Contract, ContractImpl } from './contract';
 import { BlockListener, CommitListener, EventType, ListenerOptions } from './events';
+import { Gateway, DiscoveryOptions } from './gateway';
 import { BlockEventSource } from './impl/event/blockeventsource';
 import { CommitListenerSession } from './impl/event/commitlistenersession';
 import { EventServiceManager } from './impl/event/eventservicemanager';
@@ -15,10 +15,8 @@ import { IsolatedBlockListenerSession } from './impl/event/isolatedblocklistener
 import { checkpointBlockListener } from './impl/event/listeners';
 import { addListener, ListenerSession, removeListener } from './impl/event/listenersession';
 import { SharedBlockListenerSession } from './impl/event/sharedblocklistenersession';
-import { QueryHandlerFactory } from './impl/query/queryhandler';
+import { QueryHandler } from './impl/query/queryhandler';
 import * as Logger from './logger';
-// @ts-ignore no implicit any
-import Gateway = require('./gateway');
 
 const logger = Logger.getLogger('Network');
 
@@ -47,12 +45,12 @@ export interface Network {
 }
 
 export class NetworkImpl implements Network {
-	public queryHandler?: QueryHandlerFactory;
+	queryHandler?: QueryHandler;
+	discoveryService?: DiscoveryService;
 	private readonly gateway: Gateway;
 	private readonly channel: Channel;
 	private readonly contracts = new Map<string, Contract>();
-	private initialized = false;
-	private discoveryService?: DiscoveryService;
+	private initialized: boolean = false;
 	private eventServiceManager: EventServiceManager;
 	private readonly commitListeners = new Map<CommitListener, ListenerSession>();
 	private readonly blockListeners = new Map<BlockListener, ListenerSession>();
@@ -77,106 +75,11 @@ export class NetworkImpl implements Network {
 		this.realtimePrivateBlockEventSource = new BlockEventSource(this.eventServiceManager, { type: 'private' });
 	}
 
-	/**
-	 * initialize the channel if it hasn't been done
-	 * @private
-	 */
-	async _initializeInternalChannel(options: any) { // TODO: fix types
-		const method = '_initializeInternalChannel';
-		logger.debug('%s - start', method);
-
-		if (options.enabled) {
-			logger.debug('%s - initialize with discovery', method);
-			let targets: Endorser[];
-			if (options.targets) {
-				if (Array.isArray(options.targets) && options.targets.length > 0) {
-					for (const target of options.targets) {
-						if (!target.connected) {
-							throw Error(`Endorser instance ${target.name} is not connected to an endpoint`);
-						}
-					}
-				} else {
-					throw Error('No discovery targets found');
-				}
-				targets = options.targets;
-				logger.debug('%s - user has specified discovery targets', method);
-			} else {
-				logger.debug('%s - user has not specified discovery targets, check channel and client', method);
-
-				// maybe the channel has connected endorsers with the mspid
-				const mspId = this.gateway.getIdentity().mspId;
-				targets = this.channel.getEndorsers(mspId);
-				if (!targets || targets.length < 1) {
-					// then check the client for connected peers associated with the mspid
-					targets = this.channel.client.getEndorsers(mspId);
-				}
-				if (!targets || targets.length < 1) {
-					// get any peer
-					targets = this.channel.client.getEndorsers();
-				}
-
-				if (!targets || targets.length < 1) {
-					throw Error('No discovery targets found');
-				} else {
-					logger.debug('%s - using channel/client targets', method);
-				}
-			}
-
-			// should have targets by now, create the discoverers from the endorsers
-			const discoverers = [];
-			for (const peer of targets) {
-				const discoverer = this.channel.client.newDiscoverer(peer.name, peer.mspid);
-				await discoverer.connect(peer.endpoint);
-				discoverers.push(discoverer);
-			}
-			this.discoveryService = this.channel.newDiscoveryService(this.channel.name);
-			const idx = this.gateway.identityContext;
-
-			// do the three steps
-			this.discoveryService.build(idx);
-			this.discoveryService.sign(idx);
-			logger.debug('%s - will discover asLocalhost:%s', method, options.asLocalhost);
-			await this.discoveryService.send({
-				asLocalhost: options.asLocalhost,
-				targets: discoverers
-			});
-
-			// now we can work with the discovery results
-			// or get a handler later from the discoverService
-			// to be used on endorsement, queries, and commits
-			logger.debug('%s - discovery complete - channel is populated', method);
-		}
-
-		logger.debug('%s - end', method);
-	}
-
-	/**
-	 * Initialize this network instance
-	 * @private
-	 */
-	async _initialize(discover: any) { // TODO: fix types
-		const method = '_initialize';
-		logger.debug('%s - start', method);
-
-		if (this.initialized) {
-			return;
-		}
-
-		await this._initializeInternalChannel(discover);
-
-		this.initialized = true;
-
-		// Must be created after channel initialization to ensure discovery has located the peers
-		const queryOptions = this.gateway.getOptions().queryHandlerOptions;
-		this.queryHandler = queryOptions.strategy(this);
-		logger.debug('%s - end', method);
-	}
-
-	getGateway() {
+	getGateway(): Gateway {
 		return this.gateway;
 	}
 
-	getContract(chaincodeId: string, name = '') {
+	getContract(chaincodeId: string, name: string = ''): Contract {
 		const method = 'getContract';
 		logger.debug('%s - start - name %s', method, name);
 
@@ -186,7 +89,7 @@ export class NetworkImpl implements Network {
 		const key = `${chaincodeId}:${name}`;
 		let contract = this.contracts.get(key);
 		if (!contract) {
-			contract = 	new Contract(
+			contract = 	new ContractImpl(
 				this,
 				chaincodeId,
 				name
@@ -197,11 +100,29 @@ export class NetworkImpl implements Network {
 		return contract;
 	}
 
-	getChannel() {
+	getChannel(): Channel {
 		return this.channel;
 	}
 
-	_dispose() {
+	async addCommitListener(listener: CommitListener, peers: Endorser[], transactionId: string): Promise<CommitListener> {
+		const sessionSupplier = async () => new CommitListenerSession(listener, this.eventServiceManager, peers, transactionId);
+		return await addListener(listener, this.commitListeners, sessionSupplier);
+	}
+
+	removeCommitListener(listener: CommitListener): void {
+		removeListener(listener, this.commitListeners);
+	}
+
+	async addBlockListener(listener: BlockListener, options: ListenerOptions = {}): Promise<BlockListener> {
+		const sessionSupplier = async () => await this.newBlockListenerSession(listener, options);
+		return await addListener(listener, this.blockListeners, sessionSupplier);
+	}
+
+	removeBlockListener(listener: BlockListener): void {
+		removeListener(listener, this.blockListeners);
+	}
+
+	_dispose(): void {
 		const method = '_dispose';
 		logger.debug('%s - start', method);
 
@@ -222,22 +143,85 @@ export class NetworkImpl implements Network {
 		this.initialized = false;
 	}
 
-	async addCommitListener(listener: CommitListener, peers: Endorser[], transactionId: string) {
-		const sessionSupplier = async () => new CommitListenerSession(listener, this.eventServiceManager, peers, transactionId);
-		return await addListener(listener, this.commitListeners, sessionSupplier);
+	/**
+	 * Initialize this network instance
+	 * @private
+	 */
+	async _initialize(discover?: DiscoveryOptions): Promise<void> {
+		const method = '_initialize';
+		logger.debug('%s - start', method);
+
+		if (this.initialized) {
+			return;
+		}
+
+		await this._initializeInternalChannel(discover);
+
+		this.initialized = true;
+
+		// Must be created after channel initialization to ensure discovery has located the peers
+		const queryOptions = this.gateway.getOptions().queryHandlerOptions!;
+		this.queryHandler = queryOptions.strategy!(this);
+		logger.debug('%s - end', method);
 	}
 
-	removeCommitListener(listener: CommitListener) {
-		removeListener(listener, this.commitListeners);
-	}
+	/**
+	 * initialize the channel if it hasn't been done
+	 * @private
+	 */
+	private async _initializeInternalChannel(options?: DiscoveryOptions): Promise<void> {
+		const method = '_initializeInternalChannel';
+		logger.debug('%s - start', method);
 
-	async addBlockListener(listener: BlockListener, options = {} as ListenerOptions) {
-		const sessionSupplier = async () => await this.newBlockListenerSession(listener, options);
-		return await addListener(listener, this.blockListeners, sessionSupplier);
-	}
+		if (options?.enabled) {
+			logger.debug('%s - initialize with discovery', method);
+			let targets: Endorser[];
+			logger.debug('%s - user has not specified discovery targets, check channel and client', method);
 
-	removeBlockListener(listener: BlockListener) {
-		removeListener(listener, this.blockListeners);
+			// maybe the channel has connected endorsers with the mspid
+			const mspId = this.gateway.getIdentity().mspId;
+			targets = this.channel.getEndorsers(mspId);
+			if (!targets || targets.length < 1) {
+				// then check the client for connected peers associated with the mspid
+				targets = this.channel.client.getEndorsers(mspId);
+			}
+			if (!targets || targets.length < 1) {
+				// get any peer
+				targets = this.channel.client.getEndorsers();
+			}
+
+			if (!targets || targets.length < 1) {
+				throw Error('No discovery targets found');
+			} else {
+				logger.debug('%s - using channel/client targets', method);
+			}
+
+			// should have targets by now, create the discoverers from the endorsers
+			const discoverers = [];
+			for (const peer of targets) {
+				const discoverer = this.channel.client.newDiscoverer(peer.name, peer.mspid);
+				await discoverer.connect(peer.endpoint);
+				discoverers.push(discoverer);
+			}
+			this.discoveryService = this.channel.newDiscoveryService(this.channel.name);
+			const idx = this.gateway.identityContext!;
+
+			// do the three steps
+			this.discoveryService.build(idx);
+			this.discoveryService.sign(idx);
+			logger.debug('%s - will discover asLocalhost:%s', method, options.asLocalhost);
+			await this.discoveryService.send({
+				asLocalhost: options.asLocalhost,
+				targets: discoverers
+			});
+
+			// now we can work with the discovery results
+			// or get a handler later from the discoverService
+			// to be used on endorsement, queries, and commits
+			logger.debug('%s - discovery complete - channel is populated', method);
+		}
+
+		logger.debug('%s - end', method);
 	}
 
 	private async newBlockListenerSession(listener: BlockListener, options: ListenerOptions): Promise<ListenerSession> {

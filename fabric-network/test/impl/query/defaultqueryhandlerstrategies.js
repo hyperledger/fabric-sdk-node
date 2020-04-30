@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2018, 2019 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -10,7 +10,7 @@ const sinon = require('sinon');
 const chai = require('chai');
 const expect = chai.expect;
 
-const Gateway = require('fabric-network/lib/gateway');
+const {Gateway} = require('fabric-network/lib/gateway');
 const {NetworkImpl: Network} = require('../../../lib/network');
 const Channel = require('fabric-common').Channel;
 const {SingleQueryHandler} = require('fabric-network/lib/impl/query/singlequeryhandler');

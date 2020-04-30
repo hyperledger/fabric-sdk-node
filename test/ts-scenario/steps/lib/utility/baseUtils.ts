@@ -39,7 +39,7 @@ export function logError(msg: string, obj?: any): void {
 	}
 }
 
-export function logAndThrow(msg: any): Error {
+export function logAndThrow(msg: any): never {
 	logError(msg);
 	if (msg instanceof Error) {
 		throw msg;

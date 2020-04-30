@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -12,12 +12,11 @@ import Long = require('long');
 import { Block, Channel, Client, Endorser, Eventer, EventInfo, FilteredBlock, FilteredTransaction, IdentityContext } from 'fabric-common';
 import * as protos from 'fabric-protos';
 import { BlockEvent, ContractEvent, ContractListener, ListenerOptions } from '../../../src/events';
-import { Network, NetworkImpl } from '../../../src/network';
+import { NetworkImpl } from '../../../src/network';
 import * as testUtils from '../../testutils';
 import { StubEventService } from './stubeventservice';
-import Contract = require('../../../src/contract');
-import ContractImpl = require('../../../src/contract');
-import Gateway = require('../../../src/gateway');
+import { Contract, ContractImpl } from '../../../src/contract';
+import { Gateway } from '../../../src/gateway';
 import { StubCheckpointer } from './stubcheckpointer';
 
 interface StubContractListener extends ContractListener {
@@ -27,7 +26,7 @@ interface StubContractListener extends ContractListener {
 describe('contract event listener', () => {
 	let eventService: StubEventService;
 	let gateway: sinon.SinonStubbedInstance<Gateway>;
-	let network: Network;
+	let network: NetworkImpl;
 	let channel: sinon.SinonStubbedInstance<Channel>;
 	let listener: StubContractListener;
 	let spyListener: sinon.SinonSpy<[ContractEvent], Promise<void>>;
@@ -42,7 +41,8 @@ describe('contract event listener', () => {
 		gateway = sinon.createStubInstance(Gateway);
 		gateway.identityContext = sinon.createStubInstance(IdentityContext);
 		gateway.getIdentity.returns({
-			mspId: 'mspId'
+			mspId: 'mspId',
+			type: 'stub'
 		});
 
 		channel = sinon.createStubInstance(Channel);
@@ -57,14 +57,13 @@ describe('contract event listener', () => {
 		client.newEventer.returns(eventer);
 		(channel as any).client = client;
 
-		network = new NetworkImpl(gateway, channel);
+		network = new NetworkImpl(gateway as unknown as Gateway, channel);
 
 		listener = testUtils.newAsyncListener<ContractEvent>();
 		spyListener = sinon.spy(listener);
 
 		const namespace: string = 'biscuitContract';
-		const collections: string[] = ['collection1', 'collection2'];
-		contract = new ContractImpl(network, chaincodeId, namespace, collections);
+		contract = new ContractImpl(network, chaincodeId, namespace);
 	});
 
 	afterEach(() => {

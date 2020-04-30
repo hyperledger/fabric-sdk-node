@@ -486,7 +486,7 @@
  */
 
 
-module.exports.Gateway = require('./lib/gateway');
+module.exports.Gateway = require('./lib/gateway').Gateway;
 module.exports.Wallet = require('./lib/impl/wallet/wallet').Wallet;
 module.exports.Wallets = require('./lib/impl/wallet/wallets').Wallets;
 module.exports.IdentityProviderRegistry = require('./lib/impl/wallet/identityproviderregistry').IdentityProviderRegistry;

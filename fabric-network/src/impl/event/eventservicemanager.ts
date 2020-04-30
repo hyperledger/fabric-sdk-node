@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -26,7 +26,7 @@ export class EventServiceManager {
 		this.network = network;
 		this.channel = network.getChannel();
 		this.mspId = network.getGateway().getIdentity().mspId;
-		this.identityContext = this.network.getGateway().identityContext;
+		this.identityContext = this.network.getGateway().identityContext!;
 	}
 
 	/**

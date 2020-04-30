@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2018, 2019 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -6,7 +6,6 @@
 
 'use strict';
 const sinon = require('sinon');
-const rewire = require('rewire');
 
 const Channel = require('fabric-common/lib/Channel');
 const DiscoveryService = require('fabric-common/lib/DiscoveryService');
@@ -17,15 +16,14 @@ const expect = chai.expect;
 chai.use(require('chai-as-promised'));
 chai.should();
 
-const Contract = rewire('../lib/contract');
-const Gateway = require('../lib/gateway');
+const {ContractImpl} = require('../lib/contract');
+const {Gateway} = require('../lib/gateway');
 const {NetworkImpl: Network} = require('../lib/network');
-const Transaction = require('../lib/transaction');
+const {Transaction} = require('../lib/transaction');
 
 describe('Contract', () => {
 	const chaincodeId = 'CHAINCODE_ID';
 	const namespace = 'namespace';
-	const collections = ['col1', 'col2'];
 
 	let network;
 	let channel;
@@ -63,7 +61,7 @@ describe('Contract', () => {
 		endorsement = sinon.createStubInstance(Endorsement);
 		endorsement.buildProposalInterest.returns('interests');
 
-		contract = new Contract(network, chaincodeId, namespace, collections);
+		contract = new ContractImpl(network, chaincodeId, namespace);
 	});
 
 	afterEach(() => {
@@ -72,7 +70,7 @@ describe('Contract', () => {
 
 	describe('#constructor', () => {
 		it('throws if namespace is not a string', () => {
-			(() => new Contract(network, chaincodeId, 123))
+			(() => new ContractImpl(network, chaincodeId, 123))
 				.should.throw(/Namespace must be a non-empty string/i);
 		});
 	});
@@ -123,8 +121,8 @@ describe('Contract', () => {
 	describe('#getDiscoveryHandler', () => {
 		it('should run with no discovery', async () => {
 			network.discoveryService = undefined;
-			const handler = await contract.getDiscoveryHandler(endorsement);
-			expect(handler).to.equal(null);
+			const handler = await contract.getDiscoveryHandler();
+			expect(handler).to.be.undefined;
 		});
 		it('should run when discover is assigned to network and contract', async () => {
 			network.discoveryService = discoveryService;

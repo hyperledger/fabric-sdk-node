@@ -12,6 +12,7 @@ import * as ByteBuffer from 'bytebuffer';
 export class Utils {
 	public static getLogger(name: string): any;
 	public static newCryptoSuite(optons: any): ICryptoSuite;
+	public static normalizeX509(pem: string): string;
 }
 export interface ICryptoKey {
 	getSKI(): string;
@@ -166,6 +167,12 @@ export class ServiceAction {
 	public getSignedEnvelope(): any;
 }
 
+export interface CommitSendRequest {
+	targets?: Committer[];
+	handler?: ServiceHandler;
+	requestTimeout?: number;
+}
+
 export class Commit extends Proposal {
 	constructor(chaincodeName: string, channel: Channel, endorsement: Endorsement);
 	public build(idContext: IdentityContext, request?: any): Buffer;
@@ -181,19 +188,34 @@ export class Query extends Proposal {
 	constructor(chaincodeName: string, channel: Channel);
 }
 
+export interface BuildProposalRequest {
+	fcn?: string;
+	args?: string[];
+	transientMap?: { [key: string]: Buffer };
+	init?: boolean;
+}
+
+export interface SendProposalRequest {
+	targets?: Endorser[];
+	handler?: ServiceHandler;
+	requestTimeout?: number;
+	requiredOrgs?: string[];
+}
+
 export class Proposal extends ServiceAction {
 	constructor(chaincodeName: string, channel: Channel);
 	public getTransactionId(): string;
 	public buildProposalInterest(): any;
 	public addCollectionInterest(collectionName: string): Proposal;
 	public addChaincodeCollectionsInterest(collectionName: string, collectionNames: string[]): Proposal;
-	public build(idContext: IdentityContext, request?: any): Buffer;
-	public send(request?: any): Promise<ProposalResponse>;
+	public build(idContext: IdentityContext, request?: BuildProposalRequest): Buffer;
+	public send(request?: SendProposalRequest): Promise<ProposalResponse>;
 	public verifyProposalResponse(proposalResponse?: any): boolean;
 	public compareProposalResponseResults(proposalResponses: any[]): boolean;
 }
 
 export class DiscoveryService extends ServiceAction {
+	readonly targets: Discoverer[];
 	constructor(chaincodeName: string, channel: Channel);
 	public setDiscoverer(discoverer: Discoverer): DiscoveryService;
 	public newHandler(): DiscoveryHandler;
@@ -294,6 +316,7 @@ export class Client {
 	public getChannel(name: string): Channel;
 
 	public setTlsClientCertAndKey(clientCert: string, clientKey: string): Client;
+	public setTlsClientCertAndKey(): Client;
 	public addTlsClientCertAndKey(options: ConnectOptions): Client;
 }
 
