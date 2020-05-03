@@ -65,11 +65,12 @@ export SOFTHSM2_CONF="./test/ts-fixtures/hsm/softhsm2.conf"
 ### Create a token to store keys in the HSM
 
 ```bash
-softhsm2-util --init-token --slot 0 --label "My token 1"
+softhsm2-util --init-token --slot 0 --label "ForFabric" --pin 98765432 --so-pin 1234
 ```
 
-Then you will be prompted two PINs: SO (Security Officer) PIN that can be used to re-initialize the token, and user PIN
-(see below) to be used by applications to access the token for generating and retrieving keys.
+The Security Officer PIN, specified with the `--so-pin` flag, can be used to re-initialize the token, 
+and the user PIN (see below), specified with the `--pin` flag, is used by applications to access the token for 
+generating and retrieving keys.
 
 ### Configure tests
 

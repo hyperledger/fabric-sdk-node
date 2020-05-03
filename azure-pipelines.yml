@@ -17,7 +17,7 @@ variables:
 - group: credentials
 - group: npm
 - name: SOFTHSM2_CONF
-  value: "$(Build.Repository.LocalPath)/test/ts-fixtures/hsm/softhsm2.conf"
+  value: $(Build.Repository.LocalPath)/test/ts-fixtures/hsm/softhsm2.conf
 - name: FABRIC_VERSION
   value: 2.1
 
@@ -44,7 +44,7 @@ stages:
           displayName: Install Node.js
         - script: |
             sudo apt-get install softhsm2
-            softhsm2-util --init-token --slot 0 --label "My token 1" --pin 98765432 --so-pin 98765432
+            softhsm2-util --init-token --slot 0 --label "ForFabric" --pin 98765432 --so-pin 1234
           displayName: Install SoftHSM
         - script: npm install
           displayName: npm install
