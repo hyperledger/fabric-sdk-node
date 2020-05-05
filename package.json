@@ -37,7 +37,7 @@
     "test:cucumber": "cucumber-js -f node_modules/cucumber-pretty ./test/scenario/features/*.feature",
 	 "test:ts-cucumber": "cucumber-js -f node_modules/cucumber-pretty ./test/ts-scenario/features/*.feature --require './test/ts-scenario/steps/**/*.ts' --require './test/ts-scenario/support/**/*.ts' --require-module ts-node/register",
 	 "test:ts-cucumberNoHSM": "cucumber-js -f node_modules/cucumber-pretty ./test/ts-scenario/features/*.feature --require './test/ts-scenario/steps/**/*.ts' --require './test/ts-scenario/support/**/*.ts' --require-module ts-node/register --tags 'not @gateway_hsm'",
-    "test:ts-cucumber-tagged": "npm run test:ts-cucumber -- --tags @gateway_hsm",
+    "test:ts-cucumber-tagged": "npm run test:ts-cucumber -- --tags @base_api_1",
     "testHeadless": "run-s cleanUp compile lint unitTest:all",
     "tapeAndCucumber": "run-s tapeIntegration dockerClean cucumberScenario"
   },

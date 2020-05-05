@@ -5,8 +5,12 @@
 'use strict';
 
 import * as FabricCAServices from 'fabric-ca-client';
-import { Channel, Client, Commit, Committer, Endorsement, Endorser, Endpoint, Eventer, EventService, IdentityContext, ProposalResponse, Query, User } from 'fabric-common';
+import { Channel, Client, Commit, Committer, Endorsement, Endorser,
+	Endpoint, Eventer, EventService, Discoverer, DiscoveryService,
+	IdentityContext, ProposalResponse, Query, User, DiscoveryHandler,
+	StartRequestOptions, SendEventOptions} from 'fabric-common';
 import * as fs from 'fs';
+import * as Long from 'long';
 import { Constants } from '../../constants';
 import * as BaseUtils from './baseUtils';
 import { CommonConnectionProfileHelper } from './commonConnectionProfileHelper';
@@ -84,13 +88,23 @@ export function retrieveClientObject(clientName: string): any {
 	}
 }
 
-export async function buildChannelRequest(requestName: string, contractName: string, requestArgs: any, clientName: string, channelName: string): Promise<void> {
+export async function buildChannelRequest(requestName: string, contractName: string, requestArgs: any, clientName: string, channelName: string, useDiscovery: boolean): Promise<void> {
 
 	// Best have a client object ready and waiting
 	const clientObject: any = retrieveClientObject(clientName);
 	const client: Client = clientObject.client;
 	const ccp: CommonConnectionProfileHelper = clientObject.ccp;
 	const channel: Channel = clientObject.channels.get(channelName);
+
+	// New object for NodeSDK-Base, "IdentityContext", this object
+	// combines the old "TransactionID" and the Clients "UserContext"
+	// into a single transaction based object needed for giving the
+	// endorsement transaction an unique transaction ID, and nonce,
+	// and also the user identity required when building the outbound
+	// request for the fabric network
+	// The user identity used must also be a signing identity unless
+	// the signing is being done external to the NodeSDK-Base.
+	const idx: IdentityContext = client.newIdentityContext(clientObject.user);
 
 	// We have arguments
 	const argArray: string[] = requestArgs.slice(1, -1).split(',');
@@ -102,24 +116,36 @@ export async function buildChannelRequest(requestName: string, contractName: str
 	// The peers and orderers will be built by the client so that common
 	// connection information will come from the client object, like the mutual TLS cert/key
 	const targets: Endorser[] = [];
+	let discoveryHandler: DiscoveryHandler;
 
 	try {
-		// New object for NodeSDK-Base, "IdentityContext", this object
-		// combines the old "TransactionID" and the Clients "UserContext"
-		// into a single transaction based object needed for giving the
-		// endorsement transaction an unique transaction ID, and nonce,
-		// and also the user identity required when building the outbound
-		// request for the fabric network
-		// The user identity used must also be a signing identity unless
-		// the signing is being done external to the NodeSDK-Base.
-		const idx: IdentityContext = client.newIdentityContext(clientObject.user);
+		// This is a new object to NodeSDK-Base. This "Proposal" object will
+		// centralize the endorsement operation, including the endorsement results.
+		// Proposals must be built from channel and chaincode name
+		const endorsement: Endorsement = channel.newEndorsement(contractName);
+		const discovery: DiscoveryService = channel.newDiscoveryService('mydiscovery');
+		const discoverer: Discoverer = client.newDiscoverer('peer1-discovery');
+
+		// ----- E N D O R S E -----
+		// endorsement will have the values needed by the chaincode
+		// to perform the endorsement (invoke)
+		const endorsementRequest: any = {
+			args: [...argArray],
+			init: initRequired
+		};
+
+		// The endorsement object has the building of the request, the signing
+		// and the sending steps broken out into separate API's that must
+		// be called individually.
+		endorsement.build(idx, endorsementRequest);
+		endorsement.sign(idx);
 
 		// unique connection information will be used to build an endpoint
 		// used on connect()
-		const peerObjects: any = ccp.getPeersForChannel(channelName);
+		const peerNames: any = ccp.getPeersForChannel(channelName);
 		const endpoints: Endpoint[] = [];
 
-		for (const peerName of Object.keys(peerObjects)) {
+		for (const peerName of peerNames) {
 			const peerObject: any = ccp.getPeer(peerName);
 			const endpoint: Endpoint = client.newEndpoint({
 				'url': peerObject.url,
@@ -141,27 +167,25 @@ export async function buildChannelRequest(requestName: string, contractName: str
 			}
 		}
 
-		// This is a new object to NodeSDK-Base. This "Proposal" object will
-		// centralize the endorsement operation, including the endorsement results.
-		// Proposals must be built from channel and chaincode name
-		const endorsement: Endorsement = channel.newEndorsement(contractName);
+		// ----- D I S C O V E R Y -----
+		await discoverer.connect(endpoints[0]);
+		// use the endorsement to build the discovery request
+		discovery.build(idx, {endorsement: endorsement});
+		discovery.sign(idx);
+		// discovery results will be based on the chaincode of the endorsement
+		const discoveryResults = await discovery.send({targets: [discoverer], asLocalhost: true});
 
-		// ----- E N D O R S E -----
-		// endorsement will have the values needed by the chaincode
-		// to perform the endorsement (invoke)
-		const endorsementRequest: any = {
-			args: [...argArray],
-			init: initRequired
-		};
+		discoveryHandler = discovery.newHandler();
 
-		// The endorsement object has the building of the request, the signing
-		// and the sending steps broken out into separate API's that must
-		// be called individually.
-		endorsement.build(idx, endorsementRequest);
-		endorsement.sign(idx);
+		// We now have all we need, save to the clientObject
+		const request: any = { endorsement, endpoints, idx, discoveryResults};
 
-		// We now have an endorsement, save to the ever expanding clientObject
-		const request: any = { endorsement, targets, endpoints, idx };
+		if (useDiscovery) {
+			request.handler = discoveryHandler;
+		} else {
+			request.targets = targets;
+		}
+
 		if (clientObject.requests) {
 			clientObject.requests.set(requestName, request);
 		} else {
@@ -188,6 +212,7 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 		const requestObject: any = clientObject.requests.get(requestName);
 		const ccp: CommonConnectionProfileHelper = clientObject.ccp;
 		const endorsement: Endorsement = requestObject.endorsement;
+		const discoveryHandler = requestObject.handler;
 		const targetPeers: Endorser[] = requestObject.targets;
 		const endpoints: Endpoint[] = requestObject.endpoints;
 		const eventer: Eventer = client.newEventer('peer1-events');
@@ -197,6 +222,7 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 			// Build an endorsement request
 			const endorsementRequest: any = {
 				targets: targetPeers,
+				handler: discoveryHandler,
 				requestTimeout: Constants.HUGE_TIME
 			};
 
@@ -222,9 +248,9 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 			const eventService: EventService = channel.newEventService(Constants.EVENT_HUB_DEFAULT_NAME);
 			eventService.build(requestObject.idx, {});
 			eventService.sign(requestObject.idx);
-			const eventRequest: any = {
+			const eventRequest: SendEventOptions = {
 				targets: [eventer],
-				requestTimeout: Constants.INC_MED
+				requestTimeout: 10000
 			};
 			await eventService.send(eventRequest);
 
@@ -309,8 +335,10 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 			BaseUtils.logError('sendChannelRequest failed with error', error.stack);
 			throw error;
 		} finally {
-			for (const target of targetPeers) {
-				target.disconnect();
+			if (targetPeers) {
+				for (const target of targetPeers) {
+					target.disconnect();
+				}
 			}
 			orderer.disconnect();
 			eventer.disconnect();
@@ -321,7 +349,9 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 	}
 }
 
-export async function submitChannelRequest(clientName: string, channelName: string, contractName: string, contractArgs: string, queryName: string): Promise<void> {
+export async function queryChannelRequest(clientName: string, channelName: string, contractName: string, contractArgs: string, queryName: string): Promise<void> {
+	BaseUtils.logMsg(' -- starting clientUtils.queryChannelRequest');
+
 	// Requires that the endorsement is already built and signed (performed by buildChannelRequest())
 	const clientObject: any = retrieveClientObject(clientName);
 	const client: Client = clientObject.client;
@@ -519,5 +549,259 @@ export function validateChannelRequestResponse(clientName: string, isRequest: bo
 
 	} else {
 		BaseUtils.logAndThrow(`Response for ${requestName} does not have a results object for validation`);
+	}
+}
+
+export function validateDiscoveryResponse(clientName: string, requestName: string): boolean | void {
+	const clientObject: any = retrieveClientObject(clientName);
+
+	let results: any;
+	if (clientObject.requests && clientObject.requests.has(requestName)) {
+		const requestObject: any = clientObject.requests.get(requestName);
+		results = requestObject.discoveryResults;
+	} else {
+		BaseUtils.logAndThrow(`Request named ${requestName} does not exits on client object for client ${clientName} for discovery results validation`);
+	}
+
+	if (results) {
+		BaseUtils.logMsg(`clientUtils - raw discovery results = ${JSON.stringify(results)}`);
+		if (results.endorsement_plan && results.endorsement_plan.layouts && results.endorsement_plan.layouts.length > 0) {
+			BaseUtils.logMsg(`Response for ${requestName} has an endorsement_plan`);
+		} else {
+			BaseUtils.logAndThrow(`Response for ${requestName} does not have an endorsement plan`);
+		}
+
+	} else {
+		BaseUtils.logAndThrow(`Response for ${requestName} does not have a results object for discovery results validation`);
+	}
+}
+
+export async function createEventService(eventServiceName: string, clientName: string, channelName: string): Promise<void> {
+
+	// Best have a client object ready and waiting
+	const clientObject: any = retrieveClientObject(clientName);
+	const client: Client = clientObject.client;
+	const channel: Channel = clientObject.channels.get(channelName);
+	const idx: IdentityContext = client.newIdentityContext(clientObject.user);
+
+	try {
+		const eventService: EventService = channel.newEventService(eventServiceName);
+		if (clientObject.eventServices) {
+			clientObject.eventServices.set(eventServiceName, { eventService, idx, channelName });
+		} else {
+			const map: Map<string, any> = new Map();
+			map.set(eventServiceName, { eventService, idx, channelName });
+			clientObject.eventServices = map;
+		}
+	} catch (error) {
+		BaseUtils.logMsg(`failure in buildEventService: ${error.toString()}`, {});
+		throw error;
+	}
+}
+
+export async function startEventService(blockType: 'filtered' | 'full' | 'private' | undefined, eventServiceName: string, clientName: string, startBlock: string, endBlock: string): Promise<void> {
+	const clientObject: any = retrieveClientObject(clientName);
+	const client: Client = clientObject.client;
+	const ccp: CommonConnectionProfileHelper = clientObject.ccp;
+	const eventServiceObject: any = clientObject.eventServices.get(eventServiceName);
+	const eventService: EventService = eventServiceObject.eventService;
+	const idx: IdentityContext = eventServiceObject.idx;
+	const channelName: string = eventServiceObject.channelName;
+
+	const targets: Eventer[] = [];
+
+	try {
+		const buildOptions: StartRequestOptions = {
+			blockType: blockType
+		};
+		if (startBlock.localeCompare('NOW') === 0) {
+			// do not add start block
+		} else {
+			buildOptions.startBlock = Number.parseInt(startBlock, 10);
+		}
+		if (endBlock.localeCompare('END') === 0) {
+			// do not add start block
+		} else {
+			buildOptions.endBlock = Number.parseInt(endBlock, 10);
+		}
+
+		eventService.build(idx, buildOptions);
+		eventService.sign(idx);
+
+		const peerNames: any = ccp.getPeersForChannel(channelName);
+		const endpoints: Endpoint[] = [];
+
+		for (const peerName of peerNames) {
+			const peerObject: any = ccp.getPeer(peerName);
+			const endpoint: Endpoint = client.newEndpoint({
+				'url': peerObject.url,
+				'pem': fs.readFileSync(peerObject.tlsCACerts.path).toString(),
+				'ssl-target-name-override': peerObject.grpcOptions['ssl-target-name-override'],
+			});
+
+			endpoints.push(endpoint);
+
+			const peer: Eventer = client.newEventer(peerObject.grpcOptions['ssl-target-name-override']);
+			await peer.connect(endpoint, {});
+			targets.push(peer);
+
+			const connectionOk: boolean = await peer.checkConnection();
+			if (connectionOk) {
+				BaseUtils.logMsg('Peer checkConnection test successfully');
+			} else {
+				BaseUtils.logAndThrow('Peer checkConnection test failed');
+			}
+		}
+
+		await eventService.send({targets: targets});
+	} catch (error) {
+		BaseUtils.logMsg(`failure in startEventService: ${error.toString()}`, {});
+		for (const target of targets) {
+			target.disconnect();
+		}
+		throw error;
+	}
+}
+
+export async function registerEventListener(
+	eventServiceName: string, clientName: string, listenerName: string, type: string,
+	startBlock: string, endBlock: string,
+	chaincodeEventName: string, chaincodeName: string): Promise<void> {
+
+	const clientObject: any = retrieveClientObject(clientName);
+	const eventServiceObject: any = clientObject.eventServices.get(eventServiceName);
+	const eventService: EventService = eventServiceObject.eventService;
+	let eventListeners: Map<string, any> = eventServiceObject.eventListeners;
+	if (!eventListeners) {
+		eventListeners = new Map();
+		eventServiceObject.eventListeners = eventListeners;
+	}
+
+	BaseUtils.logMsg(`Register event listener ${listenerName}`);
+
+	const listenerOptions: any = {};
+	if (startBlock.length > 0) {
+		listenerOptions.startBlock = Number.parseInt(startBlock, 10);
+	}
+	if (endBlock.length > 0) {
+		listenerOptions.endBlock = Number.parseInt(endBlock, 10);
+	}
+
+	try {
+		const listenerObject: any = {};
+		eventServiceObject.eventListeners.set(listenerName, listenerObject);
+		if (type === 'block') {
+			BaseUtils.logMsg(`Registering a block event with startBlock ${startBlock} endBlock ${endBlock}`);
+
+			listenerObject.eventListener = eventService.registerBlockListener(
+				(error, event) => {
+					if (error) {
+						BaseUtils.logMsg(`Block listener ERROR received for ${listenerName} :: ${error.toString()}`);
+						listenerObject.error = error;
+						return;
+					}
+					if (event?.endBlockReceived) {
+						if (event?.blockNumber.equals(Long.fromValue(listenerOptions.endBlock))) {
+							BaseUtils.logMsg(`Endblock indication received for ${listenerName}`);
+						} else {
+							listenerObject.error = Error('invalid "Endblock" indication received');
+							BaseUtils.logMsg(`invalid Endblock indication received for ${listenerName} with block number ${event?.blockNumber.toString()}`);
+						}
+						return;
+					}
+					if (event?.blockNumber.lessThan(Long.fromValue(listenerOptions.startBlock)) ||
+						event?.blockNumber.greaterThan(Long.fromValue(listenerOptions.endBlock))) {
+						listenerObject.error = Error('Block received not in range');
+					}
+					const results = {block: event?.blockNumber.toString()};
+					listenerObject.results = {block: event?.blockNumber.toString()};
+					BaseUtils.logMsg(`Store event listener ${listenerName} results of ${JSON.stringify(results)}`);
+				},
+				listenerOptions
+			);
+		} else if (type === 'chaincode') {
+			BaseUtils.logMsg(`Registering a chaincode event with chaincodeName ${chaincodeName} chaincodeEventName ${chaincodeEventName}`);
+			listenerObject.eventListener = eventService.registerChaincodeListener(
+				chaincodeName,
+				chaincodeEventName,
+				(error, event) => {
+					if (error) {
+						BaseUtils.logMsg(`Chaincode listener ERROR received for ${listenerName} :: ${error.toString()}`);
+						if (error.toString().includes('Shutdown due to end block number has been seen')) {
+							BaseUtils.logMsg(`Shutdown indication received for ${listenerName} successfully successfully from event service ${eventServiceName}`);
+							return;
+						}
+						listenerObject.error = error;
+						return;
+					}
+
+					BaseUtils.logMsg(`Chaincode listener event received for ${listenerName} :: ${JSON.stringify(event)}`);
+
+					if (event?.chaincodeEvents) {
+						for (const chaincodeEvent of event.chaincodeEvents) {
+							const results: any = {};
+							results[chaincodeEvent.eventName] = chaincodeEvent.payload ? chaincodeEvent.payload.toString() : '';
+							listenerObject.results = results;
+							BaseUtils.logMsg(`Store event listener ${listenerName} results of ${JSON.stringify(results)}`);
+						}
+					}
+				},
+				listenerOptions
+			);
+		} else if (type === 'transaction') {
+			BaseUtils.logMsg('Registering a transaction event for all transactions');
+
+			listenerObject.eventListener = eventService.registerTransactionListener(
+				'all',
+				(error, event) => {
+					if (error) {
+						if (error.toString().includes('Shutdown due to end block number has been seen')) {
+							BaseUtils.logMsg(`Shutdown indication received for ${listenerName} successfully successfully from event service ${eventServiceName}`);
+							return;
+						}
+						listenerObject.error = error;
+						return;
+					}
+					const transactionResults = listenerObject.results;
+					transactionResults.transaction = (Number.parseInt(transactionResults.transaction, 10) + 1).toString();
+					listenerObject.results = transactionResults;
+					BaseUtils.logMsg(`Store event listener ${listenerName} results of ${JSON.stringify(transactionResults)}`);
+				},
+				listenerOptions
+			);
+			listenerObject.results = {transaction: '0'};
+		} else {
+			BaseUtils.logAndThrow(`Event listener type is not known ${type}`);
+		}
+	} catch (error) {
+		BaseUtils.logMsg(`failure in registerEventListener: ${error.toString()}`, {});
+		throw error;
+	}
+}
+
+export async function checkEventListenerResults(
+	eventServiceName: string, clientName: string, listenerName: string,
+	check: string): Promise<void> {
+
+	const clientObject: any = retrieveClientObject(clientName);
+	const eventServiceObject: any = clientObject.eventServices.get(eventServiceName);
+	const listenerObject: any = eventServiceObject.eventListeners.get(listenerName);
+
+	if (listenerObject) {
+		if (listenerObject.error) {
+			BaseUtils.logMsg(`Received an error for ${listenerName} of ${listenerObject.error}`);
+			throw listenerObject.error;
+		}
+		if (listenerObject.results) {
+			if (JSON.stringify(listenerObject.results).localeCompare(check) === 0) {
+				BaseUtils.logMsg(`Results compare for eventListener ${listenerName}`);
+			} else {
+				BaseUtils.logAndThrow(`Results do not compare for eventListener ${listenerName} with ${JSON.stringify(listenerObject.results)}`);
+			}
+		} else {
+			BaseUtils.logAndThrow(`No results for eventListener ${listenerName}`);
+		}
+	} else {
+		BaseUtils.logAndThrow(`Listener object not found ${listenerName}`);
 	}
 }

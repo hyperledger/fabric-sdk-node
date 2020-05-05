@@ -103,6 +103,9 @@ class FabCar extends Contract {
 		};
 
 		await ctx.stub.putState(carNumber, Buffer.from(JSON.stringify(car)));
+		ctx.stub.setEvent('createCar', Buffer.from(model));
+		console.info('============= ADD CHAINCODE EVENT : ->createCar<- with ' + model + ' ==========='); // eslint-disable-line
+
 		console.info('============= END : Create Car ==========='); // eslint-disable-line
 	}
 
@@ -149,6 +152,8 @@ class FabCar extends Contract {
 		car.owner = newOwner;
 
 		await ctx.stub.putState(carNumber, Buffer.from(JSON.stringify(car)));
+		ctx.stub.setEvent('changeCarOwner', Buffer.from(carNumber));
+
 		console.info('============= END : changeCarOwner ==========='); // eslint-disable-line
 	}
 

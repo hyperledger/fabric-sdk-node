@@ -63,7 +63,7 @@ export class NetworkImpl implements Network {
 	/*
 	 * Network constructor for internal use only.
 	 * @param {Gateway} gateway The owning gateway instance
-	 * @param {Channel} channel The fabric-base channel instance
+	 * @param {Channel} channel The fabric-common channel instance
 	 */
 	constructor(gateway: Gateway, channel: Channel) {
 		const method = 'constructor';
