@@ -1,6 +1,7 @@
 {
 	"compilerOptions": {
-		"allowJs": true,
+		"allowJs": false,
+		"declaration": true,
 		"alwaysStrict": true,
 		"module": "commonjs",
 		"outDir": "./lib",

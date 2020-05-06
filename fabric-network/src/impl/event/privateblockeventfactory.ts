@@ -10,8 +10,6 @@ import { cachedResult } from '../gatewayutils';
 import { newFullBlockEvent } from './fullblockeventfactory';
 import { newFullContractEvents } from './fullcontracteventfactory';
 import { getTransactionEnvelopeIndexes, newFullTransactionEvent } from './fulltransactioneventfactory';
-// @ts-ignore no implicit any
-import protos = require('fabric-protos');
 
 import util = require('util');
 

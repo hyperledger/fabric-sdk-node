@@ -9,7 +9,6 @@ import { BlockEvent, TransactionEvent } from '../../events';
 import { cachedResult } from '../gatewayutils';
 import { newFullContractEvents } from './fullcontracteventfactory';
 import * as TransactionStatus from './transactionstatus';
-// @ts-ignore no implicit any
 import protos = require('fabric-protos');
 
 export function getTransactionEnvelopeIndexes(blockData: Block): number[] {

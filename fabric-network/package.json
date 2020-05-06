@@ -27,22 +27,12 @@
   "types": "./types/index.d.ts",
   "dependencies": {
     "fabric-ca-client": "file:../fabric-ca-client",
-    "fabric-common": "file:../fabric-common",
-    "fs-extra": "^8.1.0",
+	"fabric-common": "file:../fabric-common",
+	"fabric-protos": "file:../fabric-protos",
+    "fs-extra": "^9.0.0",
     "long": "^4.0.0",
-    "nano": "^8.1.0",
-    "winston": "^2.4.0"
-  },
-  "devDependencies": {
-    "@types/chai": "^4.2.0",
-    "@types/fs-extra": "^8.0.0",
-    "@types/mocha": "^5.2.7",
-    "@types/rimraf": "^2.0.2",
-    "mocha": "^5.2.0",
-    "nyc": "^15.0.0",
-    "rewire": "^4.0.1",
-    "rimraf": "^2.6.2",
-    "sinon": "^6.3.5"
+    "nano": "^8.2.2",
+    "winston": "^2.4.4"
   },
   "nyc": {
     "exclude": [

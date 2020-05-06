@@ -29,7 +29,7 @@
 		"elliptic": "^6.2.3",
 		"fabric-protos": "file:../fabric-protos",
 		"js-sha3": "^0.7.0",
-		"nano": "^6.4.4",
+		"jsrsasign": "^8.0.15",
 		"nconf": "^0.10.0",
 		"promise-settle": "^0.3.0",
 		"sjcl": "1.0.7",
@@ -38,15 +38,6 @@
 	},
 	"optionalDependencies": {
 		"pkcs11js": "^1.0.6"
-	},
-	"devDependencies": {
-		"chai": "^4.1.2",
-		"chai-as-promised": "^7.1.1",
-		"mocha": "^5.2.0",
-		"nyc": "^15.0.0",
-		"rewire": "^4.0.1",
-		"sinon": "^6.3.5",
-		"sinon-chai": "^3.4.0"
 	},
 	"nyc": {
 		"exclude": [
