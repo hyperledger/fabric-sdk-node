@@ -4,39 +4,17 @@
 
 'use strict';
 
+import * as FabricCAClient from 'fabric-ca-client';
+import { Contract, DefaultEventHandlerStrategies, DefaultQueryHandlerStrategies, Gateway, GatewayOptions, HsmOptions, HsmX509Provider, Identity, IdentityProvider, Network, QueryHandlerFactory, Transaction, TransientMap, TxEventHandlerFactory, Wallet, Wallets } from 'fabric-network';
+import * as fs from 'fs';
+import * as path from 'path';
+import { createQueryHandler as sampleQueryStrategy } from '../../config/handlers/sample-query-handler';
+import { createTransactionEventHandler as sampleTxnEventStrategy } from '../../config/handlers/sample-transaction-event-handler';
 import { Constants } from '../constants';
 import * as AdminUtils from './utility/adminUtils';
 import * as BaseUtils from './utility/baseUtils';
-import * as ClientUtils from './utility/clientUtils';
 import { CommonConnectionProfileHelper } from './utility/commonConnectionProfileHelper';
 import { StateStore } from './utility/stateStore';
-
-import { createQueryHandler as sampleQueryStrategy } from '../../config/handlers/sample-query-handler';
-import { createTransactionEventHandler as sampleTxnEventStrategy } from '../../config/handlers/sample-transaction-event-handler';
-
-import {
-	DefaultEventHandlerStrategies,
-	DefaultQueryHandlerStrategies,
-	Gateway,
-	GatewayOptions,
-	Wallet,
-	Wallets,
-	Identity,
-	Contract,
-	Network,
-	TxEventHandlerFactory,
-	QueryHandlerFactory,
-	Transaction,
-	TransientMap,
-	IdentityProvider,
-	HsmX509Provider,
-	HsmOptions,
-	HsmX509Identity
-} from 'fabric-network';
-import * as FabricCAClient from 'fabric-ca-client';
-import { User } from 'fabric-common';
-import * as fs from 'fs';
-import * as path from 'path';
 
 const stateStore: StateStore = StateStore.getInstance();
 const txnTypes: string[] = ['evaluate', 'submit'];
@@ -49,7 +27,7 @@ const supportedWallets: string[] = [
 ];
 
 const HSM_PROVIDER: string = Constants.HSM_PROVIDER;
-const X509_PROVDER: string = Constants.X509_PROVDER;
+const X509_PROVIDER: string = Constants.X509_PROVIDER;
 
 const EventStrategies: { [key: string]: TxEventHandlerFactory } = {
 	MSPID_SCOPE_ALLFORTX : DefaultEventHandlerStrategies.MSPID_SCOPE_ALLFORTX,
@@ -62,6 +40,15 @@ const QueryStrategies: { [key: string]: QueryHandlerFactory } = {
 	MSPID_SCOPE_SINGLE : DefaultQueryHandlerStrategies.MSPID_SCOPE_SINGLE,
 	MSPID_SCOPE_ROUND_ROBIN : DefaultQueryHandlerStrategies.MSPID_SCOPE_ROUND_ROBIN,
 };
+
+interface GatewayData {
+	gateway: Gateway;
+	profile: any;
+	result?: {
+		type: string;
+		response: string | object;
+	};
+}
 
 /**
  * Create a gateway
@@ -154,7 +141,7 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 					privateKey: tlsInfo.key,
 				},
 				mspId: caOrg.mspid,
-				type: X509_PROVDER,
+				type: X509_PROVIDER,
 			};
 			await wallet.put('tlsId', tlsIdentity);
 		}
@@ -179,7 +166,7 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 	BaseUtils.logMsg(`Gateway ${gatewayName} connected`);
 }
 
-function addGatewayObjectToStateStore(gatewayName: string, gateway: any): void {
+function addGatewayObjectToStateStore(gatewayName: string, gateway: GatewayData): void {
 	let gateways: Map<string, any> = stateStore.get(Constants.GATEWAYS);
 	if (gateways) {
 		gateways.set(gatewayName, gateway);
@@ -191,24 +178,15 @@ function addGatewayObjectToStateStore(gatewayName: string, gateway: any): void {
 	stateStore.set(Constants.GATEWAYS, gateways);
 }
 
-function getGatewayObject(gatewayName: string): any {
-	const gateways: Map<string, any> = stateStore.get(Constants.GATEWAYS);
-	if (gateways && gateways.get(gatewayName)) {
-		return gateways.get(gatewayName);
-	} else {
+function getGatewayObject(gatewayName: string): GatewayData {
+	const gateways: Map<string, GatewayData> = stateStore.get(Constants.GATEWAYS);
+	const gatewayData = gateways?.get(gatewayName);
+	if (!gatewayData) {
 		const msg: string = `Gateway named ${gatewayName} is not present in the state store`;
 		BaseUtils.logAndThrow(msg);
 	}
-}
 
-function getGateway(gatewayName: string): any {
-	const gateways: Map<string, any> = stateStore.get(Constants.GATEWAYS);
-	if (gateways.get(gatewayName)) {
-		return gateways.get(gatewayName).gateway;
-	} else {
-		const msg: string = `Gateway named ${gatewayName} is not present in the state store`;
-		BaseUtils.logAndThrow(msg);
-	}
+	return gatewayData;
 }
 
 function getHSMLibPath(): string {
@@ -265,7 +243,7 @@ async function identitySetup(wallet: Wallet, ccp: CommonConnectionProfileHelper,
 			privateKey: key,
 		},
 		mspId: orgMsp,
-		type: X509_PROVDER,
+		type: X509_PROVIDER,
 	};
 
 	BaseUtils.logMsg(`Adding identity for ${identityName} to wallet`);
@@ -293,7 +271,7 @@ async function createHSMUser(wallet: Wallet, ccp: CommonConnectionProfileHelper,
 	};
 	const hsmProvider: IdentityProvider = wallet.getProviderRegistry().getProvider(HSM_PROVIDER);
 	const hsmCAClient = new FabricCAClient(fabricCAEndpoint, tlsOptions, caName, hsmProvider.getCryptoSuite());
-	const provider: IdentityProvider = wallet.getProviderRegistry().getProvider(X509_PROVDER);
+	const provider: IdentityProvider = wallet.getProviderRegistry().getProvider(X509_PROVIDER);
 	const caClient = new FabricCAClient(fabricCAEndpoint, tlsOptions, caName);
 
 	// first setup the admin user
@@ -310,7 +288,7 @@ async function createHSMUser(wallet: Wallet, ccp: CommonConnectionProfileHelper,
 			privateKey: adminEnrollment.key.toBytes()
 		},
 		mspId: orgMsp,
-		type: X509_PROVDER
+		type: X509_PROVIDER
 	};
 	await wallet.put(adminName, adminIdentity);
 	const adminUser = await provider.getUserContext(adminIdentity, 'admin');
@@ -357,8 +335,8 @@ async function createHSMUser(wallet: Wallet, ccp: CommonConnectionProfileHelper,
  */
 export async function performGatewayTransaction(gatewayName: string, contractName: string, channelName: string, collectionName: string, args: string, txnType: string, handlerOption?: string): Promise<void> {
 
-	const gatewayObj: any = getGatewayObject(gatewayName);
-	const gateway: Gateway = getGateway(gatewayName);
+	const gatewayObj = getGatewayObject(gatewayName);
+	const gateway = gatewayObj.gateway;
 
 	const submit: boolean = isSubmit(txnType);
 
@@ -442,8 +420,8 @@ export async function performGatewayTransaction(gatewayName: string, contractNam
 export async function performTransientGatewayTransaction(gatewayName: string, contractName: string, channelName: string, args: string, txnType: string): Promise<void> {
 
 	// Retrieve gateway and contract
-	const gatewayObj: any = getGatewayObject(gatewayName);
-	const gateway: Gateway = getGateway(gatewayName);
+	const gatewayObj = getGatewayObject(gatewayName);
+	const gateway = gatewayObj.gateway;
 	const contract: Contract = await retrieveContractFromGateway(gateway, channelName, contractName);
 
 	// Split args out
@@ -549,7 +527,11 @@ export function getLastTransactionResult(gatewayName: string): any {
  * @param {boolean} exactMatch boolean flag to indicate if an exact match is being performed
  */
 export function lastTransactionResponseCompare(gatewayName: string, msg: string, exactMatch: boolean): boolean {
-	const gatewayObj: any = getGatewayObject(gatewayName);
+	const gatewayObj = getGatewayObject(gatewayName);
+
+	if (!gatewayObj.result) {
+		throw new Error(`No result for gateway ${gatewayName}`);
+	}
 
 	let result: string;
 	if (typeof gatewayObj.result.response === 'string') {
@@ -570,19 +552,15 @@ export function lastTransactionResponseCompare(gatewayName: string, msg: string,
 /**
  * Disconnect all gateways within the `gateways` Map
  */
-export async function disconnectAllGateways(): Promise<void> {
+export function disconnectAllGateways(): void {
 	try {
-		const gateways: Map<string, Gateway> = stateStore.get(Constants.GATEWAYS);
+		const gateways: Map<string, GatewayData> = stateStore.get(Constants.GATEWAYS);
 		if (gateways) {
-			const iterator: IterableIterator<string> = gateways.keys();
-			let next: IteratorResult<string> = iterator.next();
-			while (!next.done) {
-				BaseUtils.logMsg('disconnecting from Gateway ', next.value);
-				const gatewayObj: any = gateways.get(next.value);
-				const gateway: Gateway = gatewayObj.gateway;
+			gateways.forEach((gatewayObj, name) => {
+				BaseUtils.logMsg('disconnecting from Gateway ', name);
+				const gateway = gatewayObj.gateway;
 				gateway.disconnect();
-				next = iterator.next();
-			}
+			});
 			gateways.clear();
 			stateStore.set(Constants.GATEWAYS, gateways);
 		}

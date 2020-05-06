@@ -28,5 +28,5 @@ AfterAll({ timeout: Constants.HUGE_TIME as number }, async () => {
 AfterAll({timeout: Constants.HUGE_TIME as number}, async () => {
 	// If a test fails without disconnecting gateways, then the tests will hang
 	BaseUtils.logMsg('Disconnecting from all gateways ...',  null);
-	await Gateway.disconnectAllGateways();
+	Gateway.disconnectAllGateways();
 });

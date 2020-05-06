@@ -1,26 +1,35 @@
-/**
+/*
  * Copyright 2018, 2019 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
+import { BuildProposalRequest, CommitSendRequest, EndorsementResponse, Endorser, IdentityContext, ProposalResponse, SendProposalRequest } from 'fabric-common';
+import { ContractImpl } from './contract';
+import { TxEventHandler, TxEventHandlerFactory } from './impl/event/transactioneventhandler';
+import { QueryImpl } from './impl/query/query';
+import { QueryHandler } from './impl/query/queryhandler';
+import * as Logger from './logger';
+import util = require('util');
+const logger = Logger.getLogger('Transaction');
 
-const {QueryImpl: Query} = require('./impl/query/query');
-const logger = require('./logger').getLogger('Transaction');
-const util = require('util');
-
-const noOpEventHandler = {
-	startListening: async () => {},
-	waitForEvents: async () => {},
-	cancelListening: () => {}
+const noOpEventHandler: TxEventHandler = {
+	startListening: async () => {
+		// No-op
+	},
+	waitForEvents: async () => {
+		// No-op
+	},
+	cancelListening: () => {
+		// No-op
+	}
 };
 
-function noOpEventHandlerStrategyFactory() {
+function noOpEventHandlerStrategyFactory(): TxEventHandler {
 	return noOpEventHandler;
 }
 
-function getResponsePayload(proposalResponse) {
+function getResponsePayload(proposalResponse: ProposalResponse): Buffer {
 	const validEndorsementResponse = getValidEndorsementResponse(proposalResponse.responses);
 
 	if (!validEndorsementResponse) {
@@ -32,17 +41,26 @@ function getResponsePayload(proposalResponse) {
 	return validEndorsementResponse.response.payload;
 }
 
-function getValidEndorsementResponse(endorsementResponses) {
+function getValidEndorsementResponse(endorsementResponses: EndorsementResponse[]): EndorsementResponse | undefined {
 	return endorsementResponses.find((endorsementResponse) => endorsementResponse.endorsement);
 }
 
-function newEndorsementError(proposalResponse) {
-	const errorInfos = [];
+function newEndorsementError(proposalResponse: ProposalResponse): Error {
+	interface ErrorInfo {
+		peer: string;
+		status: number | string;
+		message: string;
+	}
+
+	const errorInfos: ErrorInfo[] = [];
 
 	for (const error of proposalResponse.errors) {
-		error.peer = error.connection.name;
-		error.status = 'grpc';
-		errorInfos.push(error);
+		const errorInfo = {
+			peer: error.connection.name,
+			status: 'grpc',
+			message: error.message
+		};
+		errorInfos.push(errorInfo);
 	}
 
 	for (const endorsement of proposalResponse.responses) {
@@ -65,9 +83,13 @@ function newEndorsementError(proposalResponse) {
 	return new Error(messages.join('\n    '));
 }
 
+export interface TransientMap {
+	[key: string]: Buffer;
+}
+
 /**
  * Represents a specific invocation of a transaction function, and provides
- * felxibility over how that transaction is invoked. Applications should
+ * flexibility over how that transaction is invoked. Applications should
  * obtain instances of this class by calling
  * [Contract#createTransaction()]{@link module:fabric-network.Contract#createTransaction}.
  * <br><br>
@@ -76,39 +98,45 @@ function newEndorsementError(proposalResponse) {
  * @memberof module:fabric-network
  * @hideconstructor
  */
-class Transaction {
+export class Transaction {
+	private readonly name: string;
+	private readonly contract: ContractImpl;
+	private transientMap?: TransientMap;
+	private readonly gatewayOptions: any; // TODO: Fix types
+	private readonly eventHandlerStrategyFactory: TxEventHandlerFactory;
+	private readonly queryHandler: QueryHandler;
+	private endorsingPeers?: Endorser[]; // for user assigned endorsements
+	private endorsingOrgs?: string[];
+	private readonly identityContext: IdentityContext;
+	private _transactionId?: string;
+
 	/*
 	 * @param {Contract} contract Contract to which this transaction belongs.
 	 * @param {String} name Fully qualified transaction name.
 	 * @param {function} eventStrategyFactory - A factory function that will return
 	 * an EventStrategy.
 	 */
-	constructor(contract, name) {
+	constructor(contract: ContractImpl, name: string) {
 		const method = `constructor[${name}]`;
 		logger.debug('%s - start', method);
 
 		this.contract = contract;
-		this._name = name;
-		this._transientMap = null;
-		this._options = contract.gateway.getOptions();
-		this._eventHandlerStrategyFactory = this._options.eventHandlerOptions.strategy || noOpEventHandlerStrategyFactory;
-		this._isInvoked = false;
-		this.queryHandler = contract.network.queryHandler;
-		this._endorsingPeers = null; // for user assigned endorsements
-		this._commitingOrderers = null; // for user assigned orderers
+		this.name = name;
+		this.gatewayOptions = contract.gateway.getOptions();
+		this.eventHandlerStrategyFactory = this.gatewayOptions.eventHandlerOptions.strategy || noOpEventHandlerStrategyFactory;
+		this.queryHandler = contract.network.queryHandler!;
 
 		// the signer of the outbound requests to the fabric network
-		this.identityContext = this.contract.gateway.identityContext;
+		this.identityContext = this.contract.gateway.identityContext!;
 		// the transaction ID will be generated during the submit
-		this._transactionId = null;
 	}
 
 	/**
 	 * Get the fully qualified name of the transaction function.
 	 * @returns {string} Transaction name.
 	 */
-	getName() {
-		return this._name;
+	getName(): string {
+		return this.name;
 	}
 
 	/**
@@ -119,11 +147,11 @@ class Transaction {
 	 * Buffer property values.
 	 * @returns {module:fabric-network.Transaction} This object, to allow function chaining.
 	 */
-	setTransient(transientMap) {
-		const method = `setTranssient[${this._name}]`;
+	setTransient(transientMap: TransientMap): Transaction {
+		const method = `setTransient[${this.name}]`;
 		logger.debug('%s - start', method);
 
-		this._transientMap = transientMap;
+		this.transientMap = transientMap;
 
 		return this;
 	}
@@ -131,9 +159,9 @@ class Transaction {
 	/**
 	 * Get the ID that will be used for this transaction invocation.
 	 * This value will be null until the submit is executed.
-	 * @returns {string} Transaction ID that is generated during the submit.
+	 * @returns {(string|undefined)} Transaction ID that is generated during the submit.
 	 */
-	getTransactionId() {
+	getTransactionId(): string | undefined {
 		return this._transactionId;
 	}
 
@@ -146,12 +174,12 @@ class Transaction {
 	 * @param {Endorser[]} peers - Endorsing peers.
 	 * @returns {module:fabric-network.Transaction} This object, to allow function chaining.
 	 */
-	setEndorsingPeers(peers) {
-		const method = `setEndorsingPeers[${this._name}]`;
+	setEndorsingPeers(peers: Endorser[]): Transaction {
+		const method = `setEndorsingPeers[${this.name}]`;
 		logger.debug('%s - start', method);
 
-		this._endorsingPeers = peers;
-		this._endorsingOrgs = null;
+		this.endorsingPeers = peers;
+		this.endorsingOrgs = undefined;
 
 		return this;
 	}
@@ -166,12 +194,12 @@ class Transaction {
 	 * @param {string[]} orgs - Endorsing organizations.
 	 * @returns {module:fabric-network.Transaction} This object, to allow function chaining.
 	 */
-	setEndorsingOrganizations(...orgs) {
-		const method = `setEndorsingOrganizations[${this._name}]`;
+	setEndorsingOrganizations(...orgs: string[]): Transaction {
+		const method = `setEndorsingOrganizations[${this.name}]`;
 		logger.debug('%s - start', method);
 
-		this._endorsingOrgs = orgs;
-		this._endorsingPeers = null;
+		this.endorsingOrgs = orgs;
+		this.endorsingPeers = undefined;
 
 		return this;
 	}
@@ -181,57 +209,29 @@ class Transaction {
 	 * will be evaluated on the endorsing peers and then submitted to the ordering service
 	 * for committing to the ledger.
 	 * @async
-     * @param {...string} [args] Transaction function arguments.
-     * @returns {Buffer} Payload response from the transaction function.
+	 * @param {...string} [args] Transaction function arguments.
+	 * @returns {Buffer} Payload response from the transaction function.
 	 * @throws {module:fabric-network.TimeoutError} If the transaction was successfully submitted to the orderer but
 	 * timed out before a commit event was received from peers.
-     */
-	async submit(...args) {
-		const method = `submit[${this._name}]`;
+	 */
+	async submit(...args: string[]): Promise<Buffer> {
+		const method = `submit[${this.name}]`;
 		logger.debug('%s - start', method);
 
-		const channel = this.contract.network.channel;
-		const transactionOptions = this._options.eventHandlerOptions;
-
-		const endorsementOptions = this._buildEndorsementOptions(args);
-		if (Number.isInteger(transactionOptions.endorseTimeout)) {
-			endorsementOptions.requestTimeout = transactionOptions.endorseTimeout * 1000; // in ms;
-		}
+		const channel = this.contract.network.getChannel();
+		const transactionOptions = this.gatewayOptions.eventHandlerOptions;
 
 		// This is the object that will centralize this endorsement activities
 		// with the fabric network
 		const endorsement = channel.newEndorsement(this.contract.chaincodeId);
 
-		if (this._endorsingPeers) {
-			logger.debug('%s - user has assigned targets', method);
-			endorsementOptions.targets = this._endorsingPeers;
-		} else if (this.contract.network.discoveryService) {
-			logger.debug('%s - discovery handler will be used for endorsing', method);
-			endorsementOptions.handler = await this.contract.getDiscoveryHandler(endorsement);
-			if (this._endorsingOrgs) {
-				logger.debug('%s - using discovery and user has assigned endorsing orgs %s', method, this._endorsingOrgs);
-				endorsementOptions.requiredOrgs = this._endorsingOrgs;
-			}
-		} else if (this._endorsingOrgs) {
-			logger.debug('%s - user has assigned endorsing orgs %s', method, this._endorsingOrgs);
-			const flatten = (accumulator, value) => {
-				accumulator.push(...value);
-				return accumulator;
-			};
-			endorsementOptions.targets = this._endorsingOrgs.map(channel.getEndorsers).reduce(flatten, []);
-		} else {
-			logger.debug('%s - targets will default to all that are assigned to this channel', method);
-			endorsementOptions.targets = channel.getEndorsers();
-		}
-
-		// by now we should have targets or a discovery handler to be used
-		// by the send() of the proposal instance
+		const proposalBuildRequest = this.newBuildProposalRequest(args);
 
 		logger.debug('%s - build and send the endorsement', method);
 
 		// build the outbound request along with getting a new transactionId
 		// from the identity context
-		endorsement.build(this.identityContext, endorsementOptions);
+		endorsement.build(this.identityContext, proposalBuildRequest);
 		// get the transaction ID generated by the endorsement build
 		this._transactionId = endorsement.getTransactionId();
 
@@ -239,41 +239,71 @@ class Transaction {
 
 		// ------- S E N D   P R O P O S A L
 		// This is where the request gets sent to the peers
-		const proposalResponse = await endorsement.send(endorsementOptions);
+		const proposalSendRequest: SendProposalRequest = {};
+		if (Number.isInteger(transactionOptions.endorseTimeout)) {
+			proposalSendRequest.requestTimeout = transactionOptions.endorseTimeout * 1000; // in ms;
+		}
+		if (this.endorsingPeers) {
+			logger.debug('%s - user has assigned targets', method);
+			proposalSendRequest.targets = this.endorsingPeers;
+		} else if (this.contract.network.discoveryService) {
+			logger.debug('%s - discovery handler will be used for endorsing', method);
+			proposalSendRequest.handler = await this.contract.getDiscoveryHandler();
+			if (this.endorsingOrgs) {
+				logger.debug('%s - using discovery and user has assigned endorsing orgs %s', method, this.endorsingOrgs);
+				proposalSendRequest.requiredOrgs = this.endorsingOrgs;
+			}
+		} else if (this.endorsingOrgs) {
+			logger.debug('%s - user has assigned endorsing orgs %s', method, this.endorsingOrgs);
+			const flatten = (accumulator: Endorser[], value: Endorser[]) => {
+				accumulator.push(...value);
+				return accumulator;
+			};
+			proposalSendRequest.targets = this.endorsingOrgs.map(channel.getEndorsers).reduce(flatten, []);
+		} else {
+			logger.debug('%s - targets will default to all that are assigned to this channel', method);
+			proposalSendRequest.targets = channel.getEndorsers();
+		}
+
+		// by now we should have targets or a discovery handler to be used
+		// by the send() of the proposal instance
+
+		const proposalResponse = await endorsement.send(proposalSendRequest);
 		try {
 			const result = getResponsePayload(proposalResponse);
 
 			// ------- E V E N T   M O N I T O R
-			const eventHandler = this._eventHandlerStrategyFactory(endorsement.getTransactionId(), this.contract.network);
+			const eventHandler = this.eventHandlerStrategyFactory(endorsement.getTransactionId(), this.contract.network);
 			await eventHandler.startListening();
 
-			const commitOptions = {};
+			const commit = endorsement.newCommit();
+			commit.build(this.identityContext);
+			commit.sign(this.identityContext);
+
+			// -----  C O M M I T   E N D O R S E M E N T
+			// this is where the endorsement results are sent to the orderer
+
+			const commitSendRequest: CommitSendRequest = {};
 			if (Number.isInteger(transactionOptions.commitTimeout)) {
-				commitOptions.requestTimeout = transactionOptions.commitTimeout * 1000; // in ms;
+				commitSendRequest.requestTimeout = transactionOptions.commitTimeout * 1000; // in ms;
 			}
-			if (endorsementOptions.handler) {
+			if (proposalSendRequest.handler) {
 				logger.debug('%s - use discovery to commit', method);
-				commitOptions.handler = endorsementOptions.handler;
+				commitSendRequest.handler = proposalSendRequest.handler;
 			} else {
 				logger.debug('%s - use the orderers assigned to the channel', method);
-				commitOptions.targets = channel.getCommitters();
+				commitSendRequest.targets = channel.getCommitters();
 			}
 
 			// by now we should have a discovery handler or use the target orderers
 			// that have been assigned from the channel to perform the commit
 
-			const commit = endorsement.newCommit();
-			commit.build(this.identityContext, commitOptions);
-			commit.sign(this.identityContext);
-
-			// -----  C O M M I T   E N D O R S E M E N T
-			// this is where the endorsement results are sent to the orderer
-			const commitResponse = await commit.send(commitOptions);
+			const commitResponse = await commit.send(commitSendRequest);
 
 			logger.debug('%s - commit response %j', method, commitResponse);
 
 			if (commitResponse.status !== 'SUCCESS') {
-				const msg = `Failed to commit transaction %${endorsement.transactionId}, orderer response status: ${commitResponse.status}`;
+				const msg = `Failed to commit transaction %${endorsement.getTransactionId()}, orderer response status: ${commitResponse.status}`;
 				logger.error('%s - %s', method, msg);
 				eventHandler.cancelListening();
 				throw new Error(msg);
@@ -292,17 +322,6 @@ class Transaction {
 		}
 	}
 
-	_buildEndorsementOptions(args) {
-		const request = {
-			fcn: this._name,
-			args: args
-		};
-		if (this._transientMap) {
-			request.transientMap = this._transientMap;
-		}
-		return request;
-	}
-
 	/**
 	 * Evaluate a transaction function and return its results.
 	 * The transaction function will be evaluated on the endorsing peers but
@@ -310,21 +329,15 @@ class Transaction {
 	 * not be committed to the ledger.
 	 * This is used for querying the world state.
 	 * @async
-     * @param {...string} [args] Transaction function arguments.
-     * @returns {Buffer} Payload response from the transaction function.
-     */
-	async evaluate(...args) {
-		const method = `evaluate[${this._name}]`;
+	 * @param {...string} [args] Transaction function arguments.
+	 * @returns {Promise<Buffer>} Payload response from the transaction function.
+	 */
+	async evaluate(...args: string[]): Promise<Buffer> {
+		const method = `evaluate[${this.name}]`;
 		logger.debug('%s - start', method);
 
-		const queryOptions = this._options.queryHandlerOptions;
-
-		const request = this._buildEndorsementOptions(args);
-		if (Number.isInteger(queryOptions.timeout)) {
-			request.requestTimeout = queryOptions.timeout * 1000; // in ms;
-		}
-
-		const queryProposal = this.contract.network.channel.newQuery(this.contract.chaincodeId);
+		const queryProposal = this.contract.network.getChannel().newQuery(this.contract.chaincodeId);
+		const request = this.newBuildProposalRequest(args);
 
 		logger.debug('%s - build and sign the query', method);
 		queryProposal.build(this.identityContext, request);
@@ -332,7 +345,7 @@ class Transaction {
 		this._transactionId = queryProposal.getTransactionId();
 		queryProposal.sign(this.identityContext);
 
-		const query = new Query(queryProposal, queryOptions);
+		const query = new QueryImpl(queryProposal, this.gatewayOptions.queryHandlerOptions);
 
 		logger.debug('%s - handler will send', method);
 		const results = await this.queryHandler.evaluate(query);
@@ -340,6 +353,15 @@ class Transaction {
 
 		return results;
 	}
-}
 
-module.exports = Transaction;
+	private newBuildProposalRequest(args: string[]): BuildProposalRequest {
+		const request: BuildProposalRequest = {
+			fcn: this.name,
+			args: args
+		};
+		if (this.transientMap) {
+			request.transientMap = this.transientMap;
+		}
+		return request;
+	}
+}

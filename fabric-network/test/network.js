@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2018, 2019 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -23,8 +23,8 @@ should();
 chai.use(require('chai-as-promised'));
 
 const {NetworkImpl: Network} = require('../lib/network');
-const Gateway = require('../lib/gateway');
-const Contract = require('../lib/contract');
+const {Gateway} = require('../lib/gateway');
+const {ContractImpl: Contract} = require('../lib/contract');
 const EventStrategies = require('fabric-network/lib/impl/event/defaulteventhandlerstrategies');
 const {EventServiceManager} = require('fabric-network/lib/impl/event/eventservicemanager');
 
@@ -117,15 +117,6 @@ describe('Network', () => {
 			await network._initializeInternalChannel({enabled:true, targets: [endorser]});
 			sinon.assert.calledOnce(channel.newDiscoveryService);
 		});
-		it('should fail if no peers found in targets parameter', async () => {
-			return network._initializeInternalChannel({enabled:true, targets: []})
-				.should.be.rejectedWith('No discovery targets found');
-		});
-		it('should fail if user provided peers not connected', async () => {
-			endorser.connected = false;
-			return network._initializeInternalChannel({enabled:true, targets: [endorser]})
-				.should.be.rejectedWith('Endorser instance peer1 is not connected to an endpoint');
-		});
 		it('should initialize the network using the discovery with targets from channel mspid', async () => {
 			await network._initializeInternalChannel({enabled:true});
 			sinon.assert.calledOnce(channel.newDiscoveryService);
@@ -134,14 +125,6 @@ describe('Network', () => {
 		it('should initialize the network using the discovery with targets from client mspid', async () => {
 			channel.getEndorsers.returns(null);
 			await network._initializeInternalChannel({enabled:true});
-			sinon.assert.calledOnce(channel.newDiscoveryService);
-			sinon.assert.calledOnce(discoveryService.send);
-		});
-		it('should initialize the network using the discovery with targets from client', async () => {
-			channel.getEndorsers.returns(null);
-			client.getEndorsers.returns(null);
-			client.getEndorsers.withArgs('msp1').returns([endorser]);
-			await network._initializeInternalChannel({enabled:true, targets: [endorser]});
 			sinon.assert.calledOnce(channel.newDiscoveryService);
 			sinon.assert.calledOnce(discoveryService.send);
 		});
@@ -162,7 +145,7 @@ describe('Network', () => {
 
 		it('should initialize the internal channels', async () => {
 			network.initialized = false;
-			sinon.stub(network, '_initializeInternalChannel').returns();
+			sinon.stub(network, '_initializeInternalChannel').resolves();
 			await network._initialize();
 			network.initialized.should.equal(true);
 		});

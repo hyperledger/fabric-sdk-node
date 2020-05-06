@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2019 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -14,9 +14,7 @@ const Committer = require('fabric-common/lib/Committer');
 const Endorser = require('fabric-common/lib/Endorser');
 const Endpoint = require('fabric-common/lib/Endpoint');
 
-const NetworkConfig = rewire('fabric-network/lib/impl/ccp/networkconfig.js');
-
-
+const NetworkConfig = rewire('fabric-network/lib/impl/ccp/networkconfig');
 
 describe('NetworkConfig', () => {
 	let sandbox;
@@ -282,11 +280,11 @@ describe('NetworkConfig', () => {
 		});
 		it('should run getPEMfromConfig with no pem config', async () => {
 			const result = await getPEMfromConfig({});
-			expect(result).to.be.equal(null);
+			expect(result).to.be.undefined;
 		});
 		it('should run getPEMfromConfig with no pem config', async () => {
 			const result = await getPEMfromConfig();
-			expect(result).to.be.equal(null);
+			expect(result).to.be.undefined;
 		});
 	});
 });

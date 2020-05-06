@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -20,7 +20,7 @@ import Long = require('long');
 
 import { Network, NetworkImpl } from '../../../src/network';
 import { EventServiceManager } from '../../../src/impl/event/eventservicemanager';
-import Gateway = require('../../../src/gateway');
+import { Gateway } from '../../../src/gateway';
 import { StubEventService } from './stubeventservice';
 import { CommitEvent } from '../../../src/events';
 
@@ -52,7 +52,8 @@ describe('commit listener', () => {
 		gateway = sinon.createStubInstance(Gateway);
 		gateway.identityContext = sinon.createStubInstance(IdentityContext);
 		gateway.getIdentity.returns({
-			mspId: 'mspId'
+			mspId: 'mspId',
+			type: 'stub'
 		});
 
 		channel = sinon.createStubInstance(Channel);
@@ -63,7 +64,7 @@ describe('commit listener', () => {
 		client.newEventer.withArgs(peer.name).returns(eventer);
 		(channel as any).client = client;
 
-		network = new NetworkImpl(gateway, channel);
+		network = new NetworkImpl(gateway as unknown as Gateway, channel);
 
 		eventServiceManager = (network as any).eventServiceManager;
 	});

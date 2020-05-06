@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2018, 2019 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -21,10 +21,10 @@ const IdentityContext = require('fabric-common/lib/IdentityContext');
 const DiscoveryHandler = require('fabric-common/lib/DiscoveryHandler');
 const Committer = require('fabric-common/lib/Committer');
 
-const Contract = require('fabric-network/lib/contract');
+const {ContractImpl: Contract} = require('fabric-network/lib/contract');
 const {NetworkImpl: Network} = require('../lib/network');
-const Gateway = require('fabric-network/lib/gateway');
-const Transaction = require('fabric-network/lib/transaction');
+const {Gateway} = require('fabric-network/lib/gateway');
+const {Transaction} = require('fabric-network/lib/transaction');
 const {TransactionEventHandler} = require('fabric-network/lib/impl/event/transactioneventhandler');
 const {QueryImpl: Query} = require('fabric-network/lib/impl/query/query');
 const QueryStrategies = require('fabric-network/lib/impl/query/defaultqueryhandlerstrategies');
@@ -118,8 +118,7 @@ describe('Transaction', () => {
 		channel.newEndorsement.returns(endorsement);
 		channel.newQuery.withArgs(chaincodeId).returns(queryProposal);
 		channel.getEndorsers.returns([endorser]);
-
-		network.channel = channel;
+		network.getChannel.returns(channel);
 		queryHandler = {
 			evaluate: sinon.stub().resolves(expectedResult)
 		};
@@ -178,9 +177,9 @@ describe('Transaction', () => {
 	});
 
 	describe('#getTransactionId', () => {
-		it('return the transactionId', () => {
+		it('return undefined transactionId prior to submit or evaluate', () => {
 			const result = transaction.getTransactionId();
-			expect(result).to.be.null;
+			expect(result).to.be.undefined;
 		});
 		it('return the transactionId built during submit', async () => {
 			await transaction.submit();
@@ -452,14 +451,6 @@ describe('Transaction', () => {
 			const result = await transaction.evaluate();
 
 			expect(result.toString()).to.equal('');
-		});
-
-		it('builds correct request with timeout from gateway options', async () => {
-			gatewayOptions.queryHandlerOptions.timeout = 55;
-
-			await transaction.evaluate();
-
-			sinon.assert.calledWith(queryProposal.build, idx, sinon.match({requestTimeout: 55000}));
 		});
 	});
 });

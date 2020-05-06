@@ -1,10 +1,9 @@
-/**
+/*
  * Copyright 2020 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// @ts-ignore no implicit any
 import protos = require('fabric-protos');
 
 function newCodeToStatusMap(): { [code: number]: string } {

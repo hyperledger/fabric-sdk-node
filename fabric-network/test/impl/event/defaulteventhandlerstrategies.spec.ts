@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2018, 2019 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -11,7 +11,7 @@ const expect = chai.expect;
 import { Channel, Endorser } from 'fabric-common';
 
 import { Network, NetworkImpl } from '../../../src/network';
-import Gateway = require('fabric-network/lib/gateway');
+import { Gateway } from '../../../src/gateway';
 
 import { AllForTxStrategy } from '../../../src/impl/event/allfortxstrategy';
 import { AnyForTxStrategy } from '../../../src/impl/event/anyfortxstrategy';
@@ -48,14 +48,15 @@ describe('DefaultEventHandlerStrategies', () => {
 		channel.getEndorsers.withArgs(mspId).returns(orgPeers);
 
 		const gateway: sinon.SinonStubbedInstance<Gateway> = sinon.createStubInstance(Gateway);
-		gateway.getOptions.returns({});
+		gateway.getOptions.returns({} as any);
 		gateway.getIdentity.returns({
-			mspId
+			mspId,
+			type: 'stub'
 		});
 
 		network = sinon.createStubInstance(NetworkImpl);
 		network.getChannel.returns(channel);
-		network.getGateway.returns(gateway);
+		network.getGateway.returns(gateway as unknown as Gateway);
 	});
 
 	afterEach(() => {

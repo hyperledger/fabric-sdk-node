@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2019 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -105,7 +105,7 @@ describe('IdentityProvider', () => {
 					.to.throw('Unsupported identity version: undefined');
 			});
 
-			it('Throws for JSON with unsuported version', () => {
+			it('Throws for JSON with unsupported version', () => {
 				identityData.version = Number.MAX_SAFE_INTEGER;
 				expect(() => provider.fromJson(identityData))
 					.to.throw('Unsupported identity version: ' + Number.MAX_SAFE_INTEGER);

@@ -1,19 +1,24 @@
-/**
+/*
  * Copyright 2018, 2019 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
+import { Network, NetworkImpl } from './network';
+import * as NetworkConfig from './impl/ccp/networkconfig';
+import { Identity } from './impl/wallet/identity';
+import { Wallet } from './impl/wallet/wallet';
+import { IdentityProvider } from './impl/wallet/identityprovider';
+import { TxEventHandlerFactory } from './impl/event/transactioneventhandler';
+import { QueryHandlerFactory } from './impl/query/queryhandler';
+import { Client, IdentityContext } from 'fabric-common';
+import * as EventStrategies from './impl/event/defaulteventhandlerstrategies';
+import * as QueryStrategies from './impl/query/defaultqueryhandlerstrategies';
+import * as IdentityProviderRegistry from './impl/wallet/identityproviderregistry';
 
-const {NetworkImpl: Network} = require('./network');
-const NetworkConfig = require('./impl/ccp/networkconfig');
-const {Client} = require('fabric-common');
-const EventStrategies = require('./impl/event/defaulteventhandlerstrategies');
-const QueryStrategies = require('./impl/query/defaultqueryhandlerstrategies');
-const {newDefaultProviderRegistry} = require('./impl/wallet/identityproviderregistry');
-
-const logger = require('./logger').getLogger('Gateway');
+import * as Logger from './logger';
+import { X509Identity, X509Provider } from './impl/wallet/x509identity';
+const logger = Logger.getLogger('Gateway');
 
 /**
  * @typedef {Object} Gateway~GatewayOptions
@@ -68,6 +73,75 @@ const logger = require('./logger').getLogger('Gateway');
  * otherwise should be disabled.
  */
 
+export interface GatewayOptions {
+	identity: string | Identity;
+	wallet?: Wallet;
+	identityProvider?: IdentityProvider;
+	clientTlsIdentity?: string;
+	tlsInfo?: {
+		certificate: string;
+		key: string;
+	};
+	discovery?: DiscoveryOptions;
+	eventHandlerOptions?: DefaultEventHandlerOptions;
+	queryHandlerOptions?: DefaultQueryHandlerOptions;
+	'connection-options'?: any;
+}
+
+export interface ConnectedGatewayOptions extends GatewayOptions {
+	discovery: DiscoveryOptions;
+	eventHandlerOptions: DefaultEventHandlerOptions;
+	queryHandlerOptions: DefaultQueryHandlerOptions;
+}
+
+export interface DiscoveryOptions {
+	asLocalhost?: boolean;
+	enabled?: boolean;
+}
+
+export interface DefaultEventHandlerOptions {
+	commitTimeout?: number;
+	endorseTimeout?: number;
+	strategy?: TxEventHandlerFactory | null;
+}
+
+export interface DefaultQueryHandlerOptions {
+	strategy?: QueryHandlerFactory;
+	timeout?: number;
+}
+
+const defaultOptions = Object.freeze({
+	queryHandlerOptions: {
+		timeout: 30, // 30 seconds
+		strategy: QueryStrategies.MSPID_SCOPE_SINGLE
+	},
+	eventHandlerOptions: {
+		endorseTimeout: 30, // 30 seconds
+		commitTimeout: 300, // 5 minutes
+		strategy: EventStrategies.MSPID_SCOPE_ALLFORTX
+	},
+	discovery: {
+		enabled: true,
+		asLocalhost: true
+	}
+});
+
+export function mergeOptions<B, E>(currentOptions: B, additionalOptions: E): B & E {
+	const result = currentOptions as B & E;
+	for (const prop in additionalOptions) {
+		if (typeof additionalOptions[prop] === 'object' && additionalOptions[prop] !== null) {
+			if (result[prop] === undefined) {
+				(result as E)[prop] = additionalOptions[prop];
+			} else {
+				mergeOptions(result[prop], additionalOptions[prop]);
+			}
+		} else {
+			(result as E)[prop] = additionalOptions[prop];
+		}
+	}
+	return result;
+}
+
 /**
  * The gateway peer provides the connection point for an application to access the Fabric network.
  * It is instantiated using the default constructor.
@@ -79,58 +153,27 @@ const logger = require('./logger').getLogger('Gateway');
  * [submit transactions]{@link Contract#submitTransaction} to the ledger.
  * @memberof module:fabric-network
  */
-class Gateway {
-
-	static _mergeOptions(defaultOptions, suppliedOptions) {
-		for (const prop in suppliedOptions) {
-			if (typeof suppliedOptions[prop] === 'object' && suppliedOptions[prop] !== null) {
-				if (defaultOptions[prop] === undefined) {
-					defaultOptions[prop] = suppliedOptions[prop];
-				} else {
-					Gateway._mergeOptions(defaultOptions[prop], suppliedOptions[prop]);
-				}
-			} else {
-				defaultOptions[prop] = suppliedOptions[prop];
-			}
-		}
-	}
+export class Gateway {
+	identityContext?: IdentityContext;
+	private client?: Client;
+	private readonly networks = new Map<string, NetworkImpl>();
+	private identity?: Identity;
+	private options?: ConnectedGatewayOptions;
 
 	constructor() {
 		logger.debug('in Gateway constructor');
-		this.client = null;
-		this.wallet = null;
-		this.identityContext = null;
-		this.networks = new Map();
-		this.identity = null;
-
-		// initial options - override with the connect()
-		this.options = {
-			queryHandlerOptions: {
-				timeout: 30, // 30 seconds
-				strategy: QueryStrategies.MSPID_SCOPE_SINGLE
-			},
-			eventHandlerOptions: {
-				endorseTimeout: 30, // 30 seconds
-				commitTimeout: 300, // 5 minutes
-				strategy: EventStrategies.MSPID_SCOPE_ALLFORTX
-			},
-			discovery: {
-				enabled: true,
-				asLocalhost: true
-			}
-		};
 	}
 
 	/**
-     * Connect to the Gateway with a connection profile or a prebuilt Client instance.
-     * @async
-     * @param {(object|Client)} config The configuration for this Gateway which can be:
+	 * Connect to the Gateway with a connection profile or a prebuilt Client instance.
+	 * @async
+	 * @param {(object|Client)} config The configuration for this Gateway which can be:
 	 * <ul>
 	 *   <li>A common connection profile JSON (Object)</li>
 	 *   <li>A pre-configured client instance</li>
 	 * </ul>
-     * @param {module:fabric-network.Gateway~GatewayOptions} options - specific options
-	  * for creating this Gateway instance
+	 * @param {module:fabric-network.Gateway~GatewayOptions} options - specific options
+	 * for creating this Gateway instance
 	 * @example
 	 * const gateway = new Gateway();
 	 * const wallet = await Wallets.newFileSystemWallet('./WALLETS/wallet');
@@ -140,35 +183,37 @@ class Gateway {
 	 *     identity: 'admin',
 	 *     wallet: wallet
 	 * });
-     */
-	async connect(config, options = {}) {
+	 */
+	async connect(config: Client | object, options: GatewayOptions) {
 		const method = 'connect';
 		logger.debug('%s - start', method);
 
-		Gateway._mergeOptions(this.options, options);
+		this.options = mergeOptions(mergeOptions({}, defaultOptions), options);
 		logger.debug('connection options: %j', options);
 
-		let load_ccp = false;
-		if (config && config.type === 'Client') {
+		let loadCcp = false;
+		if (config instanceof Client) {
 			// initialize from an existing Client object instance
 			logger.debug('%s - using existing client object', method);
 			this.client = config;
-		} else {
+		} else if (typeof config === 'object') {
 			this.client = new Client('gateway client');
-			load_ccp = true;
+			loadCcp = true;
+		} else {
+			throw new Error('Configuration must be a connection profile object or Client object');
 		}
 
 		// setup an initial identity for the Gateway
 		if (typeof options.identity === 'string') {
 			logger.debug('%s - setting identity from wallet', method);
 			this.identity = await this._getWalletIdentity(options.identity);
-			const provider = options.wallet.getProviderRegistry().getProvider(this.identity.type);
+			const provider = options.wallet!.getProviderRegistry().getProvider(this.identity.type);
 			const user = await provider.getUserContext(this.identity, options.identity);
 			this.identityContext = this.client.newIdentityContext(user);
 		} else if (typeof options.identity === 'object') {
 			logger.debug('%s - setting identity using identity object', method);
 			this.identity = options.identity;
-			const provider = options.identityProvider || newDefaultProviderRegistry().getProvider(this.identity.type);
+			const provider = options.identityProvider || IdentityProviderRegistry.newDefaultProviderRegistry().getProvider(this.identity.type);
 			const user = await provider.getUserContext(this.identity, 'gateway identity');
 			this.identityContext = this.client.newIdentityContext(user);
 		} else {
@@ -179,7 +224,10 @@ class Gateway {
 		if (options.clientTlsIdentity) {
 			logger.debug('%s - setting tlsIdentity', method);
 			const tlsIdentity = await this._getWalletIdentity(options.clientTlsIdentity);
-			const tlsCredentials = tlsIdentity.credentials;
+			if (tlsIdentity.type !== 'X.509') {
+				throw new Error('Unsupported TLS identity type: ' + tlsIdentity.type);
+			}
+			const tlsCredentials = (tlsIdentity as X509Identity).credentials;
 			this.client.setTlsClientCertAndKey(tlsCredentials.certificate, tlsCredentials.privateKey);
 		} else if (options.tlsInfo) {
 			logger.debug('%s - setting tlsInfo', method);
@@ -194,12 +242,12 @@ class Gateway {
 		// of connection options for an endpoint
 		// these will be merged with those from the config (default.json)
 		if (options['connection-options']) {
-			this.client.centralized_options = options['connection-options'];
+			(this.client as any).centralized_options = options['connection-options'];
 			logger.debug('%s - assigned connection options');
 		}
 
 		// Load connection profile after client configuration has been completed
-		if (load_ccp) {
+		if (loadCcp) {
 			logger.debug('%s - NetworkConfig loading client from ccp', method);
 			await NetworkConfig.loadFromConfig(this.client, config);
 		}
@@ -207,8 +255,66 @@ class Gateway {
 		logger.debug('%s - end', method);
 	}
 
-	async _getWalletIdentity(label) {
-		if (!this.options.wallet) {
+	/**
+	 * Get the identity associated with the gateway connection.
+	 * @returns {module:fabric-network.Identity} An identity.
+	 */
+	getIdentity(): Identity {
+		if (!this.identity) {
+			throw new Error('Gateway is not connected');
+		}
+		return this.identity;
+	}
+
+	/**
+	 * Returns the set of options associated with the Gateway connection
+	 * @returns {module:fabric-network.Gateway~GatewayOptions} The Gateway connection options
+	 */
+	getOptions(): ConnectedGatewayOptions {
+		if (!this.options) {
+			throw new Error('Gateway is not connected');
+		}
+		return this.options;
+	}
+
+	/**
+	 * Clean up and disconnect this Gateway connection in preparation for it to be discarded and garbage collected
+	 */
+	disconnect(): void {
+		logger.debug('in disconnect');
+		this.networks.forEach((network) => network._dispose());
+		this.networks.clear();
+	}
+
+	/**
+	 * Returns an object representing a network
+	 * @param {string} networkName The name of the network (channel name)
+	 * @returns {module:fabric-network.Network}
+	 */
+	async getNetwork(networkName: string): Promise<Network> {
+		const method = 'getNetwork';
+		logger.debug('%s - start', method);
+
+		if (!this.client || !this.options) {
+			throw new Error('Gateway is not connected');
+		}
+
+		const existingNetwork = this.networks.get(networkName);
+		if (existingNetwork) {
+			logger.debug('%s - returning existing network:%s', method, networkName);
+			return existingNetwork;
+		}
+
+		logger.debug('%s - create network object and initialize', method);
+		const channel = this.client.getChannel(networkName);
+		const newNetwork = new NetworkImpl(this, channel);
+		await newNetwork._initialize(this.options.discovery);
+		this.networks.set(networkName, newNetwork);
+		return newNetwork;
+	}
+
+	private async _getWalletIdentity(label: string): Promise<Identity> {
+		if (!this.options?.wallet) {
 			throw new Error('No wallet supplied from which to retrieve identity label');
 		}
 
@@ -219,57 +325,4 @@ class Gateway {
 
 		return identity;
 	}
-
-	/**
-	 * Get the identity associated with the gateway connection.
-	 * @returns {module:fabric-network.Identity} An identity.
-	 */
-	getIdentity() {
-		return this.identity;
-	}
-
-	/**
-	 * Returns the set of options associated with the Gateway connection
-	 * @returns {module:fabric-network.Gateway~GatewayOptions} The Gateway connection options
-	 */
-	getOptions() {
-		logger.debug('in getOptions');
-		return this.options;
-	}
-
-	/**
-     * Clean up and disconnect this Gateway connection in preparation for it to be discarded and garbage collected
-     */
-	disconnect() {
-		logger.debug('in disconnect');
-		for (const network of this.networks.values()) {
-			network._dispose();
-		}
-		this.networks.clear();
-	}
-
-	/**
-	 * Returns an object representing a network
-	 * @param {string} networkName The name of the network (channel name)
-	 * @returns {module:fabric-network.Network}
-	 */
-	async getNetwork(networkName) {
-		const method = 'getNetwork';
-		logger.debug('%s - start', method);
-
-		const existingNetwork = this.networks.get(networkName);
-		if (existingNetwork) {
-			logger.debug('%s - returning existing network:%s', method, networkName);
-			return existingNetwork;
-		}
-
-		logger.debug('%s - create network object and initialize', method);
-		const channel = this.client.getChannel(networkName);
-		const newNetwork = new Network(this, channel);
-		await newNetwork._initialize(this.options.discovery);
-		this.networks.set(networkName, newNetwork);
-		return newNetwork;
-	}
 }
-
-module.exports = Gateway;

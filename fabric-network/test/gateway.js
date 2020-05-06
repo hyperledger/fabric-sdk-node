@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2018, 2019 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -18,8 +18,9 @@ const chai = require('chai');
 const should = chai.should();
 chai.use(require('chai-as-promised'));
 
-const Gateway = rewire('../lib/gateway');
-const Client = rewire('fabric-common/lib/Client');
+const GatewayRewire = rewire('../lib/gateway');
+const {Gateway, mergeOptions} = GatewayRewire;
+const {Client} = require('fabric-common');
 const QueryStrategies = require('../lib/impl/query/defaultqueryhandlerstrategies');
 
 describe('Gateway', () => {
@@ -34,15 +35,17 @@ describe('Gateway', () => {
 	let provider;
 	let identity;
 	let options;
+	const connectionProfile = {};
 
 	beforeEach(() => {
 		revert = [];
 
 		clientHelper = sinon.stub();
 		clientHelper.loadFromConfig = sinon.stub().resolves('ccp');
-		revert.push(Gateway.__set__('NetworkConfig', clientHelper));
+		revert.push(GatewayRewire.__set__('NetworkConfig', clientHelper));
 
 		provider = sinon.createStubInstance(X509Provider);
+		provider.type = 'X.509';
 		provider.getUserContext.callsFake((id, label) => {
 			return {
 				getName: () => label,
@@ -51,10 +54,10 @@ describe('Gateway', () => {
 		});
 
 		const providerRegistry = newDefaultProviderRegistry();
-		const getProviderStub = sinon.stub(providerRegistry, 'getProvider');
-		getProviderStub.callThrough();
-		getProviderStub.withArgs('X.509').returns(provider);
-		revert.push(Gateway.__set__('newDefaultProviderRegistry', () => providerRegistry));
+		providerRegistry.addProvider(provider);
+		revert.push(GatewayRewire.__set__('IdentityProviderRegistry', {
+			newDefaultProviderRegistry: () => providerRegistry
+		}));
 
 		client = sinon.createStubInstance(Client);
 		client.type = 'Client';
@@ -62,9 +65,6 @@ describe('Gateway', () => {
 		client.newIdentityContext.returns(identityContext);
 
 		gateway = new Gateway();
-		gateway.getIdentity = sinon.fake.returns({
-			mspId: 'mspId'
-		});
 
 		identity = {
 			type: 'X.509',
@@ -95,7 +95,7 @@ describe('Gateway', () => {
 		sinon.restore();
 	});
 
-	describe('#_mergeOptions', () => {
+	describe('#mergeOptions', () => {
 		let defaultOptions;
 
 		beforeEach(() => {
@@ -113,7 +113,7 @@ describe('Gateway', () => {
 
 		it('should return the default options when there are no overrides', () => {
 			const overrideOptions = {};
-			Gateway._mergeOptions(defaultOptions, overrideOptions);
+			mergeOptions(defaultOptions, overrideOptions);
 			defaultOptions.should.deep.equal(defaultOptions);
 		});
 
@@ -134,7 +134,7 @@ describe('Gateway', () => {
 					inner22: 'twenty'
 				}
 			};
-			Gateway._mergeOptions(defaultOptions, overrideOptions);
+			mergeOptions(defaultOptions, overrideOptions);
 			defaultOptions.should.deep.equal(expectedOptions);
 		});
 
@@ -154,7 +154,7 @@ describe('Gateway', () => {
 					inner22: 'twenty'
 				}
 			};
-			Gateway._mergeOptions(defaultOptions, overrideOptions);
+			mergeOptions(defaultOptions, overrideOptions);
 			defaultOptions.should.deep.equal(expectedOptions);
 		});
 
@@ -174,7 +174,7 @@ describe('Gateway', () => {
 					inner22: 'twenty'
 				}
 			};
-			Gateway._mergeOptions(defaultOptions, overrideOptions);
+			mergeOptions(defaultOptions, overrideOptions);
 			defaultOptions.should.deep.equal(expectedOptions);
 		});
 
@@ -195,7 +195,7 @@ describe('Gateway', () => {
 					inner22: 'twenty'
 				}
 			};
-			Gateway._mergeOptions(defaultOptions, overrideOptions);
+			mergeOptions(defaultOptions, overrideOptions);
 			defaultOptions.should.deep.equal(expectedOptions);
 		});
 
@@ -214,7 +214,7 @@ describe('Gateway', () => {
 				},
 				single: true
 			};
-			Gateway._mergeOptions(defaultOptions, overrideOptions);
+			mergeOptions(defaultOptions, overrideOptions);
 			defaultOptions.should.deep.equal(expectedOptions);
 		});
 
@@ -233,7 +233,7 @@ describe('Gateway', () => {
 				},
 				single: null
 			};
-			Gateway._mergeOptions(defaultOptions, overrideOptions);
+			mergeOptions(defaultOptions, overrideOptions);
 			defaultOptions.should.deep.equal(expectedOptions);
 		});
 
@@ -248,7 +248,7 @@ describe('Gateway', () => {
 					inner22: 'twenty'
 				}
 			};
-			Gateway._mergeOptions(defaultOptions, overrideOptions);
+			mergeOptions(defaultOptions, overrideOptions);
 			defaultOptions.should.deep.equal(expectedOptions);
 		});
 
@@ -273,7 +273,7 @@ describe('Gateway', () => {
 					inner32: 'thirty'
 				}
 			};
-			Gateway._mergeOptions(defaultOptions, overrideOptions);
+			mergeOptions(defaultOptions, overrideOptions);
 			defaultOptions.should.deep.equal(expectedOptions);
 		});
 
@@ -298,7 +298,7 @@ describe('Gateway', () => {
 					inner22: 'twenty'
 				}
 			};
-			Gateway._mergeOptions(defaultOptions, overrideOptions);
+			mergeOptions(defaultOptions, overrideOptions);
 			defaultOptions.should.deep.equal(expectedOptions);
 		});
 	});
@@ -312,7 +312,7 @@ describe('Gateway', () => {
 
 	describe('#connect', () => {
 		it('should fail without options supplied', () => {
-			return gateway.connect()
+			return gateway.connect(connectionProfile, {})
 				.should.be.rejectedWith('An identity must be assigned to a Gateway instance');
 		});
 
@@ -320,12 +320,12 @@ describe('Gateway', () => {
 			options = {
 				identity: 'identity'
 			};
-			return gateway.connect('ccp', options)
+			return gateway.connect(connectionProfile, options)
 				.should.be.rejectedWith('No wallet supplied from which to retrieve identity label');
 		});
 
 		it('should connect to the gateway with wallet identity', async () => {
-			await gateway.connect('ccp', options);
+			await gateway.connect(connectionProfile, options);
 			gateway.client.name.should.equal('gateway client');
 			gateway.identityContext.mspid.should.equal(identity.mspId);
 		});
@@ -334,7 +334,7 @@ describe('Gateway', () => {
 			options = {
 				identity
 			};
-			await gateway.connect('ccp', options);
+			await gateway.connect(connectionProfile, options);
 			gateway.identityContext.mspid.should.equal(identity.mspId);
 		});
 
@@ -343,7 +343,7 @@ describe('Gateway', () => {
 			options = {
 				identity
 			};
-			return gateway.connect('ccp', options)
+			return gateway.connect(connectionProfile, options)
 				.should.be.rejectedWith(identity.type);
 		});
 
@@ -353,7 +353,7 @@ describe('Gateway', () => {
 				identity,
 				identityProvider: provider
 			};
-			await gateway.connect('ccp', options);
+			await gateway.connect(connectionProfile, options);
 			gateway.identityContext.mspid.should.equal(identity.mspId);
 		});
 
@@ -381,7 +381,7 @@ describe('Gateway', () => {
 		});
 
 		it('has default transaction event handling strategy if none specified', async () => {
-			await gateway.connect('ccp', options);
+			await gateway.connect(connectionProfile, options);
 			gateway.getOptions().eventHandlerOptions.strategy.should.be.a('Function');
 		});
 
@@ -390,7 +390,7 @@ describe('Gateway', () => {
 			options.eventHandlerOptions = {
 				strategy: stubStrategyFn
 			};
-			await gateway.connect('ccp', options);
+			await gateway.connect(connectionProfile, options);
 			gateway.getOptions().eventHandlerOptions.strategy.should.equal(stubStrategyFn);
 		});
 
@@ -398,7 +398,7 @@ describe('Gateway', () => {
 			options.eventHandlerOptions = {
 				strategy: null
 			};
-			await gateway.connect('ccp', options);
+			await gateway.connect(connectionProfile, options);
 			should.equal(gateway.getOptions().eventHandlerOptions.strategy, null);
 		});
 
@@ -415,33 +415,56 @@ describe('Gateway', () => {
 				wallet,
 				identity: 'INVALID_IDENTITY_LABEL'
 			};
-			return gateway.connect('ccp', options)
+			return gateway.connect(connectionProfile, options)
 				.should.be.rejectedWith('Identity not found in wallet: INVALID_IDENTITY_LABEL');
 		});
 
 		it('throws if the TLS identity does not exist', () => {
 			options.clientTlsIdentity = 'INVALID_IDENTITY_LABEL';
-			return gateway.connect('ccp', options)
+			return gateway.connect(connectionProfile, options)
 				.should.be.rejectedWith('Identity not found in wallet: INVALID_IDENTITY_LABEL');
+		});
+
+		it('throws if the TLS identity is not an X.509 identity', () => {
+			options.clientTlsIdentity = 'tls';
+			const tlsIdentity = {
+				mspId: 'mspId',
+				type: 'BAD_TYPE'
+			};
+			wallet.get.withArgs(options.clientTlsIdentity).resolves(tlsIdentity);
+
+			return gateway.connect(connectionProfile, options)
+				.should.be.rejectedWith(tlsIdentity.type);
 		});
 	});
 
-	describe('getters', () => {
-		beforeEach(async () => {
+	describe('#getOptions', () => {
+		it('should include default options', async () => {
 			await gateway.connect(client, options);
-		});
-
-		describe('#getOptions', () => {
-			it('should return the options', () => {
-				gateway.getOptions().should.be.an('object').that.nested.include({
-					'queryHandlerOptions.timeout': 30,
-					'queryHandlerOptions.strategy': QueryStrategies.MSPID_SCOPE_SINGLE,
-					'eventHandlerOptions.commitTimeout': 300
-				});
+			gateway.getOptions().should.be.an('object').that.nested.include({
+				'queryHandlerOptions.timeout': 30,
+				'queryHandlerOptions.strategy': QueryStrategies.MSPID_SCOPE_SINGLE,
+				'eventHandlerOptions.commitTimeout': 300
 			});
 		});
 	});
 
+	describe('Unconnected behavior', () => {
+		it('getIdentity() should throw if gateway not connected', () => {
+			(() => gateway.getIdentity())
+				.should.throw('Gateway is not connected');
+		});
+
+		it('getOptions() should throw if gateway not connected', () => {
+			(() => gateway.getOptions())
+				.should.throw('Gateway is not connected');
+		});
+
+		it('getNetwork() should throw if gateway not connected', async () => {
+			await gateway.getNetwork()
+				.should.be.rejectedWith('Gateway is not connected');
+		});
+	});
 
 	describe('#getNetwork/#disconnect', () => {
 		beforeEach(async () => {
@@ -451,7 +474,7 @@ describe('Gateway', () => {
 			options.query = {
 				strategy: () => {}
 			};
-			await gateway.connect('ccp', options);
+			await gateway.connect(connectionProfile, options);
 			gateway.identityContext = identityContext;
 		});
 

@@ -71,7 +71,7 @@ export enum Constants {
 
 	// provider types
 	HSM_PROVIDER = 'HSM-X.509',
-	X509_PROVDER = 'X.509',
+	X509_PROVIDER = 'X.509',
 
 	// Listener types
 	CONTRACT = 'CONTRACT',

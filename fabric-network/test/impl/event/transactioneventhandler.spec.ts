@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2019 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -17,7 +17,7 @@ import {
 } from 'fabric-common';
 import Long = require('long');
 
-import Gateway = require('../../../src/gateway');
+import { Gateway } from '../../../src/gateway';
 import { Network, NetworkImpl } from '../../../src/network';
 import { EventServiceManager } from '../../../src/impl/event/eventservicemanager';
 import { TransactionEventStrategy } from '../../../src/impl/event/transactioneventstrategy';
@@ -69,10 +69,11 @@ describe('TransactionEventHandler', () => {
 		gateway.identityContext = sinon.createStubInstance(IdentityContext);
 		gateway.getOptions.returns(options);
 		gateway.getIdentity.returns({
-			mspId: 'mspId'
+			mspId: 'mspId',
+			type: 'stub'
 		});
 
-		network = new NetworkImpl(gateway, null);
+		network = new NetworkImpl(gateway as unknown as Gateway, null);
 		(network as any).eventServiceManager = eventServiceManager;
 
 		stubStrategy = sinon.createStubInstance(TransactionEventStrategy);
