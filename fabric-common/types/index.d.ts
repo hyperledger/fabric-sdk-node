@@ -39,13 +39,25 @@ export interface ICryptoSuite {
 	setCryptoKeyStore(cryptoKeyStore: ICryptoKeyStore): void;
 	sign(key: ICryptoKey, digest: Buffer): Buffer;
 	verify(key: ICryptoKey, signature: Buffer, digest: Buffer): boolean;
+	close(): void;
 }
 
-export interface CryptoSetting {
+export type CryptoSetting = SoftwareCryptoSetting | HsmCryptoSetting;
+
+export interface SoftwareCryptoSetting {
 	algorithm: string;
 	hash: string;
 	keysize: number;
-	software: boolean;
+	software: true;
+}
+
+export interface HsmCryptoSetting {
+	lib?: string;
+	pin?: string;
+	slot?: number;
+	usertype?: number;
+	readwrite?: boolean;
+	software: false;
 }
 
 export interface UserConfig {

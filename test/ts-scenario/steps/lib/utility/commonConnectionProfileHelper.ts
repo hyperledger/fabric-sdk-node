@@ -159,9 +159,9 @@ export class CommonConnectionProfileHelper {
 	/**
 	 * Retrieve certificate authorities for a named organization
 	 * @param {String} orgName the organization name
-	 * @return {Object[]} certificate authorities for the named organization
+	 * @return {string[]} certificate authorities for the named organization
 	 */
-	public getCertificateAuthoritiesForOrg(orgName: string): any[] {
+	public getCertificateAuthoritiesForOrg(orgName: string): string[] {
 		return this.profile.organizations[orgName].certificateAuthorities;
 	}
 

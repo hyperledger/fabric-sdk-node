@@ -33,13 +33,6 @@ module.exports.NODE_END2END = {
 	chaincodeVersion: 'v0'
 };
 
-module.exports.NETWORK_END2END = {
-	channel: 'mychannel',
-	chaincodeId: 'network-e2enodecc',
-	chaincodeLanguage: 'node',
-	chaincodeVersion: 'v0'
-};
-
 // all temporary files and directories are created under here
 const tempdir = path.join(__dirname, '../temp');
 

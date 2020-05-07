@@ -10,7 +10,7 @@
 const sinon = require('sinon');
 const rewire = require('rewire');
 
-const {IdentityContext} = require('fabric-common');
+const {IdentityContext, CryptoSuite} = require('fabric-common');
 const {X509Provider} = require('../lib/impl/wallet/x509identity');
 const {newDefaultProviderRegistry} = require('../lib/impl/wallet/identityproviderregistry');
 
@@ -36,6 +36,7 @@ describe('Gateway', () => {
 	let identity;
 	let options;
 	const connectionProfile = {};
+	let cryptoSuite;
 
 	beforeEach(() => {
 		revert = [];
@@ -44,12 +45,15 @@ describe('Gateway', () => {
 		clientHelper.loadFromConfig = sinon.stub().resolves('ccp');
 		revert.push(GatewayRewire.__set__('NetworkConfig', clientHelper));
 
+		cryptoSuite = sinon.createStubInstance(CryptoSuite);
+
 		provider = sinon.createStubInstance(X509Provider);
 		provider.type = 'X.509';
 		provider.getUserContext.callsFake((id, label) => {
 			return {
 				getName: () => label,
-				getMspid: () => id.mspId
+				getMspid: () => id.mspId,
+				getCryptoSuite: () => cryptoSuite
 			};
 		});
 
@@ -475,7 +479,6 @@ describe('Gateway', () => {
 				strategy: () => {}
 			};
 			await gateway.connect(connectionProfile, options);
-			gateway.identityContext = identityContext;
 		});
 
 		it('should get a new network with new name', async () => {
@@ -496,6 +499,11 @@ describe('Gateway', () => {
 			gateway.networks.size.should.equal(1);
 			gateway.disconnect();
 			gateway.networks.size.should.equal(0);
+		});
+
+		it('should close cryptoSuite on disconnect', async () => {
+			gateway.disconnect();
+			sinon.assert.called(cryptoSuite.close);
 		});
 	});
 });

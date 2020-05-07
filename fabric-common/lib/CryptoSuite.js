@@ -161,6 +161,14 @@ class CryptoSuite {
 		}
 		throw new Error('Can\'t call abstract method, must be implemented by sub-class!');
 	}
+
+	/**
+	 * Close any connections to external crypto services, such as a hardware security module (HSM). Called when this
+	 * CryptoSuite will no longer be used.
+	 */
+	close() {
+		// Do nothing by default
+	}
 }
 
 module.exports = CryptoSuite;

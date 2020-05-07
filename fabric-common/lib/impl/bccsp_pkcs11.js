@@ -1065,6 +1065,9 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 		_initialized = false;
 	}
 
+	close() {
+		this.closeSession();
+	}
 }
 
 module.exports = CryptoSuite_PKCS11;

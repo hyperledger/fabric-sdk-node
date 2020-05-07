@@ -11,7 +11,7 @@ import { Wallet } from './impl/wallet/wallet';
 import { IdentityProvider } from './impl/wallet/identityprovider';
 import { TxEventHandlerFactory } from './impl/event/transactioneventhandler';
 import { QueryHandlerFactory } from './impl/query/queryhandler';
-import { Client, IdentityContext } from 'fabric-common';
+import { Client, IdentityContext, ICryptoSuite, User } from 'fabric-common';
 import * as EventStrategies from './impl/event/defaulteventhandlerstrategies';
 import * as QueryStrategies from './impl/query/defaultqueryhandlerstrategies';
 import * as IdentityProviderRegistry from './impl/wallet/identityproviderregistry';
@@ -159,6 +159,7 @@ export class Gateway {
 	private readonly networks = new Map<string, NetworkImpl>();
 	private identity?: Identity;
 	private options?: ConnectedGatewayOptions;
+	private cryptoSuite?: ICryptoSuite;
 
 	constructor() {
 		logger.debug('in Gateway constructor');
@@ -204,22 +205,24 @@ export class Gateway {
 		}
 
 		// setup an initial identity for the Gateway
+		let user: User;
 		if (typeof options.identity === 'string') {
 			logger.debug('%s - setting identity from wallet', method);
 			this.identity = await this._getWalletIdentity(options.identity);
 			const provider = options.wallet!.getProviderRegistry().getProvider(this.identity.type);
-			const user = await provider.getUserContext(this.identity, options.identity);
-			this.identityContext = this.client.newIdentityContext(user);
+			user = await provider.getUserContext(this.identity, options.identity);
 		} else if (typeof options.identity === 'object') {
 			logger.debug('%s - setting identity using identity object', method);
 			this.identity = options.identity;
 			const provider = options.identityProvider || IdentityProviderRegistry.newDefaultProviderRegistry().getProvider(this.identity.type);
-			const user = await provider.getUserContext(this.identity, 'gateway identity');
-			this.identityContext = this.client.newIdentityContext(user);
+			user = await provider.getUserContext(this.identity, 'gateway identity');
 		} else {
 			logger.error('%s - An identity must be assigned to a Gateway instance', method);
 			throw new Error('An identity must be assigned to a Gateway instance');
 		}
+
+		this.cryptoSuite = user.getCryptoSuite();
+		this.identityContext = this.client.newIdentityContext(user);
 
 		if (options.clientTlsIdentity) {
 			logger.debug('%s - setting tlsIdentity', method);
@@ -284,6 +287,7 @@ export class Gateway {
 		logger.debug('in disconnect');
 		this.networks.forEach((network) => network._dispose());
 		this.networks.clear();
+		this.cryptoSuite?.close();
 	}
 
 	/**

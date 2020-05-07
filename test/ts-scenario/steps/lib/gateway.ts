@@ -5,7 +5,7 @@
 'use strict';
 
 import * as FabricCAClient from 'fabric-ca-client';
-import { Contract, DefaultEventHandlerStrategies, DefaultQueryHandlerStrategies, Gateway, GatewayOptions, HsmOptions, HsmX509Provider, Identity, IdentityProvider, Network, QueryHandlerFactory, Transaction, TransientMap, TxEventHandlerFactory, Wallet, Wallets } from 'fabric-network';
+import { Contract, DefaultEventHandlerStrategies, DefaultQueryHandlerStrategies, Gateway, GatewayOptions, HsmOptions, HsmX509Provider, Identity, IdentityProvider, Network, QueryHandlerFactory, Transaction, TransientMap, TxEventHandlerFactory, Wallet, Wallets, HsmX509Identity, X509Identity } from 'fabric-network';
 import * as fs from 'fs';
 import * as path from 'path';
 import { createQueryHandler as sampleQueryStrategy } from '../../config/handlers/sample-query-handler';
@@ -15,6 +15,8 @@ import * as AdminUtils from './utility/adminUtils';
 import * as BaseUtils from './utility/baseUtils';
 import { CommonConnectionProfileHelper } from './utility/commonConnectionProfileHelper';
 import { StateStore } from './utility/stateStore';
+import { User, HsmCryptoSetting } from 'fabric-common';
+import FabricCAServices = require('fabric-ca-client');
 
 const stateStore: StateStore = StateStore.getInstance();
 const txnTypes: string[] = ['evaluate', 'submit'];
@@ -25,9 +27,6 @@ const supportedWallets: string[] = [
 	Constants.COUCH_WALLET as string,
 	Constants.HSM_WALLET as string
 ];
-
-const HSM_PROVIDER: string = Constants.HSM_PROVIDER;
-const X509_PROVIDER: string = Constants.X509_PROVIDER;
 
 const EventStrategies: { [key: string]: TxEventHandlerFactory } = {
 	MSPID_SCOPE_ALLFORTX : DefaultEventHandlerStrategies.MSPID_SCOPE_ALLFORTX,
@@ -68,83 +67,17 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 		BaseUtils.logAndThrow(`Passed wallet type [${walletType}] is not supported, must be one of: ${supportedWallets}`);
 	}
 
-	let useHSM = false;
-
-	const myWalletReference: string = `${Constants.WALLET}_walletType`;
-	let wallet: Wallet = stateStore.get(myWalletReference);
-	if (!wallet) {
-		BaseUtils.logMsg(`Creating wallet of type ${walletType}`);
-		switch (walletType) {
-			case Constants.MEMORY_WALLET:
-				wallet = await Wallets.newInMemoryWallet();
-				break;
-			case Constants.FILE_WALLET:
-				const tempDir: string = path.join(__dirname, Constants.LIB_TO_TEMP, Constants.FILE_WALLET);
-				if (fs.existsSync(tempDir)) {
-					BaseUtils.recursiveDirDelete(tempDir);
-				}
-				fs.mkdirSync(tempDir);
-				wallet = await Wallets.newFileSystemWallet(tempDir);
-				break;
-			case Constants.COUCH_WALLET:
-				wallet = await Wallets.newCouchDBWallet({url: Constants.COUCH_WALLET_URL as string});
-				break;
-			case Constants.HSM_WALLET:
-				wallet = await Wallets.newInMemoryWallet();
-				useHSM = true;
-
-				const hsmOptions: HsmOptions = {
-					lib: getHSMLibPath(),
-					pin: process.env.PKCS11_PIN || '98765432',
-					slot: Number(process.env.PKCS11_SLOT || '0')
-				};
-
-				const hsmProvider = new HsmX509Provider(hsmOptions);
-				wallet.getProviderRegistry().addProvider(hsmProvider);
-				break;
-			default:
-				BaseUtils.logAndThrow(`Unmatched wallet backing store`);
-		}
-	}
-
-	// Might already have a user@org in that wallet
 	const userId: string = `${userName}@${orgName}`;
-	const userIdentity: Identity | undefined = await wallet.get(userId);
+	const wallet = await getWallet(walletType);
 
 	// Will always be adding a gateway
 	const gateway: Gateway = new Gateway();
 
-	if (userIdentity) {
-		// We have an identity to use
-		BaseUtils.logMsg(`Identity ${userId} already exists in wallet and will be used`);
-	} else {
-		if (useHSM) {
-			BaseUtils.logMsg(`Will create HSM Identity ${userId}`);
-			await createHSMUser(wallet, ccp, orgName, userName);
-		} else {
-			// User1 is the only user with existing credentials
-			BaseUtils.logMsg(`Will build existing Identity ${userId}`);
-			await identitySetup(wallet, ccp, orgName, userName);
-		}
+	await createIdentityIfAbsent(wallet, userId, () => createIdentity(walletType, ccp, orgName, userName));
 
-		if (tls) {
-			const caName: string = ccp.getCertificateAuthoritiesForOrg(orgName)[0];
-			const fabricCAEndpoint: string = ccp.getCertificateAuthority(caName).url;
-			BaseUtils.logMsg(`fabricCAEndpoint ${fabricCAEndpoint} will be used for TLS certificate`);
-
-			const tlsInfo: any = await AdminUtils.tlsEnroll(fabricCAEndpoint, caName);
-			const caOrg: any = ccp.getOrganization(orgName);
-
-			const tlsIdentity: any = {
-				credentials: {
-					certificate: tlsInfo.certificate,
-					privateKey: tlsInfo.key,
-				},
-				mspId: caOrg.mspid,
-				type: X509_PROVIDER,
-			};
-			await wallet.put('tlsId', tlsIdentity);
-		}
+	if (tls) {
+		const tlsIdentity = await createTlsIdentity(ccp, orgName);
+		await wallet.put('tlsId', tlsIdentity);
 	}
 
 	const opts: GatewayOptions = {
@@ -164,6 +97,95 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 	};
 	addGatewayObjectToStateStore(gatewayName, gatewayObj);
 	BaseUtils.logMsg(`Gateway ${gatewayName} connected`);
+}
+
+async function createIdentityIfAbsent(wallet: Wallet, label: string, createFn: () => Promise<Identity>): Promise<Identity> {
+	let identity = await wallet.get(label);
+	if (!identity) {
+		identity = await createFn();
+		await wallet.put(label, identity);
+	}
+
+	return identity;
+}
+
+async function createTlsIdentity(ccp: CommonConnectionProfileHelper, orgName: string): Promise<X509Identity> {
+	const caName = ccp.getCertificateAuthoritiesForOrg(orgName)[0];
+	const fabricCAEndpoint: string = ccp.getCertificateAuthority(caName).url;
+
+	BaseUtils.logMsg(`fabricCAEndpoint ${fabricCAEndpoint} will be used for TLS certificate`);
+
+	const tlsInfo = await AdminUtils.tlsEnroll(fabricCAEndpoint, caName);
+	const caOrg = ccp.getOrganization(orgName);
+
+	return {
+		credentials: {
+			certificate: tlsInfo.certificate,
+			privateKey: tlsInfo.key.toBytes(),
+		},
+		mspId: caOrg.mspid,
+		type: 'X.509'
+	};
+}
+
+async function createIdentity(walletType: string, ccp: CommonConnectionProfileHelper, orgName: string, userName: string): Promise<Identity> {
+	if (walletType === Constants.HSM_WALLET) {
+		return await createHsmIdentity(ccp, orgName, userName);
+	} else {
+		return await createX509Identity(ccp, orgName, userName);
+	}
+}
+
+async function getWallet(walletType: string) {
+	const key = `${Constants.WALLET}_${walletType}`;
+	let wallet: Wallet = stateStore.get(key);
+	if (!wallet) {
+		wallet = await createWallet(walletType);
+		stateStore.set(key, wallet);
+	}
+
+	return wallet;
+}
+
+async function createWallet(walletType: string): Promise<Wallet> {
+	BaseUtils.logMsg(`Creating wallet of type ${walletType}`);
+
+	if (walletType === Constants.MEMORY_WALLET) {
+		return await Wallets.newInMemoryWallet();
+	} else if (walletType === Constants.FILE_WALLET) {
+		return await createFileSystemWallet();
+	} else if (walletType === Constants.COUCH_WALLET) {
+		return await Wallets.newCouchDBWallet({ url: Constants.COUCH_WALLET_URL.toString() });
+	} else if (walletType === Constants.HSM_WALLET) {
+		return await createHsmWallet();
+	} else {
+		BaseUtils.logAndThrow(`Unmatched wallet backing store`);
+	}
+}
+
+async function createHsmWallet() {
+	const wallet = await Wallets.newInMemoryWallet();
+	const hsmOptions: HsmOptions = getHsmOptions();
+	const hsmProvider = new HsmX509Provider(hsmOptions);
+	wallet.getProviderRegistry().addProvider(hsmProvider);
+	return wallet;
+}
+
+async function createFileSystemWallet(): Promise<Wallet> {
+	const tempDir: string = path.join(__dirname, Constants.LIB_TO_TEMP, Constants.FILE_WALLET);
+	if (fs.existsSync(tempDir)) {
+		BaseUtils.recursiveDirDelete(tempDir);
+	}
+	fs.mkdirSync(tempDir);
+	return await Wallets.newFileSystemWallet(tempDir);
+}
+
+function getHsmOptions(): HsmOptions {
+	return {
+		lib: getHSMLibPath(),
+		pin: process.env.PKCS11_PIN || '98765432',
+		slot: Number(process.env.PKCS11_SLOT || '0')
+	};
 }
 
 function addGatewayObjectToStateStore(gatewayName: string, gateway: GatewayData): void {
@@ -216,38 +238,24 @@ function getHSMLibPath(): string {
 	return pkcsLibPath;
 }
 
-/**
- * Perform an ID setup
- * @param {Wallet} wallet the in memory wallet to use
- * @param {CommonConnectionProfileHelper} ccp The common connection profile
- * @param {String} orgName the organization name
- * @param {String} userName the user name
- * @return {String} the identity name
- */
-async function identitySetup(wallet: Wallet, ccp: CommonConnectionProfileHelper, orgName: string, userName: string): Promise<void> {
-
-	const org: any = ccp.getOrganization(orgName);
+async function createX509Identity(ccp: CommonConnectionProfileHelper, orgName: string, userName: string): Promise<X509Identity> {
+	const org = ccp.getOrganization(orgName);
 	const orgMsp: string = org.mspid;
 
-	const identityName: string = `${userName}@${orgName}`;
+	const userCertPath = org.signedCertPEM.path.replace(/Admin/g, userName);
+	const cert = (await fs.promises.readFile(userCertPath)).toString('utf8');
 
-	const userCertPath: string = org.signedCertPEM.path.replace(/Admin/g, userName);
-	const cert: string = fs.readFileSync(userCertPath).toString('utf8');
+	const userKeyPath = org.adminPrivateKeyPEM.path.replace(/Admin/g, userName);
+	const key = (await fs.promises.readFile(userKeyPath)).toString('utf8');
 
-	const userKeyPath: string = org.adminPrivateKeyPEM.path.replace(/Admin/g, userName);
-	const key: string = fs.readFileSync(userKeyPath).toString('utf8');
-
-	const identity: any = {
+	return {
 		credentials: {
 			certificate: cert,
 			privateKey: key,
 		},
 		mspId: orgMsp,
-		type: X509_PROVIDER,
+		type: 'X.509',
 	};
-
-	BaseUtils.logMsg(`Adding identity for ${identityName} to wallet`);
-	await wallet.put(identityName, identity);
 }
 
 /**
@@ -258,42 +266,38 @@ async function identitySetup(wallet: Wallet, ccp: CommonConnectionProfileHelper,
  * @param {String} userName the user name
  * @return {String} the identity name
  */
-async function createHSMUser(wallet: Wallet, ccp: CommonConnectionProfileHelper, orgName: string, userName: string): Promise<void> {
-	const org: any = ccp.getOrganization(orgName);
+async function createHsmIdentity(ccp: CommonConnectionProfileHelper, orgName: string, userName: string): Promise<HsmX509Identity> {
+	const org = ccp.getOrganization(orgName);
 	const orgMsp: string = org.mspid;
 
 	// Setup the CAs and providers
-	const caName: string = ccp.getCertificateAuthoritiesForOrg(orgName)[0];
+	const caName = ccp.getCertificateAuthoritiesForOrg(orgName)[0];
 	const fabricCAEndpoint: string = ccp.getCertificateAuthority(caName).url;
-	const tlsOptions = {
+	const tlsOptions: FabricCAClient.TLSOptions = {
 		trustedRoots: [],
 		verify: false
 	};
-	const hsmProvider: IdentityProvider = wallet.getProviderRegistry().getProvider(HSM_PROVIDER);
-	const hsmCAClient = new FabricCAClient(fabricCAEndpoint, tlsOptions, caName, hsmProvider.getCryptoSuite());
-	const provider: IdentityProvider = wallet.getProviderRegistry().getProvider(X509_PROVIDER);
+
+	let cryptoOptions: HsmCryptoSetting = {
+		software: false
+	};
+	cryptoOptions = Object.assign({}, getHsmOptions(), cryptoOptions);
+	const cryptoSuite = User.newCryptoSuite(cryptoOptions);
+	const hsmCAClient = new FabricCAClient(fabricCAEndpoint, tlsOptions, caName, cryptoSuite);
 	const caClient = new FabricCAClient(fabricCAEndpoint, tlsOptions, caName);
 
-	// first setup the admin user
-	const adminName: string = `admin@${orgName}`;
-
+	// Enroll admin user
 	const adminOptions = {
 		enrollmentID: 'admin',
 		enrollmentSecret: 'adminpw'
 	};
 	const adminEnrollment = await caClient.enroll(adminOptions);
-	const adminIdentity = {
-		credentials: {
-			certificate: adminEnrollment.certificate,
-			privateKey: adminEnrollment.key.toBytes()
-		},
-		mspId: orgMsp,
-		type: X509_PROVIDER
-	};
-	await wallet.put(adminName, adminIdentity);
-	const adminUser = await provider.getUserContext(adminIdentity, 'admin');
+	const adminUser = new User('admin');
+	adminUser.setCryptoSuite(User.newCryptoSuite());
+	const importedKey = cryptoSuite.createKeyFromRaw(adminEnrollment.key.toBytes());
+	await adminUser.setEnrollment(importedKey, adminEnrollment.certificate, orgMsp, true);
 
-	// register the new user using the admin
+	// Register the HSM user using the admin
 	const registerRequest: any = {
 		enrollmentID: userName,
 		affiliation: orgName.toLowerCase(),
@@ -303,6 +307,8 @@ async function createHSMUser(wallet: Wallet, ccp: CommonConnectionProfileHelper,
 	};
 	const userSecret = await hsmCAClient.register(registerRequest, adminUser);
 
+	cryptoSuite.close();
+
 	// enroll the user -- generate keys and get the certificate
 	//                 -- stores the generated private key in the HSM
 	const options = {
@@ -311,17 +317,13 @@ async function createHSMUser(wallet: Wallet, ccp: CommonConnectionProfileHelper,
 	};
 	const enrollment = await hsmCAClient.enroll(options);
 
-	// set the new identity into the wallet
-	const identityName: string = `${userName}@${orgName}`;
-	const identity = {
+	return {
 		credentials: {
 			certificate: enrollment.certificate
 		},
 		mspId: orgMsp,
-		type: HSM_PROVIDER
+		type: 'HSM-X.509'
 	};
-	await wallet.put(identityName, identity);
-	BaseUtils.logMsg(`Adding HSM identity for ${userName}@${orgName} to wallet`);
 }
 
 /**

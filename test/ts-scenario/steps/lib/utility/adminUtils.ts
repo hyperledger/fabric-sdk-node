@@ -21,23 +21,20 @@ const stateStore: StateStore = StateStore.getInstance();
  * Enroll and get the cert
  * @param {string} fabricCAEndpoint the url of the FabricCA
  * @param {string} caName name of caName
- * @return {Object} something useful in a promise
  */
-export async function tlsEnroll(fabricCAEndpoint: string, caName: string): Promise<any> {
-	const tlsOptions: any = {
+export async function tlsEnroll(fabricCAEndpoint: string, caName: string): Promise<FabricCAServices.IEnrollResponse> {
+	const tlsOptions: FabricCAServices.TLSOptions = {
 		trustedRoots: [],
 		verify: false,
 	};
-	const caService: FabricCAServices = new FabricCAServices(fabricCAEndpoint, tlsOptions as any, caName);
-	const req: any = {
+	const caService = new FabricCAServices(fabricCAEndpoint, tlsOptions, caName);
+	const req: FabricCAServices.IEnrollmentRequest = {
 		enrollmentID: 'admin',
 		enrollmentSecret: 'adminpw',
 		profile: 'tls',
 	};
 
-	const enrollment: any = await caService.enroll(req);
-	enrollment.key  = enrollment.key.toBytes();
-	return enrollment;
+	return await caService.enroll(req);
 }
 
 export async function getSubmitter(client: Client, peerAdmin: boolean, org: string, ccp: CommonConnectionProfileHelper): Promise<Client.User> {
@@ -169,8 +166,8 @@ export async function assignOrgAdmin(client: Client, orgName: string, ccp: Commo
 	if (ccp.isTls()) {
 		const caName: string = ccp.getCertificateAuthoritiesForOrg(orgName)[0];
 		const fabricCAEndpoint: string = ccp.getCertificateAuthority(caName).url;
-		const tlsInfo: any = await tlsEnroll(fabricCAEndpoint, caName);
-		client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
+		const tlsInfo = await tlsEnroll(fabricCAEndpoint, caName);
+		client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key.toBytes());
 	}
 
 	const org: any = ccp.getOrganization(orgName);

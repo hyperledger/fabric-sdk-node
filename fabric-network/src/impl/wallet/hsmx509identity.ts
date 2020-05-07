@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ICryptoSuite, ICryptoKey, User } from 'fabric-common';
-
+import { User, HsmCryptoSetting } from 'fabric-common';
 import { Identity } from './identity';
 import { IdentityData } from './identitydata';
 import { IdentityProvider } from './identityprovider';
@@ -41,8 +40,7 @@ export interface HsmOptions {
  */
 export class HsmX509Provider implements IdentityProvider {
 	public readonly type: string = 'HSM-X.509';
-	private readonly options: any;
-	private readonly cryptoSuite: ICryptoSuite;
+	private readonly options: HsmCryptoSetting;
 
 	/**
 	 * Create a provider instance.
@@ -50,14 +48,10 @@ export class HsmX509Provider implements IdentityProvider {
 	 * unless this information is provided through external configuration.
 	 */
 	public constructor(options: HsmOptions = {}) {
-		this.options = {};
-		Object.assign(this.options, options);
-		this.options.software = false; // Must be set to enable HSM
-		this.cryptoSuite = User.newCryptoSuite(this.options);
-	}
-
-	public getCryptoSuite(): ICryptoSuite {
-		return this.cryptoSuite;
+		const hsmOptions: HsmCryptoSetting = {
+			software: false
+		};
+		this.options = Object.assign({}, options, hsmOptions);
 	}
 
 	public fromJson(data: IdentityData): HsmX509Identity {
@@ -92,12 +86,13 @@ export class HsmX509Provider implements IdentityProvider {
 	}
 
 	public async getUserContext(identity: HsmX509Identity, name: string): Promise<User> {
-		const user: User = new User(name);
-		user.setCryptoSuite(this.cryptoSuite);
+		const user = new User(name);
+		const cryptoSuite = User.newCryptoSuite(this.options);
+		user.setCryptoSuite(cryptoSuite);
 
-		const publicKey: ICryptoKey = await this.cryptoSuite.importKey(identity.credentials.certificate);
-		const privateKeyObj: ICryptoKey = await this.cryptoSuite.getKey(publicKey.getSKI());
-		await user.setEnrollment(privateKeyObj, identity.credentials.certificate.toString(), identity.mspId, true);
+		const publicKey = await cryptoSuite.importKey(identity.credentials.certificate);
+		const privateKeyObj = await cryptoSuite.getKey(publicKey.getSKI());
+		await user.setEnrollment(privateKeyObj, identity.credentials.certificate, identity.mspId, true);
 
 		return user;
 	}
