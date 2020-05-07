@@ -9,8 +9,6 @@ import { BlockEvent, TransactionEvent } from '../../events';
 import { cachedResult } from '../gatewayutils';
 import { getTransactionEnvelopeIndexes, newFullTransactionEvent } from './fulltransactioneventfactory';
 import util = require('util');
-// @ts-ignore no implicit any
-import protos = require('fabric-protos');
 
 export function newFullBlockEvent(eventInfo: EventInfo): BlockEvent {
 	if (!eventInfo.block) {
