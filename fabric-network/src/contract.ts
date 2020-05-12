@@ -71,16 +71,111 @@ export interface Contract {
  *       [submitTransaction]{@link module:fabric-network.Contract#submitTransaction}.</li>
  *   <li>Evaluate transactions that query state from the ledger using
  *       [evaluateTransaction]{@link module:fabric-network.Contract#evaluateTransaction}.</li>
- *   <li>Listen for new events and replay previous events emitted by the smart contract using
+ *   <li>Listen for new chaincode events and replay previous chaincode events emitted by the smart contract using
  *       [addContractListener]{@link module:fabric-network.Contract#addContractListener}.</li>
  * </ul>
  *
  * <p>If more control over transaction invocation is required, such as including transient data,
  * [createTransaction]{@link module:fabric-network.Contract#createTransaction} can be used to build a transaction
  * request that is submitted to or evaluated by the smart contract.</p>
+ * @interface Contract
  * @memberof module:fabric-network
- * @hideconstructor
  */
+/**
+ * Create an object representing a specific invocation of a transaction
+ * function implemented by this contract, and provides more control over
+ * the transaction invocation. A new transaction object <strong>must</strong>
+ * be created for each transaction invocation.
+ * @method Contract#createTransaction
+ * @memberof module:fabric-network
+ * @param {string} name Transaction function name.
+ * @returns {module:fabric-network.Transaction} A transaction object.
+ */
+/**
+ * Submit a transaction to the ledger. The transaction function <code>name</code>
+ * will be evaluated on the endorsing peers and then submitted to the ordering service
+ * for committing to the ledger.
+ * This function is equivalent to calling <code>createTransaction(name).submit()</code>.
+ * @method Contract#submitTransaction
+ * @memberof module:fabric-network
+ * @param {string} name Transaction function name.
+ * @param {...string} [args] Transaction function arguments.
+ * @returns {Buffer} Payload response from the transaction function.
+ * @throws {module:fabric-network.TimeoutError} If the transaction was successfully submitted to the orderer but
+ * timed out before a commit event was received from peers.
+ */
+/**
+ * Evaluate a transaction function and return its results.
+ * The transaction function <code>name</code>
+ * will be evaluated on the endorsing peers but the responses will not be sent to
+ * the ordering service and hence will not be committed to the ledger.
+ * This is used for querying the world state.
+ * This function is equivalent to calling <code>createTransaction(name).evaluate()</code>.
+ * @method Contract#evaluateTransaction
+ * @memberof module:fabric-network
+ * @param {string} name Transaction function name.
+ * @param {...string} [args] Transaction function arguments.
+ * @returns {Buffer} Payload response from the transaction function.
+ */
+/**
+ * Add a listener to receive all chaincode events emitted by the smart contract as part of successfully committed
+ * transactions. The default is to listen for full contract events from the current block position.
+ * @method Contract#addContractListener
+ * @memberof module:fabric-network
+ * @param {module:fabric-network.ContractListener} listener A contract listener callback function.
+ * @param {module:fabric-network.ListenerOptions} [options] Listener options.
+ * @returns {Promise<module:fabric-network.ContractListener>} The added listener.
+ * @example
+ * const listener: ContractListener = async (event) => {
+ *     if (event.eventName === 'newOrder') {
+ *         const details = event.payload.toString('utf8');
+ *         // Run business process to handle orders
+ *     }
+ * };
+ * contract.addContractListener(listener);
+ */
+/**
+ * Remove a previously added contract listener.
+ * @method Contract#removeContractListener
+ * @memberof module:fabric-network
+ * @param {module:fabric-network.ContractListener} listener A contract listener callback function.
+ */
+/**
+ * Provide a Discovery Interest settings to help the peer's discovery service
+ * build an endorsement plan. This chaincode Id will be include by default in
+ * the list of discovery interests. If this contract's chaincode is in one or
+ * more collections then use this method with this chaincode Id to change the
+ * default discovery interest to include those collection names.
+ * @method Contract#addDiscoveryInterest
+ * @memberof module:fabric-network
+ * @param {DiscoveryInterest} interest - These will be added to the existing discovery interests and used when
+ * {@link module:fabric-network.Transaction#submit} is called.
+ * @return {Contract} This Contract instance
+ */
+/**
+ * reset Discovery interest to default of this contracts chaincode name
+ * and no collection names and no other chaincode names.
+ * @method Contract#resetDiscoveryInterests
+ * @memberof module:fabric-network
+ * @return {Contract} This Contract instance
+ */
+/**
+ * Retrieve the Discovery Interest settings that will help the peer's
+ * discovery service build an endorsement plan.
+ * @method Contract#getDiscoveryInterests
+ * @memberof module:fabric-network
+ * @return {DiscoveryInterest[]} - An array of DiscoveryInterest
+ */
+
+/**
+ * A callback function that will be invoked when a block event is received.
+ * @callback ContractListener
+ * @memberof module:fabric-network
+ * @async
+ * @param {module:fabric-network.ContractEvent} event Contract event.
+ * @returns {Promise<void>}
+ */
+
 export class ContractImpl {
 	readonly chaincodeId: string;
 	readonly namespace: string;
@@ -104,14 +199,6 @@ export class ContractImpl {
 		this.discoveryInterests = [{name: chaincodeId}];
 	}
 
-	/**
-	 * Create an object representing a specific invocation of a transaction
-	 * function implemented by this contract, and provides more control over
-	 * the transaction invocation. A new transaction object <strong>must</strong>
-	 * be created for each transaction invocation.
-	 * @param {string} name Transaction function name.
-	 * @returns {module:fabric-network.Transaction} A transaction object.
-	 */
 	createTransaction(name: string): Transaction {
 		verifyTransactionName(name);
 		const qualifiedName = this._getQualifiedName(name);
@@ -120,61 +207,20 @@ export class ContractImpl {
 		return transaction;
 	}
 
-	/**
-	 * Submit a transaction to the ledger. The transaction function <code>name</code>
-	 * will be evaluated on the endorsing peers and then submitted to the ordering service
-	 * for committing to the ledger.
-	 * This function is equivalent to calling <code>createTransaction(name).submit()</code>.
-	 * @param {string} name Transaction function name.
-	 * @param {...string} [args] Transaction function arguments.
-	 * @returns {Buffer} Payload response from the transaction function.
-	 * @throws {module:fabric-network.TimeoutError} If the transaction was successfully submitted to the orderer but
-	 * timed out before a commit event was received from peers.
-	 */
 	async submitTransaction(name: string, ...args: string[]): Promise<Buffer> {
 		return this.createTransaction(name).submit(...args);
 	}
 
-	/**
-	 * Evaluate a transaction function and return its results.
-	 * The transaction function <code>name</code>
-	 * will be evaluated on the endorsing peers but the responses will not be sent to
-	 * the ordering service and hence will not be committed to the ledger.
-	 * This is used for querying the world state.
-	 * This function is equivalent to calling <code>createTransaction(name).evaluate()</code>.
-	 * @param {string} name Transaction function name.
-	 * @param {...string} [args] Transaction function arguments.
-	 * @returns {Buffer} Payload response from the transaction function.
-	 */
 	async evaluateTransaction(name: string, ...args: string[]): Promise<Buffer> {
 		return this.createTransaction(name).evaluate(...args);
 	}
 
-	/**
-	 * Add a listener to receive all contract events emitted by the smart contract as part of successfully committed
-	 * transactions. The default is to listen for full contract events from the current block position.
-	 * @param {module:fabric-network.ContractListener} listener A contract listener callback function.
-	 * @param {module:fabric-network.ListenerOptions} [options] Listener options.
-	 * @returns {Promise<module:fabric-network.ContractListener>} The added listener.
-	 * @example
-	 * const listener: ContractListener = async (event) => {
-	 *     if (event.eventName === 'newOrder') {
-	 *         const details = event.payload.toString('utf8');
-	 *         // Run business process to handle orders
-	 *     }
-	 * };
-	 * contract.addContractListener(listener);
-	 */
 	async addContractListener(listener: ContractListener, options?: ListenerOptions): Promise<ContractListener> {
 		const sessionSupplier = async () => new ContractListenerSession(listener, this.chaincodeId, this.network, options);
 		const contractListener = await addListener(listener, this.contractListeners, sessionSupplier);
 		return contractListener;
 	}
 
-	/**
-	 * Remove a previously added contract listener.
-	 * @param {module:fabric-network.ContractListener} listener A contract listener callback function.
-	 */
 	removeContractListener(listener: ContractListener): void {
 		removeListener(listener, this.contractListeners);
 	}
@@ -237,17 +283,6 @@ export class ContractImpl {
 		return this.discoveryService.newHandler();
 	}
 
-	/**
-	 * Provide a Discovery Interest settings to help the peer's discovery service
-	 * build an endorsement plan. This chaincode Id will be include by default in
-	 * the list of discovery interests. If this contract's chaincode is in one or
-	 * more collections then use this method with this chaincode Id to change the
-	 * default discovery interest to include those collection names.
-	 * @param {DiscoveryInterest} interest - These will be added to the
-	 * existing discovery interests and used when the
-	 * @link module:fabric-network.Transaction#submit} is called.
-	 * @return {Contract} This Contract instance
-	 */
 	addDiscoveryInterest(interest: DiscoveryInterest): Contract {
 		const method = `addDiscoveryInterest[${this.chaincodeId}]`;
 
@@ -267,12 +302,6 @@ export class ContractImpl {
 		return this;
 	}
 
-	/**
-	 * reset Discovery interest to default of this contracts chaincode name
-	 * and no collection names and no other chaincode names.
-	 *
-	 * @return {Contract} This Contract instance
-	 */
 	resetDiscoveryInterests(): Contract {
 		const method = `resetDiscoveryInterest[${this.chaincodeId}]`;
 		logger.debug('%s - start', method);
@@ -282,11 +311,6 @@ export class ContractImpl {
 		return this;
 	}
 
-	/**
-	 * Retrieve the Discovery Interest settings that will help the peer's
-	 * discovery service build an endorsement plan.
-	 * @return {DiscoveryInterest[]} - An array of DiscoveryInterest
-	 */
 	getDiscoveryInterests(): DiscoveryInterest[] {
 		return this.discoveryInterests;
 	}
