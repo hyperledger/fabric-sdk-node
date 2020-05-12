@@ -8,7 +8,7 @@ The SDK implements the Fabric programming model as described in the [Developing 
 ## Documentation
 
 Full documentation is published for each of the following versions:
-- [2.x](https://hyperledger.github.io/fabric-sdk-node/master/module-fabric-network.html)
+- [2.1](https://hyperledger.github.io/fabric-sdk-node/master/module-fabric-network.html)
 - [1.4](https://hyperledger.github.io/fabric-sdk-node/release-1.4/module-fabric-network.html)
 
 

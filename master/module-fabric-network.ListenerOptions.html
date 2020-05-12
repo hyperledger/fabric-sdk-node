@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Hyperledger Fabric SDK for Node.js Class: ChaincodeEvent</title>
+	<title>Hyperledger Fabric SDK for Node.js Interface: ListenerOptions</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -93,13 +93,15 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Class: ChaincodeEvent</h1>
+	<h1 class="page-title">Interface: ListenerOptions</h1>
 <section>
 
 <header>
     
         <h2>
-        ChaincodeEvent
+            <span class="ancestors"><a href="module-fabric-network.html">fabric-network</a>.</span>
+        
+        ListenerOptions
         </h2>
         
     
@@ -110,34 +112,145 @@
     <div class="container-overview">
     
         
-<hr>
-<dt>
-    <h4 class="name" id="ChaincodeEvent"><span class="type-signature"></span>new ChaincodeEvent()</h4>
-    
-    
-</dt>
-<dd>
 
-    
-    <div class="description">
-        Constructs an object that contains all information from the chaincode event.
-message ChaincodeEvent {
-  string chaincode_id = 1;
-  string tx_id = 2;
-  string event_name = 3;
-  bytes payload = 4;
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
+        
 <dl class="details">
+    
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    <dl>
+
+<table class="props table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>startBlock</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+|
+
+<span class="param-type">string</span>
+|
+
+<span class="param-type">Long</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">The block number from which events should be received. Leaving this
+value undefined starts listening from the current block.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>type</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-fabric-network.html#.EventType">module:fabric-network.EventType</a></span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">The type of events to be received.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>checkpointer</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-fabric-network.Checkpointer.html">module:fabric-network.Checkpointer</a></span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">A checkpointer instance. If the checkpointer has a
+current block number set, this takes precendence over the <code>startBlock</code> option. If no current block number
+is set, the <code>startBlock</code> option is used if present.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+</dl>
+
     
 
 	
@@ -176,21 +289,7 @@ message ChaincodeEvent {
 </dl>
 
 
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
+        
     
     </div>
 

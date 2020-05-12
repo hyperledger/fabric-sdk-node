@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Hyperledger Fabric SDK for Node.js Class: ChaincodeEvent</title>
+	<title>Hyperledger Fabric SDK for Node.js Interface: X509Identity</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -93,13 +93,15 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Class: ChaincodeEvent</h1>
+	<h1 class="page-title">Interface: X509Identity</h1>
 <section>
 
 <header>
     
         <h2>
-        ChaincodeEvent
+            <span class="ancestors"><a href="module-fabric-network.html">fabric-network</a>.</span>
+        
+        X509Identity
         </h2>
         
     
@@ -110,36 +112,114 @@
     <div class="container-overview">
     
         
-<hr>
-<dt>
-    <h4 class="name" id="ChaincodeEvent"><span class="type-signature"></span>new ChaincodeEvent()</h4>
-    
-    
-</dt>
-<dd>
+            <div class="description">Identity described by an X.509 certificate.</div>
+        
 
-    
-    <div class="description">
-        Constructs an object that contains all information from the chaincode event.
-message ChaincodeEvent {
-  string chaincode_id = 1;
-  string tx_id = 2;
-  string event_name = 3;
-  bytes payload = 4;
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
+        
 <dl class="details">
     
 
+    <h5 class="subsection-title">Properties:</h5>
+
+    <dl>
+
+<table class="props table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>type</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">'X.509'</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The type of the identity.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>credentials.certificate</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Certificate in PEM format.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>credentials.privateKey</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Private key in PEM format.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+</dl>
+
+    
+
 	
 
 	
@@ -150,6 +230,13 @@ message ChaincodeEvent {
 
     
 
+    
+    <dt class="implements">Implements:</dt>
+    <dd class="implements"><ul>
+        
+            <li><a href="module-fabric-network.Identity.html">module:fabric-network.Identity</a></li>
+        
+    </ul></dd>
     
 
     
@@ -176,21 +263,7 @@ message ChaincodeEvent {
 </dl>
 
 
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
+        
     
     </div>
 

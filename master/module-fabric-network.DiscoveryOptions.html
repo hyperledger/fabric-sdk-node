@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Hyperledger Fabric SDK for Node.js Class: ChaincodeEvent</title>
+	<title>Hyperledger Fabric SDK for Node.js Interface: DiscoveryOptions</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -93,13 +93,15 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Class: ChaincodeEvent</h1>
+	<h1 class="page-title">Interface: DiscoveryOptions</h1>
 <section>
 
 <header>
     
         <h2>
-        ChaincodeEvent
+            <span class="ancestors"><a href="module-fabric-network.html">fabric-network</a>.</span>
+        
+        DiscoveryOptions
         </h2>
         
     
@@ -110,34 +112,120 @@
     <div class="container-overview">
     
         
-<hr>
-<dt>
-    <h4 class="name" id="ChaincodeEvent"><span class="type-signature"></span>new ChaincodeEvent()</h4>
-    
-    
-</dt>
-<dd>
 
-    
-    <div class="description">
-        Constructs an object that contains all information from the chaincode event.
-message ChaincodeEvent {
-  string chaincode_id = 1;
-  string tx_id = 2;
-  string event_name = 3;
-  bytes payload = 4;
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
+        
 <dl class="details">
+    
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    <dl>
+
+<table class="props table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>enabled</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    true
+                
+                </td>
+            
+
+            <td class="description last">True if discovery should be used; otherwise false.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>asLocalhost</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    false
+                
+                </td>
+            
+
+            <td class="description last">Convert discovered host addresses to be 'localhost'.
+Will be needed when running a docker composed fabric network on the local system;
+otherwise should be disabled.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+</dl>
+
     
 
 	
@@ -176,21 +264,7 @@ message ChaincodeEvent {
 </dl>
 
 
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
+        
     
     </div>
 

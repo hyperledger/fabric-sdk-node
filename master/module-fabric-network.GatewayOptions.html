@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Hyperledger Fabric SDK for Node.js Class: ChaincodeEvent</title>
+	<title>Hyperledger Fabric SDK for Node.js Interface: GatewayOptions</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -93,13 +93,15 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Class: ChaincodeEvent</h1>
+	<h1 class="page-title">Interface: GatewayOptions</h1>
 <section>
 
 <header>
     
         <h2>
-        ChaincodeEvent
+            <span class="ancestors"><a href="module-fabric-network.html">fabric-network</a>.</span>
+        
+        GatewayOptions
         </h2>
         
     
@@ -110,34 +112,377 @@
     <div class="container-overview">
     
         
-<hr>
-<dt>
-    <h4 class="name" id="ChaincodeEvent"><span class="type-signature"></span>new ChaincodeEvent()</h4>
-    
-    
-</dt>
-<dd>
 
-    
-    <div class="description">
-        Constructs an object that contains all information from the chaincode event.
-message ChaincodeEvent {
-  string chaincode_id = 1;
-  string tx_id = 2;
-  string event_name = 3;
-  bytes payload = 4;
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
+        
 <dl class="details">
+    
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    <dl>
+
+<table class="props table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>identity</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+|
+
+<span class="param-type"><a href="module-fabric-network.Identity.html">module:fabric-network.Identity</a></span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">The identity used for all interactions on this Gateway
+instance. This can be either:
+<ul>
+  <li>a label matching an identity within the supplied wallet.</li>
+  <li>an identity object.</li>
+</ul</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>wallet</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-fabric-network.Wallet.html">module:fabric-network.Wallet</a></span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">The identity wallet implementation for use with this Gateway
+instance. Required if a label is specified as the <code>identity</code>, or <code>clientTlsIdentity</code> is specified.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>identityProvider</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-fabric-network.IdentityProvider.html">module:fabric-network.IdentityProvider</a></span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">An identity provider for the supplied identity
+object. Required if an identity object is not one of the default supported types.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>clientTlsIdentity</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">The identity within the wallet to use as the client TLS identity.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>tlsInfo</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Credentials to use as the client TLS identity.
+                <h6>Properties</h6>
+
+<table class="props table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>certificate</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Certificate PEM.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>key</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Private key PEM.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>eventHandlerOptions</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-fabric-network.DefaultEventHandlerOptions.html">module:fabric-network.DefaultEventHandlerOptions</a></span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Options for event handling when submitting transactions.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>queryHandlerOptions</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-fabric-network.DefaultQueryHandlerOptions.html">module:fabric-network.DefaultQueryHandlerOptions</a></span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Options for query handling when evaluating transactions.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>discovery</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-fabric-network.DiscoveryOptions.html">module:fabric-network.DiscoveryOptions</a></span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Discovery options.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+</dl>
+
     
 
 	
@@ -176,21 +521,7 @@ message ChaincodeEvent {
 </dl>
 
 
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
+        
     
     </div>
 

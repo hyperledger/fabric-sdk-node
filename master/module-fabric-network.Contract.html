@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Hyperledger Fabric SDK for Node.js Class: ContractImpl</title>
+	<title>Hyperledger Fabric SDK for Node.js Interface: Contract</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -40,14 +40,14 @@
 			<li class="dropdown">
 				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="AffiliationService.html">AffiliationService</a></li><li><a href="BaseClient.html">BaseClient</a></li><li><a href="BlockDecoder.html">BlockDecoder</a></li><li><a href="global.html#ChaincodeEvent">ChaincodeEvent</a></li><li><a href="Channel.html">Channel</a></li><li><a href="Client.html">Client</a></li><li><a href="Commit.html">Commit</a></li><li><a href="Committer.html">Committer</a></li><li><a href="CryptoKeyStore.html">CryptoKeyStore</a></li><li><a href="CryptoSuite.html">CryptoSuite</a></li><li><a href="CryptoSuite_ECDSA_AES.html">CryptoSuite_ECDSA_AES</a></li><li><a href="CryptoSuite_PKCS11.html">CryptoSuite_PKCS11</a></li><li><a href="Discoverer.html">Discoverer</a></li><li><a href="DiscoveryHandler.html">DiscoveryHandler</a></li><li><a href="DiscoveryService.html">DiscoveryService</a></li><li><a href="ECDSA_KEY.html">ECDSA_KEY</a></li><li><a href="global.html#Endorsement">Endorsement</a></li><li><a href="Endorser.html">Endorser</a></li><li><a href="Endpoint.html">Endpoint</a></li><li><a href="Eventer.html">Eventer</a></li><li><a href="global.html#EventInfo">EventInfo</a></li><li><a href="EventService.html">EventService</a></li><li><a href="FabricCAClient.html">FabricCAClient</a></li><li><a href="FabricCAServices.html">FabricCAServices</a></li><li><a href="Hash.html">Hash</a></li><li><a href="Identity.html">Identity</a></li><li><a href="IdentityContext.html">IdentityContext</a></li><li><a href="IdentityService.html">IdentityService</a></li><li><a href="InMemoryKeyValueStore.html">InMemoryKeyValueStore</a></li><li><a href="Key.html">Key</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="module.exports_module.exports.html">module.exports#module.exports</a></li><li><a href="module-fabric-network.ContractImpl.html">fabric-network.ContractImpl</a></li><li><a href="module-fabric-network.DefaultCheckpointers.html">fabric-network.DefaultCheckpointers</a></li><li><a href="module-fabric-network.FabricError.html">fabric-network.FabricError</a></li><li><a href="module-fabric-network.Gateway.html">fabric-network.Gateway</a></li><li><a href="module-fabric-network.HsmX509Provider.html">fabric-network.HsmX509Provider</a></li><li><a href="module-fabric-network.IdentityProviderRegistry.html">fabric-network.IdentityProviderRegistry</a></li><li><a href="module-fabric-network.TimeoutError.html">fabric-network.TimeoutError</a></li><li><a href="module-fabric-network.Transaction.html">fabric-network.Transaction</a></li><li><a href="module-fabric-network.Wallet.html">fabric-network.Wallet</a></li><li><a href="module-fabric-network.Wallets.html">fabric-network.Wallets</a></li><li><a href="PKCS11_ECDSA_KEY.html">PKCS11_ECDSA_KEY</a></li><li><a href="Proposal.html">Proposal</a></li><li><a href="Query.html">Query</a></li><li><a href="ServiceAction.html">ServiceAction</a></li><li><a href="ServiceEndpoint.html">ServiceEndpoint</a></li><li><a href="ServiceHandler.html">ServiceHandler</a></li><li><a href="Signer.html">Signer</a></li><li><a href="SigningIdentity.html">SigningIdentity</a></li><li><a href="User.html">User</a></li>
+					<li><a href="AffiliationService.html">AffiliationService</a></li><li><a href="BaseClient.html">BaseClient</a></li><li><a href="BlockDecoder.html">BlockDecoder</a></li><li><a href="global.html#ChaincodeEvent">ChaincodeEvent</a></li><li><a href="Channel.html">Channel</a></li><li><a href="Client.html">Client</a></li><li><a href="Commit.html">Commit</a></li><li><a href="Committer.html">Committer</a></li><li><a href="CryptoKeyStore.html">CryptoKeyStore</a></li><li><a href="CryptoSuite.html">CryptoSuite</a></li><li><a href="CryptoSuite_ECDSA_AES.html">CryptoSuite_ECDSA_AES</a></li><li><a href="CryptoSuite_PKCS11.html">CryptoSuite_PKCS11</a></li><li><a href="Discoverer.html">Discoverer</a></li><li><a href="DiscoveryHandler.html">DiscoveryHandler</a></li><li><a href="DiscoveryService.html">DiscoveryService</a></li><li><a href="ECDSA_KEY.html">ECDSA_KEY</a></li><li><a href="global.html#Endorsement">Endorsement</a></li><li><a href="Endorser.html">Endorser</a></li><li><a href="Endpoint.html">Endpoint</a></li><li><a href="Eventer.html">Eventer</a></li><li><a href="global.html#EventInfo">EventInfo</a></li><li><a href="EventService.html">EventService</a></li><li><a href="FabricCAClient.html">FabricCAClient</a></li><li><a href="FabricCAServices.html">FabricCAServices</a></li><li><a href="Hash.html">Hash</a></li><li><a href="Identity.html">Identity</a></li><li><a href="IdentityContext.html">IdentityContext</a></li><li><a href="IdentityService.html">IdentityService</a></li><li><a href="InMemoryKeyValueStore.html">InMemoryKeyValueStore</a></li><li><a href="Key.html">Key</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="module.exports_module.exports.html">module.exports#module.exports</a></li><li><a href="module-fabric-network.DefaultCheckpointers.html">fabric-network.DefaultCheckpointers</a></li><li><a href="module-fabric-network.FabricError.html">fabric-network.FabricError</a></li><li><a href="module-fabric-network.Gateway.html">fabric-network.Gateway</a></li><li><a href="module-fabric-network.HsmX509Provider.html">fabric-network.HsmX509Provider</a></li><li><a href="module-fabric-network.IdentityProviderRegistry.html">fabric-network.IdentityProviderRegistry</a></li><li><a href="module-fabric-network.TimeoutError.html">fabric-network.TimeoutError</a></li><li><a href="module-fabric-network.Transaction.html">fabric-network.Transaction</a></li><li><a href="module-fabric-network.Wallet.html">fabric-network.Wallet</a></li><li><a href="module-fabric-network.Wallets.html">fabric-network.Wallets</a></li><li><a href="PKCS11_ECDSA_KEY.html">PKCS11_ECDSA_KEY</a></li><li><a href="Proposal.html">Proposal</a></li><li><a href="Query.html">Query</a></li><li><a href="ServiceAction.html">ServiceAction</a></li><li><a href="ServiceEndpoint.html">ServiceEndpoint</a></li><li><a href="ServiceHandler.html">ServiceHandler</a></li><li><a href="Signer.html">Signer</a></li><li><a href="SigningIdentity.html">SigningIdentity</a></li><li><a href="User.html">User</a></li>
 				</ul>
 			</li>
 			
 			<li class="dropdown">
 				<a href="interfaces.list.html" class="dropdown-toggle" data-toggle="dropdown">Interfaces<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="module-fabric-network.BlockEvent.html">fabric-network.BlockEvent</a></li><li><a href="module-fabric-network.Checkpointer.html">fabric-network.Checkpointer</a></li><li><a href="module-fabric-network.CommitEvent.html">fabric-network.CommitEvent</a></li><li><a href="module-fabric-network.ContractEvent.html">fabric-network.ContractEvent</a></li><li><a href="module-fabric-network.Network.html">fabric-network.Network</a></li><li><a href="module-fabric-network.Query.html">fabric-network.Query</a></li><li><a href="module-fabric-network.QueryHandler.html">fabric-network.QueryHandler</a></li><li><a href="module-fabric-network.TransactionEvent.html">fabric-network.TransactionEvent</a></li><li><a href="module-fabric-network.TxEventHandler.html">fabric-network.TxEventHandler</a></li><li><a href="module-fabric-network.WalletStore.html">fabric-network.WalletStore</a></li>
+					<li><a href="module-fabric-network.BlockEvent.html">fabric-network.BlockEvent</a></li><li><a href="module-fabric-network.Checkpointer.html">fabric-network.Checkpointer</a></li><li><a href="module-fabric-network.CommitError.html">fabric-network.CommitError</a></li><li><a href="module-fabric-network.CommitEvent.html">fabric-network.CommitEvent</a></li><li><a href="module-fabric-network.Contract.html">fabric-network.Contract</a></li><li><a href="module-fabric-network.ContractEvent.html">fabric-network.ContractEvent</a></li><li><a href="module-fabric-network.DefaultEventHandlerOptions.html">fabric-network.DefaultEventHandlerOptions</a></li><li><a href="module-fabric-network.DefaultQueryHandlerOptions.html">fabric-network.DefaultQueryHandlerOptions</a></li><li><a href="module-fabric-network.DiscoveryOptions.html">fabric-network.DiscoveryOptions</a></li><li><a href="module-fabric-network.GatewayOptions.html">fabric-network.GatewayOptions</a></li><li><a href="module-fabric-network.HsmOptions.html">fabric-network.HsmOptions</a></li><li><a href="module-fabric-network.HsmX509Identity.html">fabric-network.HsmX509Identity</a></li><li><a href="module-fabric-network.Identity.html">fabric-network.Identity</a></li><li><a href="module-fabric-network.IdentityProvider.html">fabric-network.IdentityProvider</a></li><li><a href="module-fabric-network.ListenerOptions.html">fabric-network.ListenerOptions</a></li><li><a href="module-fabric-network.Network.html">fabric-network.Network</a></li><li><a href="module-fabric-network.Query.html">fabric-network.Query</a></li><li><a href="module-fabric-network.QueryHandler.html">fabric-network.QueryHandler</a></li><li><a href="module-fabric-network.TransactionEvent.html">fabric-network.TransactionEvent</a></li><li><a href="module-fabric-network.TxEventHandler.html">fabric-network.TxEventHandler</a></li><li><a href="module-fabric-network.WalletStore.html">fabric-network.WalletStore</a></li><li><a href="module-fabric-network.X509Identity.html">fabric-network.X509Identity</a></li>
 				</ul>
 			</li>
 			
@@ -93,34 +93,16 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Class: ContractImpl</h1>
+	<h1 class="page-title">Interface: Contract</h1>
 <section>
 
 <header>
     
         <h2>
-            <span class="ancestors"><a href="module-fabric-network.html">fabric-network</a>~</span>
+            <span class="ancestors"><a href="module-fabric-network.html">fabric-network</a>.</span>
         
-        ContractImpl
+        Contract
         </h2>
-        
-            <div class="class-description"><p>Represents a smart contract (chaincode) instance in a network.
-Applications should get a Contract instance using the
-networks's <a href="module-fabric-network.Network.html#getContract">getContract</a> method.</p>
-
-<p>The Contract allows applications to:</p>
-<ul>
-  <li>Submit transactions that store state to the ledger using
-      submitTransaction.</li>
-  <li>Evaluate transactions that query state from the ledger using
-      evaluateTransaction.</li>
-  <li>Listen for new events and replay previous events emitted by the smart contract using
-      addContractListener.</li>
-</ul>
-
-<p>If more control over transaction invocation is required, such as including transient data,
-createTransaction can be used to build a transaction
-request that is submitted to or evaluated by the smart contract.</p></div>
         
     
 </header>
@@ -130,24 +112,26 @@ request that is submitted to or evaluated by the smart contract.</p></div>
     <div class="container-overview">
     
         
-<hr>
-<dt>
-    <h4 class="name" id="ContractImpl"><span class="type-signature"></span>new ContractImpl()</h4>
-    
-    
-</dt>
-<dd>
+            <div class="description"><p>Represents a smart contract (chaincode) instance in a network.
+Applications should get a Contract instance using the
+networks's <a href="module-fabric-network.Network.html#getContract">getContract</a> method.</p>
 
-    
+<p>The Contract allows applications to:</p>
+<ul>
+  <li>Submit transactions that store state to the ledger using
+      <a href="module-fabric-network.Contract.html#submitTransaction">submitTransaction</a>.</li>
+  <li>Evaluate transactions that query state from the ledger using
+      <a href="module-fabric-network.Contract.html#evaluateTransaction">evaluateTransaction</a>.</li>
+  <li>Listen for new chaincode events and replay previous chaincode events emitted by the smart contract using
+      <a href="module-fabric-network.Contract.html#addContractListener">addContractListener</a>.</li>
+</ul>
 
-    
+<p>If more control over transaction invocation is required, such as including transient data,
+<a href="module-fabric-network.Contract.html#createTransaction">createTransaction</a> can be used to build a transaction
+request that is submitted to or evaluated by the smart contract.</p></div>
+        
 
-    
-
-    
-    
-
-    
+        
 <dl class="details">
     
 
@@ -187,21 +171,7 @@ request that is submitted to or evaluated by the smart contract.</p></div>
 </dl>
 
 
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
+        
     
     </div>
 
@@ -224,7 +194,7 @@ request that is submitted to or evaluated by the smart contract.</p></div>
             
 <hr>
 <dt>
-    <h4 class="name" id="addContractListener"><span class="type-signature">&lt;async> </span>addContractListener(listener [, options])</h4>
+    <h4 class="name" id="addContractListener"><span class="type-signature"></span>addContractListener(listener [, options])</h4>
     
     
 </dt>
@@ -232,7 +202,7 @@ request that is submitted to or evaluated by the smart contract.</p></div>
 
     
     <div class="description">
-        Add a listener to receive all contract events emitted by the smart contract as part of successfully committed
+        Add a listener to receive all chaincode events emitted by the smart contract as part of successfully committed
 transactions. The default is to listen for full contract events from the current block position.
     </div>
     
@@ -308,7 +278,7 @@ transactions. The default is to listen for full contract events from the current
             <td class="type">
             
                 
-<span class="param-type"><a href="module-fabric-network.html#.ListenerOptions">module:fabric-network.ListenerOptions</a></span>
+<span class="param-type"><a href="module-fabric-network.ListenerOptions.html">module:fabric-network.ListenerOptions</a></span>
 
 
 
@@ -497,8 +467,8 @@ default discovery interest to include those collection names.
 
             
 
-            <td class="description last">These will be added to the
-existing discovery interests and used when the</td>
+            <td class="description last">These will be added to the existing discovery interests and used when
+<a href="module-fabric-network.Transaction.html#submit">module:fabric-network.Transaction#submit</a> is called.</td>
         </tr>
 
     
@@ -745,7 +715,7 @@ be created for each transaction invocation.
             
 <hr>
 <dt>
-    <h4 class="name" id="evaluateTransaction"><span class="type-signature">&lt;async> </span>evaluateTransaction(name [, args])</h4>
+    <h4 class="name" id="evaluateTransaction"><span class="type-signature"></span>evaluateTransaction(name [, args])</h4>
     
     
 </dt>
@@ -1282,7 +1252,7 @@ and no collection names and no other chaincode names.
             
 <hr>
 <dt>
-    <h4 class="name" id="submitTransaction"><span class="type-signature">&lt;async> </span>submitTransaction(name [, args])</h4>
+    <h4 class="name" id="submitTransaction"><span class="type-signature"></span>submitTransaction(name [, args])</h4>
     
     
 </dt>
@@ -1558,7 +1528,7 @@ timed out before a commit event was received from peers.
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a>
 	
-		on 2020-05-07T07:31:43+00:00
+		on 2020-05-12T15:53:36+00:00
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>
