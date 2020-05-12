@@ -17,9 +17,9 @@ function getOrganizationPeers(network: Network) {
 /**
  * @typedef DefaultQueryHandlerStrategies
  * @memberof module:fabric-network
- * @property {module:fabric-network.QueryHandlerFactory} MSPID_SCOPE_SINGLE Query any one of the event services for the connected organisation. Continue
+ * @property {module:fabric-network.QueryHandlerFactory} MSPID_SCOPE_SINGLE Query any one of the peers for the connected organization. Continue
  * to use the same event service for all queries unless it fails.
- * @property {module:fabric-network.QueryHandlerFactory} MSPID_SCOPE_ROUND_ROBIN Query any one of the event services for the connected organisation.
+ * @property {module:fabric-network.QueryHandlerFactory} MSPID_SCOPE_ROUND_ROBIN Query any one of the peers for the connected organization.
  * Use the next available peer for each successive query.
  */
 

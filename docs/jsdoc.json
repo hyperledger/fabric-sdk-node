@@ -14,10 +14,15 @@
     },
     "opts": {
         "tutorials": "docs/tutorials",
-        "destination": "docs/gen"
+        "destination": "docs/gen",
+        "recurse": true,
+        "pedantic": true
     },
     "templates": {
         "systemName": "Hyperledger Fabric SDK for Node.js",
         "theme": "cosmo"
+    },
+    "tags": {
+        "allowUnknownTags": false
     }
 }
