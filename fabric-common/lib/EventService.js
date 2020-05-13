@@ -321,7 +321,7 @@ class EventService extends ServiceAction {
 
 	/**
 	 * @typedef {Object} StartEventRequest
-	 * @property {Eventers[]} targets - The Eventers to send the start stream request.
+	 * @property {Eventer[]} targets - The Eventers to send the start stream request.
 	 * @property {Number} [requestTimeout] - Optional. The request timeout
 	 */
 
@@ -464,11 +464,9 @@ class EventService extends ServiceAction {
 						this._processEndBlock(block_num);
 
 						// check to see if we should shut things down
-						if (this.endBlock) {
-							if (this.endBlock.lessThanOrEqual(this.lastBlockNumber)) {
-								this._end_block_seen = true;
-								this._close(new Error(`Shutdown due to end block number has been seen: ${this.lastBlockNumber.toNumber()}`));
-							}
+						if (this.endBlock && this.endBlock.lessThanOrEqual && this.endBlock.lessThanOrEqual(this.lastBlockNumber)) {
+							this._end_block_seen = true;
+							this._close(new Error(`Shutdown due to end block number has been seen: ${this.lastBlockNumber.toNumber()}`));
 						}
 					} catch (error) {
 						logger.error('%s EventService - ::%s', method, error.stack);
@@ -1219,16 +1217,14 @@ class ChaincodeEvent {
 }
 /**
  * @typedef {Object} EventInfo
- * @property {EventService} EventService - this EventService.
- * @property {Long} - blockNumber - The block number that contains
- *  this event.
- * @property {string} - [transactionId] - The transaction ID of this event
- * @property {string} - [transactionStatus] - The transaction status of this
+ * @property {EventService} eventService - This EventService.
+ * @property {Long} blockNumber - The block number that contains this event.
+ * @property {string} [transactionId] - The transaction ID of this event
+ * @property {string} [transactionStatus] - The transaction status of this
  *  event.
- * @property {boolean} - endBlockReceived - Indicates if the endBlock as
+ * @property {boolean} endBlockReceived - Indicates if the endBlock as
  *  defined by the listener has been seen.
- * @property {ChaincodeEvent[]} [chaincodeEvents] - An array of
- *  {@link ChaincodeEvent}.
+ * @property {ChaincodeEvent[]} chaincodeEvents - An array of {@link ChaincodeEvent}.
  * @property {object} [block] - The decode of the full block received
  * @property {object} [filteredBlock] - The decode of the filtered block received
  * @property {object} [privateData] -A data map of any included private data.
