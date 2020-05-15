@@ -87,7 +87,7 @@ describe('Transaction', () => {
 	let commit;
 	let queryHandler;
 	let network;
-	let idx;
+	let identityContext;
 	let gatewayOptions;
 	let discoveryHandler;
 	let client;
@@ -99,16 +99,20 @@ describe('Transaction', () => {
 		network.queryHandler = queryHandler;
 		contract.network = network;
 
-		idx = sinon.createStubInstance(IdentityContext);
+		identityContext = sinon.createStubInstance(IdentityContext);
+		identityContext.clone.returnsThis();
+		identityContext.calculateTransactionId.callsFake(() => {
+			identityContext.transactionId = transactionId;
+			return identityContext;
+		});
+
 		endorser = sinon.createStubInstance(Endorser);
 
 		queryProposal = sinon.createStubInstance(QueryProposal);
 		queryProposal.send.resolves(newProposalResponse([validEnsorsementResponse]));
-		queryProposal.getTransactionId.returns(transactionId);
 
 		endorsement = sinon.createStubInstance(Endorsement);
 		endorsement.send.resolves(newProposalResponse([validEnsorsementResponse]));
-		endorsement.getTransactionId.returns(transactionId);
 		commit = sinon.createStubInstance(Commit);
 		commit.send.resolves({status: 'SUCCESS'});
 		commit.build.returns();
@@ -135,7 +139,7 @@ describe('Transaction', () => {
 
 		const mockGateway = sinon.createStubInstance(Gateway);
 		mockGateway.client = client;
-		mockGateway.identityContext = idx;
+		mockGateway.identityContext = identityContext;
 
 		gatewayOptions = {
 			queryHandlerOptions: {
@@ -177,19 +181,7 @@ describe('Transaction', () => {
 	});
 
 	describe('#getTransactionId', () => {
-		it('return undefined transactionId prior to submit or evaluate', () => {
-			const result = transaction.getTransactionId();
-			expect(result).to.be.undefined;
-		});
-		it('return the transactionId built during submit', async () => {
-			await transaction.submit();
-
-			const result = transaction.getTransactionId();
-			expect(result).to.equal(transactionId);
-		});
-		it('return the transactionId built during evaluate', async () => {
-			await transaction.evaluate();
-
+		it('returns transaction ID obtained from identity context', () => {
 			const result = transaction.getTransactionId();
 			expect(result).to.equal(transactionId);
 		});
@@ -302,6 +294,18 @@ describe('Transaction', () => {
 			sinon.assert.called(stubEventHandler.waitForEvents);
 		});
 
+		it('uses event handler set on the transaction', async () => {
+			const stubEventHandler = sinon.createStubInstance(TransactionEventHandler);
+			const stubEventHandlerFactoryFn = sinon.stub().withArgs(transactionId, network).returns(stubEventHandler);
+			transaction = new Transaction(contract, transactionName);
+
+			await transaction.setEventHandler(stubEventHandlerFactoryFn)
+				.submit();
+
+			sinon.assert.called(stubEventHandler.startListening);
+			sinon.assert.called(stubEventHandler.waitForEvents);
+		});
+
 		it('sends a proposal with transient data', async () => {
 			const transientMap = {key1: 'value1', key2: 'value2'};
 
@@ -403,6 +407,12 @@ describe('Transaction', () => {
 			sinon.assert.calledWithMatch(commit.send, {targets: committers});
 			sinon.assert.neverCalledWithMatch(commit.send, {handler: discoveryHandler});
 		});
+
+		it('prevents proposal build from changing transaction ID on identity context', async () => {
+			await transaction.submit();
+
+			sinon.assert.calledWithMatch(endorsement.build, identityContext, {generateTransactionId: false});
+		});
 	});
 
 	describe('#evaluate', () => {
@@ -419,7 +429,7 @@ describe('Transaction', () => {
 		it('builds correct request for no-args invocation', async () => {
 			await transaction.evaluate();
 
-			sinon.assert.calledWith(queryProposal.build, idx, sinon.match({
+			sinon.assert.calledWith(queryProposal.build, identityContext, sinon.match({
 				fcn: transactionName,
 				args: []
 			}));
@@ -430,7 +440,7 @@ describe('Transaction', () => {
 
 			await transaction.evaluate(...args);
 
-			sinon.assert.calledWith(queryProposal.build, idx, sinon.match({
+			sinon.assert.calledWith(queryProposal.build, identityContext, sinon.match({
 				fcn: transactionName,
 				args
 			}));
@@ -442,7 +452,7 @@ describe('Transaction', () => {
 
 			await transaction.evaluate();
 
-			sinon.assert.calledWith(queryProposal.build, idx, sinon.match({transientMap}));
+			sinon.assert.calledWith(queryProposal.build, identityContext, sinon.match({transientMap}));
 		});
 
 		it('returns empty string response', async () => {
@@ -451,6 +461,12 @@ describe('Transaction', () => {
 			const result = await transaction.evaluate();
 
 			expect(result.toString()).to.equal('');
+		});
+
+		it('prevents proposal build from changing transaction ID on identity context', async () => {
+			await transaction.evaluate();
+
+			sinon.assert.calledWithMatch(queryProposal.build, identityContext, {generateTransactionId: false});
 		});
 	});
 });

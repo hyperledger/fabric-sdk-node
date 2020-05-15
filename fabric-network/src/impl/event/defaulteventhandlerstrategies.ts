@@ -6,7 +6,7 @@
 
 import { AllForTxStrategy } from './allfortxstrategy';
 import { AnyForTxStrategy } from './anyfortxstrategy';
-import { TxEventHandlerFactory, TransactionEventHandler } from './transactioneventhandler';
+import { TxEventHandlerFactory, TransactionEventHandler, TxEventHandler } from './transactioneventhandler';
 import { Network } from '../../network';
 import { Endorser } from 'fabric-common';
 
@@ -38,6 +38,9 @@ function getNetworkPeers(network: Network): Endorser[] {
  * events from all peers in the network.
  * The [submitTransaction]{@link module:fabric-network.Contract#submitTransaction} function will wait until a
  * successful event is received from <em>any</em> peer.
+ * @property {module:fabric-network.TxEventHandlerFactory} NONE Do not wait for any commit events.
+ * The [submitTransaction]{@link module:fabric-network.Contract#submitTransaction} function will return immediately
+ * after successfully sending the transaction to the orderer.
  */
 
 export const MSPID_SCOPE_ALLFORTX: TxEventHandlerFactory = (transactionId, network) => {
@@ -58,4 +61,20 @@ export const NETWORK_SCOPE_ALLFORTX: TxEventHandlerFactory = (transactionId, net
 export const NETWORK_SCOPE_ANYFORTX: TxEventHandlerFactory = (transactionId, network) => {
 	const eventStrategy = new AnyForTxStrategy(getNetworkPeers(network));
 	return new TransactionEventHandler(transactionId, network, eventStrategy);
+};
+
+const noOpEventHandler: TxEventHandler = {
+	startListening: async () => {
+		// No-op
+	},
+	waitForEvents: async () => {
+		// No-op
+	},
+	cancelListening: () => {
+		// No-op
+	}
+};
+
+export const NONE: TxEventHandlerFactory = (transactionId, network) => {
+	return noOpEventHandler;
 };

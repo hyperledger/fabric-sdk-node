@@ -78,4 +78,18 @@ describe('IdentityContext', () => {
 			should.equal(string, 'IdentityContext: { user: user, transactionId: null, nonce:null}');
 		});
 	});
+
+	describe('#clone', () => {
+		it('should create a new identity context', () => {
+			const result = idx.clone();
+			result.should.be.an.instanceof(IdentityContext).that.does.not.equal(idx);
+		});
+
+		it('should have same serialized identity', () => {
+			const expected = idx.serializeIdentity();
+			const actual = idx.clone().serializeIdentity();
+
+			actual.should.deep.equal(expected);
+		});
+	});
 });

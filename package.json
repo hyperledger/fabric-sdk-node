@@ -80,7 +80,7 @@
     "ts-mock-imports": "^1.3.0",
     "ts-node": "^8.10.1",
     "tslint": "5.19.0",
-    "typescript": "^3.8.3",
+    "typescript": "^3.9.2",
     "winston": "^2.4.4"
   },
   "license": "Apache-2.0",
