@@ -193,6 +193,7 @@ export interface BuildProposalRequest {
 	args?: string[];
 	transientMap?: { [key: string]: Buffer };
 	init?: boolean;
+	generateTransactionId?: boolean;
 }
 
 export interface SendProposalRequest {
@@ -360,9 +361,11 @@ export class Channel {
 }
 
 export class IdentityContext {
+	readonly transactionId: string;
 	constructor(user: User, client: Client);
-	public getTransactionID(): string;
-	public getNonce(): Buffer;
+	calculateTransactionId(): this;
+	getNonce(): Buffer;
+	clone(): IdentityContext;
 }
 
 export interface BlockData {

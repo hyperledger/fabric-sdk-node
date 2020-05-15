@@ -25,7 +25,6 @@ const logger = getLogger(TYPE);
  * @class
  */
 const IdentityContext = class {
-
 	/**
 	 * Construct a IdentityContext object.
 	 *
@@ -95,6 +94,13 @@ const IdentityContext = class {
 		return `IdentityContext: { user: ${this.user.getName()}, transactionId: ${this.transactionId}, nonce:${this.nonce}}`;
 	}
 
+	/**
+	 * Creates a copy of this object.
+	 * @return {IdentityContext} An identity context.
+	 */
+	clone() {
+		return new IdentityContext(this.user, this.client);
+	}
 };
 
 module.exports = IdentityContext;

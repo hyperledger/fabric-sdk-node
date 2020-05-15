@@ -56,6 +56,6 @@ export async function createTempDir(): Promise<string> {
 	return await fs.promises.mkdtemp(prefix);
 }
 
-export async function rmdir(path: string): Promise<void> {
-	await rimraf(path);
+export async function rmdir(directory: string): Promise<void> {
+	await rimraf(directory);
 }

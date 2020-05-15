@@ -178,7 +178,10 @@ class Proposal extends ServiceAction {
 			this._action.init = init;
 		}
 
-		this._action.transactionId = idContext.calculateTransactionId().transactionId;
+		if (request.generateTransactionId !== false) {
+			idContext.calculateTransactionId();
+		}
+		this._action.transactionId = idContext.transactionId;
 
 		this._action.args = [];
 		if (fcn) {

@@ -7,9 +7,7 @@
 'use strict';
 const sinon = require('sinon');
 
-const Channel = require('fabric-common/lib/Channel');
-const DiscoveryService = require('fabric-common/lib/DiscoveryService');
-const Endorsement = require('fabric-common/lib/Endorsement');
+const {Channel, DiscoveryService, Endorsement, IdentityContext} = require('fabric-common');
 
 const chai = require('chai');
 const expect = chai.expect;
@@ -40,8 +38,15 @@ describe('Contract', () => {
 		channel = sinon.createStubInstance(Channel);
 		channel.newDiscoveryService.returns(discoveryService);
 
+		const identityContext = sinon.createStubInstance(IdentityContext);
+		identityContext.clone.returnsThis();
+		identityContext.calculateTransactionId.callsFake(() => {
+			identityContext.transactionId = 'txId';
+			return identityContext;
+		});
+
 		gateway = sinon.createStubInstance(Gateway);
-		gateway.identityContext = 'idx';
+		gateway.identityContext = identityContext;
 		gateway.getOptions.returns({
 			eventHandlerOptions: 'options',
 			discovery: {
