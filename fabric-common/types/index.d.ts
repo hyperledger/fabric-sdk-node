@@ -363,9 +363,9 @@ export class Channel {
 export class IdentityContext {
 	readonly transactionId: string;
 	constructor(user: User, client: Client);
-	calculateTransactionId(): this;
-	getNonce(): Buffer;
-	clone(): IdentityContext;
+	calculateTransactionId(): IdentityContext;
+	serializeIdentity(): Buffer;
+	sign(payload: Buffer): Buffer;
 }
 
 export interface BlockData {
