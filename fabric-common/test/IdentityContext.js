@@ -51,6 +51,24 @@ describe('IdentityContext', () => {
 			should.exist(idx.nonce);
 			should.exist(idx.transactionId);
 		});
+
+		it('should return new identity context', () => {
+			const result = idx.calculateTransactionId();
+			result.should.be.an.instanceof(IdentityContext).that.does.not.equal(idx);
+		});
+
+		it('result should have same serialized identity', () => {
+			const actual = idx.calculateTransactionId().serializeIdentity();
+
+			const expected = idx.serializeIdentity();
+			actual.should.deep.equal(expected);
+		});
+
+		it('result should have matching transaction ID and nonce', () => {
+			const result = idx.calculateTransactionId();
+			result.transactionId.should.equal(idx.transactionId);
+			result.nonce.should.equal(idx.nonce);
+		});
 	});
 
 	describe('#serializeIdentity', () => {
@@ -76,20 +94,6 @@ describe('IdentityContext', () => {
 		it('should return string', () => {
 			const string = idx.toString();
 			should.equal(string, 'IdentityContext: { user: user, transactionId: null, nonce:null}');
-		});
-	});
-
-	describe('#clone', () => {
-		it('should create a new identity context', () => {
-			const result = idx.clone();
-			result.should.be.an.instanceof(IdentityContext).that.does.not.equal(idx);
-		});
-
-		it('should have same serialized identity', () => {
-			const expected = idx.serializeIdentity();
-			const actual = idx.clone().serializeIdentity();
-
-			actual.should.deep.equal(expected);
 		});
 	});
 });

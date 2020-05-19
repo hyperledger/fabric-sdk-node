@@ -116,10 +116,9 @@ export class Transaction {
 		this.eventHandlerStrategyFactory = this.gatewayOptions.eventHandlerOptions.strategy || EventHandlers.NONE;
 		this.queryHandler = contract.network.queryHandler!;
 
-		// Calculating transaction ID modifies the state of the identity context so take a copy to prevent the state
-		// being modified by other code before it is used to send any proposals
-		this.identityContext = this.contract.gateway.identityContext!.clone();
-		this.transactionId = this.identityContext.calculateTransactionId().transactionId;
+		// Store the returned copy to prevent state being modified by other code before it is used to send proposals
+		this.identityContext = this.contract.gateway.identityContext!.calculateTransactionId();
+		this.transactionId = this.identityContext.transactionId;
 	}
 
 	/**

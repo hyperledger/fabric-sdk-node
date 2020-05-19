@@ -36,7 +36,6 @@ const IdentityContext = class {
 		this.type = TYPE;
 		this.client = client;
 		this.user = user;
-		this.options = {};
 		if (!user.getName) {
 			throw Error('Missing valid user parameter');
 		}
@@ -47,7 +46,10 @@ const IdentityContext = class {
 	}
 
 	/**
-	 * create a new transaction ID value
+	 * Create a new transaction ID value. The new transaction ID will be set both on this object and on the return
+	 * value, which is a copy of this identity context. Calls to this function will not affect the transaction ID value
+	 * on copies returned from previous calls.
+	 * @returns A copy of this identity context.
 	 */
 	calculateTransactionId() {
 		const method = 'calculateTransactionId';
@@ -59,12 +61,12 @@ const IdentityContext = class {
 		this.transactionId = Buffer.from(trans_hash).toString();
 		logger.debug('%s - %s', method, this.transactionId);
 
-		return this;
+		return this.clone();
 	}
 
 	/**
 	 * Get the protobuf serialized identity of this user
-	 * @returns {byte[]} serialized identity in bytes
+	 * @returns {Buffer} serialized identity in bytes
 	 */
 	serializeIdentity() {
 		const method = 'serializeIdentity';
@@ -75,8 +77,8 @@ const IdentityContext = class {
 
 	/**
 	 * Sign the bytes provided
-	 * @param {byte[]} payload - The payload bytes that require a signature
-	 * @return  {byte[]} - The signature in bytes
+	 * @param {Buffer} payload - The payload bytes that require a signature
+	 * @return {Buffer} - The signature in bytes
 	 */
 	sign(payload = checkParameter('payload')) {
 		const method = 'sign';
@@ -96,10 +98,14 @@ const IdentityContext = class {
 
 	/**
 	 * Creates a copy of this object.
+	 * @private
 	 * @return {IdentityContext} An identity context.
 	 */
 	clone() {
-		return new IdentityContext(this.user, this.client);
+		const result = new IdentityContext(this.user, this.client);
+		result.transactionId = this.transactionId;
+		result.nonce = this.nonce;
+		return result;
 	}
 };
 
