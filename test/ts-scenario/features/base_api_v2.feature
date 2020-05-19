@@ -38,7 +38,6 @@ Scenario: Using only fabric-common on V2 channel
 	And the request named myDiscoveryRequest for client fred has a event result matching {"result":"Commit success"}
 	And the request named myDiscoveryRequest for client fred has a commit result matching {"status":"SUCCESS"}
 
-
 	When I create an event service myFilteredEventService as client fred on channel basev2channel
 	And I regisister a block listener named myFilteredBlockListener with myFilteredEventService for startBlock 1 and endBlock 3 as client fred
 	And I regisister a chaincode listener named myFilteredChaincodeListener with myFilteredEventService for createCar event on contract fabcar as client fred
@@ -57,3 +56,16 @@ Scenario: Using only fabric-common on V2 channel
 	Then the event listener myFullBlockListener of myFullEventService has results matching {"block":"4"} as client fred
 	Then the event listener myFullChaincodeListener of myFullEventService has results matching {"createCar":"Focus"} as client fred
 	Then the event listener myFullTransactionListener of myFullEventService has results matching {"transaction":"7"} as client fred
+
+	When I disconnect Event Service myFilteredEventService as client fred
+	And I regisister a block listener named myRestartListener with myFilteredEventService for startBlock 1 and endBlock 6 as client fred
+	And I restart the event service myFilteredEventService as filtered blocks to start at block 0 and end at block 6 as client fred
+	When I build a new endorsement request named myEventRequest for smart contract named fabcar with arguments [createCar,2008,Chrysler,PTCurser,white,Jones] as client fred on discovery channel basev2channel
+	And I commit the endorsement request named myEventRequest as client fred on channel basev2channel
+	Then the event listener myRestartListener of myFilteredEventService has results matching {"block":"6"} as client fred
+	When I disconnect Event Service myFilteredEventService as client fred
+	And I regisister a block listener named myRestartListener with myFilteredEventService for startBlock 1 and endBlock 6 as client fred
+	And I restart the event service myFilteredEventService as filtered blocks to start at block 0 and end at block 6 as client fred
+	When I build a new endorsement request named myEventRequest for smart contract named fabcar with arguments [createCar,2008,Chrysler,PTCurser,white,Jones] as client fred on discovery channel basev2channel
+	And I commit the endorsement request named myEventRequest as client fred on channel basev2channel
+	Then the event listener myRestartListener of myFilteredEventService has results matching {"block":"6"} as client fred

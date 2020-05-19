@@ -62,9 +62,9 @@ When(/^I create an event service (.+?) as client (.+?) on channel (.+?)$/, { tim
 	await ClientHelper.createEventService(eventServiceName, clientName, channelName);
 });
 
-Then(/^I start the event service (.+?) as (.+?) blocks to start at block (.+?) and end at block (.+?) as client (.+?)$/, { timeout: Constants.INC_SHORT as number },
-	async (eventServiceName: string, blockType: 'filtered' | 'full' | 'private' | undefined, startBlock: string, endBlock: string, clientName: string) => {
-	await ClientHelper.startEventService(blockType, eventServiceName, clientName, startBlock, endBlock);
+Then(/^I (.+?) the event service (.+?) as (.+?) blocks to start at block (.+?) and end at block (.+?) as client (.+?)$/, { timeout: Constants.INC_SHORT as number },
+	async (start: 'start' | 'restart', eventServiceName: string, blockType: 'filtered' | 'full' | 'private' | undefined, startBlock: string, endBlock: string, clientName: string) => {
+		await ClientHelper.startEventService(blockType, eventServiceName, clientName, startBlock, endBlock, start);
 });
 
 Then(/^I regisister a block listener named (.+?) with (.+?) for startBlock (.+?) and endBlock (.+?) as client (.+?)$/, { timeout: Constants.INC_SHORT as number },
@@ -85,4 +85,8 @@ Then(/^I regisister a transaction listener named (.+?) with (.+?) for all transa
 Then(/^the event listener (.+?) of (.+?) has results matching (.+?) as client (.+?)$/, { timeout: Constants.INC_SHORT as number },
 	async (listenerName: string, eventServiceName: string, check: string, clientName: string) => {
 	await ClientHelper.checkEventListenerResults(eventServiceName, clientName, listenerName, check);
+});
+
+When(/^I disconnect Event Service (.+?) as client (.+?)$/, {timeout: Constants.HUGE_TIME as number }, async (eventServiceName: string, clientName: string) => {
+	await ClientHelper.disconnectEventService(eventServiceName, clientName);
 });

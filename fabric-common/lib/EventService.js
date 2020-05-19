@@ -169,6 +169,8 @@ class EventService extends ServiceAction {
 			this._current_eventer.disconnect();
 			logger.debug('%s - closing stream %s', method, this.currentStreamNumber);
 			this._current_eventer = null;
+		} else {
+			logger.debug('%s - no current eventer - not shutting down stream', method);
 		}
 		this._close_running = false;
 
@@ -356,16 +358,20 @@ class EventService extends ServiceAction {
 		for (const target of this.targets) {
 			try {
 				if (target.stream) {
+					logger.debug('%s - target has a stream, is already listening %s', method, target.toString());
 					start_error = Error(`Event service ${target.name} is currently listening`);
 				} else {
 					if (target.isConnectable()) {
+						logger.debug('%s - target needs to connect %s', method, target.toString());
 						await target.connect(); // target endpoint has been previously assigned, but not connected yet
 					}
 					const isConnected = await target.checkConnection();
 					if (!isConnected) {
 						start_error = Error(`Event service ${target.name} is not connected`);
+						logger.debug('%s - target is not connected %s', method, target.toString());
 					} else {
 						this._current_eventer = await this._startService(target, envelope, requestTimeout);
+						logger.debug('%s - set current eventer %s', method, this._current_eventer.toString());
 					}
 				}
 			} catch (error) {
@@ -384,8 +390,11 @@ class EventService extends ServiceAction {
 		// if we ran through the all targets and have start_error then we
 		// have not found a working target endpoint, so tell user error
 		if (start_error) {
+			logger.error('%s - no targets started - %s', method, start_error);
 			throw start_error;
 		}
+
+		logger.debug('%s - end', method);
 	}
 
 	/*

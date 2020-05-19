@@ -599,7 +599,14 @@ export async function createEventService(eventServiceName: string, clientName: s
 	}
 }
 
-export async function startEventService(blockType: 'filtered' | 'full' | 'private' | undefined, eventServiceName: string, clientName: string, startBlock: string, endBlock: string): Promise<void> {
+export async function startEventService(
+	blockType: 'filtered' | 'full' | 'private' | undefined,
+	eventServiceName: string,
+	clientName: string,
+	startBlock: string,
+	endBlock: string,
+	start: string): Promise<void> {
+
 	const clientObject: any = retrieveClientObject(clientName);
 	const client: Client = clientObject.client;
 	const ccp: CommonConnectionProfileHelper = clientObject.ccp;
@@ -630,6 +637,12 @@ export async function startEventService(blockType: 'filtered' | 'full' | 'privat
 
 		const peerNames: any = ccp.getPeersForChannel(channelName);
 		const endpoints: Endpoint[] = [];
+
+		if (start === 'restart') {
+			// we want to use the targets that we used last time
+			await eventService.send();
+			return;
+		}
 
 		for (const peerName of peerNames) {
 			const peerObject: any = ccp.getPeer(peerName);
@@ -804,4 +817,12 @@ export async function checkEventListenerResults(
 	} else {
 		BaseUtils.logAndThrow(`Listener object not found ${listenerName}`);
 	}
+}
+
+export async function disconnectEventService(
+	eventServiceName: string, clientName: string): Promise<void> {
+	const clientObject: any = retrieveClientObject(clientName);
+	const eventServiceObject: any = clientObject.eventServices.get(eventServiceName);
+
+	eventServiceObject.eventService.close();
 }
