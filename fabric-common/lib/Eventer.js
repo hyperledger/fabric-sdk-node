@@ -117,7 +117,7 @@ class Eventer extends ServiceEndpoint {
 			}
 		}
 
-		logger.debug('%s - end', method);
+		logger.debug('%s - end return:%s', method, result);
 		return result;
 	}
 

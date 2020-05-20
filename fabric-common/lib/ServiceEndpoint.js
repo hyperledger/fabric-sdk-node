@@ -120,7 +120,7 @@ class ServiceEndpoint {
 		logger.debug(`${method} - create the grpc service for ${this.name}`);
 		this.service = new this.serviceClass(this.endpoint.addr, this.endpoint.creds, this.options);
 		await this.waitForReady(this.service);
-		logger.debug(`${method} - completed the waitForReady for ${this.name}`);
+		logger.debug(`${method} - end - completed the waitForReady for ${this.name}`);
 	}
 
 	/**
@@ -135,6 +135,7 @@ class ServiceEndpoint {
 			this.service.close();
 			this.service = null;
 			this.connected = false;
+			this.connectAttempted = false;
 		}
 	}
 
@@ -142,7 +143,8 @@ class ServiceEndpoint {
 	 * Check the connection status
 	 */
 	async checkConnection() {
-		logger.debug(`checkConnection[${this.name}] - start `);
+		const method = `checkConnection[${this.name}]`;
+		logger.debug('%s - start - connected:%s', method, this.connected);
 
 		if (this.connected) {
 			try {
@@ -153,6 +155,7 @@ class ServiceEndpoint {
 			}
 		}
 
+		logger.debug('%s - end - connected:%s', method, this.connected);
 		return this.connected;
 	}
 
@@ -227,7 +230,7 @@ class ServiceEndpoint {
 			url = this.endpoint.url;
 		}
 
-		return `${this.type}- name: ${this.name}, url:${url}`;
+		return `${this.type}- name: ${this.name}, url:${url}, connected:${this.connected}, connectAttempted:${this.connectAttempted}`;
 	}
 
 }

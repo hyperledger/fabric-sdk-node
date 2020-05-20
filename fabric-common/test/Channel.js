@@ -512,7 +512,7 @@ describe('Channel', () => {
 			channel.addCommitter(getCommitter('committer1'));
 			const channel_string = channel.toString();
 			assert.equal(channel_string,
-				'{"name":"mychannel","committers":["Committer- name: committer1, url:<not connected>"],"endorsers":["Endorser- name: endorser1, url:<not connected>"]}',
+				'{"name":"mychannel","committers":["Committer- name: committer1, url:<not connected>, connected:true, connectAttempted:false"],"endorsers":["Endorser- name: endorser1, url:<not connected>, connected:true, connectAttempted:false"]}',
 				'toString has all this'
 			);
 		});

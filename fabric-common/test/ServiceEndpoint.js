@@ -236,12 +236,12 @@ describe('ServiceEndpoint', () => {
 	describe('#toString', () => {
 		it('should get a string url', async () => {
 			const results = serviceEndpoint.toString();
-			results.should.be.equal('ServiceEndpoint- name: myserviceEndpoint, url:grpc://host:2700');
+			results.should.be.equal('ServiceEndpoint- name: myserviceEndpoint, url:grpc://host:2700, connected:true, connectAttempted:false');
 		});
 		it('should get a string result', async () => {
 			serviceEndpoint.endpoint = null;
 			const results = serviceEndpoint.toString();
-			results.should.be.equal('ServiceEndpoint- name: myserviceEndpoint, url:<not connected>');
+			results.should.be.equal('ServiceEndpoint- name: myserviceEndpoint, url:<not connected>, connected:true, connectAttempted:false');
 		});
 	});
 });
