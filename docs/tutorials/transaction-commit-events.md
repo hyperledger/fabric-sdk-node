@@ -112,4 +112,4 @@ class MyTransactionEventHandler {
 }
 ```
 
-For a complete sample plug-in event handler implementation, see [sample-transaction-event-handler.js](https://github.com/hyperledger/fabric-sdk-node/blob/master/test/integration/network-e2e/sample-transaction-event-handler.js).
+For a complete sample plug-in event handler implementation, see [sample-transaction-event-handler.js](https://github.com/hyperledger/fabric-sdk-node/blob/release-1.4/test/integration/network-e2e/sample-transaction-event-handler.js).
