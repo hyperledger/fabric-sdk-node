@@ -71,4 +71,4 @@ class MyQueryHandler {
 }
 ```
 
-For a complete sample plug-in query handler implementation, see [sample-query-handler.ts](https://github.com/hyperledger/fabric-sdk-node/blob/master/test/typescript/integration/network-e2e/sample-query-handler.ts).
+For a complete sample plug-in query handler implementation, see [sample-query-handler.ts](https://github.com/hyperledger/fabric-sdk-node/blob/release-1.4/test/typescript/integration/network-e2e/sample-query-handler.ts).
