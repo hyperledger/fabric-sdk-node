@@ -5,16 +5,18 @@
 'use strict';
 
 import * as FabricCAServices from 'fabric-ca-client';
-import { Channel, Client, Commit, Committer, Endorsement, Endorser,
+import {
+	Channel, Client, Commit, Committer, Endorsement, Endorser,
 	Endpoint, Eventer, EventService, Discoverer, DiscoveryService,
 	IdentityContext, ProposalResponse, Query, User, DiscoveryHandler,
-	StartRequestOptions, SendEventOptions} from 'fabric-common';
+	StartRequestOptions, SendEventOptions
+} from 'fabric-common';
 import * as fs from 'fs';
 import * as Long from 'long';
-import { Constants } from '../../constants';
+import {Constants} from '../../constants';
 import * as BaseUtils from './baseUtils';
-import { CommonConnectionProfileHelper } from './commonConnectionProfileHelper';
-import { StateStore } from './stateStore';
+import {CommonConnectionProfileHelper} from './commonConnectionProfileHelper';
+import {StateStore} from './stateStore';
 
 const stateStore: StateStore = StateStore.getInstance();
 
@@ -47,10 +49,10 @@ export async function createAdminClient(clientName: string, ccp: CommonConnectio
 
 		// persist client in state store for use later
 		if (clientMap) {
-			clientMap.set(clientName, { client, user, ccp, clientOrg });
+			clientMap.set(clientName, {client, user, ccp, clientOrg});
 		} else {
 			const map: Map<string, any> = new Map<string, any>();
-			map.set(clientName, { client, user, ccp, clientOrg });
+			map.set(clientName, {client, user, ccp, clientOrg});
 			stateStore.set(Constants.CLIENTS, map);
 		}
 		BaseUtils.logMsg(`Created client named ${clientName} and persisted in state store`);
@@ -178,7 +180,7 @@ export async function buildChannelRequest(requestName: string, contractName: str
 		discoveryHandler = discovery.newHandler();
 
 		// We now have all we need, save to the clientObject
-		const request: any = { endorsement, endpoints, idx, discoveryResults};
+		const request: any = {endorsement, endpoints, idx, discoveryResults};
 
 		if (useDiscovery) {
 			request.handler = discoveryHandler;
@@ -308,7 +310,7 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 
 			try {
 				// Send commit, having started the event listener, wait for all
-				const commitSubmission: any =  commit.send(commitRequest);
+				const commitSubmission: any = commit.send(commitRequest);
 				const commitResults: any[] = await Promise.all([eventListener, commitSubmission]);
 
 				requestObject.results = {
@@ -590,10 +592,10 @@ export async function createEventService(eventServiceName: string, clientName: s
 	try {
 		const eventService: EventService = channel.newEventService(eventServiceName);
 		if (clientObject.eventServices) {
-			clientObject.eventServices.set(eventServiceName, { eventService, idx, channelName });
+			clientObject.eventServices.set(eventServiceName, {eventService, idx, channelName});
 		} else {
 			const map: Map<string, any> = new Map();
-			map.set(eventServiceName, { eventService, idx, channelName });
+			map.set(eventServiceName, {eventService, idx, channelName});
 			clientObject.eventServices = map;
 		}
 	} catch (error) {

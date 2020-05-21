@@ -11,11 +11,8 @@ const {Utils: utils, BaseClient} = require('fabric-common');
 const FabricCAClient = require('./FabricCAClient');
 
 const {normalizeX509} = BaseClient;
-const util = require('util');
 const path = require('path');
-const parseURL = require('./helper').parseURL;
-const checkRegistrar = require('./helper').checkRegistrar;
-const getSubjectCommonName = require('./helper').getSubjectCommonName;
+const {parseURL, checkRegistrar, getSubjectCommonName} = require('./helper');
 const logger = utils.getLogger('FabricCAClientService.js');
 
 // setup the location of the default config shipped with code
@@ -183,13 +180,11 @@ const FabricCAServices = class extends BaseClient {
 			if (!Array.isArray(req.attr_reqs)) {
 				logger.error('Invalid enroll request, attr_reqs must be an array of AttributeRequest objects');
 				throw new Error('req.attr_reqs is not an array');
-			} else {
-				for (const i in req.attr_reqs) {
-					const attr_req = req.attr_reqs[i];
-					if (!attr_req.name) {
-						logger.error('Invalid enroll request, attr_reqs object is missing the name of the attribute');
-						throw new Error('req.att_regs is missing the attribute name');
-					}
+			}
+			for (const attr_req of req.attr_reqs) {
+				if (!attr_req.name) {
+					logger.error('Invalid enroll request, attr_reqs object is missing the name of the attribute');
+					throw new Error('req.att_regs is missing the attribute name');
 				}
 			}
 		}
@@ -211,13 +206,13 @@ const FabricCAServices = class extends BaseClient {
 					}
 					logger.debug('successfully generated key pairs');
 				} catch (err) {
-					throw new Error(util.format('Failed to generate key for enrollment due to error [%s]: %s', err, err.stack));
+					throw new Error(`Failed to generate key for enrollment due to error [${err}]: ${err.stack}`);
 				}
 				try {
 					csr = privateKey.generateCSR('CN=' + req.enrollmentID);
 					logger.debug('successfully generated csr');
 				} catch (err) {
-					throw new Error(util.format('Failed to generate CSR for enrollment due to error [%s]: %s', err, err.stack));
+					throw new Error(`Failed to generate CSR for enrollment due to error [${err}]: ${err.stack}`);
 				}
 			}
 
@@ -242,11 +237,11 @@ const FabricCAServices = class extends BaseClient {
 	 * Re-enroll the member in cases such as the existing enrollment certificate is about to expire, or
 	 * it has been compromised
 	 * @param {User} currentUser The identity of the current user that holds the existing enrollment certificate
-	 * @param {AttributeRequest[]} [attr_reqs] Optional an array of {@link AttributeRequest} that indicate attributes to
+	 * @param {AttributeRequest[]} [attrReqs] An array of {@link AttributeRequest} that indicate attributes to
 	 *                             be included in the certificate
 	 * @returns Promise for an object with "key" for private key and "certificate" for the signed certificate
 	 */
-	async reenroll(currentUser, attr_reqs) {
+	async reenroll(currentUser, attrReqs) {
 		if (!currentUser) {
 			logger.error('Invalid re-enroll request, missing argument "currentUser"');
 			throw new Error('Invalid re-enroll request, missing argument "currentUser"');
@@ -257,17 +252,15 @@ const FabricCAServices = class extends BaseClient {
 			throw new Error('Invalid re-enroll request, "currentUser" is not a valid User object');
 		}
 
-		if (attr_reqs) {
-			if (!Array.isArray(attr_reqs)) {
+		if (attrReqs) {
+			if (!Array.isArray(attrReqs)) {
 				logger.error('Invalid re-enroll request, attr_reqs must be an array of AttributeRequest objects');
 				throw new Error('Invalid re-enroll request, attr_reqs must be an array of AttributeRequest objects');
-			} else {
-				for (const i in attr_reqs) {
-					const attr_req = attr_reqs[i];
-					if (!attr_req.name) {
-						logger.error('Invalid re-enroll request, attr_reqs object is missing the name of the attribute');
-						throw new Error('Invalid re-enroll request, attr_reqs object is missing the name of the attribute');
-					}
+			}
+			for (const attr_req of attrReqs) {
+				if (!attr_req.name) {
+					logger.error('Invalid re-enroll request, attr_reqs object is missing the name of the attribute');
+					throw new Error('Invalid re-enroll request, attr_reqs object is missing the name of the attribute');
 				}
 			}
 		}
@@ -277,7 +270,7 @@ const FabricCAServices = class extends BaseClient {
 		try {
 			subject = getSubjectCommonName(normalizeX509(cert));
 		} catch (err) {
-			logger.error(util.format('Failed to parse enrollment certificate %s for Subject. \nError: %s', cert, err));
+			logger.error(`Failed to parse enrollment certificate ${cert} for Subject. \nError: ${err}`);
 		}
 
 		if (!subject) {
@@ -301,7 +294,7 @@ const FabricCAServices = class extends BaseClient {
 			throw Error(`Failed to generate CSR for enrollment due to error [${e}]`);
 		}
 
-		const response = await this._fabricCAClient.reenroll(csr, currentUser.getSigningIdentity(), attr_reqs);
+		const response = await this._fabricCAClient.reenroll(csr, currentUser.getSigningIdentity(), attrReqs);
 		return {
 			key: privateKey,
 			certificate: Buffer.from(response.result.Cert, 'base64').toString(),

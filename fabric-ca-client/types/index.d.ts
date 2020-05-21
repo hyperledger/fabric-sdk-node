@@ -13,7 +13,7 @@ declare class FabricCAServices {
 
 	enroll(req: FabricCAServices.IEnrollmentRequest): Promise<FabricCAServices.IEnrollResponse>;
 
-	reenroll(currentUser: User, attr_reqs: FabricCAServices.IAttributeRequest[]): Promise<FabricCAServices.IEnrollResponse>;
+	reenroll(currentUser: User, attrReqs: FabricCAServices.IAttributeRequest[]): Promise<FabricCAServices.IEnrollResponse>;
 
 	revoke(request: FabricCAServices.IRevokeRequest, registrar: User): Promise<any>;
 

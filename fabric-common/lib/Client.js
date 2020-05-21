@@ -8,8 +8,7 @@ const TYPE = 'Client';
 
 const crypto = require('crypto');
 
-const {checkParameter, getLogger, pemToDER, setConfigSetting,
-	getConfigSetting, newCryptoSuite} = require('./Utils.js');
+const {checkParameter, getLogger, pemToDER, setConfigSetting, getConfigSetting, newCryptoSuite} = require('./Utils.js');
 const Channel = require('./Channel');
 const Endpoint = require('./Endpoint');
 const Committer = require('./Committer');
@@ -70,6 +69,7 @@ const Client = class {
 	newIdentityContext(user = checkParameter('user')) {
 		return new IdentityContext(user, this);
 	}
+
 	/**
 	 * @typedef {Object} ConnectOptions
 	 * @property {string} url The committer URL with format of 'grpc(s)://host:port'.
@@ -235,6 +235,7 @@ const Client = class {
 
 		return Channel._getServiceEndpoints(this.endorsers.values(), 'Endorser', mspid);
 	}
+
 	/**
 	 * Returns a {@link Committer} instance with the given name.
 	 * Will return a new instance. Does not check for existing instances
@@ -279,6 +280,7 @@ const Client = class {
 		logger.debug('%s return committer name:%s', method, name);
 		return committer;
 	}
+
 	/**
 	 * Will return an array of {@link Committer} instances that have been
 	 * assigned to this channel instance. Include a MSPID to only return committers

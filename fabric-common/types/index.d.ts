@@ -6,8 +6,12 @@
 /* tslint:disable:ordered-imports */
 
 import * as Long from 'long';
-import {IKeyValueStore} from 'fabric-client';
 import * as fabproto6 from 'fabric-protos';
+
+export interface IKeyValueStore {
+	getValue(name: string): Promise<string>;
+	setValue(name: string, value: string): Promise<string>;
+}
 
 export class Utils {
 	public static getLogger(name: string): any;
@@ -226,10 +230,14 @@ export class DiscoveryService extends ServiceAction {
 	public getDiscoveryResults(refresh?: boolean): Promise<any>;
 	public close(): void;
 }
+export interface RegistrationOpts {
+	startBlock?: number|string|Long;
+	endBlock?: number|string|Long;
+	unregister?: boolean;
+}
 
-export class EventListener {
-	constructor(listenerType: string, callback: any, options: any, event: string);
-	onEvent(error: Error, event: any): void;
+interface EventListener {
+	onEvent(error: Error, event: EventInfo): void;
 	unregisterEventListener(): void;
 }
 
