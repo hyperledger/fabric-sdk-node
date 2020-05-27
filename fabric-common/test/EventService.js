@@ -7,10 +7,10 @@
 
 const rewire = require('rewire');
 const EventService = rewire('../lib/EventService');
+const Eventer = rewire('../lib/Eventer');
 const Client = rewire('../lib/Client');
 const User = require('../lib/User');
 const EventListener = require('../lib/EventListener');
-const Eventer = require('../lib/Eventer');
 
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
@@ -160,14 +160,19 @@ describe('EventService', () => {
 			const eventService2 = new EventService('myhub', channel);
 			eventService2.name.should.equal('myhub');
 			eventService2.type.should.equal('EventService');
+			eventService2.channel.should.be.deep.equal(channel);
+			should.equal(eventService2.lastBlockNumber, null);
 			eventService2.startBlock.should.equal('newest');
-			eventService2._end_block_seen.should.be.false;
-			eventService2._reg_counter.should.be.equal(0);
+			should.equal(eventService2.endBlock, undefined);
+			eventService2._endBlockSeen.should.be.false;
 			eventService2._haveBlockListeners.should.be.false;
 			eventService2._haveTxListeners.should.be.false;
 			eventService2._haveChaincodeListeners.should.be.false;
-			eventService2._close_running.should.be.false;
-			eventService2.channel.should.be.deep.equal(channel);
+			should.equal(eventService2.targets, null);
+			should.equal(eventService2._currentEventer, null);
+			eventService2._closeRunning.should.be.false;
+			eventService2.blockType.should.be.equal('filtered');
+			eventService2.replay.should.be.false;
 		});
 	});
 
@@ -231,10 +236,10 @@ describe('EventService', () => {
 		it('should throw if reason_error arg not given', () => {
 			(() => {
 				eventService._close();
-			}).should.throw(/Missing reason_error parameter/);
+			}).should.throw(/Missing reasonError parameter/);
 		});
 		it('should see close is already running', () => {
-			eventService._close_running = true;
+			eventService._closeRunning = true;
 			eventService._close(new Error('test'));
 			sinon.assert.calledWith(FakeLogger.debug, '%s - close is running - exiting');
 		});
@@ -446,7 +451,7 @@ describe('EventService', () => {
 			eventService._payload =  Buffer.from('payload');
 			eventService._signature = Buffer.from('signature');
 			await eventService.send({targets: [eventer1]});
-			eventService._current_eventer.should.be.deep.equal(eventer1);
+			eventService._currentEventer.should.be.deep.equal(eventer1);
 		});
 		it('rejects if not built and signed', async () => {
 			const eventer1 = client.newEventer('eventer1');
@@ -495,7 +500,7 @@ describe('EventService', () => {
 				deliver: deliverStub,
 				deliverWithPrivateData: deliverWithPrivateDataStub
 			});
-			revert.push(EventService.__set__('fabprotos.protos.Deliver', eventProtoDeliverStub));
+			revert.push(Eventer.__set__('fabproto6.services.protos.Deliver', eventProtoDeliverStub));
 
 			eventService = new EventService('myhub', channel);
 		});
@@ -564,11 +569,10 @@ describe('EventService', () => {
 			};
 			eventService.blockType = 'full';
 			eventService._close = sinon.stub();
-			eventService._current_eventer = sinon.stub();
-			eventService._current_eventer.disconnect = sinon.stub();
+			eventService._currentEventer = sinon.stub();
+			eventService._currentEventer.disconnect = sinon.stub();
 			await eventService._startService(eventer1, {}, 10).should.be.rejectedWith('ForcedError');
 			sinon.assert.called(eventService._close);
-
 		});
 		it('should call stream on data and log about an unknown response', async () => {
 			const eventer1 = client.newEventer('eventer1');
@@ -580,7 +584,7 @@ describe('EventService', () => {
 			// TEST CALL
 			await eventService._startService(eventer1, {}, 3000);
 			sinon.assert.called(deliverStub);
-			sinon.assert.calledWith(FakeLogger.error, 'on.data - unknown deliverResponse type %s', 'unknown');
+			sinon.assert.calledWith(FakeLogger.error, 'on.data %s- unknown deliverResponse type %s');
 		});
 		it('should call stream on data and log about a block response with no listeners', async () => {
 			const eventer1 = client.newEventer('eventer1');
@@ -592,7 +596,7 @@ describe('EventService', () => {
 			// TEST CALL for full block
 			await eventService._startService(eventer1, {}, 3000);
 			sinon.assert.called(deliverStub);
-			sinon.assert.calledWith(FakeLogger.debug, 'on.data - have full block data');
+			sinon.assert.calledWith(FakeLogger.debug, 'on.data %s- have full block data');
 		});
 		it('should call stream on data and log about a filtered block response with no listeners', async () => {
 			const eventer1 = client.newEventer('eventer1');
@@ -604,7 +608,7 @@ describe('EventService', () => {
 			// TEST CALL for filtered data
 			await eventService._startService(eventer1, {}, 3000);
 			sinon.assert.called(deliverFilteredStub);
-			sinon.assert.calledWith(FakeLogger.debug, 'on.data - have filtered block data');
+			sinon.assert.calledWith(FakeLogger.debug, 'on.data %s- have filtered block data');
 		});
 		it('should call stream on data and log about a private block response with no listeners', async () => {
 			const eventer1 = client.newEventer('eventer1');
@@ -617,7 +621,7 @@ describe('EventService', () => {
 			await eventService._startService(eventer1, {}, 3000);
 			sinon.assert.called(deliverWithPrivateDataStub);
 			sinon.assert.called(decodeBlockWithPrivateData);
-			sinon.assert.calledWith(FakeLogger.debug, 'on.data - have full block data with private data');
+			sinon.assert.calledWith(FakeLogger.debug, 'on.data %s- have full block data with private data');
 		});
 		it('should call stream on data and log about a block response with matching endblock', async () => {
 			const eventer1 = client.newEventer('eventer1');
@@ -632,7 +636,7 @@ describe('EventService', () => {
 			await eventService._startService(eventer1, {}, 3000);
 			sinon.assert.called(deliverStub);
 			sinon.assert.called(eventService._close);
-			sinon.assert.calledWith(FakeLogger.debug, 'on.data - incoming block number 1');
+			sinon.assert.calledWith(FakeLogger.debug, 'on.data %s- incoming block number %s');
 		});
 		it('should call stream on data and catch an error', async () => {
 			const eventer1 = client.newEventer('eventer1');
@@ -647,7 +651,7 @@ describe('EventService', () => {
 			await eventService._startService(eventer1, {}, 3000);
 			sinon.assert.called(deliverStub);
 			sinon.assert.called(eventService._close);
-			sinon.assert.calledWith(FakeLogger.error, '%s EventService has detected an error %s');
+			sinon.assert.calledWith(FakeLogger.error, 'on.data %s- EventService has detected an error %s');
 		});
 		it('should call close when on data with SUCCESS status and end block seen', async () => {
 			const eventer1 = client.newEventer('eventer1');
@@ -657,15 +661,15 @@ describe('EventService', () => {
 			eventService.blockType = 'full';
 			onStub.yields({Type: 'status', status: 'SUCCESS'});
 			eventService._close = sinon.stub();
-			eventService._end_block_seen = true;
+			eventService._endBlockSeen = true;
 			eventService.lastBlockNumber = Long.fromValue(1);
 			eventService.endBlock = Long.fromValue(1);
 			// TEST CALL
 			await eventService._startService(eventer1, {}, 3000);
 			sinon.assert.called(deliverStub);
 			sinon.assert.notCalled(eventService._close);
-			sinon.assert.calledWith(FakeLogger.debug, '%s - on.data received type status of SUCCESS');
-			sinon.assert.calledWith(FakeLogger.debug, 'on.data - status received after last block seen: %s block_num: %s');
+			sinon.assert.calledWith(FakeLogger.debug, 'on.data %s- received type status of SUCCESS');
+			sinon.assert.calledWith(FakeLogger.debug, 'on.data %s- status received after last block seen: %s blockNumber: %s');
 		});
 		it('should call close when on data with status SUCCESS and end block seen and newest block seen', async () => {
 			const eventer1 = client.newEventer('eventer1');
@@ -675,15 +679,15 @@ describe('EventService', () => {
 			eventService.blockType = 'full';
 			onStub.yields({Type: 'status', status: 'SUCCESS'});
 			eventService._close = sinon.stub();
-			eventService._end_block_seen = false;
+			eventService._endBlockSeen = false;
 			eventService.lastBlockNumber = Long.fromValue(1);
 			eventService.endBlock = 'newest';
 			// TEST CALL
 			await eventService._startService(eventer1, {}, 3000);
 			sinon.assert.called(deliverStub);
 			sinon.assert.called(eventService._close);
-			sinon.assert.calledWith(FakeLogger.debug, '%s - on.data received type status of SUCCESS');
-			sinon.assert.calledWith(FakeLogger.debug, 'on.data - status received when newest block seen: %s block_num: %s');
+			sinon.assert.calledWith(FakeLogger.debug, 'on.data %s- received type status of SUCCESS');
+			sinon.assert.calledWith(FakeLogger.debug, 'on.data %s- status received when newest block seen: %s blockNumber: %s');
 		});
 		it('should call close when on data with status SUCCESS and end block not seen', async () => {
 			const eventer1 = client.newEventer('eventer1');
@@ -693,15 +697,15 @@ describe('EventService', () => {
 			eventService.blockType = 'full';
 			onStub.yields({Type: 'status', status: 'SUCCESS'});
 			eventService._close = sinon.stub();
-			eventService._end_block_seen = false;
+			eventService._endBlockSeen = false;
 			eventService.lastBlockNumber = Long.fromValue(1);
 			eventService.endBlock = Long.fromValue(3);
 			// TEST CALL
 			await eventService._startService(eventer1, {}, 3000);
 			sinon.assert.called(deliverStub);
 			sinon.assert.called(eventService._close);
-			sinon.assert.calledWith(FakeLogger.debug, '%s - on.data received type status of SUCCESS');
-			sinon.assert.calledWith(FakeLogger.error, 'on.data - status SUCCESS received before the configured endblock has been seen');
+			sinon.assert.calledWith(FakeLogger.debug, 'on.data %s- received type status of SUCCESS');
+			sinon.assert.calledWith(FakeLogger.error, 'on.data %s- status SUCCESS received before the configured endblock has been seen');
 		});
 		it('should close when on data with status of SUCCESS and end block not seen with still need blocks', async () => {
 			const eventer1 = client.newEventer('eventer1');
@@ -711,15 +715,15 @@ describe('EventService', () => {
 			eventService.blockType = 'full';
 			onStub.yields({Type: 'status', status: 'SUCCESS'});
 			eventService._close = sinon.stub();
-			eventService._end_block_seen = false;
+			eventService._endBlockSeen = false;
 			eventService.lastBlockNumber = Long.fromValue(4);
 			eventService.endBlock = Long.fromValue(3);
 			// TEST CALL
 			await eventService._startService(eventer1, {}, 3000);
 			sinon.assert.called(deliverStub);
 			sinon.assert.called(eventService._close);
-			sinon.assert.calledWith(FakeLogger.debug, '%s - on.data received type status of SUCCESS');
-			sinon.assert.calledWith(FakeLogger.error, 'on.data - status SUCCESS received while blocks are required');
+			sinon.assert.calledWith(FakeLogger.debug, 'on.data %s- received type status of SUCCESS');
+			sinon.assert.calledWith(FakeLogger.error, 'on.data %s- status SUCCESS received while blocks are required');
 		});
 		it('should close when on data with status of NOT FOUND end block not seen', async () => {
 			const eventer1 = client.newEventer('eventer1');
@@ -729,15 +733,15 @@ describe('EventService', () => {
 			eventService.blockType = 'full';
 			onStub.yields({Type: 'status', status: 'NOT_FOUND'});
 			eventService._close = sinon.stub();
-			eventService._end_block_seen = false;
+			eventService._endBlockSeen = false;
 			eventService.lastBlockNumber = Long.fromValue(1);
 			eventService.endBlock = Long.fromValue(3);
 			// TEST CALL
 			await eventService._startService(eventer1, {}, 3000);
 			sinon.assert.called(deliverStub);
 			sinon.assert.called(eventService._close);
-			sinon.assert.calledWith(FakeLogger.debug, '%s - on.data received type status of NOT_FOUND');
-			sinon.assert.calledWith(FakeLogger.error, 'on.data - Configured endblock does not exist');
+			sinon.assert.calledWith(FakeLogger.debug, 'on.data %s- received type status of NOT_FOUND');
+			sinon.assert.calledWith(FakeLogger.error, 'on.data %s- Configured endblock does not exist');
 		});
 		it('should close when on data with status of NOT FOUND and still need blocks', async () => {
 			const eventer1 = client.newEventer('eventer1');
@@ -747,15 +751,15 @@ describe('EventService', () => {
 			eventService.blockType = 'full';
 			onStub.yields({Type: 'status', status: 'NOT_FOUND'});
 			eventService._close = sinon.stub();
-			eventService._end_block_seen = false;
+			eventService._endBlockSeen = false;
 			eventService.lastBlockNumber = Long.fromValue(1);
 			eventService.endBlock = null;
 			// TEST CALL
 			await eventService._startService(eventer1, {}, 3000);
 			sinon.assert.called(deliverStub);
 			sinon.assert.called(eventService._close);
-			sinon.assert.calledWith(FakeLogger.debug, '%s - on.data received type status of NOT_FOUND');
-			sinon.assert.calledWith(FakeLogger.error, 'on.data - NOT_FOUND status received - last block received %s');
+			sinon.assert.calledWith(FakeLogger.debug, 'on.data %s- received type status of NOT_FOUND');
+			sinon.assert.calledWith(FakeLogger.error, 'on.data %s- NOT_FOUND status received - last block received %s');
 		});
 		it('should call stream on data with type status of SUCCESS', async () => {
 			const eventer1 = client.newEventer('eventer1');
@@ -769,7 +773,7 @@ describe('EventService', () => {
 			await eventService._startService(eventer1, {}, 3000);
 			sinon.assert.called(deliverStub);
 			sinon.assert.notCalled(eventService._close);
-			sinon.assert.calledWith(FakeLogger.debug, '%s - on.data received type status of SUCCESS');
+			sinon.assert.calledWith(FakeLogger.debug, 'on.data %s- received type status of SUCCESS');
 		});
 		it('should call stream on data with type status of not SUCCESS', async () => {
 			const eventer1 = client.newEventer('eventer1');
@@ -783,20 +787,20 @@ describe('EventService', () => {
 			await eventService._startService(eventer1, {}, 3000);
 			sinon.assert.called(deliverStub);
 			sinon.assert.called(eventService._close);
-			sinon.assert.calledWith(FakeLogger.error, 'on.data - unexpected deliverResponse status received - %s');
+			sinon.assert.calledWith(FakeLogger.error, 'on.data %s- unexpected deliverResponse status received - %s');
 		});
 	});
 
 	describe('#isStarted', () => {
 		it('should return true', () => {
-			eventService._current_eventer = sinon.stub();
-			eventService._current_eventer.isStreamReady = sinon.stub().returns(true);
+			eventService._currentEventer = sinon.stub();
+			eventService._currentEventer.isStreamReady = sinon.stub().returns(true);
 			const results = eventService.isStarted();
 			results.should.be.true;
 		});
 		it('should return false', () => {
-			eventService._current_eventer = sinon.stub();
-			eventService._current_eventer.isStreamReady = sinon.stub().returns(false);
+			eventService._currentEventer = sinon.stub();
+			eventService._currentEventer.isStreamReady = sinon.stub().returns(false);
 			const results = eventService.isStarted();
 			results.should.be.false;
 		});
@@ -1000,7 +1004,7 @@ describe('EventService', () => {
 		it('should do nothing if no block', () => {
 			(() => {
 				eventService._processEndBlock();
-			}).should.throw(/Missing block_num parameter/);
+			}).should.throw(/Missing blockNumber parameter/);
 		});
 		it('should do nothing if no registrations', () => {
 			eventService._processEndBlock('block_num');
@@ -1061,7 +1065,7 @@ describe('EventService', () => {
 			eventService.registerTransactionListener('tx1', sinon.stub(), {unregister: false});
 			const fake_callTransactionListener = sinon.stub();
 			eventService._callTransactionListener = fake_callTransactionListener;
-			eventService._processTxEvents('full', {filtered_transactions: [{txid: 'tx1', tx_validation_code: 'valid', type: 'ENDORSER_TRANSACTION'}], number: 1});
+			eventService._processTxEvents('full', {filtered_transactions: [{txid: 'tx1', tx_validation_code: 'valid', type: 3}], number: 1});
 			sinon.assert.calledWith(FakeLogger.debug, '%s filtered block number=%s');
 			sinon.assert.called(fake_callTransactionListener);
 		});

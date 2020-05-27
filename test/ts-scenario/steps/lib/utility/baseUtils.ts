@@ -32,10 +32,10 @@ export function logMsg(msg: string, obj?: any): void {
 export function logError(msg: string, obj?: any): void {
 	if (typeof obj === 'undefined') {
 		// tslint:disable-next-line:no-console
-		console.error(msg);
+		console.error('\n' + msg + '\n');
 	} else {
 		// tslint:disable-next-line:no-console
-		console.error(msg, obj);
+		console.error('\n' + msg + '\n', obj);
 	}
 }
 

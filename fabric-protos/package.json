@@ -4,9 +4,10 @@
   "description": "Protocol Buffer files and generated JavaScript classes for Hyperledger Fabric",
   "main": "index.js",
   "scripts": {
-    "update:clean": "rimraf bundle.json protos && mkdirp protos",
+    "update:clean": "rimraf bundle.js protos && mkdirp protos",
     "update:copy": "cpx \"${GOPATH}/src/github.com/hyperledger/fabric-protos/**/*.proto\" protos",
-    "update:pbjs": "patch-package && pbjs -t json -p google-protos -p protos $(find google-protos protos -name \"*.proto\" -type f) -o bundle.json",
+    "update:pbjs": "./node_modules/protobufjs/bin/pbjs -t static-module -p google-protos -p protos $(find google-protos protos -name \"*.proto\" -type f) -o bundle.js --keep-case",
+    "update:pbts": "./node_modules/protobufjs/bin/pbts -o './types/index.d.ts' bundle.js",
     "update": "npm run update:clean && npm run update:copy && npm run update:pbjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -29,15 +30,16 @@
       "url": "https://github.com/hyperledger/fabric/blob/master/LICENSE"
     }
   ],
+  "types": "./types/index.d.ts",
   "dependencies": {
-    "grpc": "1.24.2",
-    "lodash.clone": "4.5.0",
-    "protobufjs": "^5.0.3"
+    "@grpc/grpc-js": "1.0.3",
+    "@grpc/proto-loader": "0.5.4",
+    "lodash.clone": "4.5.0"
   },
   "devDependencies": {
     "cpx": "^1.5.0",
     "mkdirp": "^0.5.1",
-    "patch-package": "^6.1.2",
+    "protobufjs": "^6.9.0",
     "rimraf": "^2.6.3"
   }
 }

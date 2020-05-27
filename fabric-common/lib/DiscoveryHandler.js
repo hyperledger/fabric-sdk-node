@@ -388,7 +388,7 @@ class DiscoveryHandler extends ServiceHandler {
 		for (const group_name in endorsement_plan.groups) {
 			const group = endorsement_plan.groups[group_name];
 			for (const peer of group.peers) {
-				peer.ledger_height = new Long(peer.ledger_height.low, peer.ledger_height.high);
+				peer.ledgerHeight = new Long(peer.ledgerHeight.low, peer.ledgerHeight.high);
 			}
 			// remove ignored and non-required
 			const clean_list = this._removePeers(ignored, ignored_orgs, required, required_orgs, group.peers);
@@ -465,8 +465,8 @@ class DiscoveryHandler extends ServiceHandler {
 		let highest = Long.fromValue(0);
 		for (const peer of peers) {
 			try {
-				if (peer.ledger_height.greaterThan(highest)) {
-					highest = peer.ledger_height;
+				if (peer.ledgerHeight.greaterThan(highest)) {
+					highest = peer.ledgerHeight;
 				}
 			} catch (error) {
 				logger.error('problem finding highest block with %s', error);
@@ -486,17 +486,17 @@ class DiscoveryHandler extends ServiceHandler {
 		if (sort === BLOCK_HEIGHT) {
 			sorted = peers.sort((a, b) => {
 				logger.debug('%s - sorting descending', method);
-				if (a.ledger_height && !b.ledger_height) {
-					logger.debug('%s - a exist (%s) - b does not exist', method, a.ledger_height);
+				if (a.ledgerHeight && !b.ledgerHeight) {
+					logger.debug('%s - a exist (%s) - b does not exist', method, a.ledgerHeight);
 
 					return -1;
-				} else if (!a.ledger_height && b.ledger_height) {
-					logger.debug('%s - a does not exist - b exist (%s)', method, b.ledger_height);
+				} else if (!a.ledgerHeight && b.ledgerHeight) {
+					logger.debug('%s - a does not exist - b exist (%s)', method, b.ledgerHeight);
 
 					return 1;
 				} else {
-					const result = -1 * a.ledger_height.compare(b.ledger_height);
-					logger.debug('%s - compare result: %s for a:(%s) b:(%s) ', method, result, a.ledger_height.toString(), b.ledger_height.toString());
+					const result = -1 * a.ledgerHeight.compare(b.ledgerHeight);
+					logger.debug('%s - compare result: %s for a:(%s) b:(%s) ', method, result, a.ledgerHeight.toString(), b.ledgerHeight.toString());
 
 					return result;
 				}
@@ -535,10 +535,10 @@ class DiscoveryHandler extends ServiceHandler {
 			// because it has a low gap, meaning it should be up to date on with ledger
 			// changes compared with other peers
 			if (!found && highest && preferred_height_gap) {
-				if (peer.ledger_height) {
+				if (peer.ledgerHeight) {
 					logger.debug('%s - checking preferred gap of %s', method, preferred_height_gap);
-					logger.debug('%s - peer.ledger_height %s', method, peer.ledger_height);
-					if (highest.subtract(peer.ledger_height).greaterThan(preferred_height_gap)) {
+					logger.debug('%s - peer.ledgerHeight %s', method, peer.ledgerHeight);
+					if (highest.subtract(peer.ledgerHeight).greaterThan(preferred_height_gap)) {
 						found = false; // this peer should not be on the priority list
 						logger.debug('%s -gap too big, peer should not be on priority list', method, peer.name);
 					} else {
@@ -546,7 +546,7 @@ class DiscoveryHandler extends ServiceHandler {
 						logger.debug('%s - gap is OK, peer should be on priority list', method, peer.name);
 					}
 				} else {
-					logger.debug('%s - peer has no ledger_height, not a priority peer');
+					logger.debug('%s - peer has no ledgerHeight, not a priority peer');
 					found = false;
 				}
 

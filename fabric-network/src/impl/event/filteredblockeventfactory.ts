@@ -4,7 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { EventInfo, FilteredBlock, FilteredTransaction } from 'fabric-common';
+import { EventInfo } from 'fabric-common';
+import * as fabproto6 from 'fabric-protos';
 import { BlockEvent, ContractEvent, TransactionEvent } from '../../events';
 import { cachedResult } from '../gatewayutils';
 import * as TransactionStatus from './transactionstatus';
@@ -25,16 +26,17 @@ export function newFilteredBlockEvent(eventInfo: EventInfo): BlockEvent {
 }
 
 function newFilteredTransactionEvents(blockEvent: BlockEvent): TransactionEvent[] {
-	const filteredTransactions = (blockEvent.blockData as FilteredBlock).filtered_transactions || [];
+	const filteredTransactions = (blockEvent.blockData as fabproto6.protos.IFilteredBlock).filtered_transactions || [];
 	return filteredTransactions.map((tx) => newFilteredTransactionEvent(blockEvent, tx));
 }
 
-function newFilteredTransactionEvent(blockEvent: BlockEvent, filteredTransaction: FilteredTransaction): TransactionEvent {
+function newFilteredTransactionEvent(blockEvent: BlockEvent, filteredTransaction: fabproto6.protos.IFilteredTransaction): TransactionEvent {
+	const status = TransactionStatus.getStatusForCode(filteredTransaction.tx_validation_code as number);
 	const transactionEvent: TransactionEvent = {
-		transactionId: filteredTransaction.txid,
-		status: filteredTransaction.tx_validation_code,
+		transactionId: filteredTransaction.txid as string,
+		status: status,
 		transactionData: filteredTransaction,
-		isValid: filteredTransaction.tx_validation_code === TransactionStatus.VALID_STATUS,
+		isValid: status === TransactionStatus.VALID_STATUS,
 		getBlockEvent: () => blockEvent,
 		getContractEvents: cachedResult(() => newFilteredContractEvents(transactionEvent))
 	};
@@ -43,14 +45,15 @@ function newFilteredTransactionEvent(blockEvent: BlockEvent, filteredTransaction
 }
 
 function newFilteredContractEvents(transactionEvent: TransactionEvent): ContractEvent[] {
-	const chaincodeActions: any[] = transactionEvent.transactionData.transaction_actions?.chaincode_actions || [];
-	return chaincodeActions.map((ccAction) => newFilteredContractEvent(transactionEvent, ccAction.chaincode_event));
+	const chaincodeActions: fabproto6.protos.IFilteredChaincodeAction[] =
+		(transactionEvent.transactionData as fabproto6.protos.IFilteredTransaction).transaction_actions?.chaincode_actions || [];
+	return chaincodeActions.map((ccAction) => newFilteredContractEvent(transactionEvent, ccAction.chaincode_event as fabproto6.protos.IChaincodeEvent));
 }
 
-function newFilteredContractEvent(transactionEvent: TransactionEvent, chaincodeEvent: any): ContractEvent {
+function newFilteredContractEvent(transactionEvent: TransactionEvent, chaincodeEvent: fabproto6.protos.IChaincodeEvent): ContractEvent {
 	const contractEvent: ContractEvent = {
-		chaincodeId: chaincodeEvent.chaincode_id,
-		eventName: chaincodeEvent.event_name,
+		chaincodeId: chaincodeEvent.chaincode_id as string,
+		eventName: chaincodeEvent.event_name as string,
 		getTransactionEvent: () => transactionEvent
 	};
 

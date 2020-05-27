@@ -128,7 +128,7 @@ class ServiceEndpoint {
 	 */
 	disconnect() {
 		const method = `disconnect[${this.type}-${this.name}]`;
-		logger.debug(`${method} - start `);
+		logger.debug(`${method} - start on ServiceEndpoint`);
 
 		if (this.service) {
 			logger.debug(`${method} ${this.type} ${this.name} - closing grpc service connection ${this.endpoint.addr}`);
@@ -137,6 +137,8 @@ class ServiceEndpoint {
 			this.connected = false;
 			this.connectAttempted = false;
 		}
+
+		logger.debug(`${method} - end on ServiceEndpoint`);
 	}
 
 	/**

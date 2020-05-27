@@ -9,11 +9,13 @@ const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const should = chai.should();
 chai.use(chaiAsPromised);
+const sinon = require('sinon');
 
 const Endpoint = rewire('../lib/Endpoint');
 
 describe('Endpoint', () => {
 	const pem = '-----BEGIN CERTIFICATE-----MIIB8TCC5l-----END CERTIFICATE-----';
+	Endpoint.__set__('grpc.credentials.createSsl', sinon.stub().returns('ssl'));
 
 	describe('#constructor', () => {
 		it('should require an options', () => {

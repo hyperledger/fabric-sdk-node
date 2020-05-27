@@ -32,6 +32,8 @@ function filterExcludedFiles {
 		| grep -v "\.jar$" \
 		| grep -v "\.csr$" \
 		| grep -v "\.proto$" \
+		| grep -v "bundle.js$" \
+		| grep -v "fabric-protos/types/index.d.ts$" \
 		| sort -u`
 }
 

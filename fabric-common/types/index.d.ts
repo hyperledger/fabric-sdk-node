@@ -6,8 +6,8 @@
 /* tslint:disable:ordered-imports */
 
 import * as Long from 'long';
-import * as ByteBuffer from 'bytebuffer';
 import {IKeyValueStore} from 'fabric-client';
+import * as fabproto6 from 'fabric-protos';
 
 export class Utils {
 	public static getLogger(name: string): any;
@@ -242,8 +242,8 @@ export interface EventInfo {
 	status?: string;
 	endBlockReceived?: boolean;
 	chaincodeEvents?: ChaincodeEvent[];
-	block?: Block;
-	filteredBlock?: FilteredBlock;
+	block?: fabproto6.common.IBlock;
+	filteredBlock?: fabproto6.protos.IFilteredBlock;
 	privateData?: PrivateData;
 }
 
@@ -374,32 +374,8 @@ export interface BlockData {
 	payload: { header: any, data: any };
 }
 
-export interface Block {
-	header: {
-		number: string;
-		previous_hash: Buffer;
-		data_hash: Buffer;
-	};
-	data: { data: BlockData[] };
-	metadata: { metadata: any };
-}
-
 export interface PrivateData {
 	[txIndexInBlock: number]: any;
-}
-
-export interface FilteredBlock {
-	channel_id: string;
-	number: string;
-	filtered_transactions: FilteredTransaction[];
-}
-
-export interface FilteredTransaction {
-	Data: string;
-	txid: string;
-	type: string;
-	transaction_actions: any;
-	tx_validation_code: string;
 }
 
 export interface KeyOpts {
@@ -433,46 +409,14 @@ export interface ISigningIdentity {
 	sign(msg: Buffer, opts: any): Buffer;
 }
 
-export enum Status {
-	UNKNOWN = 0,
-	SUCCESS = 200,
-	BAD_REQUEST = 400,
-	FORBIDDEN = 403,
-	NOT_FOUND = 404,
-	REQUEST_ENTITY_TOO_LARGE = 413,
-	INTERNAL_SERVER_ERROR = 500,
-	SERVICE_UNAVAILABLE = 503,
-}
-
-export interface Response {
-	status: Status;
-	message: string;
-	payload: Buffer;
-}
-
-export interface Proposal {
-	header: ByteBuffer;
-	payload: ByteBuffer;
-	extension: ByteBuffer;
-}
-
-export interface Header {
-	channel_header: ByteBuffer;
-	signature_header: ByteBuffer;
-}
-
-export interface TransientMap {
-	[key: string]: Buffer;
-}
-
 export interface DiscoveryResultMSPConfig {
 	rootCerts: string;
 	intermediateCerts: string;
 	admins: string;
 	id: string;
 	orgs: string[];
-	tls_root_certs: string;
-	tls_intermediate_certs: string;
+	tlsRootCerts: string;
+	tlsIntermediateCerts: string;
 }
 
 export interface DiscoveryResultEndpoint {
@@ -492,7 +436,7 @@ export interface DiscoveryResultChaincode {
 export interface DiscoveryResultPeer {
 	mspid: string;
 	endpoint: string;
-	ledger_height: Long;
+	ledgerHeight: Long;
 	name: string;
 	chaincodes: DiscoveryResultChaincode[];
 }
@@ -520,7 +464,7 @@ export interface DiscoveryResults {
 	msps?: { [mspid: string]: DiscoveryResultMSPConfig };
 	orderers?: { [mspid: string]: DiscoveryResultEndpoints };
 
-	peers_by_org?: { [name: string]: DiscoveryResultPeers };
+	peersByOrg?: { [name: string]: DiscoveryResultPeers };
 
 	endorsement_plans: DiscoveryResultEndorsementPlan[];
 

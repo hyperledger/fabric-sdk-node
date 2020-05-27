@@ -55,11 +55,12 @@ const IdentityContext = class {
 		const method = 'calculateTransactionId';
 		logger.debug('%s - start', method);
 		this.nonce = getNonce();
+		logger.debug('%s - nonce:%s', method, this.nonce.toString('hex'));
 		const creator_bytes = this.serializeIdentity();// same as signatureHeader.Creator
 		const trans_bytes = Buffer.concat([this.nonce, creator_bytes]);
 		const trans_hash = HashPrimitives.SHA2_256(trans_bytes);
 		this.transactionId = Buffer.from(trans_hash).toString();
-		logger.debug('%s - %s', method, this.transactionId);
+		logger.debug('%s - txid:%s', method, this.transactionId);
 
 		return this.clone();
 	}
@@ -86,6 +87,7 @@ const IdentityContext = class {
 		const signer = this.user.getSigningIdentity();
 		const signature = Buffer.from(signer.sign(payload));
 
+		logger.debug('%s - end', method);
 		return signature;
 	}
 

@@ -48,7 +48,7 @@ describe('ServiceAction', () => {
 		it('should reset', () => {
 			should.equal(serviceAction._action, undefined);
 			serviceAction._reset();
-			serviceAction._action.should.be.deep.equal({});
+			serviceAction._action.should.be.deep.equal({init: false});
 		});
 	});
 
@@ -102,8 +102,8 @@ describe('ServiceAction', () => {
 			serviceAction._payload = Buffer.from('payload');
 			serviceAction._signature = Buffer.from('signature');
 			const signedProposal = serviceAction.getSignedProposal();
-			should.equal(signedProposal.getProposalBytes().toBuffer().toString('hex'), serviceAction._payload.toString('hex'));
-			should.equal(signedProposal.getSignature().toBuffer().toString('hex'), serviceAction._signature.toString('hex'));
+			should.equal(signedProposal.proposal_bytes.toString('hex'), serviceAction._payload.toString('hex'));
+			should.equal(signedProposal.signature.toString('hex'), serviceAction._signature.toString('hex'));
 		});
 	});
 

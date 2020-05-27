@@ -11,7 +11,7 @@ const DiscoveryService = require('./DiscoveryService.js');
 const Endorsement = require('./Endorsement.js');
 const Commit = require('./Commit.js');
 const Query = require('./Query.js');
-const fabprotos = require('fabric-protos');
+const fabproto6 = require('fabric-protos');
 const {checkParameter, getLogger} = require('./Utils.js');
 
 const logger = getLogger(TYPE);
@@ -147,10 +147,10 @@ const Channel = class {
 	 * @property {string} name - The name for this MSP, Typically the
 	 *  organization name. To avoid confusion the name and ID should be
 	 *  the same. This will be key to finding this MSP configuration.
-	 * @property {string[]} organizational_unit_identifiers
-	 * @property {string[]} root_certs - List of root certificates trusted by
+	 * @property {string[]} organizationalUnitIdentifiers
+	 * @property {string[]} rootCerts - List of root certificates trusted by
 	 *  this MSP. They are used upon certificate validation.
-	 * @property {string[]} intermediate_certs - List of intermediate
+	 * @property {string[]} intermediateCerts - List of intermediate
 	 *  certificates trusted by this MSP. They are used upon certificate
 	 *  validation as follows:
 	 *     Validation attempts to build a path from the certificate to be
@@ -160,9 +160,9 @@ const Channel = class {
 	 *     searched within the Intermediate Certificates pool.
 	 * @property {string} admins - Identity denoting the administrator
 	 *  of this MSP
-	 * @property {string} tls_root_certs - TLS root certificates
+	 * @property {string} tlsRootCerts - TLS root certificates
 	 *  trusted by this MSP
-	 * @property {string} tls_intermediate_certs - TLS intermediate certificates
+	 * @property {string} tlsIntermediateCerts - TLS intermediate certificates
 	 *  trusted by this MSP
 	 */
 
@@ -413,7 +413,7 @@ const Channel = class {
 					results.push(remote);
 					logger.debug(`${method} - ${type} mspid matched, added ${remote.name}`);
 				} else {
-					logger.debug(`${method} - ${type} mpsid not matched, not added ${remote.name} - ${remote.mspid}`);
+					logger.debug(`${method} - ${type} mspid not matched, not added ${remote.name} - ${remote.mspid}`);
 				}
 			} else {
 				results.push(remote);
@@ -470,30 +470,53 @@ const Channel = class {
 	}
 
 	/*
- 	 * This function will build a common channel header
- 	 */
+	 * This function will build a common channel header
+	 */
 	buildChannelHeader(type = checkParameter('type'), chaincode_id = checkParameter('chaincode_id'), tx_id = checkParameter('tx_id')) {
 		const method = `buildChannelHeader[${this.name}]`;
 		logger.debug(`${method} - start - type ${type} chaincode_id ${chaincode_id} tx_id ${tx_id}`);
-		const channelHeader = new fabprotos.common.ChannelHeader();
-		channelHeader.setType(type); // int32
-		channelHeader.setVersion(1); // int32
 
-		channelHeader.setChannelId(this.name); // string
-		channelHeader.setTxId(tx_id.toString()); // string
-		// 	channelHeader.setEpoch(epoch); // uint64
+		const chaincodeID = fabproto6.protos.ChaincodeID.create({
+			name: chaincode_id
+		});
 
-		const chaincodeID = new fabprotos.protos.ChaincodeID();
-		chaincodeID.setName(chaincode_id);
+		logger.debug('%s - chaincodeID %j', method, chaincodeID);
 
-		const headerExt = new fabprotos.protos.ChaincodeHeaderExtension();
-		headerExt.setChaincodeId(chaincodeID);
+		let fields = {
+			chaincode_id: chaincodeID
+		};
 
-		channelHeader.setExtension(headerExt.toBuffer());
-		channelHeader.setTimestamp(buildCurrentTimestamp()); // google.protobuf.Timestamp
-		channelHeader.setTlsCertHash(this.client.getClientCertHash());
+		let check = fabproto6.protos.ChaincodeHeaderExtension.verify(fields);
+		if (check) {
+			logger.error('%s - channel header is not valid =>%s<=', method, check);
+			throw Error(`Not able to build channel header ${check}`);
+		}
 
-		return channelHeader;
+		const chaincodeHeaderExtension = fabproto6.protos.ChaincodeHeaderExtension.create(fields);
+		const chaincodeHeaderExtensionBuf = fabproto6.protos.ChaincodeHeaderExtension.encode(chaincodeHeaderExtension).finish();
+
+		logger.debug('%s - ChaincodeHeaderExtension %j', method, chaincodeHeaderExtensionBuf);
+
+		fields = {
+			type: type,
+			version: 1,
+			channel_id: this.name,
+			tx_id: tx_id,
+			extension: chaincodeHeaderExtensionBuf,
+			timestamp: buildCurrentTimestamp(),
+			tls_cert_hash: this.client.getClientCertHash()
+		};
+
+		check = fabproto6.common.ChannelHeader.verify(fields);
+		if (check) {
+			logger.error('%s - channel header is not valid =>%s<=', method, check);
+			throw Error(`Not able to build channel header ${check}`);
+		}
+
+		const channelHeader = fabproto6.common.ChannelHeader.create(fields);
+		const channelHeaderBuf = fabproto6.common.ChannelHeader.encode(channelHeader).finish();
+
+		return channelHeaderBuf;
 	}
 
 	/**
@@ -521,10 +544,17 @@ const Channel = class {
 };
 
 function buildCurrentTimestamp() {
+	const method = `buildCurrentTimestamp[${this.name}]`;
+	logger.debug(`${method} - start`);
 	const now = new Date();
-	const timestamp = new fabprotos.google.protobuf.Timestamp();
-	timestamp.setSeconds(now.getTime() / 1000);
-	timestamp.setNanos((now.getTime() % 1000) * 1000000);
+	const seconds = parseInt(now.getTime() / 1000);
+	const nanos = (now.getTime() % 1000) * 1000000;
+	logger.debug('%s - seconds %s nanos %s', method, seconds, nanos);
+	const timestamp = fabproto6.google.protobuf.Timestamp.create({
+		seconds: seconds,
+		nanos: nanos
+	});
+
 	return timestamp;
 }
 

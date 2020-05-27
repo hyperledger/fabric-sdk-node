@@ -8,7 +8,7 @@ const TYPE = 'Endorser';
 
 const {checkParameter, getLogger} = require('./Utils.js');
 const ServiceEndpoint = require('./ServiceEndpoint');
-const fabprotos = require('fabric-protos');
+const fabproto6 = require('fabric-protos').services;
 
 const logger = getLogger(TYPE);
 
@@ -43,7 +43,7 @@ class Endorser extends ServiceEndpoint {
 		super(name, client, mspid);
 
 		this.type = TYPE;
-		this.serviceClass = fabprotos.protos.Endorser;
+		this.serviceClass = fabproto6.protos.Endorser;
 	}
 
 	/**
@@ -70,6 +70,12 @@ class Endorser extends ServiceEndpoint {
 			if (this.connected === false) {
 				throw Error(`Broadcast Client ${this.name} ${this.endpoint.url} is not connected`);
 			}
+
+			logger.debug('%s - %j', method, signedProposal);
+
+
+
+
 			let rto = this.options.requestTimeout;
 			if (typeof timeout === 'number') {
 				rto = timeout;

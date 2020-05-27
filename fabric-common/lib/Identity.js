@@ -6,7 +6,7 @@
 
 'use strict';
 
-const fabprotos = require('fabric-protos');
+const fabproto6 = require('fabric-protos');
 
 /**
  * This interface is shared within the peer and client API of the membership service provider.
@@ -111,10 +111,13 @@ class Identity {
 	 * @returns {Buffer} protobuf-based serialization with two fields: "mspid" and "certificate PEM bytes"
 	 */
 	serialize() {
-		const serializedIdentity = new fabprotos.msp.SerializedIdentity();
-		serializedIdentity.setMspid(this.getMSPId());
-		serializedIdentity.setIdBytes(Buffer.from(this._certificate));
-		return serializedIdentity.toBuffer();
+		const serializedIdentity = fabproto6.msp.SerializedIdentity.create({
+			mspid: this.getMSPId(),
+			id_bytes: Buffer.from(this._certificate)
+		});
+		const serializedIdentityBuf = fabproto6.msp.SerializedIdentity.encode(serializedIdentity).finish();
+
+		return serializedIdentityBuf;
 	}
 }
 

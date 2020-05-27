@@ -9,7 +9,7 @@ const TYPE = 'ServiceAction';
 const {checkParameter, getLogger} = require('./Utils.js');
 const logger = getLogger(TYPE);
 const IdentityContext = require('./IdentityContext.js');
-const fabprotos = require('fabric-protos');
+const fabproto6 = require('fabric-protos');
 
 /**
  * @classdesc
@@ -27,11 +27,12 @@ const ServiceAction = class {
 	constructor(name = checkParameter('name')) {
 		this.type = TYPE;
 		this.name = name;
-		logger.debug(`${TYPE}.constructor - start [${name}`);
+		logger.debug(`${TYPE}.constructor - start [${name}]`);
 	}
 
 	_reset() {
 		this._action = {};
+		this._action.init = false;
 		this._payload = null; // bytes
 		this._signature = null; // bytes
 	}
@@ -72,6 +73,7 @@ const ServiceAction = class {
 			throw Error('param is an unknown signer or signature type');
 		}
 
+		logger.debug('%s - end', method);
 		return this;
 	}
 
@@ -82,7 +84,7 @@ const ServiceAction = class {
 		throw Error('"send" method must be implemented');
 	}
 
-	/**
+	/*
 	 * return a signed proposal from the signature and the payload as bytes
 	 *
 	 * This method is not intended for use by an application. It will be used
@@ -95,14 +97,20 @@ const ServiceAction = class {
 
 		this._checkPayloadAndSignature();
 
-		const signedProposal = new fabprotos.protos.SignedProposal();
-		signedProposal.setSignature(this._signature);
-		signedProposal.setProposalBytes(this._payload);
+		const signedProposal = fabproto6.protos.SignedProposal.create({
+			signature: this._signature,
+			proposal_bytes: this._payload
+		});
+
+		// const signedProposal = {
+		// 	signature: this._signature,
+		// 	proposalBytes: this._payload
+		// };
 
 		return signedProposal;
 	}
 
-	/**
+	/*
 	 * return a signed envelope from the signature and the payload as bytes
 	 *
 	 * This method is not intended for use by an application. It will be used
@@ -135,14 +143,20 @@ const ServiceAction = class {
 	/*
 	 * This function will build the common header
 	 */
-	buildHeader(idContext, channelHeader) {
-		const signatureHeader = new fabprotos.common.SignatureHeader();
-		signatureHeader.setCreator(idContext.serializeIdentity());
-		signatureHeader.setNonce(idContext.nonce);
+	buildHeader(idContext, channelHeaderBuf) {
+		const method = 'buildHeader';
+		logger.debug('%s - start', method);
 
-		const header = new fabprotos.common.Header();
-		header.setSignatureHeader(signatureHeader.toBuffer());
-		header.setChannelHeader(channelHeader.toBuffer());
+		const signatureHeader = fabproto6.common.SignatureHeader.create({
+			creator: idContext.serializeIdentity(),
+			nonce: idContext.nonce
+		});
+		const signatureHeaderBuf = fabproto6.common.SignatureHeader.encode(signatureHeader).finish();
+
+		const header = fabproto6.common.Header.create({
+			signature_header: signatureHeaderBuf,
+			channel_header: channelHeaderBuf
+		});
 
 		return header;
 	}

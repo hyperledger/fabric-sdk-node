@@ -13,7 +13,7 @@ const DiscoveryHandler = require('./DiscoveryHandler.js');
 
 const logger = getLogger(TYPE);
 
-const fabprotos = require('fabric-protos');
+const fabproto6 = require('fabric-protos');
 
 /**
  * The DiscoveryService class represents a peer in the target fabric network that
@@ -162,81 +162,77 @@ class DiscoveryService extends ServiceAction {
 		const {config = true, local = false, interest, endorsement} = request;
 		this._reset();
 
-		const discovery_request = new fabprotos.discovery.Request();
-		const authentication = new fabprotos.discovery.AuthInfo();
-		authentication.setClientIdentity(idContext.serializeIdentity());
-		const cert_hash = this.client.getClientCertHash();
-		authentication.setClientTlsCertHash(cert_hash);
-		discovery_request.setAuthentication(authentication);
+		const authentication = fabproto6.discovery.AuthInfo.create({
+			client_identity: idContext.serializeIdentity(),
+			client_tls_cert_hash: this.client.getClientCertHash(),
+		});
+
 
 		// be sure to add all entries to this array before setting into the grpc object
 		const queries = [];
 
 		if (config) {
-			let query = new fabprotos.discovery.Query();
-			queries.push(query);
-			query.setChannel(this.channel.name);
-
-			const config_query = new fabprotos.discovery.ConfigQuery();
-			query.setConfigQuery(config_query);
+			const configQuery = fabproto6.discovery.Query.create({
+				channel: this.channel.name,
+				config_query: fabproto6.discovery.ConfigQuery.create()
+			});
 			logger.debug(`${method} - adding config query`);
+			queries.push(configQuery);
 
-			query = new fabprotos.discovery.Query();
-			queries.push(query);
-			query.setChannel(this.channel.name);
-
-			const peer_query = new fabprotos.discovery.PeerMembershipQuery();
-			query.setPeerQuery(peer_query);
+			const membershipQuery = fabproto6.discovery.Query.create({
+				channel: this.channel.name,
+				peer_query: fabproto6.discovery.PeerMembershipQuery.create()
+			});
 			logger.debug(`${method} - adding peer membership query`);
+			queries.push(membershipQuery);
 		}
 
 		if (local) {
-			const query = new fabprotos.discovery.Query();
-			const local_peers = new fabprotos.discovery.LocalPeerQuery();
-			query.setLocalPeers(local_peers);
+			const localQuery = fabproto6.discovery.Query.create({
+				local_peers: fabproto6.discovery.LocalPeerQuery.create()
+			});
 			logger.debug(`${method} - adding local peers query`);
-			queries.push(query);
+			queries.push(localQuery);
 		}
 
 		// add a chaincode query to get endorsement plans
-		if (endorsement) {
-			const query = new fabprotos.discovery.Query();
-			query.setChannel(this.channel.name);
+		if (endorsement || interest) {
+			const interests = [];
 
-			const _interests = [];
-			const proposal_interest = endorsement.buildProposalInterest();
-			const proto_interest = this._buildProtoChaincodeInterest(proposal_interest);
-			_interests.push(proto_interest);
+			let proposalInterest;
+			if (endorsement) {
+				proposalInterest = endorsement.buildProposalInterest();
+			} else {
+				proposalInterest = interest;
+			}
 
-			const cc_query = new fabprotos.discovery.ChaincodeQuery();
-			cc_query.setInterests(_interests);
-			query.setCcQuery(cc_query);
-			logger.debug(`${method} - adding proposal chaincodes/collections query`);
-			queries.push(query);
-		} else if (interest) {
-			const query = new fabprotos.discovery.Query();
-			query.setChannel(this.channel.name);
+			const chaincodeInterest = this._buildProtoChaincodeInterest(proposalInterest);
+			interests.push(chaincodeInterest);
 
-			const _interests = [];
-			const proto_interest = this._buildProtoChaincodeInterest(interest);
-			_interests.push(proto_interest);
+			const ccQuery = fabproto6.discovery.ChaincodeQuery.create({
+				interests: interests
+			});
 
-			const cc_query = new fabprotos.discovery.ChaincodeQuery();
-			cc_query.setInterests(_interests);
-			query.setCcQuery(cc_query);
-			logger.debug('%s - adding interest chaincodes/collections query %j', method, interest);
+			const query = fabproto6.discovery.Query.create({
+				channel: this.channel.name,
+				cc_query: ccQuery
+			});
+			logger.debug(`${method} - adding chaincodes/collections query`);
 			queries.push(query);
 		}
 
 		if (queries.length === 0) {
 			throw Error('No discovery interest provided');
-		} else {
-			// be sure to set the array after completely building it
-			discovery_request.setQueries(queries);
 		}
 
-		this._action.request = discovery_request;
-		this._payload = discovery_request.toBuffer();
+		this._action.request = fabproto6.discovery.Request.create({
+			queries: queries,
+			authentication: authentication,
+
+		});
+		this._payload  = fabproto6.discovery.Request.encode(
+			this._action.request
+		).finish();
 
 		return this._payload;
 	}
@@ -305,18 +301,18 @@ class DiscoveryService extends ServiceAction {
 		this.discoveryResults = {};
 		logger.debug(`${method} - processing discovery response`);
 		if (response && response.results) {
-			let error_msg = null;
+			let errorMsg = null;
 			logger.debug(`${method} - parse discovery response.results`);
 			for (const index in response.results) {
 				const result = response.results[index];
 				if (result.result === 'error') {
 					logger.error(`${method} - Channel:${this.channel.name} received discovery error:${result.error.content}`);
-					error_msg = result.error.content;
+					errorMsg = result.error.content;
 					break;
 				} else {
 					logger.debug(`${method} - process result index:${index}`);
 					if (result.config_result) {
-						logger.debug(`${method} - process result - have config_result in ${index}`);
+						logger.debug(`${method} - process result - have configResult in ${index}`);
 						const config = this._processConfig(result.config_result);
 						this.discoveryResults.msps = config.msps;
 						this.discoveryResults.orderers = await this._buildOrderers(config.orderers);
@@ -326,15 +322,15 @@ class DiscoveryService extends ServiceAction {
 						this.discoveryResults.peers_by_org = await this._processMembership(result.members);
 					}
 					if (result.cc_query_res) {
-						logger.debug(`${method} - process result - have cc_query_res in ${index}`);
+						logger.debug(`${method} - process result - have ccQueryRes in ${index}`);
 						this.discoveryResults.endorsement_plan = await this._processChaincode(result.cc_query_res);
 					}
 					logger.debug(`${method} - completed processing result ${index}`);
 				}
 			}
 
-			if (error_msg) {
-				throw Error(`DiscoveryService: ${this.name} error: ${error_msg}`);
+			if (errorMsg) {
+				throw Error(`DiscoveryService: ${this.name} error: ${errorMsg}`);
 			} else {
 				this.discoveryResults.timestamp = (new Date()).getTime();
 				return this.discoveryResults;
@@ -375,28 +371,30 @@ class DiscoveryService extends ServiceAction {
 	 */
 	_buildProtoChaincodeInterest(interest = []) {
 		logger.debug(`_buildProtoChaincodeInterest[${this.name}] - start`);
-		const chaincode_calls = [];
+		const chaincodeCalls = [];
 		for (const chaincode of interest) {
-			const chaincode_call = new fabprotos.discovery.ChaincodeCall();
+			const chaincodeCall = fabproto6.discovery.ChaincodeCall.create();
 			if (typeof chaincode.name === 'string') {
-				chaincode_call.setName(chaincode.name);
+				chaincodeCall.name = chaincode.name;
+				// support both names
 				if (chaincode.collection_names) {
-					_getCollectionNames(chaincode.collection_names, chaincode_call);
+					_getCollectionNames(chaincode.collection_names, chaincodeCall);
 				} else if (chaincode.collectionNames) {
-					_getCollectionNames(chaincode.collectionNames, chaincode_call);
+					_getCollectionNames(chaincode.collectionNames, chaincodeCall);
 				}
-				chaincode_calls.push(chaincode_call);
+				chaincodeCalls.push(chaincodeCall);
 			} else {
 				throw Error('Chaincode name must be a string');
 			}
 		}
-		const interest_proto = new fabprotos.discovery.ChaincodeInterest();
-		interest_proto.setChaincodes(chaincode_calls);
+		const chaincodeInterest = fabproto6.discovery.ChaincodeInterest.create({
+			chaincodes: chaincodeCalls
+		});
 
-		return interest_proto;
+		return chaincodeInterest;
 	}
 
-	// -- process the ChaincodeQueryResult - discovery.QueryResult.ChaincodeQueryResult
+	// -- process the ChaincodeQueryResult - fabproto6.discovery.QueryResult.ChaincodeQueryResult
 	async _processChaincode(q_chaincodes) {
 		const method = '_processChaincode';
 		logger.debug(`${method} - start`);
@@ -446,12 +444,12 @@ class DiscoveryService extends ServiceAction {
 					const msp_config = {
 						id: id,
 						name: id,
-						organizational_unit_identifiers: q_msp.organizational_unit_identifiers,
-						root_certs: byteToNormalizedPEM(q_msp.root_certs),
-						intermediate_certs: byteToNormalizedPEM(q_msp.intermediate_certs),
+						organizationalUnitIdentifiers: q_msp.organizational_unit_identifiers,
+						rootCerts: byteToNormalizedPEM(q_msp.root_certs),
+						intermediateCerts: byteToNormalizedPEM(q_msp.intermediate_certs),
 						admins: byteToNormalizedPEM(q_msp.admins),
-						tls_root_certs: byteToNormalizedPEM(q_msp.tls_root_certs),
-						tls_intermediate_certs: byteToNormalizedPEM(q_msp.tls_intermediate_certs)
+						tlsRootCerts: byteToNormalizedPEM(q_msp.tls_root_certs),
+						tlsIntermediateCerts: byteToNormalizedPEM(q_msp.tls_intermediate_certs)
 					};
 					config.msps[id] = msp_config;
 					this.channel.addMsp(msp_config, true);
@@ -484,17 +482,17 @@ class DiscoveryService extends ServiceAction {
 	async _processMembership(q_members) {
 		const method = `_processMembership[${this.name}]`;
 		logger.debug(`${method} - start`);
-		const peers_by_org = {};
+		const peersByOrg = {};
 		if (q_members.peers_by_org) {
 			for (const mspid in q_members.peers_by_org) {
 				logger.debug(`${method} - found org:${mspid}`);
-				peers_by_org[mspid] = {};
-				peers_by_org[mspid].peers = await this._processPeers(q_members.peers_by_org[mspid].peers);
+				peersByOrg[mspid] = {};
+				peersByOrg[mspid].peers = await this._processPeers(q_members.peers_by_org[mspid].peers);
 			}
 		} else {
 			logger.debug(`${method} - missing peers by org`);
 		}
-		return peers_by_org;
+		return peersByOrg;
 	}
 
 	// message Peers
@@ -505,27 +503,27 @@ class DiscoveryService extends ServiceAction {
 		for (const q_peer of q_peers) {
 			const peer = {};
 			// IDENTITY
-			const q_identity = fabprotos.msp.SerializedIdentity.decode(q_peer.identity);
+			const q_identity = fabproto6.msp.SerializedIdentity.decode(q_peer.identity);
 			peer.mspid = q_identity.mspid;
 
 			// MEMBERSHIP - Peer.membership_info
-			// gossip.Envelope.payload
-			const q_membership_message = fabprotos.gossip.GossipMessage.decode(q_peer.membership_info.payload);
+			// fabproto6.gossip.Envelope.payload
+			const q_membership_message = fabproto6.gossip.GossipMessage.decode(q_peer.membership_info.payload);
 			peer.endpoint = q_membership_message.alive_msg.membership.endpoint;
 			peer.name = q_membership_message.alive_msg.membership.endpoint;
 			logger.debug(`${method} - peer :${peer.endpoint}`);
 
 			// STATE
 			if (q_peer.state_info) {
-				const message_s = fabprotos.gossip.GossipMessage.decode(q_peer.state_info.payload);
-				peer.ledger_height = Long.fromValue(message_s.state_info.properties.ledger_height);
-				logger.debug(`${method} - ledger_height :${peer.ledger_height}`);
+				const message_s = fabproto6.gossip.GossipMessage.decode(q_peer.state_info.payload);
+				peer.ledgerHeight = Long.fromValue(message_s.state_info.properties.ledger_height);
+				logger.debug(`${method} - ledgerHeight :${peer.ledgerHeight}`);
 				peer.chaincodes = [];
 				for (const index in message_s.state_info.properties.chaincodes) {
 					const q_chaincode = message_s.state_info.properties.chaincodes[index];
 					const chaincode = {};
-					chaincode.name = q_chaincode.getName();
-					chaincode.version = q_chaincode.getVersion();
+					chaincode.name = q_chaincode.name;
+					chaincode.version = q_chaincode.version;
 					// TODO metadata ?
 					logger.debug(`${method} - chaincode :${JSON.stringify(chaincode)}`);
 					peer.chaincodes.push(chaincode);
@@ -662,26 +660,26 @@ class DiscoveryService extends ServiceAction {
 		const method = `_buildTlsRootCerts[${this.name}]`;
 		logger.debug(`${method} - start`);
 		let ca_roots = '';
-		let msp;
+		let mspDiscovered;
 		if (this.discoveryResults && this.discoveryResults.msps) {
-			msp = this.discoveryResults.msps[msp_id];
+			mspDiscovered = this.discoveryResults.msps[msp_id];
 		} else {
 			logger.error('Missing MSPs discovery results');
 			return ca_roots;
 		}
-		if (msp) {
+		if (mspDiscovered) {
 			logger.debug(`Found msp ${msp_id}`);
 		} else {
 			logger.error(`Missing msp ${msp_id} in discovery results`);
 			return ca_roots;
 		}
-		if (msp.tls_root_certs) {
-			ca_roots = ca_roots + msp.tls_root_certs;
+		if (mspDiscovered.tlsRootCerts) {
+			ca_roots = ca_roots + mspDiscovered.tlsRootCerts;
 		} else {
 			logger.debug('%s - no tls root certs', method);
 		}
-		if (msp.tls_intermediate_certs) {
-			ca_roots = ca_roots + msp.tls_intermediate_certs;
+		if (mspDiscovered.tlsIntermediateCerts) {
+			ca_roots = ca_roots + mspDiscovered.tlsIntermediateCerts;
 		} else {
 			logger.debug('%s - no tls intermediate certs', method);
 		}
@@ -722,7 +720,7 @@ function _getCollectionNames(names, chaincode_call) {
 				throw Error('The collection name must be a string');
 			}
 		});
-		chaincode_call.setCollectionNames(collection_names);
+		chaincode_call.collection_names = collection_names;
 	} else {
 		throw Error('Collection names must be an array of strings');
 	}

@@ -9,7 +9,7 @@ const TYPE = 'Committer';
 const {checkParameter, getLogger} = require('./Utils.js');
 const ServiceEndpoint = require('./ServiceEndpoint');
 
-const fabprotos = require('fabric-protos');
+const fabproto6 = require('fabric-protos');
 const logger = getLogger(TYPE);
 
 /**
@@ -79,7 +79,7 @@ class Committer extends ServiceEndpoint {
 		this.mspid = mspid;
 		this.type = TYPE;
 
-		this.serviceClass = fabprotos.orderer.AtomicBroadcast;
+		this.serviceClass = fabproto6.services.orderer.AtomicBroadcast;
 	}
 
 	/**
@@ -132,13 +132,19 @@ class Committer extends ServiceEndpoint {
 			}, rto);
 
 			broadcast.on('data', (response) => {
-				logger.debug(`${method} - on data response: ${response}`);
+				logger.debug('%s - on data response: %j', method, response);
 				broadcast.end();
 				if (response && response.info) {
 					logger.debug(`${method} - response info :: ${response.info}`);
 				}
 				if (response && response.status) {
 					logger.debug(`${method} - response status ${response.status}`);
+					// convert to string enum (depending on how the protobuf code has been gennerated)
+					if (typeof response.status === 'number') {
+						response.status = fabproto6.common.Status[response.status];
+					}
+					logger.debug('%s - on data response: %j', method, response);
+
 					return resolve(response);
 				} else {
 					logger.error(`${this.name} ERROR - ${method} reject with invalid response from the committer`);

@@ -10,8 +10,7 @@ const {checkParameter, getLogger} = require('./Utils.js');
 const logger = getLogger(TYPE);
 
 const Proposal = require('./Proposal.js');
-const fabprotos = require('fabric-protos');
-
+const fabproto6 = require('fabric-protos');
 
 /**
  * @classdesc
@@ -71,11 +70,11 @@ class Commit extends Proposal {
 		this._reset();
 		const endorsements = [];
 		for (const proposalResponse of this._endorsement._proposalResponses) {
-
-			logger.debug('proposalResponse is:', proposalResponse.status);
-
 			if (proposalResponse && proposalResponse.response && proposalResponse.endorsement) {
+				logger.debug('%s - proposalResponse endorsement added to commit:', method, proposalResponse.status);
 				endorsements.push(proposalResponse.endorsement);
+			} else {
+				logger.debug('%s - proposalResponse endorsement not added to commit:', method, proposalResponse.status);
 			}
 		}
 
@@ -85,38 +84,59 @@ class Commit extends Proposal {
 		}
 		const proposalResponse = this._endorsement._proposalResponses[0];
 
-		const chaincodeEndorsedAction = new fabprotos.protos.ChaincodeEndorsedAction();
-		chaincodeEndorsedAction.setProposalResponsePayload(proposalResponse.payload);
-		chaincodeEndorsedAction.setEndorsements(endorsements);
-
-		const chaincodeActionPayload = new fabprotos.protos.ChaincodeActionPayload();
-		chaincodeActionPayload.setAction(chaincodeEndorsedAction);
+		const chaincodeEndorsedAction = fabproto6.protos.ChaincodeEndorsedAction.create({
+			proposal_response_payload: proposalResponse.payload,
+			endorsements: endorsements
+		});
 
 		// the TransientMap field inside the original proposal payload is only meant for the
 		// endorsers to use from inside the chaincode. This must be taken out before sending
 		// to the committer, otherwise the transaction will be rejected by the validators when
 		// it compares the proposal hash calculated by the endorsers and returned in the
 		// proposal response, which was calculated without the TransientMap
-		const originalChaincodeProposalPayload = fabprotos.protos.ChaincodeProposalPayload.decode(this._endorsement._action.proposal.getPayload());
-		const chaincodeProposalPayloadNoTrans = new fabprotos.protos.ChaincodeProposalPayload();
-		chaincodeProposalPayloadNoTrans.setInput(originalChaincodeProposalPayload.input); // only set the input field, skipping the TransientMap
-		chaincodeActionPayload.setChaincodeProposalPayload(chaincodeProposalPayloadNoTrans.toBuffer());
+		const originalChaincodeProposalPayload = fabproto6.protos.ChaincodeProposalPayload.decode(
+			this._endorsement._action.proposal.payload
+		);
+		const chaincodeProposalPayloadNoTrans = fabproto6.protos.ChaincodeProposalPayload.create({
+			input: originalChaincodeProposalPayload.input // only set the input field, skipping the TransientMap
+		});
 
-		const transactionAction = new fabprotos.protos.TransactionAction();
-		transactionAction.setHeader(this._endorsement._action.header.getSignatureHeader());
-		transactionAction.setPayload(chaincodeActionPayload.toBuffer());
+		const chaincodeProposalPayloadNoTransBuf = fabproto6.protos.ChaincodeProposalPayload.encode(
+			chaincodeProposalPayloadNoTrans
+		).finish();
+
+		const chaincodeActionPayload = fabproto6.protos.ChaincodeActionPayload.create({
+			action: chaincodeEndorsedAction,
+			chaincode_proposal_payload: chaincodeProposalPayloadNoTransBuf
+		});
+		const chaincodeActionPayloadBuf = fabproto6.protos.ChaincodeActionPayload.encode(
+			chaincodeActionPayload
+		).finish();
+
+		const transactionAction = fabproto6.protos.TransactionAction.create({
+			header: this._endorsement._action.header.signature_header,
+			payload: chaincodeActionPayloadBuf
+		});
 
 		const actions = [];
 		actions.push(transactionAction);
 
-		const transaction = new fabprotos.protos.Transaction();
-		transaction.setActions(actions);
+		const transaction = fabproto6.protos.Transaction.create({
+			actions: actions
+		});
+		const transactionBuf = fabproto6.protos.Transaction.encode(
+			transaction
+		).finish();
 
-		this._action.payload = new fabprotos.common.Payload();
-		this._action.payload.setHeader(this._endorsement._action.header);
-		this._action.payload.setData(transaction.toBuffer());
-		this._payload = this._action.payload.toBuffer();
+		this._action.payload = fabproto6.common.Payload.create({
+			header: this._endorsement._action.header,
+			data: transactionBuf
+		});
+		this._payload = fabproto6.common.Payload.encode(
+			this._action.payload
+		).finish();
 
+		logger.debug('%s - end - %s', method, idContext.name);
 		return this._payload;
 	}
 

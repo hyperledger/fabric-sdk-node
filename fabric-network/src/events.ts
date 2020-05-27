@@ -4,7 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Block, BlockType, Endorser, FilteredBlock, FilteredTransaction } from 'fabric-common';
+import { BlockType, Endorser} from 'fabric-common';
+import * as fabproto6 from 'fabric-protos';
 import { Checkpointer } from './checkpointer';
 import Long = require('long');
 
@@ -12,7 +13,7 @@ export type EventType = BlockType;
 
 export interface BlockEvent {
 	readonly blockNumber: Long;
-	readonly blockData: FilteredBlock | Block;
+	readonly blockData: fabproto6.protos.IFilteredBlock | fabproto6.common.IBlock;
 	getTransactionEvents(): TransactionEvent[];
 }
 
@@ -20,7 +21,7 @@ export interface TransactionEvent {
 	readonly transactionId: string;
 	readonly status: string;
 	readonly isValid: boolean;
-	readonly transactionData: FilteredTransaction | any;
+	readonly transactionData: fabproto6.protos.ITransaction | fabproto6.protos.IFilteredTransaction;
 	readonly privateData?: any;
 	getBlockEvent(): BlockEvent;
 	getContractEvents(): ContractEvent[];
