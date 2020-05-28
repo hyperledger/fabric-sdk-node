@@ -61,7 +61,7 @@
 			<li class="dropdown">
 				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="global.html#bitsToBytes">bitsToBytes</a></li><li><a href="global.html#bytesToBits">bytesToBits</a></li><li><a href="global.html#CLIENT">CLIENT</a></li><li><a href="global.html#crypto">crypto</a></li><li><a href="global.html#HFAFFILIATIONMGR">HFAFFILIATIONMGR</a></li><li><a href="global.html#HFGENCRL">HFGENCRL</a></li><li><a href="global.html#HFINTERMEDIATECA">HFINTERMEDIATECA</a></li><li><a href="global.html#HFREGISTRARATTRIBUTES">HFREGISTRARATTRIBUTES</a></li><li><a href="global.html#HFREGISTRARDELEGATEROLES">HFREGISTRARDELEGATEROLES</a></li><li><a href="global.html#HFREGISTRARROLES">HFREGISTRARROLES</a></li><li><a href="global.html#HFREVOKER">HFREVOKER</a></li><li><a href="global.html#newCryptoSuite">newCryptoSuite</a></li><li><a href="global.html#newInstance">newInstance</a></li><li><a href="global.html#ORDERER">ORDERER</a></li><li><a href="global.html#PEER">PEER</a></li><li><a href="global.html#setLogger">setLogger</a></li><li><a href="global.html#TYPE">TYPE</a></li><li><a href="global.html#USER">USER</a></li>
+					<li><a href="global.html#bitsToBytes">bitsToBytes</a></li><li><a href="global.html#bytesToBits">bytesToBits</a></li><li><a href="global.html#CLIENT">CLIENT</a></li><li><a href="global.html#crypto">crypto</a></li><li><a href="global.html#HFAFFILIATIONMGR">HFAFFILIATIONMGR</a></li><li><a href="global.html#HFGENCRL">HFGENCRL</a></li><li><a href="global.html#HFINTERMEDIATECA">HFINTERMEDIATECA</a></li><li><a href="global.html#HFREGISTRARATTRIBUTES">HFREGISTRARATTRIBUTES</a></li><li><a href="global.html#HFREGISTRARDELEGATEROLES">HFREGISTRARDELEGATEROLES</a></li><li><a href="global.html#HFREGISTRARROLES">HFREGISTRARROLES</a></li><li><a href="global.html#HFREVOKER">HFREVOKER</a></li><li><a href="global.html#newCryptoKeyStore">newCryptoKeyStore</a></li><li><a href="global.html#newCryptoSuite">newCryptoSuite</a></li><li><a href="global.html#ORDERER">ORDERER</a></li><li><a href="global.html#PEER">PEER</a></li><li><a href="global.html#setLogger">setLogger</a></li><li><a href="global.html#TYPE">TYPE</a></li><li><a href="global.html#USER">USER</a></li>
 				</ul>
 			</li>
 			
@@ -2354,145 +2354,7 @@ SPDX-License-Identifier: Apache-2.0
             
 <hr>
 <dt>
-    <h4 class="name" id="newCryptoSuite"><span class="type-signature"></span>newCryptoSuite(setting)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        Returns a new instance of the CryptoSuite API implementation. Supports the following:
-- newCryptoSuite({software: true, keysize: 256, algorithm: EC})
-- newCryptoSuite({software: false, lib: '/usr/local/bin/pkcs11.so', slot: 0, pin: '1234'})
-- newCryptoSuite({keysize: 384})
-- newCryptoSuite()
-    </div>
-    
-
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>setting</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Object</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">This optional parameter is an object with the following optional properties:
-   - software {boolean}: Whether to load a software-based implementation (true) or HSM implementation (false)
-       default is true (for software based implementation), specific implementation module is specified
-       in the setting 'crypto-suite-software'
- - keysize {number}: The key size to use for the crypto suite instance. default is value of the setting 'crypto-keysize'
- - algorithm {string}: Digital signature algorithm, currently supporting ECDSA only with value "EC"
- - hash {string}: 'SHA2' or 'SHA3'</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="newInstance"><span class="type-signature"></span>newInstance(KVSImplClass, opts)</h4>
+    <h4 class="name" id="newCryptoKeyStore"><span class="type-signature"></span>newCryptoKeyStore( [keyValueStore])</h4>
     
     
 </dt>
@@ -2519,6 +2381,8 @@ SPDX-License-Identifier: Apache-2.0
         <th>Type</th>
 
         
+        <th>Argument</th>
+        
 
         
 
@@ -2531,51 +2395,35 @@ SPDX-License-Identifier: Apache-2.0
 
         <tr>
             
-                <td class="name"><code>KVSImplClass</code></td>
+                <td class="name"><code>keyValueStore</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">function</span>
+<span class="param-type"><a href="KeyValueStore.html">KeyValueStore</a></span>
 
 
 
             
             </td>
 
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
             
 
             
 
             <td class="description last">Optional. The built-in key store saves private keys.
-   The key store may be backed by different <a href="KeyValueStore.html">KeyValueStore</a> implementations.
-   If specified, the value of the argument must point to a module implementing the
-   KeyValueStore interface.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>opts</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Object</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Implementation-specific option object used in the constructor</td>
+   The key store must be instance of any <a href="KeyValueStore.html">KeyValueStore</a> implementations.</td>
         </tr>
 
     
@@ -2655,6 +2503,153 @@ SPDX-License-Identifier: Apache-2.0
 
 
         
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="newCryptoSuite"><span class="type-signature"></span>newCryptoSuite( [setting])</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Returns a new instance of the CryptoSuite API implementation. Supports the following:
+- newCryptoSuite({software: true, keysize: 256, algorithm: EC})
+- newCryptoSuite({software: false, lib: '/usr/local/bin/pkcs11.so', slot: 0, pin: '1234'})
+- newCryptoSuite({keysize: 384})
+- newCryptoSuite()
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>setting</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="global.html#CryptoSetting">CryptoSetting</a></span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">- property `software` default is true (for software based implementation),
+         specific implementation module is specified in the setting 'crypto-suite-software'
+ - property `algorithm` currently supporting ECDSA only with value "EC"
+ - property `keysize` default is value of the setting 'crypto-keysize'</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
 
     
 </dd>
@@ -5372,9 +5367,7 @@ signatures -- {array}
 
             
 
-            <td class="description last">Whether to load a software-based implementation (true) or HSM implementation (false)
-   default is true (for software based implementation), specific implementation module is specified
-   in the setting 'crypto-suite-software'</td>
+            <td class="description last">Whether to load a software-based implementation (true) or HSM implementation (false)</td>
         </tr>
 
     
@@ -5398,7 +5391,7 @@ signatures -- {array}
 
             
 
-            <td class="description last">The key size to use for the crypto suite instance. default is value of the setting 'crypto-keysize'</td>
+            <td class="description last">The key size to use for the crypto suite instance.</td>
         </tr>
 
     
@@ -5422,201 +5415,7 @@ signatures -- {array}
 
             
 
-            <td class="description last">Digital signature algorithm, currently supporting ECDSA only with value 'EC'</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>hash</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">'SHA2' or 'SHA3'</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-</dl>
-
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-</dd>
-
-            
-                
-<hr>
-<dt class="name" id="CryptoSetting">
-    <h4 id="CryptoSetting">CryptoSetting</h4>
-
-    
-</dt>
-<dd>
-    
-
-    
-        <h5>Type:</h5>
-        <ul>
-            <li>
-                
-<span class="param-type">Object</span>
-
-
-
-            </li>
-        </ul>
-    
-
-    
-<dl class="details">
-    
-
-    <h5 class="subsection-title">Properties:</h5>
-
-    <dl>
-
-<table class="props table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>software</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Whether to load a software-based implementation (true) or HSM implementation (false)
-   default is true (for software based implementation), specific implementation module is specified
-   in the setting 'crypto-suite-software'</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>keysize</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The key size to use for the crypto suite instance. default is value of the setting 'crypto-keysize'</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>algorithm</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Digital signature algorithm, currently supporting ECDSA only with value 'EC'</td>
+            <td class="description last">Digital signature algorithm</td>
         </tr>
 
     
@@ -6940,6 +6739,164 @@ certificate authority</td>
 	
 </dl>
 
+
+    
+</dd>
+
+            
+                
+<hr>
+<dt>
+    <h4 class="name" id="EventCallback"><span class="type-signature"></span>EventCallback(error, event)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Callback function that takes two parameters
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>error</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Error</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The "error" will be null unless this EventService has been shutdown.
+ The shutdown may be caused by a network, connection error,
+ by a call to the "disconnect()" method
+ or when the fabric event service ends the connection to this EventService.
+ This callback will also be called with an Error when the EventService is shutdown
+ due to the last block being received if the service has been setup with an endBlock to be 'newest'
+ or a specific block number that has been seen.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>event</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="global.html#EventInfo">EventInfo</a></span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The "event" will be the <a href="global.html#EventInfo">EventInfo</a> object.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
 
     
 </dd>
@@ -11407,7 +11364,7 @@ actions {array}
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a>
 	
-		on 2020-05-20T11:46:59+00:00
+		on 2020-05-28T07:06:46+00:00
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>

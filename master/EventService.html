@@ -61,7 +61,7 @@
 			<li class="dropdown">
 				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="global.html#bitsToBytes">bitsToBytes</a></li><li><a href="global.html#bytesToBits">bytesToBits</a></li><li><a href="global.html#CLIENT">CLIENT</a></li><li><a href="global.html#crypto">crypto</a></li><li><a href="global.html#HFAFFILIATIONMGR">HFAFFILIATIONMGR</a></li><li><a href="global.html#HFGENCRL">HFGENCRL</a></li><li><a href="global.html#HFINTERMEDIATECA">HFINTERMEDIATECA</a></li><li><a href="global.html#HFREGISTRARATTRIBUTES">HFREGISTRARATTRIBUTES</a></li><li><a href="global.html#HFREGISTRARDELEGATEROLES">HFREGISTRARDELEGATEROLES</a></li><li><a href="global.html#HFREGISTRARROLES">HFREGISTRARROLES</a></li><li><a href="global.html#HFREVOKER">HFREVOKER</a></li><li><a href="global.html#newCryptoSuite">newCryptoSuite</a></li><li><a href="global.html#newInstance">newInstance</a></li><li><a href="global.html#ORDERER">ORDERER</a></li><li><a href="global.html#PEER">PEER</a></li><li><a href="global.html#setLogger">setLogger</a></li><li><a href="global.html#TYPE">TYPE</a></li><li><a href="global.html#USER">USER</a></li>
+					<li><a href="global.html#bitsToBytes">bitsToBytes</a></li><li><a href="global.html#bytesToBits">bytesToBits</a></li><li><a href="global.html#CLIENT">CLIENT</a></li><li><a href="global.html#crypto">crypto</a></li><li><a href="global.html#HFAFFILIATIONMGR">HFAFFILIATIONMGR</a></li><li><a href="global.html#HFGENCRL">HFGENCRL</a></li><li><a href="global.html#HFINTERMEDIATECA">HFINTERMEDIATECA</a></li><li><a href="global.html#HFREGISTRARATTRIBUTES">HFREGISTRARATTRIBUTES</a></li><li><a href="global.html#HFREGISTRARDELEGATEROLES">HFREGISTRARDELEGATEROLES</a></li><li><a href="global.html#HFREGISTRARROLES">HFREGISTRARROLES</a></li><li><a href="global.html#HFREVOKER">HFREVOKER</a></li><li><a href="global.html#newCryptoKeyStore">newCryptoKeyStore</a></li><li><a href="global.html#newCryptoSuite">newCryptoSuite</a></li><li><a href="global.html#ORDERER">ORDERER</a></li><li><a href="global.html#PEER">PEER</a></li><li><a href="global.html#setLogger">setLogger</a></li><li><a href="global.html#TYPE">TYPE</a></li><li><a href="global.html#USER">USER</a></li>
 				</ul>
 			</li>
 			
@@ -1192,7 +1192,7 @@ block.
             <td class="type">
             
                 
-<span class="param-type">function</span>
+<span class="param-type"><a href="global.html#EventCallback">EventCallback</a></span>
 
 
 
@@ -1203,20 +1203,7 @@ block.
 
             
 
-            <td class="description last">Callback function that takes two parameters:
- <ul>
- <li>{Error} error
- <li>{Event} Event object
- </ul>
- The Error will be null unless this EventService has been shutdown.
- The shutdown may be caused by a network, connection error,
- by a call to the "disconnect()" method or when
- the fabric event service ends the connection to this EventService.
- This callback will also be called with an Error when the EventService is
- shutdown due to the last block being received if the service has been
- setup with an endBlock to be 'newest' or a specific block number that
- has been seen.
-<br> The Event will be the Event object.</td>
+            <td class="description last"></td>
         </tr>
 
     
@@ -1413,7 +1400,7 @@ block.
             <td class="type">
             
                 
-<span class="param-type">function</span>
+<span class="param-type"><a href="global.html#EventCallback">EventCallback</a></span>
 
 
 
@@ -1424,20 +1411,7 @@ block.
 
             
 
-            <td class="description last">Callback function that takes two parameters:
- <ul>
- <li>{Error} error
- <li>{EventInfo} event
- </ul>
- The "error" will be null unless this EventService has been shutdown.
- The shutdown may be caused by a network, connection error,
- by a call to the "disconnect()" method or when
- the fabric event service ends the connection to this EventService.
- This callback will also be called with an Error when the EventService is
- shutdown due to the last block being received if the service has been
- setup with an endBlock to be 'newest' or a specific block number that
- has been seen.
-<br> The "event" will be the <a href="global.html#EventInfo">EventInfo</a> object.</td>
+            <td class="description last"></td>
         </tr>
 
     
@@ -1631,7 +1605,7 @@ for every transaction written to the ledger.
             <td class="type">
             
                 
-<span class="param-type">function</span>
+<span class="param-type"><a href="global.html#EventCallback">EventCallback</a></span>
 
 
 
@@ -1642,20 +1616,7 @@ for every transaction written to the ledger.
 
             
 
-            <td class="description last">Callback function that takes the parameters:
- <ul>
- <li>{Error} error
- <li>{string} transaction ID
- <li>{string} status
- <li>{long} block number
- </ul>
- The Error will be null unless this EventService is shutdown.
- The shutdown may be caused by a network or connection error,
- by a call to the "disconnect()" method or when
- the fabric service ends the connection to this EventService.
- This callback will also be called with an Error when the EventService is
- shutdown due to the last block being received if replaying and requesting
- the endBlock to be 'newest' or a specific value.</td>
+            <td class="description last"></td>
         </tr>
 
     
@@ -2511,7 +2472,7 @@ the register listener methods.
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a>
 	
-		on 2020-05-20T11:47:00+00:00
+		on 2020-05-28T07:06:47+00:00
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>

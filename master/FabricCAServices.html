@@ -61,7 +61,7 @@
 			<li class="dropdown">
 				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="global.html#bitsToBytes">bitsToBytes</a></li><li><a href="global.html#bytesToBits">bytesToBits</a></li><li><a href="global.html#CLIENT">CLIENT</a></li><li><a href="global.html#crypto">crypto</a></li><li><a href="global.html#HFAFFILIATIONMGR">HFAFFILIATIONMGR</a></li><li><a href="global.html#HFGENCRL">HFGENCRL</a></li><li><a href="global.html#HFINTERMEDIATECA">HFINTERMEDIATECA</a></li><li><a href="global.html#HFREGISTRARATTRIBUTES">HFREGISTRARATTRIBUTES</a></li><li><a href="global.html#HFREGISTRARDELEGATEROLES">HFREGISTRARDELEGATEROLES</a></li><li><a href="global.html#HFREGISTRARROLES">HFREGISTRARROLES</a></li><li><a href="global.html#HFREVOKER">HFREVOKER</a></li><li><a href="global.html#newCryptoSuite">newCryptoSuite</a></li><li><a href="global.html#newInstance">newInstance</a></li><li><a href="global.html#ORDERER">ORDERER</a></li><li><a href="global.html#PEER">PEER</a></li><li><a href="global.html#setLogger">setLogger</a></li><li><a href="global.html#TYPE">TYPE</a></li><li><a href="global.html#USER">USER</a></li>
+					<li><a href="global.html#bitsToBytes">bitsToBytes</a></li><li><a href="global.html#bytesToBits">bytesToBits</a></li><li><a href="global.html#CLIENT">CLIENT</a></li><li><a href="global.html#crypto">crypto</a></li><li><a href="global.html#HFAFFILIATIONMGR">HFAFFILIATIONMGR</a></li><li><a href="global.html#HFGENCRL">HFGENCRL</a></li><li><a href="global.html#HFINTERMEDIATECA">HFINTERMEDIATECA</a></li><li><a href="global.html#HFREGISTRARATTRIBUTES">HFREGISTRARATTRIBUTES</a></li><li><a href="global.html#HFREGISTRARDELEGATEROLES">HFREGISTRARDELEGATEROLES</a></li><li><a href="global.html#HFREGISTRARROLES">HFREGISTRARROLES</a></li><li><a href="global.html#HFREVOKER">HFREVOKER</a></li><li><a href="global.html#newCryptoKeyStore">newCryptoKeyStore</a></li><li><a href="global.html#newCryptoSuite">newCryptoSuite</a></li><li><a href="global.html#ORDERER">ORDERER</a></li><li><a href="global.html#PEER">PEER</a></li><li><a href="global.html#setLogger">setLogger</a></li><li><a href="global.html#TYPE">TYPE</a></li><li><a href="global.html#USER">USER</a></li>
 				</ul>
 			</li>
 			
@@ -114,7 +114,7 @@
         
 <hr>
 <dt>
-    <h4 class="name" id="FabricCAServices"><span class="type-signature"></span>new FabricCAServices(url, tlsOptions, caName, cryptoSuite)</h4>
+    <h4 class="name" id="FabricCAServices"><span class="type-signature"></span>new FabricCAServices(url [, tlsOptions] [, caName] [, cryptoSuite])</h4>
     
     
 </dt>
@@ -145,6 +145,8 @@
         <th>Type</th>
 
         
+        <th>Argument</th>
+        
 
         
 
@@ -174,6 +176,14 @@
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
@@ -199,6 +209,16 @@
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
 
             
 
@@ -223,6 +243,16 @@
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
 
             
 
@@ -241,12 +271,25 @@
             
                 
 <span class="param-type"><a href="CryptoSuite.html">CryptoSuite</a></span>
+|
+
+<span class="param-type">ICryptoSuite</span>
 
 
 
             
             </td>
 
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
             
 
             
@@ -256,10 +299,7 @@ If not specified, an instance of <a href="CryptoSuite.html">CryptoSuite</a> will
 <br> - crypto-hsm: use an implementation for Hardware Security Module (if set to true) or software-based key management (if set to false)
 <br> - crypto-keysize: security level, or key size, to use with the digital signature public key algorithm. Currently ECDSA
  is supported and the valid key sizes are 256 and 384
-<br> - crypto-hash-algo: hashing algorithm
-<br> - key-value-store: some CryptoSuite implementation requires a key store to persist private keys. A <a href="CryptoKeyStore.html">CryptoKeyStore</a>
- is provided for this purpose, which can be used on top of any implementation of the <a href="KeyValueStore.html">KeyValueStore</a> interface,
- such as a file-based store or a database-based one. The specific implementation is determined by the value of this configuration setting.</td>
+<br> - crypto-hash-algo: hashing algorithm</td>
         </tr>
 
     
@@ -506,7 +546,7 @@ If not specified, an instance of <a href="CryptoSuite.html">CryptoSuite</a> will
             
 <hr>
 <dt>
-    <h4 class="name" id="generateCRL"><span class="type-signature"></span>generateCRL(request, registrar)</h4>
+    <h4 class="name" id="generateCRL"><span class="type-signature">&lt;async> </span>generateCRL(request, registrar)</h4>
     
     
 </dt>
@@ -1198,7 +1238,7 @@ If not specified, an instance of <a href="CryptoSuite.html">CryptoSuite</a> will
             
 <hr>
 <dt>
-    <h4 class="name" id="reenroll"><span class="type-signature"></span>reenroll(currentUser, Optional)</h4>
+    <h4 class="name" id="reenroll"><span class="type-signature">&lt;async> </span>reenroll(currentUser [, attr_reqs])</h4>
     
     
 </dt>
@@ -1230,6 +1270,8 @@ it has been compromised
         <th>Type</th>
 
         
+        <th>Argument</th>
+        
 
         
 
@@ -1256,6 +1298,14 @@ it has been compromised
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
@@ -1266,7 +1316,7 @@ it has been compromised
 
         <tr>
             
-                <td class="name"><code>Optional</code></td>
+                <td class="name"><code>attr_reqs</code></td>
             
 
             <td class="type">
@@ -1280,10 +1330,20 @@ it has been compromised
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
 
             
 
-            <td class="description last">an array of <a href="global.html#AttributeRequest">AttributeRequest</a> that indicate attributes to
+            <td class="description last">Optional an array of <a href="global.html#AttributeRequest">AttributeRequest</a> that indicate attributes to
                             be included in the certificate</td>
         </tr>
 
@@ -1363,7 +1423,7 @@ it has been compromised
             
 <hr>
 <dt>
-    <h4 class="name" id="register"><span class="type-signature"></span>register(req, registrar)</h4>
+    <h4 class="name" id="register"><span class="type-signature">&lt;async> </span>register(req, registrar)</h4>
     
     
 </dt>
@@ -1539,7 +1599,7 @@ it has been compromised
             
 <hr>
 <dt>
-    <h4 class="name" id="revoke"><span class="type-signature"></span>revoke(request, registrar)</h4>
+    <h4 class="name" id="revoke"><span class="type-signature">&lt;async> </span>revoke(request, registrar)</h4>
     
     
 </dt>
@@ -1740,9 +1800,6 @@ an instance based on default configuration settings:
 <li> crypto-keysize: security level, or key size, to use with the digital signature public key algorithm. Currently ECDSA
  is supported and the valid key sizes are 256 and 384
 <li> crypto-hash-algo: hashing algorithm
-<li> key-value-store: some CryptoSuite implementation requires a key store to persist private keys. A <a href="CryptoKeyStore.html">CryptoKeyStore</a>
- is provided for this purpose, which can be used on top of any implementation of the <a href="KeyValueStore.html">KeyValueStore</a> interface,
- such as a file-based store or a database-based one. The specific implementation is determined by the value of this configuration setting.
     </div>
     
 
@@ -1783,7 +1840,10 @@ an instance based on default configuration settings:
             <td class="type">
             
                 
-<span class="param-type">module:api.CryptoSuite</span>
+<span class="param-type">api.CryptoSuite</span>
+|
+
+<span class="param-type">ICryptoSuite</span>
 
 
 
@@ -2000,7 +2060,7 @@ an instance based on default configuration settings:
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a>
 	
-		on 2020-05-20T11:47:00+00:00
+		on 2020-05-28T07:06:47+00:00
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>

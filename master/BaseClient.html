@@ -61,7 +61,7 @@
 			<li class="dropdown">
 				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="global.html#bitsToBytes">bitsToBytes</a></li><li><a href="global.html#bytesToBits">bytesToBits</a></li><li><a href="global.html#CLIENT">CLIENT</a></li><li><a href="global.html#crypto">crypto</a></li><li><a href="global.html#HFAFFILIATIONMGR">HFAFFILIATIONMGR</a></li><li><a href="global.html#HFGENCRL">HFGENCRL</a></li><li><a href="global.html#HFINTERMEDIATECA">HFINTERMEDIATECA</a></li><li><a href="global.html#HFREGISTRARATTRIBUTES">HFREGISTRARATTRIBUTES</a></li><li><a href="global.html#HFREGISTRARDELEGATEROLES">HFREGISTRARDELEGATEROLES</a></li><li><a href="global.html#HFREGISTRARROLES">HFREGISTRARROLES</a></li><li><a href="global.html#HFREVOKER">HFREVOKER</a></li><li><a href="global.html#newCryptoSuite">newCryptoSuite</a></li><li><a href="global.html#newInstance">newInstance</a></li><li><a href="global.html#ORDERER">ORDERER</a></li><li><a href="global.html#PEER">PEER</a></li><li><a href="global.html#setLogger">setLogger</a></li><li><a href="global.html#TYPE">TYPE</a></li><li><a href="global.html#USER">USER</a></li>
+					<li><a href="global.html#bitsToBytes">bitsToBytes</a></li><li><a href="global.html#bytesToBits">bytesToBits</a></li><li><a href="global.html#CLIENT">CLIENT</a></li><li><a href="global.html#crypto">crypto</a></li><li><a href="global.html#HFAFFILIATIONMGR">HFAFFILIATIONMGR</a></li><li><a href="global.html#HFGENCRL">HFGENCRL</a></li><li><a href="global.html#HFINTERMEDIATECA">HFINTERMEDIATECA</a></li><li><a href="global.html#HFREGISTRARATTRIBUTES">HFREGISTRARATTRIBUTES</a></li><li><a href="global.html#HFREGISTRARDELEGATEROLES">HFREGISTRARDELEGATEROLES</a></li><li><a href="global.html#HFREGISTRARROLES">HFREGISTRARROLES</a></li><li><a href="global.html#HFREVOKER">HFREVOKER</a></li><li><a href="global.html#newCryptoKeyStore">newCryptoKeyStore</a></li><li><a href="global.html#newCryptoSuite">newCryptoSuite</a></li><li><a href="global.html#ORDERER">ORDERER</a></li><li><a href="global.html#PEER">PEER</a></li><li><a href="global.html#setLogger">setLogger</a></li><li><a href="global.html#TYPE">TYPE</a></li><li><a href="global.html#USER">USER</a></li>
 				</ul>
 			</li>
 			
@@ -661,7 +661,7 @@ being used by the Hyperledger Fabric client.
             
 <hr>
 <dt>
-    <h4 class="name" id=".newCryptoKeyStore"><span class="type-signature">&lt;static> </span>newCryptoKeyStore(KVSImplClass, opts)</h4>
+    <h4 class="name" id=".newCryptoKeyStore"><span class="type-signature">&lt;static> </span>newCryptoKeyStore( [keyValueStore])</h4>
     
     
 </dt>
@@ -674,7 +674,7 @@ being used by the Hyperledger Fabric client.
 When the application needs to use a key store other than the default,
 it should create a new CryptoKeyStore and set it on the CryptoSuite.
 
-<br><br><code>cryptosuite.setCryptoKeyStore(Client.newCryptoKeyStore(KVSImplClass, opts))</code>
+<br><br><code>cryptosuite.setCryptoKeyStore(BaseClient.newCryptoKeyStore(keyValueStore))</code>
     </div>
     
 
@@ -697,6 +697,8 @@ it should create a new CryptoKeyStore and set it on the CryptoSuite.
         <th>Type</th>
 
         
+        <th>Argument</th>
+        
 
         
 
@@ -709,13 +711,13 @@ it should create a new CryptoKeyStore and set it on the CryptoSuite.
 
         <tr>
             
-                <td class="name"><code>KVSImplClass</code></td>
+                <td class="name"><code>keyValueStore</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">api.KeyValueStore</span>
+<span class="param-type"><a href="KeyValueStore.html">KeyValueStore</a></span>
 
 
 
@@ -723,36 +725,21 @@ it should create a new CryptoKeyStore and set it on the CryptoSuite.
             </td>
 
             
-
-            
-
-            <td class="description last">Optional. The built-in key store saves private keys. The key store may be backed by different
-<a href="KeyValueStore.html">KeyValueStore</a> implementations. If specified, the value of the argument must point to a module implementing the
-KeyValueStore interface.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>opts</code></td>
-            
-
-            <td class="type">
-            
+                <td class="attributes">
                 
-<span class="param-type">Object</span>
+                    &lt;optional><br>
+                
 
+                
 
-
-            
-            </td>
-
-            
-
+                
+                </td>
             
 
-            <td class="description last">Implementation-specific option object used in the constructor</td>
+            
+
+            <td class="description last">Optional. The built-in key store saves private keys.
+   The key store must be instance of any <a href="KeyValueStore.html">KeyValueStore</a> implementations.</td>
         </tr>
 
     
@@ -997,7 +984,7 @@ that is passed in, or if skipped, based on default values of the <a href="global
             
 <hr>
 <dt>
-    <h4 class="name" id=".newDefaultKeyValueStore"><span class="type-signature">&lt;async, static> </span>newDefaultKeyValueStore(options)</h4>
+    <h4 class="name" id=".newDefaultKeyValueStore"><span class="type-signature">&lt;static> </span>newDefaultKeyValueStore(options)</h4>
     
     
 </dt>
@@ -1006,9 +993,7 @@ that is passed in, or if skipped, based on default values of the <a href="global
     
     <div class="description">
         Obtains an instance of the KeyValueStore class. By default
-it returns the built-in implementation, which is based on files (FileKeyValueStore).
-This can be overriden with a configuration setting <code>key-value-store</code>, the value of which is the
-full path of a CommonJS module for the alternative implementation.
+it returns the built-in implementation <a href="InMemoryKeyValueStore.html">InMemoryKeyValueStore</a>.
     </div>
     
 
@@ -1060,8 +1045,7 @@ full path of a CommonJS module for the alternative implementation.
 
             
 
-            <td class="description last">Specific to the implementation, for initializing the instance. For the built-in
-file-based implementation, this requires a single property <code>path</code> to the top-level folder for the store</td>
+            <td class="description last">Specific to the implementation, for initializing the instance.</td>
         </tr>
 
     
@@ -1125,7 +1109,7 @@ file-based implementation, this requires a single property <code>path</code> to 
     
             
 <div class="param-desc">
-    A Promise for a module:api.KeyValueStore instance of the KeyValueStore implementation
+    module:api.KeyValueStore instance of the KeyValueStore implementation
 </div>
 
 
@@ -1136,7 +1120,7 @@ file-based implementation, this requires a single property <code>path</code> to 
     </dt>
     <dd>
         
-<span class="param-type">Promise</span>
+<span class="param-type"><a href="KeyValueStore.html">KeyValueStore</a></span>
 
 
 
@@ -1725,9 +1709,6 @@ an instance based on default configuration settings:
 <li> crypto-keysize: security level, or key size, to use with the digital signature public key algorithm. Currently ECDSA
  is supported and the valid key sizes are 256 and 384
 <li> crypto-hash-algo: hashing algorithm
-<li> key-value-store: some CryptoSuite implementation requires a key store to persist private keys. A <a href="CryptoKeyStore.html">CryptoKeyStore</a>
- is provided for this purpose, which can be used on top of any implementation of the <a href="KeyValueStore.html">KeyValueStore</a> interface,
- such as a file-based store or a database-based one. The specific implementation is determined by the value of this configuration setting.
     </div>
     
 
@@ -1768,7 +1749,10 @@ an instance based on default configuration settings:
             <td class="type">
             
                 
-<span class="param-type">module:api.CryptoSuite</span>
+<span class="param-type">api.CryptoSuite</span>
+|
+
+<span class="param-type">ICryptoSuite</span>
 
 
 
@@ -1893,7 +1877,7 @@ an instance based on default configuration settings:
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a>
 	
-		on 2020-05-20T11:46:59+00:00
+		on 2020-05-28T07:06:47+00:00
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>
