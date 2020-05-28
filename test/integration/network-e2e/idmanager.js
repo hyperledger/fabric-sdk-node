@@ -26,11 +26,10 @@ class IDManager {
 
 		this.defaultClient = new FabricCAClient(caUrl, tlsOptions, caName);
 
-		this.hsmClient = new FabricCAClient(caUrl, tlsOptions, caName);
 		const hsmCryptoSuite = FabricCAClient.newCryptoSuite(this.hsmOptions);
 		// Setting a key store triggers enrollment using this crypto suite to store the generated private key in the HSM
 		hsmCryptoSuite.setCryptoKeyStore(FabricCAClient.newCryptoKeyStore());
-		this.hsmClient.setCryptoSuite(hsmCryptoSuite);
+		this.hsmClient = new FabricCAClient(caUrl, tlsOptions, caName, hsmCryptoSuite);
 	}
 
 	async registerUser(userID, issuerWallet, issuerId, options = {}) {

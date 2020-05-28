@@ -11,7 +11,6 @@ const KEYUTIL = jsrsasign.KEYUTIL;
 
 const ECDSAKey = require('./ecdsa/key.js');
 const KeyValueStore = require('../KeyValueStore');
-const InMemoryKeyValueStore = require('./InMemoryKeyValueStore');
 
 const _getPrivateKeyIndex = (ski) => {
 	return ski + '-priv';
@@ -84,19 +83,4 @@ class CryptoKeyStore extends KeyValueStore {
 	}
 }
 
-/**
- *
- * @param {function} KVSImplClass Optional. The built-in key store saves private keys.
- *    The key store may be backed by different {@link KeyValueStore} implementations.
- *    If specified, the value of the argument must point to a module implementing the
- *    KeyValueStore interface.
- * @param {Object} opts Implementation-specific option object used in the constructor
- * @return {CryptoKeyStore}
- */
-const newInstance = (KVSImplClass, opts) => {
-	const keyValueStore = typeof KVSImplClass === 'function' ? new KVSImplClass(opts) : new InMemoryKeyValueStore();
-	return Promise.resolve(new CryptoKeyStore(keyValueStore));
-};
-
-
-module.exports = newInstance;
+module.exports = CryptoKeyStore;

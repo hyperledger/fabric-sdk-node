@@ -101,9 +101,8 @@ class CryptoSuite_ECDSA_AES extends CryptoSuite {
 
 		const key = this.generateEphemeralKey();
 
-		const store = await this._cryptoKeyStore._getKeyStore();
 		logger.debug('generateKey, store.setValue');
-		await store.putKey(key);
+		await this._cryptoKeyStore.putKey(key);
 		return key;
 	}
 
@@ -162,8 +161,7 @@ class CryptoSuite_ECDSA_AES extends CryptoSuite {
 
 		// Attempt Key creation from Raw input
 		const key = this.createKeyFromRaw(pem);
-		const store = await this._cryptoKeyStore._getKeyStore();
-		await store.putKey(key);
+		await this._cryptoKeyStore.putKey(key);
 		return key;
 	}
 
@@ -172,13 +170,12 @@ class CryptoSuite_ECDSA_AES extends CryptoSuite {
 		if (!this._cryptoKeyStore) {
 			throw new Error('getKey requires CryptoKeyStore to be set.');
 		}
-		const store = await this._cryptoKeyStore._getKeyStore();
-		const key = await store.getKey(ski);
+		const key = await this._cryptoKeyStore.getKey(ski);
 		if (key instanceof ECDSAKey) {
 			return key;
 		}
 
-		if (key !== null) {
+		if (key) {
 			const pubKey = KEYUTIL.getKey(key);
 			return new ECDSAKey(pubKey);
 		}

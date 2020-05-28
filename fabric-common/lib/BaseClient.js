@@ -21,16 +21,6 @@ const BaseClient = class {
 	}
 
 	/**
-	 * @typedef {Object} CryptoSetting
-	 * @property {boolean} software Whether to load a software-based implementation (true) or HSM implementation (false)
-	 *    default is true (for software based implementation), specific implementation module is specified
-	 *    in the setting 'crypto-suite-software'
-	 * @property {number} keysize The key size to use for the crypto suite instance. default is value of the setting 'crypto-keysize'
-	 * @property {string} algorithm Digital signature algorithm, currently supporting ECDSA only with value 'EC'
-	 * @property {string} hash 'SHA2' or 'SHA3'
-	 */
-
-	/**
 	 * This is a factory method. It returns a new instance of the CryptoSuite API implementation, based on the "setting"
 	 * that is passed in, or if skipped, based on default values of the {@link CryptoSetting} properties.
 	 *
@@ -47,31 +37,25 @@ const BaseClient = class {
 	 * When the application needs to use a key store other than the default,
 	 * it should create a new CryptoKeyStore and set it on the CryptoSuite.
 	 *
-	 * <br><br><code>cryptosuite.setCryptoKeyStore(Client.newCryptoKeyStore(KVSImplClass, opts))</code>
+	 * <br><br><code>cryptosuite.setCryptoKeyStore(BaseClient.newCryptoKeyStore(keyValueStore))</code>
 	 *
-	 * @param {api.KeyValueStore} KVSImplClass Optional. The built-in key store saves private keys. The key store may be backed by different
-	 * {@link KeyValueStore} implementations. If specified, the value of the argument must point to a module implementing the
-	 * KeyValueStore interface.
-	 * @param {Object} opts Implementation-specific option object used in the constructor
+	 * @param {KeyValueStore} [keyValueStore] Optional. The built-in key store saves private keys.
+	 *    The key store must be instance of any {@link KeyValueStore} implementations.
 	 * @returns {CryptoKeyStore} a new instance of the CryptoKeystore
 	 */
-	static newCryptoKeyStore(KVSImplClass, opts) {
-		return sdkUtils.newCryptoKeyStore(KVSImplClass, opts);
+	static newCryptoKeyStore(keyValueStore) {
+		return sdkUtils.newCryptoKeyStore(keyValueStore);
 	}
 
 	/**
 	 * Obtains an instance of the [KeyValueStore]{@link module:api.KeyValueStore} class. By default
-	 * it returns the built-in implementation, which is based on files ([FileKeyValueStore]{@link module:api.FileKeyValueStore}).
-	 * This can be overriden with a configuration setting <code>key-value-store</code>, the value of which is the
-	 * full path of a CommonJS module for the alternative implementation.
+	 * it returns the built-in implementation [InMemoryKeyValueStore]{@link InMemoryKeyValueStore}.
 	 *
-	 * @async
-	 * @param {Object} options Specific to the implementation, for initializing the instance. For the built-in
-	 * file-based implementation, this requires a single property <code>path</code> to the top-level folder for the store
-	 * @returns {Promise} A Promise for a {@link module:api.KeyValueStore} instance of the KeyValueStore implementation
+	 * @param {Object} options Specific to the implementation, for initializing the instance.
+	 * @returns {KeyValueStore} {@link module:api.KeyValueStore} instance of the KeyValueStore implementation
 	 */
-	static async newDefaultKeyValueStore(options) {
-		return await sdkUtils.newKeyValueStore(options);
+	static newDefaultKeyValueStore(options) {
+		return sdkUtils.newKeyValueStore(options);
 	}
 
 	/**
@@ -208,11 +192,8 @@ const BaseClient = class {
 	 * <li> crypto-keysize: security level, or key size, to use with the digital signature public key algorithm. Currently ECDSA
 	 *  is supported and the valid key sizes are 256 and 384
 	 * <li> crypto-hash-algo: hashing algorithm
-	 * <li> key-value-store: some CryptoSuite implementation requires a key store to persist private keys. A {@link CryptoKeyStore}
-	 *  is provided for this purpose, which can be used on top of any implementation of the {@link KeyValueStore} interface,
-	 *  such as a file-based store or a database-based one. The specific implementation is determined by the value of this configuration setting.
 	 *
-	 * @param {module:api.CryptoSuite} cryptoSuite the CryptoSuite object
+	 * @param {api.CryptoSuite|ICryptoSuite} cryptoSuite the CryptoSuite object
 	 */
 	setCryptoSuite(cryptoSuite) {
 		this._cryptoSuite = cryptoSuite;

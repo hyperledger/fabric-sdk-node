@@ -455,11 +455,7 @@ const Client = class {
 	}
 
 	/**
-	 * Adds a setting to override all settings that are
-	 * part of the hierarchical configuration.
-	 *
-	 * <br><p>
-	 * The hierarchical configuration settings search order: see {@link BaseClient.getConfigSetting}
+	 * Adds a setting to override all settings that are part of the hierarchical configuration.
 	 *
 	 * @param {String} name - The name of a setting
 	 * @param {Object} value - The value of a setting

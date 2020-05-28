@@ -55,7 +55,7 @@ function checkNotExist(response, affiliation, t) {
 	}
 }
 
-test('\n\n ** HFCAIdentityService Test **\n\n', (t) => {
+test('\n\n ** HFCAIdentityService Test **\n\n', async (t) => {
 
 	FabricCAServices.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
 	ORGS = FabricCAServices.getConfigSetting('test-network');
@@ -98,89 +98,84 @@ test('\n\n ** HFCAIdentityService Test **\n\n', (t) => {
 		force: true,
 	};
 
-	let admin;
-	let affiliationService;
 
-	caService.enroll(bootstrapUser)
-		.then((enrollment) => {
-			t.pass('Successfully enrolled \'' + bootstrapUser.enrollmentID + '\'.');
-			admin = new User('admin');
-			return admin.setEnrollment(enrollment.key, enrollment.certificate, 'Org1MSP');
-		}).then(() => {
-			t.pass('Successfully set enrollment for user admin');
-			affiliationService = caService.newAffiliationService();
+	const enrollment = await caService.enroll(bootstrapUser);
 
-			// get all affiliations with admin
-			return affiliationService.getAll(admin);
-		}).then((resp) => {
-			t.equal(resp.success, true);
-			t.equal(resp.result.caname, 'ca-org1');
-			checkExist(resp.result, 'org1', t);
-			checkExist(resp.result, 'org2', t);
-			t.equal(resp.result.affiliations.length, 2);
-			t.pass('Successfully get All afflitions from fabric-ca');
+	t.pass('Successfully enrolled \'' + bootstrapUser.enrollmentID + '\'.');
+	const admin = new User('admin');
+	await admin.setEnrollment(enrollment.key, enrollment.certificate, 'Org1MSP');
 
-			return affiliationService.create(newAffiliationRequest, admin);
-		}).then((resp) => {
-			checkResponse(resp, newAffiliationRequest.name, t);
-			t.pass(`Successfully created new affiliation ${newAffiliationRequest.name}`);
+	t.pass('Successfully set enrollment for user admin');
+	const affiliationService = caService.newAffiliationService();
 
-			return affiliationService.create(forceCreateAffiliationRequest, admin);
-		}).then((resp) => {
-			checkResponse(resp, forceCreateAffiliationRequest.name, t);
-			t.pass(`Successfully force created new affiliation ${forceCreateAffiliationRequest.name}`);
+	// get all affiliations with admin
+	let resp = await affiliationService.getAll(admin);
 
-			return affiliationService.getOne(newAffiliationRequest.name, admin);
-		}).then((resp) => {
-			checkResponse(resp, newAffiliationRequest.name, t);
-			t.pass(`Successfully get affiliation ${newAffiliationRequest.name}`);
+	t.equal(resp.success, true);
+	t.equal(resp.result.caname, 'ca-org1');
+	checkExist(resp.result, 'org1', t);
+	checkExist(resp.result, 'org2', t);
+	t.equal(resp.result.affiliations.length, 2);
+	t.pass('Successfully get All afflitions from fabric-ca');
 
-			return affiliationService.update('org2.office1', updatedAffiliation, admin);
-		}).then((resp) => {
-			checkResponse(resp, updatedAffiliation.name, t);
-			t.pass(`Successfully updated affiliation ${newAffiliationRequest.name} to ${updatedAffiliation.name}`);
+	resp = await affiliationService.create(newAffiliationRequest, admin);
 
-			return affiliationService.getAll(admin);
-		}).then((resp) => {
-			t.equal(resp.success, true, 'resp should have property \'success\' equals true');
-			const org2 = resp.result.affiliations.find((affiliation) => affiliation.name === 'org2');
-			checkExist(org2, updatedAffiliation.name, t);
-			checkNotExist(org2, newAffiliationRequest.name, t);
-			t.pass(`After update, ${newAffiliationRequest.name} does not exist, and ${updatedAffiliation.name} exists`);
+	checkResponse(resp, newAffiliationRequest.name, t);
+	t.pass(`Successfully created new affiliation ${newAffiliationRequest.name}`);
 
-			return affiliationService.update('org3', forceUpdatedAffiliation, admin);
-		}).then((resp) => {
-			checkResponse(resp, forceUpdatedAffiliation.name, t);
-			t.pass('Successfully force updated affiliation \'org3\' to \'org4\', now check all its children have been updated too');
+	resp = await affiliationService.create(forceCreateAffiliationRequest, admin);
 
-			return affiliationService.getAll(admin);
-		}).then((resp) => {
-			checkExist(resp.result, forceUpdatedAffiliation.name, t);
-			const org4 = resp.result.affiliations.find((affiliation) => affiliation.name === 'org4');
-			checkExist(org4, 'org4.department1', t);
-			checkNotExist(resp.result, 'org3', t);
-			t.pass('After force update, \'org3\' has been renamed to \'org4\', \'org3.department1\' has been renamed to \'org4.department1\'');
+	checkResponse(resp, forceCreateAffiliationRequest.name, t);
+	t.pass(`Successfully force created new affiliation ${forceCreateAffiliationRequest.name}`);
 
-			return affiliationService.delete(updatedAffiliation, admin);
-		}).then((resp) => {
-			checkResponse(resp, updatedAffiliation.name, t);
-			t.pass(`Successfully deleted affiliation ${updatedAffiliation.name}`);
+	resp = await affiliationService.getOne(newAffiliationRequest.name, admin);
 
-			return affiliationService.delete(forceDeleteAffiliationRequest, admin);
-		}).then((resp) => {
-			checkResponse(resp, forceUpdatedAffiliation.name, t);
-			t.pass(`Successfully deleted affiliation ${forceDeleteAffiliationRequest.name}`);
+	checkResponse(resp, newAffiliationRequest.name, t);
+	t.pass(`Successfully get affiliation ${newAffiliationRequest.name}`);
 
-			return affiliationService.getAll(admin);
-		}).then((resp) => {
-			t.equal(resp.success, true);
-			checkNotExist(resp.result, 'org4', t);
-			t.pass('After force delete, \'org4\' and all its child affiliations are deleted');
+	resp = await affiliationService.update('org2.office1', updatedAffiliation, admin);
 
-			t.end();
-		})
-		.catch((e) => {
-			t.fail(e.stack);
-			t.end();
-		});
+	checkResponse(resp, updatedAffiliation.name, t);
+	t.pass(`Successfully updated affiliation ${newAffiliationRequest.name} to ${updatedAffiliation.name}`);
+
+	resp = await affiliationService.getAll(admin);
+
+	t.equal(resp.success, true, 'resp should have property \'success\' equals true');
+	const org2 = resp.result.affiliations.find((affiliation) => affiliation.name === 'org2');
+	checkExist(org2, updatedAffiliation.name, t);
+	checkNotExist(org2, newAffiliationRequest.name, t);
+	t.pass(`After update, ${newAffiliationRequest.name} does not exist, and ${updatedAffiliation.name} exists`);
+
+	resp = await affiliationService.update('org3', forceUpdatedAffiliation, admin);
+
+	checkResponse(resp, forceUpdatedAffiliation.name, t);
+	t.pass('Successfully force updated affiliation \'org3\' to \'org4\', now check all its children have been updated too');
+
+	resp = await affiliationService.getAll(admin);
+
+	checkExist(resp.result, forceUpdatedAffiliation.name, t);
+	const org4 = resp.result.affiliations.find((affiliation) => affiliation.name === 'org4');
+	checkExist(org4, 'org4.department1', t);
+	checkNotExist(resp.result, 'org3', t);
+	t.pass('After force update, \'org3\' has been renamed to \'org4\', \'org3.department1\' has been renamed to \'org4.department1\'');
+
+	resp = await affiliationService.delete(updatedAffiliation, admin);
+
+	checkResponse(resp, updatedAffiliation.name, t);
+	t.pass(`Successfully deleted affiliation ${updatedAffiliation.name}`);
+
+	resp = await affiliationService.delete(forceDeleteAffiliationRequest, admin);
+
+	checkResponse(resp, forceUpdatedAffiliation.name, t);
+	t.pass(`Successfully deleted affiliation ${forceDeleteAffiliationRequest.name}`);
+
+	resp = await affiliationService.getAll(admin);
+
+	t.equal(resp.success, true);
+	checkNotExist(resp.result, 'org4', t);
+	t.pass('After force delete, \'org4\' and all its child affiliations are deleted');
+
+	t.end();
+
+
 });

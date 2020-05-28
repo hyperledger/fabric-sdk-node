@@ -5,8 +5,6 @@
  */
 const TYPE = 'User';
 
-const util = require('util');
-const CryptoAlgorithms = require('./CryptoAlgorithms');
 const Identity = require('./Identity');
 const Signer = require('./Signer');
 const SigningIdentity = require('./SigningIdentity');
@@ -167,15 +165,6 @@ const User = class {
 		this._cryptoSuite = cryptoSuite;
 	}
 
-	/**
-	 * @typedef {Object} CryptoSetting
-	 * @property {boolean} software Whether to load a software-based implementation (true) or HSM implementation (false)
-	 *    default is true (for software based implementation), specific implementation module is specified
-	 *    in the setting 'crypto-suite-software'
-	 * @property {number} keysize The key size to use for the crypto suite instance. default is value of the setting 'crypto-keysize'
-	 * @property {string} algorithm Digital signature algorithm, currently supporting ECDSA only with value 'EC'
-	 * @property {string} hash 'SHA2' or 'SHA3'
-	 */
 
 	/**
 	 * This is a factory method. It returns a new instance of the CryptoSuite API implementation, based on the "setting"
@@ -195,10 +184,9 @@ const User = class {
 	 * @param {module:api.Key} privateKey the private key object
 	 * @param {string} certificate the PEM-encoded string of certificate
 	 * @param {string} mspId The Member Service Provider id for the local signing identity
-	 * @param {boolean} skipPersistence Whether to persist this user
 	 * @returns {Promise} Promise for successful completion of creating the user's signing Identity
 	 */
-	async setEnrollment(privateKey, certificate, mspId, skipPersistence) {
+	async setEnrollment(privateKey, certificate, mspId) {
 		if (typeof privateKey === 'undefined' || privateKey === null || privateKey === '') {
 			throw new Error('Invalid parameter. Must have a valid private key.');
 		}
@@ -215,17 +203,10 @@ const User = class {
 
 		if (!this._cryptoSuite) {
 			this._cryptoSuite = sdkUtils.newCryptoSuite();
-			if (!skipPersistence) {
-				this._cryptoSuite.setCryptoKeyStore(sdkUtils.newCryptoKeyStore());
-			}
+			this._cryptoSuite.setCryptoKeyStore(sdkUtils.newCryptoKeyStore());
 		}
 
-		let pubKey;
-		if (this._cryptoSuite._cryptoKeyStore && !skipPersistence) {
-			pubKey = await this._cryptoSuite.importKey(certificate);
-		} else {
-			pubKey = await this._cryptoSuite.createKeyFromRaw(certificate);
-		}
+		const pubKey = await this._cryptoSuite.createKeyFromRaw(certificate);
 
 		this._identity = new Identity(certificate, pubKey, mspId, this._cryptoSuite);
 		this._signingIdentity = new SigningIdentity(certificate, pubKey, mspId, this._cryptoSuite, new Signer(this._cryptoSuite, privateKey));
@@ -244,10 +225,9 @@ const User = class {
 	 *
 	 * @async
 	 * @param {string} str - the member state serialized
-	 * @param {boolean} no_save - to indicate that the cryptoSuite should not save
 	 * @return {Member} Promise of the unmarshalled Member object represented by the serialized string
 	 */
-	async fromString(str, no_save) {
+	async fromString(str) {
 		logger.debug('fromString --start');
 		const state = JSON.parse(str);
 
@@ -267,22 +247,12 @@ const User = class {
 
 		if (!this._cryptoSuite) {
 			this._cryptoSuite = sdkUtils.newCryptoSuite();
-			if (no_save) {
-				this._cryptoSuite.setCryptoKeyStore(sdkUtils.newCryptoKeyStore());
-			}
+			this._cryptoSuite.setCryptoKeyStore(sdkUtils.newCryptoKeyStore());
 		}
 
-		let pubKey;
+		const pubKey = this._cryptoSuite.createKeyFromRaw(state.enrollment.identity.certificate);
 
-		const opts = {algorithm: CryptoAlgorithms.X509Certificate};
-		if (no_save) {
-			pubKey = this._cryptoSuite.createKeyFromRaw(state.enrollment.identity.certificate);
-		} else {
-			pubKey = await this._cryptoSuite.importKey(state.enrollment.identity.certificate, opts);
-		}
-
-		const identity = new Identity(state.enrollment.identity.certificate, pubKey, this._mspId, this._cryptoSuite);
-		this._identity = identity;
+		this._identity = new Identity(state.enrollment.identity.certificate, pubKey, this._mspId, this._cryptoSuite);
 
 		// during serialization (see toString() below) only the key's SKI are saved
 		// swap out that for the real key from the crypto provider
@@ -290,7 +260,7 @@ const User = class {
 
 		// the key retrieved from the key store using the SKI could be a public key
 		// or a private key, check to make sure it's a private key
-		if (privateKey.isPrivate()) {
+		if (privateKey && privateKey.isPrivate()) {
 			this._signingIdentity = new SigningIdentity(
 				state.enrollment.identity.certificate,
 				pubKey,
@@ -300,7 +270,7 @@ const User = class {
 
 			return this;
 		} else {
-			throw new Error(util.format('Private key missing from key store. Can not establish the signing identity for user %s', state.name));
+			throw new Error(`Private key missing from key store. Can not establish the signing identity for user ${state.name}`);
 		}
 	}
 

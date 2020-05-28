@@ -75,7 +75,7 @@ export class X509Provider implements IdentityProvider {
 		user.setCryptoSuite(this.cryptoSuite);
 
 		const importedKey: ICryptoKey = this.cryptoSuite.createKeyFromRaw(identity.credentials.privateKey.toString());
-		await user.setEnrollment(importedKey, identity.credentials.certificate.toString(), identity.mspId, true);
+		await user.setEnrollment(importedKey, identity.credentials.certificate.toString(), identity.mspId);
 
 		return user;
 	}

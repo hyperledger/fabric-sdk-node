@@ -5,14 +5,15 @@
 /* tslint:disable:max-classes-per-file */
 /* tslint:disable:ordered-imports */
 
-import { lstatSync } from 'fs';
 import * as Long from 'long';
 import * as ByteBuffer from 'bytebuffer';
+import {IKeyValueStore} from 'fabric-client';
 
 export class Utils {
 	public static getLogger(name: string): any;
-	public static newCryptoSuite(optons: any): ICryptoSuite;
+	public static newCryptoSuite(options?: CryptoSetting): ICryptoSuite;
 	public static normalizeX509(pem: string): string;
+	public static newCryptoKeyStore(keyValueStore?: IKeyValueStore): ICryptoKeyStore;
 }
 export interface ICryptoKey {
 	getSKI(): string;
@@ -103,9 +104,9 @@ export class User {
 	public setSigningIdentity(signingIdentity: ISigningIdentity): void;
 	public getCryptoSuite(): ICryptoSuite;
 	public setCryptoSuite(suite: ICryptoSuite): void;
-	public setEnrollment(privateKey: ICryptoKey, certificate: string, mspId: string, skipPersistence: boolean): Promise<void>;
+	public setEnrollment(privateKey: ICryptoKey, certificate: string, mspId: string): Promise<void>;
 	public isEnrolled(): boolean;
-	public fromString(): Promise<User>;
+	public fromString(str: string): Promise<User>;
 }
 
 export class Endpoint {

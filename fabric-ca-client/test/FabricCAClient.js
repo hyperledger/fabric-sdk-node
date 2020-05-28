@@ -170,33 +170,29 @@ describe('FabricCAClient', () => {
 			}
 		});
 
-		it('should throw if called with too few parameters', () => {
-			(() => {
-				const connect_opts = {
-					caname: 'test-ca-name',
-					protocol: 'https',
-					hostname: 'testHost'
-				};
+		it('should throw if called with too few parameters', async () => {
+			const connect_opts = {
+				caname: 'test-ca-name',
+				protocol: 'https',
+				hostname: 'testHost'
+			};
 
-				const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
-				client.register('one', 'too', 'few', 'parameters', 'for', 'this_function_call');
-			}).should.throw(/Missing required parameters/);
+			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
+			await client.register('one', 'too', 'few', 'parameters', 'for', 'this_function_call').should.be.rejectedWith(/Missing required parameters/);
 		});
 
-		it('should throw if called with maxEnrollements that is not a number', () => {
-			(() => {
-				const connect_opts = {
-					caname: 'test-ca-name',
-					protocol: 'https',
-					hostname: 'testHost'
-				};
+		it('should throw if called with maxEnrollements that is not a number', async () => {
+			const connect_opts = {
+				caname: 'test-ca-name',
+				protocol: 'https',
+				hostname: 'testHost'
+			};
 
-				const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
-				client.register(null, null, null, null, 'string_num', null, null);
-			}).should.throw(/Parameter 'maxEnrollments' must be a number/);
+			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
+			await client.register(null, null, null, null, 'string_num', null, null).should.be.rejectedWith(/Parameter 'maxEnrollments' must be a number/);
 		});
 
-		it('should call POST with the correct method, request, and signing identity', () => {
+		it('should call POST with the correct method, request, and signing identity', async () => {
 			const connect_opts = {
 				caname: 'test-ca-name',
 				protocol: 'https',
@@ -208,7 +204,7 @@ describe('FabricCAClient', () => {
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
 
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
-			client.register('enrollmentID', 'enrollmentSecret', 'role', 'affiliation', 2, 'atts', 'signingIdentity');
+			await client.register('enrollmentID', 'enrollmentSecret', 'role', 'affiliation', 2, 'atts', 'signingIdentity');
 
 			// should call post
 			sinon.assert.calledOnce(postStub);
@@ -227,7 +223,7 @@ describe('FabricCAClient', () => {
 			callArgs[2].should.equal('signingIdentity');
 		});
 
-		it('should call POST without the type in the request if no role provided', () => {
+		it('should call POST without the type in the request if no role provided', async () => {
 			const connect_opts = {
 				caname: 'test-ca-name',
 				protocol: 'https',
@@ -239,7 +235,7 @@ describe('FabricCAClient', () => {
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
 
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
-			client.register('enrollmentID', 'enrollmentSecret', null, 'affiliation', 2, 'atts', 'signingIdentity');
+			await client.register('enrollmentID', 'enrollmentSecret', null, 'affiliation', 2, 'atts', 'signingIdentity');
 
 			// should call post
 			sinon.assert.calledOnce(postStub);
@@ -255,7 +251,7 @@ describe('FabricCAClient', () => {
 			});
 		});
 
-		it('should call POST without the secret in the request if no enrollmentSecret provided', () => {
+		it('should call POST without the secret in the request if no enrollmentSecret provided', async () => {
 			const connect_opts = {
 				caname: 'test-ca-name',
 				protocol: 'https',
@@ -267,7 +263,7 @@ describe('FabricCAClient', () => {
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
 
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
-			client.register('enrollmentID', null, 'role', 'affiliation', 2, 'atts', 'signingIdentity');
+			await client.register('enrollmentID', null, 'role', 'affiliation', 2, 'atts', 'signingIdentity');
 
 			// should call post
 			sinon.assert.calledOnce(postStub);

@@ -7,13 +7,7 @@
 'use strict';
 
 /**
- * Abstract class for a Key-Value store. The Channel class uses this store
- * to save sensitive information such as authenticated user's private keys,
- * certificates, etc.
- *
- * The SDK provides a default implementation based on files. An alternative
- * implementation can be specified using the "key-value-store" configuration
- * setting, pointing to a full require() path to package for the module.
+ * Abstract class for a Key-Value store.
  *
  * @class
  */

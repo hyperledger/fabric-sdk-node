@@ -97,7 +97,7 @@ export class HsmX509Provider implements IdentityProvider {
 
 		const publicKey: ICryptoKey = await this.cryptoSuite.importKey(identity.credentials.certificate);
 		const privateKeyObj: ICryptoKey = await this.cryptoSuite.getKey(publicKey.getSKI());
-		await user.setEnrollment(privateKeyObj, identity.credentials.certificate.toString(), identity.mspId, true);
+		await user.setEnrollment(privateKeyObj, identity.credentials.certificate.toString(), identity.mspId);
 
 		return user;
 	}

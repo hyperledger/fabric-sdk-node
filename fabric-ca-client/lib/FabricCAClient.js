@@ -31,6 +31,7 @@ const FabricCAClient = class {
 	 * @param {TLSOptions} connect_opts.tlsOptions The TLS settings to use when the Fabric CA endpoint uses "https"
 	 * @param {string} connect_opts.caname The optional name of the CA. Fabric-ca servers support multiple Certificate Authorities from
 	 *  a single server. If omitted or null or an empty string, then the default CA is the target of requests
+	 * @param cryptoPrimitives
 	 * @throws Will throw an error if connection options are missing or invalid
 	 *
 	 */
@@ -43,7 +44,7 @@ const FabricCAClient = class {
 			throw new Error(`Invalid connection options. ${err.message}`);
 		}
 
-		this._caName = connect_opts.caname,
+		this._caName = connect_opts.caname;
 		this._httpClient = (connect_opts.protocol === 'http') ? http : https;
 		this._hostname = connect_opts.hostname;
 		if (connect_opts.port) {
@@ -95,7 +96,7 @@ const FabricCAClient = class {
 	 * signing certificate, hash algorithm and signature algorithm
 	 * @returns {Promise} The enrollment secret to use when this user enrolls
 	 */
-	register(enrollmentID, enrollmentSecret, role, affiliation, maxEnrollments, attrs, signingIdentity) {
+	async register(enrollmentID, enrollmentSecret, role, affiliation, maxEnrollments, attrs, signingIdentity) {
 
 		const self = this;
 
@@ -243,23 +244,23 @@ const FabricCAClient = class {
 		return new CertificateService(this);
 	}
 
-	post(api_method, requestObj, signingIdentity) {
+	async post(api_method, requestObj, signingIdentity) {
 		return this.request('POST', api_method, signingIdentity, requestObj);
 	}
 
-	delete(api_method, signingIdentity) {
+	async delete(api_method, signingIdentity) {
 		return this.request('DELETE', api_method, signingIdentity);
 	}
 
-	get(api_method, signingIdentity) {
+	async get(api_method, signingIdentity) {
 		return this.request('GET', api_method, signingIdentity);
 	}
 
-	put(api_method, requestObj, signingIdentity) {
+	async put(api_method, requestObj, signingIdentity) {
 		return this.request('PUT', api_method, signingIdentity, requestObj);
 	}
 
-	request(http_method, api_method, signingIdentity, requestObj) {
+	async request(http_method, api_method, signingIdentity, requestObj) {
 
 		// Check for required args (requestObj optional)
 		if (arguments.length < 3) {

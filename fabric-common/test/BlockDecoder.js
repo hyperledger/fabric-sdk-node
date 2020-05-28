@@ -332,7 +332,7 @@ describe('BlockDecoder', () => {
 		});
 
 		it('should add each value in metadata_bytes to transaction_filter', () => {
-			const buffer = new Buffer('1');
+			const buffer = Buffer.from('1');
 			const transactionFilter = decodeTransactionFilter(buffer);
 			transactionFilter.should.deep.equal([49]);
 		});
