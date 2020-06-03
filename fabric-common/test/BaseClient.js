@@ -76,16 +76,15 @@ describe('BaseClient', () => {
 			sandbox.restore();
 		});
 
-		it('should call `sdkUtils.newKeyValueStore` with passed parameters and return result', async () => {
+		it('should call `sdkUtils.newKeyValueStore` and return result', async () => {
 			const sdkUtilsStub = sandbox.stub();
 			const newDefaultKeyValueStoreStub = sandbox.stub().resolves('newDefaultKeyValueStore');
 			sdkUtilsStub.newKeyValueStore = newDefaultKeyValueStoreStub;
 			BaseClientRewire.__set__('sdkUtils', sdkUtilsStub);
 
-			BaseClientRewire.newDefaultKeyValueStore('setting');
+			await BaseClientRewire.newDefaultKeyValueStore();
 
 			sinon.assert.calledOnce(newDefaultKeyValueStoreStub);
-			sinon.assert.calledWith(newDefaultKeyValueStoreStub, 'setting');
 		});
 	});
 

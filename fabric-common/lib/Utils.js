@@ -127,7 +127,7 @@ module.exports.newCryptoSuite = (setting) => {
 };
 
 // Provide an in-memory keyValueStore
-module.exports.newKeyValueStore = (options) => {
+module.exports.newKeyValueStore = () => {
 	return new InMemoryKeyValueStore();
 };
 
