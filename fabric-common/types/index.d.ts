@@ -223,7 +223,6 @@ export class Proposal extends ServiceAction {
 export class DiscoveryService extends ServiceAction {
 	readonly targets: Discoverer[];
 	constructor(chaincodeName: string, channel: Channel);
-	public setDiscoverer(discoverer: Discoverer): DiscoveryService;
 	public newHandler(): DiscoveryHandler;
 	public build(idContext: IdentityContext, request?: any): Buffer;
 	public send(request?: any): Promise<any>;

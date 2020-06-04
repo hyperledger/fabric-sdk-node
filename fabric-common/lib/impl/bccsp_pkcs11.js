@@ -599,8 +599,7 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 			 * Error will be thrown if signature is not properly encoded.
 			 */
 			const rns = new ecsig(signature, 'hex');
-			logger.debug(__func() + 'ECDSA R+S signature: ' +
-				util.inspect(rns, {depth: null}));
+			logger.debug(__func() + 'ECDSA R+S signature: ', rns);
 			const sig = Buffer.concat([rns.r.toArrayLike(Buffer, '', 0),
 				rns.s.toArrayLike(Buffer, '', 0)]);
 			logger.debug(__func() + 'ECDSA RAW signature: ' +
@@ -766,16 +765,10 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 	 * @returns {module:api.Key} Promise of an instance of {@link module:PKCS11_ECDSA_KEY}
 	 * containing the private key and the public key.
 	 */
-	generateEphemeralKey(opts) {
-		if (!opts) {
-			opts = {};
-		}
-		if (opts !== null && (typeof opts.algorithm === 'undefined' || opts.algorithm === null)) {
-			opts.algorithm = 'ECDSA';
-		}
-		if (typeof opts === 'undefined' || opts === null ||
-			typeof opts.algorithm === 'undefined' || opts.algorithm === null ||
-			typeof opts.algorithm !== 'string') {
+	generateEphemeralKey(opts = {}) {
+		opts.algorithm = opts.algorithm || 'ECDSA';
+
+		if (typeof opts.algorithm !== 'string') {
 			throw new Error(__func() + ' opts.algorithm must be String type');
 		}
 
