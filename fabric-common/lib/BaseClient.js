@@ -50,7 +50,6 @@ const BaseClient = class {
 	/**
 	 * Obtains an instance of the [KeyValueStore]{@link module:api.KeyValueStore} class. By default
 	 * it returns the built-in implementation [InMemoryKeyValueStore]{@link InMemoryKeyValueStore}.
-	 *
 	 * @param {Object} options Specific to the implementation, for initializing the instance.
 	 * @returns {KeyValueStore} {@link module:api.KeyValueStore} instance of the KeyValueStore implementation
 	 */
