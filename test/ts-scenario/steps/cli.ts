@@ -125,9 +125,11 @@ Given(/^I use the cli to lifecycle deploy a (.+?) smart contract named (.+?) at 
 
 		BaseUtils.logMsg(`\n -- Lifecycle deploy step two - package Smart contract ${ccName}`);
 
+		const label = `${ccName}-${channelName}`;
+
 		// Package on each org
 		for (const orgName of orgNames) {
-			await Contract.cli_lifecycle_chaincode_package(ccType, ccName, orgName.toLowerCase());
+			await Contract.cli_lifecycle_chaincode_package(ccType, ccName, orgName.toLowerCase(), label);
 		}
 
 		BaseUtils.logMsg(`\n -- Lifecycle deploy step three - install Smart contract ${ccName}`);
@@ -149,7 +151,7 @@ Given(/^I use the cli to lifecycle deploy a (.+?) smart contract named (.+?) at 
 
 		// Approve on each org
 		for (const orgName of orgNames) {
-			const packageId: string = await Contract.retrievePackageIdForLabelOnOrg(ccName, orgName.toLowerCase()) as any;
+			const packageId = await Contract.retrievePackageIdForLabelOnOrg(label, orgName.toLowerCase());
 			await Contract.cli_lifecycle_chaincode_approve(ccReference, ccVersion, orgName.toLowerCase(), channelName, packageId, '1', tls, ccType, ccName, initRequired);
 			BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} has been approved on organization ${orgName} `);
 		}
