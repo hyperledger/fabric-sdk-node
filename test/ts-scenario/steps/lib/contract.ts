@@ -269,11 +269,11 @@ export async function retrievePackageIdForLabelOnOrg(label: string, orgName: str
  * @param {string} ccName the name of the chaincode
  * @param {string} orgName the organization to use
  */
-export async function cli_lifecycle_chaincode_package(ccType: string, ccName: string, orgName: string): Promise<void> {
+export async function cli_lifecycle_chaincode_package(ccType: string, ccName: string, orgName: string, label: string): Promise<void> {
 
 	try {
 		// Use CLI container to package smart contract (no TLS options required)
-		BaseUtils.logMsg(`Attempting lifecyle package of smart contract ${ccName} for organization ${orgName} using the CLI`);
+		BaseUtils.logMsg(`Attempting lifecyle package of smart contract ${ccName} with label ${label} for organization ${orgName} using the CLI`);
 
 		const ccPath: string = path.join('/', 'opt', 'gopath', 'src', 'github.com', 'chaincode', ccType, ccName);
 		let packageCommand: string[];
@@ -281,15 +281,15 @@ export async function cli_lifecycle_chaincode_package(ccType: string, ccName: st
 			'docker', 'exec', `${orgName}_cli`, 'peer', 'lifecycle', 'chaincode', 'package',
 			`${ccName}.tar.gz`,
 			'--lang', ccType,
-			'--label', ccName,
+			'--label', label,
 			'--path', ccPath,
 		];
 
 		await commandRunner.runShellCommand(true, packageCommand.join(' '), VERBOSE_CLI);
 		await BaseUtils.sleep(Constants.INC_SHORT);
-		BaseUtils.logMsg(`Smart contract ${ccName} has been packaged for organization ${orgName} using the CLI`);
+		BaseUtils.logMsg(`Smart contract ${ccName} with label ${label} has been packaged for organization ${orgName} using the CLI`);
 	} catch (err) {
-		BaseUtils.logError(`Failed to package smart contract ${ccName} using the CLI`, err);
+		BaseUtils.logError(`Failed to package smart contract ${ccName} with label ${label} using the CLI`, err);
 		return Promise.reject(err);
 	}
 }
