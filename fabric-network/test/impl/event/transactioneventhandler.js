@@ -16,6 +16,7 @@ const ChannelEventHub = require('fabric-client').ChannelEventHub;
 const Transaction = require('fabric-network/lib/transaction');
 const TransactionEventHandler = require('fabric-network/lib/impl/event/transactioneventhandler');
 const TimeoutError = require('fabric-network/lib/errors/timeouterror');
+const TransactionError = require('fabric-network/lib/errors/transactionerror');
 const TransactionID = require('fabric-client/lib/TransactionID');
 
 describe('TransactionEventHandler', () => {
@@ -123,7 +124,7 @@ describe('TransactionEventHandler', () => {
 			const code = 'ERROR_CODE';
 			await handler.startListening();
 			stubEventHub._onEventFn(transactionId, code);
-			return expect(handler.waitForEvents()).to.be.rejectedWith(code);
+			return expect(handler.waitForEvents()).to.be.rejectedWith(TransactionError);
 		});
 
 		it('succeeds when strategy calls success function after event received', async () => {

@@ -140,6 +140,9 @@ export interface FabricError extends Error {
 }
 
 export interface TimeoutError extends FabricError {} // tslint:disable-line:no-empty-interface
+export interface TransactionError extends FabricError {
+	transationCode: string;
+}
 
 //-------------------------------------------
 // Wallet Management

@@ -11,9 +11,10 @@ const expect = chai.expect;
 
 const FabricError = require('fabric-network/lib/errors/fabricerror');
 const TimeoutError = require('fabric-network/lib/errors/timeouterror');
+const TransactionError = require('fabric-network/lib/errors/transactionerror');
 
 describe('Common error behaviour', () => {
-	[FabricError, TimeoutError].forEach((ErrorType) => describe(ErrorType.name, () => {
+	[FabricError, TimeoutError, TransactionError].forEach((ErrorType) => describe(ErrorType.name, () => {
 		it('name property matches class name', () => {
 			const error = new ErrorType();
 			expect(error.name).to.equal(ErrorType.name);
@@ -29,6 +30,12 @@ describe('Common error behaviour', () => {
 			const info = {message: 'message'};
 			const error = new ErrorType(info);
 			expect(error.message).to.equal(info.message);
+		});
+
+		it('created with error message property', () => {
+			const info = {transactionCode: 'NOT_VALID'};
+			const error = new ErrorType(info);
+			expect(error.transactionCode).to.equal(info.transactionCode);
 		});
 
 		it('created with cause error', () => {
