@@ -7,6 +7,7 @@
 'use strict';
 
 const TimeoutError = require('fabric-network/lib/errors/timeouterror');
+const TransactionError = require('fabric-network/lib/errors/transactionerror');
 
 const logger = require('fabric-network/lib/logger').getLogger('TransactionEventHandler');
 const util = require('util');
@@ -110,7 +111,11 @@ class TransactionEventHandler {
 		this._receivedEventHubResponse(eventHub);
 		if (code !== 'VALID') {
 			const message = util.format('Peer %s has rejected transaction %j with code %j', eventHub.getPeerAddr(), txId, code);
-			this._strategyFail(new Error(message));
+			this._strategyFail(new TransactionError({
+				message,
+				transactionId: txId,
+				transactionCode: code
+			}));
 		} else {
 			this.strategy.eventReceived(this._strategySuccess.bind(this), this._strategyFail.bind(this));
 		}
