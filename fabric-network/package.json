@@ -6,7 +6,6 @@
     "blockchain"
   ],
   "version": "2.1.1-snapshot",
-  "tag": "unstable",
   "main": "index.js",
   "repository": {
     "type": "git",

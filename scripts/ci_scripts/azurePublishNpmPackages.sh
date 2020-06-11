@@ -11,98 +11,123 @@ set -e -o pipefail
 : "${NPM_TOKEN:?}" # The npm publishing auth token
 : "${PROJECT_DIR:?}" # The project root directory
 
-readonly NODE_MODULES="fabric-protos fabric-common fabric-ca-client fabric-network"
+readonly NODE_PACKAGES=(fabric-protos fabric-common fabric-ca-client fabric-network)
 
 publishAllPackages() {
-    local module moduleDir
-    for module in ${NODE_MODULES}; do
-        moduleDir="${PROJECT_DIR}/${module}"
-        if [ -d "${moduleDir}" ]; then
-            echo -e "\033[32m Publishing ${module} \033[0m"
-            (cd "${moduleDir}" && publishPackage "${module}")
-        fi
+    loadPackageInfo
+    forEachNodePackage preparePackage
+    forEachNodePackage publishPackage
+}
+
+loadPackageInfo() {
+    RELEASE_VERSION=$(readPackageProperty version)
+    : "${RELEASE_VERSION:?}"
+    echoLog "Release version: ${RELEASE_VERSION}"
+
+    RELEASE_TAG=$(readPackageProperty tag)
+    : "${RELEASE_TAG:?}"
+    echoLog "Release tag: ${RELEASE_TAG:?}"
+
+    if isStableRelease; then
+        echoLog 'Stable release'
+    else
+        echoLog 'Unstable release'
+    fi
+}
+
+readPackageProperty() {
+    node -e "console.log(require('./package.json').$1 || '')"
+}
+
+echoLog() {
+    echo -e "\033[32m======>" "$@" "\033[0m"
+}
+
+forEachNodePackage() {
+    local packageName packageDir
+    for packageName in "${NODE_PACKAGES[@]}"; do
+        packageDir="${PROJECT_DIR}/${packageName}"
+        (cd "${packageDir}" && "$@" "${packageName}")
     done
 }
 
-publishPackage() {
-    readPackageVersion
+isStableRelease() {
+    isStableVersion "${RELEASE_VERSION}"
+}
 
-    if [[ ${CURRENT_TAG} = *"skip"* ]]; then
-        echo -e "\033[34m----> Don't publish $1 npm modules on skip tag \033[0m"
-        return
-    fi
+isStableVersion() {
+    [[ $1 = *-* ]] && return 1 || return 0
+}
 
-    configureNpm
+preparePackage() {
+    local packageVersion
 
-    if [[ ${CURRENT_TAG} = *"unstable"* ]]; then
-        publishUnstablePackage "$1"
+    if isSkipPackage; then
+        packageVersion=$(readCurrentPackageVersion "$1")
+        : "${packageVersion:?}"
+        echoLog "Preparing skipped package $1 at version ${packageVersion}"
+    elif isStableRelease; then
+        packageVersion="${RELEASE_VERSION}"
+        echoLog "Preparing stable package $1 at version ${packageVersion}"
     else
-        publishReleasePackage "$1"
+        packageVersion=$(readNextUnstablePackageVersion "$1")
+        echoLog "Preparing unstable package $1 at version ${packageVersion}"
     fi
+
+    updatePackageVersion "${packageVersion}"
+    updateAllDependencyVersions "$1" "${packageVersion}"
 }
 
-readPackageVersion() {
-    # Get the unstable tag from package.json
-    CURRENT_TAG=$(grep '"tag":' package.json | cut -d\" -f4)
-    echo -e "\033[32m ======> Current TAG: ${CURRENT_TAG} \033[0m"
-    # Get the version from package.json
-    RELEASE_VERSION=$(grep '"version":' package.json | cut -d\" -f4)
-    echo -e "\033[32m ======> Current Version: ${RELEASE_VERSION} \033[0m"
+isSkipPackage() {
+    [[ $(readPackageProperty tag) = skip ]]
 }
 
-configureNpm() {
-    echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' > '.npmrc'
+readCurrentPackageVersion() {
+    npm dist-tags ls "$1" | awk "/^${RELEASE_TAG}:"/'{ print $NF }'
 }
 
-publishUnstablePackage() {
-    local module
-    # Get the current unstable version of a module from npm registry
-    UNSTABLE_VER=$(npm dist-tags ls "$1" | awk "/${CURRENT_TAG}:"/'{
+readNextUnstablePackageVersion() {
+    local nextVersion
+    nextVersion=$(npm dist-tags ls "$1" | awk "/^${RELEASE_TAG}:"/'{
         ver=$NF
         rel=$NF
         sub(/.*\./,"",rel)
         sub(/\.[[:digit:]]+$/,"",ver)
-        print ver"."rel+1
+        print rel+1
     }')
-    if [[ -z ${UNSTABLE_VER} ]]; then
-        echo -e "\033[34m  ----> unstable ver is blank \033[0m"
-        UNSTABLE_INCREMENT=1
-    else
-        # Get last digit of the unstable version built above
-        UNSTABLE_INCREMENT=$(echo "${UNSTABLE_VER}" | rev | cut -d '.' -f 1 | rev)
-    fi
-    echo -e "\033[32m======> UNSTABLE_INCREMENT: ${UNSTABLE_INCREMENT} \033[0m"
-    # Append last digit with the package.json version
-    export UNSTABLE_INCREMENT_VERSION="${RELEASE_VERSION}.${UNSTABLE_INCREMENT}"
-    echo -e "\033[32m======> UNSTABLE_INCREMENT_VERSION: ${UNSTABLE_INCREMENT_VERSION} \033[0m"
-    for module in ${NODE_MODULES}; do
-        sed -i "s/\"${module}\": \".*\"/\"${module}\": \"${CURRENT_TAG}\"/" package.json
-    done
-
-    # Replace existing version with $UNSTABLE_INCREMENT_VERSION
-    sed -i 's/\(.*\"version\"\: \"\)\(.*\)/\1'"${UNSTABLE_INCREMENT_VERSION}"\"\,'/' package.json
-    # Show Version after modify the package.json with latest version to publish
-    grep '"version":' package.json | cut -d\" -f4
-    # Publish unstable versions to npm registry
-    npmPublish "$1"
+    echo "${RELEASE_VERSION}.${nextVersion:-1}"
 }
 
-publishReleasePackage() {
-    local module
-    echo -e "\033[32m ========> PUBLISH $RELEASE_VERSION \033[0m"
-    for module in ${NODE_MODULES}; do
-        sed -i "s/\"${module}\": \".*\"/\"${module}\": \"${CURRENT_TAG}\"/" package.json
-    done
+updatePackageVersion() {
+    npm --allow-same-version --no-git-tag-version version "$1"
+}
 
-    npmPublish "$1"
+updateAllDependencyVersions() {
+    forEachNodePackage updateDependencyVersion "$1" "$2"
+}
+
+updateDependencyVersion() {
+    local packageJson
+    packageJson=$(node -e "const pkg = require('./package.json'); if (pkg.dependencies['$1']) pkg.dependencies['$1'] = '$2'; console.log(JSON.stringify(pkg, undefined, 2))")
+    echo "${packageJson}" > package.json
+}
+
+publishPackage() {
+    if [[ $(readPackageProperty tag) = skip ]]; then
+        echoLog "Skipping publish for package $1"
+        return
+    fi
+
+    if npmPublish; then
+        echoLog "Successfully published ${RELEASE_TAG} tag of $1"
+    else
+        echoLog "FAILED to publish ${RELEASE_TAG} of $1"
+    fi
 }
 
 npmPublish() {
-    npm publish --tag "${CURRENT_TAG}" || {
-        echo -e "\033[31m FAILED to publish ${CURRENT_TAG} of $1 npm module \033[0m"
-        exit 1
-    }
-    echo -e "\033[32m ========> PUBLISHED ${CURRENT_TAG} tag of $1 npm module SUCCESSFULLY \033[0m"
+    echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' > '.npmrc'
+    npm publish --tag "${RELEASE_TAG}"
 }
 
-publishAllPackages
+(cd "${PROJECT_DIR}" && publishAllPackages)
