@@ -577,8 +577,22 @@ class DiscoveryService extends ServiceAction {
 		const orderer = this.client.newCommitter(address, msp_id);
 		const end_point = this.client.newEndpoint(this._buildOptions(address, url, host, msp_id));
 		try {
-			await orderer.connect(end_point);
-			this.channel.addCommitter(orderer);
+			// first check to see if orderer is already on this channel
+			let same = false;
+			const channelOrderers = this.channel.getCommitters();
+			for (const channelOrderer of channelOrderers) {
+				logger.debug('%s - checking %s', method, channelOrderer);
+				if (channelOrderer.endpoint && channelOrderer.endpoint.url === url) {
+					same = true;
+					break;
+				}
+			}
+			if (!same) {
+				await orderer.connect(end_point);
+				this.channel.addCommitter(orderer);
+			} else {
+				logger.debug('%s - %s - already added to this channel', method, orderer);
+			}
 		} catch (error) {
 			logger.error(`${method} - Unable to connect to the discovered orderer ${address} due to ${error}`);
 		}
@@ -608,10 +622,24 @@ class DiscoveryService extends ServiceAction {
 		const peer = this.client.newEndorser(address, msp_id);
 		const end_point = this.client.newEndpoint(this._buildOptions(address, url, host_port[0], msp_id));
 		try {
-			logger.debug(`${method} - about to connect to endorser ${address} url:${url}`);
-			await peer.connect(end_point);
-			this.channel.addEndorser(peer);
-			logger.debug(`${method} - connected to peer ${address} url:${url}`);
+			// first check to see if peer is already on this channel
+			let same = false;
+			const channelPeers = this.channel.getEndorsers();
+			for (const channelPeer of channelPeers) {
+				logger.debug('%s - checking %s', method, channelPeer);
+				if (channelPeer.endpoint && channelPeer.endpoint.url === url) {
+					same = true;
+					break;
+				}
+			}
+			if (!same) {
+				logger.debug(`${method} - about to connect to endorser ${address} url:${url}`);
+				await peer.connect(end_point);
+				this.channel.addEndorser(peer);
+				logger.debug(`${method} - connected to peer ${address} url:${url}`);
+			} else {
+				logger.debug('%s - %s - already added to this channel', method, peer);
+			}
 		} catch (error) {
 			logger.error(`${method} - Unable to connect to the discovered peer ${address} due to ${error}`);
 		}
