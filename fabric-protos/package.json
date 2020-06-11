@@ -1,7 +1,6 @@
 {
   "name": "fabric-protos",
   "version": "2.1.1-snapshot",
-  "tag": "unstable",
   "description": "Protocol Buffer files and generated JavaScript classes for Hyperledger Fabric",
   "main": "index.js",
   "scripts": {
