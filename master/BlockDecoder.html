@@ -103,7 +103,8 @@
         </h2>
         
             <div class="class-description">Utility class to convert a protobuf encoded byte array of a Hyperledger Fabric block
-message into a pure Javascript object</div>
+message into a pure Javascript object with the key names as they appear in the protobuf
+defintions (typically snake case)</div>
         
     
 </header>
@@ -207,7 +208,7 @@ message into a pure Javascript object</div>
             
 <hr>
 <dt>
-    <h4 class="name" id=".decode"><span class="type-signature">&lt;static> </span>decode(block_bytes)</h4>
+    <h4 class="name" id=".decode"><span class="type-signature">&lt;static> </span>decode(blockBuf)</h4>
     
     
 </dt>
@@ -251,7 +252,7 @@ protobuf encoded `Block` bytes.
 
         <tr>
             
-                <td class="name"><code>block_bytes</code></td>
+                <td class="name"><code>blockBuf</code></td>
             
 
             <td class="type">
@@ -360,7 +361,7 @@ protobuf encoded `Block` bytes.
             
 <hr>
 <dt>
-    <h4 class="name" id=".decodeBlock"><span class="type-signature">&lt;static> </span>decodeBlock(block_data)</h4>
+    <h4 class="name" id=".decodeBlock"><span class="type-signature">&lt;static> </span>decodeBlock(blockProto-)</h4>
     
     
 </dt>
@@ -369,7 +370,7 @@ protobuf encoded `Block` bytes.
     
     <div class="description">
         Constructs an object containing all decoded values from the
-protobuf encoded `Block` object
+protobuf `common.Block` object
     </div>
     
 
@@ -404,7 +405,7 @@ protobuf encoded `Block` object
 
         <tr>
             
-                <td class="name"><code>block_data</code></td>
+                <td class="name"><code>blockProto-</code></td>
             
 
             <td class="type">
@@ -513,7 +514,7 @@ protobuf encoded `Block` object
             
 <hr>
 <dt>
-    <h4 class="name" id=".decodeBlockWithPrivateData"><span class="type-signature">&lt;static> </span>decodeBlockWithPrivateData(block_with_private_data)</h4>
+    <h4 class="name" id=".decodeBlockWithPrivateData"><span class="type-signature">&lt;static> </span>decodeBlockWithPrivateData(blockAndPrivateDataProto)</h4>
     
     
 </dt>
@@ -522,7 +523,7 @@ protobuf encoded `Block` object
     
     <div class="description">
         Constructs an object containing all decoded values from the
-protobuf encoded `BlockAndPrivateData` object
+protobuf `BlockAndPrivateData` object
     </div>
     
 
@@ -557,7 +558,7 @@ protobuf encoded `BlockAndPrivateData` object
 
         <tr>
             
-                <td class="name"><code>block_with_private_data</code></td>
+                <td class="name"><code>blockAndPrivateDataProto</code></td>
             
 
             <td class="type">
@@ -666,7 +667,160 @@ protobuf encoded `BlockAndPrivateData` object
             
 <hr>
 <dt>
-    <h4 class="name" id=".decodeTransaction"><span class="type-signature">&lt;static> </span>decodeTransaction(processed_transaction_bytes)</h4>
+    <h4 class="name" id=".decodeFilteredBlock"><span class="type-signature">&lt;static> </span>decodeFilteredBlock(filteredBlockProto-)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Constructs an object containing all decoded values from the
+protobuf `common.Block` object
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>filteredBlockProto-</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">an object that represents the protobuf protos.FilteredBlock</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    An object of the fully decoded protobuf protos.FilteredBlock
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">FilteredBlock</span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id=".decodeTransaction"><span class="type-signature">&lt;static> </span>decodeTransaction(processedTransactionBuf)</h4>
     
     
 </dt>
@@ -710,7 +864,7 @@ protobuf encoded "ProcessedTransaction" bytes
 
         <tr>
             
-                <td class="name"><code>processed_transaction_bytes</code></td>
+                <td class="name"><code>processedTransactionBuf</code></td>
             
 
             <td class="type">
@@ -864,9 +1018,9 @@ protobuf encoded "ProcessedTransaction" bytes
 
 
 <span class="jsdoc-message">
-	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a>
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.4</a>
 	
-		on 2020-06-12T15:47:09+00:00
+		on 2020-06-12T21:13:16+00:00
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>
