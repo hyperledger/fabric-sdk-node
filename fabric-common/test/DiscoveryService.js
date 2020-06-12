@@ -129,8 +129,9 @@ describe('DiscoveryService', () => {
 		client.newCommitter = sinon.stub().returns(committer);
 		committer.connect.resolves(true);
 		committer.name = 'mycommitter';
+		committer.connect.resolves(true);
+		committer.connected = true;
 		channel.committers = new Map();
-		channel.addCommitter = sinon.stub();
 	});
 
 	afterEach(() => {
@@ -549,18 +550,27 @@ describe('DiscoveryService', () => {
 			should.equal(results, 'mycommitter:80');
 			sinon.assert.calledWith(FakeLogger.error, '_buildOrderer[mydiscovery] - Unable to connect to the discovered orderer mycommitter:80 due to Error: failed to connect');
 		});
+		it('should handle found same name committer on the channel', async () => {
+			channel.addCommitter(committer);
+			committer.endpoint = endpoint;
+			discovery._buildUrl = sinon.stub().returns('grpc://somehost.com');
+			await discovery._buildOrderer('somehost.com', 7000, 'mspid');
+			should.equal(channel.getCommitters().length, 1);
+			sinon.assert.calledWith(FakeLogger.debug, '%s - %s - already added to this channel');
+		});
 	});
 
 	describe('#_buildPeer', () => {
 		it('should handle no parms', async () => {
 			await discovery._buildPeer().should.be.rejectedWith('Missing discovery_peer parameter');
 		});
-		it('should handle found endorser on the channel', async () => {
+		it('should handle found same name endorser on the channel', async () => {
 			endorser.name = 'mypeer';
 			channel.endorsers = new Map();
 			channel.addEndorser(endorser);
 			const results = await discovery._buildPeer({endpoint: 'mypeer'});
 			should.equal(results, endorser);
+			should.equal(channel.getEndorsers().length, 1);
 		});
 		it('should run', async () => {
 			discovery.discoveryResults = {};
@@ -586,6 +596,17 @@ describe('DiscoveryService', () => {
 			endorser.connect.throws(new Error('failed to connect'));
 			const results = await discovery._buildPeer({endpoint: 'host3.com:1000', name: 'host3.com:1000', mspid: 'msp1'});
 			should.equal(results.name, 'host3.com:1000');
+		});
+		it('should handle found same name endorser on the channel', async () => {
+			endorser.name = 'mypeer';
+			channel.endorsers = new Map();
+			channel.addEndorser(endorser);
+			endorser.endpoint = endpoint;
+			discovery._buildUrl = sinon.stub().returns('grpc://somehost.com');
+			const results = await discovery._buildPeer({endpoint: 'somehost.com', mspid: 'mspid'});
+			should.equal(results, endorser);
+			should.equal(channel.getEndorsers().length, 1);
+			sinon.assert.calledWith(FakeLogger.debug, '%s - %s - already added to this channel');
 		});
 	});
 

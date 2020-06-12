@@ -319,9 +319,9 @@ class DiscoveryHandler extends ServiceHandler {
 					logger.debug('%s - existing peer %s endorsement will be used', method, peer_info.name);
 				} else {
 					if (peer_info.in_use) {
-						logger.debug('%s - peer in use %s', method, peer_info.name);
+						logger.debug('%s - peer in use %s, skipping', method, peer_info.name);
 					} else {
-						const peer = this.discovery.channel.getEndorser(peer_info.name);
+						const peer = this._getPeer(peer_info.endpoint);
 						if (peer) {
 							logger.debug('%s - send endorsement to %s', method, peer_info.name);
 							peer_info.in_use = true;
@@ -578,6 +578,26 @@ class DiscoveryHandler extends ServiceHandler {
 		}
 
 		return result_list;
+	}
+
+	/*
+	 * utility function to return a peer with the requested url
+	 */
+	_getPeer(address) {
+		let result = null;
+		if (address) {
+			const host_port = address.split(':');
+			const url = this.discovery._buildUrl(host_port[0], host_port[1]);
+			const peers = 	this.discovery.channel.getEndorsers();
+			for (const peer of peers) {
+				if (peer.endpoint && peer.endpoint.url === url) {
+					result = peer;
+					break;
+				}
+			}
+		}
+
+		return result;
 	}
 
 	toString() {

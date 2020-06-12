@@ -33,6 +33,8 @@ describe('DiscoveryHandler', () => {
 
 	const tmpSetDelete = Set.prototype.delete;
 
+	let peer11, peer12, peer21, peer22, peer31, peer32, peer33;
+
 	// const pem = '-----BEGIN CERTIFICATE-----    -----END CERTIFICATE-----\n';
 	const org1 = [
 		'Org1MSP',
@@ -168,33 +170,40 @@ describe('DiscoveryHandler', () => {
 		revert.push(DiscoveryHandler.__set__('logger', FakeLogger));
 
 		channel = client.newChannel('mychannel');
-		const peer11 = client.newEndorser(org1[1], org1[0]);
+		peer11 = client.newEndorser(org1[1], org1[0]);
+		peer11.endpoint = {url: 'grpcs://' + org1[1], addr: org1[1]};
 		peer11.sendProposal = sandbox.stub().resolves(good);
 		peer11.connected = true;
 		channel.addEndorser(peer11);
-		const peer12 = client.newEndorser(org1[2], org1[0]);
+		peer12 = client.newEndorser(org1[2], org1[0]);
+		peer12.endpoint = {url: 'grpcs://' + org1[2], addr: org1[2]};
 		peer12.sendProposal = sandbox.stub().resolves(good);
 		peer12.connected = true;
 		channel.addEndorser(peer12);
 
-		const peer21 = client.newEndorser(org2[1], org2[0]);
+		peer21 = client.newEndorser(org2[1], org2[0]);
+		peer21.endpoint = {url: 'grpcs://' + org2[1], addr: org2[1]};
 		peer21.sendProposal = sandbox.stub().resolves(good);
 		peer21.connected = true;
 		channel.addEndorser(peer21);
-		const peer22 = client.newEndorser(org2[2], org2[0]);
+		peer22 = client.newEndorser(org2[2], org2[0]);
+		peer22.endpoint = {url: 'grpcs://' + org2[2], addr: org2[2]};
 		peer22.sendProposal = sandbox.stub().resolves(good);
 		peer22.connected = true;
 		channel.addEndorser(peer22);
 
-		const peer31 = client.newEndorser(org3[1], org3[0]);
+		peer31 = client.newEndorser(org3[1], org3[0]);
+		peer31.endpoint = {url: 'grpcs://' + org3[1], addr: org3[1]};
 		peer31.sendProposal = sandbox.stub().resolves(good);
 		peer31.connected = true;
 		channel.addEndorser(peer31);
-		const peer32 = client.newEndorser(org3[2], org3[0]);
+		peer32 = client.newEndorser(org3[2], org3[0]);
+		peer32.endpoint = {url: 'grpcs://' + org3[2], addr: org3[2]};
 		peer32.sendProposal = sandbox.stub().resolves(good);
 		peer32.connected = true;
 		channel.addEndorser(peer32);
-		const peer33 = client.newEndorser(org3[3], org3[0]);
+		peer33 = client.newEndorser(org3[3], org3[0]);
+		peer33.endpoint = {url: 'grpcs://' + org3[3], addr: org3[3]};
 		peer33.sendProposal = sandbox.stub().resolves(good);
 		peer33.connected = true;
 		channel.addEndorser(peer33);
@@ -476,8 +485,8 @@ describe('DiscoveryHandler', () => {
 		});
 		it('should run ok and return error when endorser rejects', async () => {
 			endorsement_plan.endorsements = {};
-			channel.getEndorser(org1[1]).sendProposal = sandbox.stub().rejects(Error('FAILED'));
-			channel.getEndorser(org1[2]).sendProposal = sandbox.stub().rejects(Error('FAILED'));
+			peer11.sendProposal = sandbox.stub().rejects(Error('FAILED'));
+			peer12.sendProposal = sandbox.stub().rejects(Error('FAILED'));
 			// TEST CALL
 			const results = await discoveryHandler._build_endorse_group_member(
 				endorsement_plan, // endorsement plan
@@ -488,8 +497,8 @@ describe('DiscoveryHandler', () => {
 				'G0' // group name
 			);
 			results.message.should.equal('FAILED');
-			sinon.assert.called(channel.getEndorser(org1[1]).sendProposal);
-			sinon.assert.called(channel.getEndorser(org1[2]).sendProposal);
+			sinon.assert.called(peer11.sendProposal);
+			sinon.assert.called(peer12.sendProposal);
 			sinon.assert.calledWith(FakeLogger.error, '%s - error on endorsement to %s error %s');
 		});
 		it('should run ok when endorser failed on last layout', async () => {
@@ -505,8 +514,8 @@ describe('DiscoveryHandler', () => {
 				'G0' // group name
 			);
 			results.response.status.should.equal(200);
-			sinon.assert.notCalled(channel.getEndorser(org1[1]).sendProposal);
-			sinon.assert.called(channel.getEndorser(org1[2]).sendProposal);
+			sinon.assert.notCalled(peer11.sendProposal);
+			sinon.assert.called(peer12.sendProposal);
 			sinon.assert.calledWith(FakeLogger.debug, '%s - existing peer %s endorsement will be used');
 		});
 		it('should run ok when endorser failed on last layout', async () => {
@@ -522,8 +531,8 @@ describe('DiscoveryHandler', () => {
 				'G0' // group name
 			);
 			results.response.status.should.equal(200);
-			sinon.assert.notCalled(channel.getEndorser(org1[1]).sendProposal);
-			sinon.assert.notCalled(channel.getEndorser(org1[2]).sendProposal);
+			sinon.assert.notCalled(peer11.sendProposal);
+			sinon.assert.notCalled(peer12.sendProposal);
 			sinon.assert.calledWith(FakeLogger.debug, '%s - existing peer %s endorsement will be used');
 		});
 		it('should run ok when endorser failed on last layout', async () => {
@@ -539,9 +548,9 @@ describe('DiscoveryHandler', () => {
 				'G0' // group name
 			);
 			results.response.status.should.equal(200);
-			sinon.assert.notCalled(channel.getEndorser(org1[1]).sendProposal);
-			sinon.assert.called(channel.getEndorser(org1[2]).sendProposal);
-			sinon.assert.calledWith(FakeLogger.debug, '%s - peer in use %s');
+			sinon.assert.notCalled(peer11.sendProposal);
+			sinon.assert.called(peer12.sendProposal);
+			sinon.assert.calledWith(FakeLogger.debug, '%s - peer in use %s, skipping');
 		});
 		it('should run ok when no endorsement found', async () => {
 			endorsement_plan.endorsements = {};
@@ -557,7 +566,7 @@ describe('DiscoveryHandler', () => {
 				'G0' // group name
 			);
 			results.message.should.equal('No endorsement available');
-			sinon.assert.notCalled(channel.getEndorser(org1[2]).sendProposal);
+			sinon.assert.notCalled(peer12.sendProposal);
 			sinon.assert.calledWith(FakeLogger.error, '%s - returning an error endorsement, no endorsement made');
 			sinon.assert.calledWith(FakeLogger.debug, '%s - peer %s not assigned to this channel');
 		});
