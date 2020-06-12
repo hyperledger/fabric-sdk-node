@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 
 const Utils = require('../lib/Utils');
-const fabprotos = require('fabric-protos');
+const fabproto6 = require('fabric-protos');
 const pem =
 '-----BEGIN CERTIFICATE-----\n' +
 'MIICSTCCAe+gAwIBAgIQPHXmPqjzn2bon7JrBRPS2DAKBggqhkjOPQQDAjB2MQsw\n' +
@@ -67,40 +67,47 @@ module.exports.createProposalResponse = (results, status = 200) => {
 	if (typeof results !== 'string') {
 		results = '';
 	}
-	const extension = new fabprotos.protos.ChaincodeAction();
-	extension.response = new fabprotos.protos.Response();
-	extension.results = Buffer.from(results);
+	const extension = fabproto6.protos.ChaincodeAction.create({
+		response: fabproto6.protos.Response.create(),
+		results: Buffer.from(results)
+	});
+	const extensionBuff  = fabproto6.protos.ChaincodeAction.encode(extension).finish();
+	const payload = fabproto6.protos.ProposalResponsePayload.create({
+		extension: extensionBuff
+	});
+	const payloadBuff  = fabproto6.protos.ProposalResponsePayload.encode(payload).finish();
 
-	const payload = new fabprotos.protos.ProposalResponsePayload();
-	payload.extension = extension.toBuffer();
+	const identity = fabproto6.msp.SerializedIdentity.create({
+		mspid: 'msp1'
+	});
+	const identityBuff  = fabproto6.msp.SerializedIdentity.encode(identity).finish();
 
-	const identity = new fabprotos.msp.SerializedIdentity();
-	identity.setMspid('msp1');
+	const endorsement = fabproto6.protos.Endorsement.create({
+		endorser: identityBuff,
+		signature: Buffer.from('signature')
+	});
 
-	const endorsement = new fabprotos.protos.Endorsement();
-	endorsement.setEndorser(identity.toBuffer());
-	endorsement.setSignature(Buffer.from('signature'));
+	const response = fabproto6.protos.Response.create({
+		status: status,
+		message: 'Dummy message',
+		payload: Buffer.from('response payload')
+	});
 
-	const response = new fabprotos.protos.Response();
-	response.setStatus(status);
-	response.setMessage('Dummy message');
-	response.setPayload(Buffer.from('response payload'));
-
-	const proposalResponse = new fabprotos.protos.ProposalResponse();
-	proposalResponse.setResponse(response);
-	proposalResponse.setPayload(payload.toBuffer());
-	proposalResponse.setEndorsement(endorsement);
+	const proposalResponse = fabproto6.protos.ProposalResponse.create({
+		response: response,
+		payload: payloadBuff,
+		endorsement: endorsement
+	});
 
 	return proposalResponse;
 };
 
 module.exports.createMsp = (name = 'mspid') => {
-	const msp = new fabprotos.msp.FabricMSPConfig();
-	msp.setName(name);
-	// msp.setRootCerts(Buffer.from(pem));
-	msp.root_certs = Buffer.from(pem);
-	// msp.setTlsIntermediateCerts(Buffer.from(pem));
-	msp.tls_intermediate_certs = Buffer.from(pem);
+	const msp = fabproto6.msp.FabricMSPConfig.create({
+		name: name,
+		root_certs: Buffer.from(pem),
+		tls_intermediate_certs: Buffer.from(pem)
+	});
 
 	return msp;
 };
@@ -108,9 +115,10 @@ module.exports.createMsp = (name = 'mspid') => {
 module.exports.createEndpoints = (host_base, count) => {
 	const endpoints = [];
 	for (let index = 1; index < count + 1; index++) {
-		const endpoint = new fabprotos.discovery.Endpoint();
-		endpoint.setHost(`${host_base}${index}`);
-		endpoint.setPort(1000);
+		const endpoint = fabproto6.discovery.Endpoint.create({
+			host: `${host_base}${index}`,
+			port: 1000,
+		});
 		endpoints.push(endpoint);
 	}
 
@@ -118,70 +126,90 @@ module.exports.createEndpoints = (host_base, count) => {
 };
 
 module.exports.createSerializedIdentity = (mspid = 'msp1') => {
-	const identity = new fabprotos.msp.SerializedIdentity();
-	identity.setMspid(mspid);
+	const identity = fabproto6.msp.SerializedIdentity.create({
+		mspid: mspid
+	});
+	const identityBuff  = fabproto6.msp.SerializedIdentity.encode(identity).finish();
 
-	return identity.toBuffer();
+	return identityBuff;
 };
 
 module.exports.createMembership = (endpoint = 'host.com:1000') => {
-	const gossip_message = new fabprotos.gossip.GossipMessage();
-	const alive_msg = new fabprotos.gossip.AliveMessage();
-	const member = new fabprotos.gossip.Member();
-	member.setEndpoint(endpoint);
-	alive_msg.setMembership(member);
-	gossip_message.setAliveMsg(alive_msg);
+	const member = fabproto6.gossip.Member.create({
+		endpoint: endpoint
+	});
+	const aliveMsg = fabproto6.gossip.AliveMessage.create({
+		membership: member
+	});
+	const gossipMessage = fabproto6.gossip.GossipMessage.create({
+		alive_msg: aliveMsg
+	});
+	const gossipMessageBuff  = fabproto6.gossip.GossipMessage.encode(gossipMessage).finish();
 
-	return gossip_message.toBuffer();
+	return gossipMessageBuff;
 };
 
 module.exports.createStateInfo = (ledgerHeight = 1000, names = ['chaincode1', 'chaincode2']) => {
-	const gossip_message = new fabprotos.gossip.GossipMessage();
-	const state_info = new fabprotos.gossip.StateInfo();
-	const properties = new fabprotos.gossip.Properties();
 	const chaincodes = [];
 	for (const name of names) {
-		const chaincode = new fabprotos.gossip.Chaincode();
-		chaincode.setName(name);
-		chaincode.setVersion('v1');
+		const chaincode = fabproto6.gossip.Chaincode.create({
+			name: name,
+			version: 'v1',
+		});
 		chaincodes.push(chaincode);
 	}
-	properties.setChaincodes(chaincodes);
-	properties.setLedgerHeight(Long.fromValue(ledgerHeight));
-	state_info.setProperties(properties);
-	gossip_message.setStateInfo(state_info);
+	const properties = fabproto6.gossip.Properties.create({
+		chaincodes: chaincodes,
+		ledger_height: Long.fromValue(ledgerHeight),
+	});
+	const stateInfo = fabproto6.gossip.StateInfo.create({
+		properties: properties
+	});
 
-	return gossip_message.toBuffer();
+	const gossipMessage = fabproto6.gossip.GossipMessage.create({
+		state_info: stateInfo
+	});
+	const gossipMessageBuff  = fabproto6.gossip.GossipMessage.encode(gossipMessage).finish();
+
+	return gossipMessageBuff;
 };
 
-module.exports.createChannelHeader = (type = 1, chaincode_name = 'chaincode', channel_name = 'channel', transactionId = 'txid') => {
-	const channelHeader = new fabprotos.common.ChannelHeader();
-	channelHeader.setType(type); // int32
-	channelHeader.setVersion(1); // int32
+module.exports.createChannelHeader = (type = 1, chaincodeName = 'chaincode', channelName = 'channel', transactionId = 'txid') => {
+	const chaincodeId = fabproto6.protos.ChaincodeID.create({
+		name: chaincodeName
+	});
 
-	channelHeader.setChannelId(channel_name); // string
-	channelHeader.setTxId(transactionId.toString()); // string
+	const headerExt = fabproto6.protos.ChaincodeHeaderExtension.create({
+		chaincode_id: chaincodeId
+	});
+	const headerExtBuff  = fabproto6.protos.ChaincodeHeaderExtension.encode(headerExt).finish();
 
-	const chaincodeID = new fabprotos.protos.ChaincodeID();
-	chaincodeID.setName(chaincode_name);
-
-	const headerExt = new fabprotos.protos.ChaincodeHeaderExtension();
-	headerExt.setChaincodeId(chaincodeID);
-
-	channelHeader.setExtension(headerExt.toBuffer());
-	channelHeader.setTlsCertHash(Buffer.from('cert'));
+	const channelHeader = fabproto6.common.ChannelHeader.create({
+		type: type,
+		version: 1,
+		chaincode_id: channelName,
+		tx_id: transactionId.toString(),
+		extension: headerExtBuff,
+		tls_cert_hash: Buffer.from('cert')
+	});
 
 	return channelHeader;
 };
 
 module.exports.createResponsePayload = (results = 'results') => {
-	const payload = new fabprotos.protos.ProposalResponsePayload();
-	payload.setProposalHash(Buffer.from('proposal'));
-	const extension = new fabprotos.protos.ChaincodeAction();
-	extension.setResults(Buffer.from(results));
-	payload.setExtension(extension.toBuffer());
 
-	return payload.toBuffer();
+	const extension = fabproto6.protos.ChaincodeAction.create({
+		results: Buffer.from(results)
+	});
+	const extensionBuff  = fabproto6.protos.ChaincodeAction.encode(extension).finish();
+
+	const payload = fabproto6.protos.ProposalResponsePayload.create({
+		proposal_hash: Buffer.from('proposal'),
+		extension: extensionBuff
+	});
+	const payloadBuff  = fabproto6.protos.ProposalResponsePayload.encode(payload).finish();
+
+	return payloadBuff;
 };
 
 module.exports.TEST_KEY_PRIVATE_CERT_PEM = '-----BEGIN CERTIFICATE-----' +

@@ -10,25 +10,13 @@ const {checkParameter, getLogger} = require('./Utils.js');
 const logger = getLogger(TYPE);
 const ServiceEndpoint = require('./ServiceEndpoint.js');
 
-const fabprotos = require('fabric-protos');
-
-const _validation_codes = {};
-let keys = Object.keys(fabprotos.protos.TxValidationCode);
-for (const key of keys) {
-	const new_key = fabprotos.protos.TxValidationCode[key];
-	_validation_codes[new_key] = key;
-}
-
-const _header_types = {};
-keys = Object.keys(fabprotos.common.HeaderType);
-for (const key of keys) {
-	const new_key = fabprotos.common.HeaderType[key];
-	_header_types[new_key] = key;
-}
+const fabproto6 = require('fabric-protos');
 
 const FILTERED_BLOCK = 'filtered';
 const FULL_BLOCK = 'full';
 const PRIVATE_BLOCK = 'private';
+
+let eventerCount = 1;
 
 /**
  * Eventer is used to monitor for new blocks on a peer's ledger.
@@ -54,13 +42,11 @@ class Eventer extends ServiceEndpoint {
 		this.type = TYPE;
 		this.mspid = mspid;
 
-		this.serviceClass = fabprotos.protos.Deliver;
+		this.serviceClass = fabproto6.services.protos.Deliver;
 		// grpc chat streaming on the service
 		this.stream = null;
-		// the streams can live on, so lets be sure we are working with
-		// the right one if we get restarted
-		this._current_stream = 0;
-		this._stream_starting = false;
+		// debug check
+		this.myCount = eventerCount++;
 	}
 
 	/**
@@ -70,27 +56,31 @@ class Eventer extends ServiceEndpoint {
 	 * from the peer service.
 	 */
 	disconnect() {
-		const method = `disconnect[${this.name}]`;
-		logger.debug(`${method} - start - hub`);
+		const method = `disconnect[${this.name}:${this.myCount}]`;
+		logger.debug(`${method} - start on Eventer`);
+
 		if (this.stream) {
 			logger.debug(`${method} - shutdown existing stream`);
 			this.stream.cancel();
-			this.stream.end();
-			this._stream_starting = false;
-			this.stream = null;
+			if (this.stream) {
+				this.stream.end();
+				this.stream = null;
+			} else {
+				logger.debug('%s - no stream to end', method);
+			}
 		} else {
 			logger.debug(`${method} - no stream to close`);
 		}
 
 		super.disconnect();
-		logger.debug(`${method} - end`);
+		logger.debug(`${method} - end on Eventer`);
 	}
 
 	/**
 	 * Check the connection status
 	 */
 	async checkConnection() {
-		const method = `checkConnection[${this.name}]`;
+		const method = `checkConnection[${this.name}:${this.myCount}]`;
 		logger.debug(`${method} - start`);
 
 		let result = false;
@@ -127,7 +117,7 @@ class Eventer extends ServiceEndpoint {
 	 * and not paused.
 	 */
 	isStreamReady() {
-		const method = 'isStreamReady';
+		const method = `isStreamReady[[${this.name}:${this.myCount}]`;
 		logger.debug(`${method} - start`);
 
 		let ready = false;
@@ -135,7 +125,7 @@ class Eventer extends ServiceEndpoint {
 			if (this.stream.isPaused()) {
 				logger.debug(`${method} - grpc isPaused`);
 			} else {
-				ready = this.stream.readable && this.stream.writable && this.stream.reading;
+				ready = this.stream.readable && this.stream.writable;
 			}
 		} else {
 			logger.debug(`${method} - no stream to check`);

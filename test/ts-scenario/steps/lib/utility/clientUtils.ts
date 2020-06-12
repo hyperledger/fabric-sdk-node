@@ -322,6 +322,7 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 						result: commitResults[0]
 					})
 				};
+				BaseUtils.logMsg(' - commitChannelRequest complete');
 			} catch (error) {
 				// Swallow error as we might be testing a failure path, but modify request object with error msg and status
 				requestObject.results = {
@@ -335,6 +336,8 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 			BaseUtils.logError('sendChannelRequest failed with error', error.stack);
 			throw error;
 		} finally {
+			BaseUtils.logMsg(' - commitChannelRequest finally');
+
 			if (targetPeers) {
 				for (const target of targetPeers) {
 					target.disconnect();
@@ -342,7 +345,7 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 			}
 			orderer.disconnect();
 			eventer.disconnect();
-			BaseUtils.logMsg(`Disconnected all endpoints for client object ${clientName} and request ${requestName}`);
+			BaseUtils.logMsg(`- disconnected all endpoints for client object ${clientName} and request ${requestName}`);
 		}
 	} else {
 		BaseUtils.logAndThrow(`Request named ${requestName} does not exits on client object for client ${clientName}`);
@@ -728,7 +731,7 @@ export async function registerEventListener(
 					}
 					const results = {block: event?.blockNumber.toString()};
 					listenerObject.results = {block: event?.blockNumber.toString()};
-					BaseUtils.logMsg(`Store event listener ${listenerName} results of ${JSON.stringify(results)}`);
+					BaseUtils.logMsg(`Store block event listener ${listenerName} results of ${JSON.stringify(results)}`);
 				},
 				listenerOptions
 			);
@@ -748,14 +751,14 @@ export async function registerEventListener(
 						return;
 					}
 
-					BaseUtils.logMsg(`Chaincode listener event received for ${listenerName} :: ${JSON.stringify(event)}`);
+					BaseUtils.logMsg(`Chaincode listener event received for ${listenerName} :: ${event}`);
 
 					if (event?.chaincodeEvents) {
 						for (const chaincodeEvent of event.chaincodeEvents) {
 							const results: any = {};
 							results[chaincodeEvent.eventName] = chaincodeEvent.payload ? chaincodeEvent.payload.toString() : '';
 							listenerObject.results = results;
-							BaseUtils.logMsg(`Store event listener ${listenerName} results of ${JSON.stringify(results)}`);
+							BaseUtils.logMsg(`Store chaincode event listener ${listenerName} results of ${JSON.stringify(results)}`);
 						}
 					}
 				},

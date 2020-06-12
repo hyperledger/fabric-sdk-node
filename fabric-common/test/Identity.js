@@ -7,7 +7,7 @@
 const CryptoSuite = require('../lib/CryptoSuite');
 const Identity = require('../lib/Identity');
 const Key = require('../lib/Key');
-const fabprotos = require('fabric-protos');
+const fabproto6 = require('fabric-protos');
 const fs = require('fs');
 const path = require('path');
 
@@ -120,9 +120,9 @@ describe('Identity', () => {
 		it('should serialize the identity to a buffer', () => {
 			const buffer = identity.serialize();
 			buffer.should.be.an.instanceOf(Buffer);
-			const serializedIdentity = fabprotos.msp.SerializedIdentity.decode(buffer);
-			serializedIdentity.getMspid().should.equal(mspId);
-			serializedIdentity.getIdBytes().toBuffer().toString().should.equal(certificateAsHex);
+			const serializedIdentity = fabproto6.msp.SerializedIdentity.decode(buffer);
+			serializedIdentity.mspid.should.equal(mspId);
+			serializedIdentity.id_bytes.toString().should.equal(certificateAsHex);
 		});
 
 	});

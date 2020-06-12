@@ -15,7 +15,7 @@ const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 const sinon = require('sinon');
 
-const fabprotos = require('fabric-protos');
+const fabproto6 = require('fabric-protos');
 
 describe('ServiceEndpoint', () => {
 	const client = new Client('myclient');
@@ -105,7 +105,7 @@ describe('ServiceEndpoint', () => {
 			serviceEndpoint.endpoint = null;
 			serviceEndpoint.connected = false;
 			serviceEndpoint.service = null;
-			serviceEndpoint.serviceClass = fabprotos.protos.Endorser;
+			serviceEndpoint.serviceClass = fabproto6.services.protos.Endorser;
 			endpoint.options['grpc-wait-for-ready-timeout'] = 100;
 			await serviceEndpoint.connect(endpoint).should.be.rejectedWith(/Failed to connect/);
 		});
@@ -113,7 +113,7 @@ describe('ServiceEndpoint', () => {
 			serviceEndpoint.endpoint = null;
 			serviceEndpoint.connected = false;
 			serviceEndpoint.service = null;
-			serviceEndpoint.serviceClass = fabprotos.protos.Endorser;
+			serviceEndpoint.serviceClass = fabproto6.services.protos.Endorser;
 			sinon.stub(serviceEndpoint, 'waitForReady').resolves(true);
 			await serviceEndpoint.connect(endpoint);
 			should.ok;

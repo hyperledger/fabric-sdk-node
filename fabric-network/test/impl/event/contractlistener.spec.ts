@@ -5,12 +5,11 @@
  */
 
 import sinon = require('sinon');
-import chai = require('chai');
-const expect = chai.expect;
+import { expect } from 'chai';
 import Long = require('long');
 
-import { Block, Channel, Client, Endorser, Eventer, EventInfo, FilteredBlock, FilteredTransaction, IdentityContext } from 'fabric-common';
-import * as protos from 'fabric-protos';
+import { Channel, Client, Endorser, Eventer, EventInfo, IdentityContext } from 'fabric-common';
+import * as fabproto6 from 'fabric-protos';
 import { BlockEvent, ContractEvent, ContractListener, ListenerOptions } from '../../../src/events';
 import { NetworkImpl } from '../../../src/network';
 import * as testUtils from '../../testutils';
@@ -87,76 +86,74 @@ describe('contract event listener', () => {
 		});
 	}
 
-	function newFullBlock(): Block {
-		const block = new protos.common.Block();
-		block.data = new protos.common.BlockData();
-		block.metadata = new protos.common.BlockMetadata();
+	function newFullBlock(): fabproto6.common.Block {
+		const block = new fabproto6.common.Block();
+		block.data = new fabproto6.common.BlockData();
+		block.metadata = new fabproto6.common.BlockMetadata();
 		block.metadata.metadata = [];
-		block.metadata.metadata[protos.common.BlockMetadataIndex.TRANSACTIONS_FILTER] = [];
+		block.metadata.metadata[fabproto6.common.BlockMetadataIndex.TRANSACTIONS_FILTER] = new Uint8Array(10);
 		return block;
 	}
 
-	function addTransaction(event: EventInfo, transaction: any, statusCode: number = protos.protos.TxValidationCode.VALID, transactionId?: string): void {
+	function addTransaction(event: any, transaction: any, statusCode: number = fabproto6.protos.TxValidationCode.VALID, index: number = 0, transactionId?: string): void {
 		event.block.data.data.push(newEnvelope(transaction, transactionId));
-
-		const transactionStatusCodes = event.block.metadata.metadata[protos.common.BlockMetadataIndex.TRANSACTIONS_FILTER];
-		transactionStatusCodes.push(statusCode);
+		event.block.metadata.metadata[fabproto6.common.BlockMetadataIndex.TRANSACTIONS_FILTER][index] = statusCode;
 	}
 
 	function newEnvelope(transaction: any, transactionId?: string): any {
-		const channelHeader = new protos.common.ChannelHeader();
-		channelHeader.type = protos.common.HeaderType.ENDORSER_TRANSACTION;
+		const channelHeader = new fabproto6.common.ChannelHeader();
+		channelHeader.type = fabproto6.common.HeaderType.ENDORSER_TRANSACTION;
 		channelHeader.tx_id = transactionId;
 
-		const payload = new protos.common.Payload();
-		payload.header = new protos.common.Header();
-		payload.header.channel_header = channelHeader;
+		const payload = new fabproto6.common.Payload();
+		payload.header =  new fabproto6.common.Header();
+		payload.header.channel_header = channelHeader as unknown as Buffer;
 		payload.data = transaction;
 
-		const envelope = new protos.common.Envelope();
+		const envelope: any = {};
 		envelope.payload = payload;
 
 		return envelope;
 	}
 
 	function newTransaction(ccId: string = contract.chaincodeId): any {
-		const transaction = new protos.protos.Transaction();
+		const transaction = new fabproto6.protos.Transaction();
 		transaction.actions.push(newTransactionAction(ccId));
 		return transaction;
 	}
 
 	function newTransactionAction(ccId: string): any {
-		const transactionAction = new protos.protos.TransactionAction();
+		const transactionAction = new fabproto6.protos.TransactionAction();
 		transactionAction.payload = newChaincodeActionPayload(ccId);
 		return transactionAction;
 	}
 
 	function newChaincodeActionPayload(ccId: string): any {
-		const chaincodeActionPayload = new protos.protos.ChaincodeActionPayload();
+		const chaincodeActionPayload = new fabproto6.protos.ChaincodeActionPayload();
 		chaincodeActionPayload.action = newChaincodeEndorsedAction(ccId);
 		return chaincodeActionPayload;
 	}
 
 	function newChaincodeEndorsedAction(ccId: string): any {
-		const endorsedAction = new protos.protos.ChaincodeEndorsedAction();
+		const endorsedAction = new fabproto6.protos.ChaincodeEndorsedAction();
 		endorsedAction.proposal_response_payload = newProposalResponsePayload(ccId);
 		return endorsedAction;
 	}
 
 	function newProposalResponsePayload(ccId: string): any {
-		const proposalResponsePayload = new protos.protos.ProposalResponsePayload();
+		const proposalResponsePayload = new fabproto6.protos.ProposalResponsePayload();
 		proposalResponsePayload.extension = newChaincodeAction(ccId);
 		return proposalResponsePayload;
 	}
 
 	function newChaincodeAction(ccId: string): any {
-		const chaincodeAction = new protos.protos.ChaincodeAction();
+		const chaincodeAction = new fabproto6.protos.ChaincodeAction();
 		chaincodeAction.events = newChaincodeEvent(ccId);
 		return chaincodeAction;
 	}
 
 	function newChaincodeEvent(ccId: string): any {
-		const chaincodeEvent = new protos.protos.ChaincodeEvent();
+		const chaincodeEvent = new fabproto6.protos.ChaincodeEvent();
 		chaincodeEvent.chaincode_id = ccId;
 		chaincodeEvent.event_name = eventName;
 		chaincodeEvent.payload = Buffer.from(eventPayload, 'utf8');
@@ -171,32 +168,32 @@ describe('contract event listener', () => {
 		};
 	}
 
-	function newFilteredBlock(blockNumber: number): FilteredBlock {
-		const filteredBlock = new protos.protos.FilteredBlock();
+	function newFilteredBlock(blockNumber: number): fabproto6.protos.FilteredBlock {
+		const filteredBlock = new fabproto6.protos.FilteredBlock();
 		filteredBlock.number = blockNumber;
 		filteredBlock.filtered_transactions = [];
 		return filteredBlock;
 	}
 
-	function addFilteredTransaction(event: EventInfo, filteredTransaction: FilteredTransaction): void {
+	function addFilteredTransaction(event: EventInfo, filteredTransaction: fabproto6.protos.FilteredTransaction): void {
 		event.filteredBlock.filtered_transactions.push(filteredTransaction);
 	}
 
-	function newFilteredTransaction(ccId: string = contract.chaincodeId): FilteredTransaction {
-		const filteredTransaction = new protos.protos.FilteredTransaction();
-		filteredTransaction.tx_validation_code = 'VALID';
+	function newFilteredTransaction(ccId: string = contract.chaincodeId): fabproto6.protos.FilteredTransaction {
+		const filteredTransaction = new fabproto6.protos.FilteredTransaction();
+		filteredTransaction.tx_validation_code = fabproto6.protos.TxValidationCode.VALID;
 		filteredTransaction.transaction_actions = newFilteredTransactionAction(ccId);
 		return filteredTransaction;
 	}
 
 	function newFilteredTransactionAction(ccId: string): any {
-		const filteredTransactionAction = new protos.protos.FilteredTransactionActions();
+		const filteredTransactionAction = new fabproto6.protos.FilteredTransactionActions();
 		filteredTransactionAction.chaincode_actions = [newFilteredChaincodeAction(ccId)];
 		return filteredTransactionAction;
 	}
 
 	function newFilteredChaincodeAction(ccId: string): any {
-		const filteredChaincodeAction = new protos.protos.FilteredChaincodeAction();
+		const filteredChaincodeAction = new fabproto6.protos.FilteredChaincodeAction();
 		filteredChaincodeAction.chaincode_event = newChaincodeEvent(ccId);
 		return filteredChaincodeAction;
 	}
@@ -391,7 +388,7 @@ describe('contract event listener', () => {
 
 	it('listener does not receive events for invalid transactions', async () => {
 		const badEvent = newEvent(1);
-		addTransaction(badEvent, newTransaction(), protos.protos.TxValidationCode.MVCC_READ_CONFLICT);
+		addTransaction(badEvent, newTransaction(), fabproto6.protos.TxValidationCode.MVCC_READ_CONFLICT, 0);
 
 		const goodEvent = newEvent(2);
 		addTransaction(badEvent, newTransaction());
@@ -542,9 +539,9 @@ describe('contract event listener', () => {
 
 			const transaction = newTransaction();
 			const event1 = newEvent(1);
-			addTransaction(event1, transaction, undefined, 'TX1');
+			addTransaction(event1, transaction, undefined, 0, 'TX1');
 			const event2 = newEvent(2);
-			addTransaction(event2, transaction, undefined, 'TX2');
+			addTransaction(event2, transaction, undefined, 0, 'TX2');
 
 			const options: ListenerOptions = {
 				checkpointer

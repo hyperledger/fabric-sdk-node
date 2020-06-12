@@ -1,0 +1,40 @@
+// Copyright the Hyperledger Fabric contributors. All rights reserved.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+syntax = "proto3";
+
+package fabric;
+
+import "common/collection.proto";
+import "common/common.proto";
+import "common/configtx.proto";
+import "common/configuration.proto";
+import "common/ledger.proto";
+import "common/policies.proto";
+import "discovery/protocol.proto";
+import "gossip/message.proto";
+import "ledger/queryresult/kv_query_result.proto";
+import "ledger/rwset/rwset.proto";
+import "ledger/rwset/kvrwset/kv_rwset.proto";
+import "msp/identities.proto";
+import "msp/msp_config.proto";
+import "msp/msp_principal.proto";
+import "orderer/ab.proto";
+import "orderer/cluster.proto";
+import "orderer/configuration.proto";
+import "orderer/kafka.proto";
+import "peer/chaincode_event.proto";
+import "peer/chaincode_shim.proto";
+import "peer/chaincode.proto";
+import "peer/collection.proto";
+import "peer/configuration.proto";
+import "peer/events.proto";
+import "peer/peer.proto";
+import "peer/policy.proto";
+import "peer/proposal_response.proto";
+import "peer/proposal.proto";
+import "peer/query.proto";
+import "peer/resources.proto";
+import "peer/signed_cc_dep_spec.proto";
+import "peer/transaction.proto";

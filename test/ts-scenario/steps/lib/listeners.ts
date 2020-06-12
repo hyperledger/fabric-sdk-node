@@ -222,10 +222,13 @@ export function checkBlockListenerPrivatePayloads(listenerName: string, checkDat
 	const found = blockEvents.some((blockEvent) => {
 		return blockEvent.getTransactionEvents()
 			.filter((transactionEvent) => transactionEvent.privateData)
-			.map((transactionEvent) => JSON.stringify(transactionEvent.privateData))
-			.some((privateDataJson) => {
-				BaseUtils.logMsg('->Transaction Payload has privateData', privateDataJson);
-				return privateDataJson.includes(checkData);
+			.map((transactionEvent) => {
+				BaseUtils.logMsg('->Transaction Payload has privateData', JSON.stringify(transactionEvent.privateData));
+				return transactionEvent.privateData.ns_pvt_rwset[0].collection_pvt_rwset[0].rwset.writes[0].value.toString('utf-8');
+			})
+			.some((privateDataValue) => {
+				BaseUtils.logMsg('->privateData', privateDataValue);
+				return privateDataValue.includes(checkData);
 			});
 	});
 

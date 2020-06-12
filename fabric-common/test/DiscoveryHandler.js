@@ -55,32 +55,32 @@ describe('DiscoveryHandler', () => {
 
 	const chaincodes = [{name: 'example', version: 'v2'}];
 	const highest = Long.fromValue(200);
-	const ledger_height = Long.fromValue(100);
+	const ledgerHeight = Long.fromValue(100);
 	const smaller = Long.fromValue(10);
 	const endorsement_plan_template = {
 		plan_id: 'example',
 		groups: {
 			G0: {
 				peers: [
-					{mspid: org1[0], endpoint: org1[1], ledger_height, chaincodes, name: org1[1]},
-					{mspid: org1[0], endpoint: org1[2], ledger_height, chaincodes, name: org1[2]}
+					{mspid: org1[0], endpoint: org1[1], ledgerHeight, chaincodes, name: org1[1]},
+					{mspid: org1[0], endpoint: org1[2], ledgerHeight, chaincodes, name: org1[2]}
 				]
 			},
 			G1: {
 				peers: [
-					{mspid: org2[0], endpoint: org2[1], ledger_height, chaincodes, name: org2[1]},
-					{mspid: org2[0], endpoint: org2[2], ledger_height, chaincodes, name: org2[2]}
+					{mspid: org2[0], endpoint: org2[1], ledgerHeight, chaincodes, name: org2[1]},
+					{mspid: org2[0], endpoint: org2[2], ledgerHeight, chaincodes, name: org2[2]}
 				]
 			},
 			G3: {
 				peers: [
-					{mspid: org1[0], endpoint: org1[1], ledger_height, chaincodes, name: org1[1]},
-					{mspid: org1[0], endpoint: org1[2], ledger_height, chaincodes, name: org1[2]},
-					{mspid: org2[0], endpoint: org2[1], ledger_height, chaincodes, name: org2[1]},
-					{mspid: org2[0], endpoint: org2[2], ledger_height, chaincodes, name: org2[2]},
-					{mspid: org3[0], endpoint: org3[1], ledger_height, chaincodes, name: org3[1]},
-					{mspid: org3[0], endpoint: org3[2], ledger_height: highest, chaincodes, name: org3[2]},
-					{mspid: org3[0], endpoint: org3[3], ledger_height: smaller, chaincodes, name: org3[3]}
+					{mspid: org1[0], endpoint: org1[1], ledgerHeight, chaincodes, name: org1[1]},
+					{mspid: org1[0], endpoint: org1[2], ledgerHeight, chaincodes, name: org1[2]},
+					{mspid: org2[0], endpoint: org2[1], ledgerHeight, chaincodes, name: org2[1]},
+					{mspid: org2[0], endpoint: org2[2], ledgerHeight, chaincodes, name: org2[2]},
+					{mspid: org3[0], endpoint: org3[1], ledgerHeight, chaincodes, name: org3[1]},
+					{mspid: org3[0], endpoint: org3[2], ledgerHeight: highest, chaincodes, name: org3[2]},
+					{mspid: org3[0], endpoint: org3[3], ledgerHeight: smaller, chaincodes, name: org3[3]}
 				]
 			}
 		},
@@ -96,7 +96,7 @@ describe('DiscoveryHandler', () => {
 				rootCerts: pem,
 				intermediateCerts: '',
 				admins: pem,
-				tls_intermediate_certs: ''
+				tlsIntermediateCerts: ''
 			},
 			Org2MSP: {
 				id: org2[0],
@@ -104,7 +104,7 @@ describe('DiscoveryHandler', () => {
 				rootCerts: pem,
 				intermediateCerts: '',
 				admins: pem,
-				tls_intermediate_certs: ''
+				tlsIntermediateCerts: ''
 			},
 			Org1MSP: {
 				id: org1[0],
@@ -112,7 +112,7 @@ describe('DiscoveryHandler', () => {
 				rootCerts: pem,
 				intermediateCerts: '',
 				admins: pem,
-				tls_intermediate_certs: ''
+				tlsIntermediateCerts: ''
 			},
 			Org3MSP: {
 				id: org3[0],
@@ -120,7 +120,7 @@ describe('DiscoveryHandler', () => {
 				rootCerts: pem,
 				intermediateCerts: '',
 				admins: pem,
-				tls_intermediate_certs: ''
+				tlsIntermediateCerts: ''
 			},
 		},
 		orderers: {
@@ -128,24 +128,24 @@ describe('DiscoveryHandler', () => {
 			Org2MSP: {endpoints: [{host: 'orderer.org2.example.com', port: 7150, name: 'orderer.org2.example.com'}]},
 			Org3MSP: {endpoints: [{host: 'orderer.org3.example.com', port: 7150, name: 'orderer.org3.example.com'}]}
 		},
-		peers_by_org: {
+		peersByOrg: {
 			Org1MSP: {
 				peers: [
-					{mspid: org1[0], endpoint: org1[1], ledger_height, chaincodes, name: org1[1]},
-					{mspid: org1[0], endpoint: org1[2], ledger_height, chaincodes, name: org1[2]}
+					{mspid: org1[0], endpoint: org1[1], ledgerHeight, chaincodes, name: org1[1]},
+					{mspid: org1[0], endpoint: org1[2], ledgerHeight, chaincodes, name: org1[2]}
 				]
 			},
 			Org2MSP: {
 				peers: [
-					{mspid: org2[0], endpoint: org2[1], ledger_height, chaincodes, name: org2[1]},
-					{mspid: org2[0], endpoint: org2[2], ledger_height, chaincodes, name: org2[2]}
+					{mspid: org2[0], endpoint: org2[1], ledgerHeight, chaincodes, name: org2[1]},
+					{mspid: org2[0], endpoint: org2[2], ledgerHeight, chaincodes, name: org2[2]}
 				]
 			},
 			Org3MSP: {
 				peers: [
-					{mspid: org3[0], endpoint: org3[1], ledger_height, chaincodes, name: org3[1]},
-					{mspid: org3[0], endpoint: org3[2], ledger_height, chaincodes, name: org3[2]},
-					{mspid: org3[0], endpoint: org3[3], ledger_height, chaincodes, name: org3[3]}
+					{mspid: org3[0], endpoint: org3[1], ledgerHeight, chaincodes, name: org3[1]},
+					{mspid: org3[0], endpoint: org3[2], ledgerHeight, chaincodes, name: org3[2]},
+					{mspid: org3[0], endpoint: org3[3], ledgerHeight, chaincodes, name: org3[3]}
 				]
 			}
 		},
@@ -573,12 +573,12 @@ describe('DiscoveryHandler', () => {
 	});
 
 	describe('#_modify_groups', () => {
-		const peer1 = {mspid: 'org1', name: 'peer1', ledger_height: {low: 5, high: 0}};
-		const peer2 = {mspid: 'org1', name: 'peer2', ledger_height: {low: 8, high: 0}};
-		const peer3 = {mspid: 'org1', name: 'peer3', ledger_height: {low: 10, high: 0}};
-		const peer4 = {mspid: 'org2', name: 'peer4', ledger_height: {low: 5, high: 0}};
-		const peer5 = {mspid: 'org2', name: 'peer5', ledger_height: {low: 8, high: 0}};
-		const peer6 = {mspid: 'org2', name: 'peer6', ledger_height: {low: 10, high: 0}};
+		const peer1 = {mspid: 'org1', name: 'peer1', ledgerHeight: {low: 5, high: 0}};
+		const peer2 = {mspid: 'org1', name: 'peer2', ledgerHeight: {low: 8, high: 0}};
+		const peer3 = {mspid: 'org1', name: 'peer3', ledgerHeight: {low: 10, high: 0}};
+		const peer4 = {mspid: 'org2', name: 'peer4', ledgerHeight: {low: 5, high: 0}};
+		const peer5 = {mspid: 'org2', name: 'peer5', ledgerHeight: {low: 8, high: 0}};
+		const peer6 = {mspid: 'org2', name: 'peer6', ledgerHeight: {low: 10, high: 0}};
 		let plan;
 
 		beforeEach(() => {
@@ -603,7 +603,7 @@ describe('DiscoveryHandler', () => {
 			should.equal(plan.groups.G0.peers.length, 3);
 			sinon.assert.calledWith(FakeLogger.debug, '%s - start');
 		});
-		it('should run ok with no ledger_height_gap', async () => {
+		it('should run ok with no ledgerHeight_gap', async () => {
 			discoveryHandler._modify_groups(
 				new Map(), // required
 				new Map(), // preferred
@@ -618,7 +618,7 @@ describe('DiscoveryHandler', () => {
 			should.equal(plan.groups.G0.peers.length, 3);
 			sinon.assert.calledWith(FakeLogger.debug, '%s - start');
 		});
-		it('should convert ledger_height', async () => {
+		it('should convert ledgerHeight', async () => {
 			discoveryHandler._modify_groups(
 				new Map(), // required
 				new Map(), // preferred
@@ -699,12 +699,12 @@ describe('DiscoveryHandler', () => {
 	describe('#_findHighest', () => {
 		it('should find highest', async () => {
 			const peers = [
-				{ledger_height: ledger_height},
-				{ledger_height: ledger_height},
-				{ledger_height: smaller},
-				{ledger_height: ledger_height},
-				{ledger_height: highest},
-				{ledger_height: ledger_height}
+				{ledgerHeight: ledgerHeight},
+				{ledgerHeight: ledgerHeight},
+				{ledgerHeight: smaller},
+				{ledgerHeight: ledgerHeight},
+				{ledgerHeight: highest},
+				{ledgerHeight: ledgerHeight}
 			];
 			// TEST CALL
 			const results = discoveryHandler._findHighest(
@@ -714,31 +714,31 @@ describe('DiscoveryHandler', () => {
 		});
 		it('should throw', () => {
 			const peers = [
-				{ledger_height: ledger_height},
-				{ledger_height: ledger_height},
-				{ledger_height: smaller},
-				{ledger_height: 'bad'},
-				{ledger_height: highest},
-				{ledger_height: ledger_height}
+				{ledgerHeight: ledgerHeight},
+				{ledgerHeight: ledgerHeight},
+				{ledgerHeight: smaller},
+				{ledgerHeight: 'bad'},
+				{ledgerHeight: highest},
+				{ledgerHeight: ledgerHeight}
 			];
 			(() => {
 				// TEST CALL
 				discoveryHandler._findHighest(
 					peers // peers
 				);
-			}).should.throw('Unable to find highest block value :: TypeError: peer.ledger_height.greaterThan is not a function');
+			}).should.throw('Unable to find highest block value :: TypeError: peer.ledgerHeight.greaterThan is not a function');
 		});
 	});
 
 	describe('#_sortPeerList', () => {
 		it('should run all', async () => {
 			const peers = [
-				{name: 'peer1', ledger_height: ledger_height},
+				{name: 'peer1', ledgerHeight: ledgerHeight},
 				{name: 'peer2'},
-				{name: 'peer3', ledger_height: smaller},
-				{name: 'peer4', ledger_height: ledger_height},
-				{name: 'peer5', ledger_height: highest},
-				{name: 'peer6', ledger_height: ledger_height}
+				{name: 'peer3', ledgerHeight: smaller},
+				{name: 'peer4', ledgerHeight: ledgerHeight},
+				{name: 'peer5', ledgerHeight: highest},
+				{name: 'peer6', ledgerHeight: ledgerHeight}
 			];
 			// TEST CALL
 			let results = discoveryHandler._sortPeerList(
@@ -762,15 +762,15 @@ describe('DiscoveryHandler', () => {
 	describe('#_splitList', () => {
 		it('should run all', async () => {
 			const sorted_list = [
-				{name: 'peer1', mspid: 'msp1', ledger_height: Long.fromValue(25)},
-				{name: 'peer2', mspid: 'msp1', ledger_height: Long.fromValue(20)},
-				{name: 'peer3', mspid: 'msp1', ledger_height: Long.fromValue(15)},
-				{name: 'peer4', mspid: 'msp3', ledger_height: Long.fromValue(10)},
-				{name: 'peer5', mspid: 'msp2', ledger_height: Long.fromValue(20)},
-				{name: 'peer6', mspid: 'msp2', ledger_height: Long.fromValue(15)},
-				{name: 'peer7', mspid: 'msp3', ledger_height: Long.fromValue(25)},
-				{name: 'peer8', mspid: 'msp4', ledger_height: Long.fromValue(20)},
-				{name: 'peer9', mspid: 'msp4', ledger_height: Long.fromValue(15)},
+				{name: 'peer1', mspid: 'msp1', ledgerHeight: Long.fromValue(25)},
+				{name: 'peer2', mspid: 'msp1', ledgerHeight: Long.fromValue(20)},
+				{name: 'peer3', mspid: 'msp1', ledgerHeight: Long.fromValue(15)},
+				{name: 'peer4', mspid: 'msp3', ledgerHeight: Long.fromValue(10)},
+				{name: 'peer5', mspid: 'msp2', ledgerHeight: Long.fromValue(20)},
+				{name: 'peer6', mspid: 'msp2', ledgerHeight: Long.fromValue(15)},
+				{name: 'peer7', mspid: 'msp3', ledgerHeight: Long.fromValue(25)},
+				{name: 'peer8', mspid: 'msp4', ledgerHeight: Long.fromValue(20)},
+				{name: 'peer9', mspid: 'msp4', ledgerHeight: Long.fromValue(15)},
 				{name: 'peer10', mspid: 'msp5'}
 			];
 			const preferred_endorsers = discoveryHandler._create_map([
@@ -803,15 +803,15 @@ describe('DiscoveryHandler', () => {
 		});
 		it('should run with no highest', async () => {
 			const sorted_list = [
-				{name: 'peer1', mspid: 'msp1', ledger_height: Long.fromValue(25)},
-				{name: 'peer2', mspid: 'msp1', ledger_height: Long.fromValue(20)},
-				{name: 'peer3', mspid: 'msp1', ledger_height: Long.fromValue(15)},
-				{name: 'peer4', mspid: 'msp3', ledger_height: Long.fromValue(10)},
-				{name: 'peer5', mspid: 'msp2', ledger_height: Long.fromValue(20)},
-				{name: 'peer6', mspid: 'msp2', ledger_height: Long.fromValue(15)},
-				{name: 'peer7', mspid: 'msp3', ledger_height: Long.fromValue(25)},
-				{name: 'peer8', mspid: 'msp4', ledger_height: Long.fromValue(20)},
-				{name: 'peer9', mspid: 'msp4', ledger_height: Long.fromValue(15)},
+				{name: 'peer1', mspid: 'msp1', ledgerHeight: Long.fromValue(25)},
+				{name: 'peer2', mspid: 'msp1', ledgerHeight: Long.fromValue(20)},
+				{name: 'peer3', mspid: 'msp1', ledgerHeight: Long.fromValue(15)},
+				{name: 'peer4', mspid: 'msp3', ledgerHeight: Long.fromValue(10)},
+				{name: 'peer5', mspid: 'msp2', ledgerHeight: Long.fromValue(20)},
+				{name: 'peer6', mspid: 'msp2', ledgerHeight: Long.fromValue(15)},
+				{name: 'peer7', mspid: 'msp3', ledgerHeight: Long.fromValue(25)},
+				{name: 'peer8', mspid: 'msp4', ledgerHeight: Long.fromValue(20)},
+				{name: 'peer9', mspid: 'msp4', ledgerHeight: Long.fromValue(15)},
 				{name: 'peer10', mspid: 'msp5'},
 				{name: 'peer11', mspid: 'msp5'}
 			];
@@ -847,15 +847,15 @@ describe('DiscoveryHandler', () => {
 		});
 		it('should run with no ledgerHeight', async () => {
 			const sorted_list = [
-				{name: 'peer1', mspid: 'msp1', ledger_height: Long.fromValue(25)},
-				{name: 'peer2', mspid: 'msp1', ledger_height: Long.fromValue(20)},
-				{name: 'peer3', mspid: 'msp1', ledger_height: Long.fromValue(15)},
-				{name: 'peer4', mspid: 'msp3', ledger_height: Long.fromValue(10)},
-				{name: 'peer5', mspid: 'msp2', ledger_height: Long.fromValue(20)},
-				{name: 'peer6', mspid: 'msp2', ledger_height: Long.fromValue(15)},
-				{name: 'peer7', mspid: 'msp3', ledger_height: Long.fromValue(25)},
-				{name: 'peer8', mspid: 'msp4', ledger_height: Long.fromValue(20)},
-				{name: 'peer9', mspid: 'msp4', ledger_height: Long.fromValue(15)},
+				{name: 'peer1', mspid: 'msp1', ledgerHeight: Long.fromValue(25)},
+				{name: 'peer2', mspid: 'msp1', ledgerHeight: Long.fromValue(20)},
+				{name: 'peer3', mspid: 'msp1', ledgerHeight: Long.fromValue(15)},
+				{name: 'peer4', mspid: 'msp3', ledgerHeight: Long.fromValue(10)},
+				{name: 'peer5', mspid: 'msp2', ledgerHeight: Long.fromValue(20)},
+				{name: 'peer6', mspid: 'msp2', ledgerHeight: Long.fromValue(15)},
+				{name: 'peer7', mspid: 'msp3', ledgerHeight: Long.fromValue(25)},
+				{name: 'peer8', mspid: 'msp4', ledgerHeight: Long.fromValue(20)},
+				{name: 'peer9', mspid: 'msp4', ledgerHeight: Long.fromValue(15)},
 				{name: 'peer10', mspid: 'msp5'},
 				{name: 'peer11', mspid: 'msp5'}
 			];
@@ -894,15 +894,15 @@ describe('DiscoveryHandler', () => {
 	describe('#_getRandom', () => {
 		it('should run with peer list', async () => {
 			const start_list = [
-				{name: 'peer1', mspid: 'msp1', ledger_height: Long.fromValue(25)},
-				{name: 'peer2', mspid: 'msp1', ledger_height: Long.fromValue(20)},
-				{name: 'peer3', mspid: 'msp1', ledger_height: Long.fromValue(15)},
-				{name: 'peer4', mspid: 'msp3', ledger_height: Long.fromValue(10)},
-				{name: 'peer5', mspid: 'msp2', ledger_height: Long.fromValue(20)},
-				{name: 'peer6', mspid: 'msp2', ledger_height: Long.fromValue(15)},
-				{name: 'peer7', mspid: 'msp3', ledger_height: Long.fromValue(25)},
-				{name: 'peer8', mspid: 'msp4', ledger_height: Long.fromValue(20)},
-				{name: 'peer9', mspid: 'msp4', ledger_height: Long.fromValue(15)},
+				{name: 'peer1', mspid: 'msp1', ledgerHeight: Long.fromValue(25)},
+				{name: 'peer2', mspid: 'msp1', ledgerHeight: Long.fromValue(20)},
+				{name: 'peer3', mspid: 'msp1', ledgerHeight: Long.fromValue(15)},
+				{name: 'peer4', mspid: 'msp3', ledgerHeight: Long.fromValue(10)},
+				{name: 'peer5', mspid: 'msp2', ledgerHeight: Long.fromValue(20)},
+				{name: 'peer6', mspid: 'msp2', ledgerHeight: Long.fromValue(15)},
+				{name: 'peer7', mspid: 'msp3', ledgerHeight: Long.fromValue(25)},
+				{name: 'peer8', mspid: 'msp4', ledgerHeight: Long.fromValue(20)},
+				{name: 'peer9', mspid: 'msp4', ledgerHeight: Long.fromValue(15)},
 				{name: 'peer10', mspid: 'msp5'}
 			];
 

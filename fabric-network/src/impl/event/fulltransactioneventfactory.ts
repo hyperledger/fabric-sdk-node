@@ -4,46 +4,52 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Block } from 'fabric-common';
+import * as fabproto6 from 'fabric-protos';
 import { BlockEvent, TransactionEvent } from '../../events';
 import { cachedResult } from '../gatewayutils';
 import { newFullContractEvents } from './fullcontracteventfactory';
 import * as TransactionStatus from './transactionstatus';
-import protos = require('fabric-protos');
 
-export function getTransactionEnvelopeIndexes(blockData: Block): number[] {
+export function getTransactionEnvelopeIndexes(blockData: fabproto6.common.IBlock): number[] {
 	const txEnvelopeIndexes: number[] = [];
-	const envelopes = blockData.data.data || [];
-	envelopes.forEach((envelope, index) => {
-		if (isTransactionPayload(envelope.payload)) {
-			txEnvelopeIndexes.push(index);
-		}
-	});
+	if (blockData.data) {
+		const envelopes: any[] = blockData.data.data || [];
+		envelopes.forEach((envelope: any, index: any) => {
+			if (isTransactionPayload(envelope.payload)) {
+				txEnvelopeIndexes.push(index);
+			}
+		});
+	}
 
 	return txEnvelopeIndexes;
 }
 
 function isTransactionPayload(payload: any) {
-	return payload.header.channel_header.type === protos.common.HeaderType.ENDORSER_TRANSACTION;
+	return payload.header.channel_header.type === fabproto6.common.HeaderType.ENDORSER_TRANSACTION;
 }
 
 export function newFullTransactionEvent(blockEvent: BlockEvent, txEnvelopeIndex: number): TransactionEvent {
-	const blockMetadata: any[] = (blockEvent.blockData as Block).metadata.metadata || [];
-	const transactionStatusCodes = blockMetadata[protos.common.BlockMetadataIndex.TRANSACTIONS_FILTER];
+	const block = blockEvent.blockData as fabproto6.common.Block;
+	if (block.metadata && block.data && block.data.data) {
+		const blockMetadata: any[] = block.metadata.metadata || [];
+		const transactionStatusCodes = blockMetadata[fabproto6.common.BlockMetadataIndex.TRANSACTIONS_FILTER];
 
-	const envelope = (blockEvent.blockData as Block).data.data[txEnvelopeIndex];
-	const transactionId = envelope.payload.header.channel_header.tx_id;
-	const code = transactionStatusCodes[txEnvelopeIndex];
-	const status = TransactionStatus.getStatusForCode(code);
+		const envelope: any = block.data.data[txEnvelopeIndex];
+		const transactionId = envelope.payload.header.channel_header.tx_id;
+		const code = transactionStatusCodes[txEnvelopeIndex];
+		const status = TransactionStatus.getStatusForCode(code);
 
-	const transactionEvent: TransactionEvent = {
-		transactionId,
-		status,
-		transactionData: envelope.payload.data,
-		isValid: status === TransactionStatus.VALID_STATUS,
-		getBlockEvent: () => blockEvent,
-		getContractEvents: cachedResult(() => newFullContractEvents(transactionEvent))
-	};
+		const transactionEvent: TransactionEvent = {
+			transactionId,
+			status,
+			transactionData: envelope.payload.data,
+			isValid: status === TransactionStatus.VALID_STATUS,
+			getBlockEvent: () => blockEvent,
+			getContractEvents: cachedResult(() => newFullContractEvents(transactionEvent))
+		};
 
-	return Object.freeze(transactionEvent);
+		return Object.freeze(transactionEvent);
+	}
+
+	throw Error('Missing transaction data');
 }

@@ -4,24 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import protos = require('fabric-protos');
-
-function newCodeToStatusMap(): { [code: number]: string } {
-	const result: { [code: number]: string } = {};
-	for (const [status, code] of Object.entries(protos.protos.TxValidationCode as { [status: string]: number })) {
-		result[code] = status;
-	}
-	return result;
-}
-
-const codeToStatusMap = Object.freeze(newCodeToStatusMap());
+import * as fabproto6 from 'fabric-protos';
 
 export const VALID_STATUS = 'VALID';
 
 export function getStatusForCode(code: number): string {
-	const status = codeToStatusMap[code];
+	const status = fabproto6.protos.TxValidationCode[code];
 	if (!status) {
 		throw new Error('Unexpected transaction status code: ' + code);
 	}
+
 	return status;
 }

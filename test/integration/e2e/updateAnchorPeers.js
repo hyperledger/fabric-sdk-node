@@ -15,7 +15,7 @@ const Client = require('fabric-client');
 const fs = require('fs');
 const path = require('path');
 
-const _commonProto = require('fabric-protos').common;
+const fabproto6 = require('fabric-protos');
 const testUtil = require('../util.js');
 const e2eUtils = require('./e2eUtils.js');
 const channel_name = process.env.channel ? process.env.channel : 'mychannel';// can use "channel=<name>" to control the channel name from command line
@@ -111,8 +111,8 @@ test('\n\n***** End-to-end flow: setAnchorPeers *****\n\n', async (t) => {
 			const channel_header = envelope.payload.header.channel_header;
 			t.comment(JSON.stringify(channel_header));
 
-			if (channel_header.type !== _commonProto.HeaderType.CONFIG) {
-				t.comment(`expect block of type "CONFIG" (${_commonProto.HeaderType.CONFIG}), but got "${channel_header.type}" instead`);
+			if (channel_header.type !== fabproto6.common.HeaderType.CONFIG) {
+				t.comment(`expect block of type "CONFIG" (${fabproto6.common.HeaderType.CONFIG}), but got "${channel_header.type}" instead`);
 				return;
 			}
 
@@ -139,4 +139,3 @@ test('\n\n***** End-to-end flow: setAnchorPeers *****\n\n', async (t) => {
 
 
 });
-

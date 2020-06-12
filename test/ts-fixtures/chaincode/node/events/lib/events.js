@@ -17,6 +17,8 @@ class Events extends Contract {
 	async createValue(ctx) {
 		const {stub} = ctx;
 		stub.setEvent('create', Buffer.from('createValueTransactionContent'));
+
+		return 'eventName "create" set with value "createValueTransactionContent"';
 	}
 
 	async privateValuePut(ctx) {

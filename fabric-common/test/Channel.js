@@ -13,7 +13,7 @@ chai.should();
 
 const Channel = rewire('../lib/Channel');
 const Client = require('../lib/Client');
-
+const fabproto6 = require('fabric-protos');
 
 describe('Channel', () => {
 	let client;
@@ -494,9 +494,10 @@ describe('Channel', () => {
 			client.getClientCertHash = () => {
 				return Buffer.from('clientCert');
 			};
-			const channel_header = channel.buildChannelHeader(1, 'mychaincode', '1234');
-			assert.equal(channel_header.getTxId(), '1234', 'Able to build object with tx_id');
-			assert.equal(channel_header.getChannelId(), 'mychannel', 'Able to build object with channelID');
+			const channelHeaderBuff = channel.buildChannelHeader(1, 'mychaincode', '1234');
+			const channel_header = fabproto6.common.ChannelHeader.decode(channelHeaderBuff);
+			assert.equal(channel_header.tx_id, '1234', 'Able to build object with tx_id');
+			assert.equal(channel_header.channel_id, 'mychannel', 'Able to build object with channelID');
 		});
 	});
 	describe('#toString', () => {

@@ -52,13 +52,13 @@ describe('BlockDecoder', () => {
 
 		it('should parse genesis block with IMPLICIT_META type', () => {
 			const block = BlockDecoderRewire.decode(data);
-			const type = block.data.data[0].payload.data.config.channel_group.policies.Writers.policy.type;
+			const type = block.data.data[0].payload.data.config.channel_group.policies.Writers.policy.typeString;
 			type.should.equal('IMPLICIT_META');
 		});
 
 		it('should throw and log error object', () => {
 			revert.push(BlockDecoderRewire.__set__('logger', FakeLogger));
-			revert.push(BlockDecoderRewire.__set__('fabprotos.common.Block.decode', () => {
+			revert.push(BlockDecoderRewire.__set__('fabproto6.common.Block.decode', () => {
 				throw new Error('MockError');
 			}));
 
@@ -69,7 +69,7 @@ describe('BlockDecoder', () => {
 		});
 
 		it('should throw and log string', () => {
-			revert.push(BlockDecoderRewire.__set__('fabprotos.common.Block.decode', () => {
+			revert.push(BlockDecoderRewire.__set__('fabproto6.common.Block.decode', () => {
 				throw new Error('Error');
 			}));
 
@@ -99,7 +99,7 @@ describe('BlockDecoder', () => {
 			const block = BlockDecoderRewire.decodeBlock(blockData);
 
 			block.header.should.deep.equal({
-				number: '0',
+				number: 0,
 				previous_hash: 'previous_hash',
 				data_hash: 'data_hash'
 			});
@@ -156,7 +156,7 @@ describe('BlockDecoder', () => {
 			revert.push(BlockDecoderRewire.__set__('decodeBlockMetaData', () => {}));
 			const block_with_private_data = BlockDecoderRewire.decodeBlockWithPrivateData(pvt_block);
 			block_with_private_data.block.header.should.deep.equal({
-				number: '0',
+				number: 0,
 				previous_hash: 'previous_hash',
 				data_hash: 'data_hash'
 			});
@@ -180,15 +180,10 @@ describe('BlockDecoder', () => {
 
 	describe('#BlockDecoder.decodeTransaction', () => {
 		beforeEach(() => {
-			revert.push(BlockDecoderRewire.__set__('fabprotos.protos.ProcessedTransaction.decode', () => {
-				const stub = {
-					getValidationCode() {},
-					getTransactionEnvelope() {}
-				};
-				sandbox.stub(stub, 'getValidationCode').returns('validationCode');
-				sandbox.stub(stub, 'getTransactionEnvelope').returns('transactionEnvelope');
-				return stub;
-			}));
+			revert.push(BlockDecoderRewire.__set__('fabproto6.protos.ProcessedTransaction.decode', sandbox.stub().returns({
+				validation_code: 'validationCode',
+				transaction_envelope: 'transactionEnvelope'
+			})));
 
 			revert.push(BlockDecoderRewire.__set__('decodeBlockDataEnvelope', (value) => {
 				return value;
@@ -202,43 +197,165 @@ describe('BlockDecoder', () => {
 
 		it('should generate a processed transaction', () => {
 			const processedtransaction = BlockDecoderRewire.decodeTransaction(data);
-			processedtransaction.validationCode.should.equal('validationCode');
-			processedtransaction.transactionEnvelope.should.equal('transactionEnvelope');
+			processedtransaction.validation_code.should.equal('validationCode');
+			processedtransaction.transaction_envelope.should.equal('transactionEnvelope');
 		});
+	});
+
+	describe('#BlockDecoder.decodeFilterBlock', () => {
+		it('should throw error if not given a filtered block', () => {
+			(() => {
+				BlockDecoderRewire.decodeFilteredBlock();
+			}).should.throw(/FilteredBlock input data is missing/);
+		});
+
+		it('should decode a block if empty', () => {
+			const filteredBlock = BlockDecoderRewire.decodeFilteredBlock({});
+			filteredBlock.should.be.deep.equal({
+				channel_id: undefined,
+				filtered_transactions: []
+			});
+		});
+
+		it('should decode a filtered block', () => {
+			const filteredBlock = BlockDecoderRewire.decodeFilteredBlock({
+				channel_id: 'channel',
+				number: 1
+			});
+			filteredBlock.should.be.deep.equal({
+				channel_id: 'channel',
+				number: 1,
+				filtered_transactions: []
+			});
+		});
+	});
+
+	describe('#decodeFilteredTransactions', () => {
+		let decodeFilteredTransactions;
+		before(() => {
+			decodeFilteredTransactions = BlockDecoderRewire.__get__('decodeFilteredTransactions');
+		});
+		it('should decode a filtered trasaction if undefined', () => {
+			const filtered_transactions = decodeFilteredTransactions();
+			filtered_transactions.should.be.deep.equal([]);
+		});
+		it('should decode a filtered trasaction if empty', () => {
+			const filtered_transactions = decodeFilteredTransactions({});
+			filtered_transactions.should.be.deep.equal([]);
+		});
+
+		it('should decode a filtered trasaction', () => {
+			const filtered_transactions = decodeFilteredTransactions([{
+				txid: 'txid',
+				type: 3,
+				tx_validation_code: 'VALID'
+			}]);
+			filtered_transactions.should.be.deep.equal([{
+				txid: 'txid',
+				type: 3,
+				typeString: 'ENDORSER_TRANSACTION',
+				tx_validation_code: 'VALID',
+				transaction_actions: {}
+			}]);
+		});
+	});
+
+	describe('#decodeFilteredTransactionActions', () => {
+		let decodeFilteredTransactionActions;
+		before(() => {
+			decodeFilteredTransactionActions = BlockDecoderRewire.__get__('decodeFilteredTransactionActions');
+		});
+		it('should decode a filtered trasaction actions if undefined', () => {
+			const filtered_transaction_actions = decodeFilteredTransactionActions();
+			filtered_transaction_actions.should.be.deep.equal({});
+		});
+		it('should decode a filtered trasaction actions if empty', () => {
+			const filtered_transaction_actions = decodeFilteredTransactionActions({});
+			filtered_transaction_actions.should.be.deep.equal({});
+		});
+
+		it('should decode a filtered trasaction actions', () => {
+			const filtered_transaction_actions = decodeFilteredTransactionActions({
+				chaincode_actions: []
+			});
+			filtered_transaction_actions.should.be.deep.equal({
+				chaincode_actions: []
+			});
+		});
+
+		it('should decode a filtered trasaction actions with chaincode actions', () => {
+			const filtered_transaction_actions = decodeFilteredTransactionActions({
+				chaincode_actions: []
+			});
+			filtered_transaction_actions.should.be.deep.equal({
+				chaincode_actions: []
+			});
+		});
+	});
+
+	describe('#decodeFilteredChaincodeAction', () => {
+		let decodeFilteredChaincodeAction;
+		before(() => {
+			decodeFilteredChaincodeAction = BlockDecoderRewire.__get__('decodeFilteredChaincodeAction');
+		});
+		it('should decode a filtered chaincode action if undefined', () => {
+			const filtered_chaincode_action = decodeFilteredChaincodeAction();
+			filtered_chaincode_action.should.be.deep.equal({});
+		});
+		it('should decode a filtered chaincode action if empty', () => {
+			const filtered_chaincode_action = decodeFilteredChaincodeAction({});
+			filtered_chaincode_action.should.be.deep.equal({});
+		});
+		it('should decode a filtered chaincode action', () => {
+			const filtered_transaction_actions = decodeFilteredChaincodeAction({
+				chaincode_event: {
+					chaincode_id: 'chaincodeId',
+					tx_id: 'txId',
+					event_name: 'eventName'
+				}
+			});
+			filtered_transaction_actions.should.be.deep.equal({
+				chaincode_event: {
+					chaincode_id: 'chaincodeId',
+					tx_id: 'txId',
+					event_name: 'eventName'
+				}
+			});
+		});
+		it('should decode a filtered chaincode action and not keep payload', () => {
+			const filtered_transaction_actions = decodeFilteredChaincodeAction({
+				chaincode_event: {
+					chaincode_id: 'chaincodeId',
+					tx_id: 'txId',
+					event_name: 'eventName',
+					payload: Buffer.from('')
+				}
+			});
+			filtered_transaction_actions.should.be.deep.equal({
+				chaincode_event: {
+					chaincode_id: 'chaincodeId',
+					tx_id: 'txId',
+					event_name: 'eventName'
+				}
+			});
+		});
+
 	});
 
 	describe('#decodeBlockHeader', () => {
 		let decodeBlockHeader;
-
-		let getNumberStub;
-		let getPreviousHashStub;
-		let getDataHashStub;
 		before(() => {
 			decodeBlockHeader = BlockDecoderRewire.__get__('decodeBlockHeader');
 		});
 
-		beforeEach(() => {
-			getNumberStub = sandbox.stub();
-			getPreviousHashStub = sandbox.stub();
-			getDataHashStub = sandbox.stub();
-
-		});
-
 		it('should return a decoded block header', () => {
 			const protoBlockHeader = {
-				getNumber: getNumberStub.returns(0),
-				getPreviousHash: getPreviousHashStub.returns({toBuffer: () => {
-					return {toString: () => 'previous-hash'};
-				}}),
-				getDataHash: getDataHashStub.returns({toBuffer: () => {
-					return {toString: () => 'data-hash'};
-				}})
+				number: 0,
+				previous_hash: 'previous-hash',
+				data_hash: 'data-hash'
 			};
 			const result = decodeBlockHeader(protoBlockHeader);
-			sinon.assert.called(getNumberStub);
-			sinon.assert.called(getPreviousHashStub);
-			sinon.assert.called(getDataHashStub);
-			result.should.deep.equal({number: '0', previous_hash: 'previous-hash', data_hash: 'data-hash'});
+			result.should.deep.equal({number: 0, previous_hash: 'previous-hash', data_hash: 'data-hash'});
 		});
 	});
 
@@ -250,28 +367,19 @@ describe('BlockDecoder', () => {
 			decodeStub = sandbox.stub();
 			decodeStub.returns('envelope');
 			revert.push(BlockDecoderRewire.__set__('decodeBlockDataEnvelope', (value) => value));
-			revert.push(BlockDecoderRewire.__set__('fabprotos.common.Envelope.decode', decodeStub));
+			revert.push(BlockDecoderRewire.__set__('fabproto6.common.Envelope.decode', decodeStub));
 		});
 
 		it('should call _commonProto.Envelope.decode with buffer twice', () => {
 			const protoBlockData = {
-				data: {
-					key1: {toBuffer() {}},
-					key2: {toBuffer() {}}
-				}
+				data: [
+					{key1: {}},
+					{key2: {}}
+				]
 			};
 			const newData = decodeBlockData(protoBlockData);
 			sinon.assert.calledTwice(decodeStub);
 			newData.data.should.deep.equal(['envelope', 'envelope']);
-		});
-
-		it('should call _commonProto.Envelope.decode with no proto', () => {
-			const protoBlockData = {
-				data: [{}]
-			};
-			const newData = decodeBlockData(protoBlockData, true);
-			sinon.assert.calledOnce(decodeStub);
-			newData.data.should.deep.equal(['envelope']);
 		});
 	});
 
@@ -279,7 +387,7 @@ describe('BlockDecoder', () => {
 		let decodeBlockMetaData;
 
 		let decodeMetadataSignaturesStub;
-		let decodeLastConfigSequenceNumberStub;
+		let decodeCommitHashStub;
 		let decodeTransactionFilterStub;
 		before(() => {
 			decodeBlockMetaData = BlockDecoderRewire.__get__('decodeBlockMetaData');
@@ -288,10 +396,11 @@ describe('BlockDecoder', () => {
 		beforeEach(() => {
 			decodeMetadataSignaturesStub = sandbox.stub();
 			revert.push(BlockDecoderRewire.__set__('decodeMetadataSignatures', decodeMetadataSignaturesStub));
-			decodeLastConfigSequenceNumberStub = sandbox.stub();
-			revert.push(BlockDecoderRewire.__set__('decodeLastConfigSequenceNumber', decodeLastConfigSequenceNumberStub));
 			decodeTransactionFilterStub = sandbox.stub();
 			revert.push(BlockDecoderRewire.__set__('decodeTransactionFilter', decodeTransactionFilterStub));
+			decodeCommitHashStub = sandbox.stub();
+			revert.push(BlockDecoderRewire.__set__('decodeCommitHash', decodeCommitHashStub));
+
 		});
 
 		it('should return the correct meta data with no paramaters', () => {
@@ -301,15 +410,15 @@ describe('BlockDecoder', () => {
 
 		it('should populate the metadata', () => {
 			decodeMetadataSignaturesStub.returns('decoded-metadata-signatures');
-			decodeLastConfigSequenceNumberStub.returns('decoded-last-config-sequence-number');
+			decodeCommitHashStub.returns('decoded-commit-hash');
 			decodeTransactionFilterStub.returns('decoded-transaction-filter');
 
-			const protoBlockMetadata = {metadata: ['metadata-signature', 'last-config-sequence-number', 'transaction-filter']};
+			const protoBlockMetadata = {metadata: ['metadata-signature', '', 'transaction-filter', '', 'commit-hash']};
 			const result = decodeBlockMetaData(protoBlockMetadata);
 			sinon.assert.calledWith(decodeMetadataSignaturesStub, 'metadata-signature');
-			sinon.assert.calledWith(decodeLastConfigSequenceNumberStub, 'last-config-sequence-number');
+			sinon.assert.calledWith(decodeCommitHashStub, 'commit-hash');
 			sinon.assert.calledWith(decodeTransactionFilterStub, 'transaction-filter');
-			result.should.deep.equal({metadata: ['decoded-metadata-signatures', 'decoded-last-config-sequence-number', 'decoded-transaction-filter']});
+			result.should.deep.equal({metadata: ['decoded-metadata-signatures', {}, 'decoded-transaction-filter', {}, 'decoded-commit-hash']});
 		});
 	});
 
@@ -320,15 +429,14 @@ describe('BlockDecoder', () => {
 			decodeTransactionFilter = BlockDecoderRewire.__get__('decodeTransactionFilter');
 		});
 
-		it('should return null if metadata_bytes not given', () => {
-			should.not.exist(decodeTransactionFilter());
+		it('should return empty array if metadata_bytes not given', () => {
+			const transactionFilter = decodeTransactionFilter();
+			transactionFilter.should.deep.equal([]);
 		});
 
-		it('should convert a not buffer to a buffer if string given', () => {
-			const notBuffer = {toBuffer() {}};
-			sandbox.stub(notBuffer, 'toBuffer').returns([]);
-			decodeTransactionFilter(notBuffer);
-			sinon.assert.called(notBuffer.toBuffer);
+		it('should return empty array if string given', () => {
+			const transactionFilter = decodeTransactionFilter('string');
+			transactionFilter.should.deep.equal([]);
 		});
 
 		it('should add each value in metadata_bytes to transaction_filter', () => {
@@ -338,15 +446,15 @@ describe('BlockDecoder', () => {
 		});
 	});
 
-	describe('#decodeLastConfigSequenceNumber', () => {
-		let decodeLastConfigSequenceNumber;
+	describe('#decodeCommitHash', () => {
+		let decodeCommitHash;
 		before(() => {
-			decodeLastConfigSequenceNumber = BlockDecoderRewire.__get__('decodeLastConfigSequenceNumber');
+			decodeCommitHash = BlockDecoderRewire.__get__('decodeCommitHash');
 		});
 
-		it ('should return an object with value property if metadata_bytes not given', () => {
-			const result = decodeLastConfigSequenceNumber();
-			result.should.deep.equal({value: {}});
+		it ('should return as given', () => {
+			const result = decodeCommitHash('commit-hash');
+			result.should.equal('commit-hash');
 		});
 	});
 
@@ -354,7 +462,6 @@ describe('BlockDecoder', () => {
 		let decodeMetadataSignatures;
 
 		let metadataDecodeStub;
-		let getValueStub;
 		let decodeMetadataValueSignaturesStub;
 		before(() => {
 			decodeMetadataSignatures = BlockDecoderRewire.__get__('decodeMetadataSignatures');
@@ -362,22 +469,17 @@ describe('BlockDecoder', () => {
 
 		beforeEach(() => {
 			metadataDecodeStub = sandbox.stub();
-			revert.push(BlockDecoderRewire.__set__('fabprotos.common.Metadata.decode', metadataDecodeStub));
-			getValueStub = sandbox.stub();
+			revert.push(BlockDecoderRewire.__set__('fabproto6.common.Metadata.decode', metadataDecodeStub));
 			decodeMetadataValueSignaturesStub = sandbox.stub();
 			revert.push(BlockDecoderRewire.__set__('decodeMetadataValueSignatures', decodeMetadataValueSignaturesStub));
-			metadataDecodeStub.returns({getValue: getValueStub, signatures: 'signatures'});
+			metadataDecodeStub.returns({value: 'value', signatures: 'signatures'});
 		});
 
 		it('should decode the metadata signatures and call decodeMetadataValueSignatures', () => {
-			getValueStub.returns({toBuffer: () => {
-				return {toString: () => 'value'};
-			}});
 			decodeMetadataValueSignaturesStub.returns('decoded-signatures');
 			const metadataBytes = 'metadata-bytes';
 			const result = decodeMetadataSignatures(metadataBytes);
 			sinon.assert.calledWith(metadataDecodeStub, metadataBytes);
-			sinon.assert.called(getValueStub);
 			sinon.assert.calledWith(decodeMetadataValueSignaturesStub, 'signatures');
 			result.should.deep.equal({value: 'value', signatures: 'decoded-signatures'});
 		});
@@ -387,11 +489,6 @@ describe('BlockDecoder', () => {
 		let decodeMetadataValueSignatures;
 		beforeEach(() => {
 			decodeMetadataValueSignatures = BlockDecoderRewire.__get__('decodeMetadataValueSignatures;');
-			revert.push(BlockDecoderRewire.__set__('fabprotos.common.MetadataSignature.decode', () => {
-				return {getSignatureHeader: () => 'signature-header', getSignature: () => {
-					return {toBuffer: () => 'signature'};
-				}};
-			}));
 			revert.push(BlockDecoderRewire.__set__('decodeSignatureHeader', (value) => value));
 		});
 
@@ -400,9 +497,12 @@ describe('BlockDecoder', () => {
 		});
 
 		it('should create return a list of signatures', () => {
-			const metaSignature = {toBuffer: () => 'meta-signature'};
-			const signatures = decodeMetadataValueSignatures([metaSignature]);
-			signatures[0].should.deep.equal({
+			const signatures = [{
+				signature_header: 'signature-header',
+				signature: 'signature'
+			}];
+			const metadataValueSignatures = decodeMetadataValueSignatures(signatures);
+			metadataValueSignatures[0].should.deep.equal({
 				signature_header: 'signature-header',
 				signature: 'signature'
 			});
@@ -412,59 +512,109 @@ describe('BlockDecoder', () => {
 	describe('#decodeBlockDataEnvelope', () => {
 		let decodeBlockDataEnvelope;
 
-		let getSignatureStub;
 		let payloadDecodeStub;
 		let decodeHeaderStub;
-		let getHeaderStub;
-		let decodePayloadBasedOnTypeStub;
-		let getDataStub;
-		let convertToStringStub;
-		let getPayloadStub;
+		let decodeConfigEnvelope;
+		let decodeConfigUpdateEnvelope;
+		let decodeEndorserTransaction;
+
 		before(() => {
 			decodeBlockDataEnvelope = BlockDecoderRewire.__get__('decodeBlockDataEnvelope');
 		});
 
 		beforeEach(() => {
-			getSignatureStub = sandbox.stub();
-			payloadDecodeStub = sandbox.stub();
-			revert.push(BlockDecoderRewire.__set__('fabprotos.common.Payload.decode', payloadDecodeStub));
+			decodeConfigEnvelope = sandbox.stub().returns('config-envelope');
+			revert.push(BlockDecoderRewire.__set__('decodeConfigEnvelope', decodeConfigEnvelope));
+
+			decodeConfigUpdateEnvelope = sandbox.stub().returns('config-update-envelope');
+			revert.push(BlockDecoderRewire.__set__('decodeConfigUpdateEnvelope', decodeConfigUpdateEnvelope));
+
+			decodeEndorserTransaction = sandbox.stub().returns('endorser-transaction');
+			revert.push(BlockDecoderRewire.__set__('decodeEndorserTransaction', decodeEndorserTransaction));
+
+			payloadDecodeStub = sandbox.stub().returns({header: 'header', data: 'data'});
+			revert.push(BlockDecoderRewire.__set__('fabproto6.common.Payload.decode', payloadDecodeStub));
+
 			decodeHeaderStub = sandbox.stub();
 			revert.push(BlockDecoderRewire.__set__('decodeHeader', decodeHeaderStub));
-			getHeaderStub = sandbox.stub();
-			decodePayloadBasedOnTypeStub = sandbox.stub();
-			revert.push(BlockDecoderRewire.__set__('HeaderType.decodePayloadBasedOnType', decodePayloadBasedOnTypeStub));
-			getDataStub = sandbox.stub();
-			convertToStringStub = sandbox.stub();
-			revert.push(BlockDecoderRewire.__set__('HeaderType.convertToString', convertToStringStub));
-			getPayloadStub = sandbox.stub();
 		});
 
-		it('should return the decoded envelope', () => {
-			getSignatureStub.returns({toBuffer: () => 'signature'});
-			getDataStub.returns({toBuffer: () => 'data'});
-			getPayloadStub.returns({toBuffer: () => 'payload'});
-			getHeaderStub.returns('header');
-			decodeHeaderStub.returns({channel_header: {type: 'channel-header-type'}});
-			payloadDecodeStub.returns({getHeader: getHeaderStub, getData: getDataStub});
-			decodePayloadBasedOnTypeStub.returns('data');
-			convertToStringStub.returns('typeString');
-			const protoEnvelope = {getSignature: getSignatureStub, getPayload: getPayloadStub};
+		it('should return the decoded envelope type unknown', () => {
+			decodeHeaderStub.returns({channel_header: {type: 99}});
+
+			const protoEnvelope = {signature: 'signature', payload: 'payload'};
 			const result = decodeBlockDataEnvelope(protoEnvelope);
-			sinon.assert.called(getSignatureStub);
 			sinon.assert.calledWith(payloadDecodeStub, 'payload');
 			sinon.assert.calledWith(decodeHeaderStub, 'header');
-			sinon.assert.called(getHeaderStub);
-			sinon.assert.calledWith(decodePayloadBasedOnTypeStub, 'data', 'channel-header-type');
-			sinon.assert.calledWith(convertToStringStub, 'channel-header-type');
 			result.should.deep.equal({
 				payload: {
 					header: {
 						channel_header: {
-							type: 'channel-header-type',
-							typeString: 'typeString'
+							type: 99,
+							typeString: undefined
 						}
 					},
-					data: 'data'
+					data: {}
+				},
+				signature: 'signature'
+			});
+		});
+		it('should return the decoded envelope type 1', () => {
+			decodeHeaderStub.returns({channel_header: {type: 1}});
+
+			const protoEnvelope = {signature: 'signature', payload: 'payload'};
+			const result = decodeBlockDataEnvelope(protoEnvelope);
+			sinon.assert.calledWith(payloadDecodeStub, 'payload');
+			sinon.assert.calledWith(decodeHeaderStub, 'header');
+			result.should.deep.equal({
+				payload: {
+					header: {
+						channel_header: {
+							type: 1,
+							typeString: 'CONFIG'
+						}
+					},
+					data: 'config-envelope'
+				},
+				signature: 'signature'
+			});
+		});
+		it('should return the decoded envelope type 2', () => {
+			decodeHeaderStub.returns({channel_header: {type: 2}});
+
+			const protoEnvelope = {signature: 'signature', payload: 'payload'};
+			const result = decodeBlockDataEnvelope(protoEnvelope);
+			sinon.assert.calledWith(payloadDecodeStub, 'payload');
+			sinon.assert.calledWith(decodeHeaderStub, 'header');
+			result.should.deep.equal({
+				payload: {
+					header: {
+						channel_header: {
+							type: 2,
+							typeString: 'CONFIG_UPDATE'
+						}
+					},
+					data: 'config-update-envelope'
+				},
+				signature: 'signature'
+			});
+		});
+		it('should return the decoded envelope type 3', () => {
+			decodeHeaderStub.returns({channel_header: {type: 3}});
+
+			const protoEnvelope = {signature: 'signature', payload: 'payload'};
+			const result = decodeBlockDataEnvelope(protoEnvelope);
+			sinon.assert.calledWith(payloadDecodeStub, 'payload');
+			sinon.assert.calledWith(decodeHeaderStub, 'header');
+			result.should.deep.equal({
+				payload: {
+					header: {
+						channel_header: {
+							type: 3,
+							typeString: 'ENDORSER_TRANSACTION'
+						}
+					},
+					data: 'endorser-transaction'
 				},
 				signature: 'signature'
 			});
@@ -479,7 +629,7 @@ describe('BlockDecoder', () => {
 		});
 
 		it('should log an error when an error is thrown', () => {
-			revert.push(BlockDecoderRewire.__set__('fabprotos.protos.Transaction.decode', () => {
+			revert.push(BlockDecoderRewire.__set__('fabproto6.protos.Transaction.decode', () => {
 				throw new Error();
 			}));
 			const newData = decodeEndorserTransaction();
@@ -491,7 +641,7 @@ describe('BlockDecoder', () => {
 			const mockAction = {header: 'header', payload: 'payload'};
 			const decodeSignatureheaderStub = sandbox.stub().returns('header');
 			const decodeChaincodeActionPayloadStub = sandbox.stub().returns('payload');
-			revert.push(BlockDecoderRewire.__set__('fabprotos.protos.Transaction.decode', () => {
+			revert.push(BlockDecoderRewire.__set__('fabproto6.protos.Transaction.decode', () => {
 				return {actions: [mockAction]};
 			}));
 			revert.push(BlockDecoderRewire.__set__('decodeSignatureHeader', decodeSignatureheaderStub));
@@ -504,7 +654,7 @@ describe('BlockDecoder', () => {
 		});
 
 		it('should return an empty object if transaction is not given', () => {
-			revert.push(BlockDecoderRewire.__set__('fabprotos.protos.Transaction.decode', () => {
+			revert.push(BlockDecoderRewire.__set__('fabproto6.protos.Transaction.decode', () => {
 				return null;
 			}));
 
@@ -513,7 +663,7 @@ describe('BlockDecoder', () => {
 		});
 
 		it('should return an empty object if transaction is given with no actions', () => {
-			revert.push(BlockDecoderRewire.__set__('fabprotos.protos.Transaction.decode', () => {
+			revert.push(BlockDecoderRewire.__set__('fabproto6.protos.Transaction.decode', () => {
 				return {};
 			}));
 
@@ -524,42 +674,43 @@ describe('BlockDecoder', () => {
 
 	describe('#decodeConfigEnvelope', () => {
 		let decodeConfigEnvelope;
+
 		let configEnvelopeDecodeStub;
 		let decodeConfigStub;
 		let decodeHeaderStub;
 		let decodeConfigUpdateEnvelopeStub;
+		let decodePayloadStub;
 		before(() => {
 			decodeConfigEnvelope = BlockDecoderRewire.__get__('decodeConfigEnvelope');
 		});
 
 		beforeEach(() => {
 			configEnvelopeDecodeStub = sandbox.stub().returns({
-				getConfig: () => 'config',
-				getLastUpdate: () => {
-					return {
-						getPayload: () => {
-							return {toBuffer: () => 'payload'};
-						},
-						getSignature: () => {
-							return {toBuffer: () => 'signature'};
-						}
-					};
+				config: 'config',
+				last_update: {
+					payload: 'payload',
+					signature: 'signature'
 				}
 			});
-			revert.push(BlockDecoderRewire.__set__('fabprotos.common.ConfigEnvelope.decode', configEnvelopeDecodeStub));
+			revert.push(BlockDecoderRewire.__set__('fabproto6.common.ConfigEnvelope.decode', configEnvelopeDecodeStub));
 			decodeConfigStub = sandbox.stub();
 			revert.push(BlockDecoderRewire.__set__('decodeConfig', decodeConfigStub));
 			decodeHeaderStub = sandbox.stub();
 			revert.push(BlockDecoderRewire.__set__('decodeHeader', decodeHeaderStub));
 			decodeConfigUpdateEnvelopeStub = sandbox.stub();
 			revert.push(BlockDecoderRewire.__set__('decodeConfigUpdateEnvelope', decodeConfigUpdateEnvelopeStub));
+			decodePayloadStub = sandbox.stub();
+			revert.push(BlockDecoderRewire.__set__('fabproto6.common.Payload.decode', decodePayloadStub));
 		});
 
 		it('should return the correct config envelope', () => {
 			decodeConfigStub.returns('config');
 			decodeHeaderStub.returns('header');
 			decodeConfigUpdateEnvelopeStub.returns('data');
+			decodePayloadStub.returns({header: 'payload-header', data: 'payload-data'});
 			const configEnvelope = decodeConfigEnvelope({});
+			sinon.assert.calledWith(decodeHeaderStub, 'payload-header');
+			sinon.assert.calledWith(decodeConfigUpdateEnvelopeStub, 'payload-data');
 
 			configEnvelope.last_update.payload.header.should.equal('header');
 			configEnvelope.last_update.payload.data.should.equal('data');
@@ -569,10 +720,7 @@ describe('BlockDecoder', () => {
 
 	describe('#decodeConfig', () => {
 		let decodeConfig;
-
 		let decodeConfigGroupStub;
-		let getSequenceStub;
-		let getChannelGroupStub;
 		before(() => {
 			decodeConfig = BlockDecoderRewire.__get__('decodeConfig');
 		});
@@ -580,20 +728,14 @@ describe('BlockDecoder', () => {
 		beforeEach(() => {
 			decodeConfigGroupStub = sandbox.stub();
 			revert.push(BlockDecoderRewire.__set__('decodeConfigGroup', decodeConfigGroupStub));
-			getSequenceStub = sandbox.stub();
-			getChannelGroupStub = sandbox.stub();
 		});
 
 		it('should decode the config given', () => {
-			getSequenceStub.returns(0);
 			decodeConfigGroupStub.returns('decoded-config-group');
-			getChannelGroupStub.returns('channel-group');
-			const protoConfig = {getSequence: getSequenceStub, getChannelGroup: getChannelGroupStub};
+			const protoConfig = {sequence: 0, channel_group: 'channel-group'};
 			const result = decodeConfig(protoConfig);
-			sinon.assert.called(getSequenceStub);
-			sinon.assert.called(getChannelGroupStub);
 			sinon.assert.calledWith(decodeConfigGroupStub, 'channel-group');
-			result.should.deep.equal({'sequence': '0', channel_group: 'decoded-config-group'});
+			result.should.deep.equal({'sequence': 0, channel_group: 'decoded-config-group'});
 		});
 	});
 
@@ -608,7 +750,7 @@ describe('BlockDecoder', () => {
 
 		beforeEach(() => {
 			configUpdateEnvelopeStub = sandbox.stub();
-			revert.push(BlockDecoderRewire.__set__('fabprotos.common.ConfigUpdateEnvelope.decode', configUpdateEnvelopeStub));
+			revert.push(BlockDecoderRewire.__set__('fabproto6.common.ConfigUpdateEnvelope.decode', configUpdateEnvelopeStub));
 			decodeConfigUpdateStub = sandbox.stub();
 			revert.push(BlockDecoderRewire.__set__('decodeConfigUpdate', decodeConfigUpdateStub));
 			decodeConfigSignatureStub = sandbox.stub();
@@ -617,9 +759,7 @@ describe('BlockDecoder', () => {
 
 		it('should return the config update envelope', () => {
 			configUpdateEnvelopeStub.returns({
-				getConfigUpdate: () => {
-					return {toBuffer: () => 'config-update'};
-				},
+				config_update: 'config-update',
 				signatures: ['signature']
 			});
 			decodeConfigSignatureStub.returns('config-signature');
@@ -641,16 +781,16 @@ describe('BlockDecoder', () => {
 
 		beforeEach(() => {
 			configUpdateDecodeStub = sandbox.stub();
-			revert.push(BlockDecoderRewire.__set__('fabprotos.common.ConfigUpdate.decode', configUpdateDecodeStub));
+			revert.push(BlockDecoderRewire.__set__('fabproto6.common.ConfigUpdate.decode', configUpdateDecodeStub));
 			decodeConfigGroupStub = sandbox.stub();
 			revert.push(BlockDecoderRewire.__set__('decodeConfigGroup', decodeConfigGroupStub));
 		});
 
 		it('should create the correct config update', () => {
 			configUpdateDecodeStub.returns({
-				getChannelId: () => 'channel-id',
-				getReadSet: () => 'read-set',
-				getWriteSet: () => 'write-set',
+				channel_id: 'channel-id',
+				read_set: 'read-set',
+				write_set: 'write-set',
 			});
 			decodeConfigGroupStub.onFirstCall().returns('read-set');
 			decodeConfigGroupStub.onSecondCall().returns('write-set');
@@ -678,13 +818,13 @@ describe('BlockDecoder', () => {
 		});
 
 		it('should return an empty object when no proto group config given', () => {
-			const result = decodeConfigGroups({map: {}});
+			const result = decodeConfigGroups({});
 			result.should.deep.equal({});
 		});
 
 		it('should call decodeConfigGroup for each group', () => {
 			decodeConfigGroupStub.returns('value');
-			const configGroupMap = {map: {'key1': 'value1', 'key2': 'value2'}};
+			const configGroupMap = {'key1': 'value1', 'key2': 'value2'};
 			const result = decodeConfigGroups(configGroupMap);
 			sinon.assert.calledTwice(decodeConfigGroupStub);
 			result.should.deep.equal({'key1': 'value', 'key2': 'value'});
@@ -694,13 +834,42 @@ describe('BlockDecoder', () => {
 	describe('#decodeConfigGroup', () => {
 		let decodeConfigGroup;
 
+		let decodeConfigGroups;
+		let decodeConfigValues;
+		let decodeConfigPolicies;
+
 		before(() => {
 			decodeConfigGroup = BlockDecoderRewire.__get__('decodeConfigGroup');
+		});
+
+		beforeEach(() => {
+			decodeConfigGroups = sandbox.stub().returns('groups');
+			decodeConfigValues = sandbox.stub().returns('values');
+			decodeConfigPolicies = sandbox.stub().returns('policies');
+			revert.push(BlockDecoderRewire.__set__('decodeConfigGroups', decodeConfigGroups));
+			revert.push(BlockDecoderRewire.__set__('decodeConfigValues', decodeConfigValues));
+			revert.push(BlockDecoderRewire.__set__('decodeConfigPolicies', decodeConfigPolicies));
 		});
 
 		it('should return null when no proto_config_group is given', () => {
 			const configGroup = decodeConfigGroup();
 			should.equal(configGroup, null);
+		});
+		it('should return decoded value', () => {
+			const configGroup = decodeConfigGroup({
+				version: 2,
+				groups: 'groupsProto',
+				values: 'valuesProto',
+				policies: 'policiesProto',
+				mod_policy: 'admins'
+			});
+			configGroup.should.deep.equal({
+				version: 2,
+				groups: 'groups',
+				values: 'values',
+				policies: 'policies',
+				mod_policy: 'admins'
+			});
 		});
 	});
 
@@ -719,7 +888,7 @@ describe('BlockDecoder', () => {
 
 		it('should call decodeConfigValue for each key in config_value_map', () => {
 			decodeConfigValueStub.returns('value');
-			const configValueMap = {map: {'key1': 'value1', 'key2': 'value2'}};
+			const configValueMap = {'key1': 'value1', 'key2': 'value2'};
 			const result = decodeConfigValues(configValueMap);
 			sinon.assert.calledTwice(decodeConfigValueStub);
 			result.should.deep.equal({'key1': 'value', 'key2': 'value'});
@@ -739,101 +908,127 @@ describe('BlockDecoder', () => {
 			decodeVersionStub = sandbox.stub();
 			revert.push(BlockDecoderRewire.__set__('decodeVersion', decodeVersionStub));
 			peerConfigurationProtoDecodeStub = sandbox.stub();
-			revert.push(BlockDecoderRewire.__set__('fabprotos.protos.AnchorPeers.decode', peerConfigurationProtoDecodeStub));
+			revert.push(BlockDecoderRewire.__set__('fabproto6.protos.AnchorPeers.decode', peerConfigurationProtoDecodeStub));
 			protoConfigValue = {
-				key: '',
-				value: {
-					getVersion: sandbox.stub(),
-					getModPolicy: sandbox.stub()
-				}
+				version: 0,
+				mod_policy: 'admins',
+				value: Buffer.from('test')
 			};
 		});
 
 		it('should return the correct config value for AnchorPeers', () => {
-			protoConfigValue.key = 'AnchorPeers';
 			peerConfigurationProtoDecodeStub.returns({anchor_peers: [
 				{host: 'host', port: 'port'}
 			]});
 
-			const configValue = decodeConfigValue(protoConfigValue);
+			const configValue = decodeConfigValue(protoConfigValue, 'AnchorPeers');
+			configValue.version.should.equal(0);
+			configValue.mod_policy.should.equal('admins');
 			configValue.value.anchor_peers.should.deep.equal([{host: 'host', port: 'port'}]);
 		});
 
 		it('should return an empty config for AnchorPeers when no anchor peers given', () => {
-			protoConfigValue.key = 'AnchorPeers';
-
-			const configValue = decodeConfigValue(protoConfigValue);
+			const configValue = decodeConfigValue(protoConfigValue, 'AnchorPeers');
 			configValue.value.anchor_peers.should.deep.equal([]);
 		});
 
 		it('should return the correct config value for MSP when config type is 0', () => {
-			const getTypeStub = sandbox.stub();
-			const getConfigStub = sandbox.stub();
 			const decodeFabricMSPConfigStub = sandbox.stub();
 			const mspConfigProtoDecodeStub = () => {
-				return {type: 0, getType: getTypeStub, getConfig: getConfigStub};
+				return {type: 0, config: 'config'};
 			};
-			getTypeStub.returns(0);
-			getConfigStub.returns('config');
+
 			decodeFabricMSPConfigStub.returns('decoded-config');
-			revert.push(BlockDecoderRewire.__set__('fabprotos.msp.MSPConfig.decode', mspConfigProtoDecodeStub));
+			revert.push(BlockDecoderRewire.__set__('fabproto6.msp.MSPConfig.decode', mspConfigProtoDecodeStub));
 			revert.push(BlockDecoderRewire.__set__('decodeFabricMSPConfig', decodeFabricMSPConfigStub));
 
-			protoConfigValue.key = 'MSP';
-			const configValue = decodeConfigValue(protoConfigValue);
-			sinon.assert.called(getTypeStub);
-			sinon.assert.called(getConfigStub);
+			const configValue = decodeConfigValue(protoConfigValue, 'MSP');
 			sinon.assert.calledWith(decodeFabricMSPConfigStub, 'config');
 			configValue.value.type.should.equal(0);
 			configValue.value.config.should.equal('decoded-config');
 		});
 
 		it('should return the correct config value for MSP when config type is not 0', () => {
-			const getTypeStub = sandbox.stub();
-			const getConfigStub = sandbox.stub();
 			const decodeFabricMSPConfigStub = sandbox.stub();
 			const mspConfigProtoDecodeStub = () => {
-				return {type: 1, getType: getTypeStub, getConfig: getConfigStub};
+				return {type: 1, config: 'config'};
 			};
-			getTypeStub.returns(1);
-			getConfigStub.returns('config');
+
 			decodeFabricMSPConfigStub.returns('decoded-config');
-			revert.push(BlockDecoderRewire.__set__('fabprotos.msp.MSPConfig.decode', mspConfigProtoDecodeStub));
+			revert.push(BlockDecoderRewire.__set__('fabproto6.msp.MSPConfig.decode', mspConfigProtoDecodeStub));
 			revert.push(BlockDecoderRewire.__set__('decodeFabricMSPConfig', decodeFabricMSPConfigStub));
 
-			protoConfigValue.key = 'MSP';
-			const configValue = decodeConfigValue(protoConfigValue);
-			sinon.assert.called(getTypeStub);
-			sinon.assert.notCalled(getConfigStub);
+			const configValue = decodeConfigValue(protoConfigValue, 'MSP');
 			sinon.assert.notCalled(decodeFabricMSPConfigStub);
 			configValue.value.type.should.equal(1);
-			configValue.value.config.should.deep.equal({});
+			should.not.exist(configValue.value.config);
 		});
 
 		it('should return the correct config value for Consortium', () => {
-			const commonConfigurationProtoStub = sandbox.stub();
-			const getNameStub = sandbox.stub();
-			revert.push(BlockDecoderRewire.__set__('fabprotos.common.Consortium.decode', commonConfigurationProtoStub));
-			commonConfigurationProtoStub.returns({getName: getNameStub});
-			getNameStub.returns('name');
+			const commonConfigurationProtoStub = sandbox.stub().returns({name: 'name'});
+			revert.push(BlockDecoderRewire.__set__('fabproto6.common.Consortium.decode', commonConfigurationProtoStub));
 
-			protoConfigValue.key = 'Consortium';
-			const configValue = decodeConfigValue(protoConfigValue);
-			sinon.assert.calledWith(commonConfigurationProtoStub, protoConfigValue.value.value);
-			sinon.assert.called(getNameStub);
+			const configValue = decodeConfigValue(protoConfigValue, 'Consortium');
+			sinon.assert.calledWith(commonConfigurationProtoStub, protoConfigValue.value);
 			configValue.value.name.should.equal('name');
 		});
 
-		it('should return the correct config value for OrdererAddresses when no proto addresses are found', () => {
-			const commonConfigurationProtoStub = sandbox.stub();
-			const getAddressesStub = sandbox.stub();
-			commonConfigurationProtoStub.returns({getAddresses: getAddressesStub});
-			getAddressesStub.returns(null);
-			revert.push(BlockDecoderRewire.__set__('fabprotos.common.OrdererAddresses.decode', commonConfigurationProtoStub));
+		it('should return the correct config value for OrdererAddresses', () => {
+			const commonConfigurationProtoStub = sandbox.stub().returns({addresses: ['a', 'b']});
+			revert.push(BlockDecoderRewire.__set__('fabproto6.common.OrdererAddresses.decode', commonConfigurationProtoStub));
 
-			protoConfigValue.key = 'OrdererAddresses';
-			const configValue = decodeConfigValue(protoConfigValue);
-			configValue.value.addresses.should.deep.equal([]);
+			const configValue = decodeConfigValue(protoConfigValue, 'OrdererAddresses');
+			configValue.value.addresses.should.deep.equal(['a', 'b']);
+		});
+		it('should return the correct config value for BlockDataHashingStructure', () => {
+			const commonConfigurationProtoStub = sandbox.stub().returns({width: 17});
+			revert.push(BlockDecoderRewire.__set__('fabproto6.common.BlockDataHashingStructure.decode', commonConfigurationProtoStub));
+
+			const configValue = decodeConfigValue(protoConfigValue, 'BlockDataHashingStructure');
+			configValue.value.width.should.deep.equal(17);
+		});
+		it('should return the correct config value for HashingAlgorithm', () => {
+			const commonConfigurationProtoStub = sandbox.stub().returns({name: 'hash'});
+			revert.push(BlockDecoderRewire.__set__('fabproto6.common.HashingAlgorithm.decode', commonConfigurationProtoStub));
+
+			const configValue = decodeConfigValue(protoConfigValue, 'HashingAlgorithm');
+			configValue.value.name.should.deep.equal('hash');
+		});
+		it('should return the correct config value for ChannelRestrictions', () => {
+			const commonConfigurationProtoStub = sandbox.stub().returns({max_count: 27});
+			revert.push(BlockDecoderRewire.__set__('fabproto6.orderer.ChannelRestrictions.decode', commonConfigurationProtoStub));
+
+			const configValue = decodeConfigValue(protoConfigValue, 'ChannelRestrictions');
+			configValue.value.max_count.should.deep.equal(27);
+		});
+		it('should return the correct config value for BatchTimeout', () => {
+			const commonConfigurationProtoStub = sandbox.stub().returns({timeout: '1000'});
+			revert.push(BlockDecoderRewire.__set__('fabproto6.orderer.BatchTimeout.decode', commonConfigurationProtoStub));
+
+			const configValue = decodeConfigValue(protoConfigValue, 'BatchTimeout');
+			configValue.value.timeout.should.deep.equal('1000');
+		});
+		it('should return the correct config value for BatchSize', () => {
+			const commonConfigurationProtoStub = sandbox.stub().returns({
+				max_message_count: 100,
+				absolute_max_bytes: 2000,
+				preferred_max_bytes: 1500,
+			});
+			revert.push(BlockDecoderRewire.__set__('fabproto6.orderer.BatchSize.decode', commonConfigurationProtoStub));
+
+			const configValue = decodeConfigValue(protoConfigValue, 'BatchSize');
+			configValue.value.should.deep.equal({
+				max_message_count: 100,
+				absolute_max_bytes: 2000,
+				preferred_max_bytes: 1500,
+			});
+		});
+		it('should return the correct config value for ConsensusType', () => {
+			const commonConfigurationProtoStub = sandbox.stub().returns({type: 'Best'});
+			revert.push(BlockDecoderRewire.__set__('fabproto6.orderer.ConsensusType.decode', commonConfigurationProtoStub));
+
+			const configValue = decodeConfigValue(protoConfigValue, 'ConsensusType');
+			configValue.value.type.should.deep.equal('Best');
 		});
 	});
 
@@ -852,7 +1047,7 @@ describe('BlockDecoder', () => {
 
 		it('should call deocdeConfigPolicy twice', () => {
 			decodeConfigPolicyStub.returns('value');
-			const configPolicyMap = {map: {'key1': 'value1', 'key2': 'value2'}};
+			const configPolicyMap = {'key1': 'value1', 'key2': 'value2'};
 			const result = decodeConfigPolicies(configPolicyMap);
 			sinon.assert.calledTwice(decodeConfigPolicyStub);
 			result.should.deep.equal({'key1': 'value', 'key2': 'value'});
@@ -862,45 +1057,67 @@ describe('BlockDecoder', () => {
 	describe('#decodeConfigPolicy', () => {
 		let decodeConfigPolicy;
 		let protoConfigPolicy;
+		let decodeStub;
 		before(() => {
 			decodeConfigPolicy = BlockDecoderRewire.__get__('decodeConfigPolicy');
 		});
 
 		beforeEach(() => {
 			protoConfigPolicy = {
-				key: '',
-				value: {
-					getVersion: sandbox.stub().returns('version'),
-					getModPolicy: sandbox.stub().returns('mod-policy'),
-					policy: {}
-				},
+				version: 1,
+				mod_policy: 'mod-policy',
+				policy: {}
 			};
 		});
 
 		it('should return the correct config policy if no policy is given', () => {
-			revert.push(BlockDecoderRewire.__set__('decodeVersion', (value) => value));
-			protoConfigPolicy.value.policy = null;
+			protoConfigPolicy.policy = null;
 			const configPolicy = decodeConfigPolicy(protoConfigPolicy);
-			sinon.assert.called(protoConfigPolicy.value.getVersion);
-			sinon.assert.called(protoConfigPolicy.value.getModPolicy);
-			configPolicy.version.should.equal('version');
-			configPolicy.mod_policy.should.equal('mod-policy');
 			configPolicy.policy.should.deep.equal({});
 		});
-
-		it('should return the correct config polict if plicy is MSP', () => {
-			const policy = 'MSP';
-			revert.push(BlockDecoderRewire.__set__('fabprotos.common.Policy.PolicyType.MSP', policy));
-			protoConfigPolicy.value.policy.type = policy;
+		it('should return the correct config policy if policy is MSP', () => {
+			protoConfigPolicy.policy.type = 2;
+			protoConfigPolicy.policy.value = Buffer.from('MSPtype');
 			decodeConfigPolicy(protoConfigPolicy);
 			sinon.assert.called(FakeLogger.warn);
 		});
-
 		it('should throw error if it doesnt recognise the policy type', () => {
-			protoConfigPolicy.value.policy.type = 'unknown-policy';
+			protoConfigPolicy.policy.type = 99;
 			(() => {
 				decodeConfigPolicy(protoConfigPolicy);
 			}).should.throw(/Unknown Policy type/);
+		});
+		it('should return the correct config policy if policy is SIGNATURE', () => {
+			protoConfigPolicy.policy.type = 1;
+			protoConfigPolicy.policy.value = Buffer.from('SIGNATURE-type');
+			decodeStub = sinon.stub().returns('SIGNATURE Policy');
+			revert.push(BlockDecoderRewire.__set__('decodeSignaturePolicyEnvelope', decodeStub));
+			const config_policy = decodeConfigPolicy(protoConfigPolicy);
+			config_policy.should.deep.equal({
+				version: 1,
+				mod_policy: 'mod-policy',
+				policy: {
+					type: 1,
+					typeString: 'SIGNATURE',
+					value: 'SIGNATURE Policy'
+				}
+			});
+		});
+		it('should return the correct config policy if policy is IMPLICIT_META', () => {
+			protoConfigPolicy.policy.type = 3;
+			protoConfigPolicy.policy.value = Buffer.from('IMPLICIT_META-type');
+			decodeStub = sinon.stub().returns('IMPLICIT_META Policy');
+			revert.push(BlockDecoderRewire.__set__('decodeImplicitMetaPolicy', decodeStub));
+			const config_policy = decodeConfigPolicy(protoConfigPolicy);
+			config_policy.should.deep.equal({
+				version: 1,
+				mod_policy: 'mod-policy',
+				policy: {
+					type: 3,
+					typeString: 'IMPLICIT_META',
+					value: 'IMPLICIT_META Policy'
+				}
+			});
 		});
 	});
 
@@ -908,72 +1125,65 @@ describe('BlockDecoder', () => {
 		let decodeImplicitMetaPolicy;
 
 		let implicitMetaPolicyDecodeStub;
-		let getSubPolicyStub;
-		let getRuleStub;
 		before(() => {
 			decodeImplicitMetaPolicy = BlockDecoderRewire.__get__('decodeImplicitMetaPolicy');
-			revert.push(BlockDecoderRewire.__set__('ImplicitMetaPolicy_Rule', ['ANY', 'ALL', 'MAJORITY']));
 		});
 
 		beforeEach(() => {
-			implicitMetaPolicyDecodeStub = sandbox.stub();
-			revert.push(BlockDecoderRewire.__set__('fabprotos.common.ImplicitMetaPolicy.decode', implicitMetaPolicyDecodeStub));
-			getSubPolicyStub = sandbox.stub();
-			getRuleStub = sandbox.stub();
-
-			implicitMetaPolicyDecodeStub.returns({getSubPolicy: getSubPolicyStub, getRule: getRuleStub});
+			implicitMetaPolicyDecodeStub = sandbox.stub().returns({
+				sub_policy: 'sub-policy',
+				rule: 0
+			});
+			revert.push(BlockDecoderRewire.__set__('fabproto6.common.ImplicitMetaPolicy.decode', implicitMetaPolicyDecodeStub));
 		});
 
 		it('should decode the implicit meta policy', () => {
-			getSubPolicyStub.returns('sub-policy');
-			getRuleStub.returns(0);
-			const implicitMetaPolicyBytes = 'implicit_meta_policy_bytes';
-			const result = decodeImplicitMetaPolicy(implicitMetaPolicyBytes);
-			sinon.assert.calledWith(implicitMetaPolicyDecodeStub, implicitMetaPolicyBytes);
-			sinon.assert.called(getSubPolicyStub);
-			sinon.assert.called(getRuleStub);
-			result.should.deep.equal({sub_policy: 'sub-policy', rule: 'ANY'});
+			const result = decodeImplicitMetaPolicy('any');
+			sinon.assert.calledWith(implicitMetaPolicyDecodeStub, 'any');
+			result.should.deep.equal({
+				sub_policy: 'sub-policy',
+				rule: 0,
+				ruleString: 'ANY'
+			});
 		});
+
 	});
 
 	describe('#decodeSignaturePolicyEnvelope', () => {
 		let decodeSignaturePolicyEnvelope;
 
 		let signaturePolicyEnvelopeStub;
-		let decodeVersionStub;
 		let decodeSignaturePolicyStub;
-		let getIdentitiesStub;
-		let getVersionStub;
-		let getRuleStub;
+		let decodeMSPPrincipalStub;
+
 		before(() => {
 			decodeSignaturePolicyEnvelope = BlockDecoderRewire.__get__('decodeSignaturePolicyEnvelope');
 		});
 
 		beforeEach(() => {
 			signaturePolicyEnvelopeStub = sandbox.stub();
-			revert.push(BlockDecoderRewire.__set__('fabprotos.common.SignaturePolicyEnvelope.decode', signaturePolicyEnvelopeStub));
-			decodeVersionStub = sandbox.stub();
-			revert.push(BlockDecoderRewire.__set__('decodeVersion', decodeVersionStub));
-			decodeSignaturePolicyStub = sandbox.stub();
+			revert.push(BlockDecoderRewire.__set__('fabproto6.common.SignaturePolicyEnvelope.decode', signaturePolicyEnvelopeStub));
+			decodeSignaturePolicyStub = sandbox.stub().returns('signature-rule');
 			revert.push(BlockDecoderRewire.__set__('decodeSignaturePolicy', decodeSignaturePolicyStub));
-			getIdentitiesStub = sandbox.stub();
-			getVersionStub = sandbox.stub();
-			getRuleStub = sandbox.stub();
+			decodeMSPPrincipalStub = sandbox.stub().returns('msp');
+			revert.push(BlockDecoderRewire.__set__('decodeMSPPrincipal', decodeMSPPrincipalStub));
 		});
 
 		it('should return the correct signature policy envelope without identities given', () => {
 			const decodedSignaurePolicyEnvelope = {
-				getIdentities: getIdentitiesStub.returns(null),
-				getVersion: getVersionStub.returns(1),
-				getRule: getRuleStub.returns('rule')
+				identities: ['a', 'b'],
+				version: 1,
+				rule: 'rule'
 			};
 			signaturePolicyEnvelopeStub.returns(decodedSignaurePolicyEnvelope);
-			decodeSignaturePolicyEnvelope({});
-			sinon.assert.called(getVersionStub);
-			sinon.assert.calledWith(decodeVersionStub, 1);
-			sinon.assert.called(getRuleStub);
+			const policy = decodeSignaturePolicyEnvelope('bytes');
 			sinon.assert.calledWith(decodeSignaturePolicyStub, 'rule');
-			sinon.assert.called(getIdentitiesStub);
+			sinon.assert.calledTwice(decodeMSPPrincipalStub);
+			policy.should.deep.equal({
+				version: 1,
+				rule: 'signature-rule',
+				identities: ['msp', 'msp']
+			});
 		});
 	});
 
@@ -983,78 +1193,64 @@ describe('BlockDecoder', () => {
 			decodeSignaturePolicy = BlockDecoderRewire.__get__('decodeSignaturePolicy');
 		});
 
-		it('should throw error when unknown signature policy is given', () => {
-			const protoSignaturePolicy = {Type:'unknown', n_out_of: {getN: () => {}}};
-			(() => {
-				decodeSignaturePolicy(protoSignaturePolicy);
-			}).should.throw(/unknown signature policy type/);
+		it('should decode signature policy noutofn given', () => {
+			const protoSignaturePolicy = {n_out_of: {n:1, rules: [{signed_by: 0}]}};
+			const signature_policy = decodeSignaturePolicy(protoSignaturePolicy);
+			signature_policy.should.deep.equal({n_out_of: {n:1, rules: [{signed_by: 0}]}});
 		});
 	});
 
 	describe('#decodeMSPPrincipal', () => {
 		let decodeMSPPrincipal;
-		let protoMspPrincipal;
 		before(() => {
 			decodeMSPPrincipal = BlockDecoderRewire.__get__('decodeMSPPrincipal');
 		});
 
-		beforeEach(() => {
-			protoMspPrincipal = {
-				getPrincipalClassification: sandbox.stub(),
-				getPrincipal: sandbox.stub()
-			};
-		});
-
 		it('should return the correct msp principal with role other than 0 or 1', () => {
-			const mspPrProtoRoleDecodeStub = sandbox.stub();
-			const getMspIdentifierstub = sandbox.stub();
-			const getRoleStub = sandbox.stub();
-			mspPrProtoRoleDecodeStub.returns({getMspIdentifier: getMspIdentifierstub, getRole: getRoleStub});
-			const role = 10;
-			protoMspPrincipal.getPrincipalClassification.returns(role);
-			revert.push(BlockDecoderRewire.__set__('fabprotos.common.MSPPrincipal.Classification.ROLE', role));
-			revert.push(BlockDecoderRewire.__set__('fabprotos.common.MSPRole.decode', mspPrProtoRoleDecodeStub));
+			const mspRoleDecodeStub = sandbox.stub().returns({
+				msp_identifier: 'msp-id',
+				role: 0
+			});
+			revert.push(BlockDecoderRewire.__set__('fabproto6.common.MSPRole.decode', mspRoleDecodeStub));
 
-			const mspPrincipal = decodeMSPPrincipal(protoMspPrincipal);
-			mspPrincipal.principal_classification.should.equal(role);
+			const mspPrincipal = decodeMSPPrincipal({
+				principal_classification: 0,
+				principal: 'msp-role-principal'
+			});
+			sinon.assert.calledWith(mspRoleDecodeStub, 'msp-role-principal');
+			mspPrincipal.principal_classification.should.equal(0);
+			mspPrincipal.role.should.equal(0);
+			mspPrincipal.roleString.should.equal('MEMBER');
+			mspPrincipal.msp_identifier.should.equal('msp-id');
 		});
 
 		it('should return the correct msp principal with principal_classification ORGANISATION_UNIT', () => {
-			const principalClassification = 'ORGANISATION_UNIT';
-			revert.push(BlockDecoderRewire.__set__('fabprotos.common.MSPPrincipal.Classification.ORGANIZATION_UNIT', principalClassification));
-			const unitOrgDecoderStub = sandbox.stub().returns({
-				getCertificiersIdentifier: sandbox.stub(),
-				getMspIdentifier: () => 'msp-identifier',
-				getOrganizationalUnitIdentifier: () => 'organizational-unit-identifier',
-				getCertifiersIdentifier: () => {
-					return {toBuffer: () => 'certifiers-identifier'};
-				}
+			const organizationUnitDecodeStub = sandbox.stub().returns({
+				msp_identifier: 'msp-id',
+				organizational_unit_identifier: 'organizational-unit-identifier',
+				certifiers_identifier: 'certifiers-identifier'
 			});
-			revert.push(BlockDecoderRewire.__set__('fabprotos.common.OrganizationUnit.decode', unitOrgDecoderStub));
-			protoMspPrincipal.getPrincipalClassification.returns(principalClassification);
-			const mspPrProtoOrganizationUnitDecodeStub = sandbox.stub();
-			const getMspIdentifierstub = sandbox.stub();
-			const getRoleStub = sandbox.stub();
-			mspPrProtoOrganizationUnitDecodeStub.returns({getMspIdentifier: getMspIdentifierstub, getRole: getRoleStub});
+			revert.push(BlockDecoderRewire.__set__('fabproto6.common.OrganizationUnit.decode', organizationUnitDecodeStub));
 
-			const mspPrincipal = decodeMSPPrincipal(protoMspPrincipal);
-			mspPrincipal.msp_identifier.should.equal('msp-identifier');
+			const mspPrincipal = decodeMSPPrincipal({
+				principal_classification: 1,
+				principal: 'org-unit-principal'
+			});
+			sinon.assert.calledWith(organizationUnitDecodeStub, 'org-unit-principal');
+			mspPrincipal.msp_identifier.should.equal('msp-id');
 			mspPrincipal.organizational_unit_identifier.should.equal('organizational-unit-identifier');
 			mspPrincipal.certifiers_identifier.should.equal('certifiers-identifier');
 		});
 
 		it('should return the correct msp principal with principal_clasification IDENTITY', () => {
-			const principalClassification = 'IDENTITY';
-			protoMspPrincipal.getPrincipalClassification.returns(principalClassification);
-			revert.push(BlockDecoderRewire.__set__('fabprotos.common.MSPPrincipal.Classification.IDENTITY', principalClassification));
-			const decodeIdentityStub = sandbox.stub();
-			decodeIdentityStub.returns('identity');
+			const decodeIdentityStub = sandbox.stub().returns('identity');
 			revert.push(BlockDecoderRewire.__set__('decodeIdentity', decodeIdentityStub));
 
-			protoMspPrincipal.getPrincipal.returns('principal');
-
-			const mspPrincipal = decodeMSPPrincipal(protoMspPrincipal);
-			sinon.assert.calledWith(decodeIdentityStub, 'principal');
+			const mspPrincipal = decodeMSPPrincipal({
+				principal_classification: 2,
+				principal: 'identity-principal'
+			});
+			sinon.assert.calledWith(decodeIdentityStub, 'identity-principal');
 			mspPrincipal.should.equal('identity');
 		});
 	});
@@ -1070,16 +1266,14 @@ describe('BlockDecoder', () => {
 			decodeSignatureHeaderStub.returns('signature-header');
 			revert.push(BlockDecoderRewire.__set__('decodeSignatureHeader', decodeSignatureHeaderStub));
 			const protoConfigSignature = {
-				getSignatureHeader: sandbox.stub().returns({toBuffer: () => 'signature-header'}),
-				getSignature: sandbox.stub().returns({toBuffer: () => 'signature'})
+				signature_header: 'signature-header',
+				signature: 'signature'
 			};
 
 			const configSignature = decodeConfigSignature(protoConfigSignature);
-			sinon.assert.called(protoConfigSignature.getSignatureHeader);
-			sinon.assert.called(protoConfigSignature.getSignature);
 			sinon.assert.called(decodeSignatureHeaderStub);
 			configSignature.signature_header.should.equal('signature-header');
-			configSignature.sigature.should.equal('signature'); // Spelling mistake
+			configSignature.sigature.should.equal('signature');
 		});
 	});
 
@@ -1088,77 +1282,54 @@ describe('BlockDecoder', () => {
 
 		let signatureHeaderDecodeStub;
 		let decodeIdentityStub;
-		let getCreatorStub;
-		let getNonceStub;
 		before(() => {
 			decodeSignatureHeader = BlockDecoderRewire.__get__('decodeSignatureHeader');
 		});
 
 		beforeEach(() => {
 			signatureHeaderDecodeStub = sandbox.stub();
-			revert.push(BlockDecoderRewire.__set__('fabprotos.common.SignatureHeader.decode', signatureHeaderDecodeStub));
+			revert.push(BlockDecoderRewire.__set__('fabproto6.common.SignatureHeader.decode', signatureHeaderDecodeStub));
+			signatureHeaderDecodeStub.returns({creator: 'creator', nonce: 'nonce'});
 			decodeIdentityStub = sandbox.stub();
 			revert.push(BlockDecoderRewire.__set__('decodeIdentity', decodeIdentityStub));
-			getCreatorStub = sandbox.stub();
-			getNonceStub = sandbox.stub();
-			signatureHeaderDecodeStub.returns({getCreator: getCreatorStub, getNonce: getNonceStub});
 		});
 
 		it('should decode the signature header and identity before returning decoded signature header', () => {
-			getCreatorStub.returns({toBuffer: () => 'creator'});
-			getNonceStub.returns({toBuffer: () => 'nonce'});
 			decodeIdentityStub.returns('identity');
 			const signatureHeaderBytes = 'signature-header-bytes';
 			const result = decodeSignatureHeader(signatureHeaderBytes);
 
 			sinon.assert.calledWith(signatureHeaderDecodeStub, signatureHeaderBytes);
 			sinon.assert.calledWith(decodeIdentityStub, 'creator');
-			sinon.assert.called(getCreatorStub);
-			sinon.assert.called(getNonceStub);
 			result.should.deep.equal({creator: 'identity', nonce: 'nonce'});
 		});
 	});
 
-	describe.skip('#decodeIdentity', () => {
+	describe('#decodeIdentity', () => {
 		let decodeIdentity;
 
 		let signatureHeaderDecodeStub;
-		let getIdBytesStub;
-		let getMspidStub;
 		before(() => {
 			decodeIdentity = BlockDecoderRewire.__get__('decodeIdentity');
 		});
 
 		beforeEach(() => {
 			signatureHeaderDecodeStub = sandbox.stub();
-			revert.push(BlockDecoderRewire.__set__('fabprotos.msp.SerializedIdentity.decode', signatureHeaderDecodeStub));
-			getIdBytesStub = sandbox.stub();
-			getMspidStub = sandbox.stub();
-			signatureHeaderDecodeStub.returns({getMspid: getMspidStub, getIdBytes: getIdBytesStub});
+			revert.push(BlockDecoderRewire.__set__('fabproto6.msp.SerializedIdentity.decode', signatureHeaderDecodeStub));
+			signatureHeaderDecodeStub.returns({mspid: 'msp-id', id_bytes: 'identity-bytes-decoded'});
 		});
 
 		it('should return a decoded identity', () => {
-			getIdBytesStub.returns({toBuffer: () => 0});
-			getMspidStub.returns('msp-id');
 			const identityBytes = 'identity-bytes';
 			const result = decodeIdentity(identityBytes);
 			sinon.assert.calledWith(signatureHeaderDecodeStub, identityBytes);
-			sinon.assert.called(getMspidStub);
-			sinon.assert.called(getMspidStub);
-			result.should.deep.equal({Mspid: 'msp-id', IdBytes: '0'});
+			result.should.deep.equal({mspid: 'msp-id', id_bytes: 'identity-bytes-decoded'});
 		});
 
 		it('should log an error when identity decoding fails', () => {
 			signatureHeaderDecodeStub.throws(new Error('MockError'));
 			const identity = decodeIdentity({});
-			sinon.assert.called(FakeLogger.error);
-			identity.should.deep.equal({});
-		});
-
-		it('should log a string error when identity decoding fails', () => {
-			signatureHeaderDecodeStub.throws('error');
-			const identity = decodeIdentity({});
-			sinon.assert.calledWith(FakeLogger.error, 'Failed to decode the identity: %s', 'error');
+			sinon.assert.calledWith(FakeLogger.error, 'Failed to decode the identity: %s');
 			identity.should.deep.equal({});
 		});
 	});
@@ -1170,32 +1341,13 @@ describe('BlockDecoder', () => {
 		let toPEMcertsStub;
 		let decodeSigningIdentityInfoStub;
 		let decodeFabricOUIdentifierStub;
-		let getNameStub;
-		let getRootCertsStub;
-		let getIntermediateCertsStub;
-		let getAdminsStub;
-		let getRevocationListStub;
-		let getSigningIdentityStub;
-		let getOrganizationalUnitIdentifiersStub;
-		let getTlsRootCertsStub;
-		let getTlsIntermediateCertsStub;
 		before(() => {
 			decodeFabricMSPConfig = BlockDecoderRewire.__get__('decodeFabricMSPConfig');
 		});
 
 		beforeEach(() => {
-			getNameStub = sandbox.stub();
-			getRootCertsStub = sandbox.stub();
-			getIntermediateCertsStub = sandbox.stub();
-			getAdminsStub = sandbox.stub();
-			getRevocationListStub = sandbox.stub();
-			getSigningIdentityStub = sandbox.stub();
-			getOrganizationalUnitIdentifiersStub = sandbox.stub();
-			getTlsRootCertsStub = sandbox.stub();
-			getTlsIntermediateCertsStub = sandbox.stub();
-
 			fabricMSPConfigDecodeStub = sandbox.stub();
-			revert.push(BlockDecoderRewire.__set__('fabprotos.msp.FabricMSPConfig.decode', fabricMSPConfigDecodeStub));
+			revert.push(BlockDecoderRewire.__set__('fabproto6.msp.FabricMSPConfig.decode', fabricMSPConfigDecodeStub));
 			toPEMcertsStub = sandbox.stub();
 			revert.push(BlockDecoderRewire.__set__('toPEMcerts', toPEMcertsStub));
 			decodeSigningIdentityInfoStub = sandbox.stub();
@@ -1203,15 +1355,15 @@ describe('BlockDecoder', () => {
 			decodeFabricOUIdentifierStub = sandbox.stub();
 			revert.push(BlockDecoderRewire.__set__('decodeFabricOUIdentifier', decodeFabricOUIdentifierStub));
 			fabricMSPConfigDecodeStub.returns({
-				getName: getNameStub.returns('name'),
-				getRootCerts: getRootCertsStub.returns('root-certs'),
-				getIntermediateCerts: getIntermediateCertsStub.returns('intermediate-cert'),
-				getAdmins: getAdminsStub.returns('admin'),
-				getRevocationList: getRevocationListStub.returns('revocation-list'),
-				getSigningIdentity: getSigningIdentityStub.returns('signing-identity'),
-				getOrganizationalUnitIdentifiers: getOrganizationalUnitIdentifiersStub.returns('unit-identifier'),
-				getTlsRootCerts: getTlsRootCertsStub.returns('tls-root-cert'),
-				getTlsIntermediateCerts: getTlsIntermediateCertsStub.returns('tls-intermediate-cert')
+				name: 'name',
+				root_certs: 'root-certs',
+				intermediate_certs: 'intermediate-cert',
+				admins: 'admin',
+				revocation_list: 'revocation-list',
+				signing_identity: 'signing-identity',
+				organizational_unit_identifiers: 'unit-identifier',
+				tls_root_certs: 'tls-root-cert',
+				tls_intermediate_certs: 'tls-intermediate-cert'
 			});
 		});
 
@@ -1228,38 +1380,29 @@ describe('BlockDecoder', () => {
 			const mspConfigBytes = 'msp_config_bytes';
 			const result = decodeFabricMSPConfig(mspConfigBytes);
 			sinon.assert.calledWith(fabricMSPConfigDecodeStub, mspConfigBytes);
-			sinon.assert.called(getNameStub);
 			result.name.should.equal('name');
 
 			toPEMcertsStub.getCall(0).args[0].should.equal('root-certs');
-			sinon.assert.called(getRootCertsStub);
 			result.root_certs.should.equal('pem-root-cert');
 
 			toPEMcertsStub.getCall(1).args[0].should.equal('intermediate-cert');
-			sinon.assert.called(getIntermediateCertsStub);
 			result.intermediate_certs.should.equal('intermediate-cert');
 
 			toPEMcertsStub.getCall(2).args[0].should.equal('admin');
-			sinon.assert.called(getAdminsStub);
 			result.admins.should.equal('admins-cert');
 
 			toPEMcertsStub.getCall(3).args[0].should.equal('revocation-list');
-			sinon.assert.called(getRevocationListStub);
 			result.revocation_list.should.equal('revocation-list-cert');
 
-			sinon.assert.called(getSigningIdentityStub);
 			sinon.assert.calledWith(decodeSigningIdentityInfoStub, 'signing-identity');
 			result.signing_identity.should.equal('decoded-signing-identity');
 
-			sinon.assert.called(getOrganizationalUnitIdentifiersStub);
 			sinon.assert.calledWith(decodeFabricOUIdentifierStub, 'unit-identifier');
 			result.organizational_unit_identifiers.should.equal('decided-unit-identifier');
 
-			sinon.assert.called(getTlsRootCertsStub);
 			toPEMcertsStub.getCall(4).args[0].should.equal('tls-root-cert');
 			result.tls_root_certs.should.equal('tls-root-cert');
 
-			sinon.assert.called(getTlsIntermediateCertsStub);
 			toPEMcertsStub.getCall(5).args[0].should.equal('tls-intermediate-cert');
 			result.tls_intermediate_certs.should.equal('tls-intermediate-cert');
 		});
@@ -1277,20 +1420,13 @@ describe('BlockDecoder', () => {
 		});
 
 		it('should return the correct identifiers', () => {
-			const mockUnitIdentifier = {
-				getCertificate: sandbox.stub().returns({
-					toBuffer: sandbox.stub().returns({
-						toString: sandbox.stub().returns('certificate')
-					})
-				}),
-				getOrganizationalUnitIdentifier: sandbox.stub().returns('organizational-unit-identifier')
-			};
-			const protoOrganizationalUnitIdentifiers = [mockUnitIdentifier];
+			const protoOrganizationalUnitIdentifiers = [{
+				certificate: 'certificate',
+				organizational_unit_identifier: 'organizational-unit-identifier'
+			}];
 			const identifiers = decodeFabricOUIdentifier(protoOrganizationalUnitIdentifiers);
 			identifiers[0].certificate.should.equal('certificate');
 			identifiers[0].organizational_unit_identifier.should.equal('organizational-unit-identifier');
-			sinon.assert.called(mockUnitIdentifier.getCertificate);
-			sinon.assert.called(mockUnitIdentifier.getOrganizationalUnitIdentifier);
 		});
 	});
 
@@ -1302,32 +1438,22 @@ describe('BlockDecoder', () => {
 		let decodeSigningIdentityInfo;
 		let signingIdentityInfoDecoderStub;
 		let decodeKeyInfoStub;
-		let getPublicSignerStub;
-		let getPrivateSignerStub;
 		before(() => {
 			decodeSigningIdentityInfo = BlockDecoderRewire.__get__('decodeSigningIdentityInfo');
 		});
 
 		beforeEach(() => {
 			signingIdentityInfoDecoderStub = sandbox.stub();
-			revert.push(BlockDecoderRewire.__set__('fabprotos.msp.SigningIdentityInfo.decode', signingIdentityInfoDecoderStub));
+			revert.push(BlockDecoderRewire.__set__('fabproto6.msp.SigningIdentityInfo.decode', signingIdentityInfoDecoderStub));
 			decodeKeyInfoStub = sandbox.stub();
 			revert.push(BlockDecoderRewire.__set__('decodeKeyInfo', decodeKeyInfoStub));
-			getPublicSignerStub = sandbox.stub().returns({toBuffer: () => {
-				return {toString: () => 'public-signer'};
-			}});
-			getPrivateSignerStub = sandbox.stub().returns('private-signer');
 		});
 
 		it('should return the correct identity info', () => {
-			signingIdentityInfoDecoderStub.returns({getPublicSigner: getPublicSignerStub, getPrivateSigner: getPrivateSignerStub});
+			signingIdentityInfoDecoderStub.returns({public_signer: 'public-signer', private_signer: 'private-signer'});
 			decodeKeyInfoStub.returns('decode-key-info');
-			const signingIdentityinfoBytes = {};
-
-			const signingIdentityInfo = decodeSigningIdentityInfo(signingIdentityinfoBytes);
-			sinon.assert.called(signingIdentityInfoDecoderStub);
-			sinon.assert.called(getPublicSignerStub);
-			sinon.assert.called(getPrivateSignerStub);
+			const signingIdentityInfo = decodeSigningIdentityInfo('bytes');
+			sinon.assert.calledWith(signingIdentityInfoDecoderStub, 'bytes');
 			sinon.assert.called(decodeKeyInfoStub);
 			signingIdentityInfo.public_signer.should.equal('public-signer');
 			signingIdentityInfo.private_signer.should.equal('decode-key-info');
@@ -1337,22 +1463,18 @@ describe('BlockDecoder', () => {
 	describe('#decodeKeyInfo', () => {
 		let decodeKeyInfo;
 		let keyInfoDecoderStub;
-		let getKeyIdentifierStub;
 		before(() => {
 			decodeKeyInfo = BlockDecoderRewire.__get__('decodeKeyInfo');
 		});
 
 		beforeEach(() => {
-			getKeyIdentifierStub = sandbox.stub();
 			keyInfoDecoderStub = sandbox.stub();
-			keyInfoDecoderStub.returns({getKeyIdentifier: getKeyIdentifierStub});
-			revert.push(BlockDecoderRewire.__set__('fabprotos.msp.KeyInfo.decode', keyInfoDecoderStub));
+			keyInfoDecoderStub.returns({key_identifier: 'key-identifier'});
+			revert.push(BlockDecoderRewire.__set__('fabproto6.msp.KeyInfo.decode', keyInfoDecoderStub));
 		});
 
 		it('should return the correct key info', () => {
-			getKeyIdentifierStub.returns('key-identifier');
 			const keyInfo = decodeKeyInfo({});
-			sinon.assert.called(getKeyIdentifierStub);
 			sinon.assert.called(keyInfoDecoderStub);
 			keyInfo.key_identifier.should.equal('key-identifier');
 			keyInfo.key_material.should.equal('private');
@@ -1369,8 +1491,6 @@ describe('BlockDecoder', () => {
 
 		let decodeChannelHeaderStub;
 		let decodeSignatureHeaderStub;
-		let getChannelHeaderStub;
-		let getSignatureHeaderStub;
 		before(() => {
 			decodeHeader = BlockDecoderRewire.__get__('decodeHeader');
 		});
@@ -1380,22 +1500,18 @@ describe('BlockDecoder', () => {
 			revert.push(BlockDecoderRewire.__set__('decodeChannelHeader', decodeChannelHeaderStub));
 			decodeSignatureHeaderStub = sandbox.stub();
 			revert.push(BlockDecoderRewire.__set__('decodeSignatureHeader', decodeSignatureHeaderStub));
-			getChannelHeaderStub = sandbox.stub();
-			getSignatureHeaderStub = sandbox.stub();
 		});
 
 		it('should decode and return the header', () => {
 			decodeChannelHeaderStub.returns('channel-header');
 			decodeSignatureHeaderStub.returns('signature-header');
 			const headerBytes = {
-				getChannelHeader: getChannelHeaderStub.returns({toBuffer: () => 'channel-header'}),
-				getSignatureHeader: getSignatureHeaderStub.returns({toBuffer: () => 'signature-header'})
+				channel_header: 'channel-header',
+				signature_header: 'signature-header'
 			};
 			const result = decodeHeader(headerBytes);
 			sinon.assert.calledWith(decodeChannelHeaderStub, 'channel-header');
 			sinon.assert.calledWith(decodeSignatureHeaderStub, 'signature-header');
-			sinon.assert.called(getChannelHeaderStub);
-			sinon.assert.called(getSignatureHeaderStub);
 			result.channel_header.should.equal('channel-header');
 			result.signature_header.should.equal('signature-header');
 		});
@@ -1405,73 +1521,42 @@ describe('BlockDecoder', () => {
 		let decodeChannelHeader;
 
 		let channelHeaderDecodeStub;
-		let getTypeStub;
-		let decodeVersionStub;
-		let getVersionStub;
+		let convertVersionStub;
 		let timeStampToDateStub;
-		let getTimestampStub;
-		let getChannelIdStub;
-		let getTxIdStub;
-		let getEpochStub;
-		let getExtensionStub;
 		before(() => {
 			decodeChannelHeader = BlockDecoderRewire.__get__('decodeChannelHeader');
 		});
 
 		beforeEach(() => {
 			channelHeaderDecodeStub = sandbox.stub();
-			revert.push(BlockDecoderRewire.__set__('fabprotos.common.ChannelHeader.decode', channelHeaderDecodeStub));
-			getTypeStub = sandbox.stub();
-			decodeVersionStub = sandbox.stub();
-			revert.push(BlockDecoderRewire.__set__('decodeVersion', decodeVersionStub));
-			getVersionStub = sandbox.stub();
-			timeStampToDateStub = sandbox.stub();
+			revert.push(BlockDecoderRewire.__set__('fabproto6.common.ChannelHeader.decode', channelHeaderDecodeStub));
+			convertVersionStub = sandbox.stub().returns('version-converted');
+			revert.push(BlockDecoderRewire.__set__('convertVersion', convertVersionStub));
+			timeStampToDateStub = sandbox.stub().returns('timestamp-formatted');
 			revert.push(BlockDecoderRewire.__set__('timeStampToDate', timeStampToDateStub));
-			getTimestampStub = sandbox.stub();
-			getChannelIdStub = sandbox.stub();
-			getTxIdStub = sandbox.stub();
-			getEpochStub = sandbox.stub();
-			getExtensionStub = sandbox.stub();
 
 			channelHeaderDecodeStub.returns({
-				getType: getTypeStub,
-				getVersion: getVersionStub,
-				getTimestamp: getTimestampStub,
-				getChannelId: getChannelIdStub,
-				getTxId: getTxIdStub,
-				getEpoch: getEpochStub,
-				getExtension: getExtensionStub
+				type: 'type',
+				version: 'version',
+				timestamp: 'timestamp',
+				channel_id: 'channel-id',
+				tx_id: 'tx-id',
+				epoch: 'epoch',
+				extension: 'extension'
 			});
 		});
 
-		it('should decode and return te channel header', () => {
-			getTypeStub.returns('type');
-			getVersionStub.returns('version');
-			decodeVersionStub.returns('version');
-			getTimestampStub.returns('timestamp');
-			timeStampToDateStub.returns('timestamp');
-			getChannelIdStub.returns('channel-id');
-			getTxIdStub.returns('tx-id');
-			getEpochStub.returns({toString: () => 'epoch'});
-			getExtensionStub.returns({toBuffer: () => 'extension'});
-
+		it('should decode and return the channel header', () => {
 			const result = decodeChannelHeader('header_bytes');
 			sinon.assert.calledWith(channelHeaderDecodeStub, 'header_bytes');
-			sinon.assert.called(getTypeStub);
 			result.type.should.equal('type');
-			sinon.assert.called(getVersionStub);
-			sinon.assert.calledWith(decodeVersionStub, 'version');
-			result.version.should.equal('version');
-			sinon.assert.called(getTimestampStub);
+			sinon.assert.calledWith(convertVersionStub, 'version');
 			sinon.assert.calledWith(timeStampToDateStub, 'timestamp');
-			result.timestamp.should.equal('timestamp');
-			sinon.assert.called(getChannelIdStub);
+			result.version.should.equal('version-converted');
+			result.timestamp.should.equal('timestamp-formatted');
 			result.channel_id.should.equal('channel-id');
-			sinon.assert.called(getTxIdStub);
 			result.tx_id.should.equal('tx-id');
-			sinon.assert.called(getEpochStub);
 			result.epoch.should.equal('epoch');
-			sinon.assert.called(getExtensionStub);
 			result.extension.should.equal('extension');
 		});
 	});
@@ -1498,7 +1583,6 @@ describe('BlockDecoder', () => {
 	describe('#decodeChaincodeActionPayload', () => {
 		let decodeChaincodeActionPayload;
 		let chaincodeActionPayloadStub;
-		let chaincodeProposalPayloadStub;
 		let decodeChaincodeProposalPayloadStub;
 		let decodeChaincodeEndorsedActionStub;
 		before(() => {
@@ -1507,9 +1591,8 @@ describe('BlockDecoder', () => {
 
 		beforeEach(() => {
 			chaincodeActionPayloadStub = sandbox.stub();
-			chaincodeProposalPayloadStub = sandbox.stub();
-			chaincodeActionPayloadStub.returns({getChaincodeProposalPayload: chaincodeProposalPayloadStub, getAction: sandbox.stub().returns('action')});
-			revert.push(BlockDecoderRewire.__set__('fabprotos.protos.ChaincodeActionPayload.decode', chaincodeActionPayloadStub));
+			chaincodeActionPayloadStub.returns({chaincode_proposal_payload: 'chaincode', action: 'action'});
+			revert.push(BlockDecoderRewire.__set__('fabproto6.protos.ChaincodeActionPayload.decode', chaincodeActionPayloadStub));
 			decodeChaincodeProposalPayloadStub = sandbox.stub();
 
 			revert.push(BlockDecoderRewire.__set__('decodeChaincodeProposalPayload', decodeChaincodeProposalPayloadStub));
@@ -1518,7 +1601,6 @@ describe('BlockDecoder', () => {
 		});
 
 		it('should return the correct chaincode action payload', () => {
-			chaincodeProposalPayloadStub.returns('chaincode');
 			decodeChaincodeProposalPayloadStub.returns('chaincode-proposal-payload');
 			decodeChaincodeEndorsedActionStub.returns('action');
 			const payload = decodeChaincodeActionPayload({});
@@ -1533,22 +1615,19 @@ describe('BlockDecoder', () => {
 	describe('#decodeChaincodeProposalPayload', () => {
 		let decodeChaincodeProposalPayload;
 
-		let getInputStub;
 		let decodeChaincodeProposalPayloadInputStub;
 		before(() => {
 			decodeChaincodeProposalPayload = BlockDecoderRewire.__get__('decodeChaincodeProposalPayload');
 		});
 
 		beforeEach(() => {
-			getInputStub = sandbox.stub().returns('input');
-			revert.push(BlockDecoderRewire.__set__('fabprotos.protos.ChaincodeProposalPayload.decode', sandbox.stub().returns({getInput: getInputStub})));
+			revert.push(BlockDecoderRewire.__set__('fabproto6.protos.ChaincodeProposalPayload.decode', sandbox.stub().returns({input: 'input'})));
 			decodeChaincodeProposalPayloadInputStub = sandbox.stub().returns('decoded-input');
 			revert.push(BlockDecoderRewire.__set__('decodeChaincodeProposalPayloadInput', decodeChaincodeProposalPayloadInputStub));
 		});
 
 		it('should return the correct chaincode proposal payload', () => {
 			const chaincodeProposalPayload = decodeChaincodeProposalPayload({});
-			sinon.assert.called(getInputStub);
 			sinon.assert.calledWith(decodeChaincodeProposalPayloadInputStub, 'input');
 			chaincodeProposalPayload.input.should.equal('decoded-input');
 		});
@@ -1558,71 +1637,43 @@ describe('BlockDecoder', () => {
 		let decodeChaincodeProposalPayloadInput;
 
 		let chaincodeInvocationSpecDecodeStub;
+		let decodeChaincodeSpecStub;
 		before(() => {
 			decodeChaincodeProposalPayloadInput = BlockDecoderRewire.__get__('decodeChaincodeProposalPayloadInput');
 		});
 
 		beforeEach(() => {
 			chaincodeInvocationSpecDecodeStub = sandbox.stub();
-			chaincodeInvocationSpecDecodeStub.returns({getChaincodeSpec: () => {
-				return {toBuffer: () => 'chaincode_spec'};
-			}});
-			revert.push(BlockDecoderRewire.__set__('fabprotos.protos.ChaincodeInvocationSpec.decode', chaincodeInvocationSpecDecodeStub));
-			revert.push(BlockDecoderRewire.__set__('decodeChaincodeSpec', (value) => value));
+			chaincodeInvocationSpecDecodeStub.returns({chaincodeSpec: 'chaincode_spec'});
+			revert.push(BlockDecoderRewire.__set__('fabproto6.protos.ChaincodeInvocationSpec.decode', chaincodeInvocationSpecDecodeStub));
+
+			decodeChaincodeSpecStub = sandbox.stub().returns('chaincode-spec');
+			revert.push(BlockDecoderRewire.__set__('decodeChaincodeSpec', decodeChaincodeSpecStub));
 		});
 
 		it('should return the correct chaincode proposal payload input', () => {
 			const chaincodeProposalPayloadInput = decodeChaincodeProposalPayloadInput({});
 			sinon.assert.called(chaincodeInvocationSpecDecodeStub);
-			chaincodeProposalPayloadInput.chaincode_spec.should.equal('chaincode_spec');
-		});
-	});
-
-	describe('#chaincodeTypeToString', () => {
-		let chaincodeTypeToString;
-		before(() => {
-			chaincodeTypeToString = BlockDecoderRewire.__get__('chaincodeTypeToString');
-			revert.push(BlockDecoderRewire.__set__('chaincode_type_as_string', {'matched_type1': 'type1'}));
-		});
-
-		it('should return the correct chaincode type when one is given', () => {
-			const chaincodeTypeString = chaincodeTypeToString('matched_type1');
-			chaincodeTypeString.should.equal('type1');
-		});
-
-		it('should return an unknown chaincode type', () => {
-			const chaincodeTypeString = chaincodeTypeToString();
-			chaincodeTypeString.should.equal('UNKNOWN');
+			chaincodeProposalPayloadInput.chaincode_spec.should.equal('chaincode-spec');
 		});
 	});
 
 	describe('#decodeChaincodeSpec', () => {
 		let decodeChaincodeSpec;
-		let chaincodeSpecDecodeStub;
-		let chaincodeTypeToStringStub;
 		let decodeChaincodeInputStub;
 		before(() => {
 			decodeChaincodeSpec = BlockDecoderRewire.__get__('decodeChaincodeSpec');
 		});
 
 		beforeEach(() => {
-			chaincodeSpecDecodeStub = sandbox.stub();
-			chaincodeSpecDecodeStub.returns({getType: () => 'type', getChaincodeId: () => 'chaincode-id', getTimeout: () => 1000, getInput: () => {
-				return {toBuffer: () => 'input'};
-			}});
-			revert.push(BlockDecoderRewire.__set__('fabprotos.protos.ChaincodeSpec.decode', chaincodeSpecDecodeStub));
-			chaincodeTypeToStringStub = sandbox.stub().returns('chaincode-type');
-			revert.push(BlockDecoderRewire.__set__('chaincodeTypeToString', chaincodeTypeToStringStub));
 			decodeChaincodeInputStub = sandbox.stub().returns('decoded-chaincode-input');
 			revert.push(BlockDecoderRewire.__set__('decodeChaincodeInput', decodeChaincodeInputStub));
 		});
 
 		it('should return the correct decoded chaincode spec', () => {
-			const chaincodeSpec = decodeChaincodeSpec();
-			sinon.assert.called(chaincodeSpecDecodeStub);
-			sinon.assert.called(decodeChaincodeInputStub);
-			sinon.assert.called(chaincodeTypeToStringStub);
-			chaincodeSpec.typeString.should.equal('chaincode-type');
+			const chaincodeSpec = decodeChaincodeSpec({type: 1, chaincode_id: 'chaincode-id', timeout: 1000, input: 'input'});
+			sinon.assert.calledWith(decodeChaincodeInputStub, 'input');
+			chaincodeSpec.typeString.should.equal('GOLANG');
 			chaincodeSpec.input.should.equal('decoded-chaincode-input');
 			chaincodeSpec.chaincode_id.should.equal('chaincode-id');
 			chaincodeSpec.timeout.should.equal(1000);
@@ -1631,24 +1682,14 @@ describe('BlockDecoder', () => {
 
 	describe('#decodeChaincodeInput', () => {
 		let decodeChaincodeInput;
-		let chaincodeInputDecoderStub;
 		before(() => {
 			decodeChaincodeInput = BlockDecoderRewire.__get__('decodeChaincodeInput');
 		});
 
-		beforeEach(() => {
-			const mockArg = {toBuffer: () => 'arg'};
-			chaincodeInputDecoderStub = sandbox.stub();
-			const mockDecoration = {map: {'key1': {value: {toBuffer: () => 'value'}}}};
-			chaincodeInputDecoderStub.returns({getArgs: () => [mockArg], getDecorations: () => mockDecoration});
-			revert.push(BlockDecoderRewire.__set__('fabprotos.protos.ChaincodeInput.decode', chaincodeInputDecoderStub));
-		});
-
 		it('should return the correct decoded chaincode input', () => {
-			const input = decodeChaincodeInput({});
-			input.args.should.deep.equal(['arg']);
+			const input = decodeChaincodeInput({args: ['arg1'], decorations: {key1: 'value'}});
+			input.args.should.deep.equal(['arg1']);
 			input.decorations.should.deep.equal({'key1': 'value'});
-			sinon.assert.called(chaincodeInputDecoderStub);
 		});
 	});
 
@@ -1670,10 +1711,12 @@ describe('BlockDecoder', () => {
 
 		it('should return the correct endorsed action', () => {
 			decodeProposalResponsePayloadStub.returns('proposal-payload-response');
-			const action = decodeChaincodeEndorsedAction({getProposalResponsePayload: () => {}, endorsements: ['endorsement']});
+			decodeEndorsementStub.returns('endorsement');
+			const action = decodeChaincodeEndorsedAction({proposalResponsePayload: 'buffer', endorsements: ['e1', 'e2']});
 			sinon.assert.called(decodeProposalResponsePayloadStub);
-			sinon.assert.called(decodeEndorsementStub);
+			sinon.assert.calledTwice(decodeEndorsementStub);
 			action.proposal_response_payload.should.equal('proposal-payload-response');
+			action.endorsements[0].should.equal('endorsement');
 		});
 	});
 
@@ -1691,10 +1734,8 @@ describe('BlockDecoder', () => {
 
 		it('should return the correct endorsement', () => {
 			const protoEndorsement = {
-				getEndorser: () => 'endorser',
-				getSignature: () => {
-					return {toBuffer: () => 'signature'};
-				}
+				endorser: 'endorser',
+				signature: 'signature'
 			};
 			const endorsement = decodeEndorsement(protoEndorsement);
 			endorsement.endorser.should.equal('endorser');
@@ -1713,19 +1754,12 @@ describe('BlockDecoder', () => {
 
 		beforeEach(() => {
 			proposalResponsePayloadDecodeStub = sandbox.stub();
-			revert.push(BlockDecoderRewire.__set__('fabprotos.protos.ProposalResponsePayload.decode', proposalResponsePayloadDecodeStub));
+			revert.push(BlockDecoderRewire.__set__('fabproto6.protos.ProposalResponsePayload.decode', proposalResponsePayloadDecodeStub));
 			proposalResponsePayloadDecodeStub.returns({
-				getProposalHash: () => {
-					return {
-						toBuffer: () => {
-							return {toString: () => 'proposal-hash'};
-						}
-					};
-				},
-				getExtension: () => 'extension'
+				proposal_hash: 'proposal-hash',
+				extension: 'extensionToBeDecoded'
 			});
 			decodeChaincodeActionStub = sandbox.stub().returns('extension');
-
 			revert.push(BlockDecoderRewire.__set__('decodeChaincodeAction', decodeChaincodeActionStub));
 		});
 
@@ -1733,6 +1767,7 @@ describe('BlockDecoder', () => {
 			const proposalResponsePayload = decodeProposalResponsePayload({});
 			proposalResponsePayload.proposal_hash.should.equal('proposal-hash');
 			proposalResponsePayload.extension.should.equal('extension');
+			sinon.assert.calledWith(decodeChaincodeActionStub, 'extensionToBeDecoded');
 		});
 	});
 
@@ -1741,7 +1776,7 @@ describe('BlockDecoder', () => {
 
 		let chaincodeActionDecodeStub;
 		let decodeReadWriteSetsStub;
-		let decodeChaincodeEventsStub;
+		let decodeChaincodeEventStub;
 		let decodeResponseStub;
 		let decodeChaincodeIdStub;
 		before(() => {
@@ -1750,16 +1785,16 @@ describe('BlockDecoder', () => {
 
 		beforeEach(() => {
 			chaincodeActionDecodeStub = sandbox.stub().returns({
-				getResults: () => 'results',
-				getEvents: () => 'events',
-				getResponse: () => 'response',
-				getChaincodeId: () => 'chaincode-id'
+				results: 'results',
+				events: 'events',
+				response: 'response',
+				chaincode_id: 'chaincode-id'
 			});
-			revert.push(BlockDecoderRewire.__set__('fabprotos.protos.ChaincodeAction.decode', chaincodeActionDecodeStub));
+			revert.push(BlockDecoderRewire.__set__('fabproto6.protos.ChaincodeAction.decode', chaincodeActionDecodeStub));
 			decodeReadWriteSetsStub = sandbox.stub();
 			revert.push(BlockDecoderRewire.__set__('decodeReadWriteSets', decodeReadWriteSetsStub));
-			decodeChaincodeEventsStub = sandbox.stub();
-			revert.push(BlockDecoderRewire.__set__('decodeChaincodeEvents', decodeChaincodeEventsStub));
+			decodeChaincodeEventStub = sandbox.stub();
+			revert.push(BlockDecoderRewire.__set__('decodeChaincodeEvent', decodeChaincodeEventStub));
 			decodeResponseStub = sandbox.stub();
 			revert.push(BlockDecoderRewire.__set__('decodeResponse', decodeResponseStub));
 			decodeChaincodeIdStub = sandbox.stub();
@@ -1768,14 +1803,14 @@ describe('BlockDecoder', () => {
 
 		it('should return the correct chaincode action payload', () => {
 			decodeReadWriteSetsStub.returns('read-write');
-			decodeChaincodeEventsStub.returns('decoded-events');
+			decodeChaincodeEventStub.returns('decoded-events');
 			decodeResponseStub.returns('decoded-response');
 			decodeChaincodeIdStub.returns('decoded-chaincode-id');
 			const chaincodeAction = decodeChaincodeAction('action_bytes');
 			sinon.assert.calledWith(FakeLogger.debug, 'decodeChaincodeAction - start');
 			sinon.assert.calledWith(chaincodeActionDecodeStub, 'action_bytes');
 			sinon.assert.calledWith(decodeReadWriteSetsStub, 'results');
-			sinon.assert.calledWith(decodeChaincodeEventsStub, 'events');
+			sinon.assert.calledWith(decodeChaincodeEventStub, 'events');
 			sinon.assert.calledWith(decodeResponseStub, 'response');
 			sinon.assert.calledWith(decodeChaincodeIdStub, 'chaincode-id');
 			chaincodeAction.results.should.equal('read-write');
@@ -1785,43 +1820,30 @@ describe('BlockDecoder', () => {
 		});
 	});
 
-	describe('#decodeChaincodeEvents', () => {
-		let decodeChaincodeEvents;
+	describe('#decodeChaincodeEvent', () => {
+		let decodeChaincodeEvent;
 
 		let chaincodeEventDecodeStub;
-		let getChaincodeIdStub;
-		let getTxIdStub;
-		let getEventNameStub;
-		let getPayloadStub;
 		before(() => {
-			decodeChaincodeEvents = BlockDecoderRewire.__get__('decodeChaincodeEvents');
+			decodeChaincodeEvent = BlockDecoderRewire.__get__('decodeChaincodeEvent');
 		});
 
 		beforeEach(() => {
 			chaincodeEventDecodeStub = sandbox.stub();
-			revert.push(BlockDecoderRewire.__set__('fabprotos.protos.ChaincodeEvent.decode', chaincodeEventDecodeStub));
-			getChaincodeIdStub = sandbox.stub().returns('chaincode-id');
-			getTxIdStub = sandbox.stub().returns('tx-id');
-			getEventNameStub = sandbox.stub().returns('event-name');
-			getPayloadStub = sandbox.stub().returns({toBuffer: () => 'payload'});
+			revert.push(BlockDecoderRewire.__set__('fabproto6.protos.ChaincodeEvent.decode', chaincodeEventDecodeStub));
 			chaincodeEventDecodeStub.returns({
-				getChaincodeId: getChaincodeIdStub,
-				getTxId: getTxIdStub,
-				getEventName: getEventNameStub,
-				getPayload: getPayloadStub
+				chaincode_id: 'chaincode-id',
+				tx_id: 'tx-id',
+				event_name: 'event-name',
+				payload: 'payload'
 			});
 		});
 
 		it('should return the correct decoded event', () => {
-			const decodedEvent = decodeChaincodeEvents('event_bytes');
+			const decodedEvent = decodeChaincodeEvent('event_bytes');
 			decodedEvent.chaincode_id.should.equal('chaincode-id');
-			sinon.assert.called(getChaincodeIdStub);
-			decodedEvent.chaincode_id.should.equal('chaincode-id');
-			sinon.assert.called(getTxIdStub);
 			decodedEvent.tx_id.should.equal('tx-id');
-			sinon.assert.called(getEventNameStub);
 			decodedEvent.event_name.should.equal('event-name');
-			sinon.assert.called(getPayloadStub);
 			decodedEvent.payload.should.equal('payload');
 		});
 	});
@@ -1833,29 +1855,22 @@ describe('BlockDecoder', () => {
 			decodeChaincodeID = BlockDecoderRewire.__get__('decodeChaincodeID');
 		});
 
-		beforeEach(() => {
-
-		});
-
 		it('should log and return an empty object when no proto_chaincode_id is given', () => {
 			const decodedChaincodeId = decodeChaincodeID();
-			sinon.assert.calledWith(FakeLogger.debug, 'decodeChaincodeID - no proto_chaincode_id found');
+			sinon.assert.calledWith(FakeLogger.debug, 'decodeChaincodeID - no chaincodeIDProto found');
 			decodedChaincodeId.should.deep.equal({});
 		});
 
 		it('should return the correct decoded chaincode id', () => {
 			const mockProtoChaincodeId = {
-				getPath: sandbox.stub().returns('path'),
-				getName: sandbox.stub().returns('name'),
-				getVersion: sandbox.stub().returns('version')
+				path: 'path',
+				name: 'name',
+				version: 'version'
 			};
 			const chaincodeId = decodeChaincodeID(mockProtoChaincodeId);
 			sinon.assert.calledWith(FakeLogger.debug, 'decodeChaincodeID - start');
-			sinon.assert.called(mockProtoChaincodeId.getPath);
 			chaincodeId.path.should.equal('path');
-			sinon.assert.called(mockProtoChaincodeId.getName);
 			chaincodeId.name.should.equal('name');
-			sinon.assert.called(mockProtoChaincodeId.getVersion);
 			chaincodeId.version.should.equal('version');
 		});
 	});
@@ -1865,70 +1880,53 @@ describe('BlockDecoder', () => {
 
 		let txReadWriteSetDecodeStub;
 		let decodeCollectionHashedRWSetStub;
-		let getNsRwsetStub;
-		let getDataModelStub;
 		let decodeKVRWSetStub;
 		before(() => {
 			decodeReadWriteSets = BlockDecoderRewire.__get__('decodeReadWriteSets');
 		});
 
 		beforeEach(() => {
-			getDataModelStub = sandbox.stub();
-			getNsRwsetStub = sandbox.stub();
 			txReadWriteSetDecodeStub = sandbox.stub().returns({
-				getDataModel: getDataModelStub,
-				getNsRwset: getNsRwsetStub
+				data_model: 'data-model',
+				ns_rwset: 'ns-rwset'
 			});
 			decodeKVRWSetStub = sandbox.stub();
 			decodeCollectionHashedRWSetStub = sandbox.stub();
-			revert.push(BlockDecoderRewire.__set__('fabprotos.rwset.TxReadWriteSet.decode', txReadWriteSetDecodeStub));
+			revert.push(BlockDecoderRewire.__set__('fabproto6.rwset.TxReadWriteSet.decode', txReadWriteSetDecodeStub));
 			revert.push(BlockDecoderRewire.__set__('decodeKVRWSet', decodeKVRWSetStub));
 			revert.push(BlockDecoderRewire.__set__('decodeCollectionHashedRWSet', decodeCollectionHashedRWSetStub));
 		});
 
 		it('should return the correct read write set when data model not KV', () => {
-			getNsRwsetStub.returns('ns-rwset');
-			getDataModelStub.returns('data-model');
-			const readWriteSet = decodeReadWriteSets({});
-			sinon.assert.called(getNsRwsetStub);
+			const readWriteSet = decodeReadWriteSets('buffer');
 			readWriteSet.ns_rwset.should.equal('ns-rwset');
-			sinon.assert.called(getDataModelStub);
 			readWriteSet.data_model.should.equal('data-model');
 		});
 
 		it('should return the correct read write set when the data model is KV', () => {
 			decodeKVRWSetStub.returns('rwset');
 			decodeCollectionHashedRWSetStub.returns('collection-hashed-rwset');
-			const getNamespaceStub = sandbox.stub().returns('namespace');
-			const getRwsetStub = sandbox.stub().returns('rwset');
-			const getCollectionHashedRwsetStub = sandbox.stub().returns('collection-hashed-rwset');
-			const mockKvRwSet = {
-				getNamespace: getNamespaceStub,
-				getRwset: getRwsetStub,
-				getCollectionHashedRwset: getCollectionHashedRwsetStub
-			};
-			getDataModelStub.returns('KV');
-			getNsRwsetStub.returns({1: mockKvRwSet});
-			revert.push(BlockDecoderRewire.__set__('fabprotos.rwset.TxReadWriteSet.DataModel.KV', 'KV'));
-			const readWriteSet = decodeReadWriteSets({});
+			txReadWriteSetDecodeStub.returns({
+				data_model: 0,
+				ns_rwset: [{
+					namespace: 'namespace',
+					rwset: 'rwset-internal',
+					collection_hashed_rwset: 'collection-hashed-rwset-interanl'
+				}]
+			});
+			const readWriteSet = decodeReadWriteSets('buffer');
 			const nsRwSet = readWriteSet.ns_rwset[0];
-			sinon.assert.calledTwice(getDataModelStub);
 			nsRwSet.namespace.should.equal('namespace');
-			sinon.assert.called(getNsRwsetStub);
 			nsRwSet.rwset.should.equal('rwset');
-			sinon.assert.calledWith(decodeKVRWSetStub, 'rwset');
+			sinon.assert.calledWith(decodeKVRWSetStub, 'rwset-internal');
 			nsRwSet.collection_hashed_rwset.should.equal('collection-hashed-rwset');
-			sinon.assert.calledWith(decodeCollectionHashedRWSetStub, 'collection-hashed-rwset');
+			sinon.assert.calledWith(decodeCollectionHashedRWSetStub, 'collection-hashed-rwset-interanl');
 		});
 	});
 
 	describe('#decodeKVRWSet', () => {
 		let deocdeKVRWSet;
 
-		let getWritesStub;
-		let getReadsStub;
-		let getRangeQueriesInfoStub;
-		let getMetadataWritesStub;
 		let KVRWSetDecodeStub;
 		let decodeKVReadStub;
 		let decodeKVWriteStub;
@@ -1939,21 +1937,12 @@ describe('BlockDecoder', () => {
 		});
 
 		beforeEach(() => {
-			getWritesStub = sandbox.stub();
-			getReadsStub = sandbox.stub();
-			getRangeQueriesInfoStub = sandbox.stub();
-			getMetadataWritesStub = sandbox.stub();
 			decodeKVReadStub = sandbox.stub();
-			KVRWSetDecodeStub = sandbox.stub().returns({
-				getWrites: getWritesStub,
-				getReads: getReadsStub,
-				getRangeQueriesInfo: getRangeQueriesInfoStub,
-				getMetadataWrites: getMetadataWritesStub
-			});
+			KVRWSetDecodeStub = sandbox.stub();
 			decodeRangeQueryInfoStub = sandbox.stub();
 			decodeKVWriteStub = sandbox.stub();
 			decodeKVMetadataWriteStub = sandbox.stub();
-			revert.push(BlockDecoderRewire.__set__('fabprotos.kvrwset.KVRWSet.decode', KVRWSetDecodeStub));
+			revert.push(BlockDecoderRewire.__set__('fabproto6.kvrwset.KVRWSet.decode', KVRWSetDecodeStub));
 			revert.push(BlockDecoderRewire.__set__('decodeKVRead', decodeKVReadStub));
 			revert.push(BlockDecoderRewire.__set__('decodeKVWrite', decodeKVWriteStub));
 			revert.push(BlockDecoderRewire.__set__('decodeRangeQueryInfo', decodeRangeQueryInfoStub));
@@ -1961,21 +1950,20 @@ describe('BlockDecoder', () => {
 		});
 
 		it('should return the correct decoded kv_rw_set', () => {
-			getReadsStub.returns(['read']);
-			getWritesStub.returns(['write']);
-			getMetadataWritesStub.returns(['metadata-write']);
-			getRangeQueriesInfoStub.returns(['range-queries-info']);
+			KVRWSetDecodeStub.returns({
+				writes: ['write'],
+				reads: ['read'],
+				range_queries_info: ['range-queries-info'],
+				metadata_writes: ['metadata-write']
+			});
 			decodeRangeQueryInfoStub.returns('range-query-info');
 			decodeKVMetadataWriteStub.returns('metadata-write');
 			decodeKVReadStub.returns('read');
 			decodeKVWriteStub.returns('write');
 			const kvRwSet = deocdeKVRWSet('kv_bytes');
 			sinon.assert.calledWith(KVRWSetDecodeStub, 'kv_bytes');
-			sinon.assert.called(getReadsStub);
-			sinon.assert.called(getWritesStub);
 			sinon.assert.calledOnce(decodeKVReadStub);
 			sinon.assert.calledOnce(decodeKVWriteStub);
-			sinon.assert.calledOnce(getRangeQueriesInfoStub);
 			sinon.assert.calledOnce(decodeRangeQueryInfoStub);
 			sinon.assert.calledOnce(decodeKVMetadataWriteStub);
 
@@ -1989,118 +1977,81 @@ describe('BlockDecoder', () => {
 	describe('#decodeKVRead', () => {
 		let decodeKVRead;
 
-		let getKeyStub;
-		let getVersionStub;
-		let getBlockNumStub;
-		let getTxNumStub;
 		before(() => {
 			decodeKVRead = BlockDecoderRewire.__get__('decodeKVRead');
 		});
 
-		beforeEach(() => {
-			getKeyStub = sandbox.stub();
-			getVersionStub = sandbox.stub();
-			getBlockNumStub = sandbox.stub();
-			getTxNumStub = sandbox.stub();
-		});
-
 		it('should return the correct kv read', () => {
-			getKeyStub.returns(1);
-			getVersionStub.returns({getBlockNum: getBlockNumStub, getTxNum: getTxNumStub});
-			getBlockNumStub.returns(0);
-			getTxNumStub.returns(1);
-			const mockProtoKvRead = {getKey: getKeyStub, getVersion: getVersionStub};
+			const mockProtoKvRead = {key: 1, version: {block_num: 0, tx_num: 1}};
 			const kvRead = decodeKVRead(mockProtoKvRead);
 			kvRead.key.should.equal(1);
-			sinon.assert.called(getKeyStub);
-			kvRead.version.block_num.should.equal('0');
-			kvRead.version.tx_num.should.equal('1');
-			sinon.assert.called(getVersionStub);
+			kvRead.version.block_num.should.equal(0);
+			kvRead.version.tx_num.should.equal(1);
 		});
 
 		it('should return the correct kv read when proto_version not present', () => {
-			getKeyStub.returns(1);
-			getVersionStub.returns(null);
-			const mockProtoKvRead = {getKey: getKeyStub, getVersion: getVersionStub};
+			const mockProtoKvRead = {key: 1};
 			const kvRead = decodeKVRead(mockProtoKvRead);
 			kvRead.key.should.equal(1);
-			sinon.assert.called(getKeyStub);
-			sinon.assert.called(getVersionStub);
-			should.equal(kvRead.version, null);
+			should.equal(kvRead.version, undefined);
 		});
 	});
 
 	describe('#decodeRangeQueryInfo', () => {
 		let decodeRangeQueryInfo;
 
-		let getStartKeyStub;
-		let getEndKeyStub;
-		let getItrExhaustedStub;
-		let getRawReadsStub;
-		let getReadsMerkleHashesStub;
 		let decodeKVReadStub;
-		let getMaxDegreeStub;
-		let getMaxLevelStub;
-		let getMaxLevelHashesStub;
 		let mockMerkelHash;
 		before(() => {
 			decodeRangeQueryInfo = BlockDecoderRewire.__get__('decodeRangeQueryInfo');
 		});
 
 		beforeEach(() => {
-			getStartKeyStub = sandbox.stub();
-			getEndKeyStub = sandbox.stub();
-			getItrExhaustedStub = sandbox.stub();
-			getRawReadsStub = sandbox.stub();
-			getReadsMerkleHashesStub = sandbox.stub();
 			decodeKVReadStub = sandbox.stub();
-			getMaxDegreeStub = sandbox.stub();
-			getMaxLevelStub = sandbox.stub();
-			getMaxLevelHashesStub = sandbox.stub();
-			mockMerkelHash = {getMaxDegree: getMaxDegreeStub, getMaxLevel: getMaxLevelStub, getMaxLevelHashes: getMaxLevelHashesStub};
+			mockMerkelHash = {max_degree: 'max-degree', max_level: 'max-level', max_level_hashes: 'max-level-hashes'};
 			revert.push(BlockDecoderRewire.__set__('decodeKVRead', decodeKVReadStub));
 		});
 
-		it('should return the correct range query info', () => {
-			getMaxDegreeStub.returns('max-degree');
-			getMaxLevelStub.returns('max-level');
-			getMaxLevelHashesStub.returns('max-level-hashes');
+		it('should return the correct range query info with raw reads', () => {
+			decodeKVReadStub.returns('kvread');
 			const mockProtoRangeQueryInfo = {
-				getStartKey: getStartKeyStub.returns('start_key'),
-				getEndKey: getEndKeyStub.returns('end_key'),
-				getItrExhausted: getItrExhaustedStub.returns('itr_exhausted'),
-				getRawReads: getRawReadsStub.returns({kv_reads: ['raw_read']}),
-				getReadsMerkleHashes: getReadsMerkleHashesStub.returns(mockMerkelHash)
+				start_key: 'start_key',
+				end_key: 'end_key',
+				itr_exhausted: 'itr_exhausted',
+				raw_reads: ['raw_read']
 			};
 			const rangeQueryInfo = decodeRangeQueryInfo(mockProtoRangeQueryInfo);
-			sinon.assert.called(getStartKeyStub);
 			rangeQueryInfo.start_key.should.equal('start_key');
-			sinon.assert.called(getEndKeyStub);
 			rangeQueryInfo.end_key.should.equal('end_key');
-			sinon.assert.called(getItrExhaustedStub);
 			rangeQueryInfo.itr_exhausted.should.equal('itr_exhausted');
-			sinon.assert.called(getReadsMerkleHashesStub);
 			sinon.assert.calledWith(decodeKVReadStub, 'raw_read');
+		});
+
+		it('should return the correct range query info with reads merklehashes', () => {
+			decodeKVReadStub.returns('kvread');
+			const mockProtoRangeQueryInfo = {
+				start_key: 'start_key',
+				end_key: 'end_key',
+				itr_exhausted: 'itr_exhausted',
+				reads_merkle_hashes: mockMerkelHash
+			};
+			const rangeQueryInfo = decodeRangeQueryInfo(mockProtoRangeQueryInfo);
+			rangeQueryInfo.start_key.should.equal('start_key');
+			rangeQueryInfo.end_key.should.equal('end_key');
+			rangeQueryInfo.itr_exhausted.should.equal('itr_exhausted');
+			sinon.assert.notCalled(decodeKVReadStub);
 			rangeQueryInfo.reads_merkle_hashes.should.deep.equal({max_degree: 'max-degree', max_level: 'max-level', max_level_hashes: 'max-level-hashes'});
 		});
 
 		it('should return the correct range query info where there are no raw reads or merkle hashes', () => {
-			getMaxDegreeStub.returns('max-degree');
-			getMaxLevelStub.returns('max-level');
-			getMaxLevelHashesStub.returns('max-level-hashes');
 			const mockProtoRangeQueryInfo = {
-				getStartKey: getStartKeyStub.returns('start_key'),
-				getEndKey: getEndKeyStub.returns('end_key'),
-				getItrExhausted: getItrExhaustedStub.returns('itr_exhausted'),
-				getRawReads: getRawReadsStub.returns(),
-				getReadsMerkleHashes: getReadsMerkleHashesStub.returns()
+				start_key: 'start_key',
+				end_key: 'end_key',
+				itr_exhausted: 'itr_exhausted'
 			};
 			const rangeQueryInfo = decodeRangeQueryInfo(mockProtoRangeQueryInfo);
-			sinon.assert.called(getStartKeyStub);
 			rangeQueryInfo.start_key.should.equal('start_key');
-			sinon.assert.called(getEndKeyStub);
 			rangeQueryInfo.end_key.should.equal('end_key');
-			sinon.assert.called(getItrExhaustedStub);
 			rangeQueryInfo.itr_exhausted.should.equal('itr_exhausted');
 		});
 	});
@@ -2108,63 +2059,44 @@ describe('BlockDecoder', () => {
 	describe('#decodeKVWrite', () => {
 		let decodeKVWrite;
 
-		let getKeyStub;
-		let getIsDeleteStub;
-		let getValueStub;
 		before(() => {
 			decodeKVWrite = BlockDecoderRewire.__get__('decodeKVWrite');
 		});
 
-		beforeEach(() => {
-			getKeyStub = sandbox.stub();
-			getIsDeleteStub = sandbox.stub();
-			getValueStub = sandbox.stub();
-		});
-
 		it('should return the correct kv write', () => {
 			const mockProtoKVWrite = {
-				getKey: getKeyStub.returns('key'),
-				getIsDelete: getIsDeleteStub.returns('is_delete'),
-				getValue: getValueStub.returns({toBuffer: () => 0})
+				key: 'key',
+				is_delete: 'is_delete',
+				value: 'value'
 			};
 
 			const kvWrite = decodeKVWrite(mockProtoKVWrite);
-			sinon.assert.called(getKeyStub);
-			sinon.assert.called(getIsDeleteStub);
-			sinon.assert.called(getValueStub);
 			kvWrite.key.should.equal('key');
 			kvWrite.is_delete.should.equal('is_delete');
-			kvWrite.value.should.equal('0');
+			kvWrite.value.should.equal('value');
 		});
 	});
 
 	describe('#decodeKVMetadataWrite', () => {
 		let decodeKVMetadataWrite;
 
-		let getKeyStub;
-		let getEntriesStub;
 		let decodeKVMetadataEntryStub;
 		before(() => {
 			decodeKVMetadataWrite = BlockDecoderRewire.__get__('decodeKVMetadataWrite');
 		});
 
 		beforeEach(() => {
-			getKeyStub = sandbox.stub();
-			getEntriesStub = sandbox.stub();
-
 			decodeKVMetadataEntryStub = sandbox.stub();
 			revert.push(BlockDecoderRewire.__set__('decodeKVMetadataEntry', decodeKVMetadataEntryStub));
 		});
 
 		it('should return the correct kv metadata', () => {
 			const mockProtokvMetadataWrite = {
-				getKey: getKeyStub.returns('key'),
-				getEntries: getEntriesStub.returns(['entry']),
+				key: 'key',
+				entries: ['entry'],
 			};
 			decodeKVMetadataEntryStub.returns('metadata');
 			const kvMetadataWrite = decodeKVMetadataWrite(mockProtokvMetadataWrite);
-			sinon.assert.called(getKeyStub);
-			sinon.assert.called(getEntriesStub);
 			sinon.assert.calledWith(decodeKVMetadataEntryStub, 'entry');
 			kvMetadataWrite.key.should.equal('key');
 			kvMetadataWrite.entries.should.deep.equal(['metadata']);
@@ -2174,27 +2106,18 @@ describe('BlockDecoder', () => {
 	describe('decodeKVMetadataEntry', () => {
 		let decodeKVMetadataEntry;
 
-		let getNameStub;
-		let getValueStub;
 		before(() => {
 			decodeKVMetadataEntry = BlockDecoderRewire.__get__('decodeKVMetadataEntry');
 		});
 
-		beforeEach(() => {
-			getNameStub = sandbox.stub();
-			getValueStub = sandbox.stub();
-		});
-
 		it('should return the correct kv metadata entry', () => {
 			const mockProtoMetadataEntry = {
-				getName: getNameStub.returns('name'),
-				getValue: getValueStub.returns({toBuffer: () => 'value'})
+				name: 'name',
+				value: 'value'
 			};
 
 			const kvMetadataEntry = decodeKVMetadataEntry(mockProtoMetadataEntry);
-			sinon.assert.called(getNameStub);
 			kvMetadataEntry.name.should.equal('name');
-			sinon.assert.called(getValueStub);
 			kvMetadataEntry.value.should.equal('value');
 		});
 	});
@@ -2202,50 +2125,38 @@ describe('BlockDecoder', () => {
 	describe('#decodeResponse', () => {
 		let decodeResponse;
 
-		let getStatusStub;
-		let getMessageStub;
-		let getPayloadStub;
 		before(() => {
 			decodeResponse = BlockDecoderRewire.__get__('decodeResponse');
 		});
 
-		beforeEach(() => {
-			getStatusStub = sandbox.stub();
-			getMessageStub = sandbox.stub();
-			getPayloadStub = sandbox.stub();
-		});
-
 		it('should return the correct response', () => {
 			const mockProtoResponse = {
-				getStatus: getStatusStub.returns('status'),
-				getMessage: getMessageStub.returns('message'),
-				getPayload: getPayloadStub.returns({toBuffer: () => 0})
+				status: 'status',
+				message: 'message',
+				payload: 'payload'
 			};
 
 			const response = decodeResponse(mockProtoResponse);
-			sinon.assert.called(getStatusStub);
 			response.status.should.equal('status');
-			sinon.assert.called(getMessageStub);
 			response.message.should.equal('message');
-			sinon.assert.called(getPayloadStub);
-			response.payload.should.equal('0');
+			response.payload.should.equal('payload');
 		});
 
-		it('should return nul when no proto response is given', () => {
+		it('should return null when no proto response is given', () => {
 			const response = decodeResponse();
-			should.equal(response, null);
+			should.equal(response, undefined);
 		});
 	});
 
-	describe('#decodeVersion', () => {
-		let decodeVersion;
+	describe('#convertVersion', () => {
+		let convertVersion;
 
 		before(() => {
-			decodeVersion = BlockDecoderRewire.__get__('decodeVersion');
+			convertVersion = BlockDecoderRewire.__get__('convertVersion');
 		});
 
 		it('should return the verson number of type int', () => {
-			const result = decodeVersion(10.2);
+			const result = convertVersion(10.2);
 			result.should.equal(10);
 		});
 	});
@@ -2253,35 +2164,27 @@ describe('BlockDecoder', () => {
 	describe('#decodeCollectionHashedRWSet', () => {
 		let decodeCollectionHashedRWSet;
 
-		let getCollectionNameStub;
-		let getHashedRwsetStub;
-		let getPvtRwsetHashStub;
 		let decodeHashedRwsetStub;
 		before(() => {
 			decodeCollectionHashedRWSet = BlockDecoderRewire.__get__('decodeCollectionHashedRWSet');
 		});
 
 		beforeEach(() => {
-			getCollectionNameStub = sandbox.stub();
-			getHashedRwsetStub = sandbox.stub();
-			getPvtRwsetHashStub = sandbox.stub();
 			decodeHashedRwsetStub = sandbox.stub();
 			revert.push(BlockDecoderRewire.__set__('decodeHashedRwset', decodeHashedRwsetStub));
 		});
 
 		it('should return the correct collection hashed rw set', () => {
 			const mockCollectionHashedRw = {
-				getCollectionName: getCollectionNameStub.returns('name'),
-				getHashedRwset: getHashedRwsetStub.returns({toBuffer: () => 'hashed-rw-set'}),
-				getPvtRwsetHash: getPvtRwsetHashStub.returns({toBuffer: () => 'pvt-rw-set'})
+				collection_name: 'name',
+				hashed_rwset: 'hashed-rw-set',
+				pvt_rwset_hash: 'pvt-rw-set'
 			};
 			decodeHashedRwsetStub.returns('rw-set');
 			const rwSet = decodeCollectionHashedRWSet([mockCollectionHashedRw]);
-			sinon.assert.called(getCollectionNameStub);
 			rwSet[0].collection_name.should.equal('name');
 			sinon.assert.calledWith(decodeHashedRwsetStub, 'hashed-rw-set');
 			rwSet[0].hashed_rwset.should.equal('rw-set');
-			sinon.assert.called(getPvtRwsetHashStub);
 			rwSet[0].pvt_rwset_hash.should.equal('pvt-rw-set');
 		});
 	});
@@ -2290,11 +2193,8 @@ describe('BlockDecoder', () => {
 		let decodeHashedRwset;
 
 		let hashedRwsetDecodeStub;
-		let getHashedReadsStub;
 		let decodeKVReadHashStub;
-		let getHashedWritesStub;
 		let decodeKVWriteHashStub;
-		let getMetadataWritesStub;
 		let decodeKVMetadataWriteHashStub;
 		before(() => {
 			decodeHashedRwset = BlockDecoderRewire.__get__('decodeHashedRwset');
@@ -2302,116 +2202,79 @@ describe('BlockDecoder', () => {
 
 		beforeEach(() => {
 			hashedRwsetDecodeStub = sandbox.stub();
-			revert.push(BlockDecoderRewire.__set__('fabprotos.kvrwset.HashedRWSet.decode', hashedRwsetDecodeStub));
-			getHashedReadsStub = sandbox.stub();
+			revert.push(BlockDecoderRewire.__set__('fabproto6.kvrwset.HashedRWSet.decode', hashedRwsetDecodeStub));
 			decodeKVReadHashStub = sandbox.stub();
 			revert.push(BlockDecoderRewire.__set__('decodeKVReadHash', decodeKVReadHashStub));
-			getHashedWritesStub = sandbox.stub();
 			decodeKVWriteHashStub = sandbox.stub();
 			revert.push(BlockDecoderRewire.__set__('decodeKVWriteHash', decodeKVWriteHashStub));
-			getMetadataWritesStub = sandbox.stub();
 			decodeKVMetadataWriteHashStub = sandbox.stub();
 			revert.push(BlockDecoderRewire.__set__('decodeKVMetadataWriteHash', decodeKVMetadataWriteHashStub));
 
 			hashedRwsetDecodeStub.returns({
-				getHashedReads: getHashedReadsStub.returns(['read']),
-				getHashedWrites: getHashedWritesStub.returns(['write']),
-				getMetadataWrites: getMetadataWritesStub.returns(['metadata'])
+				hashed_reads: ['read'],
+				hashed_writes: ['write'],
+				metadata_writes: ['metadata']
 			});
 		});
 
 		it('should return the correct hashe rw set', () => {
-			decodeKVReadHashStub.returns('read');
-			decodeKVWriteHashStub.returns('write');
-			decodeKVMetadataWriteHashStub.returns('metadata');
+			decodeKVReadHashStub.returns('read-decode');
+			decodeKVWriteHashStub.returns('write-decode');
+			decodeKVMetadataWriteHashStub.returns('metadata-decode');
 			const rwset = decodeHashedRwset({});
-			sinon.assert.called(getHashedReadsStub);
 			sinon.assert.called(decodeKVReadHashStub);
-			rwset.hashed_reads.should.deep.equal(['read']);
-			sinon.assert.called(getHashedWritesStub);
+			rwset.hashed_reads.should.deep.equal(['read-decode']);
 			sinon.assert.called(decodeKVWriteHashStub);
-			rwset.hashed_writes.should.deep.equal(['write']);
-			sinon.assert.called(getMetadataWritesStub);
+			rwset.hashed_writes.should.deep.equal(['write-decode']);
 			sinon.assert.called(decodeKVMetadataWriteHashStub);
-			rwset.metadata_writes.should.deep.equal(['metadata']);
+			rwset.metadata_writes.should.deep.equal(['metadata-decode']);
 		});
 	});
 
 	describe('#decodeKVReadHash', () => {
 		let decodeKVReadHash;
 
-		let getKeyHashStub;
-		let getVersionStub;
-		let getBlockNumStub;
-		let getTxNumStub;
 		before(() => {
 			decodeKVReadHash = BlockDecoderRewire.__get__('decodeKVReadHash');
 		});
 
-		beforeEach(() => {
-			getKeyHashStub = sandbox.stub();
-			getVersionStub = sandbox.stub();
-			getBlockNumStub = sandbox.stub();
-			getTxNumStub = sandbox.stub();
-		});
-
 		it('should return the correct kv read hash', () => {
 			const mockProtoKVReadHash = {
-				getKeyHash: getKeyHashStub.returns({toBuffer: () => 'key-hash'}),
-				getVersion: getVersionStub.returns({getBlockNum: getBlockNumStub.returns(0), getTxNum: getTxNumStub.returns(1)})
-
+				key_hash: 'key-hash',
+				version: {block_num: 0, tx_num: 1}
 			};
 			const kvKeyHash = decodeKVReadHash(mockProtoKVReadHash);
-			sinon.assert.called(getKeyHashStub);
 			kvKeyHash.key_hash.should.equal('key-hash');
-			sinon.assert.called(getVersionStub);
-			sinon.assert.called(getBlockNumStub);
-			sinon.assert.called(getTxNumStub);
-			kvKeyHash.version.should.deep.equal({block_num: '0', tx_num: '1'});
+			kvKeyHash.version.should.deep.equal({block_num: 0, tx_num: 1});
 		});
 
 		it('should return the correct kv read hash when version is not given', () => {
 			const mockProtoKVReadHash = {
-				getKeyHash: getKeyHashStub.returns({toBuffer: () => 'key-hash'}),
-				getVersion: getVersionStub.returns(null)
-
+				key_hash: 'key-hash',
+				version: null
 			};
 			const kvKeyHash = decodeKVReadHash(mockProtoKVReadHash);
-			sinon.assert.called(getKeyHashStub);
 			kvKeyHash.key_hash.should.equal('key-hash');
-			sinon.assert.called(getVersionStub);
-			should.equal(kvKeyHash.version, null);
+			should.equal(kvKeyHash.version, undefined);
 		});
 	});
 
 	describe('#decodeKVWriteHash', () => {
 		let decodeKVWriteHash;
 
-		let getKeyHashStub;
-		let getIsDeleteStub;
-		let getValueHashStub;
 		before(() => {
 			decodeKVWriteHash = BlockDecoderRewire.__get__('decodeKVWriteHash');
 		});
 
-		beforeEach(() => {
-			getKeyHashStub = sandbox.stub();
-			getIsDeleteStub = sandbox.stub();
-			getValueHashStub = sandbox.stub();
-		});
-
 		it('should return the correct key hash', () => {
 			const mockProtoKVWriteHash = {
-				getKeyHash: getKeyHashStub.returns({toBuffer: () => 'key-hash'}),
-				getIsDelete: getIsDeleteStub.returns('is-delete'),
-				getValueHash: getValueHashStub.returns({toBuffer: () => 'value-hash'})
+				key_hash: 'key-hash',
+				is_delete: 'is-delete',
+				value_hash: 'value-hash'
 			};
 			const kvWriteHash = decodeKVWriteHash(mockProtoKVWriteHash);
-			sinon.assert.called(getKeyHashStub);
 			kvWriteHash.key_hash.should.equal('key-hash');
-			sinon.assert.called(getIsDeleteStub);
 			kvWriteHash.is_delete.should.equal('is-delete');
-			sinon.assert.called(getValueHashStub);
 			kvWriteHash.value_hash.should.equal('value-hash');
 		});
 	});
@@ -2419,125 +2282,56 @@ describe('BlockDecoder', () => {
 	describe('#decodeKVMetadataWriteHash', () => {
 		let decodeKVMetadataWriteHash;
 
-		let getKeyHashStub;
-		let getEntriesStub;
 		let decodeKVMetadataEntryStub;
 		before(() => {
 			decodeKVMetadataWriteHash = BlockDecoderRewire.__get__('decodeKVMetadataWriteHash');
 		});
 
 		beforeEach(() => {
-			getKeyHashStub = sandbox.stub();
-			getEntriesStub = sandbox.stub();
 			decodeKVMetadataEntryStub = sandbox.stub();
 			revert.push(BlockDecoderRewire.__set__('decodeKVMetadataEntry', decodeKVMetadataEntryStub));
 		});
 
 		it('should return the correct kv metadata write hash', () => {
 			const mockProtoKVMetatataWriteHash = {
-				getKeyHash: getKeyHashStub.returns({toBuffer: () => 'key-hash'}),
-				getEntries: getEntriesStub.returns(['entry'])
+				key_hash: 'key-hash', // bytes
+				entries: ['entry'] // repeated KVMetadataEntry
 			};
 			decodeKVMetadataEntryStub.returns('decoded-entry');
 			const kvMetadataWriteHash = decodeKVMetadataWriteHash(mockProtoKVMetatataWriteHash);
-			sinon.assert.called(getKeyHashStub);
 			kvMetadataWriteHash.key_hash.should.equal('key-hash');
-			sinon.assert.called(getEntriesStub);
 			kvMetadataWriteHash.entries.should.deep.equal(['decoded-entry']);
-		});
-	});
-
-	describe('#HeaderType.convertToString', () => {
-		let typeAsStringStub;
-		beforeEach(() => {
-			typeAsStringStub = null;
-		});
-
-		it('should log an error', () => {
-			revert.push(BlockDecoderRewire.__set__('type_as_string', typeAsStringStub));
-			const convertedType = BlockDecoderRewire.HeaderType.convertToString('type');
-			convertedType.should.equal('UNKNOWN_TYPE');
-			sinon.assert.calledWith(FakeLogger.error, 'HeaderType conversion - unknown headertype - %s', 'type');
-		});
-
-		it('should return the correct type', () => {
-			typeAsStringStub = {0: 'type'};
-			revert.push(BlockDecoderRewire.__set__('type_as_string', typeAsStringStub));
-			const convertedType = BlockDecoderRewire.HeaderType.convertToString(0);
-			convertedType.should.equal('type');
-		});
-	});
-
-	describe('#HeaderType.decodePayloadBasedOnType', () => {
-		let decodeConfigEnvelopeStub;
-		let decodeConfigUpdateEnvelopeStub;
-		let decodeEndorserTransactionStub;
-
-		beforeEach(() => {
-			decodeConfigEnvelopeStub = sandbox.stub();
-			revert.push(BlockDecoderRewire.__set__('decodeConfigEnvelope', decodeConfigEnvelopeStub));
-			decodeConfigUpdateEnvelopeStub = sandbox.stub();
-			revert.push(BlockDecoderRewire.__set__('decodeConfigUpdateEnvelope', decodeConfigUpdateEnvelopeStub));
-			decodeEndorserTransactionStub = sandbox.stub();
-			revert.push(BlockDecoderRewire.__set__('decodeEndorserTransaction', decodeEndorserTransactionStub));
-		});
-
-		it('should call decodeConfigEnvelope', () => {
-			decodeConfigEnvelopeStub.returns('config');
-			const payload = BlockDecoderRewire.HeaderType.decodePayloadBasedOnType('data', 1);
-			payload.should.equal('config');
-			sinon.assert.calledWith(decodeConfigEnvelopeStub, 'data');
-		});
-
-		it('should call decodeConfigUpdateEnvelope', () => {
-			decodeConfigUpdateEnvelopeStub.returns('config');
-			const payload = BlockDecoderRewire.HeaderType.decodePayloadBasedOnType('data', 2);
-			payload.should.equal('config');
-			sinon.assert.calledWith(decodeConfigUpdateEnvelopeStub, 'data');
-		});
-
-		it('should call decodeEndorserTransaction', () => {
-			decodeEndorserTransactionStub.returns('config');
-			const payload = BlockDecoderRewire.HeaderType.decodePayloadBasedOnType('data', 3);
-			payload.should.equal('config');
-			sinon.assert.calledWith(decodeEndorserTransactionStub, 'data');
-		});
-
-		it('should return an empty object and call Logger.debug as a default case', () => {
-			BlockDecoderRewire.HeaderType.convertToString = () => 'type';
-			const payload = BlockDecoderRewire.HeaderType.decodePayloadBasedOnType('data', null);
-			payload.should.deep.equal({});
-			sinon.assert.calledWith(FakeLogger.debug, ' ***** found a header type of %s :: %s', null, 'type');
 		});
 	});
 
 	describe('#decodePrivateData', () => {
 		let decodePrivateData;
-		let decodeKVRWSet_stub;
+		let decodeKVRWSet;
 
-		const private_data_map_proto = {};
-
-		const collection_pvt_rwset_array = [];
-		const collection_pvt_rwset = {};
-		collection_pvt_rwset.collection_name = 'mycollection';
-		collection_pvt_rwset.rwset = Buffer.from('rwset'); // will not be decoded
-		collection_pvt_rwset_array.push(collection_pvt_rwset);
-
-		const ns_pvt_rwset_array = []; // be sure to populate before setting into protobuf
-		const ns_pvt_rwset = {};
-		ns_pvt_rwset_array.push(ns_pvt_rwset);
-		ns_pvt_rwset.namespace = 'collections';
-		ns_pvt_rwset.collection_pvt_rwset = collection_pvt_rwset_array;
-
-		const txPvtReadWriteSet = {};
-		txPvtReadWriteSet.data_model = 'KV';
-		txPvtReadWriteSet.ns_pvt_rwset = ns_pvt_rwset_array;
-		private_data_map_proto['0'] = txPvtReadWriteSet;
+		const privateDataMapProto = {0: // map key is transaction index
+			// TxPvtReadWriteSet
+			{
+				data_model: 0, // enum KV
+				ns_pvt_rwset: [
+					// NSPvtReadWriteSet
+					{
+						namespace: 'namespace-string',
+						collection_pvt_rwset: [
+							// CollectionReadWriteSet
+							{
+								collection_name: 'collectionName-string',
+								rwset: 'rwset-bytes' // decoded by decodeKVRWSet
+							}
+						]
+					}
+				]
+			}
+		};
 
 		beforeEach(() => {
 			decodePrivateData = BlockDecoderRewire.__get__('decodePrivateData');
-			decodeKVRWSet_stub = sandbox.stub().returns('myrwset');
-			revert.push(BlockDecoderRewire.__set__('decodeKVRWSet', decodeKVRWSet_stub));
+			decodeKVRWSet = sandbox.stub().returns('rwset-decode');
+			revert.push(BlockDecoderRewire.__set__('decodeKVRWSet', decodeKVRWSet));
 		});
 		it('should run with no data', () => {
 			const private_data_map = decodePrivateData();
@@ -2545,9 +2339,11 @@ describe('BlockDecoder', () => {
 		});
 
 		it('should return the correct rwset', () => {
-			const private_data_map = decodePrivateData(private_data_map_proto);
-			private_data_map[0].ns_pvt_rwset[0].collection_pvt_rwset[0].rwset.should.equal('myrwset');
-			private_data_map[0].ns_pvt_rwset[0].collection_pvt_rwset[0].collection_name.should.equal('mycollection');
+			const private_data_map = decodePrivateData(privateDataMapProto);
+			private_data_map[0].ns_pvt_rwset[0].collection_pvt_rwset[0].rwset.should.equal('rwset-decode');
+			private_data_map[0].ns_pvt_rwset[0].collection_pvt_rwset[0].collection_name.should.equal('collectionName-string');
+			private_data_map[0].ns_pvt_rwset[0].namespace.should.equal('namespace-string');
+			sinon.assert.called(decodeKVRWSet);
 		});
 	});
 });

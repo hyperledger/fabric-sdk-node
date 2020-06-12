@@ -8,7 +8,7 @@ const TYPE = 'Discoverer';
 
 const {checkParameter, getLogger} = require('./Utils.js');
 const ServiceEndpoint = require('./ServiceEndpoint');
-const fabprotos = require('fabric-protos');
+const fabproto6 = require('fabric-protos').services;
 
 const logger = getLogger(TYPE);
 
@@ -33,7 +33,7 @@ class Discoverer extends ServiceEndpoint {
 		super(name, client, mspid);
 
 		this.type = TYPE;
-		this.serviceClass = fabprotos.discovery.Discovery;
+		this.serviceClass = fabproto6.discovery.Discovery;
 	}
 
 	/**

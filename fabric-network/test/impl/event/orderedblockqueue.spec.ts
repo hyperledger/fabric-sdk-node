@@ -25,7 +25,7 @@ describe('OrderedBlockQueue', () => {
 			blockNumber: Long.fromNumber(blockNumber),
 			blockData: {
 				channel_id: 'channel_id',
-				number: 'number',
+				number: 10,
 				filtered_transactions: []
 			},
 			getTransactionEvents: () => []

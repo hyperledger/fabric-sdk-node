@@ -20,7 +20,7 @@ const User = rewire('../lib/User');
 const TestUtils = require('./TestUtils');
 
 describe('DiscoveryService', () => {
-	const cc_query_res = {result: 'cc_query_res',
+	const ccQueryRes = {result: 'cc_query_res',
 		cc_query_res: {content: [{
 			chaincode: 'mychaincode',
 			endorsers_by_groups: {
@@ -57,7 +57,7 @@ describe('DiscoveryService', () => {
 			}
 		}}
 	};
-	const config_result = {result: 'config_result',
+	const configResult = {result: 'config_result',
 		config_result: {
 			msps: {
 				msp1: TestUtils.createMsp('msp1'),
@@ -69,7 +69,7 @@ describe('DiscoveryService', () => {
 			}
 		}
 	};
-	const config_result2 = {result: 'config_result',
+	const configResult2 = {result: 'configResult',
 		config_result: {
 			msps: {
 				msp1: TestUtils.createMsp('msp1'),
@@ -286,7 +286,7 @@ describe('DiscoveryService', () => {
 			discovery.build(idx);
 			discovery.sign(idx);
 			endorser.name = 'peer1';
-			sinon.stub(discoverer, 'sendDiscovery').resolves({results: [config_result]});
+			sinon.stub(discoverer, 'sendDiscovery').resolves({results: [configResult]});
 			discovery.targets = [discoverer];
 			const results = await discovery.send();
 			should.exist(results.msps);
@@ -295,7 +295,7 @@ describe('DiscoveryService', () => {
 			discovery.build(idx);
 			discovery.sign(idx);
 			endorser.name = 'peer1';
-			sinon.stub(discoverer, 'sendDiscovery').resolves({results: [config_result]});
+			sinon.stub(discoverer, 'sendDiscovery').resolves({results: [configResult]});
 			const results = await discovery.send({targets: [discoverer]});
 			should.exist(results.msps);
 		});
@@ -303,7 +303,7 @@ describe('DiscoveryService', () => {
 			discovery.build(idx);
 			discovery.sign(idx);
 			endorser.name = 'peer1';
-			sinon.stub(discoverer, 'sendDiscovery').resolves({results: [config_result2]});
+			sinon.stub(discoverer, 'sendDiscovery').resolves({results: [configResult2]});
 			const results = await discovery.send({targets: [discoverer]});
 			should.exist(results.msps);
 		});
@@ -312,7 +312,7 @@ describe('DiscoveryService', () => {
 			discovery.sign(idx);
 			endorser.name = 'host.com:1000';
 			channel.addEndorser(endorser);
-			sinon.stub(discoverer, 'sendDiscovery').resolves({results: [config_result]});
+			sinon.stub(discoverer, 'sendDiscovery').resolves({results: [configResult]});
 			const results = await discovery.send({targets: [discoverer]});
 			should.exist(results.msps);
 		});
@@ -320,7 +320,7 @@ describe('DiscoveryService', () => {
 			discovery.build(idx);
 			discovery.sign(idx);
 			endorser.name = 'peer2';
-			sinon.stub(discoverer, 'sendDiscovery').resolves({results: [config_result, members]});
+			sinon.stub(discoverer, 'sendDiscovery').resolves({results: [configResult, members]});
 			const results = await discovery.send({targets: [discoverer]});
 			should.exist(results.peers_by_org);
 		});
@@ -328,7 +328,7 @@ describe('DiscoveryService', () => {
 			discovery.build(idx);
 			discovery.sign(idx);
 			endorser.name = 'peer3';
-			sinon.stub(discoverer, 'sendDiscovery').resolves({results: [config_result, bad_members]});
+			sinon.stub(discoverer, 'sendDiscovery').resolves({results: [configResult, bad_members]});
 			const results = await discovery.send({targets: [discoverer], asLocalhost: true});
 			should.exist(results.peers_by_org);
 
@@ -338,7 +338,7 @@ describe('DiscoveryService', () => {
 			discovery.sign(idx);
 			endorser.name = 'peer4';
 			endorser.connect = sinon.stub().throws(new Error('bad connect'));
-			sinon.stub(discoverer, 'sendDiscovery').resolves({results: [config_result, cc_query_res]});
+			sinon.stub(discoverer, 'sendDiscovery').resolves({results: [configResult, ccQueryRes]});
 			const results = await discovery.send({targets: [discoverer]});
 			should.exist(results.endorsement_plan);
 		});
@@ -491,8 +491,8 @@ describe('DiscoveryService', () => {
 			discovery.discoveryResults.msps = {msp1: {
 				id: 'msp1',
 				name: 'msp1',
-				tls_root_certs: 'root certs',
-				tls_intermediate_certs: 'intermediate certs'
+				tlsRootCerts: 'root certs',
+				tlsIntermediateCerts: 'intermediate certs'
 			}};
 			const results = discovery._buildTlsRootCerts('bad');
 			should.equal(results, '');
@@ -502,8 +502,8 @@ describe('DiscoveryService', () => {
 			discovery.discoveryResults.msps = {msp1: {
 				id: 'msp1',
 				name: 'msp1',
-				tls_root_certs: 'rootcerts',
-				tls_intermediate_certs: 'intermediatecerts'
+				tlsRootCerts: 'rootcerts',
+				tlsIntermediateCerts: 'intermediatecerts'
 			}};
 			const results = discovery._buildTlsRootCerts('msp1');
 			should.equal(results, 'rootcertsintermediatecerts');
@@ -577,8 +577,8 @@ describe('DiscoveryService', () => {
 			discovery.discoveryResults.msps = {msp1: {
 				id: 'msp1',
 				name: 'msp1',
-				tls_root_certs: 'rootcerts',
-				tls_intermediate_certs: 'intermediatecerts'
+				tlsRootCerts: 'rootcerts',
+				tlsIntermediateCerts: 'intermediatecerts'
 			}};
 			endorser.name = 'host2.com:1000';
 			const results = await discovery._buildPeer({endpoint: 'host2.com:1000', name: 'host2.com:1000', mspid: 'msp1'});
@@ -589,8 +589,8 @@ describe('DiscoveryService', () => {
 			discovery.discoveryResults.msps = {msp1: {
 				id: 'msp1',
 				name: 'msp1',
-				tls_root_certs: 'rootcerts',
-				tls_intermediate_certs: 'intermediatecerts'
+				tlsRootCerts: 'rootcerts',
+				tlsIntermediateCerts: 'intermediatecerts'
 			}};
 			endorser.name = 'host3.com:1000';
 			endorser.connect.throws(new Error('failed to connect'));

@@ -76,7 +76,7 @@ describe('block listener', () => {
 			blockNumber: longBlockNumber,
 			filteredBlock: {
 				channel_id: 'channel',
-				number: longBlockNumber.toString(),
+				number: longBlockNumber,
 				filtered_transactions: []
 			}
 		};

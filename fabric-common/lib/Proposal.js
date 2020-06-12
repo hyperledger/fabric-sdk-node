@@ -9,7 +9,8 @@ const TYPE = 'Proposal';
 const settle = require('promise-settle');
 const {checkParameter, getLogger} = require('./Utils.js');
 const logger = getLogger(TYPE);
-const fabprotos = require('fabric-protos');
+const fabproto6 = require('fabric-protos');
+
 const ServiceAction = require('./ServiceAction.js');
 
 /**
@@ -172,6 +173,7 @@ class Proposal extends ServiceAction {
 		this._reset();
 
 		if (transientMap) {
+			logger.debug('%s - adding transientMap', method);
 			this._action.transientMap = transientMap;
 		}
 		if (typeof init === 'boolean') {
@@ -204,43 +206,59 @@ class Proposal extends ServiceAction {
 			this._action.args.push(arg);
 		}
 
-		logger.debug('%s - chaincode ID:%s', method, this.chaincodeId);
-		const chaincodeSpec = new fabprotos.protos.ChaincodeSpec();
-		chaincodeSpec.setType(fabprotos.protos.ChaincodeSpec.Type.GOLANG);
-		const chaincode_id = new fabprotos.protos.ChaincodeID();
-		chaincode_id.setName(this.chaincodeId);
-		chaincodeSpec.setChaincodeId(chaincode_id);
-		const input = new fabprotos.protos.ChaincodeInput();
-		input.setArgs(this._action.args);
-		if (this._action.init) {
-			input.setIsInit(true);
-		}
-		chaincodeSpec.setInput(input);
+		// build the proposal payload
+		const chaincodeID = fabproto6.protos.ChaincodeID.create({
+			name: this.chaincodeId
+		});
 
-		const channelHeader = this.channel.buildChannelHeader(
-			fabprotos.common.HeaderType.ENDORSER_TRANSACTION,
+		const chaincodeInput = fabproto6.protos.ChaincodeInput.create({
+			args: this._action.args,
+			is_init: this._action.init
+		});
+
+		const chaincodeSpec = fabproto6.protos.ChaincodeSpec.create({
+			type: fabproto6.protos.ChaincodeSpec.Type.GOLANG,
+			chaincode_id: chaincodeID,
+			input: chaincodeInput
+		});
+
+		const chaincodeInvocationSpec = fabproto6.protos.ChaincodeInvocationSpec.create({
+			chaincode_spec: chaincodeSpec
+		});
+		const chaincodeInvocationSpecBuf = fabproto6.protos.ChaincodeInvocationSpec.encode(
+			chaincodeInvocationSpec
+		).finish();
+
+		const fields = {
+			input: chaincodeInvocationSpecBuf
+		};
+		if (this._action.transientMap) {
+			fields.TransientMap = this._action.transientMap;
+		}
+		const chaincodeProposalPayload = fabproto6.protos.ChaincodeProposalPayload.create(
+			fields
+		);
+		const chaincodeProposalPayloadBuf = fabproto6.protos.ChaincodeProposalPayload.encode(
+			chaincodeProposalPayload
+		).finish();
+
+		const channelHeaderBuf = this.channel.buildChannelHeader(
+			fabproto6.common.HeaderType.ENDORSER_TRANSACTION,
 			this.chaincodeId,
 			this._action.transactionId
 		);
 
-		this._action.header = this.buildHeader(idContext, channelHeader);
+		// save the header for use by the commit
+		this._action.header = this.buildHeader(idContext, channelHeaderBuf);
 
-		// construct the ChaincodeInvocationSpec
-		const cciSpec = new fabprotos.protos.ChaincodeInvocationSpec();
-		cciSpec.setChaincodeSpec(chaincodeSpec);
+		const headerBuf = fabproto6.common.Header.encode(this._action.header).finish();
 
-		const cc_payload = new fabprotos.protos.ChaincodeProposalPayload();
-		cc_payload.setInput(cciSpec.toBuffer());
+		this._action.proposal = fabproto6.protos.Proposal.create({
+			header: headerBuf,
+			payload: chaincodeProposalPayloadBuf
+		});
+		this._payload = fabproto6.protos.Proposal.encode(this._action.proposal).finish();
 
-		if (this._action.transientMap) {
-			cc_payload.setTransientMap(this._action.transientMap);
-		}
-
-		this._action.proposal = new fabprotos.protos.Proposal();
-		this._action.proposal.setHeader(this._action.header.toBuffer());
-		this._action.proposal.setPayload(cc_payload.toBuffer());
-
-		this._payload = this._action.proposal.toBuffer();
 		return this._payload;
 	}
 
@@ -444,7 +462,7 @@ message Endorsement {
 		const endorsement = proposal_response.endorsement;
 		let identity;
 
-		const sid = fabprotos.msp.SerializedIdentity.decode(endorsement.endorser);
+		const sid = fabproto6.msp.SerializedIdentity.decode(endorsement.endorser);
 		const mspid = sid.getMspid();
 		logger.debug('%s - found mspid %s', method, mspid);
 		const msp = this._msp_manager.getMSP(mspid);
@@ -549,11 +567,10 @@ function _getProposalResponseResults(proposaResponse = checkParameter('proposalR
 	if (!proposaResponse.payload) {
 		throw new Error('Parameter must be a ProposalResponse Object');
 	}
-	const payload = fabprotos.protos.ProposalResponsePayload.decode(proposaResponse.payload);
-	const extension = fabprotos.protos.ChaincodeAction.decode(payload.extension);
+	const payload = fabproto6.protos.ProposalResponsePayload.decode(proposaResponse.payload);
+	const extension = fabproto6.protos.ChaincodeAction.decode(payload.extension);
 
-	// return a buffer object which has an equals method
-	return extension.results.toBuffer();
+	return extension.results;
 }
 
 module.exports = Proposal;
