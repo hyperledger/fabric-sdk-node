@@ -23,7 +23,7 @@
   "dependencies": {
     "grpc": "1.24.2",
     "lodash.clone": "4.5.0",
-    "jsrsasign": "^7.2.2",
+    "jsrsasign": "^8.0.16",
     "url": "^0.11.0",
     "util": "^0.10.3",
     "winston": "^2.4.0"
