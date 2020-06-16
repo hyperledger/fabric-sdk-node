@@ -15,31 +15,25 @@ const default_unregister = {
 	chaincode: false
 };
 
-/*
+/**
  * The EventListener is used internally to the EventService to hold
  * an event registration callback and settings.
+ * @private
  */
 class EventListener {
-/**
+	/**
 	 * @typedef {Object} RegistrationOpts
-	 * @property {integer} startBlock - Optional - The starting block number
+	 * @property {number|string|Long} [startBlock] - Optional. The starting block number
 	 * for event checking. When included, the peer's event service
 	 * will be asked to start sending blocks from this block number.
 	 * This is how to resume or replay missed blocks that were added
 	 * to the ledger.
 	 * Default is the latest block on the ledger.
-	 * @property {integer | 'newest'} endBlock - Optional - The ending block number
-	 * for event checking. The value 'newest' indicates that the endBlock
-	 * will be calculated by the peer's event service as the newest block
-	 * on the ledger at the time of registration.
-	 * This allows the application to replay up to the latest block on
-	 * the ledger and then the listener will stop and be notified by the
-	 * callback.
-	 * When included, the peer's event service
-	 * will be asked to stop sending blocks once this block is delivered.
-	 * This is how to replay missed blocks that were added
-	 * to the ledger. When a startBlock is not included, the endBlock
-	 * must be equal to or larger than the current channel block height.
+	 * @property {number|string|Long} [endBlock] - Optional. The ending block number
+	 * for event checking.
+	 * When included, the peer's event service will be asked to stop sending blocks once this block is delivered.
+	 * This is how to replay missed blocks that were added to the ledger.
+	 * When a startBlock is not included, the endBlock must be equal to or larger than the current channel block height.
 	 * @property {boolean} unregister - Optional - This options setting indicates
 	 * the registration should be removed (unregister) when the event
 	 * is seen. When the application is using a timeout to wait a
@@ -59,27 +53,25 @@ class EventListener {
 	 * will be automatically unregistered.
 	 */
 
-	/*
+	/**
 	 * Constructs a Event Listener
-	 *
 	 * @param {EventService} eventService - The EventService where this listener is registered
 	 * @param {string} listenerType - a string to indicate the type of event registration
 	 *  "block", "tx", or "chaincode".
 	 * @param {function} callback - Callback for event matches
 	 * @param {RegistrationOpts} options - event registration options
-	 * @param {any} event
+	 * @param {RegExp|string} [event]
 	 *  <br>- When this listener is of type "block" then this field is not used.
 	 *  <br>- When this listener is of type "chaincode" then this
 	 *  field will be the chaincode event name, used as a regular
 	 *  expression match on the chaincode event name within the transactions.
 	 *  <br>- When this listener is of type "tx" then this field will be the
 	 *  transaction id string.
-	 *  In both cases this field will be compared with data in the transaction
-	 *  and when there is a match
-	 *  the event will have taken place and the listener's callback will be
-	 *  called (notified).
-	 * @param {string} [chaincodeId] - optional - used to isolate chaincode events
+	 *  In both cases this field will be compared with data in the transaction.
+	 *  And when there is a match the event will have taken place and the listener's callback will be called (notified).
+	 * @param {string} [chaincodeId] - optional. Used to isolate chaincode events
 	 *  to a specific chaincode.
+	 * @private
 	 */
 	constructor(eventService = checkParameter('eventService'), listenerType = checkParameter('listenerType'), callback = checkParameter('callback'), options, event, chaincodeId) {
 		this.eventService = eventService;
@@ -110,8 +102,8 @@ class EventListener {
 	 * event information or error instance.
 	 * @param {Error} error - An Error object that was created as a result
 	 *  of an error on the {@link EventService} connection to the Peer.
-	 * @param {BlockEvent} event - A {@link BlockEvent} that contains
-	 *  event information.
+	 * @param {EventInfo} event - A {@link EventInfo} that contains event information.
+	 * @private
 	 */
 	onEvent(error, event) {
 		const method = 'onEvent';
