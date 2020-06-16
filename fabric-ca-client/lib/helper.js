@@ -35,8 +35,8 @@ function checkRegistrar(registrar) {
 // first which as of jsrsasign@6.2.3 always assumes RSA based certificates and
 // fails to parse certs that includes ECDSA keys.
 function getSubjectCommonName(pem) {
-	const hex = X509.pemToHex(pem);
-	const d = ASN1HEX.getDecendantHexTLVByNthList(hex, 0, [0, 5]);
+	const hex = jsrsasign.pemtohex(pem);
+	const d = ASN1HEX.getTLVbyList(hex, 0, [0, 5]);
 	const subject = X509.hex2dn(d); // format: '/C=US/ST=California/L=San Francisco/CN=Admin@org1.example.com/emailAddress=admin@org1.example.com'
 	const m = subject.match(/CN=.+[^/]/);
 	if (!m) {

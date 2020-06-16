@@ -122,7 +122,7 @@ test('\n\n ** ECDSA Key Impl tests **\n\n', (t) => {
 	let csrPEM;
 	// malformed subjectDN
 	try {
-		csrPEM = key3.generateCSR('###############');
+		csrPEM = key3.generateCSR(null);
 		t.fail('Should not have generated a CSR with a malformed subject');
 	} catch (err) {
 		t.pass('Checking that CSR is not generated for a malformed subject');
