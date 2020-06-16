@@ -1,3 +1,14 @@
+## v1.4.9
+Tue Jun 16 13:20:56 EDT 2020
+
+* [aab7b47f](https://github.com/hyperledger/fabric-sdk-node/commit/aab7b47f) [FABN-1575](https://jira.hyperledger.org/browse/FABN-1575) Publish NodeSDK 1.4.9
+* [6b314c96](https://github.com/hyperledger/fabric-sdk-node/commit/6b314c96) [FABN-1568 release-1](https://jira.hyperledger.org/browse/FABN-1568 release-1).4 upgrade jsrsasign (#250)
+* [3e98eab1](https://github.com/hyperledger/fabric-sdk-node/commit/3e98eab1) [FABN-1566](https://jira.hyperledger.org/browse/FABN-1566) add transaction code to event error (#245)
+* [94bc9718](https://github.com/hyperledger/fabric-sdk-node/commit/94bc9718) [FABN-1556](https://jira.hyperledger.org/browse/FABN-1556): Fix broken doc links (#238)
+* [e224076c](https://github.com/hyperledger/fabric-sdk-node/commit/e224076c) [[FABN-1538](https://jira.hyperledger.org/browse/FABN-1538)] provide similar _createClients in orderer.js (#218)
+* [6208ccc8](https://github.com/hyperledger/fabric-sdk-node/commit/6208ccc8) Import ByteBuffer and Long types to prevent TypeScript errors (#207)
+* [a4ca6ea1](https://github.com/hyperledger/fabric-sdk-node/commit/a4ca6ea1) [FABN-1224](https://jira.hyperledger.org/browse/FABN-1224) NodeSDK discovery interest 1.4 (#132)
+
 ## v1.4.8
 Mon 16 Mar 2020 12:05:37 GMT
 
