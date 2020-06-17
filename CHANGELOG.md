@@ -1,3 +1,35 @@
+## v2.1.1
+Wed Jun 17 09:52:17 EDT 2020
+
+* [53898325](https://github.com/hyperledger/fabric-sdk-node/commit/53898325) [[FABN-1555](https://jira.hyperledger.org/browse/FABN-1555)] Update EventListener typedef and document (#239)
+* [d22e1a1b](https://github.com/hyperledger/fabric-sdk-node/commit/d22e1a1b) [FABN-1544](https://jira.hyperledger.org/browse/FABN-1544) Update gRPC to pure js version (#247)
+* [6f29724e](https://github.com/hyperledger/fabric-sdk-node/commit/6f29724e) [FABN-1570](https://jira.hyperledger.org/browse/FABN-1570): Better unstable version generation (#248)
+* [430f4706](https://github.com/hyperledger/fabric-sdk-node/commit/430f4706) [FABN-1567](https://jira.hyperledger.org/browse/FABN-1567) Adding duplicates with discovery (#249)
+* [7a70ad27](https://github.com/hyperledger/fabric-sdk-node/commit/7a70ad27) [FABN-1570](https://jira.hyperledger.org/browse/FABN-1570): Explicit dependency versions on publishing (#246)
+* [4d662d75](https://github.com/hyperledger/fabric-sdk-node/commit/4d662d75) [FABN-1569](https://jira.hyperledger.org/browse/FABN-1569): Revert newDefaultKeyValueStore() to async (#241)
+* [29cf613b](https://github.com/hyperledger/fabric-sdk-node/commit/29cf613b) [FABN-1573](https://jira.hyperledger.org/browse/FABN-1573): Use unique label per channel on chaincode package (#244)
+* [1cb708df](https://github.com/hyperledger/fabric-sdk-node/commit/1cb708df) [FABN-1565](https://jira.hyperledger.org/browse/FABN-1565): Fix docs for DefaultEventHandlerStrategies (#240)
+* [c7f33a9b](https://github.com/hyperledger/fabric-sdk-node/commit/c7f33a9b) [[FABN-835](https://jira.hyperledger.org/browse/FABN-835)] Refactor CryptoKeyStore (Part 3) (#208)
+* [ba119799](https://github.com/hyperledger/fabric-sdk-node/commit/ba119799) [FABN-1557](https://jira.hyperledger.org/browse/FABN-1557) NodeSDK all restart event service (#237)
+* [44bbab02](https://github.com/hyperledger/fabric-sdk-node/commit/44bbab02) [FABN-1536](https://jira.hyperledger.org/browse/FABN-1536): Return copy from IdentityContext.calculateTransactionId() (#236)
+* [b6a20bcd](https://github.com/hyperledger/fabric-sdk-node/commit/b6a20bcd) [FABN-1536](https://jira.hyperledger.org/browse/FABN-1536): Make transaction ID available before submit (#235)
+* [07b93c26](https://github.com/hyperledger/fabric-sdk-node/commit/07b93c26) Fix when endBlock is of string type (#233)
+* [b8cc3a8f](https://github.com/hyperledger/fabric-sdk-node/commit/b8cc3a8f) [FABN-1549](https://jira.hyperledger.org/browse/FABN-1549): JSDoc fixes (#234)
+* [2da3e188](https://github.com/hyperledger/fabric-sdk-node/commit/2da3e188) [FABN-1549: Remove non-TypeScript build for fabric-](https://jira.hyperledger.org/browse/FABN-1549: Remove non-TypeScript build for fabric-)network (#231)
+* [5c0a28b2](https://github.com/hyperledger/fabric-sdk-node/commit/5c0a28b2) [FABN-1549: Convert remaining fabric-](https://jira.hyperledger.org/browse/FABN-1549: Convert remaining fabric-)network source to TypeScript (#230)
+* [251038a3](https://github.com/hyperledger/fabric-sdk-node/commit/251038a3) Fix some audit complaints (#229)
+* [9497ed20](https://github.com/hyperledger/fabric-sdk-node/commit/9497ed20) Add missing copyright to several files (#227)
+* [db6711b4](https://github.com/hyperledger/fabric-sdk-node/commit/db6711b4) [FABN-1539](https://jira.hyperledger.org/browse/FABN-1539) NodeSDK limit "all" transaction event listening (#212)
+* [48d1c4ba](https://github.com/hyperledger/fabric-sdk-node/commit/48d1c4ba) Update SoftHSM Label (#228)
+* [f79cd20e](https://github.com/hyperledger/fabric-sdk-node/commit/f79cd20e) Update link to HLP security report wiki page (#226)
+* [5e6d19c1](https://github.com/hyperledger/fabric-sdk-node/commit/5e6d19c1) [FABN-1550](https://jira.hyperledger.org/browse/FABN-1550): Await call to async function in NetworkConfig (#225)
+* [df2eb45c](https://github.com/hyperledger/fabric-sdk-node/commit/df2eb45c) [FAB-17777](https://jira.hyperledger.org/browse/FAB-17777) Create basic settings.yaml (#220)
+* [c8bb029b](https://github.com/hyperledger/fabric-sdk-node/commit/c8bb029b) [FABN-1548](https://jira.hyperledger.org/browse/FABN-1548) NodeSDK move HSM to scenario test (#224)
+* [cb1f572b](https://github.com/hyperledger/fabric-sdk-node/commit/cb1f572b) [FABN-1546](https://jira.hyperledger.org/browse/FABN-1546): Connect Gateway without a wallet (#222)
+* [bf5fa51f](https://github.com/hyperledger/fabric-sdk-node/commit/bf5fa51f) Add Fabric Version to CI Props (#221)
+* [fe2d00bb](https://github.com/hyperledger/fabric-sdk-node/commit/fe2d00bb) [FABN-1543 TypeScript declaration file in fabric-](https://jira.hyperledger.org/browse/FABN-1543 TypeScript declaration file in fabric-)common module does not match with the actual implementation (#217)
+* [377a9af5](https://github.com/hyperledger/fabric-sdk-node/commit/377a9af5) [FABN-1540](https://jira.hyperledger.org/browse/FABN-1540) NodeSDK remove ccp roles (#215)
+
 ## v2.1.0
 Wed 8 Apr 2020 17:06:37 BST
 
