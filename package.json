@@ -1,6 +1,6 @@
 {
   "name": "fabric-sdk-node",
-  "version": "1.4.9",
+  "version": "1.4.10-snapshot",
   "testFabricVersion": "1.4.6",
   "testFabricThirdParty": "0.4.16",
   "main": "index.js",
