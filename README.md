@@ -6,7 +6,7 @@ The Hyperledger Fabric Client SDK makes it possible to use APIs to interact with
 
 This project publishes the following npm packages:
 * `fabric-ca-client` - client for the optional component in Hyperledger Fabric, [fabric-ca](http://hyperledger-fabric-ca.readthedocs.io/en/latest/users-guide.html). The fabric-ca component allows applications to enroll Peers and application users to establish trusted identities on the blockchain network. It also provides support for pseudonymous transaction submissions with Transaction Certificates. If the target blockchain network is configured with standard Certificate Authorities for trust anchors, the application does not need to use this package.
-* `fabric-common`, encapsulates the common code used by all fabric-sdk-node packages supporting fine grain interactions with the Fabric network to send transaction invocations
+* `fabric-common` - encapsulates the common code used by all fabric-sdk-node packages supporting fine grain interactions with the Fabric network to send transaction invocations
 * `fabric-network` - This package encapsulates the APIs to connect to a Fabric network, submit transactions and perform queries against the ledger at a higher level of abstraction than through the `fabric-common`.
 * `fabric-protos` - This package encapsulates the protobuffers that are used to communicate over gRPC
 

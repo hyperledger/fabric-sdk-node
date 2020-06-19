@@ -15,7 +15,7 @@ const os = require('os');
 
 const Config = require('./Config');
 const InMemoryKeyValueStore = require('./impl/InMemoryKeyValueStore');
-
+const CryptoKeyStore = require('./impl/CryptoKeyStore');
 const sjcl = require('sjcl');
 const yn = require('yn');
 
@@ -462,7 +462,6 @@ module.exports.getDefaultKeyStorePath = () => {
  * @return {CryptoKeyStore}
  */
 module.exports.newCryptoKeyStore = (keyValueStore = new InMemoryKeyValueStore()) => {
-	const CryptoKeyStore = require('./impl/CryptoKeyStore');
 	return new CryptoKeyStore(keyValueStore);
 };
 
