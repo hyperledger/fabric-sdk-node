@@ -598,7 +598,7 @@ rule
 		header -- {{@link Header}}
 		data -- {{@link Transaction}}
 		</pre>
-	*/
+	 */
 
 	/**
 	 * Constructs an object containing all decoded values from the
@@ -615,13 +615,15 @@ rule
 		if (!(processedTransactionBuf instanceof Buffer)) {
 			throw new Error('Processed transaction data is not a byte buffer');
 		}
-		const processed_transaction = {};
 		const processedTransactionProto = fabproto6.protos.ProcessedTransaction.decode(processedTransactionBuf);
-		processed_transaction.validation_code = processedTransactionProto.validation_code;
-		processed_transaction.transaction_envelope = decodeBlockDataEnvelope(processedTransactionProto.transaction_envelope);
+
+		const transactionEnvelope = decodeBlockDataEnvelope(processedTransactionProto.transactionEnvelope);
 
 		logger.debug('decodeTransaction - end');
-		return processed_transaction;
+		return {
+			validationCode: processedTransactionProto.validationCode,
+			transactionEnvelope
+		};
 	}
 }
 
@@ -1091,7 +1093,7 @@ function decodeConfigPolicy(configPolicyProto) {
 				config_policy.policy.value = decodeSignaturePolicyEnvelope(configPolicyProto.policy.value);
 				break;
 			case fabproto6.common.Policy.PolicyType.MSP:
-			// var proto_msp = fabproto6.common.Policy.decode(configPolicyProto.value.policy.value);
+				// var proto_msp = fabproto6.common.Policy.decode(configPolicyProto.value.policy.value);
 				logger.warn('decodeConfigPolicy - found a PolicyType of MSP. This policy type has not been implemented yet.');
 				break;
 			case fabproto6.common.Policy.PolicyType.IMPLICIT_META:
@@ -1413,8 +1415,7 @@ function decodeResponse(responseProto) {
 
 		return response;
 	}
-
-	return;
+	return undefined;
 }
 
 function decodeChaincodeID(chaincodeIDProto) {

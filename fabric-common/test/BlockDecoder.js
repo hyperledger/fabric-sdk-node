@@ -181,8 +181,8 @@ describe('BlockDecoder', () => {
 	describe('#BlockDecoder.decodeTransaction', () => {
 		beforeEach(() => {
 			revert.push(BlockDecoderRewire.__set__('fabproto6.protos.ProcessedTransaction.decode', sandbox.stub().returns({
-				validation_code: 'validationCode',
-				transaction_envelope: 'transactionEnvelope'
+				validationCode: 'validationCode',
+				transactionEnvelope: 'transactionEnvelope'
 			})));
 
 			revert.push(BlockDecoderRewire.__set__('decodeBlockDataEnvelope', (value) => {
@@ -197,8 +197,8 @@ describe('BlockDecoder', () => {
 
 		it('should generate a processed transaction', () => {
 			const processedtransaction = BlockDecoderRewire.decodeTransaction(data);
-			processedtransaction.validation_code.should.equal('validationCode');
-			processedtransaction.transaction_envelope.should.equal('transactionEnvelope');
+			processedtransaction.validationCode.should.equal('validationCode');
+			processedtransaction.transactionEnvelope.should.equal('transactionEnvelope');
 		});
 	});
 
