@@ -228,6 +228,13 @@ describe('TransactionEventHandler', () => {
 
 			await expect(handler.waitForEvents()).to.be.rejectedWith(invalidEventInfo.status);
 		});
+
+		it('fails when receiving an invalid event from peer', async () => {
+			await handler.startListening();
+			eventService.sendEvent(invalidEventInfo);
+
+			await expect(handler.waitForEvents()).to.be.rejectedWith(invalidEventInfo.status);
+		});
 	});
 
 	describe('timeouts', () => {
@@ -304,5 +311,4 @@ describe('TransactionEventHandler', () => {
 			}
 		});
 	});
-
 });

@@ -24,6 +24,7 @@ export { X509Identity } from '../lib/impl/wallet/x509identity';
 export * from '../lib/events';
 export { FabricError } from '../lib/errors/fabricerror';
 export { TimeoutError } from '../lib/errors/timeouterror';
+export { TransactionError, TransactionErrorInfo } from '../lib/errors/transactionerror';
 export { QueryHandlerFactory };
 export { QueryHandler } from '../lib/impl/query/queryhandler';
 export { Query, QueryResults, QueryResponse } from '../lib/impl/query/query';

@@ -9,6 +9,7 @@ import { TransactionEventStrategy } from './transactioneventstrategy';
 import { Network } from '../../network';
 import { Endorser } from 'fabric-common';
 import { CommitError, CommitEvent, CommitListener } from '../../events';
+import { TransactionError } from '../../errors/transactionerror';
 
 import * as Logger from '../../logger';
 const logger = Logger.getLogger('TransactionEventHandler');
@@ -121,7 +122,11 @@ export class TransactionEventHandler implements TxEventHandler {
 	private eventCallback(error?: CommitError, event?: CommitEvent) {
 		if (event && !event.isValid) {
 			const message = `Commit of transaction ${this.transactionId} failed on peer ${event.peer.name} with status ${event.status}`;
-			this.strategyFail(new Error(message));
+			this.strategyFail(new TransactionError({
+				message,
+				transactionId: event.transactionId,
+				transactionCode: event.status
+			}));
 		}
 
 		const peer = error?.peer || event!.peer;
