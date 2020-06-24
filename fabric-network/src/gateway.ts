@@ -57,22 +57,6 @@ export interface DefaultQueryHandlerOptions {
 	timeout?: number;
 }
 
-const defaultOptions = Object.freeze({
-	queryHandlerOptions: {
-		timeout: 30, // 30 seconds
-		strategy: QueryStrategies.MSPID_SCOPE_SINGLE
-	},
-	eventHandlerOptions: {
-		endorseTimeout: 30, // 30 seconds
-		commitTimeout: 300, // 5 minutes
-		strategy: EventStrategies.MSPID_SCOPE_ALLFORTX
-	},
-	discovery: {
-		enabled: true,
-		asLocalhost: true
-	}
-});
-
 export function mergeOptions<B, E>(currentOptions: B, additionalOptions: E): B & E {
 	const result = currentOptions as B & E;
 	for (const prop in additionalOptions) {
@@ -273,7 +257,23 @@ export class Gateway {
 		const method = 'connect';
 		logger.debug('%s - start', method);
 
-		this.options = mergeOptions(mergeOptions({}, defaultOptions), options);
+		const defaultOptions = {
+			queryHandlerOptions: {
+				timeout: 30, // 30 seconds
+				strategy: QueryStrategies.MSPID_SCOPE_SINGLE
+			},
+			eventHandlerOptions: {
+				endorseTimeout: 30, // 30 seconds
+				commitTimeout: 300, // 5 minutes
+				strategy: EventStrategies.MSPID_SCOPE_ALLFORTX
+			},
+			discovery: {
+				enabled: true,
+				asLocalhost: true
+			}
+		};
+
+		this.options = mergeOptions(defaultOptions, options);
 		logger.debug('connection options: %j', options);
 
 		let loadCcp = false;
