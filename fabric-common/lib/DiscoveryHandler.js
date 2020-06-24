@@ -190,7 +190,7 @@ class DiscoveryHandler extends ServiceHandler {
 			throw Error('preferred_height_gap setting is not a number');
 		}
 
-		let sort = RANDOM;
+		let sort = BLOCK_HEIGHT;
 		if (request.sort) {
 			if (request.sort === BLOCK_HEIGHT) {
 				sort = BLOCK_HEIGHT;
