@@ -436,6 +436,29 @@ describe('Gateway', () => {
 			return gateway.connect(connectionProfile, options)
 				.should.be.rejectedWith(tlsIdentity.type);
 		});
+
+		it('options do not pollute other gateway instances', async () => {
+			const discoveryEnabledGateway = new Gateway();
+			await discoveryEnabledGateway.connect(connectionProfile, {
+				wallet,
+				identity: options.identity,
+				discovery: {
+					enabled: true
+				}
+			});
+
+			const discoveryDisabledGateway = new Gateway();
+			await discoveryDisabledGateway.connect(connectionProfile, {
+				wallet,
+				identity: options.identity,
+				discovery: {
+					enabled: false
+				}
+			});
+
+			discoveryEnabledGateway.getOptions().discovery.enabled.should.be.true;
+			discoveryDisabledGateway.getOptions().discovery.enabled.should.be.false;
+		});
 	});
 
 	describe('#getOptions', () => {
