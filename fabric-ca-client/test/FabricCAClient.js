@@ -847,7 +847,7 @@ describe('FabricCAClient', () => {
 			revert.push(FabricCAClientRewire.__set__('FabricCAClient.prototype.generateAuthToken', generateAuthTokenStub));
 
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
-			await client.request('test_http_method', 'test_api_method', 'signingIdentity', {}).should.be.rejectedWith(/fabric-ca request test_api_method failed with errors \["forced_errors"]/);
+			await client.request('test_http_method', 'test_api_method', 'signingIdentity', {}).should.be.rejectedWith(/fabric-ca request test_api_method failed with errors \['forced_errors']/);
 		});
 
 		it('should reject if invalid jason recieved', async () => {
@@ -1178,7 +1178,7 @@ describe('FabricCAClient', () => {
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.http', requestStub);
 
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
-			await client.enroll('enough', 'parameters', 'for_this_function_call').should.be.rejectedWith(/fabric-ca request enroll failed with errors \["forced errors"]/);
+			await client.enroll('enough', 'parameters', 'for_this_function_call').should.be.rejectedWith(/fabric-ca request enroll failed with errors \['forced errors']/);
 		});
 
 		it('should reject if invalid json received', async () => {
@@ -1291,6 +1291,21 @@ describe('FabricCAClient', () => {
 
 			// should have a result
 			testCRL.should.be.equal('bazinga');
+		});
+
+		it('should reject if POST does not return result in the response body', async () => {
+			const connect_opts = {
+				caname: 'test-ca-name',
+				protocol: 'https',
+				hostname: 'testHost'
+			};
+
+			const postStub = sinon.stub();
+			postStub.resolves({errors: 'test_fail'});
+			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
+
+			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
+			await client.generateCRL('revokedBefore', 'revokedAfter', 'expireBefore', 'expireAfter', 'signingIdentity').should.be.rejectedWith('Cannot read property \'CRL\' of undefined');
 		});
 
 		it('should reject if POST throws an error', async () => {

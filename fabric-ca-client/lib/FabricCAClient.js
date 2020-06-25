@@ -9,6 +9,7 @@ const config = utils.getConfig();
 const logger = utils.getLogger('FabricCAClient.js');
 const http = require('http');
 const https = require('https');
+const util = require('util');
 const IdentityService = require('./IdentityService');
 const AffiliationService = require('./AffiliationService');
 const CertificateService = require('./CertificateService');
@@ -21,15 +22,19 @@ const CertificateService = require('./CertificateService');
 const FabricCAClient = class {
 
 	/**
-	 * constructor
-	 *
-	 * @param {object} connect_opts Connection options for communicating with the Fabric CA server
-	 * @param {string} connect_opts.protocol The protocol to use (either HTTP or HTTPS)
-	 * @param {string} connect_opts.hostname The hostname of the Fabric CA server endpoint
-	 * @param {number} connect_opts.port The port of the Fabric CA server endpoint
-	 * @param {TLSOptions} connect_opts.tlsOptions The TLS settings to use when the Fabric CA endpoint uses "https"
-	 * @param {string} connect_opts.caname The optional name of the CA. Fabric-ca servers support multiple Certificate Authorities from
+	 * @typedef {Object} ConnectOpts
+	 * @property {string} protocol - The protocol to use (either HTTP or HTTPS)
+	 * @property {string} hostname - The hostname of the Fabric CA server endpoint
+	 * @property {number} [port] - The port of the Fabric CA server endpoint, Default is 7054
+	 * @property {TLSOptions} [tlsOptions] - The TLS settings to use when the Fabric CA endpoint uses "https"
+	 * @property {string} [caname] - The optional name of the CA. Fabric-ca servers support multiple Certificate Authorities from
 	 *  a single server. If omitted or null or an empty string, then the default CA is the target of requests
+	 */
+
+	/**
+	 *
+	 * @constructor
+	 * @param {ConnectOpts} connect_opts Connection options for communicating with the Fabric CA server
 	 * @param cryptoPrimitives
 	 * @throws Will throw an error if connection options are missing or invalid
 	 *
@@ -65,7 +70,7 @@ const FabricCAClient = class {
 
 		this._cryptoPrimitives = cryptoPrimitives;
 
-		logger.debug(`Successfully constructed Fabric CA client from options - ${JSON.stringify(connect_opts)}`);
+		logger.debug(`Successfully constructed Fabric CA client from options - ${util.inspect(connect_opts)}`);
 	}
 
 	/**
@@ -82,14 +87,14 @@ const FabricCAClient = class {
 	 * @param {string} [enrollmentSecret] Optional enrollment secret to set for the registered user.
 	 *        If not provided, the server will generate one.
 	 *        When not including, use a null for this parameter.
-	 * @param {string} role Optional type of role for this user.
+	 * @param {string} [role] Optional type of role for this user.
 	 *        When not including, use a null for this parameter.
 	 * @param {string} affiliation Affiliation with which this user will be associated
 	 * @param {number} maxEnrollments The maximum number of times the user is permitted to enroll
-	 * @param {KeyValueAttribute[]} attrs Array of key/value attributes to assign to the user
+	 * @param {KeyValueAttribute[]} [attrs] Array of key/value attributes to assign to the user
 	 * @param {SigningIdentity} signingIdentity The instance of a SigningIdentity encapsulating the
 	 * signing certificate, hash algorithm and signature algorithm
-	 * @returns {Promise} The enrollment secret to use when this user enrolls
+	 * @returns {Promise<string>} The enrollment secret to use when this user enrolls
 	 */
 	async register(enrollmentID, enrollmentSecret, role, affiliation, maxEnrollments, attrs, signingIdentity) {
 
@@ -163,7 +168,7 @@ const FabricCAClient = class {
 	 * @param {string} csr PEM-encoded PKCS#10 certificate signing request
 	 * @param {SigningIdentity} signingIdentity The instance of a SigningIdentity encapsulating the
 	 * signing certificate, hash algorithm and signature algorithm
-	 * @param {AttributeRequest[]} attr_reqs An array of {@link AttributeRequest}
+	 * @param {AttributeRequest[]} [attr_reqs] An array of {@link AttributeRequest}
 	 * @returns {Promise<EnrollmentResponse>}
 	 */
 	async reenroll(csr, signingIdentity, attr_reqs) {
@@ -290,7 +295,7 @@ const FabricCAClient = class {
 					if (responseObj.success) {
 						return resolve(responseObj);
 					} else {
-						const err = Error(`fabric-ca request ${api_method} failed with errors [${JSON.stringify(responseObj && responseObj.errors ? responseObj.errors : responseObj)}]`);
+						const err = Error(`fabric-ca request ${api_method} failed with errors [${util.inspect(responseObj.errors || responseObj)}]`);
 						Object.assign(err, responseObj);
 						return reject(err);
 					}
@@ -376,8 +381,8 @@ const FabricCAClient = class {
 	 * @param {string} enrollmentID The registered ID to use for enrollment
 	 * @param {string} enrollmentSecret The secret associated with the enrollment ID
 	 * @param {string} csr PEM-encoded PKCS#10 certificate signing request
-	 * @param {string} profile The profile name.  Specify the 'tls' profile for a TLS certificate; otherwise, an enrollment certificate is issued.
-	 * @param {AttributeRequest[]} attr_reqs An array of {@link AttributeRequest}
+	 * @param {string} [profile] The profile name.  Specify the 'tls' profile for a TLS certificate; otherwise, an enrollment certificate is issued.
+	 * @param {AttributeRequest[]} [attr_reqs] An array of {@link AttributeRequest}
 	 * @returns {Promise<EnrollmentResponse>}
 	 */
 	async enroll(enrollmentID, enrollmentSecret, csr, profile, attr_reqs) {
