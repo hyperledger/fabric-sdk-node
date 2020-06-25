@@ -6,8 +6,8 @@
   "scripts": {
     "update:clean": "rimraf bundle.js protos && mkdirp protos",
     "update:copy": "cpx \"${GOPATH}/src/github.com/hyperledger/fabric-protos/**/*.proto\" protos",
-    "update:pbjs": "./node_modules/protobufjs/bin/pbjs -t static-module -p google-protos -p protos $(find google-protos protos -name \"*.proto\" -type f) -o bundle.js --keep-case",
-    "update:pbts": "./node_modules/protobufjs/bin/pbts -o './types/index.d.ts' bundle.js",
+    "update:pbjs": "pbjs -t static-module -p google-protos -p protos $(find google-protos protos -name \"*.proto\" -type f) -o bundle.js --keep-case",
+    "update:pbts": "pbts -o './types/index.d.ts' bundle.js",
     "update": "npm run update:clean && npm run update:copy && npm run update:pbjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -34,12 +34,11 @@
   "dependencies": {
     "@grpc/grpc-js": "1.0.3",
     "@grpc/proto-loader": "0.5.4",
-    "lodash.clone": "4.5.0"
+    "protobufjs": "^6.9.0"
   },
   "devDependencies": {
     "cpx": "^1.5.0",
-    "mkdirp": "^0.5.1",
-    "protobufjs": "^6.9.0",
-    "rimraf": "^2.6.3"
+    "mkdirp": "^1.0.4",
+    "rimraf": "^3.0.2"
   }
 }
