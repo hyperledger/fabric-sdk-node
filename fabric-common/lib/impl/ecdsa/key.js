@@ -7,20 +7,20 @@
 
 'use strict';
 
-const {HashPrimitives, Key, Utils: utils} = require('../../../');
+const Key = require('../../Key');
+const HashPrimitives = require('../../HashPrimitives');
 const jsrsa = require('jsrsasign');
 const asn1 = jsrsa.asn1;
 const KEYUTIL = jsrsa.KEYUTIL;
 const ECDSA = jsrsa.ECDSA;
 const jws = jsrsa.jws;
-const logger = utils.getLogger('ecdsa/key.js');
 
 /**
  * This module implements the {@link module:api.Key} interface, for ECDSA.
  * @class ECDSA_KEY
  * @extends module:api.Key
  */
-module.exports = class ECDSA_KEY extends Key {
+class ECDSA_KEY extends Key {
 	/**
 	 * this class represents the private or public key of an ECDSA key pair.
 	 *
@@ -59,8 +59,6 @@ module.exports = class ECDSA_KEY extends Key {
 			const xyhex = key.getPublicKeyXYHex();
 			const xBuffer = Buffer.from(xyhex.x, 'hex');
 			const yBuffer = Buffer.from(xyhex.y, 'hex');
-			logger.debug('ECDSA curve param X: %s', xBuffer.toString('hex'));
-			logger.debug('ECDSA curve param Y: %s', yBuffer.toString('hex'));
 			xBuffer.copy(newBuff, 1 + byteLen - xBuffer.length);
 			yBuffer.copy(newBuff, 1 + 2 * byteLen - yBuffer.length);
 			return newBuff;
@@ -182,4 +180,6 @@ module.exports = class ECDSA_KEY extends Key {
 			return KEYUTIL.getPEM(this._key);
 		}
 	}
-};
+}
+
+module.exports = ECDSA_KEY;
