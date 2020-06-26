@@ -102,7 +102,7 @@
         FabricCAClient
         </h2>
         
-            <div class="class-description">Client for communciating with the Fabric CA APIs</div>
+            <div class="class-description">Client for communicating with the Fabric CA APIs</div>
         
     
 </header>
@@ -120,10 +120,6 @@
 </dt>
 <dd>
 
-    
-    <div class="description">
-        constructor
-    </div>
     
 
     
@@ -163,7 +159,7 @@
             <td class="type">
             
                 
-<span class="param-type">object</span>
+<span class="param-type"><a href="global.html#ConnectOpts">ConnectOpts</a></span>
 
 
 
@@ -174,154 +170,7 @@
 
             
 
-            <td class="description last">Connection options for communicating with the Fabric CA server
-                <h6 class="method-params-label method-subparams-label">Properties</h6>
-                
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>protocol</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The protocol to use (either HTTP or HTTPS)</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>hostname</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The hostname of the Fabric CA server endpoint</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>port</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The port of the Fabric CA server endpoint</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>tlsOptions</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="global.html#TLSOptions">TLSOptions</a></span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The TLS settings to use when the Fabric CA endpoint uses "https"</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>caname</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The optional name of the CA. Fabric-ca servers support multiple Certificate Authorities from
- a single server. If omitted or null or an empty string, then the default CA is the target of requests</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-            </td>
+            <td class="description last">Connection options for communicating with the Fabric CA server</td>
         </tr>
 
     
@@ -437,7 +286,7 @@
             
 <hr>
 <dt>
-    <h4 class="name" id="enroll"><span class="type-signature"></span>enroll(enrollmentID, enrollmentSecret, csr, profile, attr_reqs)</h4>
+    <h4 class="name" id="enroll"><span class="type-signature">&lt;async> </span>enroll(enrollmentID, enrollmentSecret, csr [, profile] [, attr_reqs])</h4>
     
     
 </dt>
@@ -468,6 +317,8 @@
         <th>Type</th>
 
         
+        <th>Argument</th>
+        
 
         
 
@@ -494,6 +345,14 @@
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
@@ -517,6 +376,14 @@
             
             </td>
 
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
             
 
             
@@ -542,6 +409,14 @@
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
@@ -566,6 +441,16 @@
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
 
             
 
@@ -589,6 +474,16 @@
             
             </td>
 
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
             
 
             
@@ -651,37 +546,11 @@
     
 
     
-    <h5>Throws:</h5>
-    <ul>
-            <li>
-
-    <div class="param-desc">
-    
-        Will throw an error if all parameters are not provided
-    
-    </div>
-
-</li>
-        
-            <li>
-
-    <div class="param-desc">
-    
-        Will throw an error if calling the enroll API fails for any reason
-    
-    </div>
-
-</li>
-        </ul>
 
     
     <h5>Returns:</h5>
     
             
-<div class="param-desc">
-    <a href="global.html#EnrollmentResponse">EnrollmentResponse</a>
-</div>
-
 
 
 <dl>
@@ -690,7 +559,7 @@
     </dt>
     <dd>
         
-<span class="param-type">Promise</span>
+<span class="param-type">Promise.&lt;<a href="global.html#EnrollmentResponse">EnrollmentResponse</a>></span>
 
 
 
@@ -1013,7 +882,7 @@
             
 <hr>
 <dt>
-    <h4 class="name" id="reenroll"><span class="type-signature"></span>reenroll(csr, signingIdentity, attr_reqs)</h4>
+    <h4 class="name" id="reenroll"><span class="type-signature">&lt;async> </span>reenroll(csr, signingIdentity [, attr_reqs])</h4>
     
     
 </dt>
@@ -1044,6 +913,8 @@
         <th>Type</th>
 
         
+        <th>Argument</th>
+        
 
         
 
@@ -1070,6 +941,14 @@
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
@@ -1093,6 +972,14 @@
             
             </td>
 
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
             
 
             
@@ -1118,6 +1005,16 @@ signing certificate, hash algorithm and signature algorithm</td>
             
             </td>
 
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
             
 
             
@@ -1185,10 +1082,6 @@ signing certificate, hash algorithm and signature algorithm</td>
     <h5>Returns:</h5>
     
             
-<div class="param-desc">
-    <a href="global.html#EnrollmentResponse">EnrollmentResponse</a>
-</div>
-
 
 
 <dl>
@@ -1197,7 +1090,7 @@ signing certificate, hash algorithm and signature algorithm</td>
     </dt>
     <dd>
         
-<span class="param-type">Promise</span>
+<span class="param-type">Promise.&lt;<a href="global.html#EnrollmentResponse">EnrollmentResponse</a>></span>
 
 
 
@@ -1214,7 +1107,7 @@ signing certificate, hash algorithm and signature algorithm</td>
             
 <hr>
 <dt>
-    <h4 class="name" id="register"><span class="type-signature">&lt;async> </span>register(enrollmentID, enrollmentSecret, role, affiliation, maxEnrollments, attrs, signingIdentity)</h4>
+    <h4 class="name" id="register"><span class="type-signature">&lt;async> </span>register(enrollmentID [, enrollmentSecret] [, role], affiliation, maxEnrollments [, attrs], signingIdentity)</h4>
     
     
 </dt>
@@ -1245,6 +1138,8 @@ signing certificate, hash algorithm and signature algorithm</td>
         <th>Type</th>
 
         
+        <th>Argument</th>
+        
 
         
 
@@ -1271,6 +1166,14 @@ signing certificate, hash algorithm and signature algorithm</td>
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
@@ -1294,6 +1197,16 @@ signing certificate, hash algorithm and signature algorithm</td>
             
             </td>
 
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
             
 
             
@@ -1321,6 +1234,16 @@ signing certificate, hash algorithm and signature algorithm</td>
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
 
             
 
@@ -1346,6 +1269,14 @@ signing certificate, hash algorithm and signature algorithm</td>
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
@@ -1369,6 +1300,14 @@ signing certificate, hash algorithm and signature algorithm</td>
             
             </td>
 
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
             
 
             
@@ -1394,6 +1333,16 @@ signing certificate, hash algorithm and signature algorithm</td>
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
 
             
 
@@ -1417,6 +1366,14 @@ signing certificate, hash algorithm and signature algorithm</td>
             
             </td>
 
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
             
 
             
@@ -1497,7 +1454,7 @@ signing certificate, hash algorithm and signature algorithm</td>
     </dt>
     <dd>
         
-<span class="param-type">Promise</span>
+<span class="param-type">Promise.&lt;string></span>
 
 
 
@@ -1514,7 +1471,7 @@ signing certificate, hash algorithm and signature algorithm</td>
             
 <hr>
 <dt>
-    <h4 class="name" id="revoke"><span class="type-signature"></span>revoke(enrollmentID, aki, serial, reason, gencrl, signingIdentity)</h4>
+    <h4 class="name" id="revoke"><span class="type-signature">&lt;async> </span>revoke(enrollmentID, aki, serial, reason, gencrl, signingIdentity)</h4>
     
     
 </dt>
@@ -1837,7 +1794,7 @@ signing certificate, hash algorithm and signature algorithm</td>
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.4</a>
 	
-		on 2020-06-25T16:08:52+00:00
+		on 2020-06-26T14:37:23+00:00
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>
