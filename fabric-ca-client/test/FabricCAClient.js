@@ -49,9 +49,6 @@ describe('FabricCAClient', () => {
 
 		it('should throw if called with invalid connection options', async () => {
 			(() => {
-				const validateStub = sinon.stub();
-				validateStub.throws(new Error('forced error'));
-				revert = FabricCAClientRewire.__set__('FabricCAClient.prototype._validateConnectionOpts', validateStub);
 				new FabricCAClientRewire({}, {});
 			}).should.throw(/Invalid connection options/);
 		});
@@ -310,17 +307,16 @@ describe('FabricCAClient', () => {
 			}
 		});
 
-		it('should throw if not called with the correct number of parameters', () => {
-			(() => {
-				const connect_opts = {
-					caname: 'test-ca-name',
-					protocol: 'https',
-					hostname: 'testHost'
-				};
+		it('should throw if not called with the correct number of parameters', async () => {
 
-				const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
-				client.revoke('one_too', 'few', 'parameters_for', 'this_function_call');
-			}).should.throw(/Missing required parameters/);
+			const connect_opts = {
+				caname: 'test-ca-name',
+				protocol: 'https',
+				hostname: 'testHost'
+			};
+
+			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
+			await client.revoke('one_too', 'few', 'parameters_for', 'this_function_call').should.be.rejectedWith(/Missing required parameters/);
 		});
 
 		it('should call POST with the correct method, request, and signing identity', () => {
@@ -383,17 +379,16 @@ describe('FabricCAClient', () => {
 			}
 		});
 
-		it('should throw if not called with the correct number of parameters', () => {
-			(() => {
-				const connect_opts = {
-					caname: 'test-ca-name',
-					protocol: 'https',
-					hostname: 'testHost'
-				};
+		it('should throw if not called with the correct number of parameters', async () => {
 
-				const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
-				client.reenroll('one_too_few_parameters_for_this_function_call');
-			}).should.throw(/Missing required parameters/);
+			const connect_opts = {
+				caname: 'test-ca-name',
+				protocol: 'https',
+				hostname: 'testHost'
+			};
+
+			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
+			await client.reenroll('one_too_few_parameters_for_this_function_call').should.be.rejectedWith(/Missing required parameters/);
 		});
 
 		it('should call POST with the correct method, request, and signing identity', () => {
@@ -752,7 +747,8 @@ describe('FabricCAClient', () => {
 
 				// Create a mock response object...
 				const res = new events.EventEmitter();
-				res.setEncoding = function () { };
+				res.setEncoding = function () {
+				};
 				callback(res);
 
 				// ...and then respond with our predefined data.
@@ -802,7 +798,8 @@ describe('FabricCAClient', () => {
 
 				// Create a mock response object...
 				const res = new events.EventEmitter();
-				res.setEncoding = function () { };
+				res.setEncoding = function () {
+				};
 				callback(res);
 
 				// ...and then respond with our predefined data.
@@ -833,7 +830,8 @@ describe('FabricCAClient', () => {
 
 				// Create a mock response object...
 				const res = new events.EventEmitter();
-				res.setEncoding = function () { };
+				res.setEncoding = function () {
+				};
 				callback(res);
 
 				// ...and then respond with our predefined data.
@@ -849,7 +847,7 @@ describe('FabricCAClient', () => {
 			revert.push(FabricCAClientRewire.__set__('FabricCAClient.prototype.generateAuthToken', generateAuthTokenStub));
 
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
-			await client.request('test_http_method', 'test_api_method', 'signingIdentity', {}).should.be.rejectedWith(/fabric-ca request test_api_method failed with errors \["forced_errors"\]/);
+			await client.request('test_http_method', 'test_api_method', 'signingIdentity', {}).should.be.rejectedWith(/fabric-ca request test_api_method failed with errors \['forced_errors']/);
 		});
 
 		it('should reject if invalid jason recieved', async () => {
@@ -863,7 +861,8 @@ describe('FabricCAClient', () => {
 
 				// Create a mock response object...
 				const res = new events.EventEmitter();
-				res.setEncoding = function () { };
+				res.setEncoding = function () {
+				};
 				callback(res);
 
 				// ...and then respond with our predefined data.
@@ -893,7 +892,8 @@ describe('FabricCAClient', () => {
 
 				// Create a mock response object...
 				const res = new events.EventEmitter();
-				res.setEncoding = function () { };
+				res.setEncoding = function () {
+				};
 				res.statusCode = 500;
 				callback(res);
 
@@ -1063,7 +1063,8 @@ describe('FabricCAClient', () => {
 
 				// Create a mock response object...
 				const res = new events.EventEmitter();
-				res.setEncoding = function () { };
+				res.setEncoding = function () {
+				};
 				callback(res);
 
 				// ...and then respond with our predefined data.
@@ -1080,7 +1081,6 @@ describe('FabricCAClient', () => {
 			// Should be called once
 			sinon.assert.calledOnce(requestStub);
 
-			// should call with known
 			const expected = {
 				hostname: 'testHost',
 				port: 7054,
@@ -1088,8 +1088,10 @@ describe('FabricCAClient', () => {
 				method: 'POST',
 				auth: 'enrollmentID:enrollmentSecret',
 				ca: [],
-				rejectUnauthorized: false
+				rejectUnauthorized: false,
+				timeout: 3000,
 			};
+
 			const callArgs = requestStub.getCall(0).args;
 			callArgs.length.should.be.equal(2);
 			callArgs[0].should.deep.equal(expected);
@@ -1106,7 +1108,8 @@ describe('FabricCAClient', () => {
 
 				// Create a mock response object...
 				const res = new events.EventEmitter();
-				res.setEncoding = function () { };
+				res.setEncoding = function () {
+				};
 				callback(res);
 
 				// ...and then respond with our predefined data.
@@ -1134,7 +1137,8 @@ describe('FabricCAClient', () => {
 
 				// Create a mock response object...
 				const res = new events.EventEmitter();
-				res.setEncoding = function () { };
+				res.setEncoding = function () {
+				};
 				res.statusCode = 500;
 				callback(res);
 
@@ -1147,7 +1151,7 @@ describe('FabricCAClient', () => {
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.http', requestStub);
 
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
-			await client.enroll('enough', 'parameters', 'for_this_function_call').should.be.rejectedWith(/Enrollment failed with HTTP status code 500/);
+			await client.enroll('enough', 'parameters', 'for_this_function_call').should.be.rejectedWith(/fabric-ca request enroll failed with HTTP status code 500/);
 		});
 
 		it('should reject if no success message', async () => {
@@ -1161,7 +1165,8 @@ describe('FabricCAClient', () => {
 
 				// Create a mock response object...
 				const res = new events.EventEmitter();
-				res.setEncoding = function () { };
+				res.setEncoding = function () {
+				};
 				callback(res);
 
 				// ...end with no required data being sent.
@@ -1173,10 +1178,10 @@ describe('FabricCAClient', () => {
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.http', requestStub);
 
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
-			await client.enroll('enough', 'parameters', 'for_this_function_call').should.be.rejectedWith(/Enrollment failed with errors \["forced errors"\]/);
+			await client.enroll('enough', 'parameters', 'for_this_function_call').should.be.rejectedWith(/fabric-ca request enroll failed with errors \['forced errors']/);
 		});
 
-		it('should reject if invalid jason recieved', async () => {
+		it('should reject if invalid json received', async () => {
 			const connect_opts = {
 				caname: 'test-ca-name',
 				protocol: 'http',
@@ -1187,7 +1192,8 @@ describe('FabricCAClient', () => {
 
 				// Create a mock response object...
 				const res = new events.EventEmitter();
-				res.setEncoding = function () { };
+				res.setEncoding = function () {
+				};
 				callback(res);
 
 				// ...end with no required data being sent.
@@ -1199,7 +1205,7 @@ describe('FabricCAClient', () => {
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.http', requestStub);
 
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
-			await client.enroll('enough', 'parameters', 'for_this_function_call').should.be.rejectedWith(/Could not parse enrollment response/);
+			await client.enroll('enough', 'parameters', 'for_this_function_call').should.be.rejectedWith(/Could not parse enroll response/);
 		});
 
 		it('should reject on end point error', async () => {
@@ -1213,7 +1219,8 @@ describe('FabricCAClient', () => {
 
 				// Create a mock response object...
 				const res = new events.EventEmitter();
-				res.setEncoding = function () { };
+				res.setEncoding = function () {
+				};
 				callback(res);
 
 				// ...end with no required data being sent.
@@ -1224,7 +1231,7 @@ describe('FabricCAClient', () => {
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.http', requestStub);
 
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
-			await client.enroll('enough', 'parameters', 'for_this_function_call').should.be.rejectedWith(/Enrollment failed with error \[such_error\]/);
+			await client.enroll('enough', 'parameters', 'for_this_function_call').should.be.rejectedWith(/Calling enroll endpoint failed with error \[such_error]/);
 		});
 	});
 
@@ -1286,22 +1293,7 @@ describe('FabricCAClient', () => {
 			testCRL.should.be.equal('bazinga');
 		});
 
-		it('should reject if POST does not return success in the response body', async () => {
-			const connect_opts = {
-				caname: 'test-ca-name',
-				protocol: 'https',
-				hostname: 'testHost'
-			};
-
-			const postStub = sinon.stub();
-			postStub.resolves({result: {CRL: 'bazinga'}, errors: 'test_fail'});
-			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
-
-			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
-			await client.generateCRL('revokedBefore', 'revokedAfter', 'expireBefore', 'expireAfter', 'signingIdentity').should.be.rejectedWith('test_fail');
-		});
-
-		it('should reject if POST does not return result in the repsonse body', async () => {
+		it('should reject if POST does not return result in the response body', async () => {
 			const connect_opts = {
 				caname: 'test-ca-name',
 				protocol: 'https',
@@ -1313,7 +1305,7 @@ describe('FabricCAClient', () => {
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
 
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
-			await client.generateCRL('revokedBefore', 'revokedAfter', 'expireBefore', 'expireAfter', 'signingIdentity').should.be.rejectedWith('test_fail');
+			await client.generateCRL('revokedBefore', 'revokedAfter', 'expireBefore', 'expireAfter', 'signingIdentity').should.be.rejectedWith('Cannot read property \'CRL\' of undefined');
 		});
 
 		it('should reject if POST throws an error', async () => {
