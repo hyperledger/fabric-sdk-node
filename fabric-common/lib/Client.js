@@ -404,7 +404,7 @@ const Client = class {
 			// HSM, or the default has been set to HSM. FABN-830
 			const key = newCryptoSuite({software: true}).generateEphemeralKey();
 			this._tls_mutual.clientKey = key.toBytes();
-			this._tls_mutual.clientCert = key.generateX509Certificate('fabric-common');
+			this._tls_mutual.clientCert = key.generateX509Certificate('/CN=fabric-common');
 			this._tls_mutual.selfGenerated = true;
 		}
 
