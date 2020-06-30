@@ -376,7 +376,7 @@ describe('DiscoveryHandler', () => {
 			const results = await discoveryHandler._endorse({}, {sort: 'ledgerHeight'}, 'proposal');
 			results[0].endorsements[0].should.equal('failed-endorsements');
 		});
-		it('should run ok', async () => {
+		it('should run ok - valid sort random', async () => {
 			discovery.getDiscoveryResults = sandbox.stub().resolves({endorsement_plan: {something: 'plan a'}});
 			discoveryHandler._modify_groups = sinon.stub();
 			discoveryHandler._getRandom = sinon.stub().returns([{}]);
@@ -386,6 +386,30 @@ describe('DiscoveryHandler', () => {
 			});
 			const results = await discoveryHandler._endorse({}, {sort: 'random'}, 'proposal');
 			results[0].endorsements[0].should.equal('failed-endorsements');
+		});
+		it('should run ok - valid sort ledgerHeight', async () => {
+			discovery.getDiscoveryResults = sandbox.stub().resolves({endorsement_plan: {something: 'plan a'}});
+			discoveryHandler._modify_groups = sinon.stub();
+			discoveryHandler._getRandom = sinon.stub().returns([{}]);
+			discoveryHandler._endorse_layout = sandbox.stub().resolves({
+				success: false,
+				endorsements: ['failed-endorsements']
+			});
+			const results = await discoveryHandler._endorse({}, {sort: 'ledgerHeight'}, 'proposal');
+			results[0].endorsements[0].should.equal('failed-endorsements');
+		});
+		it('should set default sort', async () => {
+			discovery.getDiscoveryResults = sandbox.stub().resolves({endorsement_plan: {something: 'plan a'}});
+			discoveryHandler._modify_groups = sinon.stub();
+			discoveryHandler._getRandom = sinon.stub().returns([{}]);
+			discoveryHandler._endorse_layout = sandbox.stub().resolves({
+				success: false,
+				endorsements: ['failed-endorsements']
+			});
+			const results = await discoveryHandler._endorse({}, {}, 'proposal');
+			results[0].endorsements[0].should.equal('failed-endorsements');
+			const m = new Map();
+			sinon.assert.calledWith(discoveryHandler._modify_groups, m, m, m, m, m, m, null, 'ledgerHeight', {endorsements: {}, layouts: [{}]});
 		});
 	});
 
@@ -597,7 +621,7 @@ describe('DiscoveryHandler', () => {
 				new Map(), // preferred_orgs
 				new Map(), // ignored_orgs
 				new Long(1), // preferred_height_gap
-				'default', // sort
+				'unknown', // sort
 				plan // endorsement_plan
 			);
 			should.equal(plan.groups.G0.peers.length, 3);
@@ -612,7 +636,7 @@ describe('DiscoveryHandler', () => {
 				new Map(), // preferred_orgs
 				new Map(), // ignored_orgs
 				null, // preferred_height_gap
-				'default', // sort
+				'unknown', // sort
 				plan // endorsement_plan
 			);
 			should.equal(plan.groups.G0.peers.length, 3);
