@@ -1,3 +1,17 @@
+## 2.1.2
+Wed  1 Jul 2020 15:56:59 BST
+
+* [55cee313](https://github.com/hyperledger/fabric-sdk-node/commit/55cee313) [[FABN-1685] jsrsasign Vulnerability: <GHSA-p8c3-7rj8-](https://jira.hyperledger.org/browse/FABN-1685] jsrsasign Vulnerability: <GHSA-p8c3-7rj8-)q963> (#263)
+* [f13d529a](https://github.com/hyperledger/fabric-sdk-node/commit/f13d529a) [FABN-1571](https://jira.hyperledger.org/browse/FABN-1571) set discovery sort ledgerHeight (#260)
+* [3f9c9d4a](https://github.com/hyperledger/fabric-sdk-node/commit/3f9c9d4a) [[FABN-1572](https://jira.hyperledger.org/browse/FABN-1572)] fabricCaClient.js hygiene (p1) (#242)
+* [ed2121e5](https://github.com/hyperledger/fabric-sdk-node/commit/ed2121e5) [[FABN-835](https://jira.hyperledger.org/browse/FABN-835)] Fix recycle reference in Utils.js (#256)
+* [e71b1260](https://github.com/hyperledger/fabric-sdk-node/commit/e71b1260) [FABN-1566](https://jira.hyperledger.org/browse/FABN-1566) Add TransactionError with event status (#258)
+* [5b409b20](https://github.com/hyperledger/fabric-sdk-node/commit/5b409b20) [FABN-1584: Add protobufjs dependency for fabric-](https://jira.hyperledger.org/browse/FABN-1584: Add protobufjs dependency for fabric-)protos (#262)
+* [e6673018](https://github.com/hyperledger/fabric-sdk-node/commit/e6673018) [FABN-1582](https://jira.hyperledger.org/browse/FABN-1582): Unit test for option pollution between gateway instances (#261)
+* [0d566392](https://github.com/hyperledger/fabric-sdk-node/commit/0d566392) [[FABN-1544](https://jira.hyperledger.org/browse/FABN-1544)] Fix the property name of ProcessedTransaction (#257)
+* [ff66fc66](https://github.com/hyperledger/fabric-sdk-node/commit/ff66fc66) [FABN-1582](https://jira.hyperledger.org/browse/FABN-1582): Fix leakage of Gateway confguration settings (#259)
+* [d73d1a6b](https://github.com/hyperledger/fabric-sdk-node/commit/d73d1a6b) [FABN-1576](https://jira.hyperledger.org/browse/FABN-1576): Revert version and tag to snapshots (#255)
+
 ## v2.1.1
 Wed Jun 17 09:52:17 EDT 2020
 
