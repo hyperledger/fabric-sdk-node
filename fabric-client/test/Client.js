@@ -705,7 +705,19 @@ describe('Client', () => {
 			client = new Client();
 		});
 
-		it('should return the ca service', () => {
+		it('should return the ca service as array when array', () => {
+			getTlsCACertsStub.returns(['cert']);
+			getConnectionOptionsStub.returns({verify: true});
+			getUrlStub.returns('url');
+			getCaNameStub.returns('name');
+			getConfigSettingStub.returns('class-path');
+			client._buildCAfromConfig(caInfo);
+			sinon.assert.calledWith(getConfigSettingStub, 'certificate-authority-client');
+			sinon.assert.calledWith(requireStub, 'class-path');
+			sinon.assert.calledWith(caServiceStub, {tlsOptions: {trustedRoots: ['cert'], verify: true}, caName: 'name', cryptoSuite: null, url: 'url'});
+		});
+
+		it('should return the ca service as array when string', () => {
 			getTlsCACertsStub.returns('cert');
 			getConnectionOptionsStub.returns({verify: true});
 			getUrlStub.returns('url');

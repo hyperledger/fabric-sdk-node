@@ -562,7 +562,9 @@ const Client = class extends BaseClient {
 	_buildCAfromConfig(ca_info) {
 		let tlsCACerts = ca_info.getTlsCACerts();
 		if (tlsCACerts) {
-			tlsCACerts = [tlsCACerts];
+			if (!Array.isArray(tlsCACerts)) {
+				tlsCACerts = [tlsCACerts];
+			} // otherwise use it as it is
 		} else {
 			tlsCACerts = [];
 		}
