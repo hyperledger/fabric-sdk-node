@@ -569,7 +569,7 @@ const Client = class extends BaseClient {
 			tlsCACerts = [];
 		}
 		const connection_options = ca_info.getConnectionOptions();
-		let verify = true; // default if not found
+		let verify = false; // default if not found
 		if (connection_options && typeof connection_options.verify === 'boolean') {
 			verify = connection_options.verify;
 		}

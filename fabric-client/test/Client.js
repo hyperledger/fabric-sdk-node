@@ -736,7 +736,7 @@ describe('Client', () => {
 			client._buildCAfromConfig(caInfo);
 			sinon.assert.calledWith(getConfigSettingStub, 'certificate-authority-client');
 			sinon.assert.calledWith(requireStub, 'class-path');
-			sinon.assert.calledWith(caServiceStub, {tlsOptions: {trustedRoots: [], verify: true}, caName: 'name', cryptoSuite: null, url: 'url'});
+			sinon.assert.calledWith(caServiceStub, {tlsOptions: {trustedRoots: [], verify: false}, caName: 'name', cryptoSuite: null, url: 'url'});
 		});
 	});
 
