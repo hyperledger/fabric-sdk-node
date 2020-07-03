@@ -1,3 +1,9 @@
+## v1.4.10
+Thu Jul  2 19:56:32 EDT 2020
+
+* [ed9433be](https://github.com/hyperledger/fabric-sdk-node/commit/ed9433be) [FABN-1587](https://jira.hyperledger.org/browse/FABN-1587) Use false as the default verify option (#268)
+* [ce45d3b7](https://github.com/hyperledger/fabric-sdk-node/commit/ce45d3b7) [FABN-1586](https://jira.hyperledger.org/browse/FABN-1586) Do not wrap tlsCACerts (#267)
+
 ## v1.4.9
 Tue Jun 16 13:20:56 EDT 2020
 
