@@ -40,7 +40,7 @@ by default.
 import { Gateway, GatewayOptions, DefaultEventHandlerStrategies } from 'fabric-network';
 
 const connectOptions: GatewayOptions = {
-    transaction: {
+    eventHandlerOptions: {
         strategy: DefaultEventHandlerStrategies.MSPID_SCOPE_ALLFORTX
     }
 }
