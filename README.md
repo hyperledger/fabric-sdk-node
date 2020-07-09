@@ -1,5 +1,8 @@
 ## Hyperledger Fabric Client SDK for Node.js
 
+[![Build Status](https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_apis/build/status/hyperledger.fabric-sdk-node?branchName=release-1.4)](https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_build/latest?definitionId=47&branchName=release-1.4)
+
+
 The Hyperledger Fabric Client SDK makes it possible to use APIs to interact with a Hyperledger Fabric blockchain.
 
 As an application developer, to learn about how to install and use the Node.js SDK, please visit the [SDK documentation](https://hyperledger.github.io/fabric-sdk-node/release-1.4/).
