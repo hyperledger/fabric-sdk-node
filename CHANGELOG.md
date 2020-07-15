@@ -1,3 +1,11 @@
+## v2.2.0
+Wed 15 Jul 2020 14:07:07 BST
+
+* [87a393af](https://github.com/hyperledger/fabric-sdk-node/commit/87a393af) [FABN-1593](https://jira.hyperledger.org/browse/FABN-1593) update channel typescript defs (#272)
+* [34a50138](https://github.com/hyperledger/fabric-sdk-node/commit/34a50138) Use Official CouchDB 3.1 Image (#265)
+* [515ca942](https://github.com/hyperledger/fabric-sdk-node/commit/515ca942) Use proper event handler Gateway option in transaction-commit-events tutorial (#271)
+* [e219e19c](https://github.com/hyperledger/fabric-sdk-node/commit/e219e19c) Change to snapshot versions post publish of v2.1.2 (#269)
+
 ## 2.1.2
 Wed  1 Jul 2020 15:56:59 BST
 
