@@ -66,7 +66,7 @@ export enum Constants {
 	MEMORY_WALLET = 'memory',
 	FILE_WALLET = 'file',
 	COUCH_WALLET = 'couchDB',
-	COUCH_WALLET_URL = 'http://localhost:5984',
+	COUCH_WALLET_URL = 'http://admin:adminpw@localhost:5984',
 	HSM_WALLET = 'HSM',
 
 	// provider types

@@ -102,6 +102,9 @@ services:
       - CORE_CHAINCODE_GOLANG_RUNTIME=hyperledger/fabric-baseos
       - CORE_CHAINCODE_JAVA_RUNTIME=hyperledger/fabric-javaenv
       - CORE_CHAINCODE_NODE_RUNTIME=hyperledger/fabric-nodeenv
+
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=adminpw
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric
     command: peer node start
     volumes:
@@ -133,4 +136,7 @@ services:
 
   couchdb:
     container_name: couchdb
-    image: hyperledger/fabric-couchdb
+    image: couchdb:3.1
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=adminpw

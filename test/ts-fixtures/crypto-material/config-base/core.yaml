@@ -569,12 +569,12 @@ ledger:
        # CouchDB client (on the peer) and server.
        couchDBAddress: 127.0.0.1:5984
        # This username must have read and write authority on CouchDB
-       username:
+       username: admin
        # The password is recommended to pass as an environment variable
        # during start up (eg LEDGER_COUCHDBCONFIG_PASSWORD).
        # If it is stored here, the file must be access control protected
        # to prevent unintended users from discovering the password.
-       password:
+       password: adminpw
        # Number of retries for CouchDB errors
        maxRetries: 3
        # Number of retries for CouchDB errors during peer startup
