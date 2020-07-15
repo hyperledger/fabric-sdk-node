@@ -354,8 +354,8 @@ export class Channel {
 
 	public getMspids(): string[];
 	public getMsp(id: string): any;
-	public removeMSP(id: string): boolean;
-	public addMSP(msp: any): Channel;
+	public removeMsp(id: string): boolean;
+	public addMsp(msp: any): Channel;
 
 	public addEndorser(endorser: Endorser, replace?: boolean): Channel;
 	public removeEndorser(endorser: Endorser): boolean;
