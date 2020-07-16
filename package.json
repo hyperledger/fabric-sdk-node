@@ -1,8 +1,7 @@
 {
   "name": "fabric-sdk-node",
-  "version": "1.4.10",
-  "testFabricVersion": "1.4.7",
-  "testFabricThirdParty": "0.4.16",
+  "version": "1.4.11-snapshot",
+  "tag": "unstable-1.4",
   "main": "index.js",
   "repository": {
     "type": "git",
@@ -32,7 +31,7 @@
     "unitTest:network": "mocha --reporter 'list' --timeout 10000 'fabric-network/test/**/*.js'",
     "unitTest:tape": "./scripts/npm_scripts/runTapeUnit.sh",
     "unitTest:tapeNoHSM": "./scripts/npm_scripts/runTapeUnit.sh noHSM",
-    "dockerReady": "npm run dockerClean && node -e 'require(\"./scripts/npm_scripts/dockerReady.js\").dockerReady()'",
+    "dockerReady": "npm run dockerClean && node ./scripts/npm_scripts/dockerReady",
     "tapeIntegration": "nyc --check-coverage --statements 73 --branches 57 --functions 72 --lines 73 ./scripts/npm_scripts/runTape.sh",
     "tapeIntegrationNoHSM": "./scripts/npm_scripts/runTape.sh noHSM",
     "cucumberScenario": "npm run setupCucumbers && export HFC_LOGGING='{\"debug\":\"test/temp/debugc.log\"}' && nyc --check-coverage --statements 55 --branches 41 --functions 57 --lines 55 npm run test:cucumber",

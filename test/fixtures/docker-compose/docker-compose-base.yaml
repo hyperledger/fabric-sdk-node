@@ -69,6 +69,10 @@ services:
       - CORE_PEER_GOSSIP_ORGLEADER=false
       - CORE_PEER_GOSSIP_USELEADERELECTION=true
       - CORE_PEER_PROFILE_ENABLED=true
+      - CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:1.4
+      - CORE_CHAINCODE_GOLANG_RUNTIME=hyperledger/fabric-baseos:0.4
+      - CORE_CHAINCODE_JAVA_RUNTIME=hyperledger/fabric-javaenv:1.4
+      - CORE_CHAINCODE_NODE_RUNTIME=hyperledger/fabric-baseimage:0.4
 
       # LOGGING SETTINGS
       - FABRIC_LOGGING_SPEC=${DOCKER_DEBUG}

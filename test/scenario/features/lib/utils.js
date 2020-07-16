@@ -43,7 +43,7 @@ function sleep(ms) {
  * @param {String} cmd -  CLI command with parameters to be run
  * @return {Promise} - Promise that will be resolved or rejected with an error
  */
-function runShellCommand(pass, cmd) {
+function runShellCommand(pass, cmd, opts) {
 	if (typeof cmd !== 'string') {
 		return Promise.reject('Command passed to function was not a string');
 	} else {
@@ -54,10 +54,11 @@ function runShellCommand(pass, cmd) {
 
 		return new Promise((resolve, reject) => {
 
-			const options = {
+			const defaultOptions = {
 				env : env,
 				maxBuffer: 100000000
 			};
+			const options = Object.assign(defaultOptions, opts);
 			const childCliProcess = childProcess.exec(command, options);
 
 			childCliProcess.stdout.setEncoding('utf8');
