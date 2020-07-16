@@ -1,3 +1,8 @@
+## v1.4.11
+Thu 16 Jul 2020 15:52:19 BST
+
+* [af53d007](https://github.com/hyperledger/fabric-sdk-node/commit/af53d007) [FABN-1600](https://jira.hyperledger.org/browse/FABN-1600): Explicit dependency versions on publishing (#276)
+
 ## v1.4.10
 Thu Jul  2 19:56:32 EDT 2020
 
