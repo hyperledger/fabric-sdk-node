@@ -5,10 +5,10 @@
 
 # Pipeline-level keywords belong here
 trigger:
-- master
+  - release-2.2
 
 pr:
-  - master
+  - release-2.2
 
 pool:
   vmImage: 'ubuntu-18.04'
