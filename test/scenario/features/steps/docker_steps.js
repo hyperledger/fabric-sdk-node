@@ -10,12 +10,16 @@ const path = require('path');
 module.exports = function () {
 
 	this.Given(/^I have deployed a (.+?) Fabric network/, {timeout: testUtil.TIMEOUTS.LONG_STEP}, async (type) => {
+		const options = {
+			cwd: path.resolve(__dirname, '..', '..', '..', 'fixtures', 'docker-compose')
+		};
+
 		await testUtil.runShellCommand(undefined, 'rm -r ~/.hlf-checkpoint');
 		await testUtil.runShellCommand(undefined, 'docker kill $(docker ps -aq); docker rm $(docker ps -aq)');
 		if (type.localeCompare('non-tls') === 0) {
-			await testUtil.runShellCommand(true, 'docker-compose -f ' + path.join(__dirname, '../../../fixtures/docker-compose/docker-compose.yaml') + ' -p node up -d');
+			await testUtil.runShellCommand(true, 'docker-compose -f docker-compose.yaml -p node up -d', options);
 		} else {
-			await testUtil.runShellCommand(true, 'docker-compose -f ' + path.join(__dirname, '../../../fixtures/docker-compose/docker-compose-tls.yaml') + ' -p node up -d');
+			await testUtil.runShellCommand(true, 'docker-compose -f docker-compose-tls.yaml -p node up -d', options);
 		}
 		return await testUtil.sleep(testUtil.TIMEOUTS.SHORT_INC);
 	});

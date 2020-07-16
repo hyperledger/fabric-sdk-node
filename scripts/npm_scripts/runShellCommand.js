@@ -13,7 +13,7 @@ const stripAnsi = require('strip-ansi');
  * @param {Obejct} env -  environment shell for command to be run in
  * @return {Promise} - Promise that will be resolved or rejected with an error
  */
-module.exports.runShellCommand = function(cmd, env) {
+module.exports.runShellCommand = function(cmd, opts) {
 	if (typeof cmd !== 'string') {
 		return Promise.reject('Command passed to function was not a string');
 	} else {
@@ -22,11 +22,11 @@ module.exports.runShellCommand = function(cmd, env) {
 		let stderr = '';
 
 		return new Promise((resolve, reject) => {
-
-			const options = {
-				env : env,
+			const defaultOpts = {
+				env: Object.create(process.env),
 				maxBuffer: 100000000
 			};
+			const options = Object.assign(defaultOpts, opts);
 			const childCliProcess = childProcess.exec(command, options);
 
 			childCliProcess.stdout.setEncoding('utf8');
