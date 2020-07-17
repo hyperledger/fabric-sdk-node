@@ -46,35 +46,10 @@ a:focus {
 </style>
 <head>
 	<meta charset="utf-8">
-	<title>Single Page Apps for GitHub Pages</title>
-	<script type="text/javascript">
-
-		let l = window.location;
-
-		// firstly need to check if we are in a loop
-		if (!l.search.match(/redirect=true/)){
-			let newUrl = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '')
-			+ '/release-1.4/index.html?redirect=true'
-
-			let mapping = [FILENAME__MAPPING]
-			let release = "release-1.4";
-
-			// look up the maping
-			let requestedPage = l.pathname.split('/').slice(1)[0]
-
-			// if (mapping.indexOf(requestedPage)>-1) {
-				// newUrl = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '')
-				// +'/release-1.4/fabric-shim.' + requestedPage+'?redirect=true';
-			// }
-
-			console.log(newUrl);
-			l.replace(newUrl);
-		}
-
-	</script>
+	<title>404: Page not found</title>
 </head>
 <body>
 <h1>Sorry, a suitable documentation page can not be found</h1>
-<h2>Please consult the main <a href="https://fabric-sdk-node.readthedocs.io/en/release-1.2/">Hyperledger Fabric documentation</a></h2>
+<h2>Please consult the <a href="https://hyperledger.github.io/fabric-sdk-node/">Node SDK documentation</a></h2>
 </body>
 </html>
