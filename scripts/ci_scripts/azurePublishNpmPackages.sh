@@ -88,13 +88,11 @@ readCurrentPackageVersion() {
 
 readNextUnstablePackageVersion() {
     local nextVersion
-    nextVersion=$(npm dist-tags ls "$1" | awk "/^${RELEASE_TAG}:"/'{
+    nextVersion=$(npm view "$1" versions --json | awk -F . "/\"${RELEASE_VERSION}/"'{
         ver=$NF
-        rel=$NF
-        sub(/.*\./,"",rel)
-        sub(/\.[[:digit:]]+$/,"",ver)
-        print rel+1
-    }')
+        sub(/\".*/, "", ver)
+        print ver+1
+    }' | sort -r | head -1)
     echo "${RELEASE_VERSION}.${nextVersion:-1}"
 }
 
