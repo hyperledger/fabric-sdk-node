@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import fs = require('fs-extra');
+import fs = require('fs');
 import os = require('os');
 import path = require('path');
 import util = require('util');
@@ -21,7 +21,7 @@ const expect = chai.expect;
 
 async function createTempDir(): Promise<string> {
 	const prefix = path.join(os.tmpdir(), 'fabric-network-test-');
-	return await fs.mkdtemp(prefix);
+	return await fs.promises.mkdtemp(prefix);
 }
 
 // tslint:disable: no-unused-expression
@@ -116,20 +116,21 @@ describe('WalletStore', () => {
 				throw new Error('tmpDir not set');
 			}
 			const file = path.join(tmpDir, 'BAD_FILE');
-			await fs.writeFile(file, Buffer.from(''));
+			await fs.promises.writeFile(file, Buffer.from(''));
 
 			const result = await store.list();
 
 			expect(result).to.be.empty;
 		});
 
-		it('Creates store directory if does not exist', async () => {
+		it('Recursively creates store directory if does not exist', async () => {
 			const label = 'label';
 			const data = Buffer.from('DATA');
 			tmpDir = await createTempDir();
+			const walletDir = path.join(tmpDir, 'wallet');
 			await rimraf(tmpDir);
 
-			const store = await FileSystemWalletStore.newInstance(tmpDir);
+			const store = await FileSystemWalletStore.newInstance(walletDir);
 			await store.put(label, data);
 			const result = await store.get(label);
 
