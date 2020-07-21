@@ -23,9 +23,7 @@ Clone the project and launch the following commands to install the dependencies 
 In the project root folder:
 * Install all dependancies via `npm install`
 * Optionally, to generate API docs via `npm run docs`
-* To generate the required crypto material used by the tests, use one of the following patform specific commands:
-  * For Linux `npm run installAndGenerateCerts`
-  * For mac `npm run installAndGenerateCertsMac`
+* To generate the required crypto material used by the tests, use the npm task `npm run installAndGenerateCerts`
 * To run the unit tests that do not require any additional set up, use `npm run testHeadless`
 
 ### Run Integration Tests
