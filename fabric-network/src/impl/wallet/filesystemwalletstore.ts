@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import fs = require('fs-extra');
+import fs = require('fs');
 import path = require('path');
 
 import { WalletStore } from './walletstore';
@@ -22,7 +22,10 @@ function toLabel(file: string): string {
 
 export class FileSystemWalletStore implements WalletStore {
 	public static async newInstance(directory: string): Promise<FileSystemWalletStore> {
-		await fs.mkdirp(directory);
+		const mkdirOptions = {
+			recursive: true
+		};
+		await fs.promises.mkdir(directory, mkdirOptions);
 		return new FileSystemWalletStore(directory);
 	}
 
@@ -34,27 +37,27 @@ export class FileSystemWalletStore implements WalletStore {
 
 	public async remove(label: string): Promise<void> {
 		const file = this.toPath(label);
-		await fs.unlink(file);
+		await fs.promises.unlink(file);
 	}
 
 	public async get(label: string): Promise<Buffer|undefined> {
 		const file = this.toPath(label);
 		try {
-			return await fs.readFile(file);
+			return await fs.promises.readFile(file);
 		} catch (error) {
 			return undefined;
 		}
 	}
 
 	public async list(): Promise<string[]> {
-		return (await fs.readdir(this.storePath))
+		return (await fs.promises.readdir(this.storePath))
 			.filter(isIdentityFile)
 			.map(toLabel);
 	}
 
 	public async put(label: string, data: Buffer): Promise<void> {
 		const file = this.toPath(label);
-		await fs.writeFile(file, data);
+		await fs.promises.writeFile(file, data);
 	}
 
 	private toPath(label: string): string {
