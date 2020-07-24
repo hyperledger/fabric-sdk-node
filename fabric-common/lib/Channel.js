@@ -66,8 +66,7 @@ const Channel = class {
 	}
 
 	/**
-	 * Close the service connections of all assigned endorsers, committers,
-	 * channel event hubs, and channel discovery.
+	 * Close the service connections of all assigned endorsers and committers
 	 */
 	close() {
 		const method = `close[${this.name}]`;
