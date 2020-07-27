@@ -4,20 +4,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Network, NetworkImpl } from './network';
+import {Network, NetworkImpl} from './network';
 import * as NetworkConfig from './impl/ccp/networkconfig';
-import { Identity } from './impl/wallet/identity';
-import { Wallet } from './impl/wallet/wallet';
-import { IdentityProvider } from './impl/wallet/identityprovider';
-import { TxEventHandlerFactory } from './impl/event/transactioneventhandler';
-import { QueryHandlerFactory } from './impl/query/queryhandler';
-import { Client, IdentityContext } from 'fabric-common';
+import {Identity} from './impl/wallet/identity';
+import {Wallet} from './impl/wallet/wallet';
+import {IdentityProvider} from './impl/wallet/identityprovider';
+import {TxEventHandlerFactory} from './impl/event/transactioneventhandler';
+import {QueryHandlerFactory} from './impl/query/queryhandler';
+import {Client, IdentityContext} from 'fabric-common';
 import * as EventStrategies from './impl/event/defaulteventhandlerstrategies';
 import * as QueryStrategies from './impl/query/defaultqueryhandlerstrategies';
 import * as IdentityProviderRegistry from './impl/wallet/identityproviderregistry';
 
 import * as Logger from './logger';
-import { X509Identity } from './impl/wallet/x509identity';
+import {X509Identity} from './impl/wallet/x509identity';
+
 const logger = Logger.getLogger('Gateway');
 
 export interface GatewayOptions {
@@ -369,6 +370,9 @@ export class Gateway {
 		logger.debug('in disconnect');
 		this.networks.forEach((network) => network._dispose());
 		this.networks.clear();
+		if (this.client) {
+			this.client.close();
+		}
 	}
 
 	/**
