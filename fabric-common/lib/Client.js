@@ -498,6 +498,21 @@ const Client = class {
 
 		return getConfigSetting(name, default_value);
 	}
+
+	close() {
+		this.endorsers.forEach(endorser => {
+			endorser.disconnect();
+		});
+		this.endorsers.clear();
+		this.committers.forEach(committer => {
+			committer.disconnect();
+		});
+		this.committers.clear();
+		this.channels.forEach(channel => {
+			channel.close();
+		});
+		this.channels.clear();
+	}
 };
 
 function computeHash(data) {
