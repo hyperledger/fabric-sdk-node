@@ -99,6 +99,7 @@ export class Transaction {
 	private endorsingOrgs?: string[];
 	private readonly identityContext: IdentityContext;
 	private readonly transactionId: string;
+	private useDiscovery: boolean;
 
 	/*
 	 * @param {Contract} contract Contract to which this transaction belongs.
@@ -119,6 +120,7 @@ export class Transaction {
 		// Store the returned copy to prevent state being modified by other code before it is used to send proposals
 		this.identityContext = this.contract.gateway.identityContext!.calculateTransactionId();
 		this.transactionId = this.identityContext.transactionId;
+		this.useDiscovery = this.contract.network.discoveryService ? true : false;
 	}
 
 	/**
@@ -204,6 +206,24 @@ export class Transaction {
 	}
 
 	/**
+	 * Set to enable or disable the use of discovery for an endorsment.
+	 * @param {boolean} [useDiscovery] Will enable or disable the use of discovery only
+	 * if the Gateway has been enabled for discovery, otherwise it will throw an error
+	 * indicating that this option is not available.
+	 * @throws {Error} An error will be thrown when attempting to enable or disable the use of
+	 * discovery when it has not been enabled by the Gateway setup.
+	 */
+	setDiscoveryEndorsement(useDiscovery: boolean): Transaction {
+		if (this.contract.network.discoveryService) {
+			this.useDiscovery = useDiscovery;
+		} else {
+			throw Error(`The network ${this.contract.network.getChannel().name} has not been initialized to use discovery`);
+		}
+
+		return this;
+	}
+
+	/**
 	 * Submit a transaction to the ledger. The transaction function <code>name</code>
 	 * will be evaluated on the endorsing peers and then submitted to the ordering service
 	 * for committing to the ledger.
@@ -243,7 +263,7 @@ export class Transaction {
 		if (this.endorsingPeers) {
 			logger.debug('%s - user has assigned targets', method);
 			proposalSendRequest.targets = this.endorsingPeers;
-		} else if (this.contract.network.discoveryService) {
+		} else if (this.contract.network.discoveryService && this.useDiscovery) {
 			logger.debug('%s - discovery handler will be used for endorsing', method);
 			proposalSendRequest.handler = await this.contract.getDiscoveryHandler();
 			if (this.endorsingOrgs) {

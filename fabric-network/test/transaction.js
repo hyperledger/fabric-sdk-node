@@ -123,6 +123,7 @@ describe('Transaction', () => {
 		channel.newQuery.withArgs(chaincodeId).returns(queryProposal);
 		channel.getEndorsers.returns([endorser]);
 		network.getChannel.returns(channel);
+		network.discoveryService = sinon.stub();
 		queryHandler = {
 			evaluate: sinon.stub().resolves(expectedResult)
 		};
@@ -205,6 +206,22 @@ describe('Transaction', () => {
 		it('returns this', () => {
 			const result = transaction.setEndorsingOrganizations([]);
 			expect(result).to.equal(transaction);
+		});
+	});
+
+	describe('#setDiscoveryEndorsement', () => {
+		it('returns this', () => {
+			const result = transaction.setDiscoveryEndorsement(false);
+			expect(result).to.equal(transaction);
+			expect(result.useDiscovery).to.equal(false);
+		});
+		it('should throw error if no discovery', () => {
+			try {
+				network.discoveryService = null;
+				transaction.setDiscoveryEndorsement(false);
+			} catch (error) {
+				expect(error.message).to.equal('The network undefined has not been initialized to use discovery');
+			}
 		});
 	});
 
@@ -348,6 +365,18 @@ describe('Transaction', () => {
 			sinon.assert.calledWithMatch(endorsement.send, {targets});
 		});
 
+		it('sends proposal to specified organizations by turning off use of discovery', async () => {
+			network.discoveryService = true;
+			const orgs = ['org1', 'org2'];
+			const targets = orgs.map((org) => org + 'peer');
+			orgs.forEach((org, i) => channel.getEndorsers.withArgs(org).returns([targets[i]]));
+			transaction.setDiscoveryEndorsement(false);
+
+			await transaction.setEndorsingOrganizations(...orgs).submit();
+
+			sinon.assert.calledWithMatch(endorsement.send, {targets});
+		});
+
 		it('send proposal to specified peers with discovery does not use discovery handler', async () => {
 			const targets = ['peer1'];
 			network.discoveryService = true;
@@ -364,6 +393,17 @@ describe('Transaction', () => {
 			await transaction.submit();
 
 			sinon.assert.calledWithMatch(endorsement.send, {handler: discoveryHandler});
+		});
+
+		it('send proposal with channel assigned peers when discovery turned off and targets not provided', async () => {
+			const targets = [endorser];
+			network.discoveryService = true;
+			transaction.setDiscoveryEndorsement(false);
+
+			await transaction.submit();
+
+			sinon.assert.calledWithMatch(endorsement.send, {targets});
+			sinon.assert.neverCalledWithMatch(endorsement.send, {handler: discoveryHandler});
 		});
 
 		it('sends proposal to specified organizations with discovery uses discovery handler and sets requiredOrgs', async () => {
