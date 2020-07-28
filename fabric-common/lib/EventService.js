@@ -113,13 +113,13 @@ class EventService extends ServiceAction {
 		}
 
 		for (const eventer of targets) {
-			if (eventer.connected || eventer.isConnectable()) {
-				logger.debug('%s - target is or could be connected %s', method, eventer.name);
+			if (eventer.isConnectable()) {
+				logger.debug('%s - target is connectable %s', method, eventer.name);
 			} else {
 				throw Error(`Eventer ${eventer.name} is not connectable`);
 			}
 		}
-		// must be all targets are connected
+		// must be all targets are connectable
 		this.targets = targets;
 
 		return this;
@@ -356,10 +356,6 @@ class EventService extends ServiceAction {
 					logger.debug('%s - target has a stream, is already listening %s', method, target.toString());
 					startError = Error(`Event service ${target.name} is currently listening`);
 				} else {
-					if (target.isConnectable()) {
-						logger.debug('%s - target needs to connect %s', method, target.toString());
-						await target.connect(); // target endpoint has been previously assigned, but not connected yet
-					}
 					const isConnected = await target.checkConnection();
 					if (!isConnected) {
 						startError = Error(`Event service ${target.name} is not connected`);

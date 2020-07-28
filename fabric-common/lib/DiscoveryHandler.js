@@ -112,18 +112,23 @@ class DiscoveryHandler extends ServiceHandler {
 			for (const committer of committers) {
 				logger.debug('%s - sending to committer %s', method, committer.name);
 				try {
-					const results = await committer.sendBroadcast(signedEnvelope, timeout);
-					if (results) {
-						if (results.status === 'SUCCESS') {
-							logger.debug('%s - Successfully sent transaction to the committer %s', method, committer.name);
-							return results;
+					const isConnected = await committer.checkConnection();
+					if (isConnected) {
+						const results = await committer.sendBroadcast(signedEnvelope, timeout);
+						if (results) {
+							if (results.status === 'SUCCESS') {
+								logger.debug('%s - Successfully sent transaction to the committer %s', method, committer.name);
+								return results;
+							} else {
+								logger.debug('%s - Failed to send transaction successfully to the committer status:%s', method, results.status);
+								return_error = new Error('Failed to send transaction successfully to the committer status:' + results.status);
+							}
 						} else {
-							logger.debug('%s - Failed to send transaction successfully to the committer status:%s', method, results.status);
-							return_error = new Error('Failed to send transaction successfully to the committer status:' + results.status);
+							return_error = new Error('Failed to send transaction to the committer');
+							logger.debug('%s - Failed to send transaction to the committer %s', method, committer.name);
 						}
 					} else {
-						return_error = new Error('Failed to send transaction to the committer');
-						logger.debug('%s - Failed to send transaction to the committer %s', method, committer.name);
+						return_error = new Error(`Committer ${committer.name} is not connected`);
 					}
 				} catch (error) {
 					logger.debug('%s - Caught: %s', method, error.toString());
@@ -326,9 +331,14 @@ class DiscoveryHandler extends ServiceHandler {
 							logger.debug('%s - send endorsement to %s', method, peer_info.name);
 							peer_info.in_use = true;
 							try {
-								endorsement = await peer.sendProposal(proposal, timeout);
-								// save this endorsement results in case we try this peer again
-								logger.debug('%s - endorsement completed to %s', method, peer_info.name);
+								const isConnected = await peer.checkConnection();
+								if (isConnected) {
+									endorsement = await peer.sendProposal(proposal, timeout);
+									// save this endorsement results in case we try this peer again
+									logger.debug('%s - endorsement completed to %s', method, peer_info.name);
+								} else {
+									endorsement = new Error(`Peer ${peer.name} is not connected`);
+								}
 							} catch (error) {
 								endorsement = error;
 								logger.error('%s - error on endorsement to %s error %s', method, peer_info.name, error);

@@ -182,19 +182,28 @@ class Commit extends Proposal {
 		} else if (targets) {
 			logger.debug('%s - sending to the targets', method);
 			const committers = this.channel.getTargetCommitters(targets);
-			let bad_result = {};
-			bad_result.status = 'UNKNOWN';
+			let result;
 			for (const committer of committers) {
-				const result = await committer.sendBroadcast(envelope, requestTimeout);
-				if (result.status === 'SUCCESS') {
-
-					return result;
+				const isConnected = await committer.checkConnection();
+				if (isConnected) {
+					try {
+						result = await committer.sendBroadcast(envelope, requestTimeout);
+						if (result.status === 'SUCCESS') {
+							break;
+						}
+					} catch (error) {
+						logger.error('%s - Unable to commit on %s ::%s', method, committer.name, error);
+						result = error;
+					}
 				} else {
-					bad_result = result;
+					result = new Error(`Committer ${committer.name} is not connected`);
 				}
 			}
+			if (result instanceof Error) {
+				throw result;
+			}
 
-			return bad_result;
+			return result;
 		} else {
 			throw checkParameter('targets');
 		}
