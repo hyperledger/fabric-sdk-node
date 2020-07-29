@@ -259,7 +259,7 @@ class DiscoveryHandler extends ServiceHandler {
 			if (required > group.peers.length) {
 				results.success = false;
 				const error = new Error(`Endorsement plan group does not contain enough peers (${group.peers.length}) to satisfy policy (required:${required})`);
-				logger.error(error);
+				logger.debug(error.message);
 				results.endorsements.push(error);
 				break; // no need to look at other groups, this layout failed
 			}
