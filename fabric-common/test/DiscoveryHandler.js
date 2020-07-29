@@ -35,7 +35,7 @@ describe('DiscoveryHandler', () => {
 
 	let peer11, peer12, peer21, peer22, peer31, peer32, peer33;
 
-	// const pem = '-----BEGIN CERTIFICATE-----    -----END CERTIFICATE-----\n';
+	const pem = '-----BEGIN CERTIFICATE-----    -----END CERTIFICATE-----\n';
 	const org1 = [
 		'Org1MSP',
 		'peer1.org1.example.com:7001',
@@ -87,8 +87,8 @@ describe('DiscoveryHandler', () => {
 		layouts: [{G0: 1, G1: 1}, {G3: 3, G1: 1}]
 	};
 
-	/*
-	const discovery_plan = {
+
+	const config_results = {
 		msps: {
 			OrdererMSP: {
 				id: 'OrdererMSP',
@@ -128,7 +128,7 @@ describe('DiscoveryHandler', () => {
 			Org2MSP: {endpoints: [{host: 'orderer.org2.example.com', port: 7150, name: 'orderer.org2.example.com'}]},
 			Org3MSP: {endpoints: [{host: 'orderer.org3.example.com', port: 7150, name: 'orderer.org3.example.com'}]}
 		},
-		peersByOrg: {
+		peers_by_org: {
 			Org1MSP: {
 				peers: [
 					{mspid: org1[0], endpoint: org1[1], ledgerHeight, chaincodes, name: org1[1]},
@@ -144,14 +144,38 @@ describe('DiscoveryHandler', () => {
 			Org3MSP: {
 				peers: [
 					{mspid: org3[0], endpoint: org3[1], ledgerHeight, chaincodes, name: org3[1]},
-					{mspid: org3[0], endpoint: org3[2], ledgerHeight, chaincodes, name: org3[2]},
-					{mspid: org3[0], endpoint: org3[3], ledgerHeight, chaincodes, name: org3[3]}
+					{mspid: org3[0], endpoint: org3[2], ledgerHeight: highest, chaincodes, name: org3[2]},
+					{mspid: org3[0], endpoint: org3[3], ledgerHeight: smaller, chaincodes, name: org3[3]}
+				]
+			}
+		}
+	};
+
+	const organization_plan = {
+		plan_id: 'required organizations',
+		groups: {
+			Org1MSP: {
+				peers: [
+					{mspid: org1[0], endpoint: org1[1], ledgerHeight, chaincodes, name: org1[1]},
+					{mspid: org1[0], endpoint: org1[2], ledgerHeight, chaincodes, name: org1[2]}
+				]
+			},
+			Org2MSP: {
+				peers: [
+					{mspid: org2[0], endpoint: org2[1], ledgerHeight, chaincodes, name: org2[1]},
+					{mspid: org2[0], endpoint: org2[2], ledgerHeight, chaincodes, name: org2[2]}
+				]
+			},
+			Org3MSP: {
+				peers: [
+					{mspid: org3[0], endpoint: org3[1], ledgerHeight, chaincodes, name: org3[1]},
+					{mspid: org3[0], endpoint: org3[2], ledgerHeight: highest, chaincodes, name: org3[2]},
+					{mspid: org3[0], endpoint: org3[3], ledgerHeight: smaller, chaincodes, name: org3[3]}
 				]
 			}
 		},
-		endorsement_plan: endorsement_plan
+		layouts: [{Org1MSP: 1, Org2MSP: 1, Org3MSP: 1}]
 	};
-	*/
 
 	const good = {response: {status: 200}};
 	beforeEach(() => {
@@ -337,6 +361,14 @@ describe('DiscoveryHandler', () => {
 			const results = await discoveryHandler.endorse('signedProposal', {requestTimeout: 2000});
 			results.should.equal('DONE');
 		});
+		it('should run ok with required orgs', async () => {
+			discovery.getDiscoveryResults = sandbox.stub().resolves(config_results);
+			discoveryHandler._endorse = sandbox.stub().resolves('DONE');
+			const results = await discoveryHandler.endorse('signedProposal', {requiredOrgs: ['Org1MSP', 'Org2MSP', 'Org3MSP'], sort: 'check'});
+			results.should.equal('DONE');
+			sinon.assert.calledWith(discoveryHandler._endorse, organization_plan, {sort: 'check', preferredHeightGap: undefined});
+
+		});
 	});
 
 	describe('#_endorse', () => {
@@ -489,6 +521,15 @@ describe('DiscoveryHandler', () => {
 			results[0].success.should.equal(true);
 			results[2].should.be.instanceof(Error);
 			sinon.assert.calledWith(FakeLogger.debug, '%s - endorsement failed: %s');
+		});
+	});
+
+	describe('#_buildRequiredOrgPlan', () => {
+		it('should run ok', async () => {
+
+			// TEST CALL
+			const results = await discoveryHandler._buildRequiredOrgPlan(config_results.peers_by_org);
+			results.should.deep.equal(organization_plan);
 		});
 	});
 

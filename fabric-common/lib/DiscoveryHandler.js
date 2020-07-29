@@ -155,7 +155,20 @@ class DiscoveryHandler extends ServiceHandler {
 
 		const results = await this.discovery.getDiscoveryResults(true);
 
-		if (results && results.endorsement_plan) {
+		if (results && request.requiredOrgs) {
+			// special case when user knows which organizations to send the endorsement
+			// let's build our own endorsement plan so that we can use the sorting and sending code
+			const endorsement_plan = this._buildRequiredOrgPlan(results.peers_by_org);
+
+			// remove all org and peer
+			const orgs_request = {
+				sort: request.sort,
+				preferredHeightGap: request.preferredHeightGap
+			};
+
+			return this._endorse(endorsement_plan, orgs_request, signedProposal, timeout);
+		} else if (results && results.endorsement_plan) {
+			// normal processing of the discovery results
 			const working_discovery = JSON.parse(JSON.stringify(results.endorsement_plan));
 
 			return this._endorse(working_discovery, request, signedProposal, timeout);
@@ -300,6 +313,23 @@ class DiscoveryHandler extends ServiceHandler {
 		}
 
 		return responses;
+	}
+
+	_buildRequiredOrgPlan(peers_by_org) {
+		const method = '_buildRequiredOrgPlan';
+		logger.debug('%s - starting', method);
+		const endorsement_plan = {plan_id: 'required organizations'};
+		endorsement_plan.groups = {};
+		endorsement_plan.layouts = [{}]; // only one layout which will have all organizations
+
+		for (const mspid in peers_by_org) {
+			logger.debug(`${method} - found org:${mspid}`);
+			endorsement_plan.groups[mspid] = {}; // make a group for each organization
+			endorsement_plan.groups[mspid].peers = peers_by_org[mspid].peers; // now put in all peers from that organization
+			endorsement_plan.layouts[0][mspid] = 1; // add this org to the one layout and require one peer to endorse
+		}
+
+		return endorsement_plan;
 	}
 
 	/*
