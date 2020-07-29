@@ -67,6 +67,7 @@ declare namespace FabricCAServices {
 		profile?: string;
 		attr_reqs?: IAttributeRequest[];
 		csr?: string;
+		subject?: string;
 	}
 
 	export interface IKey {
