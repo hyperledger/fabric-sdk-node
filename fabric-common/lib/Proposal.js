@@ -131,6 +131,7 @@ class Proposal extends ServiceAction {
 
 		return this;
 	}
+
 	/**
 	 * @typedef {Object} BuildProposalRequest
 	 * @property {string} [fcn] - Optional. The function name. May be used by
@@ -164,7 +165,7 @@ class Proposal extends ServiceAction {
 		const method = `build[${this.chaincodeId}][${this.type}]`;
 		logger.debug('%s - start', method);
 
-		const {fcn,  args = [], transientMap, init} = request;
+		const {fcn, args = [], transientMap, init} = request;
 
 		if (!Array.isArray(args)) {
 			throw Error('Proposal parameter "args" must be an array.');
@@ -208,7 +209,9 @@ class Proposal extends ServiceAction {
 
 		// build the proposal payload
 		const chaincodeID = fabproto6.protos.ChaincodeID.create({
-			name: this.chaincodeId
+			name: this.chaincodeId,
+			version: this.chaincodeVersion || '',
+			path: this.chaincodePath || '',
 		});
 
 		const chaincodeInput = fabproto6.protos.ChaincodeInput.create({
@@ -225,9 +228,7 @@ class Proposal extends ServiceAction {
 		const chaincodeInvocationSpec = fabproto6.protos.ChaincodeInvocationSpec.create({
 			chaincode_spec: chaincodeSpec
 		});
-		const chaincodeInvocationSpecBuf = fabproto6.protos.ChaincodeInvocationSpec.encode(
-			chaincodeInvocationSpec
-		).finish();
+		const chaincodeInvocationSpecBuf = fabproto6.protos.ChaincodeInvocationSpec.encode(chaincodeInvocationSpec).finish();
 
 		const fields = {
 			input: chaincodeInvocationSpecBuf
@@ -235,16 +236,16 @@ class Proposal extends ServiceAction {
 		if (this._action.transientMap) {
 			fields.TransientMap = this._action.transientMap;
 		}
-		const chaincodeProposalPayload = fabproto6.protos.ChaincodeProposalPayload.create(
-			fields
-		);
-		const chaincodeProposalPayloadBuf = fabproto6.protos.ChaincodeProposalPayload.encode(
-			chaincodeProposalPayload
-		).finish();
+		const chaincodeProposalPayload = fabproto6.protos.ChaincodeProposalPayload.create(fields);
+		const chaincodeProposalPayloadBuf = fabproto6.protos.ChaincodeProposalPayload.encode(chaincodeProposalPayload).finish();
 
 		const channelHeaderBuf = this.channel.buildChannelHeader(
 			fabproto6.common.HeaderType.ENDORSER_TRANSACTION,
-			this.chaincodeId,
+			{
+				name: this.chaincodeId,
+				version: this.chaincodeVersion || '',
+				path: this.chaincodePath || '',
+			},
 			this._action.transactionId
 		);
 
@@ -405,7 +406,7 @@ message Endorsement {
 			throw Error('Missing targets parameter');
 		}
 
-		const return_results =  {
+		const return_results = {
 			errors: this._proposalErrors,
 			responses: this._proposalResponses
 		};
