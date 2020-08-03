@@ -103,14 +103,18 @@ class DiscoveryService extends ServiceAction {
 	 *  sending to the peer.
 	 * @property {Endorsement} [endorsement] - Optional. Include the endorsement
 	 *  instance to build the discovery request based on the proposal.
-	 *  This will get the discovery interest (chaincode names and collections)
+	 *  This will get the discovery interest (chaincode names, collections and "no private reads")
 	 *  from the endorsement instance. Use the {@link Proposal#addCollectionInterest}
-	 *  to add collections to the endorsement's chaincode. Use the
-	 *  {@link Proposal#addChaincodeCollectionsInterest} to add chaincodes
-	 *  and collections that will be called by the endorsement's chaincode.
+	 *  to add collections to the endorsement's chaincode.
+	 *  Use the {@link Proposal#setNoPrivateReads} to set the proposals "no private reads"
+	 *  setting of the discovery interest.
+	 *  Use the {@link Proposal#addCollectionInterest} to add chaincodes,
+	 *  collections, and no private reads that will be used to get an endorsement plan
+	 *  from the peer's discovery service.
 	 * @property {DiscoveryChaincode} [interest] - Optional. An
-	 *  array of {@link DiscoveryChaincodeInterest} that have chaincodes
-	 *  and collections to calculate the endorsement plans.
+	 *  array of {@link DiscoveryChaincodeInterest} that have chaincodes, collections,
+	 *  and "no private reads" to help the peer's discovery service calculate the
+	 *  endorsement plan.
 	 * @example <caption>"single chaincode"</caption>
 	 *  [
 	 *     { name: "mychaincode"}
@@ -121,17 +125,21 @@ class DiscoveryService extends ServiceAction {
 	 *  ]
 	 * @example <caption>"single chaincode with a collection"</caption>
 	 *  [
-	 *     { name: "mychaincode", collection_names: ["mycollection"] }
+	 *     { name: "mychaincode", collectionNames: ["mycollection"] }
+	 *  ]
+	 * @example <caption>"single chaincode with a collection allowing no private data reads"</caption>
+	 *  [
+	 *     { name: "mychaincode", collectionNames: ["mycollection"], noPrivateReads: true }
 	 *  ]
 	 * @example <caption>"chaincode to chaincode with a collection"</caption>
 	 *  [
-	 *     { name: "mychaincode", collection_names: ["mycollection"] },
-	 *     { name: "myotherchaincode", collection_names: ["mycollection"] }}
+	 *     { name: "mychaincode", collectionNames: ["mycollection"] },
+	 *     { name: "myotherchaincode", collectionNames: ["mycollection"] }}
 	 *  ]
 	 * @example <caption>"chaincode to chaincode with collections"</caption>
 	 *  [
-	 *     { name: "mychaincode", collection_names: ["mycollection", "myothercollection"] },
-	 *     { name: "myotherchaincode", collection_names: ["mycollection", "myothercollection"] }}
+	 *     { name: "mychaincode", collectionNames: ["mycollection", "myothercollection"] },
+	 *     { name: "myotherchaincode", collectionNames: ["mycollection", "myothercollection"] }}
 	 *  ]
 	 */
 
@@ -144,7 +152,8 @@ class DiscoveryService extends ServiceAction {
 	/**
 	 * @typedef {Object} DiscoveryChaincodeCall
 	 * @property {string} name - The name of the chaincode
-	 * @property {string[]} [collection_names] - The names of the related collections
+	 * @property {string[]} [collectionNames] - The names of the related collections
+	 * @property {boolean} [noPrivateReads] - Indicates we do not need to read from private data
 	 */
 
 	/**
@@ -195,7 +204,7 @@ class DiscoveryService extends ServiceAction {
 			queries.push(localQuery);
 		}
 
-		// add a chaincode query to get endorsement plans
+		// add a discovery chaincode query to get endorsement plans
 		if (endorsement || interest) {
 			const interests = [];
 
@@ -376,6 +385,9 @@ class DiscoveryService extends ServiceAction {
 			const chaincodeCall = fabproto6.discovery.ChaincodeCall.create();
 			if (typeof chaincode.name === 'string') {
 				chaincodeCall.name = chaincode.name;
+				if (chaincode.noPrivateReads) {
+					chaincodeCall.no_private_reads = chaincode.noPrivateReads;
+				}
 				// support both names
 				if (chaincode.collection_names) {
 					_getCollectionNames(chaincode.collection_names, chaincodeCall);
@@ -738,7 +750,7 @@ class DiscoveryService extends ServiceAction {
 	}
 }
 
-function _getCollectionNames(names, chaincode_call) {
+function _getCollectionNames(names, chaincodeCall) {
 	if (Array.isArray(names)) {
 		const collection_names = [];
 		names.map(name => {
@@ -748,7 +760,9 @@ function _getCollectionNames(names, chaincode_call) {
 				throw Error('The collection name must be a string');
 			}
 		});
-		chaincode_call.collection_names = collection_names;
+		// this collection_names must be in snake case as it will
+		// be used by the gRPC create message
+		chaincodeCall.collection_names = collection_names;
 	} else {
 		throw Error('Collection names must be an array of strings');
 	}
