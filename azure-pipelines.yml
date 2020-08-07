@@ -4,6 +4,15 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
 
 # Pipeline-level keywords belong here
+
+schedules:
+  - cron: "0 0 * * *" # https://crontab.guru/#0_0_*_*_*
+    displayName: "Daily midnight build"
+    branches:
+      include:
+        - master
+    always: true
+
 trigger:
 - master
 
