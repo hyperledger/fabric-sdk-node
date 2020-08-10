@@ -231,7 +231,7 @@ describe('Channel', () => {
 				const endorser1 = getEndorser('endorser');
 				endorser1.connected = false;
 				channel.addEndorser(endorser1);
-			}).should.throw('Endorser must be connected');
+			}).should.throw('Endorser must be connectable');
 		});
 		it('should find a endorser.name', () => {
 			(() => {
@@ -311,7 +311,7 @@ describe('Channel', () => {
 				const committer1 = getCommitter('committer');
 				committer1.connected = false;
 				channel.addCommitter(committer1);
-			}).should.throw('Committer must be connected');
+			}).should.throw('Committer must be connectable');
 		});
 		it('should find a committer.name', () => {
 			(() => {
