@@ -70,10 +70,10 @@ class DiscoveryService extends ServiceAction {
 		}
 
 		for (const discoverer of targets) {
-			if (discoverer.connected || discoverer.isConnectable()) {
-				logger.debug('%s - target is or could be connected %s', method, discoverer.name);
+			if (discoverer.isConnectable()) {
+				logger.debug('%s - target is connectable%s', method, discoverer.name);
 			} else {
-				throw Error(`Discoverer ${discoverer.name} is not connected`);
+				throw Error(`Discoverer ${discoverer.name} is not connectable`);
 			}
 		}
 		// must be all targets are connected
@@ -285,9 +285,12 @@ class DiscoveryService extends ServiceAction {
 		for (const target of this.targets) {
 			logger.debug(`${method} - about to discover on ${target.endpoint.url}`);
 			try {
-				response = await target.sendDiscovery(signedEnvelope, this.requestTimeout);
-				this.currentTarget = target;
-				break;
+				const isConnected = await target.checkConnection();
+				if (isConnected) {
+					response = await target.sendDiscovery(signedEnvelope, this.requestTimeout);
+					this.currentTarget = target;
+					break;
+				}
 			} catch (error) {
 				response = error;
 			}

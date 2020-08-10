@@ -255,8 +255,8 @@ const Channel = class {
 		if (!(endorser.type === 'Endorser')) {
 			throw Error('Missing valid endorser instance');
 		}
-		if (!(endorser.connected)) {
-			throw Error('Endorser must be connected');
+		if (!endorser.isConnectable()) {
+			throw Error('Endorser must be connectable');
 		}
 		const name = endorser.name;
 		const check = this.endorsers.get(name);
@@ -336,8 +336,8 @@ const Channel = class {
 		if (!(committer.type === 'Committer')) {
 			throw Error('Missing valid committer instance');
 		}
-		if (!(committer.connected)) {
-			throw Error('Committer must be connected');
+		if (!committer.isConnectable()) {
+			throw Error('Committer must be connectable');
 		}
 		const name = committer.name;
 		const check = this.committers.get(name);

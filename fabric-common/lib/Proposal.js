@@ -375,9 +375,17 @@ message Endorsement {
 		} else if (targets) {
 			logger.debug('%s - have targets', method);
 			const peers = this.channel.getTargetEndorsers(targets);
-			const promises = peers.map(async (peer) => {
-				return peer.sendProposal(signedEnvelope, requestTimeout);
-			});
+			const promises = [];
+			for (const peer of peers) {
+				const isConnected = await peer.checkConnection();
+				if (isConnected) {
+					promises.push(peer.sendProposal(signedEnvelope, requestTimeout));
+				}
+			}
+			if (promises.length === 0) {
+				logger.error('%s - no targets are connected', method);
+				throw Error('No targets are connected');
+			}
 
 			logger.debug('%s - about to send to all peers', method);
 			const results = await settle(promises);
