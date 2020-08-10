@@ -89,6 +89,7 @@ class EventService extends ServiceAction {
 		// will be set during the .build call
 		this.blockType = FILTERED_BLOCK;
 		this.replay = false;
+		this.startSpecified = false;
 
 		this.myNumber = count++;
 	}
@@ -266,6 +267,7 @@ class EventService extends ServiceAction {
 				number: this.startBlock
 			});
 			this.replay = true;
+			this.startSpecified = true;
 		}
 
 		// build stop proto
@@ -409,8 +411,19 @@ class EventService extends ServiceAction {
 
 			logger.debug('%s - create stream setup timeout', method);
 			const connectionSetupTimeout = setTimeout(() => {
-				logger.error(`EventService[${this.name}] timed out after:${requestTimeout}`);
-				reject(Error('Event service timed out - Unable to start listening'));
+				// this service may be waiting for a start block that has not happened
+				if (this.startSpecified) {
+					logger.debug(`EventService[${this.name}] timed out after:${requestTimeout}`);
+					logger.debug(`EventService[${this.name}] not stopping service, wait indefinitely`);
+					// resolve the promise as if we did get a good response from the peer, since we did
+					// not get an "end" or "error" back indicating that the request was invalid
+					// application should have a timer just in case this peer never gets this block
+					resolve(eventer);
+				} else {
+					logger.error(`EventService[${this.name}] timed out after:${requestTimeout}`);
+					reject(Error('Event service timed out - Unable to start listening'));
+				}
+
 			}, requestTimeout);
 
 			logger.debug('%s - create stream based on blockType', method, this.blockType);
