@@ -41,6 +41,8 @@ describe('Proposal', () => {
 		endorser.type = 'Endorser';
 		endpoint = client.newEndpoint({url: 'grpc://somehost.com'});
 		endorser.endpoint = endpoint;
+		endorser.waitForReady = sinon.stub().resolves(true);
+		endorser.checkConnection = sinon.stub().resolves(true);
 		handler = new DiscoveryHandler('discovery');
 	});
 

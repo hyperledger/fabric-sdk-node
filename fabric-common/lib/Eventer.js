@@ -83,6 +83,8 @@ class Eventer extends ServiceEndpoint {
 		const method = `checkConnection[${this.name}:${this.myCount}]`;
 		logger.debug(`${method} - start`);
 
+		super.checkConnection();
+
 		let result = false;
 		if (this.service) {
 			try {

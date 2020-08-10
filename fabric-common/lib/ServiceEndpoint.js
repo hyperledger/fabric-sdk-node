@@ -26,6 +26,7 @@ class ServiceEndpoint {
 		this.service = null;
 		this.serviceClass = null;
 		this.type = TYPE; // will be overridden by subclass
+		this.options = {};
 	}
 
 	/**
@@ -55,10 +56,8 @@ class ServiceEndpoint {
 	}
 
 	/**
-	 * Check that this ServiceEndpoint is not connected and has been assigned
-	 * an endpoint so that it could be connected. If a previous attempt
-	 * to conntect has been tried unsuccessfully it will be considered
-	 * not to be connectable.
+	 * Check that this ServiceEndpoint could be connected, even if it has
+	 * failed a previous attempt.
 	 */
 	isConnectable() {
 		const method = `isConnectable[${this.type}-${this.name}]`;
@@ -67,8 +66,8 @@ class ServiceEndpoint {
 		let result = false;
 		if (this.connected) {
 			logger.debug(`${method} - this servive endpoint has been connected`);
-			result = false;
-		} else if (this.endpoint && !this.connectAttempted) {
+			result = true;
+		} else if (this.endpoint && this.serviceClass) {
 			logger.debug(`${method} - this service endpoint has been assigned an endpoint, connect may be run`);
 			result = true;
 		}
@@ -152,13 +151,40 @@ class ServiceEndpoint {
 			try {
 				await this.waitForReady();
 			} catch (error) {
-				logger.error(`Peer ${this.endpoint.url} Connection failed :: ${error}`);
-				return false;
+				logger.error(`ServiceEndpoint ${this.endpoint.url} connection failed :: ${error}`);
+			}
+		}
+
+		if (!this.connected && this.isConnectable()) {
+			try {
+				await this.resetConnection();
+			} catch (error) {
+				logger.error(`ServiceEndpoint ${this.endpoint.url} reset connection failed :: ${error}`);
 			}
 		}
 
 		logger.debug('%s - end - connected:%s', method, this.connected);
 		return this.connected;
+	}
+
+	/**
+	 * Reset the connection
+	 */
+	async resetConnection() {
+		const method = `resetConnection[${this.name}]`;
+		logger.debug('%s - start - connected:%s', method, this.connected);
+
+		this.disconnect(); // clean up possible old service
+		this.connectAttempted = true;
+		logger.debug(`${method} - create the grpc service for ${this.name}`);
+		if (this.endpoint && this.serviceClass) {
+			this.service = new this.serviceClass(this.endpoint.addr, this.endpoint.creds, this.options);
+			await this.waitForReady(this.service);
+		} else {
+			throw Error(`ServiceEndpoint ${this.name} is missing endpoint information`);
+		}
+
+		logger.debug('%s - end - connected:%s', method, this.connected);
 	}
 
 	waitForReady() {

@@ -9,8 +9,10 @@ const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const should = chai.should();
 chai.use(chaiAsPromised);
+const sinon = require('sinon');
 
 const Commit = rewire('../lib/Commit');
+const Committer = require('../lib/Committer');
 const Client = require('../lib/Client');
 const User = rewire('../lib/User');
 const TestUtils = require('./TestUtils');
@@ -36,12 +38,12 @@ describe('Commit', () => {
 		}
 	};
 	const committer_results = {status: 'SUCCESS'};
-	const fakeCommitter = {
-		type: 'Committer',
-		sendBroadcast: () => {
-			return committer_results;
-		}
-	};
+	const fakeCommitter = sinon.createStubInstance(Committer);
+	fakeCommitter.sendBroadcast.resolves(committer_results);
+	fakeCommitter.checkConnection.resolves(true);
+	fakeCommitter.type = 'Committer';
+	fakeCommitter.name = 'mycommitter';
+
 	beforeEach(() => {
 		commit = endorsement.newCommit();
 	});
@@ -144,6 +146,17 @@ describe('Commit', () => {
 			committer_results.status = 'FAILED';
 			const results = await commit.send(request);
 			should.equal(results.status, 'FAILED');
+		});
+		it('uses a target with connection', async () => {
+			endorsement._proposalResponses = [];
+			endorsement._proposalResponses.push(proposalResponse);
+			commit.build(idx);
+			commit.sign(idx);
+			fakeCommitter.checkConnection.resolves(false);
+			const request = {
+				targets: [fakeCommitter]
+			};
+			await commit.send(request).should.be.rejectedWith(/Committer mycommitter is not connected/);
 		});
 	});
 
