@@ -46,6 +46,7 @@ function verifyNamespace(namespace?: string): void {
 export interface DiscoveryInterest {
 	name: string;
 	collectionNames?: string[];
+	noPrivateReads?: boolean;
 }
 
 export interface Contract {

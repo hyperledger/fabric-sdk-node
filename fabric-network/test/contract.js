@@ -146,8 +146,15 @@ describe('Contract', () => {
 		it ('throws when not an interest', () => {
 			(() => contract.addDiscoveryInterest('intersts')).should.throw('"interest" parameter must be a DiscoveryInterest object');
 		});
-		it('add collection', async () => {
+		it('update collection', async () => {
 			const interest = {name: chaincodeId, collectionNames: ['c1', 'c2']};
+			contract.addDiscoveryInterest(interest);
+			expect(contract.discoveryInterests).to.deep.equal([
+				interest
+			]);
+		});
+		it('update collection with no private reads', async () => {
+			const interest = {name: chaincodeId, collectionNames: ['c1', 'c2'], noPrivateReads: true};
 			contract.addDiscoveryInterest(interest);
 			expect(contract.discoveryInterests).to.deep.equal([
 				interest
@@ -163,6 +170,14 @@ describe('Contract', () => {
 		});
 		it('add chaincode and collection', async () => {
 			const other = {name: 'other', collectionNames: ['c1', 'c2']};
+			contract.addDiscoveryInterest(other);
+			expect(contract.discoveryInterests).to.deep.equal([
+				{name: chaincodeId},
+				other
+			]);
+		});
+		it('add chaincode and collection with no private reads', async () => {
+			const other = {name: 'other', collectionNames: ['c1', 'c2'], noPrivateReads: true};
 			contract.addDiscoveryInterest(other);
 			expect(contract.discoveryInterests).to.deep.equal([
 				{name: chaincodeId},
