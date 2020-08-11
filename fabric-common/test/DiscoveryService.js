@@ -422,6 +422,23 @@ describe('DiscoveryService', () => {
 			const results = discovery._buildProtoChaincodeInterest(interest);
 			should.exist(results.chaincodes);
 		});
+		it('should handle two chaincode four collection in camel case', () => {
+			const interest = [
+				{name: 'chaincode1', collectionNames: ['collection1', 'collection3']},
+				{name: 'chaincode2', collectionNames: ['collection2', 'collection4']}
+			];
+			const results = discovery._buildProtoChaincodeInterest(interest);
+			should.exist(results.chaincodes);
+		});
+		it('should handle two chaincode four collection in camel case', () => {
+			const interest = [
+				{name: 'chaincode1', collectionNames: ['collection1', 'collection3'], noPrivateReads: true},
+				{name: 'chaincode2', collectionNames: ['collection2', 'collection4']}
+			];
+			const results = discovery._buildProtoChaincodeInterest(interest);
+			should.exist(results.chaincodes);
+			results.chaincodes[0].no_private_reads.should.be.true;
+		});
 		it('should handle two chaincodes same name', () => {
 			const interest = [{name: 'chaincode1'}, {name: 'chaincode1'}];
 			const results = discovery._buildProtoChaincodeInterest(interest);

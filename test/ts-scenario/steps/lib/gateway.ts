@@ -5,7 +5,7 @@
 'use strict';
 
 import * as FabricCAClient from 'fabric-ca-client';
-import { Contract, DefaultEventHandlerStrategies, DefaultQueryHandlerStrategies, Gateway, GatewayOptions, HsmOptions, HsmX509Provider, Identity, IdentityProvider, Network, QueryHandlerFactory, Transaction, TransientMap, TxEventHandlerFactory, Wallet, Wallets } from 'fabric-network';
+import { Contract, DefaultEventHandlerStrategies, DefaultQueryHandlerStrategies, Gateway, GatewayOptions, HsmOptions, HsmX509Provider, Identity, IdentityProvider, Network, QueryHandlerFactory, Transaction, TransientMap, TxEventHandlerFactory, Wallet, Wallets, DiscoveryInterest } from 'fabric-network';
 import * as fs from 'fs';
 import * as path from 'path';
 import { createQueryHandler as sampleQueryStrategy } from '../../config/handlers/sample-query-handler';
@@ -382,7 +382,7 @@ export async function performGatewayTransaction(gatewayName: string, contractNam
 		BaseUtils.logMsg(` -- adding a discovery interest colletion name to the contrace ${collectionName}`);
 		const chaincodeId = contract.chaincodeId;
 		contract.resetDiscoveryInterests();
-		contract.addDiscoveryInterest({name: chaincodeId, collectionNames: [collectionName]});
+		contract.addDiscoveryInterest({name: chaincodeId, collectionNames: [collectionName], noPrivateReads: false});
 	}
 
 	// Split args
