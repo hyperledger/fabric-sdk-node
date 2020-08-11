@@ -38,6 +38,10 @@ Given(/^I have a (.+?) backed gateway named (.+?) with discovery set to (.+?) fo
 	}
 });
 
+When(/^I use the discovery gateway named (.+?) to (.+?) a transaction with args (.+?) for contract (.+?) instantiated on channel (.+?) using requiredOrgs (.+?)$/, { timeout: Constants.STEP_MED as number }, async (gatewayName: string, txnType: string, txnArgs: string, ccName: string, channelName: string, requiredOrgs: string) => {
+	return await Gateway.performGatewayTransaction(gatewayName, ccName, channelName, '', txnArgs, txnType, '', JSON.parse(requiredOrgs));
+});
+
 When(/^I use the discovery gateway named (.+?) to (.+?) a transaction with args (.+?) for contract (.+?) instantiated on channel (.+?) using collection (.+?)$/, { timeout: Constants.STEP_MED as number }, async (gatewayName: string, txnType: string, txnArgs: string, ccName: string, channelName: string, collectionName: string) => {
 	return await Gateway.performGatewayTransaction(gatewayName, ccName, channelName, collectionName, txnArgs, txnType);
 });
