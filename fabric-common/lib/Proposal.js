@@ -39,6 +39,9 @@ class Proposal extends ServiceAction {
 
 		this.chaincodeId = chaincodeId;
 		this.channel = channel;
+
+		// to be used to build a discovery interest
+		this.noPrivateReads = false;
 		this.collectionsInterest = [];
 		this.chaincodesCollectionsInterest = [];
 	}
@@ -59,17 +62,25 @@ class Proposal extends ServiceAction {
 	}
 
 	/**
-	 * Returns a JSON object representing this proposals chaincodes
-	 * and collections as an interest for the Discovery Service.
-	 * The {@link Discovery} will use the interest to build a query
+	 * Returns a JSON object representing this proposal's chaincodes,
+	 * collections and the no private reads as an "interest" for the
+	 * Discovery Service.
+	 * The {@link Discovery} will use an interest to build a query
 	 * request for an endorsement plan to a Peer's Discovery service.
 	 * Use the {@link Proposal#addCollectionInterest} to add collections
 	 * for the chaincode of this proposal.
+	 * Use the {@link Proposal#setNoPrivateReads} to set this "no private reads"
+	 * setting for this proposal's chaincode. The default will be false
+	 * when not set.
 	 * Use the {@link Proposal#addChaincodeCollectionInterest} to add
 	 * chaincodes and collections that this chaincode code will call.
 	 * @example
 	 *    [
 	 *      { name: "mychaincode", collectionNames: ["mycollection"] }
+	 *    ]
+	 * @example
+	 *    [
+	 *      { name: "mychaincode", collectionNames: ["mycollection"], noPrivateReads: true }
 	 *    ]
 	 */
 	buildProposalInterest() {
@@ -83,6 +94,7 @@ class Proposal extends ServiceAction {
 		if (this.collectionsInterest.length > 0) {
 			chaincode.collectionNames = this.collectionsInterest;
 		}
+		chaincode.noPrivateReads = this.noPrivateReads;
 		if (this.chaincodesCollectionsInterest.length > 0) {
 			interest = interest.concat(this.chaincodesCollectionsInterest);
 		}
@@ -109,18 +121,37 @@ class Proposal extends ServiceAction {
 	}
 
 	/**
-	 * Use this method to add a chaincode name and collection names
-	 * that this proposal's chaincode will call. These will be used
-	 * to build a Discovery interest. {@link Proposal#buildProposalInterest}
+	 * Use this method to set the "no private reads" of the discovery hint
+	 * (interest) for the chaincode of this proposal.
+	 * @param {boolean} noPrivateReads Indicates we do not need to read from private data
+	 */
+	setNoPrivateReads(noPrivateReads) {
+		const method = `setNoPrivateReads[${this.chaincodeId}]`;
+		logger.debug('%s - start', method);
+
+		if (typeof noPrivateReads === 'boolean') {
+			this.noPrivateReads = noPrivateReads;
+		} else {
+			throw Error(`The "no private reads" setting must be boolean. :: ${noPrivateReads}`);
+		}
+	}
+
+	/**
+	 * Use this method to add a chaincode name and the collection names
+	 * that this proposal's chaincode will call along with the no private read
+	 * setting. These will be used to build a Discovery interest when this proposal
+	 * is used with the Discovery Service.
 	 * @param {string} chaincodeId - chaincode name
+	 * @param {boolean} noPrivateReads Indicates we do not need to read from private data
 	 * @param  {...string} collectionNames - one or more collection names
 	 */
-	addChaincodeCollectionsInterest(chaincodeId, ...collectionNames) {
+	addChaincodeNoPrivateReadsCollectionsInterest(chaincodeId, noPrivateReads, ...collectionNames) {
 		const method = `addChaincodeCollectionsInterest[${this.chaincodeId}]`;
 		logger.debug('%s - start', method);
 		if (typeof chaincodeId === 'string') {
 			const added_chaincode = {};
 			added_chaincode.name = chaincodeId;
+			added_chaincode.noPrivateReads = noPrivateReads ? true : false;
 			if (collectionNames && collectionNames.length > 0) {
 				added_chaincode.collectionNames = collectionNames;
 			}
@@ -130,6 +161,21 @@ class Proposal extends ServiceAction {
 		}
 
 		return this;
+	}
+
+	/**
+	 * Use this method to add a chaincode name and collection names
+	 * that this proposal's chaincode will call. These will be used
+	 * to build a Discovery interest when this proposal is used with
+	 * the Discovery Service.
+	 * @param {string} chaincodeId - chaincode name
+	 * @param  {...string} collectionNames - one or more collection names
+	 */
+	addChaincodeCollectionsInterest(chaincodeId, ...collectionNames) {
+		const method = `addChaincodeCollectionsInterest[${this.chaincodeId}]`;
+		logger.debug('%s - start', method);
+
+		return this.addChaincodeNoPrivateReadsCollectionsInterest(chaincodeId, false, ...collectionNames);
 	}
 
 	/**
