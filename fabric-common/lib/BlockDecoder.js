@@ -1513,7 +1513,7 @@ function decodeRangeQueryInfo(rangeQueryInfoProto) {
 	if (rangeQueryInfoProto.raw_reads) {
 		range_query_info.raw_reads = {};
 		range_query_info.raw_reads.kv_reads = [];
-		for (const kVReadProto of rangeQueryInfoProto.raw_reads) {
+		for (const kVReadProto of rangeQueryInfoProto.raw_reads.kv_reads) {
 			range_query_info.raw_reads.kv_reads.push(decodeKVRead(kVReadProto));
 		}
 	} else if (rangeQueryInfoProto.reads_merkle_hashes) {
