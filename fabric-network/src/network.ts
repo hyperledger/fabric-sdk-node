@@ -16,6 +16,7 @@ import { checkpointBlockListener } from './impl/event/listeners';
 import { addListener, ListenerSession, removeListener } from './impl/event/listenersession';
 import { SharedBlockListenerSession } from './impl/event/sharedblocklistenersession';
 import { QueryHandler } from './impl/query/queryhandler';
+import { notNullish } from './impl/gatewayutils';
 import * as Logger from './logger';
 
 const logger = Logger.getLogger('Network');
@@ -355,7 +356,7 @@ export class NetworkImpl implements Network {
 			listener = checkpointBlockListener(listener, options.checkpointer);
 		}
 
-		if (options.startBlock) {
+		if (notNullish(options.startBlock)) {
 			return this.newIsolatedBlockListenerSession(listener, options);
 		} else {
 			return this.newSharedBlockListenerSession(listener, options.type);

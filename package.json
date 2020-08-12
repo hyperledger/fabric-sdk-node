@@ -29,7 +29,7 @@
     "unitTest:all": "export HFC_LOGGING='{\"debug\":\"test/temp/debug.log\"}' && nyc run-s unitTest:common unitTest:ca-client unitTest:network",
     "unitTest:common": "mocha --reporter list 'fabric-common/test/**/*.js'",
     "unitTest:ca-client": "mocha --reporter list 'fabric-ca-client/test/**/*.js'",
-    "unitTest:network": "npm run compile && mocha --require ts-node/register --reporter list 'fabric-network/test/**/*.{js,ts}'",
+    "unitTest:network": "run-s compile \"unitTest -- 'fabric-network/test/**/*.{js,ts}'\"",
     "unitTest": "mocha --require ts-node/register --reporter list",
     "dockerReady": "npm run dockerClean && (cd test/fixtures/docker-compose && docker-compose -f docker-compose-tls-level-db.yaml -p node up -d && sleep 15 && docker ps -a)",
     "tapeIntegration": "./scripts/npm_scripts/runTape.sh",
