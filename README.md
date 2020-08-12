@@ -1,6 +1,11 @@
 ## Hyperledger Fabric Client SDK for Node.js
 
-[![Build Status](https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_apis/build/status/hyperledger.fabric-sdk-node?branchName=master)](https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_build/latest?definitionId=47&branchName=master)
+|  Branch    | Build Status  |
+|  ----     | ----          |
+| master    | [![Build Status](https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_apis/build/status/Fabric-SDK-Node?branchName=master)](https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_build/latest?definitionId=47&branchName=master) |
+|release-2.2| [![Build Status](https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_apis/build/status/hyperledger.fabric-sdk-node?branchName=release-2.2)](https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_build/latest?definitionId=47&branchName=release-2.2) |
+|release-1.4| [![Build Status](https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_apis/build/status/Fabric-SDK-Node?branchName=release-1.4)](https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_build/latest?definitionId=47&branchName=release-1.4) |
+
 
 The Hyperledger Fabric Client SDK makes it possible to use APIs to interact with a Hyperledger Fabric blockchain. This readme is directed towards a current or future contributor to this project, and gives an overview of setting up the project locally and running tests. For more information on the SDK, including features and an API reference, please visit the [SDK documentation](https://hyperledger.github.io/fabric-sdk-node/).
 
