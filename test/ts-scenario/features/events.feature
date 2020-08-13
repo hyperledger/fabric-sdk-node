@@ -101,8 +101,10 @@ Feature: Node SDK Events
 	Scenario: Checkpoint contract event listening
 	 	When I use the gateway named event_gateway to listen for full contract events named create with a new file checkpoint listener named checkpointContractListener for the smart contract named events on channel eventschannel
 		And I use the gateway named event_gateway to submit a transaction with args [createValue] for contract events instantiated on channel eventschannel
-		Then the listener named checkpointContractListener should have contract events with payload containing "createValueTransactionContent"
+		Then I receive a minimum 1 events from the listener named checkpointContractListener
+		And the listener named checkpointContractListener should have contract events with payload containing "createValueTransactionContent"
 		When I unregister the listener named checkpointContractListener
 		And I use the gateway named event_gateway to submit a transaction with args [createValue] for contract events instantiated on channel eventschannel
 	 	And I use the gateway named event_gateway to listen for full contract events named create with an existing file checkpoint listener named checkpointContractListener for the smart contract named events on channel eventschannel
-		Then the listener named checkpointContractListener should have contract events with payload containing "createValueTransactionContent"
+		Then I receive a minimum 1 events from the listener named checkpointContractListener
+		And the listener named checkpointContractListener should have contract events with payload containing "createValueTransactionContent"
