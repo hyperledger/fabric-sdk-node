@@ -263,10 +263,10 @@ describe('block listener', () => {
 
 			await startListener.completePromise;
 			sinon.assert.calledWith(stub, eventService);
-			sinon.assert.neverCalledWith(stub, sinon.match.any, sinon.match.has('startBlock', sinon.match.number));
+			sinon.assert.neverCalledWith(stub, sinon.match.any, sinon.match.has('startBlock', sinon.match.defined));
 		});
 
-		it('errors trigger reconnect of event service with next block as start block if events received', async () => {
+		it('errors trigger reconnect of event service with last received block as start block if events received', async () => {
 			await network.addBlockListener(listener, listenerOptions);
 			const startListener = testUtils.newAsyncListener<void>();
 			const stub = sinon.stub(eventServiceManager, 'startEventService').callsFake(() => startListener());
@@ -275,7 +275,28 @@ describe('block listener', () => {
 			eventService.sendError(new Error('DISCONNECT'));
 
 			await startListener.completePromise;
-			sinon.assert.calledWith(stub, eventService, sinon.match.has('startBlock', Long.fromNumber(2)));
+			sinon.assert.calledWith(stub, eventService, sinon.match.has('startBlock', Long.ONE));
+		});
+
+		it('listener does not receive old blocks on reconnect', async () => {
+			listener = testUtils.newAsyncListener<BlockEvent>(2);
+			const event1 = newFilteredBlockEventInfo(1);
+			const event2 = newFilteredBlockEventInfo(2);
+			const startListener = testUtils.newAsyncListener<void>(2);
+			const stub = sinon.stub(eventServiceManager, 'startEventService').callsFake(() => startListener());
+
+			await network.addBlockListener(listener, listenerOptions);
+			eventService.sendEvent(event1);
+			eventService.sendError(new Error('DISCONNECT'));
+
+			await startListener.completePromise;
+
+			eventService.sendEvent(event1);
+			eventService.sendEvent(event2);
+
+			const actual = await listener.completePromise;
+			const blockNumbers = actual.map((e) => e.blockNumber);
+			expect(blockNumbers).to.deep.equal([event1.blockNumber, event2.blockNumber]);
 		});
 
 		it('listener changing event data does not affect other listeners', async () => {
@@ -325,13 +346,22 @@ describe('block listener', () => {
 	});
 
 	describe('replay', () => {
-		it('replay listener sends start block to event service', async () => {
+		it('replay listener sends (startBlock - 1) to event service', async () => {
 			const stub = sinon.stub(eventServiceManager, 'startEventService');
 
-			listenerOptions.startBlock = 2;
+			listenerOptions.startBlock = 1;
 			await network.addBlockListener(listener, listenerOptions);
 
-			sinon.assert.calledWith(stub, eventService, sinon.match.has('startBlock', Long.fromNumber(2)));
+			sinon.assert.calledWith(stub, eventService, sinon.match.has('startBlock', Long.ZERO));
+		});
+
+		it('replay listener does not send start block less than zero to event service', async () => {
+			const stub = sinon.stub(eventServiceManager, 'startEventService');
+
+			listenerOptions.startBlock = 0;
+			await network.addBlockListener(listener, listenerOptions);
+
+			sinon.assert.calledWith(stub, eventService, sinon.match.has('startBlock', Long.ZERO));
 		});
 
 		it('replay listener does not receive events earlier than start block', async () => {
@@ -449,7 +479,7 @@ describe('block listener', () => {
 			expect(actual.blockNumber).to.equal(event.blockNumber);
 		});
 
-		it('checkpoint listener sends block number to event service', async () => {
+		it('checkpoint listener sends (block number - 1) to event service', async () => {
 			const stub = sinon.stub(eventServiceManager, 'startEventService');
 			const checkpointer = new StubCheckpointer();
 			await checkpointer.setBlockNumber(Long.fromNumber(2));
@@ -457,19 +487,19 @@ describe('block listener', () => {
 			listenerOptions.checkpointer = checkpointer;
 			await network.addBlockListener(listener, listenerOptions);
 
-			sinon.assert.calledWith(stub, eventService, sinon.match.has('startBlock', Long.fromNumber(2)));
+			sinon.assert.calledWith(stub, eventService, sinon.match.has('startBlock', Long.ONE));
 		});
 
 		it('checkpoint block number takes precedence over startBlock option', async () => {
 			const stub = sinon.stub(eventServiceManager, 'startEventService');
 			const checkpointer = new StubCheckpointer();
-			await checkpointer.setBlockNumber(Long.fromNumber(2));
+			await checkpointer.setBlockNumber(Long.ONE);
 
 			listenerOptions.checkpointer = checkpointer;
-			listenerOptions.startBlock = 1;
+			listenerOptions.startBlock = 10;
 			await network.addBlockListener(listener, listenerOptions);
 
-			sinon.assert.calledWith(stub, eventService, sinon.match.has('startBlock', Long.fromNumber(2)));
+			sinon.assert.calledWith(stub, eventService, sinon.match.has('startBlock', Long.ZERO));
 		});
 
 		it('checkpoint listener receives events from checkpoint block number', async () => {

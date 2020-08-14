@@ -64,3 +64,12 @@ export function cachedResult<T>(f: () => T): () => T {
 		return value;
 	};
 }
+
+/**
+ * Typesafe check that a value is not nullish.
+ * @private
+ * @param value Any value, including null and undefined.
+ */
+export function notNullish<T>(value?: T): value is T {
+	return value !== null && value !== undefined;
+}
