@@ -323,7 +323,8 @@ and to commit a proposal.</div>
     <div class="description">
         Use this method to add a chaincode name and collection names
 that this proposal's chaincode will call. These will be used
-to build a Discovery interest. <a href="Proposal.html#buildProposalInterest">Proposal#buildProposalInterest</a>
+to build a Discovery interest when this proposal is used with
+the Discovery Service.
     </div>
     
 
@@ -386,6 +387,213 @@ to build a Discovery interest. <a href="Proposal.html#buildProposalInterest">Pro
             
 
             <td class="description last">chaincode name</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>collectionNames</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                    &lt;repeatable><br>
+                
+                </td>
+            
+
+            
+
+            <td class="description last">one or more collection names</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="addChaincodeNoPrivateReadsCollectionsInterest"><span class="type-signature"></span>addChaincodeNoPrivateReadsCollectionsInterest(chaincodeId, noPrivateReads, collectionNames)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Use this method to add a chaincode name and the collection names
+that this proposal's chaincode will call along with the no private read
+setting. These will be used to build a Discovery interest when this proposal
+is used with the Discovery Service.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>chaincodeId</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">chaincode name</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>noPrivateReads</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Indicates we do not need to read from private data</td>
         </tr>
 
     
@@ -785,12 +993,16 @@ needed to build this proposal.</td>
 
     
     <div class="description">
-        Returns a JSON object representing this proposals chaincodes
-and collections as an interest for the Discovery Service.
-The Discovery will use the interest to build a query
+        Returns a JSON object representing this proposal's chaincodes,
+collections and the no private reads as an "interest" for the
+Discovery Service.
+The Discovery will use an interest to build a query
 request for an endorsement plan to a Peer's Discovery service.
 Use the <a href="Proposal.html#addCollectionInterest">Proposal#addCollectionInterest</a> to add collections
 for the chaincode of this proposal.
+Use the <a href="Proposal.html#setNoPrivateReads">Proposal#setNoPrivateReads</a> to set this "no private reads"
+setting for this proposal's chaincode. The default will be false
+when not set.
 Use the Proposal#addChaincodeCollectionInterest to add
 chaincodes and collections that this chaincode code will call.
     </div>
@@ -856,10 +1068,14 @@ chaincodes and collections that this chaincode code will call.
     
 
     
-        <h5>Example</h5>
+        <h5>Examples</h5>
         
     <pre class="sunlight-highlight-javascript">[
      { name: &quot;mychaincode&quot;, collectionNames: [&quot;mycollection&quot;] }
+   ]</pre>
+
+    <pre class="sunlight-highlight-javascript">[
+     { name: &quot;mychaincode&quot;, collectionNames: [&quot;mycollection&quot;], noPrivateReads: true }
    ]</pre>
 
 
@@ -1280,6 +1496,135 @@ from all endorsing peers</td>
             
 <hr>
 <dt>
+    <h4 class="name" id="setNoPrivateReads"><span class="type-signature"></span>setNoPrivateReads(noPrivateReads)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Use this method to set the "no private reads" of the discovery hint
+(interest) for the chaincode of this proposal.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>noPrivateReads</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Indicates we do not need to read from private data</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
     <h4 class="name" id="toString"><span class="type-signature"></span>toString()</h4>
     
     
@@ -1569,7 +1914,7 @@ the signature are valid, false otherwise.
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.4</a>
 	
-		on 2020-08-14T10:46:11+00:00
+		on 2020-08-19T13:07:30+00:00
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>
