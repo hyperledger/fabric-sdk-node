@@ -99,8 +99,13 @@ describe('DiscoveryService', () => {
 
 	const endorser = sinon.createStubInstance(Endorser);
 	endorser.type = 'Endorser';
+	endorser.connected = true;
+	endorser.isConnectable = sinon.stub().returns(true);
+
 	const committer = sinon.createStubInstance(Committer);
 	committer.type = 'Committer';
+	committer.connected = true;
+	committer.isConnectable = sinon.stub().returns(true);
 
 	let FakeLogger;
 
@@ -121,6 +126,8 @@ describe('DiscoveryService', () => {
 		discoverer = new Discoverer('mydiscoverer', client);
 		endpoint = client.newEndpoint({url: 'grpc://somehost.com'});
 		discoverer.endpoint = endpoint;
+		discoverer.waitForReady = sinon.stub().resolves(true);
+		discoverer.checkConnection = sinon.stub().resolves(true);
 		discovery = new DiscoveryService('mydiscovery', channel);
 		client.getEndorser = sinon.stub().returns(endorser);
 		client.newEndorser = sinon.stub().returns(endorser);
@@ -178,7 +185,7 @@ describe('DiscoveryService', () => {
 			(() => {
 				discoverer.endpoint = undefined;
 				discovery.setTargets([discoverer]);
-			}).should.throw('Discoverer mydiscoverer is not connected');
+			}).should.throw('Discoverer mydiscoverer is not connectable');
 		});
 		it('should handle connected target', () => {
 			discoverer.connected = true;
@@ -414,6 +421,23 @@ describe('DiscoveryService', () => {
 			];
 			const results = discovery._buildProtoChaincodeInterest(interest);
 			should.exist(results.chaincodes);
+		});
+		it('should handle two chaincode four collection in camel case', () => {
+			const interest = [
+				{name: 'chaincode1', collectionNames: ['collection1', 'collection3']},
+				{name: 'chaincode2', collectionNames: ['collection2', 'collection4']}
+			];
+			const results = discovery._buildProtoChaincodeInterest(interest);
+			should.exist(results.chaincodes);
+		});
+		it('should handle two chaincode four collection in camel case', () => {
+			const interest = [
+				{name: 'chaincode1', collectionNames: ['collection1', 'collection3'], noPrivateReads: true},
+				{name: 'chaincode2', collectionNames: ['collection2', 'collection4']}
+			];
+			const results = discovery._buildProtoChaincodeInterest(interest);
+			should.exist(results.chaincodes);
+			results.chaincodes[0].no_private_reads.should.be.true;
 		});
 		it('should handle two chaincodes same name', () => {
 			const interest = [{name: 'chaincode1'}, {name: 'chaincode1'}];

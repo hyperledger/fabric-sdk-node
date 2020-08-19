@@ -34,8 +34,9 @@ describe('DiscoveryHandler', () => {
 	const tmpSetDelete = Set.prototype.delete;
 
 	let peer11, peer12, peer21, peer22, peer31, peer32, peer33;
+	let orderer1, orderer2, orderer3;
 
-	// const pem = '-----BEGIN CERTIFICATE-----    -----END CERTIFICATE-----\n';
+	const pem = '-----BEGIN CERTIFICATE-----    -----END CERTIFICATE-----\n';
 	const org1 = [
 		'Org1MSP',
 		'peer1.org1.example.com:7001',
@@ -87,8 +88,8 @@ describe('DiscoveryHandler', () => {
 		layouts: [{G0: 1, G1: 1}, {G3: 3, G1: 1}]
 	};
 
-	/*
-	const discovery_plan = {
+
+	const config_results = {
 		msps: {
 			OrdererMSP: {
 				id: 'OrdererMSP',
@@ -128,7 +129,7 @@ describe('DiscoveryHandler', () => {
 			Org2MSP: {endpoints: [{host: 'orderer.org2.example.com', port: 7150, name: 'orderer.org2.example.com'}]},
 			Org3MSP: {endpoints: [{host: 'orderer.org3.example.com', port: 7150, name: 'orderer.org3.example.com'}]}
 		},
-		peersByOrg: {
+		peers_by_org: {
 			Org1MSP: {
 				peers: [
 					{mspid: org1[0], endpoint: org1[1], ledgerHeight, chaincodes, name: org1[1]},
@@ -144,14 +145,38 @@ describe('DiscoveryHandler', () => {
 			Org3MSP: {
 				peers: [
 					{mspid: org3[0], endpoint: org3[1], ledgerHeight, chaincodes, name: org3[1]},
-					{mspid: org3[0], endpoint: org3[2], ledgerHeight, chaincodes, name: org3[2]},
-					{mspid: org3[0], endpoint: org3[3], ledgerHeight, chaincodes, name: org3[3]}
+					{mspid: org3[0], endpoint: org3[2], ledgerHeight: highest, chaincodes, name: org3[2]},
+					{mspid: org3[0], endpoint: org3[3], ledgerHeight: smaller, chaincodes, name: org3[3]}
+				]
+			}
+		}
+	};
+
+	const organization_plan = {
+		plan_id: 'required organizations',
+		groups: {
+			Org1MSP: {
+				peers: [
+					{mspid: org1[0], endpoint: org1[1], ledgerHeight, chaincodes, name: org1[1]},
+					{mspid: org1[0], endpoint: org1[2], ledgerHeight, chaincodes, name: org1[2]}
+				]
+			},
+			Org2MSP: {
+				peers: [
+					{mspid: org2[0], endpoint: org2[1], ledgerHeight, chaincodes, name: org2[1]},
+					{mspid: org2[0], endpoint: org2[2], ledgerHeight, chaincodes, name: org2[2]}
+				]
+			},
+			Org3MSP: {
+				peers: [
+					{mspid: org3[0], endpoint: org3[1], ledgerHeight, chaincodes, name: org3[1]},
+					{mspid: org3[0], endpoint: org3[2], ledgerHeight: highest, chaincodes, name: org3[2]},
+					{mspid: org3[0], endpoint: org3[3], ledgerHeight: smaller, chaincodes, name: org3[3]}
 				]
 			}
 		},
-		endorsement_plan: endorsement_plan
+		layouts: [{Org1MSP: 1, Org2MSP: 1, Org3MSP: 1}]
 	};
-	*/
 
 	const good = {response: {status: 200}};
 	beforeEach(() => {
@@ -173,54 +198,67 @@ describe('DiscoveryHandler', () => {
 		peer11 = client.newEndorser(org1[1], org1[0]);
 		peer11.endpoint = {url: 'grpcs://' + org1[1], addr: org1[1]};
 		peer11.sendProposal = sandbox.stub().resolves(good);
+		peer11.checkConnection = sandbox.stub().resolves(true);
 		peer11.connected = true;
 		channel.addEndorser(peer11);
 		peer12 = client.newEndorser(org1[2], org1[0]);
 		peer12.endpoint = {url: 'grpcs://' + org1[2], addr: org1[2]};
 		peer12.sendProposal = sandbox.stub().resolves(good);
+		peer12.checkConnection = sandbox.stub().resolves(true);
 		peer12.connected = true;
 		channel.addEndorser(peer12);
 
 		peer21 = client.newEndorser(org2[1], org2[0]);
 		peer21.endpoint = {url: 'grpcs://' + org2[1], addr: org2[1]};
 		peer21.sendProposal = sandbox.stub().resolves(good);
+		peer21.checkConnection = sandbox.stub().resolves(true);
 		peer21.connected = true;
 		channel.addEndorser(peer21);
 		peer22 = client.newEndorser(org2[2], org2[0]);
 		peer22.endpoint = {url: 'grpcs://' + org2[2], addr: org2[2]};
 		peer22.sendProposal = sandbox.stub().resolves(good);
+		peer22.checkConnection = sandbox.stub().resolves(true);
 		peer22.connected = true;
 		channel.addEndorser(peer22);
 
 		peer31 = client.newEndorser(org3[1], org3[0]);
 		peer31.endpoint = {url: 'grpcs://' + org3[1], addr: org3[1]};
 		peer31.sendProposal = sandbox.stub().resolves(good);
+		peer31.checkConnection = sandbox.stub().resolves(true);
 		peer31.connected = true;
 		channel.addEndorser(peer31);
 		peer32 = client.newEndorser(org3[2], org3[0]);
 		peer32.endpoint = {url: 'grpcs://' + org3[2], addr: org3[2]};
 		peer32.sendProposal = sandbox.stub().resolves(good);
+		peer32.checkConnection = sandbox.stub().resolves(true);
 		peer32.connected = true;
 		channel.addEndorser(peer32);
 		peer33 = client.newEndorser(org3[3], org3[0]);
 		peer33.endpoint = {url: 'grpcs://' + org3[3], addr: org3[3]};
 		peer33.sendProposal = sandbox.stub().resolves(good);
+		peer33.checkConnection = sandbox.stub().resolves(true);
 		peer33.connected = true;
 		channel.addEndorser(peer33);
 
-		const orderer1 = client.newCommitter('orderer1', 'msp1');
+		orderer1 = client.newCommitter('orderer1', 'msp1');
 		orderer1.sendBroadcast = sandbox.stub().resolves({status: 'SUCCESS'});
+		orderer1.checkConnection = sandbox.stub().resolves(true);
 		orderer1.connected = true;
+		orderer1.endpoint = {url: 'grpc://orderer1.com'};
 		channel.addCommitter(orderer1);
 
-		const orderer2 = client.newCommitter('orderer2', 'msp2');
+		orderer2 = client.newCommitter('orderer2', 'msp2');
 		orderer2.sendBroadcast = sandbox.stub().resolves({status: 'SUCCESS'});
+		orderer2.checkConnection = sandbox.stub().resolves(true);
 		orderer2.connected = true;
+		orderer2.endpoint = {url: 'grpc://orderer2.com'};
 		channel.addCommitter(orderer2);
 
-		const orderer3 = client.newCommitter('orderer3', 'msp1');
+		orderer3 = client.newCommitter('orderer3', 'msp1');
 		orderer3.sendBroadcast = sandbox.stub().resolves({status: 'SUCCESS'});
+		orderer3.checkConnection = sandbox.stub().resolves(true);
 		orderer3.connected = true;
+		orderer3.endpoint = {url: 'grpc://orderer3.com'};
 		channel.addCommitter(orderer3);
 
 		discovery = channel.newDiscoveryService('mydiscovery');
@@ -300,7 +338,9 @@ describe('DiscoveryHandler', () => {
 			const results = await discoveryHandler.commit('signedEnvelope');
 			results.status.should.equal('SUCCESS');
 		});
-		it('should run with orderers assigned', async () => {
+		it('should run with some bad orderers assigned', async () => {
+			orderer1.checkConnection = sandbox.stub().resolves(false);
+			orderer2.checkConnection = sandbox.stub().resolves(false);
 			const results = await discoveryHandler.commit('signedEnvelope');
 			results.status.should.equal('SUCCESS');
 		});
@@ -321,6 +361,14 @@ describe('DiscoveryHandler', () => {
 			await discoveryHandler.commit('signedEnvelope', {mspid: 'msp2'})
 				.should.be.rejectedWith(/FAILED with Error/);
 		});
+		it('should reject when all orderers are no connected', async () => {
+			orderer1.checkConnection = sandbox.stub().resolves(false);
+			orderer2.checkConnection = sandbox.stub().resolves(false);
+			orderer3.checkConnection = sandbox.stub().resolves(false);
+
+			await discoveryHandler.commit('signedEnvelope')
+				.should.be.rejectedWith(/is not connected/);
+		});
 	});
 
 	describe('#endorse', () => {
@@ -336,6 +384,14 @@ describe('DiscoveryHandler', () => {
 			discoveryHandler._endorse = sandbox.stub().resolves('DONE');
 			const results = await discoveryHandler.endorse('signedProposal', {requestTimeout: 2000});
 			results.should.equal('DONE');
+		});
+		it('should run ok with required orgs', async () => {
+			discovery.getDiscoveryResults = sandbox.stub().resolves(config_results);
+			discoveryHandler._endorse = sandbox.stub().resolves('DONE');
+			const results = await discoveryHandler.endorse('signedProposal', {requiredOrgs: ['Org1MSP', 'Org2MSP', 'Org3MSP'], sort: 'check'});
+			results.should.equal('DONE');
+			sinon.assert.calledWith(discoveryHandler._endorse, organization_plan, {sort: 'check', preferredHeightGap: undefined});
+
 		});
 	});
 
@@ -365,7 +421,7 @@ describe('DiscoveryHandler', () => {
 			const results = await discoveryHandler._endorse({}, {preferredHeightGap: 0}, 'proposal');
 			results.should.equal('endorsements');
 		});
-		it('should run ok', async () => {
+		it('should run - show failed', async () => {
 			discovery.getDiscoveryResults = sandbox.stub().resolves({endorsement_plan: {something: 'plan a'}});
 			discoveryHandler._modify_groups = sinon.stub();
 			discoveryHandler._getRandom = sinon.stub().returns([{}]);
@@ -492,6 +548,15 @@ describe('DiscoveryHandler', () => {
 		});
 	});
 
+	describe('#_buildRequiredOrgPlan', () => {
+		it('should run ok', async () => {
+
+			// TEST CALL
+			const results = await discoveryHandler._buildRequiredOrgPlan(config_results.peers_by_org);
+			results.should.deep.equal(organization_plan);
+		});
+	});
+
 	describe('#_build_endorse_group_member', () => {
 		it('should run ok', async () => {
 			endorsement_plan.endorsements = {};
@@ -506,6 +571,23 @@ describe('DiscoveryHandler', () => {
 			);
 			results.response.status.should.equal(200);
 			sinon.assert.calledWith(FakeLogger.debug, '%s - start', '_build_endorse_group_member >> G0:0');
+		});
+		it('should run - show reconnect error', async () => {
+			endorsement_plan.endorsements = {};
+			peer11.checkConnection.resolves(false);
+			peer12.checkConnection.resolves(false);
+			// TEST CALL
+			const results = await discoveryHandler._build_endorse_group_member(
+				endorsement_plan, // endorsement plan
+				endorsement_plan.groups.G0, // group
+				'proposal', // proposal
+				2000, // timeout
+				0, // endorser_process_index
+				'G0' // group name
+			);
+			results.message.should.equal('Peer peer2.org1.example.com:7002 is not connected');
+			sinon.assert.notCalled(peer11.sendProposal);
+			sinon.assert.notCalled(peer12.sendProposal);
 		});
 		it('should run ok and return error when endorser rejects', async () => {
 			endorsement_plan.endorsements = {};

@@ -125,6 +125,10 @@ export async function buildChannelRequest(requestName: string, contractName: str
 		// centralize the endorsement operation, including the endorsement results.
 		// Proposals must be built from channel and chaincode name
 		const endorsement: Endorsement = channel.newEndorsement(contractName);
+
+		// ---- setup DISCOVERY
+		endorsement.setNoPrivateReads(true);
+		endorsement.addCollectionInterest('_implicit_org_Org1MSP');
 		const discovery: DiscoveryService = channel.newDiscoveryService('mydiscovery');
 		const discoverer: Discoverer = client.newDiscoverer('peer1-discovery');
 

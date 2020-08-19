@@ -41,6 +41,8 @@ describe('Proposal', () => {
 		endorser.type = 'Endorser';
 		endpoint = client.newEndpoint({url: 'grpc://somehost.com'});
 		endorser.endpoint = endpoint;
+		endorser.waitForReady = sinon.stub().resolves(true);
+		endorser.checkConnection = sinon.stub().resolves(true);
 		handler = new DiscoveryHandler('discovery');
 	});
 
@@ -78,19 +80,39 @@ describe('Proposal', () => {
 	describe('#buildProposalInterest', () => {
 		it('should return interest', () => {
 			const interest = proposal.buildProposalInterest();
-			interest.should.deep.equal([{name: 'chaincode'}]);
+			interest.should.deep.equal([{name: 'chaincode', noPrivateReads: false}]);
 		});
 		it('should return interest and collections', () => {
 			const collections = ['col1', 'col2'];
 			proposal.collectionsInterest = collections;
 			const interest = proposal.buildProposalInterest();
-			interest.should.deep.equal([{name: 'chaincode', collectionNames: collections}]);
+			interest.should.deep.equal([{name: 'chaincode', noPrivateReads: false, collectionNames: collections}]);
+		});
+		it('should return interest and collections with noPrivateReads', () => {
+			const collections = ['col1', 'col2'];
+			proposal.collectionsInterest = collections;
+			proposal.noPrivateReads = true;
+			const interest = proposal.buildProposalInterest();
+			interest.should.deep.equal([{name: 'chaincode', noPrivateReads: true, collectionNames: collections}]);
 		});
 		it('should return interest and chaincode and chaincode collections ', () => {
 			const chaincode_collection = {name: 'chain2', collectionNames: ['col1', 'col2']};
 			proposal.chaincodesCollectionsInterest = [chaincode_collection];
 			const interest = proposal.buildProposalInterest();
-			interest.should.deep.equal([{name: 'chaincode'}, chaincode_collection]);
+			interest.should.deep.equal([{name: 'chaincode', noPrivateReads: false}, chaincode_collection]);
+		});
+		it('should return interest and chaincode and chaincode collections with no private reads ', () => {
+			const chaincode_collection = {name: 'chain2', collectionNames: ['col1', 'col2'], noPrivateReads: true};
+			proposal.chaincodesCollectionsInterest = [chaincode_collection];
+			const interest = proposal.buildProposalInterest();
+			interest.should.deep.equal([{name: 'chaincode', noPrivateReads: false}, chaincode_collection]);
+		});
+		it('should return interest and chaincode and chaincode collections with no private reads ', () => {
+			const chaincode_collection = {name: 'chain2', collectionNames: ['col1', 'col2'], noPrivateReads: true};
+			proposal.noPrivateReads = true;
+			proposal.chaincodesCollectionsInterest = [chaincode_collection];
+			const interest = proposal.buildProposalInterest();
+			interest.should.deep.equal([{name: 'chaincode', noPrivateReads: true}, chaincode_collection]);
 		});
 	});
 
@@ -105,7 +127,7 @@ describe('Proposal', () => {
 			proposal.addCollectionInterest('col2');
 			proposal.collectionsInterest.should.deep.equal(collections);
 			const interest = proposal.buildProposalInterest();
-			interest.should.deep.equal([{name: 'chaincode', collectionNames: collections}]);
+			interest.should.deep.equal([{name: 'chaincode', noPrivateReads: false, collectionNames: collections}]);
 		});
 		it('should require a string collection name', () => {
 			(() => {
@@ -114,24 +136,63 @@ describe('Proposal', () => {
 		});
 	});
 
+	describe('#setNoPrivateReads', () => {
+		it('should set no private reads', () => {
+			proposal.setNoPrivateReads(true);
+			proposal.noPrivateReads.should.equal(true);
+		});
+		it('should set no private reads false', () => {
+			proposal.setNoPrivateReads(false);
+			proposal.noPrivateReads.should.equal(false);
+		});
+
+		it('should require a boolean', () => {
+			(() => {
+				proposal.setNoPrivateReads({});
+			}).should.throw(/The "no private reads" setting must be boolean/);
+		});
+	});
+
 	describe('#addChaincodeCollectionsInterest', () => {
 		it('should save chaincode collection interest', () => {
-			const chaincode_collection = {name: 'chain2', collectionNames: ['col1', 'col2']};
+			const chaincode_collection = {name: 'chain2', noPrivateReads: false, collectionNames: ['col1', 'col2']};
 			proposal.addChaincodeCollectionsInterest('chain2', 'col1', 'col2');
 			proposal.chaincodesCollectionsInterest.should.deep.equal([chaincode_collection]);
 			const interest = proposal.buildProposalInterest();
-			interest.should.deep.equal([{name: 'chaincode'}, chaincode_collection]);
+			interest.should.deep.equal([{name: 'chaincode', noPrivateReads: false}, chaincode_collection]);
 		});
 		it('should save chaincode only chaincode collection interest', () => {
-			const chaincode_collection = {name: 'chain2'};
+			const chaincode_collection = {name: 'chain2', noPrivateReads: false};
 			proposal.addChaincodeCollectionsInterest('chain2');
 			proposal.chaincodesCollectionsInterest.should.deep.equal([chaincode_collection]);
 			const interest = proposal.buildProposalInterest();
-			interest.should.deep.equal([{name: 'chaincode'}, chaincode_collection]);
+			interest.should.deep.equal([{name: 'chaincode', noPrivateReads: false}, chaincode_collection]);
 		});
 		it('should require a string chaincode name', () => {
 			(() => {
 				proposal.addChaincodeCollectionsInterest({});
+			}).should.throw('Invalid chaincodeId parameter');
+		});
+	});
+
+	describe('#addChaincodeNoPrivateReadsCollectionsInterest', () => {
+		it('should save chaincode collection interest', () => {
+			const chaincode_collection = {name: 'chain2', noPrivateReads: true, collectionNames: ['col1', 'col2']};
+			proposal.addChaincodeNoPrivateReadsCollectionsInterest('chain2', true, 'col1', 'col2');
+			proposal.chaincodesCollectionsInterest.should.deep.equal([chaincode_collection]);
+			const interest = proposal.buildProposalInterest();
+			interest.should.deep.equal([{name: 'chaincode', noPrivateReads: false}, chaincode_collection]);
+		});
+		it('should save chaincode only chaincode collection interest', () => {
+			const chaincode_collection = {name: 'chain2', noPrivateReads: false};
+			proposal.addChaincodeNoPrivateReadsCollectionsInterest('chain2');
+			proposal.chaincodesCollectionsInterest.should.deep.equal([chaincode_collection]);
+			const interest = proposal.buildProposalInterest();
+			interest.should.deep.equal([{name: 'chaincode', noPrivateReads: false}, chaincode_collection]);
+		});
+		it('should require a string chaincode name', () => {
+			(() => {
+				proposal.addChaincodeNoPrivateReadsCollectionsInterest({});
 			}).should.throw('Invalid chaincodeId parameter');
 		});
 	});

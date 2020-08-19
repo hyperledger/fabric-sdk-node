@@ -5,7 +5,7 @@
 'use strict';
 
 import * as FabricCAClient from 'fabric-ca-client';
-import { Contract, DefaultEventHandlerStrategies, DefaultQueryHandlerStrategies, Gateway, GatewayOptions, HsmOptions, HsmX509Provider, Identity, IdentityProvider, Network, QueryHandlerFactory, Transaction, TransientMap, TxEventHandlerFactory, Wallet, Wallets } from 'fabric-network';
+import { Contract, DefaultEventHandlerStrategies, DefaultQueryHandlerStrategies, Gateway, GatewayOptions, HsmOptions, HsmX509Provider, Identity, IdentityProvider, Network, QueryHandlerFactory, Transaction, TransientMap, TxEventHandlerFactory, Wallet, Wallets, DiscoveryInterest } from 'fabric-network';
 import * as fs from 'fs';
 import * as path from 'path';
 import { createQueryHandler as sampleQueryStrategy } from '../../config/handlers/sample-query-handler';
@@ -333,7 +333,7 @@ async function createHSMUser(wallet: Wallet, ccp: CommonConnectionProfileHelper,
  * @param {String} txnType the type of transaction (submit/evaluate)
  * @param {String} handlerOption Optional: the handler option to use
  */
-export async function performGatewayTransaction(gatewayName: string, contractName: string, channelName: string, collectionName: string, args: string, txnType: string, handlerOption?: string): Promise<void> {
+export async function performGatewayTransaction(gatewayName: string, contractName: string, channelName: string, collectionName: string, args: string, txnType: string, handlerOption?: string, requiredOrgs?: string[]): Promise<void> {
 
 	const gatewayObj = getGatewayObject(gatewayName);
 	const gateway = gatewayObj.gateway;
@@ -382,7 +382,7 @@ export async function performGatewayTransaction(gatewayName: string, contractNam
 		BaseUtils.logMsg(` -- adding a discovery interest colletion name to the contrace ${collectionName}`);
 		const chaincodeId = contract.chaincodeId;
 		contract.resetDiscoveryInterests();
-		contract.addDiscoveryInterest({name: chaincodeId, collectionNames: [collectionName]});
+		contract.addDiscoveryInterest({name: chaincodeId, collectionNames: [collectionName], noPrivateReads: false});
 	}
 
 	// Split args
@@ -393,6 +393,10 @@ export async function performGatewayTransaction(gatewayName: string, contractNam
 	// Submit/evaluate transaction
 	try {
 		const transaction: Transaction = contract.createTransaction(func);
+		if (requiredOrgs) {
+			transaction.setEndorsingOrganizations(...requiredOrgs);
+		}
+
 		let resultBuffer: Buffer;
 		if (submit) {
 			resultBuffer = await transaction.submit(...funcArgs);

@@ -62,24 +62,24 @@ describe('ServiceEndpoint', () => {
 		it('should be true if connected', () => {
 			serviceEndpoint.connected = true;
 			const result = serviceEndpoint.isConnectable();
-			should.equal(result, false);
+			should.equal(result, true);
 		});
 		it('should be true if not connected and have endpoint assigned', () => {
 			serviceEndpoint.connected = false;
 			serviceEndpoint.endpoint = endpoint;
+			serviceEndpoint.serviceClass = sinon.stub();
 			const result = serviceEndpoint.isConnectable();
 			should.equal(result, true);
-		});
-		it('should be false if not connected and have endpoint assigned but already tried to connect', () => {
-			serviceEndpoint.connected = false;
-			serviceEndpoint.endpoint = endpoint;
-			serviceEndpoint.connectAttempted = true;
-			const result = serviceEndpoint.isConnectable();
-			should.equal(result, false);
 		});
 		it('should be false if not connected and no endpoint assigned', () => {
 			serviceEndpoint.connected = false;
 			serviceEndpoint.endpoint = undefined;
+			const result = serviceEndpoint.isConnectable();
+			should.equal(result, false);
+		});
+		it('should be false if not connected and no service class assigned', () => {
+			serviceEndpoint.connected = false;
+			serviceEndpoint.endpoint = endpoint;
 			const result = serviceEndpoint.isConnectable();
 			should.equal(result, false);
 		});
@@ -120,6 +120,59 @@ describe('ServiceEndpoint', () => {
 		});
 	});
 
+	describe('#checkConnection', () => {
+		it('should resolve true if connected', async () => {
+			serviceEndpoint.connected = true;
+			sinon.stub(serviceEndpoint, 'waitForReady').resolves(true);
+			sinon.stub(serviceEndpoint, 'resetConnection').resolves(true);
+			sinon.stub(serviceEndpoint, 'isConnectable').resolves(true);
+
+			const result = await serviceEndpoint.checkConnection();
+			should.equal(result, true);
+		});
+		it('should resolve false if not connected and not able to reset', async () => {
+			serviceEndpoint.connected = false;
+			sinon.stub(serviceEndpoint, 'resetConnection').resolves(false);
+			sinon.stub(serviceEndpoint, 'isConnectable').resolves(true);
+
+			const result = await serviceEndpoint.checkConnection();
+			should.equal(result, false);
+			sinon.assert.calledOnce(serviceEndpoint.resetConnection);
+		});
+		it('should resolve true if not connected and able to reset', async () => {
+			serviceEndpoint.connected = false;
+			serviceEndpoint.resetConnection = () => {
+				return new Promise((resolve, reject) => {
+					serviceEndpoint.connected = true;
+					resolve(true);
+				});
+			};
+			sinon.stub(serviceEndpoint, 'isConnectable').resolves((true));
+
+			const result = await serviceEndpoint.checkConnection();
+			should.equal(result, true);
+		});
+		it('should resolve true if connection fails, but able to reset', async () => {
+			serviceEndpoint.connected = true;
+			sinon.stub(serviceEndpoint, 'waitForReady').resolves(false);
+			sinon.stub(serviceEndpoint, 'resetConnection').resolves(true);
+			sinon.stub(serviceEndpoint, 'isConnectable').resolves(true);
+
+			const result = await serviceEndpoint.checkConnection();
+			should.equal(result, true);
+		});
+		it('should resolve false if not connectable', async () => {
+			serviceEndpoint.connected = false;
+			sinon.stub(serviceEndpoint, 'waitForReady').resolves(false);
+			sinon.stub(serviceEndpoint, 'resetConnection').resolves(false);
+			sinon.stub(serviceEndpoint, 'isConnectable').resolves(false);
+
+			const result = await serviceEndpoint.checkConnection();
+			should.equal(result, false);
+			sinon.assert.notCalled(serviceEndpoint.waitForReady);
+		});
+	});
+
 	describe('#disconnect', () => {
 		it('should run if no service', () => {
 			serviceEndpoint.service = null;
@@ -134,21 +187,18 @@ describe('ServiceEndpoint', () => {
 		});
 	});
 
-	describe('#checkConnection', () => {
-		it('should run if connected', async () => {
-			serviceEndpoint.connected = false;
-			const results = await serviceEndpoint.checkConnection();
-			results.should.be.false;
-		});
-		it('should run if connected', async () => {
+	describe('#resetConnection', () => {
+		it('should run', async () => {
+			sinon.stub(serviceEndpoint, 'disconnect').returns(true);
 			sinon.stub(serviceEndpoint, 'waitForReady').resolves(true);
-			const results = await serviceEndpoint.checkConnection();
-			results.should.be.true;
+			serviceEndpoint.endpoint = sinon.stub();
+			serviceEndpoint.serviceClass = sinon.stub();
+			await serviceEndpoint.resetConnection();
 		});
-		it('should get false if waitForReady fails', async () => {
-			sinon.stub(serviceEndpoint, 'waitForReady').rejects(new Error('Failed to connect'));
-			const results = await serviceEndpoint.checkConnection();
-			results.should.be.false;
+		it('should fail', async () => {
+			sinon.stub(serviceEndpoint, 'disconnect').returns(true);
+			sinon.stub(serviceEndpoint, 'waitForReady').resolves(true);
+			await serviceEndpoint.resetConnection().should.be.rejectedWith(/is missing endpoint information/);
 		});
 	});
 

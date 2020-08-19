@@ -112,18 +112,23 @@ class DiscoveryHandler extends ServiceHandler {
 			for (const committer of committers) {
 				logger.debug('%s - sending to committer %s', method, committer.name);
 				try {
-					const results = await committer.sendBroadcast(signedEnvelope, timeout);
-					if (results) {
-						if (results.status === 'SUCCESS') {
-							logger.debug('%s - Successfully sent transaction to the committer %s', method, committer.name);
-							return results;
+					const isConnected = await committer.checkConnection();
+					if (isConnected) {
+						const results = await committer.sendBroadcast(signedEnvelope, timeout);
+						if (results) {
+							if (results.status === 'SUCCESS') {
+								logger.debug('%s - Successfully sent transaction to the committer %s', method, committer.name);
+								return results;
+							} else {
+								logger.debug('%s - Failed to send transaction successfully to the committer status:%s', method, results.status);
+								return_error = new Error('Failed to send transaction successfully to the committer status:' + results.status);
+							}
 						} else {
-							logger.debug('%s - Failed to send transaction successfully to the committer status:%s', method, results.status);
-							return_error = new Error('Failed to send transaction successfully to the committer status:' + results.status);
+							return_error = new Error('Failed to send transaction to the committer');
+							logger.debug('%s - Failed to send transaction to the committer %s', method, committer.name);
 						}
 					} else {
-						return_error = new Error('Failed to send transaction to the committer');
-						logger.debug('%s - Failed to send transaction to the committer %s', method, committer.name);
+						return_error = new Error(`Committer ${committer.name} is not connected`);
 					}
 				} catch (error) {
 					logger.debug('%s - Caught: %s', method, error.toString());
@@ -155,7 +160,20 @@ class DiscoveryHandler extends ServiceHandler {
 
 		const results = await this.discovery.getDiscoveryResults(true);
 
-		if (results && results.endorsement_plan) {
+		if (results && request.requiredOrgs) {
+			// special case when user knows which organizations to send the endorsement
+			// let's build our own endorsement plan so that we can use the sorting and sending code
+			const endorsement_plan = this._buildRequiredOrgPlan(results.peers_by_org);
+
+			// remove all org and peer
+			const orgs_request = {
+				sort: request.sort,
+				preferredHeightGap: request.preferredHeightGap
+			};
+
+			return this._endorse(endorsement_plan, orgs_request, signedProposal, timeout);
+		} else if (results && results.endorsement_plan) {
+			// normal processing of the discovery results
 			const working_discovery = JSON.parse(JSON.stringify(results.endorsement_plan));
 
 			return this._endorse(working_discovery, request, signedProposal, timeout);
@@ -259,7 +277,7 @@ class DiscoveryHandler extends ServiceHandler {
 			if (required > group.peers.length) {
 				results.success = false;
 				const error = new Error(`Endorsement plan group does not contain enough peers (${group.peers.length}) to satisfy policy (required:${required})`);
-				logger.error(error);
+				logger.debug(error.message);
 				results.endorsements.push(error);
 				break; // no need to look at other groups, this layout failed
 			}
@@ -302,6 +320,23 @@ class DiscoveryHandler extends ServiceHandler {
 		return responses;
 	}
 
+	_buildRequiredOrgPlan(peers_by_org) {
+		const method = '_buildRequiredOrgPlan';
+		logger.debug('%s - starting', method);
+		const endorsement_plan = {plan_id: 'required organizations'};
+		endorsement_plan.groups = {};
+		endorsement_plan.layouts = [{}]; // only one layout which will have all organizations
+
+		for (const mspid in peers_by_org) {
+			logger.debug(`${method} - found org:${mspid}`);
+			endorsement_plan.groups[mspid] = {}; // make a group for each organization
+			endorsement_plan.groups[mspid].peers = peers_by_org[mspid].peers; // now put in all peers from that organization
+			endorsement_plan.layouts[0][mspid] = 1; // add this org to the one layout and require one peer to endorse
+		}
+
+		return endorsement_plan;
+	}
+
 	/*
 	 * utility method to build a promise that will return one of the required
 	 * endorsements or an error object
@@ -326,9 +361,14 @@ class DiscoveryHandler extends ServiceHandler {
 							logger.debug('%s - send endorsement to %s', method, peer_info.name);
 							peer_info.in_use = true;
 							try {
-								endorsement = await peer.sendProposal(proposal, timeout);
-								// save this endorsement results in case we try this peer again
-								logger.debug('%s - endorsement completed to %s', method, peer_info.name);
+								const isConnected = await peer.checkConnection();
+								if (isConnected) {
+									endorsement = await peer.sendProposal(proposal, timeout);
+									// save this endorsement results in case we try this peer again
+									logger.debug('%s - endorsement completed to %s', method, peer_info.name);
+								} else {
+									endorsement = new Error(`Peer ${peer.name} is not connected`);
+								}
 							} catch (error) {
 								endorsement = error;
 								logger.error('%s - error on endorsement to %s error %s', method, peer_info.name, error);

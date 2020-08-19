@@ -173,6 +173,7 @@ describe('EventService', () => {
 			eventService2._closeRunning.should.be.false;
 			eventService2.blockType.should.be.equal('filtered');
 			eventService2.replay.should.be.false;
+			eventService2.startSpecified.should.be.false;
 		});
 	});
 
@@ -367,6 +368,7 @@ describe('EventService', () => {
 			};
 			eventService.build(idx, options);
 			should.exist(eventService._payload);
+			should.equal(eventService.startSpecified, true);
 		});
 		it('should build with startBlock and endBlock as valid numbers', () => {
 			const options = {
@@ -516,6 +518,21 @@ describe('EventService', () => {
 			};
 			eventService.blockType = 'full';
 			await eventService._startService(eventer1, {}, 10).should.be.rejectedWith('Event service timed out - Unable to start listening');
+		});
+		it('throws timeout on stream', async () => {
+			const eventer1 = client.newEventer('eventer1');
+			eventer1.endpoint = endpoint;
+			eventer1.checkConnection = sinon.stub().returns(true);
+			const stream = sinon.stub();
+			stream.on = sinon.stub();
+			stream.write = sinon.stub();
+			eventer1.setStreamByType = function() {
+				this.stream = stream;
+			};
+			eventService.blockType = 'full';
+			eventService.startSpecified = true;
+			await eventService._startService(eventer1, {}, 10);
+			eventService.close();
 		});
 		it('throws error on stream write', async () => {
 			const eventer1 = client.newEventer('eventer1');

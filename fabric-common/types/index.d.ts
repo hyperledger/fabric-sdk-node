@@ -213,7 +213,9 @@ export class Proposal extends ServiceAction {
 	public getTransactionId(): string;
 	public buildProposalInterest(): any;
 	public addCollectionInterest(collectionName: string): Proposal;
+	public setNoPrivateReads(noPrivateReads: boolean): Proposal;
 	public addChaincodeCollectionsInterest(collectionName: string, collectionNames: string[]): Proposal;
+	public addChaincodeNoPrivateReadsCollectionsInterest(collectionName: string, noPrivateReads: boolean, collectionNames: string[]): Proposal;
 	public build(idContext: IdentityContext, request?: BuildProposalRequest): Buffer;
 	public send(request?: SendProposalRequest): Promise<ProposalResponse>;
 	public verifyProposalResponse(proposalResponse?: any): boolean;

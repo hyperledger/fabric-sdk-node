@@ -2018,13 +2018,13 @@ describe('BlockDecoder', () => {
 				start_key: 'start_key',
 				end_key: 'end_key',
 				itr_exhausted: 'itr_exhausted',
-				raw_reads: ['raw_read']
+				raw_reads: {kv_reads: ['kv_read']}
 			};
 			const rangeQueryInfo = decodeRangeQueryInfo(mockProtoRangeQueryInfo);
 			rangeQueryInfo.start_key.should.equal('start_key');
 			rangeQueryInfo.end_key.should.equal('end_key');
 			rangeQueryInfo.itr_exhausted.should.equal('itr_exhausted');
-			sinon.assert.calledWith(decodeKVReadStub, 'raw_read');
+			sinon.assert.calledWith(decodeKVReadStub, 'kv_read');
 		});
 
 		it('should return the correct range query info with reads merklehashes', () => {
