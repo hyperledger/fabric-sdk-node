@@ -1,3 +1,14 @@
+## v2.2.1
+Wed Aug 19 11:02:55 EDT 2020
+
+* [475fc7d0](https://github.com/hyperledger/fabric-sdk-node/commit/475fc7d0) [FABN-1612 cherrypick from master to release-2](https://jira.hyperledger.org/browse/FABN-1612 cherrypick from master to release-2).2 (#305)
+* [8f36a57b](https://github.com/hyperledger/fabric-sdk-node/commit/8f36a57b) [FABN-1607](https://jira.hyperledger.org/browse/FABN-1607): Start event replay from previous block (#299) (#303)
+* [5ffdbb3e](https://github.com/hyperledger/fabric-sdk-node/commit/5ffdbb3e) [FABN-1588](https://jira.hyperledger.org/browse/FABN-1588): Fix timing issue in checkpoint listener scenario tests (#302)
+* [3c9a0d04](https://github.com/hyperledger/fabric-sdk-node/commit/3c9a0d04) [FABN-1606](https://jira.hyperledger.org/browse/FABN-1606): Daily scheduled build (#296)
+* [bb9cc1fc](https://github.com/hyperledger/fabric-sdk-node/commit/bb9cc1fc) [FABN-1605: Remove unnecessary dependencies from fabric-](https://jira.hyperledger.org/browse/FABN-1605: Remove unnecessary dependencies from fabric-)network (#284) (#285)
+* [c97e4a04](https://github.com/hyperledger/fabric-sdk-node/commit/c97e4a04) [FABN-1603](https://jira.hyperledger.org/browse/FABN-1603): v2.2 doc updates (#281)
+* [d2d9e8ed](https://github.com/hyperledger/fabric-sdk-node/commit/d2d9e8ed) Prepare release-2.2 branch (#275)
+
 ## v2.2.0
 Wed 15 Jul 2020 14:07:07 BST
 
