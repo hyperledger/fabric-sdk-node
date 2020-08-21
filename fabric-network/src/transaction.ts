@@ -41,11 +41,14 @@ function newEndorsementError(proposalResponse: ProposalResponse): Error {
 	const errorInfos: ErrorInfo[] = [];
 
 	for (const error of proposalResponse.errors) {
-		const errorInfo = {
-			peer: error.connection.name,
+		const errorInfo: ErrorInfo = {
+			peer: 'unknown',
 			status: 'grpc',
 			message: error.message
 		};
+		if (error.connection) {
+			errorInfo.peer = error.connection.name;
+		}
 		errorInfos.push(errorInfo);
 	}
 

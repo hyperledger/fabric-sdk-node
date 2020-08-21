@@ -152,7 +152,7 @@ describe('DiscoveryHandler', () => {
 		}
 	};
 
-	const organization_plan = {
+	const organization_plan = JSON.parse(JSON.stringify({
 		plan_id: 'required organizations',
 		groups: {
 			Org1MSP: {
@@ -176,7 +176,7 @@ describe('DiscoveryHandler', () => {
 			}
 		},
 		layouts: [{Org1MSP: 1, Org2MSP: 1, Org3MSP: 1}]
-	};
+	}));
 
 	const good = {response: {status: 200}};
 	beforeEach(() => {
@@ -549,10 +549,10 @@ describe('DiscoveryHandler', () => {
 	});
 
 	describe('#_buildRequiredOrgPlan', () => {
-		it('should run ok', async () => {
+		it('should run ok', () => {
 
 			// TEST CALL
-			const results = await discoveryHandler._buildRequiredOrgPlan(config_results.peers_by_org);
+			const results = discoveryHandler._buildRequiredOrgPlan(config_results.peers_by_org, ['Org1MSP', 'Org2MSP', 'Org3MSP']);
 			results.should.deep.equal(organization_plan);
 		});
 	});
