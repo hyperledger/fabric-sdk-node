@@ -1,3 +1,8 @@
+## v2.2.2
+Fri Aug 21 11:30:59 EDT 2020
+
+* [bafd43a1](https://github.com/hyperledger/fabric-sdk-node/commit/bafd43a1) [FABN-1619](https://jira.hyperledger.org/browse/FABN-1619) Fix requiredOrgs with Discovery (#308) (#309)
+
 ## v2.2.1
 Wed Aug 19 11:02:55 EDT 2020
 
