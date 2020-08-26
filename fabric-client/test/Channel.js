@@ -14,6 +14,8 @@
 
 'use strict';
 
+const fs = require('fs');
+const path = require('path');
 const sinon = require('sinon');
 const chai = require('chai');
 const rewire = require('rewire');
@@ -45,6 +47,9 @@ const configtxProto = ProtoLoader.load(__dirname + '/../lib/protos/common/config
 
 const fakeHandlerModulePath = 'fabric-client/test/FakeHandler';
 const fakeHandler = require(fakeHandlerModulePath).create();
+
+const configBlock = fs.readFileSync(path.join(__dirname, '../../test/fixtures/crypto-material/config-base/twoorgs.genesis.block'));
+
 
 describe('Channel', () => {
 	const channelName = 'channel-name';
@@ -1453,6 +1458,18 @@ describe('Channel', () => {
 	describe('#joinChannel', () => {});
 
 	describe('#getChannelConfig', () => {});
+
+	describe('#getChannelCapabilities', () => {
+		const block = commonProto.Block.decode(configBlock);
+		const envelope = commonProto.Envelope.decode(block.data.data[0]);
+		const payload = commonProto.Payload.decode(envelope.payload);
+
+		const configEnvelope = configtxProto.ConfigEnvelope.decode(payload.data);
+
+		it('should run', () => {
+			channel.getChannelCapabilities(configEnvelope).should.deep.equal(['V1_1']);
+		});
+	});
 
 	describe('#getChannelConfigFromOrderer', () => {});
 
