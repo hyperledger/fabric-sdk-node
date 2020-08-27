@@ -1806,6 +1806,22 @@ const Channel = class {
 	}
 
 	/**
+	 * This utility method takes a ConfigEnvelope as queried from a channel and
+	 * locates the channel's capabilities
+	 *
+	 * @param {ConfigEnvelope} configEnvelope - The grpc ConfigEnvelope as returned from the
+	 * [getChannelConfig()]{@link Channel#getChannelConfig} method.
+	 * @returns {String[]} An array of strings with this channels capablities
+	 */
+	getChannelCapabilities(configEnvelope) {
+		const _capabilities = _commonConfigurationProto.Capabilities.decode(configEnvelope.config.channel_group.values.map.Capabilities.value.value);
+		const capabilities = _capabilities.capabilities.map;
+		const keys = Object.keys(capabilities);
+
+		return keys;
+	}
+
+	/**
 	 * Asks the orderer for the current (latest) configuration block for this channel.
 	 * This is similar to [getGenesisBlock()]{@link Channel#getGenesisBlock}, except
 	 * that instead of getting block number 0 it gets the latest block that contains
