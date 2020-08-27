@@ -189,11 +189,11 @@ declare namespace Client { // tslint:disable-line:no-namespace
 		public getChannelEventHub(name: string): ChannelEventHub;
 		public getChannelEventHubsForOrg(mspid?: string): ChannelEventHub[];
 		public getPeersForOrg(mspid?: string): ChannelPeer[];
-
 		public getGenesisBlock(request?: OrdererRequest): Promise<Block>;
 
 		public joinChannel(request: JoinChannelRequest, timeout?: number): Promise<ProposalResponse[]>;
 		public getChannelConfig(target?: string | Peer, timeout?: number): Promise<any>;
+		public getChannelCapabilities(configEnvelope: any): string[];
 		public getChannelConfigFromOrderer(): Promise<any>;
 		public loadConfigUpdate(configUpdateBytes: Buffer): any;
 		public loadConfigEnvelope(configEnvelope: any): any;
