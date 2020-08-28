@@ -1814,10 +1814,33 @@ const Channel = class {
 	 * @returns {String[]} An array of strings with this channels capablities
 	 */
 	getChannelCapabilities(configEnvelope) {
-		const _capabilities = _commonConfigurationProto.Capabilities.decode(configEnvelope.config.channel_group.values.map.Capabilities.value.value);
-		const capabilities = _capabilities.capabilities.map;
-		const keys = Object.keys(capabilities);
+		const method = 'getChannelCapabilities';
+		logger.debug('%s - start', method);
+		let keys = [];
+		if (
+			configEnvelope &&
+			configEnvelope.config &&
+			configEnvelope.config.channel_group
+		) {
+			if (
+				configEnvelope.config.channel_group.values &&
+				configEnvelope.config.channel_group.values.map &&
+				configEnvelope.config.channel_group.values.map.Capabilities
+			) {
+				const _capabilities = _commonConfigurationProto.Capabilities.decode(
+					configEnvelope.config.channel_group.values.map.Capabilities.value.value
+				);
+				const capabilities = _capabilities.capabilities.map;
+				keys = Object.keys(capabilities);
+			} else {
+				logger.debug('%s - capabilities not found', method);
+			}
+		} else {
+			logger.debug('%s - invalid config envelope', method);
+			throw Error('Invalid ConfigEnvelope');
+		}
 
+		logger.debug('%s - end %s', method, keys);
 		return keys;
 	}
 
