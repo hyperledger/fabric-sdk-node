@@ -1460,14 +1460,27 @@ describe('Channel', () => {
 	describe('#getChannelConfig', () => {});
 
 	describe('#getChannelCapabilities', () => {
-		const block = commonProto.Block.decode(configBlock);
-		const envelope = commonProto.Envelope.decode(block.data.data[0]);
-		const payload = commonProto.Payload.decode(envelope.payload);
-
-		const configEnvelope = configtxProto.ConfigEnvelope.decode(payload.data);
-
 		it('should run', () => {
+			const block = commonProto.Block.decode(configBlock);
+			const envelope = commonProto.Envelope.decode(block.data.data[0]);
+			const payload = commonProto.Payload.decode(envelope.payload);
+			const configEnvelope = configtxProto.ConfigEnvelope.decode(payload.data);
 			channel.getChannelCapabilities(configEnvelope).should.deep.equal(['V1_1']);
+		});
+
+		it('should run with no capabilities', () => {
+			const block = commonProto.Block.decode(configBlock);
+			const envelope = commonProto.Envelope.decode(block.data.data[0]);
+			const payload = commonProto.Payload.decode(envelope.payload);
+			const configEnvelope = configtxProto.ConfigEnvelope.decode(payload.data);
+			delete configEnvelope.config.channel_group.values.map.Capabilities;
+			channel.getChannelCapabilities(configEnvelope).should.deep.equal([]);
+		});
+
+		it('should throw an error if missing config envelope', () => {
+			(() => {
+				channel.getChannelCapabilities();
+			}).should.throw(Error, 'Invalid ConfigEnvelope');
 		});
 	});
 
