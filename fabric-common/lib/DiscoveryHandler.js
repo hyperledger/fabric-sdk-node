@@ -11,6 +11,7 @@ const Long = require('long');
 const settle = require('promise-settle');
 
 const ServiceHandler = require('./ServiceHandler.js');
+const fabproto6 = require('fabric-protos');
 const {randomize, checkParameter, getLogger, getConfigSetting, convertToLong} = require('./Utils.js');
 
 const logger = getLogger(TYPE);
@@ -235,24 +236,35 @@ class DiscoveryHandler extends ServiceHandler {
 		// always randomize the layouts
 		endorsement_plan.layouts = this._getRandom(endorsement_plan.layouts);
 
+		let matchError = false;
+
 		// loop through the layouts trying to complete one successfully
 		for (const layout_index in endorsement_plan.layouts) {
 			logger.debug('%s - starting layout plan %s', method, layout_index);
 			const layout_results = await this._endorse_layout(layout_index, endorsement_plan, proposal, timeout);
 			// if this layout is successful then we are done
 			if (layout_results.success) {
-				logger.debug('%s - layout plan %s completed successfully', method, layout_index);
-				results.endorsements = layout_results.endorsements;
-				results.success = true;
-				break;
-			} else {
-				logger.debug('%s - layout plan %s did not complete successfully, try another layout plan', method, layout_index);
-				results.failed_endorsements = results.failed_endorsements.concat(layout_results.endorsements);
+				// make sure all responses have the same endorsement read/write set
+				if (this.compareProposalResponseResults(layout_results.endorsements)) {
+					logger.debug('%s - layout plan %s completed successfully', method, layout_index);
+					results.endorsements = layout_results.endorsements;
+					results.success = true;
+					break;
+				} else {
+					matchError = true;
+				}
 			}
+			logger.debug('%s - layout plan %s did not complete successfully', method, layout_index);
+			results.failed_endorsements = results.failed_endorsements.concat(layout_results.endorsements);
 		}
 
 		if (!results.success) {
-			const error = new Error('Endorsement has failed');
+			let error;
+			if (matchError) {
+				error =  new Error('Peer endorsements do not match');
+			} else {
+				error = new Error('Endorsement has failed');
+			}
 			error.endorsements = results.failed_endorsements;
 			return [error];
 		}
@@ -638,6 +650,58 @@ class DiscoveryHandler extends ServiceHandler {
 		}
 
 		return result;
+	}
+
+	// internal utility method to decode and get the write set from an endorsement
+	_getProposalResponseResults(proposaResponse = checkParameter('proposalResponse')) {
+		if (!proposaResponse.payload) {
+			throw new Error('Parameter must be a ProposalResponse Object');
+		}
+		const payload = fabproto6.protos.ProposalResponsePayload.decode(proposaResponse.payload);
+		const extension = fabproto6.protos.ChaincodeAction.decode(payload.extension);
+
+		return extension.results;
+	}
+
+	/**
+	 * Utility method to examine a set of proposals to check they contain
+	 * the same endorsement result write sets.
+	 * This will validate that the endorsing peers all agree on the result
+	 * of the chaincode execution.
+	 *
+	 * @param {ProposalResponse[]} proposalResponses - The proposal responses
+	 * from all endorsing peers
+	 * @returns {boolean} True when all proposals compare equally, false otherwise.
+	 */
+	compareProposalResponseResults(proposalResponses = checkParameter('proposalResponses')) {
+		const method = `compareProposalResponseResults[${this.chaincodeId}]`;
+		logger.debug('%s - start', method);
+
+		if (!Array.isArray(proposalResponses)) {
+			throw new Error('proposalResponses must be an array, typeof=' + typeof proposalResponses);
+		}
+		if (proposalResponses.length === 0) {
+			throw new Error('proposalResponses is empty');
+		}
+
+		if (proposalResponses.some((response) => response instanceof Error)) {
+
+			return false;
+		}
+
+		const first_one = this._getProposalResponseResults(proposalResponses[0]);
+		for (let i = 1; i < proposalResponses.length; i++) {
+			const next_one = this._getProposalResponseResults(proposalResponses[i]);
+			if (next_one.equals(first_one)) {
+				logger.debug('%s - read/writes result sets match index=%s', method, i);
+			} else {
+				logger.error('%s - read/writes result sets do not match index=%s', method, i);
+
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	toString() {
