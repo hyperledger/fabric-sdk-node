@@ -1,3 +1,12 @@
+## v1.4.12
+Mon Sep  7 13:00:17 EDT 2020
+
+* [36428541](https://github.com/hyperledger/fabric-sdk-node/commit/36428541) [FABN-1621](https://jira.hyperledger.org/browse/FABN-1621) getChannelCapabilities handle only valid envelope (#313)
+* [b4f59fdf](https://github.com/hyperledger/fabric-sdk-node/commit/b4f59fdf) [FABN-1621](https://jira.hyperledger.org/browse/FABN-1621) Add typescript defs for getChannelCapabilities (#312)
+* [5589c24b](https://github.com/hyperledger/fabric-sdk-node/commit/5589c24b) [FABN-1621](https://jira.hyperledger.org/browse/FABN-1621) Add capability decode (#311)
+* [7c540e4a](https://github.com/hyperledger/fabric-sdk-node/commit/7c540e4a) [FABN-1606](https://jira.hyperledger.org/browse/FABN-1606): Daily scheduled build (#295)
+* [8badf99b](https://github.com/hyperledger/fabric-sdk-node/commit/8badf99b) [FABN-1600](https://jira.hyperledger.org/browse/FABN-1600): Better unstable version generation (#248) (#279)
+
 ## v1.4.11
 Thu 16 Jul 2020 15:52:19 BST
 
