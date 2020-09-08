@@ -1,6 +1,6 @@
 {
   "name": "fabric-protos",
-  "version": "2.2.0",
+  "version": "2.3.0-snapshot",
   "description": "Protocol Buffer files and generated JavaScript classes for Hyperledger Fabric",
   "main": "index.js",
   "scripts": {
