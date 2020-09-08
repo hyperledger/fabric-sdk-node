@@ -5,7 +5,7 @@
     "hyperledger",
     "blockchain"
   ],
-  "version": "2.2.2",
+  "version": "2.2.3-snapshot",
   "main": "index.js",
   "scripts": {
     "test": "nyc mocha --recursive  -t 10000"
