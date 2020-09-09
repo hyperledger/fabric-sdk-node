@@ -83,8 +83,8 @@ class DiscoveryHandler extends ServiceHandler {
 	}
 
 	/**
-	 * This will submit transactions to be committed to one committer at time from a provided
-	 *  list or a list currently assigned to the channel.
+	 * This will submit transactions to be committed to one committer at a
+	 * time from a list currently assigned to the channel.
 	 * @param {*} signedProposal
 	 * @param {Object} request
 	 */
@@ -103,44 +103,70 @@ class DiscoveryHandler extends ServiceHandler {
 		await this.discovery.getDiscoveryResults(true);
 
 		const committers = this.discovery.channel.getCommitters(mspid);
-		let return_error = null;
 		if (committers && committers.length > 0) {
 			logger.debug('%s - found %s committers assigned to channel', method, committers.length);
 			randomize(committers);
 
-			// loop through the committers trying to complete one successfully
-			for (const committer of committers) {
-				logger.debug('%s - sending to committer %s', method, committer.name);
-				try {
-					const isConnected = await committer.checkConnection();
-					if (isConnected) {
-						const results = await committer.sendBroadcast(signedEnvelope, timeout);
-						if (results) {
-							if (results.status === 'SUCCESS') {
-								logger.debug('%s - Successfully sent transaction to the committer %s', method, committer.name);
-								return results;
-							} else {
-								logger.debug('%s - Failed to send transaction successfully to the committer status:%s', method, results.status);
-								return_error = new Error('Failed to send transaction successfully to the committer status:' + results.status);
-							}
-						} else {
-							return_error = new Error('Failed to send transaction to the committer');
-							logger.debug('%s - Failed to send transaction to the committer %s', method, committer.name);
-						}
-					} else {
-						return_error = new Error(`Committer ${committer.name} is not connected`);
-					}
-				} catch (error) {
-					logger.debug('%s - Caught: %s', method, error.toString());
-					return_error = error;
-				}
+			let results;
+			// first pass only try a committer that is in good standing
+			results = await this._commitSend(committers, signedEnvelope, timeout, false);
+			if (results.error) {
+				// since we did not get a good result, try another pass, this time try to
+				// have the orderers reconnect
+				results = await this._commitSend(committers, signedEnvelope, timeout, true);
 			}
 
-			logger.debug('%s - return error %s ', method, return_error.toString());
-			throw return_error;
+			if (results.commit) {
+				logger.debug('%s - return commit status %s ', method, results.commit);
+				return results.commit;
+			}
+
+			logger.debug('%s - return error %s ', method, results.error);
+			throw results.error;
 		} else {
 			throw new Error('No committers assigned to the channel');
 		}
+	}
+
+	async _commitSend(committers, signedEnvelope, timeout, reconnect) {
+		const method = 'commit';
+		logger.debug('%s - start', method);
+
+		let return_error;
+		// loop through the committers trying to complete one successfully
+		for (const committer of committers) {
+			logger.debug('%s - sending to committer %s', method, committer.name);
+			try {
+				const isConnected = await committer.checkConnection(reconnect);
+				if (isConnected) {
+					const commit = await committer.sendBroadcast(signedEnvelope, timeout);
+					if (commit) {
+						if (commit.status === 'SUCCESS') {
+							logger.debug('%s - Successfully sent transaction to the committer %s', method, committer.name);
+							return {error: undefined,  commit};
+						} else {
+							logger.debug('%s - Failed, status was not "success" from the send transaction to the committer. status:%s', method, commit.status);
+							return_error = new Error('Failed to send transaction successfully to the committer. status:' + commit.status);
+						}
+					} else {
+						return_error = new Error('Failed to receive committer status');
+						logger.debug('%s - Failed, no status received on the send transaction to the committer %s', method, committer.name);
+					}
+				} else {
+					let error_message = `Failed, committer ${committer.name} is not connected`;
+					if (reconnect) {
+						error_message = `Failed, not able to reconnect to committer ${committer.name}`;
+					}
+					return_error = new Error(error_message);
+				}
+			} catch (error) {
+				logger.debug('%s - Caught: %s', method, error.toString());
+				return_error = error;
+			}
+		}
+
+		logger.debug('%s - return error %s ', method, return_error.toString());
+		return {error: return_error};
 	}
 
 	/**

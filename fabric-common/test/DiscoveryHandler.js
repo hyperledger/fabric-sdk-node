@@ -330,44 +330,60 @@ describe('DiscoveryHandler', () => {
 		it('should reject if orderers are missing', async () => {
 			await discoveryHandler.commit('signedEnvelope', {mspid: 'msp3'}).should.be.rejectedWith(/No committers assigned to the channel/);
 		});
-		it('should run with orderers assigned by mspid', async () => {
-			const results = await discoveryHandler.commit('signedEnvelope', {mspid: 'msp1', requestTimeout: 2000});
-			results.status.should.equal('SUCCESS');
-		});
-		it('should run with orderers assigned', async () => {
+		it('should run', async () => {
+			discoveryHandler._commitSend = sandbox.stub().resolves({error: undefined, commit: {status:'SUCCESS'}});
 			const results = await discoveryHandler.commit('signedEnvelope');
 			results.status.should.equal('SUCCESS');
 		});
+		it('should reject', async () => {
+			discoveryHandler._commitSend = sandbox.stub().resolves({error:new Error('FAILED with Error')});
+			await discoveryHandler.commit('signedEnvelope').should.be.rejectedWith('FAILED with Error');
+		});
+	});
+
+	//	async _commitSend(committers, signedEnvelope, timeout, reconnect) {
+
+	describe('#_commitSend', () => {
 		it('should run with some bad orderers assigned', async () => {
 			orderer1.checkConnection = sandbox.stub().resolves(false);
 			orderer2.checkConnection = sandbox.stub().resolves(false);
-			const results = await discoveryHandler.commit('signedEnvelope');
-			results.status.should.equal('SUCCESS');
+			const results = await discoveryHandler._commitSend(channel.getCommitters(), 'signedEnvelope', 2000, false);
+			results.commit.status.should.equal('SUCCESS');
 		});
 		it('should reject orderer returns missing results', async () => {
 			channel.removeCommitter(channel.getCommitter('orderer2'));
 			channel.removeCommitter(channel.getCommitter('orderer3'));
 			channel.getCommitter('orderer1').sendBroadcast = sandbox.stub().resolves();
-			await discoveryHandler.commit('signedEnvelope')
-				.should.be.rejectedWith(/Failed to send transaction to the committer/);
+			const results = await discoveryHandler._commitSend(channel.getCommitters(), 'signedEnvelope', 2000, false);
+			results.error.message.should.equal('Failed to receive committer status');
 		});
 		it('should reject when status is not correct', async () => {
-			channel.getCommitter('orderer2').sendBroadcast = sandbox.stub().resolves({status: 'FAILED'});
-			await discoveryHandler.commit('signedEnvelope', {mspid: 'msp2'})
-				.should.be.rejectedWith(/Failed to send transaction successfully to the committer status:FAILED/);
+			channel.removeCommitter(channel.getCommitter('orderer2'));
+			channel.removeCommitter(channel.getCommitter('orderer3'));
+			channel.getCommitter('orderer1').sendBroadcast = sandbox.stub().resolves({status: 'FAILED'});
+			const results = await discoveryHandler._commitSend(channel.getCommitters(), 'signedEnvelope', 2000, false);
+			results.error.message.should.equal('Failed to send transaction successfully to the committer. status:FAILED');
 		});
 		it('should reject when orderer returns an error', async () => {
+			channel.removeCommitter(channel.getCommitter('orderer1'));
+			channel.removeCommitter(channel.getCommitter('orderer3'));
 			channel.getCommitter('orderer2').sendBroadcast = sandbox.stub().rejects(new Error('FAILED with Error'));
-			await discoveryHandler.commit('signedEnvelope', {mspid: 'msp2'})
-				.should.be.rejectedWith(/FAILED with Error/);
+			const results = await discoveryHandler._commitSend(channel.getCommitters(), 'signedEnvelope', 2000, false);
+			results.error.message.should.equal('FAILED with Error');
 		});
-		it('should reject when all orderers are no connected', async () => {
+		it('should reject when all orderers are not connected', async () => {
 			orderer1.checkConnection = sandbox.stub().resolves(false);
 			orderer2.checkConnection = sandbox.stub().resolves(false);
 			orderer3.checkConnection = sandbox.stub().resolves(false);
-
-			await discoveryHandler.commit('signedEnvelope')
-				.should.be.rejectedWith(/is not connected/);
+			const results = await discoveryHandler._commitSend(channel.getCommitters(), 'signedEnvelope', 2000, false);
+			results.error.message.should.equal('Failed, committer orderer3 is not connected');
+		});
+		it('should reject when all orderers are not connected and using reconnect', async () => {
+			orderer1.checkConnection = sandbox.stub().resolves(false);
+			orderer2.checkConnection = sandbox.stub().resolves(false);
+			orderer3.checkConnection = sandbox.stub().resolves(false);
+			const results = await discoveryHandler._commitSend(channel.getCommitters(), 'signedEnvelope', 2000, true);
+			results.error.message.should.equal('Failed, not able to reconnect to committer orderer3');
 		});
 	});
 
