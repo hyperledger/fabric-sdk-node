@@ -16,3 +16,6 @@ npm-debug.log
 
 # Source files #
 /src
+
+tsconfig.json
+/.*
