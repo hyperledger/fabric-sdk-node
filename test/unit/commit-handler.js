@@ -116,7 +116,7 @@ test('\n\n ** BasicCommitHandler - test **\n\n', async (t) => {
 		t.fail('Should not be here - looking for connect deadline');
 	} catch (error) {
 		if (error instanceof Error) {
-			if (error.toString().indexOf('Failed to connect before the deadline URL:grpc://somehost.com:6666') > -1) {
+			if (error.toString().indexOf('Failed to connect before the deadline') > -1) {
 				t.pass('This should fail with ' + error.toString());
 			} else {
 				t.fail('Did not get deadline error - got ' + error.toString());

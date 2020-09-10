@@ -82,6 +82,7 @@ class Orderer extends Remote {
 		logger.debug('Orderer.const - url: %s timeout: %s', url, this._request_timeout);
 		this._createClients();
 		this._sendDeliverConnect = false;
+		this.connected = true;
 	}
 
 	_createClients() {
@@ -152,10 +153,12 @@ class Orderer extends Remote {
 			const broadcast_timeout = setTimeout(() => {
 				logger.error('sendBroadcast - timed out after:%s', rto);
 				broadcast.end();
+				self.connected = false;
 				return reject(new Error(error_msg));
 			}, rto);
 
 			broadcast.on('data', (response) => {
+				self.connected = true;
 				logger.debug('sendBroadcast - on data response: %j', response);
 				broadcast.end();
 				if (response && response.info) {
@@ -182,6 +185,7 @@ class Orderer extends Remote {
 				if (err && err.code) {
 					if (err.code === 14) {
 						logger.error('sendBroadcast - on error: %j', err.stack ? err.stack : err);
+						self.connected = false;
 						return reject(new Error('SERVICE_UNAVAILABLE'));
 					}
 				}
