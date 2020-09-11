@@ -103,32 +103,35 @@ class BasicCommitHandler extends api.CommitHandler {
 		const method = '_commit';
 
 		const orderers = this._channel.getOrderers();
+		if (orderers.length === 0) {
+			throw new Error('No orderers assigned to the channel');
+		}
+		randomize(orderers);
 		let return_error = null;
 		if (orderers && orderers.length > 0) {
 			logger.debug('%s - found %s orderers assigned to channel', method, orderers.length);
 			// loop through the orderers trying to complete one successfully
 			for (const orderer of orderers) {
-				logger.debug('%s - starting orderer %s', method, orderer.getName());
-				try {
-					const results =  await orderer.sendBroadcast(envelope, timeout);
-					if (results) {
-						if (results.status === 'SUCCESS') {
-							logger.debug('%s - Successfully sent transaction to the orderer %s', method, orderer.getName());
-							return results;
-						} else {
-							logger.debug('%s - Failed to send transaction successfully to the orderer status:%s', method, results.status);
-							return_error = new Error('Failed to send transaction successfully to the orderer status:' + results.status);
-						}
+				logger.debug('%s - checking orderer %s', method, orderer.getName());
+				if (orderer.connected) {
+					const {error, commit} = await _send(orderer, envelope, timeout);
+					if (commit) {
+						return commit;
 					} else {
-						return_error = new Error('Failed to send transaction to the orderer');
-						logger.debug('%s - Failed to send transaction to the orderer %s', method, orderer.getName());
+						return_error = error;
 					}
-				} catch (error) {
-					logger.debug('%s - Caught: %s', method, error.toString());
+				} else {
+					logger.debug('%s - orderer %s not connected - skipping', method, orderer.getName());
+				}
+			}
+			for (const orderer of orderers) {
+				logger.debug('%s - reconnecting orderer %s', method, orderer.getName());
+				const {error, commit} = await _send(orderer, envelope, timeout);
+				if (commit) {
+					return commit;
+				} else {
 					return_error = error;
 				}
-
-				logger.debug('%s - finished orderer %s ', method, orderer.getName());
 			}
 
 			logger.debug('%s - return error %s ', method, return_error.toString());
@@ -139,6 +142,38 @@ class BasicCommitHandler extends api.CommitHandler {
 	}
 }
 
+async function _send(orderer, envelope, timeout) {
+	const method = '_send';
+	logger.debug('%s - starting orderer %s ', method, orderer.getName());
 
+	let return_error, return_results;
+	try {
+		const results =  await orderer.sendBroadcast(envelope, timeout);
+		if (results) {
+			if (results.status === 'SUCCESS') {
+				logger.debug('%s - Successfully sent transaction to the orderer %s', method, orderer.getName());
+				return_results = results;
+			} else {
+				logger.debug('%s - Failed to send transaction successfully to the orderer status:%s', method, results.status);
+				return_error = new Error('Failed to send transaction successfully to the orderer status:' + results.status);
+			}
+		} else {
+			return_error = new Error('Failed to send transaction to the orderer');
+			logger.debug('%s - Failed to send transaction to the orderer %s', method, orderer.getName());
+		}
+	} catch (error) {
+		logger.debug('%s - Caught: %s', method, error.toString());
+		return_error = error;
+	}
+
+	return {error: return_error, commit: return_results};
+}
+
+function randomize (items) {
+	for (let i = items.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		[items[i], items[j]] = [items[j], items[i]];
+	}
+}
 
 module.exports = BasicCommitHandler;

@@ -1431,6 +1431,7 @@ const Channel = class {
 			if (orderer.getUrl() === url) {
 				logger.debug('%s - found existing orderer %s', method, url);
 				found = orderer;
+				found.connected = true; // force a reconnect
 			}
 		});
 		if (!found) {
