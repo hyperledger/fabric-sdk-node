@@ -121,6 +121,18 @@ describe('ServiceEndpoint', () => {
 	});
 
 	describe('#checkConnection', () => {
+		it('should resolve false if not connected', async () => {
+			serviceEndpoint.connected = false;
+			sinon.stub(serviceEndpoint, 'waitForReady').resolves(true);
+			sinon.stub(serviceEndpoint, 'resetConnection').resolves(true);
+			sinon.stub(serviceEndpoint, 'isConnectable').resolves(true);
+
+			const result = await serviceEndpoint.checkConnection(false);
+			should.equal(result, false);
+			sinon.assert.notCalled(serviceEndpoint.waitForReady);
+			sinon.assert.notCalled(serviceEndpoint.resetConnection);
+			sinon.assert.notCalled(serviceEndpoint.isConnectable);
+		});
 		it('should resolve true if connected', async () => {
 			serviceEndpoint.connected = true;
 			sinon.stub(serviceEndpoint, 'waitForReady').resolves(true);

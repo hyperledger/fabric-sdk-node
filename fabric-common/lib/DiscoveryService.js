@@ -591,12 +591,12 @@ class DiscoveryService extends ServiceAction {
 		const end_point = this.client.newEndpoint(this._buildOptions(address, url, host, msp_id));
 		try {
 			// first check to see if orderer is already on this channel
-			let same = false;
+			let same;
 			const channelOrderers = this.channel.getCommitters();
 			for (const channelOrderer of channelOrderers) {
 				logger.debug('%s - checking %s', method, channelOrderer);
 				if (channelOrderer.endpoint && channelOrderer.endpoint.url === url) {
-					same = true;
+					same = channelOrderer;
 					break;
 				}
 			}
@@ -604,6 +604,7 @@ class DiscoveryService extends ServiceAction {
 				await orderer.connect(end_point);
 				this.channel.addCommitter(orderer);
 			} else {
+				await same.checkConnection();
 				logger.debug('%s - %s - already added to this channel', method, orderer);
 			}
 		} catch (error) {
