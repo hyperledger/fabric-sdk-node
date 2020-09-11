@@ -5,7 +5,7 @@
     "hyperledger",
     "blockchain"
   ],
-  "version": "1.4.12",
+  "version": "1.4.13",
   "main": "index.js",
   "repository": {
     "type": "git",
