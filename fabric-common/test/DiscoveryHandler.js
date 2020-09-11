@@ -481,7 +481,7 @@ describe('DiscoveryHandler', () => {
 			const results = await discoveryHandler._endorse({}, {}, 'proposal');
 			results[0].endorsements[0].should.equal('failed-endorsements');
 			const m = new Map();
-			sinon.assert.calledWith(discoveryHandler._modify_groups, m, m, m, m, m, m, null, 'ledgerHeight', {endorsements: {}, layouts: [{}]});
+			sinon.assert.calledWith(discoveryHandler._modify_groups, m, m, m, m, m, m, Long.fromInt(1), 'ledgerHeight', {endorsements: {}, layouts: [{}]});
 		});
 	});
 
@@ -725,21 +725,6 @@ describe('DiscoveryHandler', () => {
 			should.equal(plan.groups.G0.peers.length, 3);
 			sinon.assert.calledWith(FakeLogger.debug, '%s - start');
 		});
-		it('should run ok with no ledgerHeight_gap', async () => {
-			discoveryHandler._modify_groups(
-				new Map(), // required
-				new Map(), // preferred
-				new Map(), // ignored
-				new Map(), // required_orgs
-				new Map(), // preferred_orgs
-				new Map(), // ignored_orgs
-				null, // preferred_height_gap
-				'unknown', // sort
-				plan // endorsement_plan
-			);
-			should.equal(plan.groups.G0.peers.length, 3);
-			sinon.assert.calledWith(FakeLogger.debug, '%s - start');
-		});
 		it('should convert ledgerHeight', async () => {
 			discoveryHandler._modify_groups(
 				new Map(), // required
@@ -748,7 +733,7 @@ describe('DiscoveryHandler', () => {
 				new Map(), // required_orgs
 				new Map(), // preferred_orgs
 				new Map(), // ignored_orgs
-				null, // preferred_height_gap
+				new Long(1), // preferred_height_gap
 				'ledgerHeight', // sort
 				plan // endorsement_plan
 			);
@@ -882,19 +867,20 @@ describe('DiscoveryHandler', () => {
 	});
 
 	describe('#_splitList', () => {
+		const peer1 = {name: 'peer1', mspid: 'msp1', ledgerHeight: Long.fromValue(25)};
+		const peer2 = {name: 'peer2', mspid: 'msp1', ledgerHeight: Long.fromValue(20)};
+		const peer3 = {name: 'peer3', mspid: 'msp1', ledgerHeight: Long.fromValue(15)};
+		const peer4 = {name: 'peer4', mspid: 'msp3', ledgerHeight: Long.fromValue(10)};
+		const peer5 = {name: 'peer5', mspid: 'msp2', ledgerHeight: Long.fromValue(20)};
+		const peer6 = {name: 'peer6', mspid: 'msp2', ledgerHeight: Long.fromValue(15)};
+		const peer7 = {name: 'peer7', mspid: 'msp3', ledgerHeight: Long.fromValue(25)};
+		const peer8 = {name: 'peer8', mspid: 'msp4', ledgerHeight: Long.fromValue(20)};
+		const peer9 = {name: 'peer9', mspid: 'msp4', ledgerHeight: Long.fromValue(15)};
+		const peerA = {name: 'peer10', mspid: 'msp5'};
+		const peerB = {name: 'peer11', mspid: 'msp5'};
+
 		it('should run all', async () => {
-			const sorted_list = [
-				{name: 'peer1', mspid: 'msp1', ledgerHeight: Long.fromValue(25)},
-				{name: 'peer2', mspid: 'msp1', ledgerHeight: Long.fromValue(20)},
-				{name: 'peer3', mspid: 'msp1', ledgerHeight: Long.fromValue(15)},
-				{name: 'peer4', mspid: 'msp3', ledgerHeight: Long.fromValue(10)},
-				{name: 'peer5', mspid: 'msp2', ledgerHeight: Long.fromValue(20)},
-				{name: 'peer6', mspid: 'msp2', ledgerHeight: Long.fromValue(15)},
-				{name: 'peer7', mspid: 'msp3', ledgerHeight: Long.fromValue(25)},
-				{name: 'peer8', mspid: 'msp4', ledgerHeight: Long.fromValue(20)},
-				{name: 'peer9', mspid: 'msp4', ledgerHeight: Long.fromValue(15)},
-				{name: 'peer10', mspid: 'msp5'}
-			];
+			const sorted_list = [peer1, peer2, peer3, peer4, peer5, peer6, peer7, peer8, peer9, peerA];
 			const preferred_endorsers = discoveryHandler._create_map([
 				'peer10'
 			]);
@@ -903,6 +889,8 @@ describe('DiscoveryHandler', () => {
 			]);
 			const preferred_height_gap = Long.fromValue(5);
 			const highest_p = Long.fromValue(25);
+			const priority_list = [peer1, peer2, peer5, peer6, peer7, peer8, peerA];
+			discoveryHandler._getRandom = sinon.stub().returns(priority_list);
 
 			// TEST CALL
 			const results = discoveryHandler._splitList(
@@ -912,31 +900,14 @@ describe('DiscoveryHandler', () => {
 				highest_p,
 				sorted_list
 			);
-			results.priority[0].name.should.be.equal('peer1');
-			results.priority[1].name.should.be.equal('peer2');
+			sinon.assert.calledWith(discoveryHandler._getRandom, priority_list);
 			results.non_priority[0].name.should.be.equal('peer3');
 			results.non_priority[1].name.should.be.equal('peer4');
-			results.priority[2].name.should.be.equal('peer5');
-			results.priority[3].name.should.be.equal('peer6');
-			results.priority[4].name.should.be.equal('peer7');
-			results.priority[5].name.should.be.equal('peer8');
 			results.non_priority[2].name.should.be.equal('peer9');
-			results.priority[6].name.should.be.equal('peer10');
+
 		});
 		it('should run with no highest', async () => {
-			const sorted_list = [
-				{name: 'peer1', mspid: 'msp1', ledgerHeight: Long.fromValue(25)},
-				{name: 'peer2', mspid: 'msp1', ledgerHeight: Long.fromValue(20)},
-				{name: 'peer3', mspid: 'msp1', ledgerHeight: Long.fromValue(15)},
-				{name: 'peer4', mspid: 'msp3', ledgerHeight: Long.fromValue(10)},
-				{name: 'peer5', mspid: 'msp2', ledgerHeight: Long.fromValue(20)},
-				{name: 'peer6', mspid: 'msp2', ledgerHeight: Long.fromValue(15)},
-				{name: 'peer7', mspid: 'msp3', ledgerHeight: Long.fromValue(25)},
-				{name: 'peer8', mspid: 'msp4', ledgerHeight: Long.fromValue(20)},
-				{name: 'peer9', mspid: 'msp4', ledgerHeight: Long.fromValue(15)},
-				{name: 'peer10', mspid: 'msp5'},
-				{name: 'peer11', mspid: 'msp5'}
-			];
+			const sorted_list = [peer1, peer2, peer3, peer4, peer5, peer6, peer7, peer8, peer9, peerA, peerB];
 			const preferred_endorsers = discoveryHandler._create_map([
 				'peer10',
 				'peer3'
@@ -945,51 +916,9 @@ describe('DiscoveryHandler', () => {
 				'msp2'
 			]);
 			const preferred_height_gap = Long.fromValue(0);
-			const highest_p = Long.fromValue(25);
-
-			// TEST CALL
-			const results = discoveryHandler._splitList(
-				preferred_endorsers,
-				preferred_orgs,
-				preferred_height_gap,
-				highest_p,
-				sorted_list
-			);
-			results.priority[0].name.should.be.equal('peer1');
-			results.non_priority[0].name.should.be.equal('peer2');
-			results.priority[1].name.should.be.equal('peer3');
-			results.non_priority[1].name.should.be.equal('peer4');
-			results.priority[2].name.should.be.equal('peer5');
-			results.priority[3].name.should.be.equal('peer6');
-			results.priority[4].name.should.be.equal('peer7');
-			results.non_priority[2].name.should.be.equal('peer8');
-			results.non_priority[3].name.should.be.equal('peer9');
-			results.priority[5].name.should.be.equal('peer10');
-			results.non_priority[4].name.should.be.equal('peer11');
-		});
-		it('should run with no ledgerHeight', async () => {
-			const sorted_list = [
-				{name: 'peer1', mspid: 'msp1', ledgerHeight: Long.fromValue(25)},
-				{name: 'peer2', mspid: 'msp1', ledgerHeight: Long.fromValue(20)},
-				{name: 'peer3', mspid: 'msp1', ledgerHeight: Long.fromValue(15)},
-				{name: 'peer4', mspid: 'msp3', ledgerHeight: Long.fromValue(10)},
-				{name: 'peer5', mspid: 'msp2', ledgerHeight: Long.fromValue(20)},
-				{name: 'peer6', mspid: 'msp2', ledgerHeight: Long.fromValue(15)},
-				{name: 'peer7', mspid: 'msp3', ledgerHeight: Long.fromValue(25)},
-				{name: 'peer8', mspid: 'msp4', ledgerHeight: Long.fromValue(20)},
-				{name: 'peer9', mspid: 'msp4', ledgerHeight: Long.fromValue(15)},
-				{name: 'peer10', mspid: 'msp5'},
-				{name: 'peer11', mspid: 'msp5'}
-			];
-			const preferred_endorsers = discoveryHandler._create_map([
-				'peer10',
-				'peer3'
-			]);
-			const preferred_orgs = discoveryHandler._create_map([
-				'msp2'
-			]);
-			const preferred_height_gap = null;
 			const highest_p = null;
+			const priority_list = [peer3, peer5, peer6, peerA];
+			discoveryHandler._getRandom = sinon.stub().returns(priority_list);
 
 			// TEST CALL
 			const results = discoveryHandler._splitList(
@@ -999,16 +928,13 @@ describe('DiscoveryHandler', () => {
 				highest_p,
 				sorted_list
 			);
+			sinon.assert.calledWith(discoveryHandler._getRandom, priority_list);
 			results.non_priority[0].name.should.be.equal('peer1');
 			results.non_priority[1].name.should.be.equal('peer2');
-			results.priority[0].name.should.be.equal('peer3');
 			results.non_priority[2].name.should.be.equal('peer4');
-			results.priority[1].name.should.be.equal('peer5');
-			results.priority[2].name.should.be.equal('peer6');
 			results.non_priority[3].name.should.be.equal('peer7');
 			results.non_priority[4].name.should.be.equal('peer8');
 			results.non_priority[5].name.should.be.equal('peer9');
-			results.priority[3].name.should.be.equal('peer10');
 			results.non_priority[6].name.should.be.equal('peer11');
 		});
 	});

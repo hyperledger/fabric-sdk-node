@@ -191,7 +191,7 @@ class DiscoveryHandler extends ServiceHandler {
 			// let's build our own endorsement plan so that we can use the sorting and sending code
 			const endorsement_plan = this._buildRequiredOrgPlan(results.peers_by_org, request.requiredOrgs);
 
-			// remove all org and peer
+			// remove conflicting settings
 			const orgs_request = {
 				sort: request.sort,
 				preferredHeightGap: request.preferredHeightGap
@@ -225,7 +225,7 @@ class DiscoveryHandler extends ServiceHandler {
 		const preferred_orgs = this._create_map(request.preferredOrgs, 'mspid');
 		const ignored_orgs = this._create_map(request.ignoredOrgs, 'mspid');
 
-		let preferred_height_gap = null;
+		let preferred_height_gap = Long.fromInt(1); // default of one block
 		try {
 			if (Number.isInteger(request.preferredHeightGap) || request.preferredHeightGap) {
 				preferred_height_gap = convertToLong(request.preferredHeightGap, true);
@@ -456,19 +456,20 @@ class DiscoveryHandler extends ServiceHandler {
 			for (const peer of group.peers) {
 				peer.ledgerHeight = new Long(peer.ledgerHeight.low, peer.ledgerHeight.high);
 			}
+
 			// remove ignored and non-required
 			const clean_list = this._removePeers(ignored, ignored_orgs, required, required_orgs, group.peers);
+
 			// get the highest ledger height if needed
 			let highest = null;
-			if (preferred_height_gap) {
+			if (sort === BLOCK_HEIGHT) {
 				highest = this._findHighest(clean_list);
-			} else {
-				logger.debug('%s - no preferred height gap', method);
 			}
+
 			// sort based on ledger height or randomly
 			const sorted_list = this._sortPeerList(sort, clean_list);
 			// pop the priority peers off the sorted list
-			const split_lists = this._splitList(preferred, preferred_orgs, highest, preferred_height_gap, sorted_list);
+			const split_lists = this._splitList(preferred, preferred_orgs, preferred_height_gap, highest, sorted_list);
 			// put the priorities on top
 			const reordered_list = split_lists.priority.concat(split_lists.non_priority);
 			// set the rebuilt peer list into the group
@@ -597,10 +598,9 @@ class DiscoveryHandler extends ServiceHandler {
 				logger.debug('%s - peer %s found on the preferred peer list', method, peer.name);
 			}
 
-			// if not on the preferred lists, see if it should be on the priority list
-			// because it has a low gap, meaning it should be up to date on with ledger
-			// changes compared with other peers
-			if (!found && highest && preferred_height_gap) {
+			// if not on the preferred lists and we are sorting by block hieght
+			// check the gap that indicates that it will be up to date shortly and it should be used
+			if (!found && highest) {
 				if (peer.ledgerHeight) {
 					logger.debug('%s - checking preferred gap of %s', method, preferred_height_gap);
 					logger.debug('%s - peer.ledgerHeight %s', method, peer.ledgerHeight);
@@ -626,7 +626,11 @@ class DiscoveryHandler extends ServiceHandler {
 			}
 		}
 
-		return {priority, non_priority};
+		// priority peers are all the same, try not to use the same
+		// one everytime
+		const randomized_priority  = this._getRandom(priority);
+
+		return {priority: randomized_priority, non_priority};
 	}
 
 	/*
