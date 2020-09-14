@@ -1,3 +1,8 @@
+## v1.4.13
+Fri Sep 11 11:09:01 EDT 2020
+
+* [3614b0b9](https://github.com/hyperledger/fabric-sdk-node/commit/3614b0b9) [FABN-1632](https://jira.hyperledger.org/browse/FABN-1632) Enhance discovery orderer failover (#324)
+
 ## v1.4.12
 Mon Sep  7 13:00:17 EDT 2020
 
