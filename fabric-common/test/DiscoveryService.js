@@ -551,6 +551,12 @@ describe('DiscoveryService', () => {
 			await discovery._buildOrderers(orderers);
 			sinon.assert.calledWith(FakeLogger.debug, '_buildOrderers[mydiscovery] - orderer msp:OrdererMSP');
 		});
+		it('should remove old orderers from channel', async () => {
+			should.equal(channel.getCommitters().length, 0);
+			await discovery._buildOrderers(orderers); // add one orderer
+			sinon.assert.calledWith(FakeLogger.debug, '_buildOrderers[mydiscovery] - orderer msp:OrdererMSP');
+			should.equal(channel.getCommitters().length, 1);
+		});
 	});
 
 	describe('#_buildOrderer', () => {

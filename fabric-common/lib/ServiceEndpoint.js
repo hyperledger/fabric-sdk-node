@@ -142,12 +142,13 @@ class ServiceEndpoint {
 
 	/**
 	 * Check the connection status
+	 * @param {boolean} [reset] - Optional, attempt to reconnect if endpoint is not connected
 	 */
-	async checkConnection() {
+	async checkConnection(reset = true) {
 		const method = `checkConnection[${this.name}]`;
 		logger.debug('%s - start - connected:%s', method, this.connected);
 
-		if (this.connected) {
+		if (reset && this.connected) {
 			try {
 				await this.waitForReady();
 			} catch (error) {
@@ -155,7 +156,7 @@ class ServiceEndpoint {
 			}
 		}
 
-		if (!this.connected && this.isConnectable()) {
+		if (reset && !this.connected && this.isConnectable()) {
 			try {
 				await this.resetConnection();
 			} catch (error) {
