@@ -325,7 +325,7 @@ export class NetworkImpl implements Network {
 			const discoverers = [];
 			for (const peer of targets) {
 				const discoverer = this.channel.client.newDiscoverer(peer.name, peer.mspid);
-				await discoverer.connect(peer.endpoint);
+				discoverer.setEndpoint(peer.endpoint);
 				discoverers.push(discoverer);
 			}
 			this.discoveryService = this.channel.newDiscoveryService(this.channel.name);
