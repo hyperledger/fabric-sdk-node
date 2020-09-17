@@ -1027,6 +1027,22 @@ function decodeConfigValueOrdererAddresses(valueBuf) {
 	return value;
 }
 
+function decodeConfigCapabilities(valueBuf) {
+	const value = {};
+	const capabilitiesProto = fabproto6.common.Capabilities.decode(valueBuf);
+	value.capabilities = capabilitiesProto.capabilities;
+
+	return value;
+}
+
+function decodeConfigACLs(valueBuf) {
+	const value = {};
+	const aclsProto = fabproto6.protos.ACLs.decode(valueBuf);
+	value.acls = aclsProto.acls;
+
+	return value;
+}
+
 function decodeConfigValue(configValueProto, valueName) {
 	const config_value = {};
 	logger.debug(' ======> Config item ::%s', valueName);
@@ -1062,6 +1078,12 @@ function decodeConfigValue(configValueProto, valueName) {
 			break;
 		case 'OrdererAddresses':
 			config_value.value = decodeConfigValueOrdererAddresses(configValueProto.value);
+			break;
+		case 'Capabilities':
+			config_value.value = decodeConfigCapabilities(configValueProto.value);
+			break;
+		case 'ACLs':
+			config_value.value = decodeConfigACLs(configValueProto.value);
 			break;
 		default:
 	}
