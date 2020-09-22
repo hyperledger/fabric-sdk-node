@@ -59,7 +59,7 @@ class Endorser extends ServiceEndpoint {
 	 * @returns {Promise} A Promise for a Object that is the Protobuf
 	 *  'protos.ProposalResponse' see fabric-protos/protos/peer/proposal_response.proto
 	 */
-	async sendProposal(signedProposal, timeout) {
+	sendProposal(signedProposal, timeout) {
 		const method = `sendProposal[${this.name}]`;
 		logger.debug(`${method} - Start ----${this.name} ${this.endpoint.url} timeout:${timeout}`);
 
