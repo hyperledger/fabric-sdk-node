@@ -42,19 +42,16 @@ function newEndorsementError(proposalResponse: ProposalResponse): Error {
 
 	for (const error of proposalResponse.errors) {
 		const errorInfo: ErrorInfo = {
-			peer: 'unknown',
+			peer: error?.connection?.name,
 			status: 'grpc',
 			message: error.message
 		};
-		if (error.connection) {
-			errorInfo.peer = error.connection.name;
-		}
 		errorInfos.push(errorInfo);
 	}
 
 	for (const endorsement of proposalResponse.responses) {
 		const errorInfo = {
-			peer: endorsement.connection.name,
+			peer: endorsement?.connection?.name,
 			status: endorsement.response.status,
 			message: endorsement.response.message
 		};

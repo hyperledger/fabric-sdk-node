@@ -73,18 +73,14 @@ class Endorser extends ServiceEndpoint {
 
 			logger.debug('%s - %j', method, signedProposal);
 
-
-
-
 			let rto = this.options.requestTimeout;
 			if (typeof timeout === 'number') {
 				rto = timeout;
 			}
 			const send_timeout = setTimeout(() => {
 				clearTimeout(send_timeout);
-				logger.error(`${method} - ${this.name} timed out after:${rto}`);
+				logger.error(`${method} - ${this.name} timed out after: ${rto}`);
 				const return_error = new Error('REQUEST TIMEOUT');
-				this.getCharacteristics(return_error);
 				return reject(return_error);
 			}, rto);
 
@@ -93,34 +89,34 @@ class Endorser extends ServiceEndpoint {
 				if (err) {
 					logger.error(`${method} - Received error response from: ${this.endpoint.url} error: ${err}`);
 					if (err instanceof Error) {
-						this.getCharacteristics(err);
 						reject(err);
 					} else {
 						const out_error = new Error(err);
-						this.getCharacteristics(out_error);
 						reject(out_error);
 					}
 				} else {
 					if (proposalResponse) {
 						logger.debug(`${method} - Received proposal response from peer "${this.endpoint.url}": status - ${proposalResponse.response && proposalResponse.response.status}`);
 						if (proposalResponse.response && proposalResponse.response.status) {
-							this.getCharacteristics(proposalResponse);
 							resolve(proposalResponse);
 						} else {
 							const return_error = new Error(`GRPC service failed to get a proper response from the peer "${this.endpoint.url}".`);
-							this.getCharacteristics(return_error);
-							logger.error(`${method} - rejecting with:${return_error}`);
 							reject(return_error);
 						}
 					} else {
 						const return_error = new Error(`GRPC service got a null or undefined response from the peer "${this.endpoint.url}".`);
-						this.getCharacteristics(return_error);
-						logger.error(`${method} - rejecting with:${return_error}`);
 						reject(return_error);
 					}
 				}
 			});
-		});
+		}).then(
+			result => this.getCharacteristics(result),
+			error => {
+				this.getCharacteristics(error);
+				logger.error(`${method} - rejecting with: ${error}`);
+				throw error;
+			}
+		);
 	}
 }
 
