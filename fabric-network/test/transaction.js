@@ -252,6 +252,26 @@ describe('Transaction', () => {
 			return expect(promise).to.be.rejectedWith(invalidEndorsementResponse.response.message);
 		});
 
+		it('handles invalid proposal responses without connection property', async () => {
+			const response = {
+				response: invalidEndorsementResponse.response
+			};
+			endorsement.send.resolves(newProposalResponse([response]));
+
+			const promise = transaction.submit();
+
+			await expect(promise).to.be.rejectedWith(invalidEndorsementResponse.response.message);
+		});
+
+		it('handles error responses without connection property', async () => {
+			const error = new Error('DISCOVERY_ERROR');
+			endorsement.send.resolves(newProposalResponse([], [error]));
+
+			const promise = transaction.submit();
+
+			await expect(promise).to.be.rejectedWith(error.message);
+		});
+
 		it('throws with peer responses if the orderer returns an unsuccessful response', () => {
 			const status = 'FAILURE';
 			commit.send.resolves({status});

@@ -222,17 +222,20 @@ class ServiceEndpoint {
 	 * Get this remote endpoints characteristics
 	 */
 	getCharacteristics(results) {
-		results.connection = {};
-		results.connection.type = this.type;
-		results.connection.name = this.name;
-		results.connection.url = this.endpoint ? this.endpoint.url : '';
-		results.connection.options = this.endpoint ? this.endpoint.options : {};
+		results.connection = {
+			type: this.type,
+			name: this.name,
+			url: this.endpoint && this.endpoint.url || '',
+			options: this.endpoint && this.endpoint.options || {}
+		};
 		results.peer = this.name;
 
 		// remove private key
 		if (results.connection.options.clientKey) {
 			delete results.connection.options.clientKey;
 		}
+
+		return results;
 	}
 
 	/**
