@@ -393,10 +393,10 @@ class DiscoveryHandler extends ServiceHandler {
 									// save this endorsement results in case we try this peer again
 									logger.debug('%s - endorsement completed to %s', method, peer_info.name);
 								} else {
-									endorsement = new Error(`Peer ${peer.name} is not connected`);
+									endorsement = peer.getCharacteristics(new Error(`Peer ${peer.name} is not connected`));
 								}
 							} catch (error) {
-								endorsement = error;
+								endorsement = peer.getCharacteristics(error);
 								logger.error('%s - error on endorsement to %s error %s', method, peer_info.name, error);
 							}
 							// save this endorsement results in case we try this peer again
