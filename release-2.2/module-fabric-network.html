@@ -803,7 +803,8 @@ is received. Only one of the two arguments will have a value for any given invoc
             
 
             <td class="description last">Listen for transaction commit
-events from all peers in the client identity's organization.
+events from all peers in the client identity's organization. If the client identity's organization has no peers,
+this strategy will fail.
 The <a href="module-fabric-network.Contract.html#submitTransaction">submitTransaction</a> function will wait until successful
 events are received from <em>all</em> currently connected peers (minimum 1).</td>
         </tr>
@@ -830,7 +831,8 @@ events are received from <em>all</em> currently connected peers (minimum 1).</td
             
 
             <td class="description last">Listen for transaction commit
-events from all peers in the client identity's organization.
+events from all peers in the client identity's organization. If the client identity's organization has no peers,
+this strategy will fail.
 The <a href="module-fabric-network.Contract.html#submitTransaction">submitTransaction</a> function will wait until a successful
 event is received from <em>any</em> peer.</td>
         </tr>
@@ -885,6 +887,39 @@ events are received from <em>all</em> currently connected peers (minimum 1).</td
 
             <td class="description last">Listen for transaction commit
 events from all peers in the network.
+The <a href="module-fabric-network.Contract.html#submitTransaction">submitTransaction</a> function will wait until a
+successful event is received from <em>any</em> peer.
+* @property {module:fabric-network.TxEventHandlerFactory} PREFER_MSPID_SCOPE_ALLFORTX Listen for transaction commit
+events from all peers in the client identity's organization. If the client identity's organization has no peers, listen
+for transaction commit events from all peers in the network.
+The <a href="module-fabric-network.Contract.html#submitTransaction">submitTransaction</a> function will wait until successful
+events are received from <em>all</em> currently connected peers (minimum 1).</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>PREFER_MSPID_SCOPE_ANYFORTX</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-fabric-network.html#.TxEventHandlerFactory">module:fabric-network.TxEventHandlerFactory</a></span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Listen for transaction commit
+events from all peers in the client identity's organization. If the client identity's organization has no peers, listen
+for transaction commit events from all peers in the network.
 The <a href="module-fabric-network.Contract.html#submitTransaction">submitTransaction</a> function will wait until a
 successful event is received from <em>any</em> peer.</td>
         </tr>
@@ -1022,7 +1057,7 @@ after successfully sending the transaction to the orderer.</td>
             
 
             <td class="description last">Query any one of the peers for the connected organization. Continue
-to use the same event service for all queries unless it fails.</td>
+to use the same event service for all queries unless it fails. If the client identity's organization has no peers, this strategy will fail.</td>
         </tr>
 
     
@@ -1047,7 +1082,58 @@ to use the same event service for all queries unless it fails.</td>
             
 
             <td class="description last">Query any one of the peers for the connected organization.
-Use the next available peer for each successive query.</td>
+Use the next available peer for each successive query. If the client identity's organization has no peers, this strategy will fail.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>PREFER_MSPID_SCOPE_SINGLE</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-fabric-network.html#.QueryHandlerFactory">module:fabric-network.QueryHandlerFactory</a></span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Query any one of the peers for the connected organization. If the
+connected organization has no peers, query any one of the peers in the network. Continue to use the same event service for all queries unless it
+fails.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>PREFER_MSPID_SCOPE_ROUND_ROBIN</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-fabric-network.html#.QueryHandlerFactory">module:fabric-network.QueryHandlerFactory</a></span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Query any one of the peers for the connected organization. If
+the connected organization has no peers, query any one of the peers in the network. Use the next available peer for each successive query.</td>
         </tr>
 
     
@@ -1565,7 +1651,7 @@ by this value.
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.4</a>
 	
-		on 2020-09-25T08:59:26+00:00
+		on 2020-09-25T16:47:19+00:00
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>
