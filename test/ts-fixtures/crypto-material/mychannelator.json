@@ -5,7 +5,8 @@
       "Application": {
         "groups": {
           "Org1MSP": {},
-          "Org2MSP": {}
+          "Org2MSP": {},
+          "Org3MSP": {}
         }
       }
     },
@@ -22,7 +23,8 @@
       "Application": {
         "groups": {
           "Org1MSP": {},
-          "Org2MSP": {}
+          "Org2MSP": {},
+          "Org3MSP": {}
         },
         "mod_policy": "Admins",
         "policies": {

@@ -27,6 +27,12 @@ services:
         service: ca1
     container_name: ca1.example.com
 
+  ca2.example.com:
+    extends:
+        file: docker-compose-base.yaml
+        service: ca2
+    container_name: ca2.example.com
+
   orderer.example.com:
     extends:
         file: docker-compose-base.yaml

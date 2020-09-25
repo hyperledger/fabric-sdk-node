@@ -268,6 +268,36 @@ Organizations:
         Type: Signature
         Rule: "OR('Org2MSP.admin')"
 
+  - &Org3
+    # DefaultOrg defines the organization which is used in the sampleconfig
+    # of the fabric.git development environment
+    Name: Org3MSP
+
+    # ID to load the MSP definition as
+    ID: Org3MSP
+
+    MSPDir: ../crypto-config/peerOrganizations/org3.example.com/msp
+
+    # Policies defines the set of policies at this level of the config tree
+    # For organization policies, their canonical path is usually
+    #   /Channel/<Application|Orderer>/<OrgName>/<PolicyName>
+    Policies: &Org3Policies
+      Readers:
+        Type: Signature
+        Rule: "OR('Org3MSP.member')"
+        # If your MSP is configured with the new NodeOUs, you might
+        # want to use a more specific rule like the following:
+        # Rule: "OR('Org3MSP.admin', 'Org3MSP.peer', 'Org3MSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('Org3MSP.member')"
+        # If your MSP is configured with the new NodeOUs, you might
+        # want to use a more specific rule like the following:
+        # Rule: "OR('Org3MSP.admin', 'Org3MSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('Org3MSP.admin')"
+
 ################################################################################
 #
 #   Profile
@@ -278,7 +308,7 @@ Organizations:
 ################################################################################
 Profiles:
 
-  TwoOrgsOrdererGenesis:
+  ThreeOrgsOrdererGenesis:
     <<: *ChannelDefaults
     Orderer:
       <<: *OrdererDefaults
@@ -291,7 +321,8 @@ Profiles:
         Organizations:
           - *Org1
           - *Org2
-  TwoOrgsChannel:
+          - *Org3
+  ThreeOrgsChannel:
     <<: *ChannelDefaults
     Consortium: SampleConsortium
     Application:
@@ -299,5 +330,6 @@ Profiles:
       Organizations:
         - *Org1
         - *Org2
+        - *Org3
       Capabilities:
         <<: *ApplicationCapabilities
