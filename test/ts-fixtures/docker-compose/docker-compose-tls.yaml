@@ -35,6 +35,16 @@ services:
       - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org2.example.com-cert.pem
       - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/key.pem
 
+  ca2.example.com:
+    extends:
+        file: docker-compose-base.yaml
+        service: ca2
+    container_name: ca2.example.com
+    environment:
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org3.example.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/key.pem
+
   orderer.example.com:
     extends:
         file: docker-compose-base.yaml

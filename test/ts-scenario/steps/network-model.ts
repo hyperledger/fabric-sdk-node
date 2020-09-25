@@ -15,7 +15,7 @@ import * as path from 'path';
 
 const stateStore: StateStore = StateStore.getInstance();
 
-Given(/^I have a (.+?) backed gateway named (.+?) with discovery set to (.+?) for user (.+?) using the connection profile named (.+?)$/, { timeout: Constants.STEP_MED as number }, async (walletType: string, gatewayName: string, useDiscovery: string, userName: string, ccpName: string) => {
+Given(/^I have a (.+?) backed gateway named (.+?) with discovery set to (.+?) for user (.+?) (?:in organization (.+?) )?using the connection profile named (.+?)$/, { timeout: Constants.STEP_MED as number }, async (walletType: string, gatewayName: string, useDiscovery: string, userName: string, orgName: string, ccpName: string) => {
 
 	const gateways: Map<string, any> = stateStore.get(Constants.GATEWAYS);
 	const fabricState: any = stateStore.get(Constants.FABRIC_STATE);
@@ -30,7 +30,7 @@ Given(/^I have a (.+?) backed gateway named (.+?) with discovery set to (.+?) fo
 			BaseUtils.logMsg(`Creating new Gateway named ${gatewayName}`);
 			const profilePath: string = path.join(__dirname, '../config', ccpName);
 			const ccp: CommonConnectionProfileHelper = new CommonConnectionProfileHelper(profilePath, true);
-			return await Gateway.createGateway(ccp, tls, userName, Constants.DEFAULT_ORG, gatewayName, JSON.parse(useDiscovery), walletType);
+			return await Gateway.createGateway(ccp, tls, userName, orgName || Constants.DEFAULT_ORG, gatewayName, JSON.parse(useDiscovery), walletType);
 		} catch (err) {
 			BaseUtils.logError(`Failed to create gateway named ${gatewayName}`, err);
 			return Promise.reject(err);

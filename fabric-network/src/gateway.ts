@@ -261,12 +261,12 @@ export class Gateway {
 		const defaultOptions = {
 			queryHandlerOptions: {
 				timeout: 30, // 30 seconds
-				strategy: QueryStrategies.MSPID_SCOPE_SINGLE
+				strategy: QueryStrategies.PREFER_MSPID_SCOPE_SINGLE
 			},
 			eventHandlerOptions: {
 				endorseTimeout: 30, // 30 seconds
 				commitTimeout: 300, // 5 minutes
-				strategy: EventStrategies.MSPID_SCOPE_ALLFORTX
+				strategy: EventStrategies.PREFER_MSPID_SCOPE_ALLFORTX
 			},
 			discovery: {
 				enabled: true,

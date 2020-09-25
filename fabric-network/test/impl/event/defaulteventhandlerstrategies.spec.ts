@@ -23,7 +23,9 @@ describe('DefaultEventHandlerStrategies', () => {
 		MSPID_SCOPE_ALLFORTX: AllForTxStrategy,
 		MSPID_SCOPE_ANYFORTX: AnyForTxStrategy,
 		NETWORK_SCOPE_ALLFORTX: AllForTxStrategy,
-		NETWORK_SCOPE_ANYFORTX: AnyForTxStrategy
+		NETWORK_SCOPE_ANYFORTX: AnyForTxStrategy,
+		PREFER_MSPID_SCOPE_ALLFORTX: AllForTxStrategy,
+		PREFER_MSPID_SCOPE_ANYFORTX: AnyForTxStrategy
 	};
 	const strategyNames = Object.keys(expectedStrategyTypes);
 
@@ -35,19 +37,24 @@ describe('DefaultEventHandlerStrategies', () => {
 		MSPID_SCOPE_ALLFORTX: orgPeers,
 		MSPID_SCOPE_ANYFORTX: orgPeers,
 		NETWORK_SCOPE_ALLFORTX: networkPeers,
-		NETWORK_SCOPE_ANYFORTX: networkPeers
+		NETWORK_SCOPE_ANYFORTX: networkPeers,
+		PREFER_MSPID_SCOPE_ALLFORTX: orgPeers,
+		PREFER_MSPID_SCOPE_ANYFORTX: orgPeers,
 	};
 
+	let gateway: sinon.SinonStubbedInstance<Gateway>;
 	let network: sinon.SinonStubbedInstance<Network>;
 	const transactionId = 'TX_ID';
 	const mspId = 'MSP_ID';
+	const otherMspId = 'OTHER_MSP_ID';
 
 	beforeEach(() => {
 		const channel = sinon.createStubInstance(Channel);
 		channel.getEndorsers.withArgs().returns(networkPeers);
 		channel.getEndorsers.withArgs(mspId).returns(orgPeers);
+		channel.getEndorsers.withArgs(otherMspId).returns([]);
 
-		const gateway: sinon.SinonStubbedInstance<Gateway> = sinon.createStubInstance(Gateway);
+		gateway = sinon.createStubInstance(Gateway);
 		gateway.getOptions.returns({} as any);
 		gateway.getIdentity.returns({
 			mspId,
@@ -88,6 +95,25 @@ describe('DefaultEventHandlerStrategies', () => {
 		it('Sets correct peers', () => {
 			const expectedPeers = expectedStrategyPeers[strategyName];
 			expect(eventHandler.strategy.getPeers()).to.equal(expectedPeers);
+		});
+	}));
+
+	strategyNames.filter((strategyName) => strategyName.startsWith('PREFER_')).forEach((strategyName) => describe(`${strategyName} (no peers in organization)`, () => {
+		const createTxEventHandler = EventStrategies[strategyName];
+
+		let eventHandler;
+
+		beforeEach(() => {
+			gateway.getIdentity.returns({
+				mspId: otherMspId,
+				type: 'stub'
+			});
+			eventHandler = createTxEventHandler(transactionId, network);
+		});
+
+		it('Sets correct peers', () => {
+			const expectedPeers = expectedStrategyPeers[strategyName];
+			expect(eventHandler.strategy.getPeers()).to.equal(networkPeers);
 		});
 	}));
 });
