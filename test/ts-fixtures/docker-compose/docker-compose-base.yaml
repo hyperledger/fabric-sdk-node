@@ -42,6 +42,20 @@ services:
       - ../crypto-material/crypto-config/peerOrganizations/org2.example.com/ca/:/etc/hyperledger/fabric-ca-server-config
     container_name: ca_peerOrg2
 
+  ca2:
+    image: hyperledger/fabric-ca
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca-org3
+      - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org3.example.com-cert.pem
+      - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/fabric-ca-server-config/key.pem
+    ports:
+      - "9054:7054"
+    command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
+    volumes:
+      - ../crypto-material/crypto-config/peerOrganizations/org3.example.com/ca/:/etc/hyperledger/fabric-ca-server-config
+    container_name: ca_peerOrg3
+
   orderer:
     container_name: orderer
     image: hyperledger/fabric-orderer
@@ -49,7 +63,7 @@ services:
       - ORDERER_GENERAL_LOGLEVEL=INFO
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
       - ORDERER_GENERAL_GENESISMETHOD=file
-      - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/twoorgs.genesis.block
+      - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/threeorgs.genesis.block
       - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
       - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/orderer/msp
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=node_default

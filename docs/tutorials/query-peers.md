@@ -11,20 +11,29 @@ specified as an argument to `connect()` on the `Gateway`, and is used for
 all transaction evaluations on Contracts obtained from that Gateway
 instance.
 
-If no query handling strategy is specified, `MSPID_SCOPE_SINGLE` is used
+If no query handling strategy is specified, `PREFER_MSPID_SCOPE_SINGLE` is used
 by default. This will evaluate all transactions on the first peer from
 which it can obtain a response, and only switch to another peer if this
 peer fails. The list of peers will be all peers in the contract's `Network`
-that belong to the gateway's organization.
+that belong to the gateway's organization, if that organization has any peers.
+Otherwise, the list of peers will be all peers in the network. If you do not
+want to fall back to all peers in the network when the gateway's organization has
+no peers, use `MSPID_SCOPE_SINGLE` instead which will fail when there are no peers
+in the gateway's organization.
 
-There is another query handling strategy provided called `MSPID_SCOPE_ROUND_ROBIN`.
+There are another two query handling strategies provided called `PREFER_MSPID_SCOPE_ROUND_ROBIN`
+and `MSPID_SCOPE_ROUND_ROBIN`.
 This will evaluate a transaction starting with the first peer on the list.
 It will try the peers in order until a response is received or all peers
 have been tried. On the next call the second peer will be tried first and then
 continue on in the list until a response is received. The starting point within
 the list is incremented on each call, this will distribute the work load among all
-responding peers. The list of peers will be all peers in the contract's `Network`
-that belong to the gateway's organization.
+responding peers. When using `PREFER_MSPID_SCOPE_ROUND_ROBIN`, the list of peers
+will be all peers in the contract's `Network` that belong to the gateway's organization,
+if that organization has any peers. Otherwise, the list of peers will be all peers
+in the network. If you do not want to fall back to all peers in the network when the
+gateway's organization has no peers, use `MSPID_SCOPE_ROUND_ROBIN` instead which will
+fail when there are no peers in the gateway's organization.
 
 ```javascript
 const { Gateway, QueryHandlerStrategies } = require('fabric-network');

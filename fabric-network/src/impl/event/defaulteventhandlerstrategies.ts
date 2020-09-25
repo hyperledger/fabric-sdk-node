@@ -23,11 +23,13 @@ function getNetworkPeers(network: Network): Endorser[] {
  * @typedef DefaultEventHandlerStrategies
  * @memberof module:fabric-network
  * @property {module:fabric-network.TxEventHandlerFactory} MSPID_SCOPE_ALLFORTX Listen for transaction commit
- * events from all peers in the client identity's organization.
+ * events from all peers in the client identity's organization. If the client identity's organization has no peers,
+ * this strategy will fail.
  * The [submitTransaction]{@link module:fabric-network.Contract#submitTransaction} function will wait until successful
  * events are received from <em>all</em> currently connected peers (minimum 1).
  * @property {module:fabric-network.TxEventHandlerFactory} MSPID_SCOPE_ANYFORTX Listen for transaction commit
- * events from all peers in the client identity's organization.
+ * events from all peers in the client identity's organization. If the client identity's organization has no peers,
+ * this strategy will fail.
  * The [submitTransaction]{@link module:fabric-network.Contract#submitTransaction} function will wait until a successful
  * event is received from <em>any</em> peer.
  * @property {module:fabric-network.TxEventHandlerFactory} NETWORK_SCOPE_ALLFORTX Listen for transaction commit
@@ -36,6 +38,16 @@ function getNetworkPeers(network: Network): Endorser[] {
  * events are received from <em>all</em> currently connected peers (minimum 1).
  * @property {module:fabric-network.TxEventHandlerFactory} NETWORK_SCOPE_ANYFORTX Listen for transaction commit
  * events from all peers in the network.
+ * The [submitTransaction]{@link module:fabric-network.Contract#submitTransaction} function will wait until a
+ * successful event is received from <em>any</em> peer.
+ * * @property {module:fabric-network.TxEventHandlerFactory} PREFER_MSPID_SCOPE_ALLFORTX Listen for transaction commit
+ * events from all peers in the client identity's organization. If the client identity's organization has no peers, listen
+ * for transaction commit events from all peers in the network.
+ * The [submitTransaction]{@link module:fabric-network.Contract#submitTransaction} function will wait until successful
+ * events are received from <em>all</em> currently connected peers (minimum 1).
+ * @property {module:fabric-network.TxEventHandlerFactory} PREFER_MSPID_SCOPE_ANYFORTX Listen for transaction commit
+ * events from all peers in the client identity's organization. If the client identity's organization has no peers, listen
+ * for transaction commit events from all peers in the network.
  * The [submitTransaction]{@link module:fabric-network.Contract#submitTransaction} function will wait until a
  * successful event is received from <em>any</em> peer.
  * @property {module:fabric-network.TxEventHandlerFactory} NONE Do not wait for any commit events.
@@ -60,6 +72,24 @@ export const NETWORK_SCOPE_ALLFORTX: TxEventHandlerFactory = (transactionId, net
 
 export const NETWORK_SCOPE_ANYFORTX: TxEventHandlerFactory = (transactionId, network) => {
 	const eventStrategy = new AnyForTxStrategy(getNetworkPeers(network));
+	return new TransactionEventHandler(transactionId, network, eventStrategy);
+};
+
+export const PREFER_MSPID_SCOPE_ALLFORTX: TxEventHandlerFactory = (transactionId, network) => {
+	let peers = getOrganizationPeers(network);
+	if (peers.length === 0) {
+		peers = getNetworkPeers(network);
+	}
+	const eventStrategy = new AllForTxStrategy(peers);
+	return new TransactionEventHandler(transactionId, network, eventStrategy);
+};
+
+export const PREFER_MSPID_SCOPE_ANYFORTX: TxEventHandlerFactory = (transactionId, network) => {
+	let peers = getOrganizationPeers(network);
+	if (peers.length === 0) {
+		peers = getNetworkPeers(network);
+	}
+	const eventStrategy = new AnyForTxStrategy(peers);
 	return new TransactionEventHandler(transactionId, network, eventStrategy);
 };
 
