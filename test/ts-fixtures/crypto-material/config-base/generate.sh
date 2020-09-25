@@ -23,15 +23,15 @@ export FABRIC_CFG_PATH="${BASEDIR}"
 cryptogen generate --config="${BASEDIR}/crypto-config.yaml" --output="${BASEDIR}/../crypto-config"
 
 # Genesis block
-configtxgen -profile TwoOrgsOrdererGenesis -outputBlock "${BASEDIR}/twoorgs.genesis.block"
+configtxgen -profile ThreeOrgsOrdererGenesis -outputBlock "${BASEDIR}/threeorgs.genesis.block"
 
 #  Channel tx
-configtxgen -profile TwoOrgsChannel -outputCreateChannelTx "${BASEDIR}/../channel-config/baseapichannel.tx" -channelID baseapichannel # scenario test base api
-configtxgen -profile TwoOrgsChannel -outputCreateChannelTx "${BASEDIR}/../channel-config/channelopschannel.tx" -channelID channelopschannel # scenario test channel query
-configtxgen -profile TwoOrgsChannel -outputCreateChannelTx "${BASEDIR}/../channel-config/deprecatedchannel.tx" -channelID deprecatedchannel # scenario test deprecated sdk
-#configtxgen -profile TwoOrgsChannel -outputCreateChannelTx "${BASEDIR}/../channel-config/discoverychannel.tx" -channelID discoverychannel # sceanrio test discovery feature
-#configtxgen -profile TwoOrgsChannel -outputCreateChannelTx "${BASEDIR}/../channel-config/eventschannel.tx" -channelID eventschannel # sceanrio test discovery feature
-#configtxgen -profile TwoOrgsChannel -outputCreateChannelTx "${BASEDIR}/../channel-config/gatewaychannel.tx" -channelID gatewaychannel # sceanrio test gateway feature
+configtxgen -profile ThreeOrgsChannel -outputCreateChannelTx "${BASEDIR}/../channel-config/baseapichannel.tx" -channelID baseapichannel # scenario test base api
+configtxgen -profile ThreeOrgsChannel -outputCreateChannelTx "${BASEDIR}/../channel-config/channelopschannel.tx" -channelID channelopschannel # scenario test channel query
+configtxgen -profile ThreeOrgsChannel -outputCreateChannelTx "${BASEDIR}/../channel-config/deprecatedchannel.tx" -channelID deprecatedchannel # scenario test deprecated sdk
+#configtxgen -profile ThreeOrgsChannel -outputCreateChannelTx "${BASEDIR}/../channel-config/discoverychannel.tx" -channelID discoverychannel # sceanrio test discovery feature
+#configtxgen -profile ThreeOrgsChannel -outputCreateChannelTx "${BASEDIR}/../channel-config/eventschannel.tx" -channelID eventschannel # sceanrio test discovery feature
+#configtxgen -profile ThreeOrgsChannel -outputCreateChannelTx "${BASEDIR}/../channel-config/gatewaychannel.tx" -channelID gatewaychannel # sceanrio test gateway feature
 
 echo 'Generating crypto-material complete, now renaming keys...'
 # Rename the key files we use to be key.pem instead of a uuid

@@ -20,24 +20,41 @@ const QueryStrategies = require('fabric-network/lib/impl/query/defaultqueryhandl
 describe('DefaultQueryHandlerStrategies', () => {
 	const expectedStrategyTypes = {
 		'MSPID_SCOPE_SINGLE': SingleQueryHandler,
-		'MSPID_SCOPE_ROUND_ROBIN': RoundRobinQueryHandler
+		'MSPID_SCOPE_ROUND_ROBIN': RoundRobinQueryHandler,
+		'PREFER_MSPID_SCOPE_SINGLE': SingleQueryHandler,
+		'PREFER_MSPID_SCOPE_ROUND_ROBIN': RoundRobinQueryHandler
 	};
 	const strategyNames = Object.keys(expectedStrategyTypes);
 
+	let gateway;
 	let network;
+	let orgPeers;
+	let networkPeers;
+
+	const mspId = 'MSP_ID';
+	const otherMspId = 'OTHER_MSP_ID';
+
 
 	beforeEach(() => {
 		const org1QueryPeer = {
 			name: 'peer1',
 			mspid: 'org1'
 		};
+		const org2QueryPeer = {
+			name: 'peer1',
+			mspid: 'org2'
+		};
+		orgPeers = [org1QueryPeer];
+		networkPeers = [org1QueryPeer, org2QueryPeer];
 
 		const channel = sinon.createStubInstance(Channel);
-		channel.getEndorsers.returns([org1QueryPeer]);
+		channel.getEndorsers.withArgs().returns(networkPeers);
+		channel.getEndorsers.withArgs(mspId).returns(orgPeers);
+		channel.getEndorsers.withArgs(otherMspId).returns([]);
 
-		const gateway = sinon.createStubInstance(Gateway);
+		gateway = sinon.createStubInstance(Gateway);
 		gateway.getIdentity.returns({
-			mspId: 'mspId'
+			mspId
 		});
 		network = sinon.createStubInstance(Network);
 		network.getChannel.returns(channel);
@@ -52,7 +69,6 @@ describe('DefaultQueryHandlerStrategies', () => {
 		const createQueryStrategy = QueryStrategies[strategyName];
 
 		let queryStrategy;
-		let gateway;
 
 		beforeEach(() => {
 			gateway = sinon.createStubInstance(Gateway);
@@ -75,7 +91,6 @@ describe('DefaultQueryHandlerStrategies', () => {
 		const createQueryStrategy = QueryStrategies[strategyName];
 
 		let queryStrategy;
-		let gateway;
 
 		beforeEach(() => {
 			gateway = sinon.createStubInstance(Gateway);
@@ -91,6 +106,35 @@ describe('DefaultQueryHandlerStrategies', () => {
 		it('returns correct strategy implementation with default timeout', () => {
 			const expectedType = expectedStrategyTypes[strategyName];
 			expect(queryStrategy).to.be.an.instanceOf(expectedType);
+		});
+	}));
+	strategyNames.filter((strategyName) => strategyName.startsWith('PREFER_')).forEach((strategyName) => describe(strategyName, () => {
+		const createQueryStrategy = QueryStrategies[strategyName];
+
+		let queryStrategy;
+
+		beforeEach(() => {
+			queryStrategy = createQueryStrategy(network);
+		});
+
+		it('Sets correct peers', () => {
+			expect(queryStrategy.peers).to.equal(orgPeers);
+		});
+	}));
+	strategyNames.filter((strategyName) => strategyName.startsWith('PREFER_')).forEach((strategyName) => describe(`${strategyName} (no peers in organization)`, () => {
+		const createQueryStrategy = QueryStrategies[strategyName];
+
+		let queryStrategy;
+
+		beforeEach(() => {
+			gateway.getIdentity.returns({
+				mspId: otherMspId
+			});
+			queryStrategy = createQueryStrategy(network);
+		});
+
+		it('Sets correct peers', () => {
+			expect(queryStrategy.peers).to.equal(networkPeers);
 		});
 	}));
 });

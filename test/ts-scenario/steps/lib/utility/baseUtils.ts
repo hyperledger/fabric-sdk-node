@@ -134,7 +134,7 @@ export function recursiveDirDelete(dirPath: string): void {
 			} else {
 				recursiveDirDelete(filePath);
 			}
-		  }
-		fs.rmdirSync(dirPath);
+		}
 	}
+	fs.rmdirSync(dirPath);
   }

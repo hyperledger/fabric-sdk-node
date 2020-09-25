@@ -33,8 +33,9 @@ are defined in `DefaultEventHandlerStrategies`. The desired strategy is
 is used for all transaction invocations on Contracts obtained from that
 Gateway instance.
 
-If no event handling strategy is specified, `MSPID_SCOPE_ALLFORTX` is used
-by default.
+If no event handling strategy is specified, `PREFER_MSPID_SCOPE_ALLFORTX` is used
+by default. This uses all peers from the current organization if that organization
+has any peers, otherwise it uses all peers from the network.
 
 ```javascript
 import { Gateway, GatewayOptions, DefaultEventHandlerStrategies } from 'fabric-network';

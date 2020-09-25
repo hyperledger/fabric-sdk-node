@@ -22,6 +22,7 @@ const GatewayRewire = rewire('../lib/gateway');
 const {Gateway, mergeOptions} = GatewayRewire;
 const {Client} = require('fabric-common');
 const QueryStrategies = require('../lib/impl/query/defaultqueryhandlerstrategies');
+const EventStrategies = require('../lib/impl/event/defaulteventhandlerstrategies');
 
 describe('Gateway', () => {
 	let client;
@@ -466,7 +467,8 @@ describe('Gateway', () => {
 			await gateway.connect(client, options);
 			gateway.getOptions().should.be.an('object').that.nested.include({
 				'queryHandlerOptions.timeout': 30,
-				'queryHandlerOptions.strategy': QueryStrategies.MSPID_SCOPE_SINGLE,
+				'queryHandlerOptions.strategy': QueryStrategies.PREFER_MSPID_SCOPE_SINGLE,
+				'eventHandlerOptions.strategy': EventStrategies.PREFER_MSPID_SCOPE_ALLFORTX,
 				'eventHandlerOptions.commitTimeout': 300
 			});
 		});
