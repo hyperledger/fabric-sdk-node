@@ -17,6 +17,10 @@ publishAllPackages() {
     loadPackageInfo
     forEachNodePackage preparePackage
     forEachNodePackage publishPackage
+
+    if isStableRelease; then
+        (cd fabric-client && tagPackage latest)
+    fi
 }
 
 loadPackageInfo() {
@@ -126,6 +130,13 @@ publishPackage() {
 npmPublish() {
     echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' > '.npmrc'
     npm publish --tag "${RELEASE_TAG}"
+}
+
+tagPackage() {
+    local packageName packageVersion
+    packageName=$(readPackageProperty name)
+    packageVersion=$(readPackageProperty version)
+    npm dist-tag add "${packageName}@${packageVersion}" "$1"
 }
 
 (cd "${PROJECT_DIR}" && publishAllPackages)
