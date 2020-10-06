@@ -17,7 +17,6 @@ const Endpoint = require('fabric-common/lib/Endpoint');
 const NetworkConfig = rewire('fabric-network/lib/impl/ccp/networkconfig');
 
 describe('NetworkConfig', () => {
-	let sandbox;
 	let buildChannel;
 	let buildPeer;
 	let buildOrderer;
@@ -37,12 +36,11 @@ describe('NetworkConfig', () => {
 
 	beforeEach(() => {
 		revert = [];
-		sandbox = sinon.createSandbox();
-		endorser = sandbox.createStubInstance(Endorser);
-		committer = sandbox.createStubInstance(Committer);
-		endorser.connect = sandbox.stub().rejects(Error('BAD'));
-		committer.connect = sandbox.stub().rejects(Error('BAD'));
-		endpoint = sandbox.createStubInstance(Endpoint);
+		endorser = sinon.createStubInstance(Endorser);
+		committer = sinon.createStubInstance(Committer);
+		endorser.connect = sinon.stub().rejects(Error('BAD'));
+		committer.connect = sinon.stub().rejects(Error('BAD'));
+		endpoint = sinon.createStubInstance(Endpoint);
 		client = new Client('myclient');
 		client.getCommitter = sinon.stub().returns(committer);
 		client.getEndorser = sinon.stub().returns(endorser);
@@ -56,14 +54,11 @@ describe('NetworkConfig', () => {
 		getPEMfromConfig = NetworkConfig.__get__('getPEMfromConfig');
 
 		FakeLogger = {
-			debug: () => {
-			},
-			error: () => {
-			},
-			warn: () => {
-			}
+			debug: sinon.fake(),
+			error: sinon.fake(),
+			warn: sinon.fake(),
+			info: sinon.fake()
 		};
-		sandbox.stub(FakeLogger);
 		revert.push(NetworkConfig.__set__('logger', FakeLogger));
 
 		const fakeFS = {
@@ -76,7 +71,7 @@ describe('NetworkConfig', () => {
 
 	afterEach(() => {
 		revert.forEach((f) => f());
-		sandbox.reset();
+		sinon.restore();
 	});
 
 	const config = {
@@ -220,11 +215,11 @@ describe('NetworkConfig', () => {
 		it('should run buildOrderer with params and bad connect', async () => {
 			revert.push(NetworkConfig.__set__('buildOptions', sinon.stub().returns({url: 'url'})));
 			await buildOrderer(client, 'name', {url: 'url'});
-			sinon.assert.calledWith(FakeLogger.error, '%s - Unable to connect to the committer %s due to %s');
+			sinon.assert.calledWith(FakeLogger.info, '%s - Unable to connect to the committer %s due to %s');
 		});
 		it('should run buildOrderer with params and good connect', async () => {
 			revert.push(NetworkConfig.__set__('buildOptions', sinon.stub().returns({url: 'url'})));
-			committer.connect = sandbox.stub().resolves('GOOD');
+			committer.connect = sinon.stub().resolves('GOOD');
 			await buildOrderer(client, 'name', {url: 'url'}, {});
 			sinon.assert.calledWith(FakeLogger.debug, '%s - connected to committer %s url:%s');
 		});
@@ -235,12 +230,12 @@ describe('NetworkConfig', () => {
 			revert.push(NetworkConfig.__set__('findPeerMspid', sinon.stub().returns('mspid')));
 			revert.push(NetworkConfig.__set__('buildOptions', sinon.stub().returns({url: 'url'})));
 			await buildPeer(client, 'name', {url: 'url'}, {});
-			sinon.assert.calledWith(FakeLogger.error, '%s - Unable to connect to the endorser %s due to %s');
+			sinon.assert.calledWith(FakeLogger.info, '%s - Unable to connect to the endorser %s due to %s');
 		});
 		it('should run buildPeer with params and good connect', async () => {
 			revert.push(NetworkConfig.__set__('findPeerMspid', sinon.stub().returns('mspid')));
 			revert.push(NetworkConfig.__set__('buildOptions', sinon.stub().returns({url: 'url'})));
-			endorser.connect = sandbox.stub().resolves('GOOD');
+			endorser.connect = sinon.stub().resolves('GOOD');
 			await buildPeer(client, 'name', {url: 'url'}, {});
 			sinon.assert.calledWith(FakeLogger.debug, '%s - connected to endorser %s url:%s');
 		});
