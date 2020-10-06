@@ -78,14 +78,14 @@ async function buildOrderer(client: Client, ordererName: string, ordererConfig: 
 	const mspid: string = ordererConfig.mspid;
 	const options = await buildOptions(ordererConfig);
 	const endpoint = client.newEndpoint(options);
+	logger.debug('%s - about to connect to committer %s url:%s mspid:%s', method, ordererName, ordererConfig.url, mspid);
+	// since the client saves the orderer, no need to save here
+	const orderer = client.getCommitter(ordererName, mspid);
 	try {
-		logger.debug('%s - about to connect to committer %s url:%s mspid:%s', method, ordererName, ordererConfig.url, mspid);
-		// since the client saves the orderer, no need to save here
-		const orderer = client.getCommitter(ordererName, mspid);
 		await orderer.connect(endpoint);
 		logger.debug('%s - connected to committer %s url:%s', method, ordererName, ordererConfig.url);
 	} catch (error) {
-		logger.error('%s - Unable to connect to the committer %s due to %s', method, ordererName, error);
+		logger.info('%s - Unable to connect to the committer %s due to %s', method, ordererName, error);
 	}
 }
 
@@ -96,14 +96,14 @@ async function buildPeer(client: Client, peerName: string, peerConfig: any, conf
 	const mspid = findPeerMspid(peerName, config);
 	const options = await buildOptions(peerConfig);
 	const endpoint = client.newEndpoint(options);
+	logger.debug('%s - about to connect to endorser %s url:%s mspid:%s', method, peerName, peerConfig.url, mspid);
+	// since this adds to the clients list, no need to save
+	const peer = client.getEndorser(peerName, mspid);
 	try {
-		logger.debug('%s - about to connect to endorser %s url:%s mspid:%s', method, peerName, peerConfig.url, mspid);
-		// since this adds to the clients list, no need to save
-		const peer = client.getEndorser(peerName, mspid);
 		await peer.connect(endpoint);
 		logger.debug('%s - connected to endorser %s url:%s', method, peerName, peerConfig.url);
 	} catch (error) {
-		logger.error('%s - Unable to connect to the endorser %s due to %s', method, peerName, error);
+		logger.info('%s - Unable to connect to the endorser %s due to %s', method, peerName, error);
 	}
 }
 
