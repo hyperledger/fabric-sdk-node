@@ -36,20 +36,26 @@ export class RoundRobinQueryHandler implements QueryHandler {
 			const peerIndex = (startPeerIndex + i) % this.peers.length;
 
 			const peer = this.peers[peerIndex];
-			logger.debug('%s - sending to peer %s', method, peer.name);
 
-			const results = await query.evaluate([peer]);
-			const result = results[peer.name];
-			if (result instanceof Error) {
-				errorMessages.push(result.toString());
-			} else {
-				if (result.isEndorsed) {
-					logger.debug('%s - return peer response status: %s', method, result.status);
-					return result.payload;
+			if (peer.hasChaincode(query.query.chaincodeId)) {
+				logger.debug('%s - sending to peer %s', method, peer.name);
+				const results = await query.evaluate([peer]);
+				const result = results[peer.name];
+				if (result instanceof Error) {
+					errorMessages.push(result.toString());
 				} else {
-					logger.debug('%s - throw peer response status: %s message: %s', method, result.status, result.message);
-					throw Error(result.message);
+					if (result.isEndorsed) {
+						logger.debug('%s - return peer response status: %s', method, result.status);
+						return result.payload;
+					} else {
+						logger.debug('%s - throw peer response status: %s message: %s', method, result.status, result.message);
+						throw Error(result.message);
+					}
 				}
+			} else {
+				const msg = util.format('Peer %s is not running chaincode %s', peer.name, query.query.chaincodeId);
+				logger.debug('%s - skipping peer,  %s', method, msg);
+				errorMessages.push(msg);
 			}
 		}
 

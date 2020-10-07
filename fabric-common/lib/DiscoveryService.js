@@ -624,38 +624,39 @@ class DiscoveryService extends ServiceAction {
 		const address = discovery_peer.endpoint;
 		const msp_id = discovery_peer.mspid;
 
-		const found = this.channel.getEndorser(address); // address is used as name
-		if (found) {
-			logger.debug(`${method} - endorser is already added to the channel - ${address}`);
-			return found;
-		}
-		logger.debug(`${method} - did not find endorser ${address}`);
 		const host_port = address.split(':');
 		const url = this._buildUrl(host_port[0], host_port[1]);
-		logger.debug(`${method} - create a new endorser ${url}`);
-		const peer = this.client.newEndorser(address, msp_id);
-		const end_point = this.client.newEndpoint(this._buildOptions(address, url, host_port[0], msp_id));
-		try {
-			// first check to see if peer is already on this channel
-			let same = false;
-			const channelPeers = this.channel.getEndorsers();
-			for (const channelPeer of channelPeers) {
-				logger.debug('%s - checking %s', method, channelPeer);
-				if (channelPeer.endpoint && channelPeer.endpoint.url === url) {
-					same = true;
-					break;
-				}
+
+		// first check to see if peer is already on this channel
+		let peer;
+		const channelPeers = this.channel.getEndorsers();
+		for (const channelPeer of channelPeers) {
+			logger.debug('%s - checking %s', method, channelPeer);
+			if (channelPeer.endpoint && channelPeer.endpoint.url === url) {
+				logger.debug('%s - %s - already added to this channel', method, peer);
+				peer = channelPeer;
+				break;
 			}
-			if (!same) {
+		}
+		if (!peer) {
+			logger.debug(`${method} - create a new endorser ${url}`);
+			peer = this.client.newEndorser(address, msp_id);
+			const end_point = this.client.newEndpoint(this._buildOptions(address, url, host_port[0], msp_id));
+			try {
 				logger.debug(`${method} - about to connect to endorser ${address} url:${url}`);
 				await peer.connect(end_point);
 				this.channel.addEndorser(peer);
 				logger.debug(`${method} - connected to peer ${address} url:${url}`);
-			} else {
-				logger.debug('%s - %s - already added to this channel', method, peer);
+			} catch (error) {
+				logger.error(`${method} - Unable to connect to the discovered peer ${address} due to ${error}`);
 			}
-		} catch (error) {
-			logger.error(`${method} - Unable to connect to the discovered peer ${address} due to ${error}`);
+		}
+
+		// make sure that this peer has all the found installed chaincodes
+		if (discovery_peer.chaincodes) {
+			for (const chaincode of discovery_peer.chaincodes) {
+				peer.addChaincode(chaincode);
+			}
 		}
 
 		return peer;

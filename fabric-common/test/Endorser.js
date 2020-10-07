@@ -43,6 +43,52 @@ describe('Endorser', () => {
 		});
 	});
 
+	describe('#hasChaincode', () => {
+		it('should be false without name', () => {
+			const result = endorser.hasChaincode();
+			result.should.be.false;
+		});
+		it('should be true with name and no chaincodes on peer', () => {
+			const result = endorser.hasChaincode('chaincode');
+			result.should.be.true;
+		});
+		it('should be false with name and no chaincodes on peer using "noCouldBe"', () => {
+			const result = endorser.hasChaincode('chaincode', true);
+			result.should.be.false;
+		});
+		it('should be true with name and found', () => {
+			endorser.chaincodes = ['chaincode'];
+			const result = endorser.hasChaincode('chaincode');
+			result.should.be.true;
+		});
+		it('should be true with name and found using "noCouldBe"', () => {
+			endorser.chaincodes = ['chaincode'];
+			const result = endorser.hasChaincode('chaincode', true);
+			result.should.be.true;
+		});
+	});
+
+	describe('#addChaincode', () => {
+		it('should run without name', () => {
+			endorser.addChaincode();
+			endorser.chaincodes.should.be.deep.equal([]);
+		});
+		it('should run with name', () => {
+			endorser.addChaincode('chaincode');
+			endorser.chaincodes.should.be.deep.equal(['chaincode']);
+		});
+		it('should run with same name', () => {
+			endorser.addChaincode('chaincode');
+			endorser.addChaincode('chaincode');
+			endorser.chaincodes.should.be.deep.equal(['chaincode']);
+		});
+		it('should run with different name', () => {
+			endorser.addChaincode('chaincode');
+			endorser.addChaincode('other');
+			endorser.chaincodes.should.be.deep.equal(['chaincode', 'other']);
+		});
+	});
+
 	describe('#sendProposal', () => {
 		it('should reject if no proposal', async () => {
 			await endorser.sendProposal().should.be.rejectedWith(/Missing signedProposal parameter/);
