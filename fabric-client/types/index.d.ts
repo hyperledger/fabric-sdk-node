@@ -379,6 +379,7 @@ declare namespace Client { // tslint:disable-line:no-namespace
 		public lastBlockNumber(): number;
 		public isconnected(): boolean;
 		public connect(options?: ConnectOptions | boolean, connectCallback?: (err: Error, channelEventHub: ChannelEventHub) => void): void;
+		public reconnect(options?: ConnectOptions, connectCallback?: (err: Error, channelEventHub: ChannelEventHub) => void): void;
 		public disconnect(): void;
 		public close(): void;
 
