@@ -194,7 +194,6 @@ class ServiceEndpoint {
 
 		return new Promise((resolve, reject) => {
 			logger.debug(`${method} - promise running ${this.name} - ${this.endpoint.url}`);
-			this.connected = false;
 			const wait_ready_timeout = this.options['grpc-wait-for-ready-timeout'];
 			const timeout = new Date().getTime() + wait_ready_timeout;
 			if (!this.service) {
@@ -206,6 +205,7 @@ class ServiceEndpoint {
 						err.message = err.message + ' on ' + this.toString();
 					}
 					err.connectFailed = true;
+					this.connected = false;
 					logger.error(err);
 					logger.error(`${method} - Failed to connect to remote gRPC server ${this.name} url:${this.endpoint.url} timeout:${wait_ready_timeout}`);
 					reject(err);
