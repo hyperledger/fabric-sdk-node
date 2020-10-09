@@ -21,8 +21,6 @@ export interface QueryResponse {
 }
 
 export interface Query {
-	readonly query: CommonQuery;
-	readonly requestTimeout: number;
 	evaluate(peers: Endorser[]): Promise<QueryResults>;
 }
 
@@ -30,8 +28,8 @@ export interface Query {
  * @private
  */
 export class QueryImpl implements Query {
-	readonly query: CommonQuery;
-	readonly requestTimeout: number;
+	private readonly query: CommonQuery;
+	private readonly requestTimeout: number;
 
 	/**
 	 * Builds a Query instance to send and then work with the results returned

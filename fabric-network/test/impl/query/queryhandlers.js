@@ -61,13 +61,10 @@ describe('QueryHandlers', () => {
 
 	beforeEach(() => {
 		query = sinon.createStubInstance(Query);
-		query.query = {chaincodeId: 'chaincodeId'};
 		endorser1 = sinon.createStubInstance(Endorser);
 		endorser1.name = 'peer1';
-		endorser1.hasChaincode = sinon.stub().returns(true);
 		endorser2 = sinon.createStubInstance(Endorser);
 		endorser2.name = 'peer2';
-		endorser2.hasChaincode = sinon.stub().returns(true);
 	});
 
 	afterEach(() => {

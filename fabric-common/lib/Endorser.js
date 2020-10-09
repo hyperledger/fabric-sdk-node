@@ -77,15 +77,16 @@ class Endorser extends ServiceEndpoint {
 	 * If the list is empty then this peer has not been told of it's chaincodes
 	 * and therefore might be running the chaincode in question.
 	 * @param {String} chaincodeName
-	 * @param {boolean} [noCouldBe] Optional, default false, return true if the
-	 * peer does not have any chaincodes on the list.
+	 * @param {boolean} [noMaybe] Optional, default false, if noMaybe is true then
+	 * this method will return true when the peer does not have any chaincodes on
+	 * the list.
 	 */
-	hasChaincode(chaincodeName, noCouldBe) {
+	hasChaincode(chaincodeName, noMaybe) {
 		const method = `hasChaincode[${this.name}]`;
 		let result = false;
 
 		if (chaincodeName) {
-			if (this.chaincodes.length === 0 && !noCouldBe) {
+			if (this.chaincodes.length === 0 && !noMaybe) {
 				result = true;
 				logger.debug(`${method} - peer has no chaincodes - ${chaincodeName} might be installed`);
 			} else {

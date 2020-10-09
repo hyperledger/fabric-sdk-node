@@ -631,9 +631,9 @@ class DiscoveryService extends ServiceAction {
 		let peer;
 		const channelPeers = this.channel.getEndorsers();
 		for (const channelPeer of channelPeers) {
-			logger.debug('%s - checking %s', method, channelPeer);
+			logger.debug('%s - checking channel peer %s', method, channelPeer.name);
 			if (channelPeer.endpoint && channelPeer.endpoint.url === url) {
-				logger.debug('%s - %s - already added to this channel', method, peer);
+				logger.debug('%s - url: %s - already added to this channel', method, url);
 				peer = channelPeer;
 				break;
 			}
@@ -655,7 +655,8 @@ class DiscoveryService extends ServiceAction {
 		// make sure that this peer has all the found installed chaincodes
 		if (discovery_peer.chaincodes) {
 			for (const chaincode of discovery_peer.chaincodes) {
-				peer.addChaincode(chaincode);
+				logger.debug(`${method} - adding chaincode ${chaincode.name} to peer ${peer.name}`);
+				peer.addChaincode(chaincode.name);
 			}
 		}
 

@@ -637,7 +637,7 @@ describe('DiscoveryService', () => {
 			const results = await discovery._buildPeer({endpoint: 'somehost.com', mspid: 'mspid'});
 			should.equal(results, endorser);
 			should.equal(channel.getEndorsers().length, 1);
-			sinon.assert.calledWith(FakeLogger.debug, '%s - %s - already added to this channel');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - url: %s - already added to this channel');
 		});
 		it('should handle found same name endorser on the channel and add chaincodes', async () => {
 			endorser.name = 'mypeer';
@@ -645,11 +645,11 @@ describe('DiscoveryService', () => {
 			channel.addEndorser(endorser);
 			endorser.endpoint = endpoint;
 			discovery._buildUrl = sinon.stub().returns('grpc://somehost.com');
-			const results = await discovery._buildPeer({endpoint: 'somehost.com', mspid: 'mspid', chaincodes: ['chaincode']});
+			const results = await discovery._buildPeer({endpoint: 'somehost.com', mspid: 'mspid', chaincodes: [{name: 'chaincode'}]});
 			should.equal(results, endorser);
 			should.equal(channel.getEndorsers().length, 1);
 			sinon.assert.calledWith(endorser.addChaincode, 'chaincode');
-			sinon.assert.calledWith(FakeLogger.debug, '%s - %s - already added to this channel');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - url: %s - already added to this channel');
 		});
 	});
 

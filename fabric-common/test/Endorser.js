@@ -52,7 +52,7 @@ describe('Endorser', () => {
 			const result = endorser.hasChaincode('chaincode');
 			result.should.be.true;
 		});
-		it('should be false with name and no chaincodes on peer using "noCouldBe"', () => {
+		it('should be false with name and no chaincodes on peer using "noMaybe"', () => {
 			const result = endorser.hasChaincode('chaincode', true);
 			result.should.be.false;
 		});
@@ -61,7 +61,7 @@ describe('Endorser', () => {
 			const result = endorser.hasChaincode('chaincode');
 			result.should.be.true;
 		});
-		it('should be true with name and found using "noCouldBe"', () => {
+		it('should be true with name and found using "noMaybe"', () => {
 			endorser.chaincodes = ['chaincode'];
 			const result = endorser.hasChaincode('chaincode', true);
 			result.should.be.true;
