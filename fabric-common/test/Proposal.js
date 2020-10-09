@@ -266,6 +266,7 @@ describe('Proposal', () => {
 			proposal.build(idx);
 			proposal.sign(idx);
 			sinon.stub(endorser, 'sendProposal').resolves({response: {status: 200}});
+			proposal.compareProposalResponseResults = sinon.stub().returns(true);
 			const results = await proposal.send({targets: [endorser]});
 			should.exist(results.responses);
 			if (results.responses && results.responses[0]) {
@@ -303,6 +304,7 @@ describe('Proposal', () => {
 			proposal.build(idx);
 			proposal.sign(idx);
 			sinon.stub(handler, 'endorse').resolves([{response: {status: 200}}]);
+			proposal.compareProposalResponseResults = sinon.stub().returns(true);
 			const results = await proposal.send({handler: handler});
 			should.exist(results.responses);
 			if (results.responses && results.responses[0]) {
@@ -342,70 +344,6 @@ describe('Proposal', () => {
 			}
 		});
 	});
-
-	describe('#compareProposalResponseResults', () => {
-		it('should require a proposalResponses', () => {
-			(() => {
-				proposal.compareProposalResponseResults();
-			}).should.throw('Missing proposalResponses parameter');
-		});
-		it('should require an array of proposalResponses', () => {
-			(() => {
-				proposal.compareProposalResponseResults('string');
-			}).should.throw('proposalResponses must be an array, typeof=string');
-		});
-		it('should require an array of proposalResponses 2', () => {
-			(() => {
-				proposal.compareProposalResponseResults([]);
-			}).should.throw('proposalResponses is empty');
-		});
-		it('if proposalResponses has any error return false', () => {
-			const proposalResponses = [
-				new Error('proposal error')
-			];
-			const results = proposal.compareProposalResponseResults(proposalResponses);
-			results.should.be.false;
-		});
-		it('if only one proposalResponses return true', () => {
-			const proposalResponses = [
-				{payload: TestUtils.createResponsePayload('result1')}
-			];
-			const results = proposal.compareProposalResponseResults(proposalResponses);
-			results.should.be.true;
-		});
-		it('if two same proposalResponses return true', () => {
-			const proposalResponses = [
-				{payload: TestUtils.createResponsePayload('result1')},
-				{payload: TestUtils.createResponsePayload('result1')}
-			];
-			const results = proposal.compareProposalResponseResults(proposalResponses);
-			results.should.be.true;
-		});
-		it('if two not same proposalResponses return false', () => {
-			const proposalResponses = [
-				{payload: TestUtils.createResponsePayload('result1')},
-				{payload: TestUtils.createResponsePayload('result2')}
-			];
-			const results = proposal.compareProposalResponseResults(proposalResponses);
-			results.should.be.false;
-		});
-	});
-
-	describe('#_getProposalResponseResults', () => {
-		const _getProposalResponseResults = Proposal.__get__('_getProposalResponseResults');
-
-		it('should require a proposalResponse', () => {
-			(() => {
-				_getProposalResponseResults();
-			}).should.throw('Missing proposalResponse parameter');
-		});
-		it('should require a proposalResponse.payload', () => {
-			(() => {
-				_getProposalResponseResults({});
-			}).should.throw('Parameter must be a ProposalResponse Object');
-		});
-	});
-
 
 	describe('#verifyProposalResponse', () => {
 		it('should require proposalResponse', () => {

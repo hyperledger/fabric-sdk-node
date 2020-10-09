@@ -395,6 +395,7 @@ message Endorsement {
 		const {handler, targets, requestTimeout} = request;
 		logger.debug('%s - requestTimeout %s', method, requestTimeout);
 		const signedEnvelope = this.getSignedProposal();
+
 		this._proposalResponses = [];
 		this._proposalErrors = [];
 		this._queryResults = [];
@@ -566,65 +567,12 @@ message Endorsement {
 	}
 
 	/**
-	 * Utility method to examine a set of proposals to check they contain
-	 * the same endorsement result write sets.
-	 * This will validate that the endorsing peers all agree on the result
-	 * of the chaincode execution.
-	 *
-	 * @param {ProposalResponse[]} proposalResponses - The proposal responses
-	 * from all endorsing peers
-	 * @returns {boolean} True when all proposals compare equally, false otherwise.
-	 */
-	compareProposalResponseResults(proposalResponses = checkParameter('proposalResponses')) {
-		const method = `compareProposalResponseResults[${this.chaincodeId}]`;
-		logger.debug('%s - start', method);
-
-		if (!Array.isArray(proposalResponses)) {
-			throw new Error('proposalResponses must be an array, typeof=' + typeof proposalResponses);
-		}
-		if (proposalResponses.length === 0) {
-			throw new Error('proposalResponses is empty');
-		}
-
-		if (proposalResponses.some((response) => response instanceof Error)) {
-
-			return false;
-		}
-
-		const first_one = _getProposalResponseResults(proposalResponses[0]);
-		for (let i = 1; i < proposalResponses.length; i++) {
-			const next_one = _getProposalResponseResults(proposalResponses[i]);
-			if (next_one.equals(first_one)) {
-				logger.debug('%s - read/writes result sets match index=%s', method, i);
-			} else {
-				logger.error('%s - read/writes result sets do not match index=%s', method, i);
-
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	/**
 	 * return a printable representation of this object
 	 */
 	toString() {
 
 		return `Proposal: {chaincodeId: ${this.chaincodeId}, channel: ${this.channel.name}}`;
 	}
-}
-
-// internal utility method to decode and get the write set
-// from a proposal response
-function _getProposalResponseResults(proposaResponse = checkParameter('proposalResponse')) {
-	if (!proposaResponse.payload) {
-		throw new Error('Parameter must be a ProposalResponse Object');
-	}
-	const payload = fabproto6.protos.ProposalResponsePayload.decode(proposaResponse.payload);
-	const extension = fabproto6.protos.ChaincodeAction.decode(payload.extension);
-
-	return extension.results;
 }
 
 module.exports = Proposal;
