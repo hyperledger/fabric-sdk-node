@@ -150,6 +150,8 @@ export class Committer extends ServiceEndpoint {
 export class Endorser extends ServiceEndpoint {
 	constructor(name: string, client: Client, mspid: string);
 	public sendProposal(signedProposal?: Buffer, timeout?: number): Promise<any>;
+	public addChaincode(chaincodeName: string): Endorser;
+	public hasChaincode(chaincodeName: string): boolean;
 }
 
 export class Eventer extends ServiceEndpoint {
@@ -209,6 +211,7 @@ export interface SendProposalRequest {
 }
 
 export class Proposal extends ServiceAction {
+	readonly chaincodeId: string;
 	constructor(chaincodeName: string, channel: Channel);
 	public getTransactionId(): string;
 	public buildProposalInterest(): any;

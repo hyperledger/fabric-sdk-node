@@ -133,6 +133,7 @@ describe('DiscoveryService', () => {
 		client.newEndorser = sinon.stub().returns(endorser);
 		endorser.connect.resolves(true);
 		endorser.connected = true;
+		endorser.addChaincode = sinon.stub();
 		client.newCommitter = sinon.stub().returns(committer);
 		committer.connect.resolves(true);
 		committer.name = 'mycommitter';
@@ -598,7 +599,7 @@ describe('DiscoveryService', () => {
 			endorser.name = 'mypeer';
 			channel.endorsers = new Map();
 			channel.addEndorser(endorser);
-			const results = await discovery._buildPeer({endpoint: 'mypeer'});
+			const results = await discovery._buildPeer({endpoint: 'mypeer:2000', mspid: 'msp1'});
 			should.equal(results, endorser);
 			should.equal(channel.getEndorsers().length, 1);
 		});
@@ -636,7 +637,19 @@ describe('DiscoveryService', () => {
 			const results = await discovery._buildPeer({endpoint: 'somehost.com', mspid: 'mspid'});
 			should.equal(results, endorser);
 			should.equal(channel.getEndorsers().length, 1);
-			sinon.assert.calledWith(FakeLogger.debug, '%s - %s - already added to this channel');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - url: %s - already added to this channel');
+		});
+		it('should handle found same name endorser on the channel and add chaincodes', async () => {
+			endorser.name = 'mypeer';
+			channel.endorsers = new Map();
+			channel.addEndorser(endorser);
+			endorser.endpoint = endpoint;
+			discovery._buildUrl = sinon.stub().returns('grpc://somehost.com');
+			const results = await discovery._buildPeer({endpoint: 'somehost.com', mspid: 'mspid', chaincodes: [{name: 'chaincode'}]});
+			should.equal(results, endorser);
+			should.equal(channel.getEndorsers().length, 1);
+			sinon.assert.calledWith(endorser.addChaincode, 'chaincode');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - url: %s - already added to this channel');
 		});
 	});
 
