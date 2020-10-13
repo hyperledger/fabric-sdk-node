@@ -46,6 +46,8 @@ stages:
             versionSpec: '10.x'
           Node12:
             versionSpec: '12.x'
+          Node14:
+            versionSpec: '14.x'
       steps:
         - task: NodeTool@0
           inputs:
