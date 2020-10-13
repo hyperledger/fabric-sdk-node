@@ -32,6 +32,7 @@ test/fixtures/fabricca/test*.*
 test/ts-fixtures/crypto-material/crypto-config/
 test/ts-fixtures/crypto-material/channel-config/
 test/ts-fixtures/crypto-material/config-base/twoorgs.genesis.block
+test/ts-fixtures/crypto-material/config-base/threeorgs.genesis.block
 # - generated typescript files
 test/typescript/**/*.js
 test/typescript/**/*.js.map
