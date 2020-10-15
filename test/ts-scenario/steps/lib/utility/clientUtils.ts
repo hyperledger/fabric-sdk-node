@@ -188,6 +188,16 @@ export async function buildChannelRequest(requestName: string, contractName: str
 
 		if (useDiscovery) {
 			request.handler = discoveryHandler;
+
+			// check the peers on the channel have the chaincode
+			const peers = channel.getEndorsers();
+			for (const peer of peers) {
+				if (peer.hasChaincode(contractName)) {
+					BaseUtils.logMsg(`Peer ${peer.name} has chaincode ${contractName}`);
+				} else {
+					BaseUtils.logAndThrow(`Peer ${peer.name} does not have chaincode ${contractName}`);
+				}
+			}
 		} else {
 			request.targets = targets;
 		}
@@ -358,14 +368,13 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 	}
 }
 
-export async function queryChannelRequest(clientName: string, channelName: string, contractName: string, contractArgs: string, queryName: string): Promise<void> {
+export async function queryChannelRequest(clientName: string, channelName: string, contractName: string, contractArgs: string, queryName: string, checkSendingtoContract: boolean): Promise<void> {
 	BaseUtils.logMsg(' -- starting clientUtils.queryChannelRequest');
 
 	// Requires that the endorsement is already built and signed (performed by buildChannelRequest())
 	const clientObject: any = retrieveClientObject(clientName);
 	const client: Client = clientObject.client;
 	const ccp: CommonConnectionProfileHelper = clientObject.ccp;
-	const clientOrg: string = clientObject.clientOrg;
 
 	// need a queries object
 	if (!clientObject.queries) {
@@ -379,7 +388,7 @@ export async function queryChannelRequest(clientName: string, channelName: strin
 		const channel: Channel = clientObject.channels.get(channelName);
 		const idx: IdentityContext = client.newIdentityContext(clientObject.user);
 
-		const peerNames: string[] = ccp.getPeersForOrganization(clientOrg);
+		const peerNames: string[] = ccp.getPeersForChannel(channelName);
 		const targets: Endorser[] = [];
 
 		for (const peerName of peerNames) {
@@ -421,37 +430,51 @@ export async function queryChannelRequest(clientName: string, channelName: strin
 				requestTimeout: Constants.INC_LONG
 			};
 
+			// if required, set up the peers with chaincode names to cause
+			// one error and one result
+			if (checkSendingtoContract) {
+				if (targets[0]) {
+					targets[0].addChaincode('dummy');
+					BaseUtils.logError('- added dummy chaincode name to peer[0] ' + targets[0].name);
+				}
+				if (targets[1]) {
+					targets[1].addChaincode(contractName);
+					BaseUtils.logError('- added ' + contractName + ' chaincode name to peer[1] ' + targets[1].name);
+				}
+			}
+
 			// Send query to target peers
 			const queryObject: any = {};
 			try {
 				const queryResponse: ProposalResponse = await query.send(queryRequest);
-
+				BaseUtils.logError('query submission checking results');
+				queryObject.results = {};
+				let inc: number = 0;
 				if (queryResponse.errors.length > 0) {
 					// failure
 					BaseUtils.logMsg(`Query failure detected`);
-					queryObject.results = {
-						general: JSON.stringify({
-							result: 'FAILURE'
-						})
-					};
-					let inc: number = 0;
+					queryObject.results.general = JSON.stringify({result: 'FAILURE'});
+					if (checkSendingtoContract) {
+						BaseUtils.logMsg(`Query during chaincodecheck failure detected`);
+						queryObject.results['chaincodecheck'] = queryObject.results.general;
+					}
 					for (const error of queryResponse.errors) {
 						queryObject.results[`peer${inc}`] = error.toString();
+						BaseUtils.logMsg(`Query failure ${queryObject.results[`peer${inc}`]}`);
+						inc++;
+					}
+				}
+				if (queryResponse.queryResults.length > 0) {
+					// Success
+					BaseUtils.logMsg(`Query success detected`);
+					queryObject.results.general = JSON.stringify({result: 'SUCCESS'});
+					for (const result of queryResponse.queryResults) {
+						queryObject.results[`peer${inc}`] = JSON.parse(result.toString());
+						BaseUtils.logMsg(`Query results ${queryObject.results[`peer${inc}`]}`);
 						inc++;
 					}
 				} else {
-					// Success
-					BaseUtils.logMsg(`Query success detected`);
-					queryObject.results = {
-						general: JSON.stringify({
-							result: 'SUCCESS'
-						})
-					};
-					let inc: number = 0;
-					for (const result of queryResponse.queryResults) {
-						queryObject.results[`peer${inc}`] = JSON.parse(result.toString());
-						inc++;
-					}
+					BaseUtils.logMsg(`No Query success detected`);
 				}
 			} catch (error) {
 				// Swallow error as we might be testing a failure path, but modify request object with error msg and status
@@ -546,12 +569,12 @@ export function validateChannelRequestResponse(clientName: string, isRequest: bo
 			BaseUtils.logMsg(`clientUtils - results of query was a string = ${stringResult}`);
 		} else { // must be an object
 			stringResult = JSON.stringify(savedResult);
-			BaseUtils.logMsg(`clientUtils - results of query was a object = ${stringResult}`);
+			BaseUtils.logMsg(`clientUtils - results of query was an object = ${stringResult}`);
 		}
 
 		const isMatch: boolean = (stringResult.localeCompare(expectedResult) === 0);
 		if (isMatch) {
-			BaseUtils.logMsg(`Validated response ${requestName} of type ${fieldName}`, {});
+			BaseUtils.logMsg(`Results match for ${requestName} of type ${fieldName}`);
 		} else {
 			BaseUtils.logAndThrow(`Unexpected response for ${requestName} and type ${fieldName}. Expected ${expectedResult} but had ${stringResult}`);
 		}

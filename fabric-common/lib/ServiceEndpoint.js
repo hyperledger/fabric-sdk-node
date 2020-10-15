@@ -145,7 +145,7 @@ class ServiceEndpoint {
 	 * @param {boolean} [reset] - Optional, attempt to reconnect if endpoint is not connected
 	 */
 	async checkConnection(reset = true) {
-		const method = `checkConnection[${this.name}]`;
+		const method = `checkConnection[${this.type}-${this.name}]`;
 		logger.debug('%s - start - connected:%s', method, this.connected);
 
 		if (reset && this.connected) {
@@ -172,7 +172,7 @@ class ServiceEndpoint {
 	 * Reset the connection
 	 */
 	async resetConnection() {
-		const method = `resetConnection[${this.name}]`;
+		const method = `resetConnection[${this.type}-${this.name}]`;
 		logger.debug('%s - start - connected:%s', method, this.connected);
 
 		this.disconnect(); // clean up possible old service

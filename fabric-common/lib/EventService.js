@@ -92,6 +92,8 @@ class EventService extends ServiceAction {
 		this.startSpecified = false;
 
 		this.myNumber = count++;
+
+		this.inUse = false;
 	}
 
 	/**
@@ -169,7 +171,9 @@ class EventService extends ServiceAction {
 		} else {
 			logger.debug('%s - no current eventer - not shutting down stream', method);
 		}
+
 		this._closeRunning = false;
+		this.inUse = false;
 
 		logger.debug('%s - end', method);
 	}
@@ -223,6 +227,7 @@ class EventService extends ServiceAction {
 		const method = `build[${this.name}] - #${this.myNumber}`;
 		logger.debug(`${method} - start`);
 
+		this.inUse = true;
 		const {startBlock, endBlock, blockType = FILTERED_BLOCK} = options;
 		this.startBlock = this._checkBlockNum(startBlock);
 		this.endBlock = this._checkBlockNum(endBlock);
@@ -422,7 +427,6 @@ class EventService extends ServiceAction {
 
 			}, requestTimeout);
 
-			logger.debug('%s - create stream based on blockType', method, this.blockType);
 			eventer.setStreamByType(this.blockType);
 
 			// the promise and streams live on and we need
@@ -432,7 +436,7 @@ class EventService extends ServiceAction {
 			const mystreamCount = streamCount++;
 			this.currentStreamNumber = mystreamCount;
 
-			logger.debug('%s - create stream listening callbacks - onData, onEnd, onStatus, onError', method);
+			logger.debug('%s - created stream % based on blockType %s', method, this.currentStreamNumber, this.blockType);
 
 			eventer.stream.on('data', (deliverResponse) => {
 				logger.debug('on.data %s- peer:%s - stream:%s', me, eventer.endpoint.url, mystreamCount);
@@ -607,17 +611,30 @@ class EventService extends ServiceAction {
 	}
 
 	/**
+	 * Use this method to indicate if application has already started using this
+	 * service. The service will have been asked to build the service request
+	 * and will not have commpleted the service startup.
+	 */
+	isInUse() {
+		const method = `isInUse[${this.name}]  - #${this.myNumber}`;
+		logger.debug('%s inUse - %s', method, this.inUse);
+
+		return this.inUse;
+	}
+
+	/**
 	 * Use this method to indicate if this event service has an event endpoint
 	 * {@link Eventer} assigned and the event endpoint has a listening stream
 	 * connected and active.
 	 */
 	isStarted() {
 		const method = `isStarted[${this.name}]  - #${this.myNumber}`;
-		logger.debug('%s - start', method);
 
 		if (this._currentEventer && this._currentEventer.isStreamReady()) {
+			logger.debug('%s - true', method);
 			return true;
 		} else {
+			logger.debug('%s - false', method);
 			return false;
 		}
 	}

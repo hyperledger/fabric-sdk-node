@@ -31,6 +31,12 @@ Scenario: Using only fabric-common on V2 channel
 	Then the query named myFirstQuery for client fred has a general result matching {"result":"SUCCESS"}
 	And the query named myFirstQuery for client fred has a peer0 result matching {"color":"blue","docType":"car","make":"Toyota","model":"Prius","owner":"Tomoko"}
 
+	When I submit a chaincode query named checkChaincodeName with args [queryCar,CAR0] for contract fabcar as client fred on channel basev2channel
+	Then the query named checkChaincodeName for client fred has a general result matching {"result":"SUCCESS"}
+	Then the query named checkChaincodeName for client fred has a chaincodecheck result matching {"result":"FAILURE"}
+	And the query named checkChaincodeName for client fred has a peer1 result matching {"color":"blue","docType":"car","make":"Toyota","model":"Prius","owner":"Tomoko"}
+	And the query named checkChaincodeName for client fred has a peer0 result matching Error: Peer peer0.org1.example.com is not running chaincode fabcar
+
 	When I build a new endorsement request named myDiscoveryRequest for smart contract named fabcar with arguments [createCar,2008,Chrysler,PTCurser,white,Jones] as client fred on discovery channel basev2channel
 	And I commit the endorsement request named myDiscoveryRequest as client fred on channel basev2channel
 	Then the request named myDiscoveryRequest for client fred has discovery results

@@ -5,6 +5,7 @@
 'use strict';
 
 import * as ClientHelper from './lib/utility/clientUtils';
+import * as BaseUtils from './lib/utility/baseUtils';
 import { Constants } from './constants';
 import { CommonConnectionProfileHelper } from './lib/utility/commonConnectionProfileHelper';
 
@@ -16,7 +17,10 @@ Given(/^I have created a client named (.+?) based on information in profile (.+?
 
 	// Get a CCP Helper
 	const profilePath: string = path.join(__dirname, '../config', ccpName);
+	BaseUtils.logMsg(`loading profile ${profilePath}`);
+
 	const ccp: CommonConnectionProfileHelper = new CommonConnectionProfileHelper(profilePath, true);
+	BaseUtils.logMsg(`     ${JSON.stringify(ccp.getProfile())}`);
 
 	// Create the user
 	await ClientHelper.createAdminClient(clientName, ccp, userOrg);
@@ -44,7 +48,12 @@ When(/^I commit the endorsement request named (.+?) as client (.+?) on channel (
 
 When(/^I submit a query named (.+?) with args (.+?) for contract (.+?) as client (.+?) on channel (.+?)$/, { timeout: Constants.HUGE_TIME as number },
 	async (queryName: string, queryArgs: string, contractName: string, clientName: string, channelName: string) => {
-	await ClientHelper.queryChannelRequest(clientName, channelName, contractName, queryArgs, queryName);
+	await ClientHelper.queryChannelRequest(clientName, channelName, contractName, queryArgs, queryName, false);
+});
+
+When(/^I submit a chaincode query named (.+?) with args (.+?) for contract (.+?) as client (.+?) on channel (.+?)$/, { timeout: Constants.HUGE_TIME as number },
+	async (queryName: string, queryArgs: string, contractName: string, clientName: string, channelName: string) => {
+	await ClientHelper.queryChannelRequest(clientName, channelName, contractName, queryArgs, queryName, true);
 });
 
 Then(/^the (request|query) named (.+?) for client (.+?) has a (.+?) result matching (.+?)$/, { timeout: Constants.INC_SHORT as number },
