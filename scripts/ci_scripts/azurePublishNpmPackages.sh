@@ -92,7 +92,7 @@ readNextUnstablePackageVersion() {
         ver=$NF
         sub(/\".*/, "", ver)
         print ver+1
-    }' | sort -r | head -1)
+    }' | tail -1)
     echo "${RELEASE_VERSION}.${nextVersion:-1}"
 }
 
@@ -120,6 +120,7 @@ publishPackage() {
         echoLog "Successfully published ${RELEASE_TAG} tag of $1"
     else
         echoLog "FAILED to publish ${RELEASE_TAG} of $1"
+        false
     fi
 }
 
