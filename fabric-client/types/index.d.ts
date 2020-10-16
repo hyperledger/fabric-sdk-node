@@ -390,11 +390,11 @@ declare namespace Client { // tslint:disable-line:no-namespace
 		public generateUnsignedRegistration(options: EventHubRegistrationRequest): Buffer;
 
 		public checkConnection(forceReconnect: boolean): string;
-		public registerChaincodeEvent(ccid: string, eventname: string, onEvent: (event: ChaincodeEvent, blockNumber?: number, txId?: string, txStatus?: string) => void, onError?: (err: Error) => void, options?: RegistrationOpts): ChaincodeChannelEventHandle;
+		public registerChaincodeEvent(ccid: string, eventname: string, onEvent: (event: ChaincodeEvent, blockNumber?: string, txId?: string, txStatus?: string) => void, onError?: (err: Error) => void, options?: RegistrationOpts): ChaincodeChannelEventHandle;
 		public unregisterChaincodeEvent(handle: ChaincodeChannelEventHandle, throwError?: boolean): void;
 		public registerBlockEvent(onEvent: (block: Block | FilteredBlock) => void, onError?: (err: Error) => void, options?: RegistrationOpts): number;
 		public unregisterBlockEvent(blockRegistrationNumber: number, throwError: boolean): void;
-		public registerTxEvent(txId: string, onEvent: (txId: string, code: string, blockNumber: number) => void, onError?: (err: Error) => void, options?: RegistrationOpts): string;
+		public registerTxEvent(txId: string, onEvent: (txId: string, code: string, blockNumber: string) => void, onError?: (err: Error) => void, options?: RegistrationOpts): string;
 		public unregisterTxEvent(txId: string, throwError?: boolean): void;
 	}
 

@@ -759,7 +759,7 @@ test('\n\n***** Network End-to-end flow: invoke transaction while channel\'s eve
 		let eventsReceived = 0;
 		let errorsReceived = 0;
 
-		function onEvent(txId: string, code: string, blockNumber: number) {
+		function onEvent(txId: string, code: string, blockNumber: string) {
 			eventsReceived++;
 		}
 		function onError(error: Error) {
