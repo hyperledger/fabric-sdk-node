@@ -91,7 +91,7 @@ class ContractEventListener extends AbstractEventListener {
 	 * block and transaction seen once the callback has run and unregisters the
 	 * listener if the unregister flag was provided
 	 * @param {ChaincodeEvent} event the event emitted
-	 * @param {number} blockNumber the block number this transaction was committed inside
+	 * @param {String} blockNumber the block number this transaction was committed inside
 	 * @param {string} transactionId the transaction ID of the transaction this event was emitted by
 	 * @param {string} status the status of the the transaction
 	 * @param {string} [expectedNumber] the expected number of events from the block
