@@ -69,3 +69,7 @@ Feature: Configure Fabric using CLI and submit/evaluate using a network Gateway 
 		Then The gateway named myDiscoveryGateway has a submit type response
 		When I use the gateway named myDiscoveryGateway to evaluate a transaction with args [queryCar,2001] for contract fabcar instantiated on channel discoverychannel
 		Then The gateway named myDiscoveryGateway has a evaluate type response matching {"color":"red","docType":"car","make":"Ford","model":"F350","owner":"Sam"}
+
+	Scenario: Using a Gateway I can use transient data
+		When I use the discovery gateway named myDiscoveryGateway to submit a transaction a 100 times with args [createCar,2001,Ford,F350,red,Sam] for contract fabcar instantiated on channel discoverychannel
+		Then The gateway named myDiscoveryGateway has a submit type response

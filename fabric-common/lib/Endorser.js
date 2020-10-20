@@ -44,6 +44,66 @@ class Endorser extends ServiceEndpoint {
 
 		this.type = TYPE;
 		this.serviceClass = fabproto6.protos.Endorser;
+
+		this.chaincodes = [];
+	}
+
+	/**
+	 * Add a chaincode name or ID to this Peer. This will aid in
+	 * determining if this peer should be used to endorse.
+	 *
+	 * This will primarily be used by the {@link DiscoveryService} when
+	 * adding peers to a channel based on the discovery results
+	 *
+	 * @param {String} chaincodeName
+	 */
+	addChaincode(chaincodeName) {
+		const method = `addChaincode[${this.name}]`;
+
+		if (chaincodeName) {
+			if (this.hasChaincode(chaincodeName, true)) {
+				logger.debug(`${method} - chaincode already exist on this endorser - ${chaincodeName}`);
+			} else {
+				this.chaincodes.push(chaincodeName);
+				logger.debug(`${method} - chaincode added to this endorser - ${chaincodeName}`);
+			}
+		}
+
+		return this;
+	}
+
+	/**
+	 * Check if this peer has the chaincode on it's list.
+	 * If the list is empty then this peer has not been told of it's chaincodes
+	 * and therefore might be running the chaincode in question.
+	 * @param {String} chaincodeName
+	 * @param {boolean} [noMaybe] Optional, default false, if noMaybe is true then
+	 * this method will return true when the peer does not have any chaincodes on
+	 * the list.
+	 */
+	hasChaincode(chaincodeName, noMaybe) {
+		const method = `hasChaincode[${this.name}]`;
+		let result = false;
+
+		if (chaincodeName) {
+			if (this.chaincodes.length === 0 && !noMaybe) {
+				result = true;
+				logger.debug(`${method} - peer has no chaincodes - ${chaincodeName} might be installed`);
+			} else {
+				for (const chaincode of this.chaincodes) {
+					if (chaincodeName === chaincode) {
+						result = true;
+						logger.debug(`${method} - chaincode found on this endorser - ${chaincodeName}`);
+						break;
+					}
+				}
+			}
+		}
+		if (!result) {
+			logger.debug(`${method} - chaincode not found on this endorser - ${chaincodeName}`);
+		}
+
+		return result;
 	}
 
 	/**

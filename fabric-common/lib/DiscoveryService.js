@@ -363,17 +363,39 @@ class DiscoveryService extends ServiceAction {
 	async getDiscoveryResults(refresh) {
 		const method = `getDiscoveryResults[${this.name}]`;
 		logger.debug(`${method} - start`);
-		if (!this.discoveryResults) {
+		if (!this.discoveryResults && !this.savedResults) {
 			throw Error('No discovery results found');
 		}
+		// when savedResults exist, then a refresh is running
+		if (this.savedResults) {
+			logger.debug(`${method} - using the saved results`);
+			return this.savedResults;
+		}
+
 		if (refresh && (new Date()).getTime() - this.discoveryResults.timestamp > this.refreshAge) {
+			logger.debug(`${method} - will refresh`);
+			this.savedResults = this.discoveryResults;
 			await this.send({asLocalhost: this.asLocalhost, requestTimeout: this.requestTimeout, targets: this.targets});
+			this.savedResults = null;
 		} else {
 			logger.debug(`${method} - not refreshing`);
 		}
 		return this.discoveryResults;
 	}
 
+	/**
+	 * Indicates if this discovery service has retreived results
+	 */
+	hasDiscoveryResults() {
+		const method = `hasDiscoveryResults[${this.name}]`;
+		logger.debug(`${method} - start`);
+
+		if (this.discoveryResults) {
+			return true;
+		}
+
+		return false;
+	}
 
 	/* internal method
 	 *  Takes an array of {@link DiscoveryChaincodeCall} that represent the
@@ -578,17 +600,11 @@ class DiscoveryService extends ServiceAction {
 		const method = `_buildOrderer[${this.name}]`;
 		logger.debug(`${method} - start mspid:${msp_id} endpoint:${host}:${port}`);
 
-		const address = `${host}:${port}`;
-		const found = this.channel.getCommitter(address);
-		if (found) {
-			logger.debug('%s - orderer is already added to the channel - %s', method, address);
-			return found.name;
-		}
-
+		const name = `${host}:${port}`;
 		const url = this._buildUrl(host, port);
 		logger.debug(`${method} - create a new orderer ${url}`);
-		const orderer = this.client.newCommitter(address, msp_id);
-		const end_point = this.client.newEndpoint(this._buildOptions(address, url, host, msp_id));
+		const orderer = this.client.newCommitter(name, msp_id);
+		const end_point = this.client.newEndpoint(this._buildOptions(name, url, host, msp_id));
 		try {
 			// first check to see if orderer is already on this channel
 			let same;
@@ -605,13 +621,13 @@ class DiscoveryService extends ServiceAction {
 				this.channel.addCommitter(orderer);
 			} else {
 				await same.checkConnection();
-				logger.debug('%s - %s - already added to this channel', method, orderer);
+				logger.debug('%s - orderer already added to this channel', method);
 			}
 		} catch (error) {
-			logger.error(`${method} - Unable to connect to the discovered orderer ${address} due to ${error}`);
+			logger.error(`${method} - Unable to connect to the discovered orderer ${name} due to ${error}`);
 		}
 
-		return address;
+		return name;
 	}
 
 	async _buildPeer(discovery_peer) {
@@ -624,40 +640,46 @@ class DiscoveryService extends ServiceAction {
 		const address = discovery_peer.endpoint;
 		const msp_id = discovery_peer.mspid;
 
-		const found = this.channel.getEndorser(address); // address is used as name
-		if (found) {
-			logger.debug(`${method} - endorser is already added to the channel - ${address}`);
-			return found;
-		}
-		logger.debug(`${method} - did not find endorser ${address}`);
 		const host_port = address.split(':');
 		const url = this._buildUrl(host_port[0], host_port[1]);
-		logger.debug(`${method} - create a new endorser ${url}`);
-		const peer = this.client.newEndorser(address, msp_id);
-		const end_point = this.client.newEndpoint(this._buildOptions(address, url, host_port[0], msp_id));
-		try {
-			// first check to see if peer is already on this channel
-			let same = false;
-			const channelPeers = this.channel.getEndorsers();
-			for (const channelPeer of channelPeers) {
-				logger.debug('%s - checking %s', method, channelPeer);
-				if (channelPeer.endpoint && channelPeer.endpoint.url === url) {
-					same = true;
-					break;
-				}
+
+		// first check to see if peer is already on this channel
+		let peer;
+		const channelPeers = this.channel.getEndorsers();
+		for (const channelPeer of channelPeers) {
+			logger.debug('%s - checking channel peer %s', method, channelPeer.name);
+			if (channelPeer.endpoint && channelPeer.endpoint.url === url) {
+				logger.debug('%s - url: %s - already added to this channel', method, url);
+				peer = channelPeer;
+				break;
 			}
-			if (!same) {
+		}
+		if (!peer) {
+			logger.debug(`${method} - create a new endorser ${url}`);
+			peer = this.client.newEndorser(address, msp_id);
+			const end_point = this.client.newEndpoint(this._buildOptions(address, url, host_port[0], msp_id));
+			try {
 				logger.debug(`${method} - about to connect to endorser ${address} url:${url}`);
 				await peer.connect(end_point);
 				this.channel.addEndorser(peer);
 				logger.debug(`${method} - connected to peer ${address} url:${url}`);
-			} else {
-				logger.debug('%s - %s - already added to this channel', method, peer);
+			} catch (error) {
+				logger.error(`${method} - Unable to connect to the discovered peer ${address} due to ${error}`);
 			}
-		} catch (error) {
-			logger.error(`${method} - Unable to connect to the discovered peer ${address} due to ${error}`);
+		} else {
+			// make sure the existing connect is still good
+			await peer.checkConnection();
 		}
 
+		// make sure that this peer has all the found installed chaincodes
+		if (discovery_peer.chaincodes) {
+			for (const chaincode of discovery_peer.chaincodes) {
+				logger.debug(`${method} - adding chaincode ${chaincode.name} to peer ${peer.name}`);
+				peer.addChaincode(chaincode.name);
+			}
+		}
+
+		logger.debug(`${method} - end`);
 		return peer;
 	}
 

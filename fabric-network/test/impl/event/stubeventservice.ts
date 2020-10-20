@@ -79,6 +79,7 @@ export class StubEventService implements EventService {
 	startBlock: string | Long;
 	endBlock: string | Long;
 	blockType: BlockType = 'filtered';
+	inUse: boolean = false;
 
 	started = false;
 
@@ -86,6 +87,10 @@ export class StubEventService implements EventService {
 
 	constructor(name: string) {
 		this.name = name;
+	}
+
+	isInUse(): boolean {
+		return this.inUse;
 	}
 
 	setEventer(discoverer: Eventer): EventService {
