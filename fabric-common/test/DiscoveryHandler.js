@@ -427,6 +427,7 @@ describe('DiscoveryHandler', () => {
 			await discoveryHandler._endorse({}, {sort: 'unknown'}, 'proposal').should.be.rejectedWith(/sort parameter is not valid/);
 		});
 		it('should run ok', async () => {
+			discoveryHandler.compareProposalResponseResults = sinon.stub().returns(true);
 			discovery.getDiscoveryResults = sandbox.stub().resolves({endorsement_plan: {something: 'plan a'}});
 			discoveryHandler._modify_groups = sinon.stub();
 			discoveryHandler._getRandom = sinon.stub().returns([{}]);
@@ -436,6 +437,19 @@ describe('DiscoveryHandler', () => {
 			});
 			const results = await discoveryHandler._endorse({}, {preferredHeightGap: 0}, 'proposal');
 			results.should.equal('endorsements');
+		});
+		it('should run - show failed due to endorsement do not match', async () => {
+			discoveryHandler.compareProposalResponseResults = sinon.stub().returns(false);
+			discovery.getDiscoveryResults = sandbox.stub().resolves({endorsement_plan: {something: 'plan a'}});
+			discoveryHandler._modify_groups = sinon.stub();
+			discoveryHandler._getRandom = sinon.stub().returns([{}]);
+			discoveryHandler._endorse_layout = sandbox.stub().resolves({
+				success: true,
+				endorsements: 'endorsements'
+			});
+			const results = await discoveryHandler._endorse({}, {sort: 'ledgerHeight'}, 'proposal');
+			results[0].message.should.equal('Peer endorsements do not match');
+			results[0].endorsements[0].should.equal('endorsements');
 		});
 		it('should run - show failed', async () => {
 			discovery.getDiscoveryResults = sandbox.stub().resolves({endorsement_plan: {something: 'plan a'}});
@@ -991,6 +1005,67 @@ describe('DiscoveryHandler', () => {
 				}
 				should.equal(found, true, `Item ${item} was not found`);
 			}
+		});
+	});
+
+	describe('#compareProposalResponseResults', () => {
+		it('should require a proposalResponses', () => {
+			(() => {
+				discoveryHandler.compareProposalResponseResults();
+			}).should.throw('Missing proposalResponses parameter');
+		});
+		it('should require an array of proposalResponses', () => {
+			(() => {
+				discoveryHandler.compareProposalResponseResults('string');
+			}).should.throw('proposalResponses must be an array, typeof=string');
+		});
+		it('should require an array of proposalResponses 2', () => {
+			(() => {
+				discoveryHandler.compareProposalResponseResults([]);
+			}).should.throw('proposalResponses is empty');
+		});
+		it('if proposalResponses has any error return false', () => {
+			const proposalResponses = [
+				new Error('proposal error')
+			];
+			const results = discoveryHandler.compareProposalResponseResults(proposalResponses);
+			results.should.be.false;
+		});
+		it('if only one proposalResponses return true', () => {
+			const proposalResponses = [
+				{payload: TestUtils.createResponsePayload('result1')}
+			];
+			const results = discoveryHandler.compareProposalResponseResults(proposalResponses);
+			results.should.be.true;
+		});
+		it('if two same proposalResponses return true', () => {
+			const proposalResponses = [
+				{payload: TestUtils.createResponsePayload('result1')},
+				{payload: TestUtils.createResponsePayload('result1')}
+			];
+			const results = discoveryHandler.compareProposalResponseResults(proposalResponses);
+			results.should.be.true;
+		});
+		it('if two not same proposalResponses return false', () => {
+			const proposalResponses = [
+				{payload: TestUtils.createResponsePayload('result1')},
+				{payload: TestUtils.createResponsePayload('result2')}
+			];
+			const results = discoveryHandler.compareProposalResponseResults(proposalResponses);
+			results.should.be.false;
+		});
+	});
+
+	describe('#_getProposalResponseResults', () => {
+		it('should require a proposalResponse', () => {
+			(() => {
+				discoveryHandler._getProposalResponseResults();
+			}).should.throw('Missing proposalResponse parameter');
+		});
+		it('should require a proposalResponse.payload', () => {
+			(() => {
+				discoveryHandler._getProposalResponseResults({});
+			}).should.throw('Parameter must be a ProposalResponse Object');
 		});
 	});
 });
