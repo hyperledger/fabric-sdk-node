@@ -34,6 +34,7 @@ describe('Contract', () => {
 	beforeEach(() => {
 		discoveryService = sinon.createStubInstance(DiscoveryService);
 		discoveryService.newHandler.returns('handler');
+		discoveryService.hasDiscoveryResults.returns(true);
 
 		channel = sinon.createStubInstance(Channel);
 		channel.newDiscoveryService.returns(discoveryService);
@@ -76,7 +77,7 @@ describe('Contract', () => {
 	describe('#constructor', () => {
 		it('throws if namespace is not a string', () => {
 			(() => new ContractImpl(network, chaincodeId, 123))
-				.should.throw(/Namespace must be a non-empty string/i);
+				.should.throw(/Namespace must be a non-empty string/);
 		});
 	});
 
@@ -201,6 +202,44 @@ describe('Contract', () => {
 				{name: chaincodeId},
 				other
 			]);
+		});
+	});
+
+	describe('#registerDiscoveryResultsListener', () => {
+		it('add', () => {
+			contract.registerDiscoveryResultsListener(() => {});
+			expect(contract.discoveryResultsListners.length).to.be.equal(1);
+		});
+	});
+
+	describe('#notifyDiscoveryResultsListeners', () => {
+		it('run with none added', () => {
+			contract.notifyDiscoveryResultsListeners();
+			expect(contract.discoveryResultsListners.length).to.be.equal(0);
+		});
+		it('run with one added', () => {
+			contract.registerDiscoveryResultsListener(() => {});
+			contract.notifyDiscoveryResultsListeners();
+			expect(contract.discoveryResultsListners.length).to.be.equal(0);
+		});
+	});
+
+	describe('#waitDiscoveryResults', () => {
+		it('runs', async () => {
+			const wait = contract.waitDiscoveryResults();
+			const notify = new Promise((resolve, reject,) => {
+				contract.notifyDiscoveryResultsListeners(false);
+				resolve();
+			});
+			await Promise.all([wait, notify]).should.be.rejectedWith(/Failed to retrieve discovery results/);
+		});
+		it('runs', async () => {
+			const wait = contract.waitDiscoveryResults();
+			const notify = new Promise((resolve, reject,) => {
+				contract.notifyDiscoveryResultsListeners(true);
+				resolve();
+			});
+			await Promise.all([wait, notify]);
 		});
 	});
 });

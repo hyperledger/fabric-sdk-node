@@ -51,6 +51,7 @@ export class BlockEventSource {
 			this.notifyListeners.bind(this)
 		);
 		this.blockType = options.type || defaultBlockType;
+		logger.debug('constructor - blockType:%s', this.blockType);
 	}
 
 	async addBlockListener(listener: BlockListener): Promise<BlockListener> {
@@ -70,6 +71,8 @@ export class BlockEventSource {
 	}
 
 	private async start() {
+		logger.debug('start - started:%s', this.started);
+
 		if (this.started) {
 			return;
 		}
@@ -79,6 +82,8 @@ export class BlockEventSource {
 		try {
 			this.eventService = this.eventServiceManager.newDefaultEventService();
 			this.registerListener(); // Register before start so no events are missed
+			logger.debug('start - calling startEventService');
+
 			await this.startEventService();
 		} catch (error) {
 			logger.error('Failed to start event service', error);
@@ -116,6 +121,7 @@ export class BlockEventSource {
 			blockType: this.blockType,
 			startBlock
 		};
+
 		await this.eventServiceManager.startEventService(this.eventService!, options);
 	}
 

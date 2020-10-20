@@ -78,39 +78,31 @@ class Eventer extends ServiceEndpoint {
 
 	/**
 	 * Check the connection status
+	 * @param {boolean} [reset] - Optional, attempt to reconnect if endpoint is not connected
 	 */
-	async checkConnection() {
-		const method = `checkConnection[${this.name}:${this.myCount}]`;
-		logger.debug(`${method} - start`);
+	async checkConnection(reset = true) {
+		const method = `checkConnection[${this.type}-${this.name}]`;
+		logger.debug('%s - start - connected:%s', method, this.connected);
 
-		super.checkConnection();
-
-		let result = false;
-		if (this.service) {
+		if (reset && this.connected) {
 			try {
 				await this.waitForReady();
-				result = true;
 			} catch (error) {
-				logger.error(`${method} Event Service ${this.endpoint.url} Connection check failed :: ${error}`);
-			}
-		}
-		if (this.stream) {
-			try {
-				const is_paused = this.stream.isPaused();
-				logger.debug(`${method} - stream isPaused :${is_paused}`);
-				if (is_paused) {
-					this.stream.resume();
-					logger.debug(`${method} - stream resumed`);
-				}
-				result = this.isStreamReady();
-			} catch (error) {
-				logger.error(`${method} Event Service ${this.endpoint.url} Stream check failed :: ${error}`);
-				result = false;
+				logger.error(`ServiceEndpoint ${this.endpoint.url} connection failed :: ${error}`);
 			}
 		}
 
-		logger.debug('%s - end return:%s', method, result);
-		return result;
+		if (reset && !this.connected && this.isConnectable()) {
+			try {
+				this.disconnect();
+				await this.resetConnection();
+			} catch (error) {
+				logger.error(`ServiceEndpoint ${this.endpoint.url} reset connection failed :: ${error}`);
+			}
+		}
+
+		logger.debug('%s - end - connected:%s', method, this.connected);
+		return this.connected;
 	}
 
 	/*
@@ -125,10 +117,10 @@ class Eventer extends ServiceEndpoint {
 		let ready = false;
 		if (this.stream) {
 			if (this.stream.isPaused()) {
-				logger.debug(`${method} - grpc isPaused`);
-			} else {
-				ready = this.stream.readable && this.stream.writable;
+				logger.debug(`${method} - grpc stream isPaused`);
+				this.stream.resume();
 			}
+			ready = this.stream.readable && this.stream.writable;
 		} else {
 			logger.debug(`${method} - no stream to check`);
 		}

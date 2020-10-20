@@ -11,6 +11,7 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 import {
+	Channel,
 	Endorser,
 	EventInfo,
 	IdentityContext
@@ -73,7 +74,9 @@ describe('TransactionEventHandler', () => {
 			type: 'stub'
 		});
 
-		network = new NetworkImpl(gateway as unknown as Gateway, null);
+		const channel = sinon.createStubInstance(Channel);
+		(channel as any).name = 'mychannel';
+		network = new NetworkImpl(gateway as unknown as Gateway, channel);
 		(network as any).eventServiceManager = eventServiceManager;
 
 		stubStrategy = sinon.createStubInstance(TransactionEventStrategy);

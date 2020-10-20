@@ -150,6 +150,8 @@ export class Committer extends ServiceEndpoint {
 export class Endorser extends ServiceEndpoint {
 	constructor(name: string, client: Client, mspid: string);
 	public sendProposal(signedProposal?: Buffer, timeout?: number): Promise<any>;
+	public addChaincode(chaincodeName: string): Endorser;
+	public hasChaincode(chaincodeName: string): boolean;
 }
 
 export class Eventer extends ServiceEndpoint {
@@ -209,6 +211,7 @@ export interface SendProposalRequest {
 }
 
 export class Proposal extends ServiceAction {
+	readonly chaincodeId: string;
 	constructor(chaincodeName: string, channel: Channel);
 	public getTransactionId(): string;
 	public buildProposalInterest(): any;
@@ -230,6 +233,7 @@ export class DiscoveryService extends ServiceAction {
 	public send(request?: any): Promise<any>;
 	public getDiscoveryResults(refresh?: boolean): Promise<any>;
 	public close(): void;
+	public hasDiscoveryResults(): boolean;
 }
 export interface RegistrationOpts {
 	startBlock?: number|string|Long;
@@ -287,8 +291,9 @@ export class EventService extends ServiceAction {
 	public registerTransactionListener(txid: string, callback: EventCallback, options: EventRegistrationOptions): EventListener;
 	public registerChaincodeListener(chaincodeId: string, eventName: string, callback: EventCallback, options: EventRegistrationOptions): EventListener;
 	public registerBlockListener(callback: EventCallback, options: EventRegistrationOptions): EventListener;
-	setTargets(targets: Eventer[]): void;
-	isStarted(): boolean;
+	public setTargets(targets: Eventer[]): void;
+	public isStarted(): boolean;
+	public isInUse(): boolean;
 }
 
 export interface StartEventRequest {
