@@ -185,6 +185,7 @@ export class ContractImpl {
 	private discoveryService?: DiscoveryService;
 	private readonly contractListeners: Map<ContractListener, ListenerSession> = new Map();
 	private discoveryInterests: DiscoveryInterest[];
+	private discoveryResultsListners: any[] = new Array();
 
 	constructor(network: NetworkImpl, chaincodeId: string, namespace: string) {
 		const method = `constructor[${namespace}]`;
@@ -276,12 +277,77 @@ export class ContractImpl {
 			// to be ready to be used by the transaction's submit
 			await this.discoveryService.send({asLocalhost, targets});
 			logger.debug('%s - endorsement plan retrieved', method);
+
+			const hasDiscoveryResults = this.discoveryService.hasDiscoveryResults();
+			this.notifyDiscoveryResultsListeners(hasDiscoveryResults);
+			logger.debug('%s - completed discovery results as first one', method);
+		} else {
+			if (!this.discoveryService.hasDiscoveryResults()) {
+				// maybe the discovery service was created by another submit of
+				// this same contract, make sure it has completed getting the
+				// discovery results, we do not want this submission to also
+				// get the discovery results, just wait for first one to complete.
+				await this.waitDiscoveryResults();
+			}
 		}
 
 		// The handler will have access to the endorsement plan fetched
 		// by the parent DiscoveryService instance.
 		logger.debug('%s - returning a new discovery service handler', method);
 		return this.discoveryService.newHandler();
+	}
+
+	/*
+	 * Internal method to setup a Promise that will wait to be notified when
+	 * the discovery service has retreived the discovery results.
+	 */
+	waitDiscoveryResults() {
+		const method = `checkDiscoveryResults[${this.chaincodeId}]`;
+		logger.debug('%s - start', method);
+
+		return new Promise((resolve: any, reject: any): any => {
+			const handle: NodeJS.Timeout = setTimeout(() => {
+				reject(new Error('Timed out waiting for discovery results'));
+			}, 30000);
+
+			this.registerDiscoveryResultsListener(
+				(hasDiscoveryResults: boolean): any => {
+					clearTimeout(handle);
+					if (hasDiscoveryResults) {
+						logger.debug('%s - discovery results have been retieved', method);
+						resolve();
+					} else {
+						const error = new Error('Failed to retrieve discovery results');
+						logger.error('%s - %s', method, error);
+						reject(error);
+					}
+				}
+			);
+		});
+	}
+
+	/*
+	 * Internal method to register to be notified when
+	 * discovery results are ready to be used.
+	 */
+	registerDiscoveryResultsListener(callback: any) {
+		const method = `registerDiscoveryResultsListener[${this.chaincodeId}]`;
+		logger.debug('%s - start', method);
+		this.discoveryResultsListners.push(callback);
+	}
+
+	/*
+	 * Interal method to notify all other submits that the discovery
+	 * results are now ready to be used. This will have the Promise
+	 * resolve and all the other submits to continue to process.
+	 */
+	notifyDiscoveryResultsListeners(hasDiscoveryResults: boolean) {
+		const method = `notifyDiscoveryResultsListeners[${this.chaincodeId}]`;
+		logger.debug('%s - start', method);
+		while (this.discoveryResultsListners.length) {
+			const listener = this.discoveryResultsListners.pop();
+			listener(hasDiscoveryResults);
+		}
 	}
 
 	addDiscoveryInterest(interest: DiscoveryInterest): Contract {

@@ -23,14 +23,13 @@ describe('Eventer', () => {
 	const client = new Client('myclient');
 	let eventer;
 	let endpoint;
-	let sandbox;
 
 	beforeEach(async () => {
-		sandbox = sinon.createSandbox();
 		eventer = new EventerRewire('myeventer', client, 'msp1');
 		endpoint = client.newEndpoint({url: 'grpc://host:2700'});
 		eventer.endpoint = endpoint;
-		eventer.connected = true;
+		eventer.connected = false;
+		eventer.isConnectable = sinon.stub().returns(true);
 		eventer.options = {};
 		eventer.service = sinon.stub();
 		eventer.service.close = sinon.stub();
@@ -41,6 +40,10 @@ describe('Eventer', () => {
 		eventer.stream.cancel = sinon.stub();
 		eventer.stream.resume = sinon.stub();
 		eventer.stream.end = sinon.stub();
+
+		sinon.addBehavior('setsConnected', (fake, n) => {
+			eventer.connected = n;
+		});
 	});
 
 	describe('#constructor', () => {
@@ -67,72 +70,83 @@ describe('Eventer', () => {
 		});
 	});
 	describe('#checkConnection', () => {
-		it('should run with no service or stream', async () => {
-			eventer.service = null;
-			eventer.stream = null;
-			const results = await eventer.checkConnection();
-			should.equal(results, false);
-		});
-		it('should run with a service and no stream', async () => {
-			eventer.stream = null;
-			eventer.waitForReady = sandbox.stub().resolves();
+		it('should return true when connected start true with reset (default)', async () => {
+			eventer.connected = true;
 			const results = await eventer.checkConnection();
 			should.equal(results, true);
 		});
-		it('should run with waitForReady throws and no stream', async () => {
-			eventer.stream = null;
-			eventer.waitForReady = sandbox.stub().rejects();
+		it('should return true when connected start false with no reset', async () => {
+			eventer.connected = false;
+			const results = await eventer.checkConnection(false);
+			should.equal(results, false);
+		});
+		it('should return true with waitForReady throws with reset', async () => {
+			eventer.disconnect = sinon.stub();
+			eventer.waitForReady = sinon.stub().rejects();
 			const results = await eventer.checkConnection();
 			should.equal(results, false);
 		});
-		it('should run with stream and isPaused', async () => {
-			eventer.service = null;
-			eventer.stream.isPaused = sinon.stub().returns(true);
-			eventer.isStreamReady = sinon.stub().returns(true);
+		it('should return true with waitForReady sets connected true', async () => {
+			eventer.connected = true;
+			eventer.disconnect = sinon.stub();
+			eventer.waitForReady = sinon.stub().setsConnected(true);
 			const results = await eventer.checkConnection();
 			should.equal(results, true);
 		});
-		it('should run with stream and not paused', async () => {
-			eventer.service = null;
-			eventer.stream.isPaused = sinon.stub().returns(false);
-			eventer.isStreamReady = sinon.stub().returns(true);
-			const results = await eventer.checkConnection();
-			should.equal(results, true);
-		});
-		it('should run with stream and throws', async () => {
-			eventer.service = null;
-			eventer.stream.isPaused = sinon.stub().returns(false);
-			eventer.isStreamReady = sinon.stub().throws(Error('fake'));
+		it('should return true with waitForReady false resetConnection false', async () => {
+			eventer.connected = true;
+			eventer.disconnect = sinon.stub();
+			eventer.waitForReady = sinon.stub().setsConnected(false);
+			eventer.resetConnection = sinon.stub().setsConnected(false);
 			const results = await eventer.checkConnection();
 			should.equal(results, false);
+		});
+		it('should return true with waitForReady false resetConnection true', async () => {
+			eventer.connected = true;
+			eventer.disconnect = sinon.stub();
+			eventer.waitForReady = sinon.stub().setsConnected(false);
+			eventer.resetConnection = sinon.stub().setsConnected(true);
+			const results = await eventer.checkConnection();
+			should.equal(results, true);
+		});
+		it('should return true with connected false resetConnection false', async () => {
+			eventer.connected = false;
+			eventer.disconnect = sinon.stub();
+			eventer.resetConnection = sinon.stub().setsConnected(false);
+			const results = await eventer.checkConnection();
+			should.equal(results, false);
+		});
+		it('should return true with connected false resetConnection true', async () => {
+			eventer.connected = false;
+			eventer.disconnect = sinon.stub();
+			eventer.resetConnection = sinon.stub().setsConnected(true);
+			const results = await eventer.checkConnection();
+			should.equal(results, true);
 		});
 	});
 	describe('#isStreamReady', () => {
-		it('should isStreamReady when paused', () => {
+		it('should return true when paused and resumed', () => {
 			eventer.stream.isPaused = sinon.stub().returns(true);
 			eventer.stream.readable = true;
 			eventer.stream.writable = true;
-			eventer.stream.reading = true;
-			const results = eventer.isStreamReady();
-			should.equal(results, false);
-		});
-		it('should isStreamReady when not paused and stream readable', () => {
-			eventer.stream.isPaused = sinon.stub().returns(false);
-			eventer.stream.readable = true;
-			eventer.stream.writable = true;
-			eventer.stream.reading = true;
 			const results = eventer.isStreamReady();
 			should.equal(results, true);
 		});
-		it('should isStreamReady when not paused and stream not readable', () => {
+		it('should return true when not paused', () => {
+			eventer.stream.isPaused = sinon.stub().returns(false);
+			eventer.stream.readable = true;
+			eventer.stream.writable = true;
+			const results = eventer.isStreamReady();
+			should.equal(results, true);
+		});
+		it('should return false when not paused and stream not readable', () => {
 			eventer.stream.isPaused = sinon.stub().returns(false);
 			eventer.stream.readable = false;
 			eventer.stream.writable = false;
-			eventer.stream.reading = false;
 			const results = eventer.isStreamReady();
 			should.equal(results, false);
 		});
-		it('should isStreamReady when stream does not exist', () => {
+		it('should return false when stream does not exist', () => {
 			eventer.stream = null;
 			const results = eventer.isStreamReady();
 			should.equal(results, false);

@@ -14,6 +14,8 @@ import {
 	StartRequestOptions,
 	Eventer
 } from 'fabric-common';
+import * as Logger from '../../logger';
+const logger = Logger.getLogger('EventSourceManager');
 
 export class EventServiceManager {
 	private readonly network: Network;
@@ -27,6 +29,7 @@ export class EventServiceManager {
 		this.channel = network.getChannel();
 		this.mspId = network.getGateway().getIdentity().mspId;
 		this.identityContext = this.network.getGateway().identityContext!;
+		logger.debug('constructor - network:%s', this.network.getChannel().name);
 	}
 
 	/**
@@ -53,7 +56,9 @@ export class EventServiceManager {
 	 * @param options The options to start the event service.
 	 */
 	async startEventService(eventService: EventService, options = {} as StartRequestOptions): Promise<void> {
-		if (eventService.isStarted()) {
+		logger.debug('startEventService - start %s', this.network.getChannel().name);
+
+		if (eventService.isStarted() || eventService.isInUse()) {
 			return this.assertValidOptionsForStartedService(options, eventService);
 		}
 

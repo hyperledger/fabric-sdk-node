@@ -423,19 +423,17 @@ message Endorsement {
 			const peers = this.channel.getTargetEndorsers(targets);
 			const promises = [];
 			for (const peer of peers) {
-				const isConnected = await peer.checkConnection();
-				if (isConnected) {
+				if (peer.hasChaincode(this.chaincodeId)) {
 					promises.push(peer.sendProposal(signedEnvelope, requestTimeout));
+				} else {
+					const chaincodeError = new Error(`Peer ${peer.name} is not running chaincode ${this.chaincodeId}`);
+					peer.getCharacteristics(chaincodeError);
+					promises.push(Promise.reject(chaincodeError));
 				}
-			}
-			if (promises.length === 0) {
-				logger.error('%s - no targets are connected', method);
-				throw Error('No targets are connected');
 			}
 
 			logger.debug('%s - about to send to all peers', method);
 			const results = await settle(promises);
-			logger.debug('%s - have results from peers', method);
 			results.forEach((result) => {
 				if (result.isFulfilled()) {
 					const response = result.value();

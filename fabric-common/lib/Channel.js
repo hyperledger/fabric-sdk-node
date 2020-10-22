@@ -411,13 +411,13 @@ const Channel = class {
 			if (mspid) {
 				if (remote.mspid === mspid) {
 					results.push(remote);
-					logger.debug(`${method} - ${type} mspid matched, added ${remote.name}`);
+					logger.debug(`${method} - ${type} mspid matched, added ${remote.name} connected: ${remote.connected}`);
 				} else {
 					logger.debug(`${method} - ${type} mspid not matched, not added ${remote.name} - ${remote.mspid}`);
 				}
 			} else {
 				results.push(remote);
-				logger.debug(`${method} - ${type} added ${remote.name}`);
+				logger.debug(`${method} - ${type} added ${remote.name} connected: ${remote.connected}`);
 			}
 		}
 
