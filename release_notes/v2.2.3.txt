@@ -1,0 +1,36 @@
+Release Notes
+-------------
+This v2.2.3 version is the latest of the v2.2 long-term support (LTS) release
+of the fabric-node-sdk packages that support Fabric 2.x, and supersedes previous
+v2.x releases. Please see the Fabric LTS release strategy document for more
+information on LTS releases:
+
+https://github.com/hyperledger/fabric-rfcs/blob/master/text/0005-lts-release-strategy.md
+
+If migrating a client application from an earlier version of the API, consult
+the migration tutorial for details of potentially breaking changes and recommended actions:
+
+https://hyperledger.github.io/fabric-sdk-node/master/tutorial-migration.html
+
+Major changes from v1.4:
+
+- The fabric-client package has been removed. Client applications should use
+  the Fabric Programming Model APIs from the fabric-network package.
+
+- The underlying APIs that interface with the gRPC layer have been
+  reimplemented in the fabric-common package and should not be used directly
+  by client applications.
+
+- Simplified wallet management, which is portable across SDK languages and
+  with pluggable persistent storage. More information can be found here:
+
+  https://hyperledger.github.io/fabric-sdk-node/master/tutorial-wallet.html
+
+- New eventing implementation in fabric-network. Client application code can
+  listen for block events using Network.addBlockListener(), and listen for
+  contract events using Contract.addContractListener(). The Network object
+  also provides capability to listen for transaction commit events,
+  specifically to support the implementation of custom event handlers. More
+  information can be found here:
+
+  https://hyperledger.github.io/fabric-sdk-node/master/tutorial-transaction-commit-events.html
