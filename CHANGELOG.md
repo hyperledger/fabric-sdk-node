@@ -1,3 +1,23 @@
+## v2.2.3
+Thu Oct 22 10:45:24 EDT 2020
+
+* [ff892dbd](https://github.com/hyperledger/fabric-sdk-node/commit/ff892dbd) [FABN-1646](https://jira.hyperledger.org/browse/FABN-1646) Support multiple submits (#361) (#363)
+* [01d3358c](https://github.com/hyperledger/fabric-sdk-node/commit/01d3358c) [FABN-1598](https://jira.hyperledger.org/browse/FABN-1598) Check discovery endorsements (#314) (#353)
+* [7240b9ac](https://github.com/hyperledger/fabric-sdk-node/commit/7240b9ac) [FABN-1646](https://jira.hyperledger.org/browse/FABN-1646) Allow multiple connection checking (#351) (#352)
+* [9c9097ef](https://github.com/hyperledger/fabric-sdk-node/commit/9c9097ef) [FABN-1653: Fix snapshot publishing for multi-](https://jira.hyperledger.org/browse/FABN-1653: Fix snapshot publishing for multi-)digit versions (#359)
+* [ea053f27](https://github.com/hyperledger/fabric-sdk-node/commit/ea053f27) [FABN-1637](https://jira.hyperledger.org/browse/FABN-1637): Build and test with Node 14 (#357)
+* [145a7eba](https://github.com/hyperledger/fabric-sdk-node/commit/145a7eba) [FABN-1650](https://jira.hyperledger.org/browse/FABN-1650): Info logs for handled errors in NetworkConfig (#349)
+* [0e63a7fb](https://github.com/hyperledger/fabric-sdk-node/commit/0e63a7fb) [[FABN-1271](https://jira.hyperledger.org/browse/FABN-1271)] Add "prefer MSP ID" strategies and change defaults (#340) (#341)
+* [4fadf73e](https://github.com/hyperledger/fabric-sdk-node/commit/4fadf73e) [[FABN-1626](https://jira.hyperledger.org/browse/FABN-1626)] Update dependencies (#339)
+* [0aec57e3](https://github.com/hyperledger/fabric-sdk-node/commit/0aec57e3) [FABN-1640](https://jira.hyperledger.org/browse/FABN-1640): Fix submit transaction error path with no connection details (#336) (#337)
+* [4c897e35](https://github.com/hyperledger/fabric-sdk-node/commit/4c897e35) [FABN-1627](https://jira.hyperledger.org/browse/FABN-1627) Add decode to blockdecoder (#329) (#334)
+* [424eb909](https://github.com/hyperledger/fabric-sdk-node/commit/424eb909) [FABN-1624](https://jira.hyperledger.org/browse/FABN-1624) handle discovery peer connection error (#327) (#333)
+* [915f5d1f](https://github.com/hyperledger/fabric-sdk-node/commit/915f5d1f) [[FABN-1623]-](https://jira.hyperledger.org/browse/FABN-1623]-)Update elliptic dependency (#331)
+* [36a0c020](https://github.com/hyperledger/fabric-sdk-node/commit/36a0c020) [FABN-1632](https://jira.hyperledger.org/browse/FABN-1632) improve commit failover (#328)
+* [19dec701](https://github.com/hyperledger/fabric-sdk-node/commit/19dec701) [FABN-1571](https://jira.hyperledger.org/browse/FABN-1571) randomize peers (#326)
+* [90cf8df6](https://github.com/hyperledger/fabric-sdk-node/commit/90cf8df6) [FABN-1617: Don't publish development configuration in fabric-](https://jira.hyperledger.org/browse/FABN-1617: Don't publish development configuration in fabric-)network (#322)
+* [120682df](https://github.com/hyperledger/fabric-sdk-node/commit/120682df) add long to dependencies (#320)
+
 ## v2.2.2
 Fri Aug 21 11:30:59 EDT 2020
 
