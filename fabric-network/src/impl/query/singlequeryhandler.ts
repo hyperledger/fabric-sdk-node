@@ -48,7 +48,7 @@ export class SingleQueryHandler implements QueryHandler {
 					return result.payload;
 				} else {
 					logger.debug('%s - throw peer response status: %s message: %s', method, result.status, result.message);
-					throw Error('peer error response: '.concat(result.message));
+					throw Error('peer error response: ' + result.message);
 				}
 			}
 		}

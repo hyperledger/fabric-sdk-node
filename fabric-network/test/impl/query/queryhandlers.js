@@ -90,7 +90,7 @@ describe('QueryHandlers', () => {
 			try {
 				await handler.evaluate(query);
 			} catch (error) {
-				expect(error.message).to.contain('peer error response: peer1-400');
+				expect(error.message).to.contain('peer1-400');
 			}
 		});
 		it('returns an error with the peer status 500 results', async () => {
@@ -99,7 +99,7 @@ describe('QueryHandlers', () => {
 			try {
 				await handler.evaluate(query);
 			} catch (error) {
-				expect(error.message).to.contain('peer error response: peer1-500');
+				expect(error.message).to.contain('peer1-500');
 			}
 		});
 		it('returns an error with the grpc sending error', async () => {
@@ -143,7 +143,7 @@ describe('QueryHandlers', () => {
 			try {
 				await handler.evaluate(query);
 			} catch (error) {
-				expect(error.message).to.contain('peer error response: peer1-400');
+				expect(error.message).to.contain('peer1-400');
 			}
 		});
 		it('returns valid results - with 500 first', async () => {
@@ -153,7 +153,7 @@ describe('QueryHandlers', () => {
 			try {
 				await handler.evaluate(query);
 			} catch (error) {
-				expect(error.message).to.contain('peer error response: peer1-500');
+				expect(error.message).to.contain('peer1-500');
 			}
 		});
 		it('returns valid results - with error', async () => {
@@ -224,7 +224,7 @@ describe('QueryHandlers', () => {
 			try {
 				await handler.evaluate(query);
 			} catch (error) {
-				expect(error.message).to.contain('peer error response: peer1-500');
+				expect(error.message).to.contain('peer1-500');
 			}
 		});
 		it('returns an error with the grpc sending error', async () => {
