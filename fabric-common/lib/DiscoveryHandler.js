@@ -365,11 +365,22 @@ class DiscoveryHandler extends ServiceHandler {
 		endorsement_plan.groups = {};
 		endorsement_plan.layouts = [{}]; // only one layout which will have all organizations
 
+		const notFound = [];
+
 		for (const mspid of required_orgs) {
 			logger.debug(`${method} - found org:${mspid}`);
-			endorsement_plan.groups[mspid] = {}; // make a group for each organization
-			endorsement_plan.groups[mspid].peers = JSON.parse(JSON.stringify(peers_by_org[mspid].peers)); // now put in all peers from that organization
-			endorsement_plan.layouts[0][mspid] = 1; // add this org to the one layout and require one peer to endorse
+			endorsement_plan.groups[mspid] = {}; // make a group for each
+			if (peers_by_org[mspid] && peers_by_org[mspid].peers && peers_by_org[mspid].peers.length > 0) {
+				endorsement_plan.groups[mspid].peers = JSON.parse(JSON.stringify(peers_by_org[mspid].peers)); // now put in all peers from that organization
+				endorsement_plan.layouts[0][mspid] = 1; // add this org to the one layout and require one peer to endorse
+			} else {
+				logger.debug('%s - discovery plan does not have peers for %', method, mspid);
+				notFound.push(mspid);
+			}
+		}
+
+		if (notFound.length > 0) {
+			throw Error(`The discovery service did not find any peers active for ${notFound} organizations`);
 		}
 
 		return endorsement_plan;
