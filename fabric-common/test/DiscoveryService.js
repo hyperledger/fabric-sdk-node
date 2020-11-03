@@ -214,8 +214,8 @@ describe('DiscoveryService', () => {
 	describe('#newHandler', () => {
 		it('should return new handler', () => {
 			const handler = discovery.newHandler();
-			should.equal(handler.discovery.type, 'DiscoveryService');
-			should.equal(handler.discovery.name, 'mydiscovery');
+			should.equal(handler.discoveryService.type, 'DiscoveryService');
+			should.equal(handler.discoveryService.name, 'mydiscovery');
 		});
 	});
 
@@ -251,11 +251,36 @@ describe('DiscoveryService', () => {
 			should.exist(discovery._action);
 			should.exist(discovery._payload);
 		});
-		it('should build with an interest option', () => {
+		it('should build with an interest option with user chaincode', () => {
 			const interest = [{name: 'mychaincode'}];
 			discovery.build(idx, {local: true, interest: interest});
 			should.exist(discovery._action);
 			should.exist(discovery._payload);
+			sinon.assert.calledWith(FakeLogger.debug, '%s - adding chaincodes/collections query');
+		});
+		it('should build with an interest option with system chaincode qscc', () => {
+			const interest = [{name: 'qscc'}];
+			discovery.build(idx, {local: true, interest: interest});
+			should.exist(discovery._action);
+			should.exist(discovery._payload);
+			sinon.assert.calledWith(FakeLogger.debug, '%s - not adding %s interest');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - NOT adding chaincodes/collections query');
+		});
+		it('should build with an interest option with system chaincode cscc', () => {
+			const interest = [{name: 'cscc'}];
+			discovery.build(idx, {local: true, interest: interest});
+			should.exist(discovery._action);
+			should.exist(discovery._payload);
+			sinon.assert.calledWith(FakeLogger.debug, '%s - not adding %s interest');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - NOT adding chaincodes/collections query');
+		});
+		it('should build with an interest option with system chaincode lscc', () => {
+			const interest = [{name: 'lscc'}];
+			discovery.build(idx, {local: true, interest: interest});
+			should.exist(discovery._action);
+			should.exist(discovery._payload);
+			sinon.assert.calledWith(FakeLogger.debug, '%s - not adding %s interest');
+			sinon.assert.calledWith(FakeLogger.debug, '%s - NOT adding chaincodes/collections query');
 		});
 	});
 

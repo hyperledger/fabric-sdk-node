@@ -195,6 +195,32 @@ describe('DiscoveryHandler', () => {
 		layouts: [{Org3MSP: 1}]
 	}));
 
+	const organization_plan_three = JSON.parse(JSON.stringify({
+		plan_id: 'all organizations',
+		groups: {
+			Org1MSP: {
+				peers: [
+					{mspid: org1[0], endpoint: org1[1], ledgerHeight, chaincodes, name: org1[1]},
+					{mspid: org1[0], endpoint: org1[2], ledgerHeight, chaincodes, name: org1[2]}
+				]
+			},
+			Org2MSP: {
+				peers: [
+					{mspid: org2[0], endpoint: org2[1], ledgerHeight, chaincodes, name: org2[1]},
+					{mspid: org2[0], endpoint: org2[2], ledgerHeight, chaincodes, name: org2[2]}
+				]
+			},
+			Org3MSP: {
+				peers: [
+					{mspid: org3[0], endpoint: org3[1], ledgerHeight, chaincodes, name: org3[1]},
+					{mspid: org3[0], endpoint: org3[2], ledgerHeight: highest, chaincodes, name: org3[2]},
+					{mspid: org3[0], endpoint: org3[3], ledgerHeight: smaller, chaincodes, name: org3[3]}
+				]
+			}
+		},
+		layouts: [{Org1MSP: 1, Org2MSP: 1, Org3MSP: 1}]
+	}));
+
 	const good = {response: {status: 200}};
 	beforeEach(() => {
 		revert = [];
@@ -301,7 +327,7 @@ describe('DiscoveryHandler', () => {
 		});
 		it('should create and have these settings', () => {
 			const dh = new DiscoveryHandler('discovery');
-			dh.discovery.should.equal('discovery');
+			dh.discoveryService.should.equal('discovery');
 		});
 	});
 
@@ -597,26 +623,34 @@ describe('DiscoveryHandler', () => {
 
 	describe('#_buildRequiredOrgPlan', () => {
 		it('should run ok with all', () => {
-			// TEST CALL
 			const results = discoveryHandler._buildRequiredOrgPlan(config_results.peers_by_org, ['Org1MSP', 'Org2MSP', 'Org3MSP']);
 			results.should.deep.equal(organization_plan);
 		});
 		it('should run ok with one', () => {
-			// TEST CALL
 			const results = discoveryHandler._buildRequiredOrgPlan(config_results.peers_by_org, ['Org3MSP']);
 			results.should.deep.equal(organization_plan_one);
 		});
 		it('should throw for one missing with no peers', () => {
 			(() => {
-				// TEST CALL
 				discoveryHandler._buildRequiredOrgPlan(config_results.peers_by_org, ['Org4MSP']);
 			}).should.throw('The discovery service did not find any peers active for Org4MSP organizations');
 		});
 		it('should throw for two missing when not included in list', () => {
 			(() => {
-				// TEST CALL
 				discoveryHandler._buildRequiredOrgPlan(config_results.peers_by_org, ['Org5MSP', 'Org6MSP']);
 			}).should.throw('The discovery service did not find any peers active for Org5MSP,Org6MSP organizations');
+		});
+	});
+
+	describe('#_buildAllOrgPlan', () => {
+		it('should run ok with all', () => {
+			const results = discoveryHandler._buildAllOrgPlan(config_results.peers_by_org);
+			results.should.deep.equal(organization_plan_three);
+		});
+		it('should throw for no peers', () => {
+			(() => {
+				discoveryHandler._buildAllOrgPlan({Org4MSP: {peers: []}});
+			}).should.throw('The discovery service did not find any peers active');
 		});
 	});
 
