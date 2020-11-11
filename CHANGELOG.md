@@ -1,3 +1,17 @@
+## v1.4.14
+Thu Nov  5 13:01:50 EST 2020
+
+* [5b7ded95](https://github.com/hyperledger/fabric-sdk-node/commit/5b7ded95) [[FABN-1648](https://jira.hyperledger.org/browse/FABN-1648)] Correct definition (#362)
+* [613b6d25](https://github.com/hyperledger/fabric-sdk-node/commit/613b6d25) [FABN-1653: Fix snapshot publishing for multi-](https://jira.hyperledger.org/browse/FABN-1653: Fix snapshot publishing for multi-)digit versions (#360)
+* [0ec8ec72](https://github.com/hyperledger/fabric-sdk-node/commit/0ec8ec72) [[FABN-1647](https://jira.hyperledger.org/browse/FABN-1647)] Add mising type def (#350)
+* [63a3ace1](https://github.com/hyperledger/fabric-sdk-node/commit/63a3ace1) [[FABN-1626](https://jira.hyperledger.org/browse/FABN-1626)] Update dependencies (#347)
+* [3613703c](https://github.com/hyperledger/fabric-sdk-node/commit/3613703c) V14 fabn 1626 update dependencies (#346)
+* [ee7b2d8d](https://github.com/hyperledger/fabric-sdk-node/commit/ee7b2d8d) V14 fabn 1626 update dependencies (#345)
+* [64bc870e](https://github.com/hyperledger/fabric-sdk-node/commit/64bc870e) Enforce maintainer review of PRs before merging (#344)
+* [e14433da](https://github.com/hyperledger/fabric-sdk-node/commit/e14433da) [[FABN-1626](https://jira.hyperledger.org/browse/FABN-1626)] Update dependencies (#343)
+* [28edfe1b](https://github.com/hyperledger/fabric-sdk-node/commit/28edfe1b) [FABN-1649: Tag stable releases of fabric-](https://jira.hyperledger.org/browse/FABN-1649: Tag stable releases of fabric-)client as latest (#342)
+* [44be4e7a](https://github.com/hyperledger/fabric-sdk-node/commit/44be4e7a) [[FABN-1623]-](https://jira.hyperledger.org/browse/FABN-1623]-)Update elliptic dependency (#332)
+
 ## v1.4.13
 Fri Sep 11 11:09:01 EDT 2020
 
