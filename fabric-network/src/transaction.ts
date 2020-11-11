@@ -344,7 +344,7 @@ export class Transaction {
 
 		logger.debug('%s - handler will send', method);
 		const results = await this.queryHandler.evaluate(query);
-		logger.debug('%s - queryHandler completed %j', method, results);
+		logger.debug('%s - queryHandler completed', method);
 
 		return results;
 	}

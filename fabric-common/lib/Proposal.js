@@ -241,7 +241,7 @@ class Proposal extends ServiceAction {
 		}
 
 		for (let i = 0; i < args.length; i++) {
-			logger.debug('%s - adding arg %s', method, args[i]);
+			logger.debug('%s - adding arg ==>%s<==', method, args[i]);
 			let arg;
 			if (args[i] instanceof Buffer) {
 				arg = args[i];
@@ -438,7 +438,7 @@ message Endorsement {
 				if (result.isFulfilled()) {
 					const response = result.value();
 					if (response && response.response && response.response.status) {
-						logger.debug('%s - Promise is fulfilled: %s', method, response.response.status);
+						logger.debug('%s - Promise is fulfilled: status:%s message:%s', method, response.response.status, response.response.message);
 						this._proposalResponses.push(response);
 					} else if (response instanceof Error) {
 						logger.debug('%s - Promise response is an error: %s', method, response);
