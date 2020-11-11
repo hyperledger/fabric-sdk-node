@@ -30,12 +30,12 @@ class DiscoveryHandler extends ServiceHandler {
 	/**
 	 * constructor
 	 *
-	 * @param {DiscoveryService} discovery - The discovery service for this handler.
+	 * @param {DiscoveryService} discoveryService - The discovery service for this handler.
 	 */
-	constructor(discovery) {
+	constructor(discoveryService) {
 		logger.debug('DiscoveryHandler.constructor - start');
 		super();
-		this.discovery = discovery;
+		this.discoveryService = discoveryService;
 		this.type = TYPE;
 	}
 
@@ -58,9 +58,9 @@ class DiscoveryHandler extends ServiceHandler {
 		}
 
 		// forces a refresh if needed
-		await this.discovery.getDiscoveryResults(true);
+		await this.discoveryService.getDiscoveryResults(true);
 		const responses = [];
-		const endorsers = this.discovery.channel.getEndorsers(mspid);
+		const endorsers = this.discoveryService.channel.getEndorsers(mspid);
 		if (endorsers && endorsers.length > 0) {
 			logger.debug('%s - found %s endorsers assigned to channel', method, endorsers.length);
 			const promises = endorsers.map(async (endorser) => {
@@ -101,9 +101,9 @@ class DiscoveryHandler extends ServiceHandler {
 		}
 
 		// force a refresh if needed
-		await this.discovery.getDiscoveryResults(true);
+		await this.discoveryService.getDiscoveryResults(true);
 
-		const committers = this.discovery.channel.getCommitters(mspid);
+		const committers = this.discoveryService.channel.getCommitters(mspid);
 		if (committers && committers.length > 0) {
 			logger.debug('%s - found %s committers assigned to channel', method, committers.length);
 			randomize(committers);
@@ -185,7 +185,7 @@ class DiscoveryHandler extends ServiceHandler {
 			timeout = request.requestTimeout;
 		}
 
-		const results = await this.discovery.getDiscoveryResults(true);
+		const results = await this.discoveryService.getDiscoveryResults(true);
 
 		if (results && results.peers_by_org && request.requiredOrgs) {
 			// special case when user knows which organizations to send the endorsement
@@ -204,6 +204,11 @@ class DiscoveryHandler extends ServiceHandler {
 			const working_discovery = JSON.parse(JSON.stringify(results.endorsement_plan));
 
 			return this._endorse(working_discovery, request, signedProposal, timeout);
+		} else if (results && results.peers_by_org) {
+			// special case when the chaincode is system chaincode without an endorsement policy
+			const endorsement_plan = this._buildAllOrgPlan(results.peers_by_org);
+
+			return this._endorse(endorsement_plan, request, signedProposal, timeout);
 		} else {
 			throw Error('No endorsement plan available');
 		}
@@ -381,6 +386,33 @@ class DiscoveryHandler extends ServiceHandler {
 
 		if (notFound.length > 0) {
 			throw Error(`The discovery service did not find any peers active for ${notFound} organizations`);
+		}
+
+		return endorsement_plan;
+	}
+
+	_buildAllOrgPlan(peers_by_org) {
+		const method = '_buildAllOrgPlan';
+		logger.debug('%s - starting', method);
+		const endorsement_plan = {plan_id: 'all organizations'};
+		endorsement_plan.groups = {};
+		endorsement_plan.layouts = [{}]; // only one layout which will have all organizations
+		let notFound = true;
+
+		Object.keys(peers_by_org).forEach((mspid) => {
+			const org = peers_by_org[mspid];
+			if (org.peers && org.peers.length > 0) {
+				endorsement_plan.groups[mspid] = {}; // make a group for each
+				endorsement_plan.groups[mspid].peers = JSON.parse(JSON.stringify(org.peers)); // now put in all peers from that organization
+				endorsement_plan.layouts[0][mspid] = 1; // add this org to the one layout and require one peer to endorse
+				notFound = false;
+			} else {
+				logger.debug('%s - discovery plan does not have peers for %', method, mspid);
+			}
+		});
+
+		if (notFound) {
+			throw Error('The discovery service did not find any peers active');
 		}
 
 		return endorsement_plan;
@@ -680,8 +712,8 @@ class DiscoveryHandler extends ServiceHandler {
 		let result = null;
 		if (address) {
 			const host_port = address.split(':');
-			const url = this.discovery._buildUrl(host_port[0], host_port[1]);
-			const peers = 	this.discovery.channel.getEndorsers();
+			const url = this.discoveryService._buildUrl(host_port[0], host_port[1]);
+			const peers = 	this.discoveryService.channel.getEndorsers();
 			for (const peer of peers) {
 				if (peer.endpoint && peer.endpoint.url === url) {
 					result = peer;
@@ -746,7 +778,7 @@ class DiscoveryHandler extends ServiceHandler {
 	}
 
 	toString() {
-		return `{type:${this.type}, discoveryService:${this.discovery.name}}`;
+		return `{type:${this.type}, discoveryService:${this.discoveryService.name}}`;
 	}
 }
 

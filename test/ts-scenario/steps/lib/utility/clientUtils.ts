@@ -434,12 +434,8 @@ export async function queryChannelRequest(clientName: string, channelName: strin
 			// one error and one result
 			if (checkSendingtoContract) {
 				if (targets[0]) {
-					targets[0].addChaincode('dummy');
-					BaseUtils.logError('- added dummy chaincode name to peer[0] ' + targets[0].name);
-				}
-				if (targets[1]) {
-					targets[1].addChaincode(contractName);
-					BaseUtils.logError('- added ' + contractName + ' chaincode name to peer[1] ' + targets[1].name);
+					targets[0].discovered = true;
+					BaseUtils.logError('- force peer[0] to fail the hasChaincode test ' + targets[0].name);
 				}
 			}
 
@@ -558,7 +554,7 @@ export function validateChannelRequestResponse(clientName: string, isRequest: bo
 
 	if (results) {
 		const savedResult: any = results[fieldName];
-		BaseUtils.logMsg(`clientUtils - raw results of query = ${savedResult}`);
+		BaseUtils.logMsg(`clientUtils - fieldName: ${fieldName} - raw results of query = ${savedResult}`);
 
 		let stringResult: string;
 		if (savedResult instanceof Buffer) {

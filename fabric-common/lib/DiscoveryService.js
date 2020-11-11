@@ -14,6 +14,7 @@ const DiscoveryHandler = require('./DiscoveryHandler.js');
 const logger = getLogger(TYPE);
 
 const fabproto6 = require('fabric-protos');
+const {SYSTEMCHAINCODES} = require('./Endorser.js');
 
 /**
  * The DiscoveryService class represents a peer in the target fabric network that
@@ -176,6 +177,28 @@ class DiscoveryService extends ServiceAction {
 			client_tls_cert_hash: this.client.getClientCertHash(),
 		});
 
+		let fullproposalInterest = null;
+
+		if (endorsement) {
+			fullproposalInterest = endorsement.buildProposalInterest();
+			logger.debug('%s - endorsement built interest: %j', method, fullproposalInterest);
+		} else if (interest) {
+			fullproposalInterest = interest;
+			logger.debug('%s - request interest: %j', method, fullproposalInterest);
+		}
+
+		// remove all legacy non endorsement policy system chaincodes
+		let proposalInterest = null;
+		if (fullproposalInterest) {
+			proposalInterest = [];
+			for (const fullinterest of fullproposalInterest) {
+				if (SYSTEMCHAINCODES.includes(fullinterest.name)) {
+					logger.debug('%s - not adding %s interest', method, fullinterest.name);
+				} else {
+					proposalInterest.push(fullinterest);
+				}
+			}
+		}
 
 		// be sure to add all entries to this array before setting into the grpc object
 		const queries = [];
@@ -205,16 +228,8 @@ class DiscoveryService extends ServiceAction {
 		}
 
 		// add a discovery chaincode query to get endorsement plans
-		if (endorsement || interest) {
+		if (proposalInterest && proposalInterest.length > 0) {
 			const interests = [];
-
-			let proposalInterest;
-			if (endorsement) {
-				proposalInterest = endorsement.buildProposalInterest();
-			} else {
-				proposalInterest = interest;
-			}
-
 			const chaincodeInterest = this._buildProtoChaincodeInterest(proposalInterest);
 			interests.push(chaincodeInterest);
 
@@ -226,8 +241,10 @@ class DiscoveryService extends ServiceAction {
 				channel: this.channel.name,
 				cc_query: ccQuery
 			});
-			logger.debug(`${method} - adding chaincodes/collections query`);
+			logger.debug('%s - adding chaincodes/collections query', method);
 			queries.push(query);
+		} else {
+			logger.debug('%s - NOT adding chaincodes/collections query', method);
 		}
 
 		if (queries.length === 0) {
@@ -243,6 +260,7 @@ class DiscoveryService extends ServiceAction {
 			this._action.request
 		).finish();
 
+		logger.debug('%s - end', method);
 		return this._payload;
 	}
 
@@ -670,6 +688,9 @@ class DiscoveryService extends ServiceAction {
 			// make sure the existing connect is still good
 			await peer.checkConnection();
 		}
+
+		// indicate that this peer has been touched by the discovery service
+		peer.discovered = true;
 
 		// make sure that this peer has all the found installed chaincodes
 		if (discovery_peer.chaincodes) {

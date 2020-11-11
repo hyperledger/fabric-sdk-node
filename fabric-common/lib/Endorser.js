@@ -45,7 +45,12 @@ class Endorser extends ServiceEndpoint {
 		this.type = TYPE;
 		this.serviceClass = fabproto6.protos.Endorser;
 
+		// initialized with legacy system chaincodes that all peers have that do
+		// not have endorsement policies and therefore discovery will not show
 		this.chaincodes = [];
+		this.chaincodes = this.chaincodes.concat(module.exports.SYSTEMCHAINCODES);
+		// if discovered chaincodes
+		this.discovered = false;
 	}
 
 	/**
@@ -61,7 +66,7 @@ class Endorser extends ServiceEndpoint {
 		const method = `addChaincode[${this.name}]`;
 
 		if (chaincodeName) {
-			if (this.hasChaincode(chaincodeName, true)) {
+			if (this.hasChaincode(chaincodeName, false)) {
 				logger.debug(`${method} - chaincode already exist on this endorser - ${chaincodeName}`);
 			} else {
 				this.chaincodes.push(chaincodeName);
@@ -77,33 +82,28 @@ class Endorser extends ServiceEndpoint {
 	 * If the list is empty then this peer has not been told of it's chaincodes
 	 * and therefore might be running the chaincode in question.
 	 * @param {String} chaincodeName
-	 * @param {boolean} [noMaybe] Optional, default false, if noMaybe is true then
+	 * @param {boolean} [maybe] Optional, default true, if noMaybe is true then
 	 * this method will return true when the peer does not have any chaincodes on
 	 * the list.
 	 */
-	hasChaincode(chaincodeName, noMaybe) {
+	hasChaincode(chaincodeName, maybe = true) {
 		const method = `hasChaincode[${this.name}]`;
-		let result = false;
 
 		if (chaincodeName) {
-			if (this.chaincodes.length === 0 && !noMaybe) {
-				result = true;
-				logger.debug(`${method} - peer has no chaincodes - ${chaincodeName} might be installed`);
-			} else {
-				for (const chaincode of this.chaincodes) {
-					if (chaincodeName === chaincode) {
-						result = true;
-						logger.debug(`${method} - chaincode found on this endorser - ${chaincodeName}`);
-						break;
-					}
+			for (const chaincode of this.chaincodes) {
+				if (chaincodeName === chaincode) {
+					logger.debug(`${method} - chaincode found on this endorser discovered chaincodes - ${chaincodeName}`);
+					return true;
 				}
 			}
-		}
-		if (!result) {
-			logger.debug(`${method} - chaincode not found on this endorser - ${chaincodeName}`);
+			if (!this.discovered && maybe) {
+				logger.debug(`${method} - peer has not been checked by discovery for chaincodes - ${chaincodeName} might be installed`);
+				return true;
+			}
 		}
 
-		return result;
+		logger.debug(`${method} - chaincode not found on this endorser - ${chaincodeName}`);
+		return false;
 	}
 
 	/**
@@ -121,17 +121,17 @@ class Endorser extends ServiceEndpoint {
 	 */
 	sendProposal(signedProposal, timeout) {
 		const method = `sendProposal[${this.name}]`;
-		logger.debug(`${method} - Start ----${this.name} ${this.endpoint.url} timeout:${timeout}`);
+		logger.debug(`${method} - start -- ${this.name} ${this.endpoint.url} timeout:${timeout}`);
 
 		return new Promise((resolve, reject) => {
+			logger.debug('%s - running promise', method);
+
 			if (!signedProposal) {
 				checkParameter('signedProposal');
 			}
 			if (this.connected === false) {
 				throw Error(`Broadcast Client ${this.name} ${this.endpoint.url} is not connected`);
 			}
-
-			logger.debug('%s - %j', method, signedProposal);
 
 			let rto = this.options.requestTimeout;
 			if (typeof timeout === 'number') {
@@ -181,3 +181,4 @@ class Endorser extends ServiceEndpoint {
 }
 
 module.exports = Endorser;
+module.exports.SYSTEMCHAINCODES = ['cscc', 'qscc', 'lscc', 'vscc', 'escc'];
