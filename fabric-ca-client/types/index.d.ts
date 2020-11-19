@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {ICryptoSuite, User} from 'fabric-common';
+import {ICryptoSuite, ICryptoKey, User} from 'fabric-common';
 
 declare class FabricCAServices {
 	constructor(url: string | FabricCAServices.IFabricCAService, tlsOptions?: FabricCAServices.TLSOptions, caName?: string, cryptoSuite?: ICryptoSuite);
@@ -70,42 +70,8 @@ declare namespace FabricCAServices {
 		subject?: string;
 	}
 
-	export interface IKey {
-		getSKI(): string;
-
-		/**
-		 * Returns true if this key is a symmetric key, false is this key is asymmetric
-		 *
-		 * @returns {boolean} if this key is a symmetric key
-		 */
-		isSymmetric(): boolean;
-
-		/**
-		 * Returns true if this key is an asymmetric private key, false otherwise.
-		 *
-		 * @returns {boolean} if this key is an asymmetric private key
-		 */
-		isPrivate(): boolean;
-
-		/**
-		 * Returns the corresponding public key if this key is an asymmetric private key.
-		 * If this key is already public, returns this key itself.
-		 *
-		 * @returns {module:api.Key} the corresponding public key if this key is an asymmetric private key.
-		 * If this key is already public, returns this key itself.
-		 */
-		getPublicKey(): IKey;
-
-		/**
-		 * Converts this key to its PEM representation, if this operation is allowed.
-		 *
-		 * @returns {string} the PEM string representation of the key
-		 */
-		toBytes(): string;
-	}
-
 	export interface IEnrollResponse {
-		key: IKey;
+		key: ICryptoKey;
 		certificate: string;
 		rootCertificate: string;
 	}
