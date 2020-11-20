@@ -95,6 +95,7 @@ describe('Network', () => {
 				strategy: EventStrategies.MSPID_SCOPE_ALLFORTX
 			},
 			queryHandlerOptions: {
+				timeout: 30,
 				strategy: (theNetwork) => {
 					stubQueryHandler.network = theNetwork;
 					return stubQueryHandler;

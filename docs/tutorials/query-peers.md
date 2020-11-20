@@ -16,11 +16,15 @@ by default. This will evaluate all transactions on the first peer from
 which is can obtain a response, and only switch to another peer if this
 peer fails.
 
+The default query timeout may be changed along with the query strategy.
+This value will be in seconds.
+
 ```javascript
 const { Gateway, DefaultQueryHandlerStrategies } = require('fabric-network');
 
 const connectOptions = {
     queryHandlerOptions: {
+        timeout: 60,
         strategy: DefaultQueryHandlerStrategies.MSPID_SCOPE_SINGLE
     }
 }

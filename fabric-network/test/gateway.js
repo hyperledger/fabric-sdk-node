@@ -139,6 +139,10 @@ describe('Gateway', () => {
 					commitTimeout: 300, // 5 minutes
 					strategy: strategy
 				},
+				queryHandlerOptions: {
+					timeout: 70,
+					strategy: strategy
+				},
 				discovery: {
 					enabled: true,
 					asLocalhost: true
@@ -155,6 +159,10 @@ describe('Gateway', () => {
 				identity: 'admin',
 				eventHandlerOptions: {
 					commitTimeout: 300, // 5 minutes
+					strategy: strategy
+				},
+				queryHandlerOptions: {
+					timeout: 70,
 					strategy: strategy
 				},
 				discovery: {
@@ -353,6 +361,7 @@ describe('Gateway', () => {
 					wallet: mockWallet,
 					identity: 'admin',
 					queryHandlerOptions: {
+						timeout: 30,
 						strategy: QueryStrategies.MSPID_SCOPE_SINGLE
 					}
 				};

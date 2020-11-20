@@ -152,6 +152,14 @@ describe('Contract', () => {
 		});
 	});
 
+	describe('#getQuertHandlerOptions', () => {
+		it('returns query handler options from the gateway', () => {
+			const result = contract.getQueryHandlerOptions();
+			const expected = mockGateway.getOptions().queryHandlerOptions;
+			result.should.deep.equal(expected);
+		});
+	});
+
 	describe('#createTransaction', () => {
 		it('returns a transaction with only a name', () => {
 			const name = 'name';

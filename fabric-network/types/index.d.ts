@@ -71,6 +71,7 @@ export interface TxEventHandler {
 }
 
 export interface DefaultQueryHandlerOptions {
+	timeout?: number;
 	strategy?: QueryHandlerFactory;
 }
 

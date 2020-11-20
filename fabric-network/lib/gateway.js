@@ -85,7 +85,9 @@ const logger = require('./logger').getLogger('Gateway');
 
 /**
  * @typedef {Object} Gateway~DefaultQueryHandlerOptions
- * @memberof module:fabric-network
+ * @memberof module:fabric-
+ * @property {number} [timeout = 30] The timeout period in seconds to wait for the query operation to
+ * complete.
  * @property {module:fabric-network.Gateway~QueryHandlerFactory} [strategy=MSPID_SCOPE_SINGLE] Query handling strategy
  * used to evaluate queries. The default is [MSPID_SCOPE_SINGLE]{@link module:fabric-network.DefaultQueryHandlerStrategies}.
  */
@@ -147,6 +149,7 @@ class Gateway {
 		// default options
 		this.options = {
 			queryHandlerOptions: {
+				timeout: 30, // 30 seconds
 				strategy: QueryStrategies.MSPID_SCOPE_SINGLE
 			},
 			eventHandlerOptions: {

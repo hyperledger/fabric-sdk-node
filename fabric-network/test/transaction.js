@@ -98,6 +98,7 @@ describe('Transaction', () => {
 
 		stubContract.getChaincodeId.returns(chaincodeId);
 		stubContract.getEventHandlerOptions.returns({commitTimeout: 418});
+		stubContract.getQueryHandlerOptions.returns({timeout: 30});
 
 		const mockClient = sinon.createStubInstance(Client);
 		const mockGateway = sinon.createStubInstance(Gateway);
@@ -433,8 +434,8 @@ describe('Transaction', () => {
 			return expect(promise).to.be.rejectedWith('Transaction has already been invoked');
 		});
 
-		it('builds correct request for invocation with long timeout', async () => {
-			stubContract.getEventHandlerOptions.returns({commitTimeout: 999});
+		it('builds correct request for invocation with non default timeout', async () => {
+			stubContract.getQueryHandlerOptions.returns({timeout: 999});
 
 			await transaction.evaluate();
 
@@ -444,13 +445,14 @@ describe('Transaction', () => {
 			});
 		});
 
-		it('builds correct request for invocation with short timeout', async () => {
-			stubContract.getEventHandlerOptions.returns({commitTimeout: 3});
-
+		it('builds correct request for invocation with default timeout', async () => {
+			stubContract.getQueryHandlerOptions.returns({});
 			await transaction.evaluate();
 
 			const query = stubQueryHandler.evaluate.lastArg;
-			expect(query._request.request_timeout).to.be.undefined;
+			expect(query._request).to.deep.include({
+				request_timeout: 30000
+			});
 		});
 
 	});
