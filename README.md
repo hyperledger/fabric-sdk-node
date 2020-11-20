@@ -21,7 +21,7 @@ To build and test, the following pre-requisites must be installed first:
 Clone the project and launch the following commands to install the dependencies and perform various tasks.
 
 In the project root folder:
-* Install all dependancies via `npm install`
+* Install all dependencies via `npm install`
 * Optionally, to generate API docs via `npm run docs`
 * To generate the required crypto material used by the tests, use one of the following patform specific commands:
   * For Linux `npm run installAndGenerateCerts`
@@ -29,7 +29,7 @@ In the project root folder:
 * To run the unit tests that do not require any additional set up, use `npm run testHeadless`
 
 ### Run Integration Tests
-Integration tests run on the master branch require the most recent stable Fabric images, which are hosted on Artifactory. A utility script is provided to retrieve non-published docker images, which may be run using the command `npm run retrieveImages`
+Integration tests run on the master branch require the most recent stable Fabric images, which are hosted on Artifactory. A utility script is provided to retrieve non-published docker images, which may be run using the command `npm run pullFabricImages`
 
 Now you are ready to run the integration tests. It is advisable to clear out any previous key value stores that may have cached user enrollment certificates using the command (`rm -rf /tmp/hfc-*`, `rm -rf ~/.hfc-key-store`) prior to testing in isolation.
 
