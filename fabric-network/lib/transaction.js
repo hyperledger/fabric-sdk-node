@@ -312,11 +312,9 @@ class Transaction {
 		const channel = this._contract.getNetwork().getChannel();
 		const request = this._buildRequest(args);
 
-		const commitTimeout = this._contract.getEventHandlerOptions().commitTimeout * 1000; // in ms
-		const timeout = this._contract.gateway.getClient().getConfigSetting('request-timeout', commitTimeout);
-		if (timeout < commitTimeout) {
-			request.request_timeout = commitTimeout;
-		}
+		// queryHandlerOption.timeout default 30 seconds
+		let timeout = this._contract.getQueryHandlerOptions().timeout ? this._contract.getQueryHandlerOptions().timeout : 30;
+		request.request_timeout =  timeout * 1000; // in ms
 
 		const query = new Query(channel, request);
 

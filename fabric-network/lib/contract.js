@@ -116,6 +116,15 @@ class Contract {
 	}
 
 	/**
+	 * Get query handler options specified by the user when creating the gateway.
+	 * @private
+	 * @returns {Object} Query handler options.
+	 */
+	getQueryHandlerOptions() {
+		return this.gateway.getOptions().queryHandlerOptions;
+	}
+
+	/**
 	 * Create an object representing a specific invocation of a transaction
 	 * function implemented by this contract, and provides more control over
 	 * the transaction invocation. A new transaction object <strong>must</strong>
