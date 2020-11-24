@@ -6,7 +6,7 @@ query.
 
 The SDK provides two strategies to evaluate transactions.
 The available strategies are defined
-in `QueryHandlerStrategies`. The desired strategy is (optionally)
+in `DefaultQueryHandlerStrategies`. The desired strategy is (optionally)
 specified as an argument to `connect()` on the `Gateway`, and is used for
 all transaction evaluations on Contracts obtained from that Gateway
 instance.
@@ -36,12 +36,12 @@ gateway's organization has no peers, use `MSPID_SCOPE_ROUND_ROBIN` instead which
 fail when there are no peers in the gateway's organization.
 
 ```javascript
-const { Gateway, QueryHandlerStrategies } = require('fabric-network');
+const { Gateway, DefaultQueryHandlerStrategies } = require('fabric-network');
 
 const connectOptions = {
-    query: {
+    queryHandlerOptions: {
         timeout: 3, // timeout in seconds
-        strategy: QueryHandlerStrategies.MSPID_SCOPE_SINGLE
+        strategy: DefaultQueryHandlerStrategies.MSPID_SCOPE_SINGLE
     }
 }
 

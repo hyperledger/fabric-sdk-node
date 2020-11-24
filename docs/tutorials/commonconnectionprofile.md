@@ -12,7 +12,7 @@ The connection profile has specific addresses and settings of the network endpoi
 ### Loading connection profile configurations
 The application may build a Javascript object from a yaml or a json
 formatted file.
-The applicatioin will then pass this to the `Gateway.connect`
+The application will then pass this to the `Gateway.connect`
 which provides the network configuration.
 
 The following examples will create a new instance of the `Gateway` using a
