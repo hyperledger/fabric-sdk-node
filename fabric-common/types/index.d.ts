@@ -430,7 +430,8 @@ export interface DiscoveryResultMSPConfig {
 	intermediateCerts: string;
 	admins: string;
 	id: string;
-	orgs: string[];
+	name: string;
+	organizationalUnitIdentifiers: string[];
 	tlsRootCerts: string;
 	tlsIntermediateCerts: string;
 }
@@ -469,7 +470,7 @@ export interface DiscoveryResultEndorsementLayout {
 
 export interface DiscoveryResultEndorsementPlan {
 	chaincode: string;
-	plan_id: string;
+	plan_id?: string;
 	groups: {
 		[groupName: string]: DiscoveryResultEndorsementGroup;
 	};
@@ -482,7 +483,7 @@ export interface DiscoveryResults {
 
 	peers_by_org?: { [name: string]: DiscoveryResultPeers };
 
-	endorsement_plan?: DiscoveryResultEndorsementPlan[];
+	endorsement_plan?: DiscoveryResultEndorsementPlan;
 
 	timestamp: number;
 }
