@@ -148,6 +148,7 @@ export class Committer extends ServiceEndpoint {
 }
 
 export class Endorser extends ServiceEndpoint {
+	public discovered: boolean;
 	constructor(name: string, client: Client, mspid: string);
 	public sendProposal(signedProposal?: Buffer, timeout?: number): Promise<any>;
 	public addChaincode(chaincodeName: string): Endorser;
