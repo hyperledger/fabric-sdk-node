@@ -256,7 +256,7 @@ export class Transaction {
 				accumulator.push(...value);
 				return accumulator;
 			};
-			proposalSendRequest.targets = this.endorsingOrgs.map(channel.getEndorsers).reduce(flatten, []);
+			proposalSendRequest.targets = this.endorsingOrgs.map((mspid) => channel.getEndorsers(mspid)).reduce(flatten, []);
 		} else {
 			logger.debug('%s - targets will default to all that are assigned to this channel', method);
 			proposalSendRequest.targets = channel.getEndorsers();
