@@ -48,7 +48,8 @@ export class RoundRobinQueryHandler implements QueryHandler {
 					return result.payload;
 				} else {
 					logger.debug('%s - throw peer response status: %s message: %s', method, result.status, result.message);
-					throw Error(result.message);
+					const responseError = Object.assign(new Error(result.message), result);
+					throw responseError;
 				}
 			}
 		}
