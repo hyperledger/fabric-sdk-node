@@ -34,10 +34,10 @@ describe('QueryHandlers', () => {
 		'peer1': {status: 200, payload: 'peer1-200', isEndorsed: true}
 	};
 	const s400ProposalResponse1 = {
-		'peer1': {status: 400, message: 'peer1-400', isEndorsed: false}
+		'peer1': {status: 400, payload: 'payload-peer1-400', message: 'peer1-400', isEndorsed: false}
 	};
 	const s500ProposalResponse1 = {
-		'peer1': {status: 500, message: 'peer1-500', isEndorsed: false}
+		'peer1': {status: 500, payload: 'payload-peer1-500', message: 'peer1-500', isEndorsed: false}
 	};
 	const errorProposalResponse1 = {
 		'peer1': new Error('peer1-error')
@@ -46,10 +46,10 @@ describe('QueryHandlers', () => {
 		'peer2': {status: 200, payload: 'peer2-200', isEndorsed: true}
 	};
 	const s400ProposalResponse2 = {
-		'peer2': {status: 400, message: 'peer2-400', isEndorsed: false}
+		'peer2': {status: 400, payload: 'payload-peer2-400', message: 'peer2-400', isEndorsed: false}
 	};
 	const s500ProposalResponse2 = {
-		'peer2': {status: 500, message: 'peer2-500', isEndorsed: false}
+		'peer2': {status: 500, payload: 'payload-peer2-500', message: 'peer2-500', isEndorsed: false}
 	};
 	const errorProposalResponse2 = {
 		'peer2': new Error('peer2-error')
@@ -91,6 +91,7 @@ describe('QueryHandlers', () => {
 				await handler.evaluate(query);
 			} catch (error) {
 				expect(error.message).to.contain('peer1-400');
+				expect(error.payload).to.contain('payload-peer1-400');
 			}
 		});
 		it('returns an error with the peer status 500 results', async () => {
@@ -100,6 +101,7 @@ describe('QueryHandlers', () => {
 				await handler.evaluate(query);
 			} catch (error) {
 				expect(error.message).to.contain('peer1-500');
+				expect(error.payload).to.contain('payload-peer1-500');
 			}
 		});
 		it('returns an error with the grpc sending error', async () => {
@@ -144,6 +146,7 @@ describe('QueryHandlers', () => {
 				await handler.evaluate(query);
 			} catch (error) {
 				expect(error.message).to.contain('peer1-400');
+				expect(error.payload).to.contain('payload-peer1-400');
 			}
 		});
 		it('returns valid results - with 500 first', async () => {
@@ -154,6 +157,7 @@ describe('QueryHandlers', () => {
 				await handler.evaluate(query);
 			} catch (error) {
 				expect(error.message).to.contain('peer1-500');
+				expect(error.payload).to.contain('payload-peer1-500');
 			}
 		});
 		it('returns valid results - with error', async () => {
@@ -225,6 +229,7 @@ describe('QueryHandlers', () => {
 				await handler.evaluate(query);
 			} catch (error) {
 				expect(error.message).to.contain('peer1-500');
+				expect(error.payload).to.contain('payload-peer1-500');
 			}
 		});
 		it('returns an error with the grpc sending error', async () => {
@@ -269,6 +274,7 @@ describe('QueryHandlers', () => {
 				await handler.evaluate(query);
 			} catch (error) {
 				expect(error.message).to.contain('peer1-400');
+				expect(error.payload).to.contain('payload-peer1-400');
 			}
 		});
 		it('returns an error with the peer status 500 results', async () => {
@@ -278,6 +284,7 @@ describe('QueryHandlers', () => {
 				await handler.evaluate(query);
 			} catch (error) {
 				expect(error.message).to.contain('peer1-500');
+				expect(error.payload).to.contain('payload-peer1-500');
 			}
 		});
 		it('returns an error with the grpc sending error', async () => {
@@ -322,6 +329,7 @@ describe('QueryHandlers', () => {
 				await handler.evaluate(query);
 			} catch (error) {
 				expect(error.message).to.contain('peer1-400');
+				expect(error.payload).to.contain('payload-peer1-400');
 			}
 		});
 		it('returns valid results - with 500 first', async () => {
@@ -332,6 +340,7 @@ describe('QueryHandlers', () => {
 				await handler.evaluate(query);
 			} catch (error) {
 				expect(error.message).to.contain('peer1-500');
+				expect(error.payload).to.contain('payload-peer1-500');
 			}
 		});
 		it('returns valid results - with error first', async () => {
@@ -353,6 +362,7 @@ describe('QueryHandlers', () => {
 				await handler.evaluate(query);
 			} catch (error) {
 				expect(error.message).to.contain('peer2-400');
+				expect(error.payload).to.contain('payload-peer2-400');
 			}
 
 			result = await handler.evaluate(query);
@@ -425,6 +435,7 @@ describe('QueryHandlers', () => {
 				await handler.evaluate(query);
 			} catch (error) {
 				expect(error.message).to.contain('peer1-500');
+				expect(error.payload).to.contain('payload-peer1-500');
 			}
 		});
 		it('returns an error with the grpc sending error', async () => {
