@@ -11,10 +11,10 @@ Check the coding styles, run the following command and make sure no ESLint viola
 * `npm run lint`
 
 Run the full test bucket and make sure 100% are passing.  You can also run each test individually to isolate any failures:
-* [Prerequisite](./README.md#Build and Test)
-* [Unit Test](./README.md#Run unit tests)
-* [Integration Test](./README.md#Run Integration Tests)
-* [Configure HSM Test](./test/README.md#Configuring and running Hardware Security Module tests)
+* [Prerequisite](./README.md#Build-and-Test)
+* [Unit Test](./README.md#Run-unit-tests)
+* [Integration Test](./README.md#Run-Integration-Tests)
+* [Configure HSM Test](./test/README.md#Configuring-and-running-Hardware-Security-Module-tests)
 
 ## Test Delivery
 
@@ -27,7 +27,7 @@ Unit tests for each package are held locally under a `package/test` directory th
 - [Nyc](https://www.npmjs.com/package/nyc) for code coverage reports
 
 It is expected that new code deliveries come with unit tests that:
-- are isolated - all unit tests should be capable of being run indiviually as well as in the suite(s)
+- are isolated - all unit tests should be capable of being run individually as well as in the suite(s)
 - are meaningful - all unit tests should test the code intention, and validate with assertions
 - test golden path and failure path
 - provide 100% line coverage
