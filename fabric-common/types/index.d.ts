@@ -480,7 +480,7 @@ export interface DiscoveryResults {
 	msps?: { [mspid: string]: DiscoveryResultMSPConfig };
 	orderers?: { [mspid: string]: DiscoveryResultEndpoints };
 
-	peersByOrg?: { [name: string]: DiscoveryResultPeers };
+	peers_by_org?: { [name: string]: DiscoveryResultPeers };
 
 	endorsement_plan?: DiscoveryResultEndorsementPlan;
 
