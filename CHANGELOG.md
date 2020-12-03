@@ -1,3 +1,9 @@
+## v1.4.15
+Thu Dec  3 13:37:50 EST 2020
+
+* [6fe0b58a](https://github.com/hyperledger/fabric-sdk-node/commit/6fe0b58a) [FABN-1668](https://jira.hyperledger.org/browse/FABN-1668) Add query timeout setting (#380)
+
+
 ## v1.4.14
 Thu Nov  5 13:01:50 EST 2020
 
