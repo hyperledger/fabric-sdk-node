@@ -182,6 +182,13 @@ class CryptoSuite_ECDSA_AES extends CryptoSuite {
 	}
 
 	/**
+	 * This is an implementation of {@link module:api.CryptoSuite#getKeySize}
+	 */
+	getKeySize() {
+		return this._keySize;
+	}
+
+	/**
 	 * This is an implementation of {@link module:api.CryptoSuite#hash}
 	 * The opts argument is not supported.
 	 */

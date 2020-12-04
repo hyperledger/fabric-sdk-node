@@ -7,7 +7,7 @@
 
 'use strict';
 
-const {Key} = require('../../../');
+const Key = require('../../Key');
 const jsrsa = require('jsrsasign');
 const asn1 = jsrsa.asn1;
 
@@ -19,19 +19,16 @@ const EC = elliptic.ec;
  * This module implements the {@link module:api.Key} interface, for ECDSA key management
  * by Hardware Security Module support via PKCS#11 interface.
  *
- * @class PKCS11_ECDSA_KEY
+ * @class Pkcs11EcdsaKey
  * @extends module:api.Key
  */
-const PKCS11_ECDSA_KEY = class extends Key {
+const Pkcs11EcdsaKey = class extends Key {
 
 	constructor(attr, size) {
 		if (typeof attr === 'undefined' || attr === null) {
 			throw new Error('constructor: attr parameter must be specified');
 		}
-		if (typeof attr.ski === 'undefined' || attr.ski === null) {
-			throw new Error('constructor: invalid key SKI');
-		}
-		if (!(attr.ski instanceof Buffer)) {
+		if (typeof attr.ski !== 'undefined' && attr.ski !== null && !(attr.ski instanceof Buffer)) {
 			throw new Error('constructor: key SKI must be Buffer type');
 		}
 		if ((typeof attr.priv === 'undefined' || attr.priv === null) &&
@@ -61,6 +58,7 @@ const PKCS11_ECDSA_KEY = class extends Key {
 		 */
 		this._ski = attr.ski;
 		this._size = size;
+		this._isPrivate = false;
 
 		/*
 		 * private key: ski set, ecpt set, priv set,   pub set
@@ -68,8 +66,10 @@ const PKCS11_ECDSA_KEY = class extends Key {
 		 */
 		if (typeof attr.priv !== 'undefined' && attr.priv !== null) {
 			this._handle = attr.priv;
-			this._pub = new PKCS11_ECDSA_KEY(
-				{ski: attr.ski, ecpt: attr.ecpt, pub: attr.pub}, size);
+			this._isPrivate = true;
+			if (attr.ski && attr.ecpt && attr.pub) {
+				this._pub = new Pkcs11EcdsaKey({ski: attr.ski, ecpt: attr.ecpt, pub: attr.pub}, size);
+			}
 		} else {
 			this._ecpt = attr.ecpt;
 			this._handle = attr.pub;
@@ -156,6 +156,10 @@ const PKCS11_ECDSA_KEY = class extends Key {
 		return this._ski.toString('hex');
 	}
 
+	getHandle() {
+		return this._handle.toString('hex');
+	}
+
 	isSymmetric() {
 		return false;
 	}
@@ -168,13 +172,20 @@ const PKCS11_ECDSA_KEY = class extends Key {
 		return this._pub === null ? this : this._pub;
 	}
 
+	/**
+	 * Returns the string representation of the bytes that represent
+	 * the key.
+	 *    if private key then it will be the handle to the private key
+	 *    if public key then it will be the actual public key
+	 * @returns {string} key or handle to the key as string
+	 */
 	toBytes() {
-		if (this._pub !== null) {
-			throw new Error('toBytes: not allowed for private key');
+		if (this.isPrivate) {
+			return this._handle.toString('hex');
 		}
 
-		return this._ecpt;
+		return this._ecpt.toString('hex');
 	}
 };
 
-module.exports = PKCS11_ECDSA_KEY;
+module.exports = Pkcs11EcdsaKey;

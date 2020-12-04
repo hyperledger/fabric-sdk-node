@@ -73,6 +73,16 @@ describe('ECDSA_KEY', () => {
 		});
 	});
 
+	describe('#getHandle', () => {
+		const keyPair = KEYUTIL.generateKeypair('EC', 'secp256r1');
+		it('should throw', () => {
+			const key = new ECDSA_KEY_REWIRE(keyPair.prvKeyObj);
+			(() => {
+				key.getHandle();
+			}).should.throw(/This key does not have a PKCS11 handle/);
+		});
+	});
+
 	describe('#isSymmetric', () => {
 
 		const keyPair = KEYUTIL.generateKeypair('EC', 'secp256r1');
