@@ -1,0 +1,36 @@
+Release Notes
+-------------
+
+fabric-sdk-node 1.4.15 is a maintenance release containing bug fixes and documentation improvements.
+
+The default query timeout may be changed along with the query strategy.
+This value will be in seconds.
+
+   const { Gateway, DefaultQueryHandlerStrategies } = require('fabric-network');
+   const connectOptions = {
+       queryHandlerOptions: {
+           timeout: 60,
+           strategy: DefaultQueryHandlerStrategies.MSPID_SCOPE_SINGLE
+       }
+   }
+   const gateway = new Gateway();
+   await gateway.connect(connectionProfile, connectOptions);
+
+
+Known Vulnerabilities
+---------------------
+none
+
+
+Resolved Vulnerabilities
+------------------------
+none
+
+
+Known Issues & Workarounds
+--------------------------
+
+
+Change Log
+----------
+https://github.com/hyperledger/fabric-sdk-node/blob/release-1.4/CHANGELOG.md#v1413
