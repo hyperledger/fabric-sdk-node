@@ -132,6 +132,13 @@ describe('CryptoSuite_PKCS11', () => {
 			new PKCS11_Rewire(256);
 			sinon.assert.calledWith(configStub, 'crypto-hash-algo');
 		});
-
+		describe('#getKeySize', () => {
+			it('should run', () => {
+				PKCS11_Rewire.__set__('utils', utilsStub);
+				PKCS11_Rewire.prototype._pkcs11OpenSession = sandbox.stub();
+				const key = new PKCS11_Rewire(256);
+				key.getKeySize().should.be.equal(256);
+			});
+		});
 	});
 });

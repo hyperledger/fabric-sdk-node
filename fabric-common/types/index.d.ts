@@ -21,10 +21,28 @@ export class Utils {
 }
 export interface ICryptoKey {
 	getSKI(): string;
+	getHandle(): string;
 	isSymmetric(): boolean;
 	isPrivate(): boolean;
 	getPublicKey(): ICryptoKey;
 	toBytes(): string;
+}
+
+export class Pkcs11EcdsaKey implements ICryptoKey {
+	constructor(keyAttr: any, keySize: number);
+	getSKI(): string;
+	getHandle(): string;
+	isSymmetric(): boolean;
+	isPrivate(): boolean;
+	getPublicKey(): ICryptoKey;
+	toBytes(): string;
+}
+
+export interface EDSAKeyAttr {
+	ski?: Buffer;
+	ecpt?: Buffer;
+	pub?: Buffer;
+	priv?: Buffer;
 }
 
 export interface ICryptoKeyStore {
@@ -38,6 +56,7 @@ export interface ICryptoSuite {
 	deriveKey(key: ICryptoKey, opts?: KeyOpts): ICryptoKey;
 	encrypt(key: ICryptoKey, plainText: Buffer, opts: any): Buffer;
 	getKey(ski: string): Promise<ICryptoKey>;
+	getKeySize(): number;
 	generateKey(opts?: KeyOpts): Promise<ICryptoKey>;
 	hash(msg: string, opts: any): string;
 	importKey(pem: string, opts?: KeyOpts): ICryptoKey | Promise<ICryptoKey>;
