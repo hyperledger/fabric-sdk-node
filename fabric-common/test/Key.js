@@ -22,6 +22,12 @@ describe('Key', () => {
 		});
 	});
 
+	describe('#getHandle', () => {
+		it('should return undefined', () => {
+			should.equal(key.getHandle(), undefined);
+		});
+	});
+
 	describe('#isSymmetric', () => {
 		it('should return undefined', () => {
 			should.equal(key.isSymmetric(), undefined);

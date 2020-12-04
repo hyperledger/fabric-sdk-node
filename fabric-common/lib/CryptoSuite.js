@@ -88,6 +88,15 @@ class CryptoSuite {
 	}
 
 	/**
+	 * Returns the key size this implementation uses when generating new keys.
+	 *
+	 * @returns {number} key size
+	 */
+	getKeySize() {
+		return this._keySize;
+	}
+
+	/**
 	 * Produce a hash of the message <code>msg</code> using options <code>opts</code>
 	 *
 	 * @param {string} msg Source message to be hashed

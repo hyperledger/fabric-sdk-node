@@ -4,16 +4,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ICryptoSuite, ICryptoKey, User } from 'fabric-common';
+import { ICryptoSuite, Pkcs11EcdsaKey, User } from 'fabric-common';
 
 import { Identity } from './identity';
 import { IdentityData } from './identitydata';
 import { IdentityProvider } from './identityprovider';
 
+import * as Logger from '../../logger';
+const logger = Logger.getLogger('HsmX509Identity');
+
 export interface HsmX509Identity extends Identity {
 	type: 'HSM-X.509';
 	credentials: {
 		certificate: string;
+		privateKey: string;
 	};
 }
 
@@ -22,6 +26,16 @@ interface HsmX509IdentityDataV1 extends IdentityData {
 	version: 1;
 	credentials: {
 		certificate: string;
+	};
+	mspId: string;
+}
+
+interface HsmX509IdentityDataV2 extends IdentityData {
+	type: 'HSM-X.509';
+	version: 2;
+	credentials: {
+		certificate: string;
+		privateKey: string; // the HSM handle to the key
 	};
 	mspId: string;
 }
@@ -65,11 +79,23 @@ export class HsmX509Provider implements IdentityProvider {
 			throw new Error('Invalid identity type: ' + data.type);
 		}
 
-		if (data.version === 1) {
-			const x509Data: HsmX509IdentityDataV1 = data as HsmX509IdentityDataV1;
+		if (data.version === 2) {
+			const x509Data: HsmX509IdentityDataV2 = data as HsmX509IdentityDataV2;
 			return {
 				credentials: {
 					certificate: x509Data.credentials.certificate,
+					privateKey: x509Data.credentials.privateKey,
+				},
+				mspId: x509Data.mspId,
+				type: 'HSM-X.509',
+			};
+		} else if (data.version === 1) {
+			const x509Data: HsmX509IdentityDataV1 = data as HsmX509IdentityDataV1;
+			logger.error('HSM-X.509 identity data is missing the privateKey handle. This credential must be saved using v2 format');
+			return {
+				credentials: {
+					certificate: x509Data.credentials.certificate,
+					privateKey: '' // force dummy in to fail later
 				},
 				mspId: x509Data.mspId,
 				type: 'HSM-X.509',
@@ -80,24 +106,31 @@ export class HsmX509Provider implements IdentityProvider {
 	}
 
 	public toJson(identity: HsmX509Identity): IdentityData {
-		const data: HsmX509IdentityDataV1 = {
+		const data: HsmX509IdentityDataV2 = {
 			credentials: {
 				certificate: identity.credentials.certificate,
+				privateKey: identity.credentials.privateKey
 			},
 			mspId: identity.mspId,
 			type: 'HSM-X.509',
-			version: 1,
+			version: 2,
 		};
 		return data;
 	}
 
 	public async getUserContext(identity: HsmX509Identity, name: string): Promise<User> {
-		const user: User = new User(name);
+		if (!identity) {
+			throw Error('HSM X.509 identity is missing');
+		} else if (!identity.credentials) {
+			throw Error('HSM X.509 identity is missing the credential data.');
+		} else if (!identity.credentials.privateKey) {
+			throw Error('HSM X.509 identity data is missing the private key handle. Check that the data has been saved to the wallet in v2 format');
+		}
+		const user = new User(name);
 		user.setCryptoSuite(this.cryptoSuite);
-
-		const publicKey: ICryptoKey = await this.cryptoSuite.importKey(identity.credentials.certificate);
-		const privateKeyObj: ICryptoKey = await this.cryptoSuite.getKey(publicKey.getSKI());
-		await user.setEnrollment(privateKeyObj, identity.credentials.certificate.toString(), identity.mspId);
+		const handle = Buffer.from(identity.credentials.privateKey, 'hex');
+		const privateKey = new Pkcs11EcdsaKey({priv: handle}, this.cryptoSuite.getKeySize());
+		await user.setEnrollment(privateKey, identity.credentials.certificate, identity.mspId);
 
 		return user;
 	}

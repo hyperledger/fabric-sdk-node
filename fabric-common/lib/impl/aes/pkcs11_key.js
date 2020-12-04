@@ -7,7 +7,7 @@
 
 'use strict';
 
-const {Key} = require('../../../');
+const Key = require('../../Key');
 
 const PKCS11_AES_KEY = class extends Key {
 
@@ -44,6 +44,10 @@ const PKCS11_AES_KEY = class extends Key {
 
 	getSKI() {
 		return this._ski;
+	}
+
+	getHandle() {
+		return this._handle.toString('hex');
 	}
 
 	isSymmetric() {

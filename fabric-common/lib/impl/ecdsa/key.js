@@ -75,6 +75,16 @@ class ECDSA_KEY extends Key {
 		return HashPrimitives.SHA2_256(buff);
 	}
 
+	/**
+	 * Not supported by non PKCS11 keys.
+	 * Only PKCS11 keys have a handle used by the HSM internally to access the key.
+	 *
+	 * @throws Error
+	 */
+	getHandle() {
+		throw Error('This key does not have a PKCS11 handle');
+	}
+
 	isSymmetric() {
 		return false;
 	}
