@@ -25,6 +25,13 @@ class Key {
 	getSKI() {}
 
 	/**
+	 * Returns the key's HSM handle in string format
+	 *
+	 * @returns {string} The handle identifier of this key as a hexidecial encoded string
+	 */
+	getHandle() {}
+
+	/**
 	 * Returns true if this key is a symmetric key, false is this key is asymmetric
 	 *
 	 * @returns {boolean} if this key is a symmetric key

@@ -7,7 +7,10 @@
 
 'use strict';
 
-const {CryptoAlgorithms, CryptoSuite, HashPrimitives, Utils: utils} = require('../../');
+const CryptoAlgorithms = require('../CryptoAlgorithms');
+const CryptoSuite = require('../CryptoSuite');
+const HashPrimitives = require('../HashPrimitives');
+const utils = require('../Utils');
 
 const aesKey = require('./aes/pkcs11_key.js');
 const ecdsaKey = require('./ecdsa/pkcs11_key.js');
@@ -762,7 +765,7 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 
 	/**
 	 * This is an implementation of {@link module:api.CryptoSuite#generateEphemeralKey}
-	 * @returns {module:api.Key} Promise of an instance of {@link module:PKCS11_ECDSA_KEY}
+	 * @returns {module:api.Key} Promise of an instance of {@link module:Pkcs11EcdsaKey}
 	 * containing the private key and the public key.
 	 */
 	generateEphemeralKey(opts = {}) {
@@ -804,7 +807,7 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 	 * across PKCS11 sessions by the HSM hardware. Use generateEphemeralKey to
 	 * retrieve an ephmeral key.
 	 *
-	 * @returns {module:api.Key} Promise of an instance of {@link module:PKCS11_ECDSA_KEY}
+	 * @returns {module:api.Key} Promise of an instance of {@link module:Pkcs11EcdsaKey}
 	 * containing the private key and the public key.
 	 */
 	generateKey(opts) {
@@ -895,6 +898,13 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 	}
 
 	/**
+	 * This is an implementation of {@link module:api.CryptoSuite#getKeySize}
+	 */
+	getKeySize() {
+		return this._keySize;
+	}
+
+	/**
 	 * This is an implementation of {@link module:api.CryptoSuite#sign}
 	 * Signs digest using key k.
 	 *
@@ -902,7 +912,7 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 	sign(key, digest) {
 		if (typeof key === 'undefined' || key === null ||
 			!(key instanceof ecdsaKey) || !key.isPrivate()) {
-			throw new Error(__func() + ' key must be PKCS11_ECDSA_KEY type private key');
+			throw new Error(__func() + ' key must be Pkcs11EcdsaKey type private key');
 		}
 		if (typeof digest === 'undefined' || digest === null ||
 			!(digest instanceof Buffer)) {
@@ -919,7 +929,7 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 	verify(key, signature, digest) {
 		if (typeof key === 'undefined' || key === null ||
 			!(key instanceof ecdsaKey || key instanceof ECDSAKey)) {
-			throw new Error(__func() + ' key must be PKCS11_ECDSA_KEY type or ECDSA_KEY type');
+			throw new Error(__func() + ' key must be Pkcs11EcdsaKey type or ECDSA_KEY type');
 		}
 		if (typeof signature === 'undefined' || signature === null ||
 			!(signature instanceof Buffer)) {

@@ -70,6 +70,13 @@ export class X509Provider implements IdentityProvider {
 	}
 
 	public async getUserContext(identity: X509Identity, name: string): Promise<User> {
+		if (!identity) {
+			throw Error('X.509 identity is missing');
+		} else if (!identity.credentials) {
+			throw Error('X.509 identity is missing the credential data.');
+		} else if (!identity.credentials.privateKey) {
+			throw Error('X.509 identity data is missing the private key.');
+		}
 
 		const user: User = new User(name);
 		user.setCryptoSuite(this.cryptoSuite);

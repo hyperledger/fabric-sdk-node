@@ -7,7 +7,7 @@
 import { ImportMock, MockManager } from 'ts-mock-imports';
 import {
 	HsmX509Identity,
-	HsmX509Provider,
+	HsmX509Provider
 } from '../../../src/impl/wallet/hsmx509identity';
 import { Identity } from '../../../src/impl/wallet/identity';
 import { IdentityData } from '../../../src/impl/wallet/identitydata';
@@ -18,7 +18,12 @@ import {
 } from '../../../src/impl/wallet/x509identity';
 
 import { Utils } from 'fabric-common';
-ImportMock.mockFunction(Utils, 'newCryptoSuite');
+const fakeCryptoSuite = {
+	getKeySize: () => {
+		return 256;
+	}
+}
+ImportMock.mockFunction(Utils, 'newCryptoSuite', fakeCryptoSuite);
 import chai = require('chai');
 const expect: Chai.ExpectStatic = chai.expect;
 
@@ -32,6 +37,7 @@ describe('IdentityProvider', () => {
 	const hsmIdentity: HsmX509Identity = {
 		credentials: {
 			certificate: 'CERTIFICATE',
+			privateKey: 'PRIVATE_HANDLE'
 		},
 		mspId: 'alice',
 		type: 'HSM-X.509',
@@ -52,10 +58,11 @@ describe('IdentityProvider', () => {
 				v1: {
 					credentials: {
 						certificate: hsmIdentity.credentials.certificate,
+						privateKey: hsmIdentity.credentials.privateKey
 					},
 					mspId: hsmIdentity.mspId,
 					type: hsmIdentity.type,
-					version: 1,
+					version: 2,
 				} as IdentityData,
 			},
 			identity: hsmIdentity,
@@ -122,6 +129,38 @@ describe('IdentityProvider', () => {
 				const result: Identity = provider.fromJson(json);
 
 				expect(result).to.deep.equal(identity);
+			});
+
+			it('getUserContext fails with message containing missing identity', async () => {
+				try {
+					await provider.getUserContext(undefined, 'dummy');
+				} catch (error) {
+					expect(error.message).to.contain('X.509 identity is missing');
+				}
+			});
+
+			it('getUserContext fails with message containing missing identity credentials', async () => {
+				try {
+					await provider.getUserContext({} as any, 'dummy');
+				} catch (error) {
+					expect(error.message).to.contain('X.509 identity is missing the credential data');
+				}
+			});
+
+			it('getUserContext fails with message containing missing identity credential privateKey', async () => {
+				try {
+					await provider.getUserContext({credentials: {}} as any, 'dummy');
+				} catch (error) {
+					expect(error.message).to.contain('X.509 identity data is missing the private key');
+				}
+			});
+
+			it('getUserContext fails with message containing missing identity credential privateKey', async () => {
+				try {
+					await provider.getUserContext({credentials: {privateKey: ''}} as any, 'dummy');
+				} catch (error) {
+					expect(error.message).to.contain('X.509 identity data is missing the private key');
+				}
 			});
 		}));
 	}));

@@ -8,11 +8,15 @@
 
 const rewire = require('rewire');
 const chai = require('chai');
+const sinon = require('sinon');
 const chaiAsPromised = require('chai-as-promised');
 const should = chai.should();
 chai.use(chaiAsPromised);
 
 const User = rewire('../lib/User');
+const Pkcs11EcdsaKey = require('../lib/impl/ecdsa/pkcs11_key');
+const CryptoSuite_PKCS11 = require('../lib/impl/bccsp_pkcs11');
+
 const TestUtils = require('./TestUtils');
 const {Utils} = require('..');
 
@@ -80,6 +84,22 @@ describe('User', () => {
 		it('should require a mspid', async () => {
 			const user = new User('user');
 			await user.setEnrollment(key, cert, 'mspid');
+			user._mspId.should.be.equal('mspid');
+		});
+		it('handle pkcs11 key', async () => {
+			const user = new User('user');
+			const cryptoSuite = sinon.createStubInstance(CryptoSuite_PKCS11);
+			user.setCryptoSuite(cryptoSuite);
+			const keyAttr = {
+				ski: Buffer.from('2000', 'hex'),
+				ecpt: Buffer.from('4000', 'hex'),
+				pub: Buffer.from('6000', 'hex'),
+				priv: Buffer.from('8000', 'hex')
+			};
+			const pkey = new Pkcs11EcdsaKey(keyAttr, 256);
+			await user.setEnrollment(pkey, cert, 'mspid');
+			user._mspId.should.be.equal('mspid');
+			user._identity._publicKey._ecpt.toString('hex').should.be.equal('4000');
 		});
 	});
 
