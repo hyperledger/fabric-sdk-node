@@ -1,3 +1,19 @@
+## v2.2.4
+Mon Dec  7 11:59:39 EST 2020
+
+* [cfbfd246](https://github.com/hyperledger/fabric-sdk-node/commit/cfbfd246) [FABN-1666](https://jira.hyperledger.org/browse/FABN-1666) Allow HSM identity to be stored (#377) (#392)
+* [9d74b641](https://github.com/hyperledger/fabric-sdk-node/commit/9d74b641) [FABN-1667](https://jira.hyperledger.org/browse/FABN-1667) Return payload on chaincode error (#385) (#390)
+* [acccd943](https://github.com/hyperledger/fabric-sdk-node/commit/acccd943) [[FABN-1674](https://jira.hyperledger.org/browse/FABN-1674)] Fix wrong type definitions on Discovery Service (#383) (#388)
+* [436adbea](https://github.com/hyperledger/fabric-sdk-node/commit/436adbea) [[FABN-1672](https://jira.hyperledger.org/browse/FABN-1672)] Fix wrong type and field names (#381) (#387)
+* [2f3a93f9](https://github.com/hyperledger/fabric-sdk-node/commit/2f3a93f9) [[FABN-1670](https://jira.hyperledger.org/browse/FABN-1670)] Fix type definition for DiscoveryResults (#375) (#386)
+* [893a8d0c](https://github.com/hyperledger/fabric-sdk-node/commit/893a8d0c) Fix some wrong descriptions in the documents (#376) (#389)
+* [34a23347](https://github.com/hyperledger/fabric-sdk-node/commit/34a23347) [[FABN-1669](https://jira.hyperledger.org/browse/FABN-1669)] Fix connection.yaml example in document (#384)
+* [c9b0f1cb](https://github.com/hyperledger/fabric-sdk-node/commit/c9b0f1cb) [[FABN-1671](https://jira.hyperledger.org/browse/FABN-1671)] fix target endorser set when service discovery is disabled (#379) (#382)
+* [9e5268e7](https://github.com/hyperledger/fabric-sdk-node/commit/9e5268e7) [FABN-1663](https://jira.hyperledger.org/browse/FABN-1663) Allow system chaincodes (#372) (#378)
+* [9b0cd48c](https://github.com/hyperledger/fabric-sdk-node/commit/9b0cd48c) [FABN-1660](https://jira.hyperledger.org/browse/FABN-1660) Throw error on missing peers (#366) (#370)
+* [173a6f02](https://github.com/hyperledger/fabric-sdk-node/commit/173a6f02) [[FABN-1658](https://jira.hyperledger.org/browse/FABN-1658)] Run builds on ubuntu 20.04 (#371)
+* [a5e45dde](https://github.com/hyperledger/fabric-sdk-node/commit/a5e45dde) [[FABN-1662]-](https://jira.hyperledger.org/browse/FABN-1662]-)More informative message (#369)
+
 ## v2.2.3
 Thu Oct 22 10:45:24 EDT 2020
 
