@@ -1,3 +1,9 @@
+## 1.4.16
+Wed 16 Dec 17:22:55 GMT 2020
+
+* [bdb6c0a0](https://github.com/hyperledger/fabric-sdk-node/commit/bdb6c0a0) [[FABN-1680](https://jira.hyperledger.org/browse/FABN-1680)] Update dependency (#396)
+
+
 ## v1.4.15
 Thu Dec  3 13:37:50 EST 2020
 
