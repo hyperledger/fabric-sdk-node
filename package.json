@@ -1,6 +1,6 @@
 {
   "name": "fabric-sdk-node",
-  "version": "1.4.15",
+  "version": "1.4.16",
   "tag": "latest-1.4",
   "main": "index.js",
   "repository": {
