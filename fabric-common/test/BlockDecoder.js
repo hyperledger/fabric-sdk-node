@@ -2330,8 +2330,8 @@ describe('BlockDecoder', () => {
 	describe('#decodePrivateData', () => {
 		let decodePrivateData;
 		let decodeKVRWSet;
-
-		const privateDataMapProto = {0: // map key is transaction index
+		const longIndex = fabproto6.util.LongBits.from('3');
+		const privateDataMapProto = {[fabproto6.util.longToHash(longIndex)]: // map key is transaction index
 			// TxPvtReadWriteSet
 			{
 				data_model: 0, // enum KV
