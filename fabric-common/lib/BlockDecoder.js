@@ -8,7 +8,7 @@
 
 const fabproto6 = require('fabric-protos');
 const utils = require('./Utils');
-const Long = require('long');
+const protobuf = require('protobufjs');
 
 const logger = utils.getLogger('BlockDecoder.js');
 
@@ -700,7 +700,7 @@ function decodePrivateData(privateDataMapProto) {
 			}
 			tx_pvt_read_write_set.ns_pvt_rwset.push(ns_pvt_rwset);
 		}
-		const intIndex = Long.fromValue(txIndex).toInt();
+		const intIndex = protobuf.util.longFromHash(txIndex).toInt();
 		private_data_map[intIndex] = tx_pvt_read_write_set;
 		found = true;
 	}
