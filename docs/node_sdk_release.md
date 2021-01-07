@@ -1,6 +1,6 @@
 # Node SDK Release Process Document - Master Branch
 
-Master branch does not expect to have publish releases. Review this file in release branches for documentation of how to publish a release for that release branch.
+Master branch does not expect to publish releases. Review this file in release branches for documentation of how to publish a release for that release branch.
 
 Using master branch and **latest** release branch of v2.2 as example throughout.
 
