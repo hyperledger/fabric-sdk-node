@@ -362,7 +362,7 @@ const Client = class extends BaseClient {
 	 * @typedef {Object} ConnectionOpts
 	 * @property {string} name - Optional. To gives this remote endpoint a name.
 	 *           The endpoint will be known by its URL if no name is provided.
-	 * @property {string} request-timeout - An integer value in milliseconds to
+	 * @property {number} request-timeout - An integer value in milliseconds to
 	 *    be used as maximum amount of time to wait on the request to respond.
 	 * @property {string} pem - The certificate file, in PEM format,
 	 *    to use with the gRPC protocol (that is, with TransportCredentials).
