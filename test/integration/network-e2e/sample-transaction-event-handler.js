@@ -142,13 +142,14 @@ class SampleTransactionEventHandler {
  * transaction. This implementation returns a commit handler that listens to all eventing peers in the user's
  * organization.
  * @param {Transaction} transaction The transaction being submitted.
- * @param {Network} network The network where the transaction is being submitted.
+ * @param {DefaultEventHandlerOptions} [options] Options for the event handler capability.
  */
-function createTransactionEventHandler(transaction, network) {
+function createTransactionEventHandler(transaction, options) {
+	const network = transaction.getNetwork();
 	const channel = network.getChannel();
 	const peers = channel.getPeersForOrg().filter(hasEventSourceRole);
 	const eventHubs = peers.map(peer => channel.getChannelEventHub(peer.getName()));
-	return new SampleTransactionEventHandler(transaction, eventHubs);
+	return new SampleTransactionEventHandler(transaction, eventHubs, options);
 }
 
 function hasEventSourceRole(peer) {

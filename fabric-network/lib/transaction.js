@@ -160,7 +160,8 @@ class Transaction {
 		const channel = network.getChannel();
 		const txId = this._transactionId.getTransactionID();
 		const options = this._contract.getEventHandlerOptions();
-		const eventHandler = this._createTxEventHandler(this, network, options);
+
+		const eventHandler = this._createTxEventHandler(this, options);
 
 		const request = this._buildRequest(args);
 		if (this._endorsingPeers) {
