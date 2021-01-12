@@ -81,7 +81,7 @@ metadata
 	 *
 	 * @example
 	 * <caption>Get the number of transactions, including the invalid transactions:</caption>
-	 * var block_num = block.data.data.legnth;
+	 * var block_num = block.data.data.length;
 	 *
 	 * @example
 	 * <caption>Get the Id of the first transaction in the block:</caption>
