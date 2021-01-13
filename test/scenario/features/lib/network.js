@@ -74,7 +74,8 @@ async function connectGateway(ccp, tls, userName, orgName, gatewayName, useDisco
 	const opts = {
 		wallet: inMemoryWallet,
 		identity: userIdentity,
-		discovery: {enabled: false}
+		discovery: {enabled: false},
+		eventHandlerOptions: {commitTimeout: 20}
 	};
 
 	if (useDiscovery) {

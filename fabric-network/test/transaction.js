@@ -265,7 +265,7 @@ describe('Transaction', () => {
 			const stubEventHandler = sinon.createStubInstance(TransactionEventHandler);
 			const options = stubContract.getEventHandlerOptions();
 			const stubEventHandlerFactoryFn = sinon.stub();
-			stubEventHandlerFactoryFn.withArgs(transaction, stubContract.getNetwork(), options).returns(stubEventHandler);
+			stubEventHandlerFactoryFn.withArgs(transaction, options).returns(stubEventHandler);
 
 			await transaction.setEventHandlerStrategy(stubEventHandlerFactoryFn).submit();
 
