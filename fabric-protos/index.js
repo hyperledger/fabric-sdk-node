@@ -15,7 +15,14 @@ const protobuf = require('protobufjs');
 // messages which have create, decode, and encode. The services do not have a backing
 // implementation
 module.exports = require('./bundle.js');
-module.exports.util = protobuf.util;
+
+// Allow client code to translate the obscure uint64 field format to/from a number
+module.exports.numberToUint64 = protobuf.util.longToHash;
+module.exports.uint64ToNumber = (uint64Value) => {
+	const value = protobuf.util.longFromHash(uint64Value, true);
+	return typeof value === 'number' ? value : value.toInt();
+}
+
 // Build the services
 // fabric.proto file must have an import for every needed proto files
 const protoPath = path.resolve(__dirname, 'protos', 'fabric.proto');

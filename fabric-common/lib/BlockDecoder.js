@@ -699,7 +699,7 @@ function decodePrivateData(privateDataMapProto) {
 			}
 			tx_pvt_read_write_set.ns_pvt_rwset.push(ns_pvt_rwset);
 		}
-		const intIndex = fabproto6.util.longFromHash(txIndex).toInt();
+		const intIndex = fabproto6.uint64ToNumber(txIndex);
 		private_data_map[intIndex] = tx_pvt_read_write_set;
 		found = true;
 	}
