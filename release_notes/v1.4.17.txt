@@ -1,0 +1,22 @@
+Release Notes
+-------------
+
+fabric-sdk-node 1.4.17 is a maintenance release containing bug fixes.
+
+Known Vulnerabilities
+---------------------
+none
+
+
+Resolved Vulnerabilities
+------------------------
+none
+
+
+Known Issues & Workarounds
+--------------------------
+
+
+Change Log
+----------
+https://github.com/hyperledger/fabric-sdk-node/blob/release-1.4/CHANGELOG.md#v1417

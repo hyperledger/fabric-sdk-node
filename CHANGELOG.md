@@ -1,3 +1,12 @@
+## v1.4.17
+Thu Jan 14 09:47:48 EST 2021
+
+* [c596aa93](https://github.com/hyperledger/fabric-sdk-node/commit/c596aa93) [[FABN-1685](https://jira.hyperledger.org/browse/FABN-1685)] commitTimeout not setting (#411)
+* [7ae083cd](https://github.com/hyperledger/fabric-sdk-node/commit/7ae083cd) [[FABN-1441](https://jira.hyperledger.org/browse/FABN-1441)] Typo change (#412)
+* [16f75e00](https://github.com/hyperledger/fabric-sdk-node/commit/16f75e00) [[FABN-1504](https://jira.hyperledger.org/browse/FABN-1504)] Type definition improvement (#410)
+* [02fe7d8d](https://github.com/hyperledger/fabric-sdk-node/commit/02fe7d8d) [[FABN-1591](https://jira.hyperledger.org/browse/FABN-1591)] Document Release Process (#409)
+* [3d45bc20](https://github.com/hyperledger/fabric-sdk-node/commit/3d45bc20) [[FABN-1591](https://jira.hyperledger.org/browse/FABN-1591)] Document Release Process (#404)
+
 ## 1.4.16
 Wed 16 Dec 17:22:55 GMT 2020
 
@@ -1100,4 +1109,3 @@ Thu Jun  8 07:11:33 EDT 2017
 
 
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
-s
