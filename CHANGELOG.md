@@ -1,4 +1,4 @@
-## 2.2.5
+## v2.2.5
 Thu 14 Jan 11:28:34 GMT 2021
 
 * [c829957e](https://github.com/hyperledger/fabric-sdk-node/commit/c829957e) [FABN-1686](https://jira.hyperledger.org/browse/FABN-1686) Private data index parsing release-2 (#416)
