@@ -11,7 +11,7 @@ Check top level `package.json` file properties **version** and **tag** are one a
 - Create a jira for publish  - publish v2.2.4.
 - Run `scripts/changelog.sh` script from the project root directory.  It takes two arguments; last release commit hash and next release version number - `./scripts/changelog.sh <commithash> 2.2.4`.
 - Update the **version** and **tag** properties in the top-level `package.json` file to be the appropriate values - next release version *2.2.4* and release npm tag *latest*.  **[NOTE: This would be latest-2.2 when a new branch supercedes as latest.]**
-- Create `release_notes/v2.2.4.txt` file with appropriate text - "This is a mainenance release containing bug fixes".
+- Create `release_notes/v2.2.4.txt` file with appropriate text - "This is a maintenance release containing bug fixes".
 - Git add, submit, push and create PR.  The build once the PR is merged will do the npm publishing.  Check it has npm published at https://www.npmjs.com/package/fabric-client and https://www.npmjs.com/package/fabric-common
 
 ## Tag Release
