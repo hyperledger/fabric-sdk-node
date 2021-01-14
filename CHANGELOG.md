@@ -1,7 +1,7 @@
 ## 2.2.5
 Thu 14 Jan 11:28:34 GMT 2021
 
-* [c829957e](https://github.com/hyperledger/fabric-sdk-node/commit/c829957e) [FABN-1686] (https://jira.hyperledger.org/browse/FABN-1686) Private data index parsing release-2 (#416)
+* [c829957e](https://github.com/hyperledger/fabric-sdk-node/commit/c829957e) [FABN-1686](https://jira.hyperledger.org/browse/FABN-1686) Private data index parsing release-2 (#416)
 * [236b30d1](https://github.com/hyperledger/fabric-sdk-node/commit/236b30d1) [FABN-1441](https://jira.hyperledger.org/browse/FABN-1441)Doc Typo fix (#414)
 * [4765b1ef](https://github.com/hyperledger/fabric-sdk-node/commit/4765b1ef) [FABN-1591](https://jira.hyperledger.org/browse/FABN-1591) Document latest branch release process (#408)
 * [3e85e47c](https://github.com/hyperledger/fabric-sdk-node/commit/3e85e47c) [FABN-1591](https://jira.hyperledger.org/browse/FABN-1591) Document latest branch release process (#405)
