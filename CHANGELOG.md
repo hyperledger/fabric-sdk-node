@@ -7,7 +7,7 @@ Thu Jan 14 09:47:48 EST 2021
 * [02fe7d8d](https://github.com/hyperledger/fabric-sdk-node/commit/02fe7d8d) [[FABN-1591](https://jira.hyperledger.org/browse/FABN-1591)] Document Release Process (#409)
 * [3d45bc20](https://github.com/hyperledger/fabric-sdk-node/commit/3d45bc20) [[FABN-1591](https://jira.hyperledger.org/browse/FABN-1591)] Document Release Process (#404)
 
-## 1.4.16
+## v1.4.16
 Wed 16 Dec 17:22:55 GMT 2020
 
 * [bdb6c0a0](https://github.com/hyperledger/fabric-sdk-node/commit/bdb6c0a0) [[FABN-1680](https://jira.hyperledger.org/browse/FABN-1680)] Update dependency (#396)
