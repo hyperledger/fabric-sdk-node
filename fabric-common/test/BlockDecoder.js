@@ -2330,8 +2330,7 @@ describe('BlockDecoder', () => {
 	describe('#decodePrivateData', () => {
 		let decodePrivateData;
 		let decodeKVRWSet;
-
-		const privateDataMapProto = {0: // map key is transaction index
+		const privateDataMapProto = {[fabproto6.numberToUint64(3)]: // map key is transaction index
 			// TxPvtReadWriteSet
 			{
 				data_model: 0, // enum KV
@@ -2363,9 +2362,9 @@ describe('BlockDecoder', () => {
 
 		it('should return the correct rwset', () => {
 			const private_data_map = decodePrivateData(privateDataMapProto);
-			private_data_map[0].ns_pvt_rwset[0].collection_pvt_rwset[0].rwset.should.equal('rwset-decode');
-			private_data_map[0].ns_pvt_rwset[0].collection_pvt_rwset[0].collection_name.should.equal('collectionName-string');
-			private_data_map[0].ns_pvt_rwset[0].namespace.should.equal('namespace-string');
+			private_data_map[3].ns_pvt_rwset[0].collection_pvt_rwset[0].rwset.should.equal('rwset-decode');
+			private_data_map[3].ns_pvt_rwset[0].collection_pvt_rwset[0].collection_name.should.equal('collectionName-string');
+			private_data_map[3].ns_pvt_rwset[0].namespace.should.equal('namespace-string');
 			sinon.assert.called(decodeKVRWSet);
 		});
 	});

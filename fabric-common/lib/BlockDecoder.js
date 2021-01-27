@@ -8,7 +8,6 @@
 
 const fabproto6 = require('fabric-protos');
 const utils = require('./Utils');
-const Long = require('long');
 
 const logger = utils.getLogger('BlockDecoder.js');
 
@@ -57,7 +56,7 @@ metadata
 	 *
 	 * @example
 	 * <caption>Get the number of transactions, including the invalid transactions:</caption>
-	 * var block_num = block.data.data.legnth;
+	 * var block_num = block.data.data.length;
 	 *
 	 * @example
 	 * <caption>Get the Id of the first transaction in the block:</caption>
@@ -700,7 +699,7 @@ function decodePrivateData(privateDataMapProto) {
 			}
 			tx_pvt_read_write_set.ns_pvt_rwset.push(ns_pvt_rwset);
 		}
-		const intIndex = Long.fromValue(txIndex).toInt();
+		const intIndex = fabproto6.uint64ToNumber(txIndex);
 		private_data_map[intIndex] = tx_pvt_read_write_set;
 		found = true;
 	}

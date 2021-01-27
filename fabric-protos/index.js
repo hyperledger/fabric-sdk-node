@@ -7,7 +7,7 @@
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 const path = require('path');
-
+const protobuf = require('protobufjs');
 // The static bundle built by protobufjs (see fabric-proto/package.json npm run command)
 // 'bundle.js' and typescript defs must be manually built when there is a change to the
 // proto files and pushed to the repository
@@ -15,6 +15,13 @@ const path = require('path');
 // messages which have create, decode, and encode. The services do not have a backing
 // implementation
 module.exports = require('./bundle.js');
+
+// Allow client code to translate the obscure uint64 field format to/from a number
+module.exports.numberToUint64 = protobuf.util.longToHash;
+module.exports.uint64ToNumber = (uint64Value) => {
+	const value = protobuf.util.longFromHash(uint64Value, true);
+	return typeof value === 'number' ? value : value.toInt();
+}
 
 // Build the services
 // fabric.proto file must have an import for every needed proto files
