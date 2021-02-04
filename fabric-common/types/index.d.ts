@@ -339,6 +339,7 @@ export class Client {
 	public newIdentityContext(user: User): IdentityContext;
 
 	public getConnectionOptions(options?: ConnectOptions): ConnectOptions;
+	public setCentralizedConnectionOptions(options: object): Client;
 	public newEndpoint(options: ConnectOptions): Endpoint;
 	public newEndorser(name: string, mspid?: string): Endorser;
 	public getEndorser(name: string, mspid?: string): Endorser;
