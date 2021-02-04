@@ -274,7 +274,7 @@ export class Gateway {
 		};
 
 		this.options = mergeOptions(defaultOptions, options);
-		logger.debug('connection options: %j', options);
+		logger.debug('gateway options: %j', options);
 
 		let loadCcp = false;
 		if (config instanceof Client) {
@@ -327,7 +327,7 @@ export class Gateway {
 		// of connection options for an endpoint
 		// these will be merged with those from the config (default.json)
 		if (options['connection-options']) {
-			(this.client as any).centralized_options = options['connection-options'];
+			this.client.setCentralizedConnectionOptions(options['connection-options']);
 			logger.debug('%s - assigned connection options');
 		}
 

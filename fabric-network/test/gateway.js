@@ -404,12 +404,10 @@ describe('Gateway', () => {
 		});
 
 		it('should assign connection options to the client', async () => {
-			options['connection-options'] = {
-				option1: 'option1',
-				option2: 'option2'
-			};
+			options['connection-options'] = {option: 'option'};
+			client.setCentralizedConnectionOptions = sinon.stub();
 			await gateway.connect(client, options);
-			client.centralized_options.option1.should.equal('option1');
+			sinon.assert.calledWith(client.setCentralizedConnectionOptions, {option: 'option'});
 		});
 		it('throws if the identity does not exist', () => {
 			options = {
