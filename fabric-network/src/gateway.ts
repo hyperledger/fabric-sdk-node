@@ -18,6 +18,16 @@ import * as IdentityProviderRegistry from './impl/wallet/identityproviderregistr
 
 import * as Logger from './logger';
 import {X509Identity} from './impl/wallet/x509identity';
+import {NodeTracerProvider} from '@opentelemetry/node';
+import { registerInstrumentations } from '@opentelemetry/instrumentation';
+import { GrpcInstrumentation } from '@opentelemetry/instrumentation-grpc';
+
+const otelProvider = new NodeTracerProvider();
+
+registerInstrumentations({
+	instrumentations: [new GrpcInstrumentation()],
+	tracerProvider: otelProvider,
+});
 
 const logger = Logger.getLogger('Gateway');
 

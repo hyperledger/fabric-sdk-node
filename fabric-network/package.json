@@ -25,6 +25,9 @@
   },
   "types": "./types/index.d.ts",
   "dependencies": {
+    "@opentelemetry/instrumentation": "^0.24.0",
+    "@opentelemetry/instrumentation-grpc": "^0.24.0",
+    "@opentelemetry/node": "^0.24.0",
     "fabric-common": "file:../fabric-common",
     "fabric-protos": "file:../fabric-protos",
     "long": "^4.0.0",
