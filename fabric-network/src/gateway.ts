@@ -118,7 +118,7 @@ export function mergeOptions<B, E>(currentOptions: B, additionalOptions: E): B &
  * complete.
  * @property {module:fabric-network.QueryHandlerFactory} [strategy=MSPID_SCOPE_SINGLE]
  * Query handling strategy used to evaluate queries. The default is
- * [MSPID_SCOPE_SINGLE]{@link module:fabric-network.DefaultQueryHandlerStrategies}.
+ * [PREFER_MSPID_SCOPE_SINGLE]{@link module:fabric-network.DefaultQueryHandlerStrategies}.
  */
 
 /**
