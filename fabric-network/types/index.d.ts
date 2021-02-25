@@ -206,7 +206,7 @@ export class X509WalletMixin implements WalletMixin {
 
 export class HSMWalletMixin implements WalletMixin {
 	public static createIdentity(mspId: string, certificate: string): Identity;
-	constructor();
+	constructor(library?: string, slot?: string, pin?: string, userType?: string);
 }
 
 export interface Checkpoint {
