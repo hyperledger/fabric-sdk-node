@@ -40,7 +40,7 @@ function getNetworkPeers(network: Network): Endorser[] {
  * events from all peers in the network.
  * The [submitTransaction]{@link module:fabric-network.Contract#submitTransaction} function will wait until a
  * successful event is received from <em>any</em> peer.
- * * @property {module:fabric-network.TxEventHandlerFactory} PREFER_MSPID_SCOPE_ALLFORTX Listen for transaction commit
+ * @property {module:fabric-network.TxEventHandlerFactory} PREFER_MSPID_SCOPE_ALLFORTX Listen for transaction commit
  * events from all peers in the client identity's organization. If the client identity's organization has no peers, listen
  * for transaction commit events from all peers in the network.
  * The [submitTransaction]{@link module:fabric-network.Contract#submitTransaction} function will wait until successful
