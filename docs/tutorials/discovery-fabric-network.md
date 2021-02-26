@@ -57,8 +57,8 @@ the network channel initialization.
 local system; otherwise should be disabled.
 
 ### To use
-By default the fabric-network will not use the service discovery. To enable the
-use of discovery, set the discovery 'enabled' attribute to a value of true.
+By default the fabric-network will use the service discovery. To enable the
+use of discovery, set the discovery 'enabled' attribute to a value of true. The default is true.
 
 ```
 await gateway.connect(connectionProfile, {discovery: { enabled: true, asLocalhost: false}});
