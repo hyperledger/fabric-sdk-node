@@ -44,8 +44,8 @@ the network channel initialization.
 local system; otherwise should be disabled.
 
 ### To use
-By default the fabric-network will not use the service discovery. To enable the
-use of discovery, set the discovery 'enabled' attribute to a value of true.
+By default the fabric-network will use the service discovery. To enable the
+use of discovery, set the discovery 'enabled' attribute to a value of true. The default is true.
 
 ```
 await gateway.connect(connectionProfile, {discovery: { enabled: true, asLocalhost: false}});
@@ -65,7 +65,7 @@ these must be same when using service discovery. Using `- 7061:7051` will not
 work as the application does not have visibility into the virtual system and
 the port address as seen by the peer's discovery service.
 
-Use the `asLocalhost` with true or false, the default is true.
+Use the `asLocalhost` with true or false, the default is false.
 ```
 await gateway.connect(connectionProfile, {discovery: { enabled: true, asLocalhost: true}});
 const network = await gateway.getNetork('mychannel');

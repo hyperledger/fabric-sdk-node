@@ -110,7 +110,7 @@ const logger = require('./logger').getLogger('Gateway');
  * @typedef {Object} Gateway~DiscoveryOptions
  * @memberof module:fabric-network
  * @property {boolean} [enabled=true] True if discovery should be used; otherwise false.
- * @property {boolean} [asLocalhost=true] Convert discovered host addresses to be 'localhost'. Will be needed when
+ * @property {boolean} [asLocalhost=false] Convert discovered host addresses to be 'localhost'. Will be needed when
  * running a docker composed fabric network on the local system; otherwise should be disabled.
  */
 
