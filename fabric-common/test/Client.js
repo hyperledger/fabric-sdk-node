@@ -81,6 +81,18 @@ describe('Client', () => {
 			options.option1.should.equal('value1');
 		});
 	});
+	describe('#setCentralizedConnectionOptions', () => {
+		it('should set options', () => {
+			client.setCentralizedConnectionOptions({'some': 'C'});
+			client.centralizedOptions.some.should.equal('C');
+		});
+		it('should null options', () => {
+			client.setCentralizedConnectionOptions({'some': 'C'});
+			should.exist(client.centralizedOptions);
+			client.setCentralizedConnectionOptions(undefined);
+			should.not.exist(client.centralizedOptions);
+		});
+	});
 	describe('#newEndpoint', () => {
 		it('should require a url', () => {
 			(() => {

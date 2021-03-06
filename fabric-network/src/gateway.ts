@@ -105,10 +105,10 @@ export function mergeOptions<B, E>(currentOptions: B, additionalOptions: E): B &
  * for commit notification to complete.
  * @property {number} [endorseTimeout = 30] The timeout period in seconds to wait
  * for the endorsement to complete.
- * @property {?module:fabric-network.TxEventHandlerFactory} [strategy=MSPID_SCOPE_ALLFORTX]
+ * @property {?module:fabric-network.TxEventHandlerFactory} [strategy=PREFER_MSPID_SCOPE_ALLFORTX]
  * Event handling strategy to identify successful transaction commits. A <code>null</code> value indicates that no
  * event handling is desired. The default is
- * [MSPID_SCOPE_ALLFORTX]{@link module:fabric-network.DefaultEventHandlerStrategies}.
+ * [PREFER_MSPID_SCOPE_ALLFORTX]{@link module:fabric-network.DefaultEventHandlerStrategies}.
  */
 
 /**
@@ -116,9 +116,9 @@ export function mergeOptions<B, E>(currentOptions: B, additionalOptions: E): B &
  * @memberof module:fabric-network
  * @property {number} [timeout = 30] The timeout period in seconds to wait for the query to
  * complete.
- * @property {module:fabric-network.QueryHandlerFactory} [strategy=MSPID_SCOPE_SINGLE]
+ * @property {module:fabric-network.QueryHandlerFactory} [strategy=PREFER_MSPID_SCOPE_SINGLE]
  * Query handling strategy used to evaluate queries. The default is
- * [MSPID_SCOPE_SINGLE]{@link module:fabric-network.DefaultQueryHandlerStrategies}.
+ * [PREFER_MSPID_SCOPE_SINGLE]{@link module:fabric-network.DefaultQueryHandlerStrategies}.
  */
 
 /**
@@ -275,7 +275,7 @@ export class Gateway {
 		};
 
 		this.options = mergeOptions(defaultOptions, options);
-		logger.debug('connection options: %j', options);
+		logger.debug('gateway options: %j', options);
 
 		let loadCcp = false;
 		if (config instanceof Client) {
@@ -328,7 +328,7 @@ export class Gateway {
 		// of connection options for an endpoint
 		// these will be merged with those from the config (default.json)
 		if (options['connection-options']) {
-			(this.client as any).centralized_options = options['connection-options'];
+			this.client.setCentralizedConnectionOptions(options['connection-options']);
 			logger.debug('%s - assigned connection options');
 		}
 

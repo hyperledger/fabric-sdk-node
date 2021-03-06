@@ -112,7 +112,10 @@ const Client = class {
 
 		// override with any centralized options
 		if (this.centralizedOptions) {
+			logger.debug('%s - adding centralized options:%s', method, this.centralizedOptions);
 			return_options = Object.assign(return_options, this.centralizedOptions);
+		} else {
+			logger.debug('%s - no centralized options', method);
 		}
 
 		// apply the tls info
@@ -126,6 +129,33 @@ const Client = class {
 		return_options = Object.assign(return_options, options);
 
 		return return_options;
+	}
+
+	/**
+	 * Utility method to set the connection options required by this Client (application).
+	 * These will be merged into new endpoints as this client creates new endpoints.
+	 * Options provided here will override the default 'conection-options' from the
+	 * config file ./config/default.json.
+	 * @example {
+		"grpc.max_receive_message_length": -1,
+		"grpc.max_send_message_length": -1,
+		"grpc.keepalive_time_ms": 120000,
+ 		"grpc.http2.min_time_between_pings_ms": 120000,
+		"grpc.keepalive_timeout_ms": 20000,
+		"grpc.http2.max_pings_without_data": 0,
+		"grpc.keepalive_permit_without_calls": 1,
+		"grpc-wait-for-ready-timeout": 3000,
+		"request-timeout" : 45000
+	 }
+	 * @param {object} options - The options to be used by gRPC connections.
+	 * @returns {Client} The Client instance.
+	 */
+	setCentralizedConnectionOptions(options) {
+		const method = `setCentralizedConnectionOptions: ${this.name} `;
+		logger.debug('%s - start %s', method, JSON.stringify(options));
+		this.centralizedOptions = options;
+
+		return this;
 	}
 
 	/**
