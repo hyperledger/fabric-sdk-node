@@ -6,17 +6,13 @@
 #
 set -euo pipefail
 
-version=${FABRIC_VERSION:-2.2}
-artifactory_url=hyperledger-fabric.jfrog.io
+version=${FABRIC_VERSION:-latest}
 
-for image in peer orderer ccenv baseos nodeenv javaenv tools; do
-    artifactory_image="${artifactory_url}/fabric-${image}:amd64-${version}-stable"
+for image in peer orderer ccenv baseos nodeenv javaenv ca tools; do
+    artifactory_image="hyperledger-fabric.jfrog.io/fabric-${image}:amd64-${version}"
     docker pull -q "${artifactory_image}"
     docker tag "${artifactory_image}" "hyperledger/fabric-${image}"
     docker rmi -f "${artifactory_image}" >/dev/null
 done
 
 docker pull -q couchdb:3.1
-docker pull -q hyperledger/fabric-ca:1.4
-docker tag hyperledger/fabric-ca:1.4 hyperledger/fabric-ca
-docker rmi hyperledger/fabric-ca:1.4 >/dev/null

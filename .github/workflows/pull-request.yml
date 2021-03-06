@@ -1,0 +1,39 @@
+# Copyright the Hyperledger Fabric contributors. All rights reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+on:
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+env:
+  FABRIC_VERSION: latest
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        node: [10, 12, 14]
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Checkout Code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Install SoftHSM
+        run: .github/workflows/scripts/setup_hsm.sh
+      - name: Install Node Modules
+        run: npm install
+      - name: Generate Certs
+        run: npm run installAndGenerateCerts
+      - name: Pull Fabric Images
+        run: npm run pullFabricImages
+      - name: Run Tests
+        run: npm test
