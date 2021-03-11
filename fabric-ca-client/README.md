@@ -1,6 +1,6 @@
 ## Hyperledger Fabric-CA Client for Node.js
 
-[![NPM](https://nodei.co/npm/fabric-ca-client.svg?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/fabric-ca-client/)
+[![NPM](https://nodei.co/npm/fabric-ca-client.svg?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.com/package/fabric-ca-client/)
 
 SDK for writing node.js applications to interact with [Hyperledger Fabric CA](http://hyperledger-fabric-ca.readthedocs.io/en/latest/users-guide.html).
 
