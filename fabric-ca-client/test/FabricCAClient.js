@@ -1235,6 +1235,80 @@ describe('FabricCAClient', () => {
 		});
 	});
 
+	describe('#getCaInfo', () => {
+
+		let revert;
+
+		beforeEach(() => {
+			revert = null;
+		});
+
+		afterEach(() => {
+			if (revert) {
+				revert();
+			}
+		});
+
+		it('should throw if not provided the required number of arguments', async () => {
+			const connect_opts = {
+				caname: 'test-ca-name',
+				protocol: 'http',
+				hostname: 'testHost'
+			};
+
+			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
+			await client.getCaInfo().should.be.rejectedWith(/Missing required parameters/);
+		});
+
+		it('should call POST with the correct method, request, and signing identity', () => {
+			const connect_opts = {
+				caname: 'test-ca-name',
+				protocol: 'https',
+				hostname: 'testHost'
+			};
+
+			const postStub = sinon.stub();
+			postStub.resolves({
+				result: {
+					'CAName' : 'test-ca-name',
+					'CAChain': 'test_chain',
+					'IssuerPublicKey': 'test_iss_pub_key',
+					'IssuerRevocationPublicKey': 'test_iss_rev_pub_key',
+					'Version': '1.4.9'
+				}});
+			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
+
+			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
+			client.getCaInfo('signingIdentity');
+
+			// should call post
+			sinon.assert.calledOnce(postStub);
+
+			// should call with known
+			const callArgs = postStub.getCall(0).args;
+			callArgs[0].should.equal('cainfo');
+			callArgs[1].should.deep.equal({
+				caname: 'test-ca-name',
+			});
+			callArgs[2].should.equal('signingIdentity');
+		});
+
+		it('should reject on POST failure', async () => {
+			const connect_opts = {
+				caname: 'test-ca-name',
+				protocol: 'https',
+				hostname: 'testHost'
+			};
+
+			const postStub = sinon.stub();
+			postStub.rejects(new Error('forced error'));
+			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
+
+			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
+			await client.getCaInfo('signingIdentity').should.be.rejectedWith('forced error');
+		});
+	});
+
 	describe('#generateCRL', () => {
 
 		let revert;
