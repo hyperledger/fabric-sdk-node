@@ -352,7 +352,7 @@ const FabricCAClient = class {
 	 * signing certificate, hash algorithm and signature algorithm
 	 * @returns {Promise<CAInfoResponse>}
 	 */
-	 async getCaInfo(signingIdentity) {
+	async getCaInfo(signingIdentity) {
 
 		if (arguments.length !== 1) {
 			return Promise.reject(new Error('Missing required parameters. \'signingIdentity\' is required.'));
