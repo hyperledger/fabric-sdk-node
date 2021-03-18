@@ -32,6 +32,7 @@ const Constants = require('./Constants.js');
 const CollectionConfig = require('./SideDB.js');
 const {Identity} = require('./msp/identity.js');
 const ChannelHelper = require('./utils/ChannelHelper');
+const ByteBuffer = require('bytebuffer');
 
 const _ccProto = ProtoLoader.load(__dirname + '/protos/peer/chaincode.proto').protos;
 const _transProto = ProtoLoader.load(__dirname + '/protos/peer/transaction.proto').protos;
@@ -3232,8 +3233,13 @@ const Channel = class {
 	 * creating a new channel
 	 */
 	static buildEnvelope(clientContext, chaincodeProposal, endorsements, proposalResponse, use_admin_signer) {
+		// Workaround to an issue with protobuf.js where ByteBuffer fields cannot be decoded multiple times
+		const proposal = new _proposalProto.Proposal({
+			header: ByteBuffer.wrap(chaincodeProposal.header),
+			payload: ByteBuffer.wrap(chaincodeProposal.payload),
+		});
 
-		const header = _commonProto.Header.decode(chaincodeProposal.getHeader());
+		const header = _commonProto.Header.decode(proposal.getHeader());
 
 		const chaincodeEndorsedAction = new _transProto.ChaincodeEndorsedAction();
 		chaincodeEndorsedAction.setProposalResponsePayload(proposalResponse.payload);
@@ -3247,7 +3253,7 @@ const Channel = class {
 		// to the orderer, otherwise the transaction will be rejected by the validators when
 		// it compares the proposal hash calculated by the endorsers and returned in the
 		// proposal response, which was calculated without the TransientMap
-		const originalChaincodeProposalPayload = _proposalProto.ChaincodeProposalPayload.decode(chaincodeProposal.payload);
+		const originalChaincodeProposalPayload = _proposalProto.ChaincodeProposalPayload.decode(proposal.payload);
 		const chaincodeProposalPayloadNoTrans = new _proposalProto.ChaincodeProposalPayload();
 		chaincodeProposalPayloadNoTrans.setInput(originalChaincodeProposalPayload.input); // only set the input field, skipping the TransientMap
 		chaincodeActionPayload.setChaincodeProposalPayload(chaincodeProposalPayloadNoTrans.toBuffer());

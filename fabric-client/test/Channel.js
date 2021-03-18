@@ -35,6 +35,7 @@ const Orderer = require('fabric-client/lib/Orderer');
 const Peer = require('fabric-client/lib/Peer');
 const TransactionID = require('fabric-client/lib/TransactionID');
 const sdk_utils = require('fabric-client/lib/utils.js');
+const ByteBuffer = require('bytebuffer');
 
 const ProtoLoader = require('fabric-client/lib/ProtoLoader');
 const responseProto = ProtoLoader.load(__dirname + '/../lib/protos/peer/proposal_response.proto').protos;
@@ -1709,7 +1710,36 @@ describe('Channel', () => {
 
 	describe('#sendSignedTransation', () => {});
 
-	describe('#buildEnvelope', () => {});
+	describe('#buildEnvelope', () => {
+		it('produces same output if called multiple times with same proposal containing ByteBuffer fields', () => {
+			const channelHeader = new commonProto.ChannelHeader({
+				channel_id: 'CHANNEL',
+				tx_id: 'TRANSACTION_ID',
+			});
+			const proposalHeader = new commonProto.Header({
+				channel_header: commonProto.ChannelHeader.encode(channelHeader)
+			});
+
+			const proposalPayload = new proposalProto.ChaincodeProposalPayload({
+				input: Buffer.from('FAKE_PAYLOAD_INPUT')
+			});
+
+			const proposal = new proposalProto.Proposal({
+				header: commonProto.Header.encode(proposalHeader),
+				payload: proposalProto.ChaincodeProposalPayload.encode(proposalPayload),
+			});
+			const endorsement = new responseProto.Endorsement();
+			const proposalResponse = new transactionProto.ProposalResponse();
+
+			expect(proposal.header).to.be.an.instanceOf(ByteBuffer, 'header');
+			expect(proposal.payload).to.be.an.instanceOf(ByteBuffer, 'payload');
+
+			const result1 = Channel.buildEnvelope(client, proposal, [endorsement], proposalResponse);
+			const result2 = Channel.buildEnvelope(client, proposal, [endorsement], proposalResponse);
+
+			expect(result1).to.deep.equal(result2);
+		});
+	});
 
 	describe('#queryByChaincode', () => {
 		const peer1Result = 'PEER1_RESULT';
