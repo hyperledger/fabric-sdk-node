@@ -58,7 +58,7 @@
     "chai-as-promised": "^7.1.1",
     "cucumber": "^6.0.5",
     "cucumber-pretty": "^6.0.0",
-    "elliptic": "^6.5.3",
+    "elliptic": "^6.5.4",
     "eslint": "^6.8.0",
     "fabric-ca-client": "file:./fabric-ca-client",
     "fabric-client": "^1.4.9",
