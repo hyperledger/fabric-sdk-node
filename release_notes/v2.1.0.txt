@@ -10,7 +10,7 @@ https://github.com/hyperledger/fabric-rfcs/pull/23
 Major changes from v1.4:
  - The fabric-client package has been removed.  Client applications should use the Fabric Programming Model APIs from the fabric-network package.
 The underlying APIs that interface with the gRPC layer have been reimplemented in the fabric-common package and should not be used directly by client applications.
- - Simplified wallet management, which is portable across SDK languages and with pluggable persistent storage, more information here: https://hyperledger.github.io/fabric-sdk-node/master/tutorial-wallet.html
+ - Simplified wallet management, which is portable across SDK languages and with pluggable persistent storage, more information here: https://hyperledger.github.io/fabric-sdk-node/main/tutorial-wallet.html
  - New eventing implementation in fabric-network. Client application code can listen for block events using Network.addBlockListener(), 
 and listen for contract events using Contract.addContractListener(). The Network object also provides capability to listen for transaction commit events, 
-specifically to support the implementation of custom event handlers; more information here: https://hyperledger.github.io/fabric-sdk-node/master/tutorial-transaction-commit-events.html
+specifically to support the implementation of custom event handlers; more information here: https://hyperledger.github.io/fabric-sdk-node/main/tutorial-transaction-commit-events.html

@@ -7,13 +7,13 @@ agreement on a chaincode before it is made available for interacting with the
 ledger. Specifically, a sufficient number of organizations must approve the
 definition of a chaincode before it becomes active, as defined by configurable
 policies on a Fabric channel.
-https://hyperledger.github.io/fabric-sdk-node/master/tutorial-chaincode-lifecycle.html
+https://hyperledger.github.io/fabric-sdk-node/main/tutorial-chaincode-lifecycle.html
 
 The v2.0 Alpha also provides Fabric's first native token support for your trial.
 Fabric tokens are governed by a UTXO model where tokens can be issued, transferred,
 and redeemed. All peers on a channel validate each transaction, ensuring the
 transactor's authorization to the tokens and preventing double spends.
-https://hyperledger.github.io/fabric-sdk-node/master/tutorial-fabtoken.html
+https://hyperledger.github.io/fabric-sdk-node/main/tutorial-fabtoken.html
 
 Bug fixes and documentation improvements.
 
