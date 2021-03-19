@@ -6,12 +6,12 @@ fabric-node-sdk packages that support Fabric 2.x, and supersedes previous
 v2.x releases. Please see the Fabric LTS release strategy document for more
 information on LTS releases:
 
-https://github.com/hyperledger/fabric-rfcs/blob/master/text/0005-lts-release-strategy.md
+https://github.com/hyperledger/fabric-rfcs/blob/main/text/0005-lts-release-strategy.md
 
 If migrating a client application from an earlier version of the API, consult
 the migration tutorial for details of potentially breaking changes and recommended actions:
 
-https://hyperledger.github.io/fabric-sdk-node/master/tutorial-migration.html
+https://hyperledger.github.io/fabric-sdk-node/main/tutorial-migration.html
 
 Major changes from v1.4:
 
@@ -25,7 +25,7 @@ Major changes from v1.4:
 - Simplified wallet management, which is portable across SDK languages and
   with pluggable persistent storage. More information can be found here:
 
-  https://hyperledger.github.io/fabric-sdk-node/master/tutorial-wallet.html
+  https://hyperledger.github.io/fabric-sdk-node/main/tutorial-wallet.html
 
 - New eventing implementation in fabric-network. Client application code can
   listen for block events using Network.addBlockListener(), and listen for
@@ -34,4 +34,4 @@ Major changes from v1.4:
   specifically to support the implementation of custom event handlers. More
   information can be found here:
 
-  https://hyperledger.github.io/fabric-sdk-node/master/tutorial-transaction-commit-events.html
+  https://hyperledger.github.io/fabric-sdk-node/main/tutorial-transaction-commit-events.html

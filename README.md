@@ -3,7 +3,7 @@
 <div style="float: right">
 <table align="right">
   <tr><th>Branch</th><th>Build status</th></tr>
-  <tr><td>master</td><td><a href="https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_build/latest?definitionId=47&branchName=master"><img src="https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_apis/build/status/Fabric-SDK-Node?branchName=master"></a></td></tr>
+  <tr><td>main</td><td><a href="https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_build/latest?definitionId=47&branchName=main"><img src="https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_apis/build/status/Fabric-SDK-Node?branchName=main"></a></td></tr>
   <tr><td>release-2.2</td><td><a href="https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_build/latest?definitionId=47&branchName=release-2.2"><img src="https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_apis/build/status/Fabric-SDK-Node?branchName=release-2.2"></a></td></tr>
   <tr><td>release-1.4</td><td><a href="https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_build/latest?definitionId=47&branchName=release-1.4"><img src="https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_apis/build/status/Fabric-SDK-Node?branchName=release-1.4"></a></td></tr>
 </table>
@@ -34,7 +34,7 @@ In the project root folder:
 * To run the unit tests that do not require any additional set up, use `npm run testHeadless`
 
 ### Run Integration Tests
-Integration tests run on the master branch require the most recent stable Fabric images, which are hosted on Artifactory. A utility script is provided to retrieve non-published docker images, which may be run using the command `npm run pullFabricImages`
+Integration tests run on the main branch require the most recent stable Fabric images, which are hosted on Artifactory. A utility script is provided to retrieve non-published docker images, which may be run using the command `npm run pullFabricImages`
 
 Now you are ready to run the integration tests. It is advisable to clear out any previous key value stores that may have cached user enrollment certificates using the command (`rm -rf /tmp/hfc-*`, `rm -rf ~/.hfc-key-store`) prior to testing in isolation.
 

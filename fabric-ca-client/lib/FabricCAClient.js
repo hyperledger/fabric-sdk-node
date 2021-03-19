@@ -341,7 +341,7 @@ const FabricCAClient = class {
 	 */
 	generateAuthToken(reqBody, signingIdentity, path, method) {
 		// specific signing procedure is according to:
-		// https://github.com/hyperledger/fabric-ca/blob/master/util/util.go#L168
+		// https://github.com/hyperledger/fabric-ca/blob/main/util/util.go#L168
 		const cert = Buffer.from(signingIdentity._certificate).toString('base64');
 		let signString;
 		if (reqBody) {
