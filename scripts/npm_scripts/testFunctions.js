@@ -21,7 +21,7 @@ module.exports.cleanUp = function() {
 };
 
 module.exports.cleanUpDocs = function() {
-	fs.removeSync('docs/gen/master');
+	fs.removeSync('docs/gen/main');
 	return;
 };
 

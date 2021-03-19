@@ -48,7 +48,7 @@ cleanStaging() {
     echo "Removing ${STAGING_RELEASE_DIR}"
     rm -rf "${STAGING_RELEASE_DIR}"
 
-    if [[ ${SOURCE_BRANCH} = master ]]; then
+    if [[ ${SOURCE_BRANCH} = main ]]; then
         removeStagingRootFiles
     fi
 }
@@ -63,7 +63,7 @@ copyToStaging() {
     echo "Copying built documentation from ${BUILD_DIR} to ${STAGING_RELEASE_DIR}"
     rsync -r "${BUILD_DIR}/" "${STAGING_RELEASE_DIR}"
 
-    if [[ ${SOURCE_BRANCH} = master ]]; then
+    if [[ ${SOURCE_BRANCH} = main ]]; then
         echo "Copying template files from ${TEMPLATE_DIR} to ${STAGING_DIR}"
         rsync -r "${TEMPLATE_DIR}/" "${STAGING_DIR}"
     fi

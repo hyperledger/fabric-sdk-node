@@ -121,4 +121,4 @@ listener to monitor commit events from endorsing peers by calling
 [Network.addCommitListener](module-fabric-network.Network.html#addCommitListener).
 
 For a complete sample plug-in event handler implementation, see
-[sample-transaction-event-handler.ts](https://github.com/hyperledger/fabric-sdk-node/blob/master/test/ts-scenario/config/handlers/sample-transaction-event-handler.ts).
+[sample-transaction-event-handler.ts](https://github.com/hyperledger/fabric-sdk-node/blob/main/test/ts-scenario/config/handlers/sample-transaction-event-handler.ts).
