@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>Hyperledger Fabric SDK for Node.js Tutorial: fabric-network: How to use the discovery service</title>
+
+	<!--[if lt IE 9]>
+	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link type="text/css" rel="stylesheet" href="styles/sunlight.default.css">
+
+	<link type="text/css" rel="stylesheet" href="styles/site.cosmo.css">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-default navbar-fixed-top ">
+<div class="container">
+	<div class="navbar-header">
+		<a class="navbar-brand" href="index.html">Hyperledger Fabric SDK for Node.js</a>
+		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+        </button>
+	</div>
+	<div class="navbar-collapse collapse" id="topNavigation">
+		<ul class="nav navbar-nav">
+			
+			<li class="dropdown">
+				<a href="modules.list.html" class="dropdown-toggle" data-toggle="dropdown">Modules<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="module-fabric-network.html">fabric-network</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="AffiliationService.html">AffiliationService</a></li><li><a href="BaseClient.html">BaseClient</a></li><li><a href="BlockDecoder.html">BlockDecoder</a></li><li><a href="global.html#ChaincodeEvent">ChaincodeEvent</a></li><li><a href="Channel.html">Channel</a></li><li><a href="Client.html">Client</a></li><li><a href="Commit.html">Commit</a></li><li><a href="Committer.html">Committer</a></li><li><a href="CryptoKeyStore.html">CryptoKeyStore</a></li><li><a href="CryptoSuite.html">CryptoSuite</a></li><li><a href="CryptoSuite_ECDSA_AES.html">CryptoSuite_ECDSA_AES</a></li><li><a href="CryptoSuite_PKCS11.html">CryptoSuite_PKCS11</a></li><li><a href="Discoverer.html">Discoverer</a></li><li><a href="DiscoveryHandler.html">DiscoveryHandler</a></li><li><a href="DiscoveryService.html">DiscoveryService</a></li><li><a href="ECDSA_KEY.html">ECDSA_KEY</a></li><li><a href="global.html#Endorsement">Endorsement</a></li><li><a href="Endorser.html">Endorser</a></li><li><a href="Endpoint.html">Endpoint</a></li><li><a href="Eventer.html">Eventer</a></li><li><a href="global.html#EventInfo">EventInfo</a></li><li><a href="EventService.html">EventService</a></li><li><a href="FabricCAClient.html">FabricCAClient</a></li><li><a href="FabricCAServices.html">FabricCAServices</a></li><li><a href="Hash.html">Hash</a></li><li><a href="Identity.html">Identity</a></li><li><a href="IdentityContext.html">IdentityContext</a></li><li><a href="IdentityService.html">IdentityService</a></li><li><a href="InMemoryKeyValueStore.html">InMemoryKeyValueStore</a></li><li><a href="Key.html">Key</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="module-fabric-network.DefaultCheckpointers.html">fabric-network.DefaultCheckpointers</a></li><li><a href="module-fabric-network.FabricError.html">fabric-network.FabricError</a></li><li><a href="module-fabric-network.Gateway.html">fabric-network.Gateway</a></li><li><a href="module-fabric-network.HsmX509Provider.html">fabric-network.HsmX509Provider</a></li><li><a href="module-fabric-network.IdentityProviderRegistry.html">fabric-network.IdentityProviderRegistry</a></li><li><a href="module-fabric-network.TimeoutError.html">fabric-network.TimeoutError</a></li><li><a href="module-fabric-network.Transaction.html">fabric-network.Transaction</a></li><li><a href="module-fabric-network.TransactionError.html">fabric-network.TransactionError</a></li><li><a href="module-fabric-network.Wallet.html">fabric-network.Wallet</a></li><li><a href="module-fabric-network.Wallets.html">fabric-network.Wallets</a></li><li><a href="Pkcs11EcdsaKey.html">Pkcs11EcdsaKey</a></li><li><a href="Proposal.html">Proposal</a></li><li><a href="Query.html">Query</a></li><li><a href="ServiceAction.html">ServiceAction</a></li><li><a href="ServiceEndpoint.html">ServiceEndpoint</a></li><li><a href="ServiceHandler.html">ServiceHandler</a></li><li><a href="Signer.html">Signer</a></li><li><a href="SigningIdentity.html">SigningIdentity</a></li><li><a href="User.html">User</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="interfaces.list.html" class="dropdown-toggle" data-toggle="dropdown">Interfaces<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="module-fabric-network.BlockEvent.html">fabric-network.BlockEvent</a></li><li><a href="module-fabric-network.Checkpointer.html">fabric-network.Checkpointer</a></li><li><a href="module-fabric-network.CommitError.html">fabric-network.CommitError</a></li><li><a href="module-fabric-network.CommitEvent.html">fabric-network.CommitEvent</a></li><li><a href="module-fabric-network.Contract.html">fabric-network.Contract</a></li><li><a href="module-fabric-network.ContractEvent.html">fabric-network.ContractEvent</a></li><li><a href="module-fabric-network.DefaultEventHandlerOptions.html">fabric-network.DefaultEventHandlerOptions</a></li><li><a href="module-fabric-network.DefaultQueryHandlerOptions.html">fabric-network.DefaultQueryHandlerOptions</a></li><li><a href="module-fabric-network.DiscoveryOptions.html">fabric-network.DiscoveryOptions</a></li><li><a href="module-fabric-network.GatewayOptions.html">fabric-network.GatewayOptions</a></li><li><a href="module-fabric-network.HsmOptions.html">fabric-network.HsmOptions</a></li><li><a href="module-fabric-network.HsmX509Identity.html">fabric-network.HsmX509Identity</a></li><li><a href="module-fabric-network.Identity.html">fabric-network.Identity</a></li><li><a href="module-fabric-network.IdentityProvider.html">fabric-network.IdentityProvider</a></li><li><a href="module-fabric-network.ListenerOptions.html">fabric-network.ListenerOptions</a></li><li><a href="module-fabric-network.Network.html">fabric-network.Network</a></li><li><a href="module-fabric-network.Query.html">fabric-network.Query</a></li><li><a href="module-fabric-network.QueryHandler.html">fabric-network.QueryHandler</a></li><li><a href="module-fabric-network.TransactionEvent.html">fabric-network.TransactionEvent</a></li><li><a href="module-fabric-network.TxEventHandler.html">fabric-network.TxEventHandler</a></li><li><a href="module-fabric-network.WalletStore.html">fabric-network.WalletStore</a></li><li><a href="module-fabric-network.X509Identity.html">fabric-network.X509Identity</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="tutorials.list.html" class="dropdown-toggle" data-toggle="dropdown">Tutorials<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="tutorial-commonconnectionprofile.html">commonconnectionprofile</a></li><li><a href="tutorial-discovery-fabric-network.html">fabric-network: How to use the discovery service</a></li><li><a href="tutorial-grpc-settings.html">fabric-common: How to set gRPC settings</a></li><li><a href="tutorial-handlers.html">fabric-common: How to use the endorsement, query, and commit handlers</a></li><li><a href="tutorial-logging.html">fabric-common: How to use logging</a></li><li><a href="tutorial-migration.html">Migrating client applications from v1.4 to v2.0</a></li><li><a href="tutorial-query-peers.html">fabric-network: How to select peers for evaluating transactions (queries)</a></li><li><a href="tutorial-sign-transaction-offline.html">fabric-common: Working with an offline private key</a></li><li><a href="tutorial-transaction-commit-events.html">fabric-network: How to wait for transactions to be committed to the ledger</a></li><li><a href="tutorial-wallet.html">fabric-network: Using wallets to manage identities</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="global.html#bitsToBytes">bitsToBytes</a></li><li><a href="global.html#bytesToBits">bytesToBits</a></li><li><a href="global.html#CLIENT">CLIENT</a></li><li><a href="global.html#crypto">crypto</a></li><li><a href="global.html#HFAFFILIATIONMGR">HFAFFILIATIONMGR</a></li><li><a href="global.html#HFGENCRL">HFGENCRL</a></li><li><a href="global.html#HFINTERMEDIATECA">HFINTERMEDIATECA</a></li><li><a href="global.html#HFREGISTRARATTRIBUTES">HFREGISTRARATTRIBUTES</a></li><li><a href="global.html#HFREGISTRARDELEGATEROLES">HFREGISTRARDELEGATEROLES</a></li><li><a href="global.html#HFREGISTRARROLES">HFREGISTRARROLES</a></li><li><a href="global.html#HFREVOKER">HFREVOKER</a></li><li><a href="global.html#newCryptoKeyStore">newCryptoKeyStore</a></li><li><a href="global.html#newCryptoSuite">newCryptoSuite</a></li><li><a href="global.html#ORDERER">ORDERER</a></li><li><a href="global.html#PEER">PEER</a></li><li><a href="global.html#setLogger">setLogger</a></li><li><a href="global.html#TYPE">TYPE</a></li><li><a href="global.html#USER">USER</a></li>
+				</ul>
+			</li>
+			
+		</ul>
+        
+            <div class="col-sm-3 col-md-3">
+                <form class="navbar-form" role="search">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search" name="q" id="search-input">
+                        <div class="input-group-btn">
+                            <button class="btn btn-default" id="search-submit"><i class="glyphicon glyphicon-search"></i></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        
+	</div>
+
+</div>
+</div>
+
+
+<div class="container" id="toc-content">
+<div class="row">
+
+	
+	<div class="col-md-12">
+	
+		<div id="main">
+			<section class="tutorial-section">
+
+<header>
+    
+
+    <h2>fabric-network: How to use the discovery service</h2>
+</header>
+
+<article>
+    <p>This tutorial illustrates the use of the service discovery by the Hyperledger Fabric Node.js fabric-network SDK.</p>
+<p>For more information on:</p>
+<ul>
+<li><a href="https://hyperledger-fabric.readthedocs.io/en/release-1.4/discovery-overview.html#how-service-discovery-works-in-fabric">Fabric Service Discovery</a></li>
+</ul>
+<p>The following assumes an understanding of the Hyperledger Fabric network
+(orderers and peers) and the Fabric discovery service.
+and of Node application development, including the use of the
+Javascript <code>promise</code> and <code>async await</code>.</p>
+<h3>Overview</h3>
+<p>The service discovery provided by Hyperledger Fabric helps an application
+understand the current view of the network. Service discovery also has insight
+into the endorsement policies of chaincodes and is able to provide lists of
+peers that are currently active on the network that could be used to endorse a
+proposal.
+To use the discovery service, the network will be required to be configure with
+a least one peer in the connection profile.</p>
+<h4>fabric-network APIs that can use the service discovery</h4>
+<ul>
+<li><code>gateway.connect</code> - This method has been enhanced by adding the discovery options.</li>
+<li><code>gateway.getNetwork</code> - This method will initialize the network channel using the
+discovery options from the gateway connect. Initialization includes discovering
+peers and orderers on the network.</li>
+<li><code>contract.addDiscoveryInterest</code> - This method will add collections and/or
+additional chaincodes and collections to the contract's discovery interests.
+These will be sent to the peer's discovery service when building an endorsement
+plan. This allows the plan to be built based on the policy information of the
+contract's chaincodes and collections. The contract will be initialized with
+a discovery interest of the contract's associated chaincode name.</li>
+<li><code>contract.resetDiscoveryInterest</code> - This method will re-initialize this
+contract's discovery interests to be this contract's associated chaincode name.
+Any collections that were added to this chaincode or additional chaincodes
+that this chaincode may call must be added.</li>
+<li><code>contract.submitTransaction</code> - When discovery is enabled by the gateway.connect
+options, this method will use discovery to help endorse the proposal.
+The contract's discovery interests help the peer's discovery service
+build an endorsement plan that includes peers that will provide a successful
+endorsement that will be able to be committed.</li>
+<li><code>transaction.submit</code> - When discovery is enabled by the gateway.connect
+options, this method will use discovery to help endorse the proposal.
+The contract's discovery interests help the peer's discovery service
+build an endorsement plan that includes peers that will provide a successful
+endorsement that will be able to be committed.</li>
+<li><code>contract.evaluateTransaction</code> - When discovery is enabled by the gateway.connect
+options, this method will select from the peers that have been discovered during
+the network channel initialization.</li>
+<li><code>transaction.evaluate</code> - When discovery is enabled by the gateway.connect
+options, this method will select from the peers that have been discovered during
+the network channel initialization.</li>
+</ul>
+<h4>fabric-network gateway.connect DiscoveryOption settings</h4>
+<ul>
+<li><code>discovery.enabled</code> - boolean - True if discovery should be used; otherwise false.</li>
+<li><code>discovery.asLocalhost</code> - boolean - Convert discovered host addresses to be
+'localhost'. Will be needed when running a docker composed fabric network on the
+local system; otherwise should be disabled.</li>
+</ul>
+<h3>To use</h3>
+<p>By default the fabric-network will use the service discovery. To enable the
+use of discovery, set the discovery 'enabled' attribute to a value of true. The default is true.</p>
+<pre class="prettyprint source"><code>await gateway.connect(connectionProfile, {discovery: { enabled: true, asLocalhost: false}});
+const network = await gateway.getNetwork('mychannel');
+
+</code></pre>
+<h3>To use with docker-compose</h3>
+<p>When the fabric network is running in a docker-compose and the node.js application
+is running outside of the docker containers, it will be necessary to modify the
+addresses returned from the discovery service. The discovery service sees the
+addresses of the peers and orderers (host names and ports) as they exist in the
+virtual systems. When the node.js application is running outside of docker,
+it will only know the endpoints as <code>localhost</code> and port.
+In the docker-compose file, notice how Docker is mapping the port addresses,
+these must be same when using service discovery. Using <code>- 7061:7051</code> will not
+work as the application does not have visibility into the virtual system and
+the port address as seen by the peer's discovery service.</p>
+<p>Set the <code>asLocalhost</code> to true, the default is true.</p>
+<pre class="prettyprint source"><code>await gateway.connect(connectionProfile, {discovery: { enabled: true, asLocalhost: true}});
+const network = await gateway.getNetwork('mychannel');
+</code></pre>
+<p>Notice in the following definition of a peer from a docker-compose file.
+The port number is the same and has been defined along with the
+host name <code>peer0.org1.example.com:7051</code> for the peer and gossip settings.
+The node.js fabric-client application running outside of of the docker
+containers will use <code>localhost:7051</code>. There is a mapping of the host name to
+'localhost' but there is no mapping of the port address.</p>
+<p>NOTE: All port addresses must be unique within the docker compose configuration
+due to the mapping of the virtual host name to the <code>localhost</code>. All port addresses
+must also be mapped within the docker compose to the same external address,
+this will require that the fabric environment settings indicate to the peer and
+orderer that port address.</p>
+<pre class="prettyprint source"><code>peer0.org1.example.com:
+  container_name: peer0.org1.example.com
+  image: hyperledger/fabric-peer
+  environment:
+	- CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+	- CORE_PEER_ID=peer0.org1.example.com
+	- CORE_PEER_ADDRESS=peer0.org1.example.com:7051 // notice how this matches the port mapping below
+	- CORE_PEER_LISTENADDRESS=peer0.org1.example.com:7051
+	- CORE_PEER_GOSSIP_ENDPOINT=peer0.org1.example.com:7051
+	- CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org1.example.com:7051
+	- FABRIC_LOGGING_SPEC=debug
+	## the following setting redirects chaincode container logs to the peer container logs
+	- CORE_VM_DOCKER_ATTACHSTDOUT=true
+	- CORE_PEER_LOCALMSPID=Org1MSP
+	- CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/msp/peer
+	##
+	- CORE_PEER_TLS_ENABLED=true
+	- CORE_PEER_TLS_CLIENTAUTHREQUIRED=true
+	- CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/msp/peer/tls/key.pem
+	- CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/msp/peer/tls/cert.pem
+	- CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/msp/peer/cacerts/org1.example.com-cert.pem
+	- CORE_PEER_TLS_CLIENTROOTCAS_FILES=/etc/hyperledger/msp/peer/cacerts/org1.example.com-cert.pem
+	# # the following setting starts chaincode containers on the same
+	# # bridge network as the peers
+	# # https://docs.docker.com/compose/networking/
+	- CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fixtures_default
+  working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+  command: peer node start
+  ports:
+	- 7051:7051 // notice internal and external are the same
+  volumes:
+	  - /var/run/:/host/var/run/
+	  - ./channel/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/:/etc/hyperledger/msp/peer
+  depends_on:
+	- orderer.example.com
+</code></pre>
+<h3>using chaincode to chaincode calls and collections</h3>
+<p>The peer's discovery service will require information
+on chaincodes, and collections that are involved in the
+smart contract to develop a valid endorsement plan.
+The contract's chaincode name will be automatically sent to
+the peer's discovery service unless the contract indicates that it requires
+other chaincodes and collections. These are known as 'discovery interests' to the
+peer's discovery service.</p>
+<p>If the endorsement will require one or more chaincode to chaincode calls and/or
+be over collections, then the application must tell the contract object
+instance of these names. This will assist the discovery service in putting
+together an endorsement plan based on all the endorsement policies of the
+chaincodes and collections involved and the active peers on the network.
+The endorsement plan will include those peers that satisfy the endorsement
+policies and the collection policies.</p>
+<p>The following examples show how to add to the discovery interests when
+the chaincode is in one or more collections or the chaincode is calling
+other chaincodes.</p>
+<pre class="prettyprint source"><code>// --------- example 0 --------------------------------------------
+// when the smart contract's chaincode will not be calling another chaincode
+// and will not be participating on a collection.
+const contract = network.getContract('mychaincode1');
+
+// produces discovery interests of:
+[
+	{name: 'mychaincode1'}
+]
+</code></pre>
+<pre class="prettyprint source"><code>// --------- example 1 --------------------------------------------
+// when the smart contract's chaincode will be calling another chaincode
+const contract = network.getContract('mychaincode1');
+
+// this adds to the interests
+contract.addDiscoveryInterest({name: 'mychaincode2'});
+
+// produces discovery interests of:
+[
+	{name: 'mychaincode1'},
+	{name: 'mychaincode2'}
+]
+</code></pre>
+<pre class="prettyprint source"><code>// --------- example 2 --------------------------------------------
+// when the smart contract's chaincode is in a collection
+const contract = network.getContract('mychaincode1');
+
+// this adds the collection name to the contract's chaincode interest
+contract.addDiscoveryInterest({name: 'mychaincode1', collectionNames: ['mycollection1']});
+
+// produces discovery interests of:
+[
+	{name: 'mychaincode1', collectionNames: ['mycollection1']}
+]
+</code></pre>
+<pre class="prettyprint source"><code>// --------- example 3 --------------------------------------------
+// when the smart contract's chaincode is in multiple collections
+// and will be calling another chaincode that is in
+// multiple collections
+const contract = network.getContract('mychaincode1');
+
+// this adds the collection names to the contract's chaincode interest
+contract.addDiscoveryInterest({name: 'mychaincode1', collectionNames: ['mycollection1', 'mycollection2']});
+
+// this adds to the interests
+contract.addDiscoveryInterest({name: 'mychaincode2', collectionNames: ['mycollection1', 'mycollection2']});
+
+// produces discovery interests of:
+[
+	{name: 'mychaincode1', collectionNames: ['mycollection1', 'mycollection2']},
+	{name: 'mychaincode2', collectionNames: ['mycollection1', 'mycollection2']}
+]
+</code></pre>
+<p>If the discovery interests are not correct, use the <code>resetDiscoveryInterests</code> method
+to return the contract's discovery interests to the default or initial state.
+The initial discovery interests will include just the contract's chaincode name.</p>
+<pre class="prettyprint source"><code>// create contract and default interests
+const contract = network.getContract('mychaincode1');
+// produces discovery interests of:
+[
+	{name: 'mychaincode1'}
+]
+
+// this adds to the interests
+contract.addDiscoveryInterest({name: 'badchaincode'});
+// produces discovery interests of:
+[
+	{name: 'mychaincode1'},
+	{name: 'badchaincode'}
+]
+
+// this will reset the interests to the default
+contract.resetDiscoveryInterests();
+// produces discovery interests of:
+[
+	{name: 'mychaincode1'}
+]
+</code></pre>
+<p><a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.</p>
+</article>
+
+</section>
+
+		</div>
+	</div>
+
+	<div class="clearfix"></div>
+
+	
+
+</div>
+</div>
+
+
+    <div class="modal fade" id="searchResults">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Search results</h4>
+          </div>
+          <div class="modal-body"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div>
+
+
+<footer>
+
+
+<span class="jsdoc-message">
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.4</a>
+	
+		on 2021-03-22T13:23:45+00:00
+	
+	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
+</span>
+</footer>
+
+<script src="scripts/docstrap.lib.js"></script>
+<script src="scripts/toc.js"></script>
+
+    <script type="text/javascript" src="scripts/fulltext-search-ui.js"></script>
+
+
+<script>
+$( function () {
+	$( "[id*='$']" ).each( function () {
+		var $this = $( this );
+
+		$this.attr( "id", $this.attr( "id" ).replace( "$", "__" ) );
+	} );
+
+	$( ".tutorial-section pre, .readme-section pre, pre.prettyprint.source" ).each( function () {
+		var $this = $( this );
+
+		var example = $this.find( "code" );
+		exampleText = example.html();
+		var lang = /{@lang (.*?)}/.exec( exampleText );
+		if ( lang && lang[1] ) {
+			exampleText = exampleText.replace( lang[0], "" );
+			example.html( exampleText );
+			lang = lang[1];
+		} else {
+			var langClassMatch = example.parent()[0].className.match(/lang\-(\S+)/);
+			lang = langClassMatch ? langClassMatch[1] : "javascript";
+		}
+
+		if ( lang ) {
+
+			$this
+			.addClass( "sunlight-highlight-" + lang )
+			.addClass( "linenums" )
+			.html( example.html() );
+
+		}
+	} );
+
+	Sunlight.highlightAll( {
+		lineNumbers : false,
+		showMenu : true,
+		enableDoclinks : true
+	} );
+
+	$.catchAnchorLinks( {
+        navbarOffset: 10
+	} );
+	$( "#toc" ).toc( {
+		anchorName  : function ( i, heading, prefix ) {
+			return $( heading ).attr( "id" ) || ( prefix + i );
+		},
+		selectors   : "#toc-content h1,#toc-content h2,#toc-content h3,#toc-content h4",
+		showAndHide : false,
+		smoothScrolling: true
+	} );
+
+	$( "#main span[id^='toc']" ).addClass( "toc-shim" );
+	$( '.dropdown-toggle' ).dropdown();
+
+    $( "table" ).each( function () {
+      var $this = $( this );
+      $this.addClass('table');
+    } );
+
+} );
+</script>
+
+
+
+<!--Navigation and Symbol Display-->
+
+
+<!--Google Analytics-->
+
+
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            SearcherDisplay.init();
+        });
+    </script>
+
+
+</body>
+</html>

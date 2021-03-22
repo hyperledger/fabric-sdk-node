@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>Hyperledger Fabric SDK for Node.js Interface: ContractEvent</title>
+
+	<!--[if lt IE 9]>
+	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link type="text/css" rel="stylesheet" href="styles/sunlight.default.css">
+
+	<link type="text/css" rel="stylesheet" href="styles/site.cosmo.css">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-default navbar-fixed-top ">
+<div class="container">
+	<div class="navbar-header">
+		<a class="navbar-brand" href="index.html">Hyperledger Fabric SDK for Node.js</a>
+		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+        </button>
+	</div>
+	<div class="navbar-collapse collapse" id="topNavigation">
+		<ul class="nav navbar-nav">
+			
+			<li class="dropdown">
+				<a href="modules.list.html" class="dropdown-toggle" data-toggle="dropdown">Modules<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="module-fabric-network.html">fabric-network</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="AffiliationService.html">AffiliationService</a></li><li><a href="BaseClient.html">BaseClient</a></li><li><a href="BlockDecoder.html">BlockDecoder</a></li><li><a href="global.html#ChaincodeEvent">ChaincodeEvent</a></li><li><a href="Channel.html">Channel</a></li><li><a href="Client.html">Client</a></li><li><a href="Commit.html">Commit</a></li><li><a href="Committer.html">Committer</a></li><li><a href="CryptoKeyStore.html">CryptoKeyStore</a></li><li><a href="CryptoSuite.html">CryptoSuite</a></li><li><a href="CryptoSuite_ECDSA_AES.html">CryptoSuite_ECDSA_AES</a></li><li><a href="CryptoSuite_PKCS11.html">CryptoSuite_PKCS11</a></li><li><a href="Discoverer.html">Discoverer</a></li><li><a href="DiscoveryHandler.html">DiscoveryHandler</a></li><li><a href="DiscoveryService.html">DiscoveryService</a></li><li><a href="ECDSA_KEY.html">ECDSA_KEY</a></li><li><a href="global.html#Endorsement">Endorsement</a></li><li><a href="Endorser.html">Endorser</a></li><li><a href="Endpoint.html">Endpoint</a></li><li><a href="Eventer.html">Eventer</a></li><li><a href="global.html#EventInfo">EventInfo</a></li><li><a href="EventService.html">EventService</a></li><li><a href="FabricCAClient.html">FabricCAClient</a></li><li><a href="FabricCAServices.html">FabricCAServices</a></li><li><a href="Hash.html">Hash</a></li><li><a href="Identity.html">Identity</a></li><li><a href="IdentityContext.html">IdentityContext</a></li><li><a href="IdentityService.html">IdentityService</a></li><li><a href="InMemoryKeyValueStore.html">InMemoryKeyValueStore</a></li><li><a href="Key.html">Key</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="module-fabric-network.DefaultCheckpointers.html">fabric-network.DefaultCheckpointers</a></li><li><a href="module-fabric-network.FabricError.html">fabric-network.FabricError</a></li><li><a href="module-fabric-network.Gateway.html">fabric-network.Gateway</a></li><li><a href="module-fabric-network.HsmX509Provider.html">fabric-network.HsmX509Provider</a></li><li><a href="module-fabric-network.IdentityProviderRegistry.html">fabric-network.IdentityProviderRegistry</a></li><li><a href="module-fabric-network.TimeoutError.html">fabric-network.TimeoutError</a></li><li><a href="module-fabric-network.Transaction.html">fabric-network.Transaction</a></li><li><a href="module-fabric-network.TransactionError.html">fabric-network.TransactionError</a></li><li><a href="module-fabric-network.Wallet.html">fabric-network.Wallet</a></li><li><a href="module-fabric-network.Wallets.html">fabric-network.Wallets</a></li><li><a href="Pkcs11EcdsaKey.html">Pkcs11EcdsaKey</a></li><li><a href="Proposal.html">Proposal</a></li><li><a href="Query.html">Query</a></li><li><a href="ServiceAction.html">ServiceAction</a></li><li><a href="ServiceEndpoint.html">ServiceEndpoint</a></li><li><a href="ServiceHandler.html">ServiceHandler</a></li><li><a href="Signer.html">Signer</a></li><li><a href="SigningIdentity.html">SigningIdentity</a></li><li><a href="User.html">User</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="interfaces.list.html" class="dropdown-toggle" data-toggle="dropdown">Interfaces<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="module-fabric-network.BlockEvent.html">fabric-network.BlockEvent</a></li><li><a href="module-fabric-network.Checkpointer.html">fabric-network.Checkpointer</a></li><li><a href="module-fabric-network.CommitError.html">fabric-network.CommitError</a></li><li><a href="module-fabric-network.CommitEvent.html">fabric-network.CommitEvent</a></li><li><a href="module-fabric-network.Contract.html">fabric-network.Contract</a></li><li><a href="module-fabric-network.ContractEvent.html">fabric-network.ContractEvent</a></li><li><a href="module-fabric-network.DefaultEventHandlerOptions.html">fabric-network.DefaultEventHandlerOptions</a></li><li><a href="module-fabric-network.DefaultQueryHandlerOptions.html">fabric-network.DefaultQueryHandlerOptions</a></li><li><a href="module-fabric-network.DiscoveryOptions.html">fabric-network.DiscoveryOptions</a></li><li><a href="module-fabric-network.GatewayOptions.html">fabric-network.GatewayOptions</a></li><li><a href="module-fabric-network.HsmOptions.html">fabric-network.HsmOptions</a></li><li><a href="module-fabric-network.HsmX509Identity.html">fabric-network.HsmX509Identity</a></li><li><a href="module-fabric-network.Identity.html">fabric-network.Identity</a></li><li><a href="module-fabric-network.IdentityProvider.html">fabric-network.IdentityProvider</a></li><li><a href="module-fabric-network.ListenerOptions.html">fabric-network.ListenerOptions</a></li><li><a href="module-fabric-network.Network.html">fabric-network.Network</a></li><li><a href="module-fabric-network.Query.html">fabric-network.Query</a></li><li><a href="module-fabric-network.QueryHandler.html">fabric-network.QueryHandler</a></li><li><a href="module-fabric-network.TransactionEvent.html">fabric-network.TransactionEvent</a></li><li><a href="module-fabric-network.TxEventHandler.html">fabric-network.TxEventHandler</a></li><li><a href="module-fabric-network.WalletStore.html">fabric-network.WalletStore</a></li><li><a href="module-fabric-network.X509Identity.html">fabric-network.X509Identity</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="tutorials.list.html" class="dropdown-toggle" data-toggle="dropdown">Tutorials<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="tutorial-commonconnectionprofile.html">commonconnectionprofile</a></li><li><a href="tutorial-discovery-fabric-network.html">fabric-network: How to use the discovery service</a></li><li><a href="tutorial-grpc-settings.html">fabric-common: How to set gRPC settings</a></li><li><a href="tutorial-handlers.html">fabric-common: How to use the endorsement, query, and commit handlers</a></li><li><a href="tutorial-logging.html">fabric-common: How to use logging</a></li><li><a href="tutorial-migration.html">Migrating client applications from v1.4 to v2.0</a></li><li><a href="tutorial-query-peers.html">fabric-network: How to select peers for evaluating transactions (queries)</a></li><li><a href="tutorial-sign-transaction-offline.html">fabric-common: Working with an offline private key</a></li><li><a href="tutorial-transaction-commit-events.html">fabric-network: How to wait for transactions to be committed to the ledger</a></li><li><a href="tutorial-wallet.html">fabric-network: Using wallets to manage identities</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="global.html#bitsToBytes">bitsToBytes</a></li><li><a href="global.html#bytesToBits">bytesToBits</a></li><li><a href="global.html#CLIENT">CLIENT</a></li><li><a href="global.html#crypto">crypto</a></li><li><a href="global.html#HFAFFILIATIONMGR">HFAFFILIATIONMGR</a></li><li><a href="global.html#HFGENCRL">HFGENCRL</a></li><li><a href="global.html#HFINTERMEDIATECA">HFINTERMEDIATECA</a></li><li><a href="global.html#HFREGISTRARATTRIBUTES">HFREGISTRARATTRIBUTES</a></li><li><a href="global.html#HFREGISTRARDELEGATEROLES">HFREGISTRARDELEGATEROLES</a></li><li><a href="global.html#HFREGISTRARROLES">HFREGISTRARROLES</a></li><li><a href="global.html#HFREVOKER">HFREVOKER</a></li><li><a href="global.html#newCryptoKeyStore">newCryptoKeyStore</a></li><li><a href="global.html#newCryptoSuite">newCryptoSuite</a></li><li><a href="global.html#ORDERER">ORDERER</a></li><li><a href="global.html#PEER">PEER</a></li><li><a href="global.html#setLogger">setLogger</a></li><li><a href="global.html#TYPE">TYPE</a></li><li><a href="global.html#USER">USER</a></li>
+				</ul>
+			</li>
+			
+		</ul>
+        
+            <div class="col-sm-3 col-md-3">
+                <form class="navbar-form" role="search">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search" name="q" id="search-input">
+                        <div class="input-group-btn">
+                            <button class="btn btn-default" id="search-submit"><i class="glyphicon glyphicon-search"></i></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        
+	</div>
+
+</div>
+</div>
+
+
+<div class="container" id="toc-content">
+<div class="row">
+
+	
+	<div class="col-md-8">
+	
+		<div id="main">
+			
+
+	<h1 class="page-title">Interface: ContractEvent</h1>
+<section>
+
+<header>
+    
+        <h2>
+            <span class="ancestors"><a href="module-fabric-network.html">fabric-network</a>.</span>
+        
+        ContractEvent
+        </h2>
+        
+    
+</header>
+
+
+<article>
+    <div class="container-overview">
+    
+        
+            <div class="description">Event representing a contract event emitted by a smart contract.</div>
+        
+
+        
+<dl class="details">
+    
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    <dl>
+
+<table class="props table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>chaincodeId</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">The chaincode ID of the smart contract that emitted this event.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>eventName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">The name of the emitted event.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>payload</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Buffer</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">The data associated with this event by the smart contract. Note that
+<strong>filtered</strong> events do not include any payload data.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+</dl>
+
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        <dl>
+            
+<hr>
+<dt>
+    <h4 class="name" id="getTransactionEvent"><span class="type-signature"></span>getTransactionEvent()</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Get the parent transaction event of this event.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    A transaction event.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="module-fabric-network.TransactionEvent.html">module:fabric-network.TransactionEvent</a></span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        </dl>
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+		</div>
+	</div>
+
+	<div class="clearfix"></div>
+
+	
+		<div class="col-md-3">
+			<div id="toc" class="col-md-3 hidden-xs hidden-sm hidden-md"></div>
+		</div>
+	
+
+</div>
+</div>
+
+
+    <div class="modal fade" id="searchResults">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Search results</h4>
+          </div>
+          <div class="modal-body"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div>
+
+
+<footer>
+
+
+<span class="jsdoc-message">
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.4</a>
+	
+		on 2021-03-22T13:23:44+00:00
+	
+	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
+</span>
+</footer>
+
+<script src="scripts/docstrap.lib.js"></script>
+<script src="scripts/toc.js"></script>
+
+    <script type="text/javascript" src="scripts/fulltext-search-ui.js"></script>
+
+
+<script>
+$( function () {
+	$( "[id*='$']" ).each( function () {
+		var $this = $( this );
+
+		$this.attr( "id", $this.attr( "id" ).replace( "$", "__" ) );
+	} );
+
+	$( ".tutorial-section pre, .readme-section pre, pre.prettyprint.source" ).each( function () {
+		var $this = $( this );
+
+		var example = $this.find( "code" );
+		exampleText = example.html();
+		var lang = /{@lang (.*?)}/.exec( exampleText );
+		if ( lang && lang[1] ) {
+			exampleText = exampleText.replace( lang[0], "" );
+			example.html( exampleText );
+			lang = lang[1];
+		} else {
+			var langClassMatch = example.parent()[0].className.match(/lang\-(\S+)/);
+			lang = langClassMatch ? langClassMatch[1] : "javascript";
+		}
+
+		if ( lang ) {
+
+			$this
+			.addClass( "sunlight-highlight-" + lang )
+			.addClass( "linenums" )
+			.html( example.html() );
+
+		}
+	} );
+
+	Sunlight.highlightAll( {
+		lineNumbers : false,
+		showMenu : true,
+		enableDoclinks : true
+	} );
+
+	$.catchAnchorLinks( {
+        navbarOffset: 10
+	} );
+	$( "#toc" ).toc( {
+		anchorName  : function ( i, heading, prefix ) {
+			return $( heading ).attr( "id" ) || ( prefix + i );
+		},
+		selectors   : "#toc-content h1,#toc-content h2,#toc-content h3,#toc-content h4",
+		showAndHide : false,
+		smoothScrolling: true
+	} );
+
+	$( "#main span[id^='toc']" ).addClass( "toc-shim" );
+	$( '.dropdown-toggle' ).dropdown();
+
+    $( "table" ).each( function () {
+      var $this = $( this );
+      $this.addClass('table');
+    } );
+
+} );
+</script>
+
+
+
+<!--Navigation and Symbol Display-->
+
+
+<!--Google Analytics-->
+
+
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            SearcherDisplay.init();
+        });
+    </script>
+
+
+</body>
+</html>
