@@ -1,3 +1,12 @@
+## v1.4.18
+Tue 23 Mar 10:53:18 GMT 2021
+
+* [e81661a5](https://github.com/hyperledger/fabric-sdk-node/commit/e81661a5) [[FABN-1705](https://jira.hyperledger.org/browse/FABN-1705)] Allow multiple calls to Channel.sendTransaction() (#441)
+* [74a89c6f](https://github.com/hyperledger/fabric-sdk-node/commit/74a89c6f) [[FABN-1701] Align Fabric-](https://jira.hyperledger.org/browse/FABN-1701] Align Fabric-)Network discover default options with code (#433)
+* [d2eabde8](https://github.com/hyperledger/fabric-sdk-node/commit/d2eabde8) [[FABN-1700](https://jira.hyperledger.org/browse/FABN-1700)] fix HSMWalletMixin TypeDef (#428)
+* [08a2bd2d](https://github.com/hyperledger/fabric-sdk-node/commit/08a2bd2d) [[FABN-1591](https://jira.hyperledger.org/browse/FABN-1591)] Typo fix in release notes (#423)
+* [461b43e1](https://github.com/hyperledger/fabric-sdk-node/commit/461b43e1) [[Fabn 1693]] reset snapshot 1.4.18 (#422)
+
 ## v1.4.17
 Thu Jan 14 09:47:48 EST 2021
 
