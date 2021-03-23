@@ -1,3 +1,12 @@
+## v1.4.18
+Tue 23 Mar 2021 13:30:20 GMT
+
+* [7b359125](https://github.com/hyperledger/fabric-sdk-node/commit/7b359125) Update elliptic dep v14 (#442)
+* [e81661a5](https://github.com/hyperledger/fabric-sdk-node/commit/e81661a5) [FABN-1705](https://jira.hyperledger.org/browse/FABN-1705): Allow multiple calls to Channel.sendTransaction() (#441)
+* [74a89c6f](https://github.com/hyperledger/fabric-sdk-node/commit/74a89c6f) [[FABN-1701] Align Fabric-](https://jira.hyperledger.org/browse/FABN-1701] Align Fabric-)Network discover default options with code (#433)
+* [d2eabde8](https://github.com/hyperledger/fabric-sdk-node/commit/d2eabde8) [[FABN-1700](https://jira.hyperledger.org/browse/FABN-1700)] fix HSMWalletMixin TypeDef (#428)
+* [08a2bd2d](https://github.com/hyperledger/fabric-sdk-node/commit/08a2bd2d) [[FABN-1591](https://jira.hyperledger.org/browse/FABN-1591)] Typo fix in release notes (#423)
+
 ## v1.4.17
 Thu Jan 14 09:47:48 EST 2021
 
