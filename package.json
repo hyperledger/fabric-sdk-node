@@ -67,7 +67,7 @@
     "fabric-protos": "file:./fabric-protos",
     "ink-docstrap": "^1.3.2",
     "jsdoc": "^3.6.3",
-    "jsrsasign": "^8.0.20",
+    "jsrsasign": "^10.2.0",
     "mocha": "^7.1.2",
     "nano": "^8.2.2",
     "npm-run-all": "^4.1.5",
