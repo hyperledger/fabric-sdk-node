@@ -18,10 +18,10 @@ runTape() {
     # First run the ca-tests that run good/bad path member registration/enrollment scenarios
     # The remaining tests re-use the same key value store with the saved user certificates, in order to interact with the network
     npx tape test/integration/fabric-ca-affiliation-service-tests.js \
-    test/integration/fabric-ca-identity-service-tests.js \
-    test/integration/fabric-ca-certificate-service-tests.js \
-    test/integration/fabric-ca-services-tests.js \
-    test/integration/e2e.js
+        test/integration/fabric-ca-identity-service-tests.js \
+        test/integration/fabric-ca-certificate-service-tests.js \
+        test/integration/fabric-ca-services-tests.js
+
 }
 
 runTape $@
