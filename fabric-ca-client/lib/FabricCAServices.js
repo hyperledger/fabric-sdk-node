@@ -202,7 +202,7 @@ const FabricCAServices = class extends BaseClient {
 					if (storeKey) {
 						privateKey = await this.getCryptoSuite().generateKey();
 					} else {
-						privateKey = this.getCryptoSuite().generateEphemeralKey();
+						privateKey = this.getCryptoSuite().generateEphemeralKey({persist: true});
 					}
 					logger.debug('successfully generated key pairs');
 				} catch (err) {

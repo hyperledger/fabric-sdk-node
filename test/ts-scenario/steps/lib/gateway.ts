@@ -316,7 +316,7 @@ async function createHSMUser(wallet: Wallet, ccp: CommonConnectionProfileHelper,
 	const identity = {
 		credentials: {
 			certificate: enrollment.certificate,
-			privateKey: enrollment.key.toBytes()
+			privateKey: enrollment.key.getSKI()
 		},
 		mspId: orgMsp,
 		type: HSM_PROVIDER
