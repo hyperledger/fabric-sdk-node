@@ -18,6 +18,10 @@ import * as IdentityProviderRegistry from './impl/wallet/identityproviderregistr
 
 import * as Logger from './logger';
 import {X509Identity} from './impl/wallet/x509identity';
+import {NodeTracerProvider} from '@opentelemetry/node';
+
+const otelProvider = new NodeTracerProvider();
+otelProvider.register();
 
 const logger = Logger.getLogger('Gateway');
 
