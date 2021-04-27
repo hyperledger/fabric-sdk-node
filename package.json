@@ -85,7 +85,6 @@
     "typescript": "^3.9.2",
     "winston": "^2.4.4"
   },
-  "license": "Apache-2.0",
   "licenses": [
     {
       "type": "Apache-2.0",
