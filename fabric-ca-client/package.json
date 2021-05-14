@@ -21,9 +21,9 @@
   "types": "./types/index.d.ts",
   "dependencies": {
     "fabric-common": "file:../fabric-common",
-    "jsrsasign": "^8.0.20",
+    "jsrsasign": "^8.0.24",
     "url": "^0.11.0",
-    "winston": "^2.4.0"
+    "winston": "^2.4.5"
   },
   "license": "Apache-2.0",
   "licenses": [
