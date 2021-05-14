@@ -27,7 +27,7 @@ class SampleTransactionEventHandler implements TxEventHandler {
 	private readonly network: Network;
 	private readonly transactionId: string;
 	private readonly notificationPromise: any;
-	private resolveNotificationPromise!: () => void;
+	private resolveNotificationPromise!: (value?: unknown) => void;
 	private rejectNotificationPromise!: (reason: Error) => void;
 	private timeoutHandler?: NodeJS.Timeout;
 	private readonly listener: CommitListener = this.eventCallback.bind(this);
