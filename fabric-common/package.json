@@ -25,20 +25,20 @@
 	},
 	"types": "./types/index.d.ts",
 	"dependencies": {
+		"callsite": "^1.0.0",
 		"elliptic": "^6.5.4",
 		"fabric-protos": "file:../fabric-protos",
-		"js-sha3": "^0.7.0",
-		"jsrsasign": "^8.0.20",
+		"js-sha3": "^0.8.0",
+		"jsrsasign": "^10.2.0",
 		"long": "^4.0.0",
-		"nconf": "^0.10.0",
+		"nconf": "^0.11.2",
 		"promise-settle": "^0.3.0",
-		"sjcl": "1.0.7",
-		"winston": "^2.4.0",
-		"yn": "^3.1.0",
-		"callsite": "^1.0.0"
+		"sjcl": "1.0.8",
+		"winston": "^3.3.3",
+		"yn": "^4.0.0"
 	},
 	"optionalDependencies": {
-		"pkcs11js": "^1.0.6"
+		"pkcs11js": "^1.2.3"
 	},
 	"nyc": {
 		"exclude": [
