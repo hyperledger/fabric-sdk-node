@@ -8,9 +8,8 @@ const path = require('path');
 const fs = require('fs-extra');
 const util = require('util');
 
-const Client = require('fabric-client');
 const copService = require('fabric-ca-client/lib/FabricCAServices.js');
-const {Utils:utils, User} = require('fabric-common');
+const {Utils: utils, User} = require('fabric-common');
 const logger = utils.getLogger('TestUtil');
 
 module.exports.CHAINCODE_PATH = 'github.com/example_cc';
@@ -54,26 +53,26 @@ logger.info(util.format(
 
 // directory for file based KeyValueStore
 module.exports.KVS = path.join(tempdir, 'hfc-test-kvs');
-module.exports.storePathForOrg = function(org) {
+module.exports.storePathForOrg = function (org) {
 	return module.exports.KVS + '_' + org;
 };
 
 // temporarily set $GOPATH to the test fixture folder
-module.exports.setupChaincodeDeploy = function() {
+module.exports.setupChaincodeDeploy = function () {
 	process.env.GOPATH = path.join(__dirname, '../fixtures/chaincode/goLang');
 };
 
 // specifically set the values to defaults because they may have been overridden when
 // running in the overall test bucket ('npm test')
-module.exports.resetDefaults = function() {
+module.exports.resetDefaults = function () {
 	global.hfc.config = undefined;
 	require('nconf').reset();
 };
 
-Client.addConfigFile(path.join(__dirname, './e2e/config.json'));
-const ORGS = Client.getConfigSetting('test-network');
+utils.addConfigFile(path.join(__dirname, './e2e/config.json'));
+const ORGS = utils.getConfigSetting('test-network');
 
-const	tlsOptions = {
+const tlsOptions = {
 	trustedRoots: [],
 	verify: false
 };
@@ -93,9 +92,9 @@ function getMember(username, password, client, t, userOrg) {
 				const member = new User(username);
 				let cryptoSuite = client.getCryptoSuite();
 				if (!cryptoSuite) {
-					cryptoSuite = Client.newCryptoSuite();
+					cryptoSuite = utils.newCryptoSuite();
 					if (userOrg) {
-						cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: module.exports.storePathForOrg(ORGS[userOrg].name)}));
+						cryptoSuite.setCryptoKeyStore(utils.newCryptoKeyStore({path: module.exports.storePathForOrg(ORGS[userOrg].name)}));
 						client.setCryptoSuite(cryptoSuite);
 					}
 				}
@@ -126,7 +125,7 @@ function getMember(username, password, client, t, userOrg) {
 		});
 }
 
-module.exports.setAdmin = function(client, userOrg) {
+module.exports.setAdmin = function (client, userOrg) {
 	return getAdmin(client, null, userOrg);
 };
 
@@ -136,9 +135,9 @@ function getAdmin(client, t, userOrg) {
 	const certPath = path.join(__dirname, util.format('../fixtures/crypto-material/crypto-config/peerOrganizations/%s.example.com/users/Admin@%s.example.com/msp/signcerts', userOrg, userOrg));
 	const certPEM = readAllFiles(certPath)[0];
 
-	const cryptoSuite = Client.newCryptoSuite();
+	const cryptoSuite = utils.newCryptoSuite();
 	if (userOrg) {
-		cryptoSuite.setCryptoKeyStore(Client.newCryptoKeyStore({path: module.exports.storePathForOrg(ORGS[userOrg].name)}));
+		cryptoSuite.setCryptoKeyStore(utils.newCryptoKeyStore({path: module.exports.storePathForOrg(ORGS[userOrg].name)}));
 		client.setCryptoSuite(cryptoSuite);
 	}
 
@@ -180,6 +179,7 @@ function readFile(filePath) {
 		});
 	});
 }
+
 module.exports.readFile = readFile;
 
 function readAllFiles(dir) {
@@ -194,11 +194,11 @@ function readAllFiles(dir) {
 	return certs;
 }
 
-module.exports.getOrderAdminSubmitter = function(client, test) {
+module.exports.getOrderAdminSubmitter = function (client, test) {
 	return getOrdererAdmin(client, test);
 };
 
-module.exports.getSubmitter = function(client, test, peerOrgAdmin, org) {
+module.exports.getSubmitter = function (client, test, peerOrgAdmin, org) {
 	if (arguments.length < 2) {
 		throw new Error('"client" and "test" are both required parameters');
 	}
@@ -228,6 +228,6 @@ module.exports.getSubmitter = function(client, test, peerOrgAdmin, org) {
 	}
 };
 
-module.exports.sleep = function(ms) {
+module.exports.sleep = function (ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 };

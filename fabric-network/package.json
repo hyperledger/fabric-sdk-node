@@ -5,7 +5,7 @@
     "hyperledger",
     "blockchain"
   ],
-  "version": "2.2",
+  "version": "2.2.6",
   "main": "index.js",
   "repository": {
     "type": "git",
@@ -25,10 +25,10 @@
   },
   "types": "./types/index.d.ts",
   "dependencies": {
-	"fabric-common": "file:../fabric-common",
-	"fabric-protos": "file:../fabric-protos",
+    "fabric-common": "file:../fabric-common",
+    "fabric-protos": "file:../fabric-protos",
     "long": "^4.0.0",
-    "nano": "^8.2.2"
+    "nano": "^9.0.3"
   },
   "nyc": {
     "exclude": [
