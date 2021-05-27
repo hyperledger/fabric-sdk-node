@@ -1,3 +1,14 @@
+## v2.2.6
+Thu 27 May 2021 09:46:52 BST
+
+* [07d1e994](https://github.com/hyperledger/fabric-sdk-node/commit/07d1e994) [[FABN-1711] prune deprecated fabric-](https://jira.hyperledger.org/browse/FABN-1711] prune deprecated fabric-)client (#449) (#454)
+* [f347b752](https://github.com/hyperledger/fabric-sdk-node/commit/f347b752) Update elliptic dependency (#438)
+* [f06a047e](https://github.com/hyperledger/fabric-sdk-node/commit/f06a047e) [[FABN-1701](https://jira.hyperledger.org/browse/FABN-1701)] Update Tutorial and Def to match Gateway defaultOptions (#431)
+* [203e7e4b](https://github.com/hyperledger/fabric-sdk-node/commit/203e7e4b) [[FABN-1271](https://jira.hyperledger.org/browse/FABN-1271)] Update doc for default on QueryHandlerOptions (#430)
+* [045dcf8d](https://github.com/hyperledger/fabric-sdk-node/commit/045dcf8d) [[FABN-1271](https://jira.hyperledger.org/browse/FABN-1271)] Update doc for default on QueryHandlerOptions (#427)
+* [61c440ab](https://github.com/hyperledger/fabric-sdk-node/commit/61c440ab) [FABN-1641 gateway connection-](https://jira.hyperledger.org/browse/FABN-1641 gateway connection-)options pass to low level (#421) (#424)
+* [bf55b39c](https://github.com/hyperledger/fabric-sdk-node/commit/bf55b39c) [[FABN-1692](https://jira.hyperledger.org/browse/FABN-1692)] Reset to snapshot 2.2.6 (#420)
+
 ## v2.2.5
 Thu 14 Jan 11:28:34 GMT 2021
 
