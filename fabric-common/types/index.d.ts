@@ -399,6 +399,7 @@ export class Channel {
 
 export class IdentityContext {
 	readonly transactionId: string;
+	readonly nonce: Buffer;
 	constructor(user: User, client: Client);
 	calculateTransactionId(): IdentityContext;
 	serializeIdentity(): Buffer;
