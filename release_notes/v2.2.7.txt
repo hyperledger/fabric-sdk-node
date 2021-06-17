@@ -1,0 +1,18 @@
+Release Notes
+-------------
+This v2.2.7 version is the latest of the v2.2 long-term support (LTS) release
+of the fabric-node-sdk packages that support Fabric 2.x, and supersedes previous
+v2.x releases. Please see the Fabric LTS release strategy document for more
+information on LTS releases:
+
+https://github.com/hyperledger/fabric-rfcs/blob/main/text/0005-lts-release-strategy.md
+
+Changes in v2.2.7:
+
+- Transaction objects can be serialized using their serialize() method, and
+  later reconstructed using the Contract's deserializeTransaction() method.
+  This allows a transaction to be persisted and resubmitted with the same
+  transaction ID (and nonce) following a client application restart, and may
+  be useful to recover from a client application failure while an in-flight
+  transaction is in an indeterminate state as its commit status has not yet
+  been observed.
