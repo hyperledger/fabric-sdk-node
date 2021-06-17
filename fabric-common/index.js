@@ -10,7 +10,6 @@ const CryptoSuite = require('./lib/CryptoSuite');
 const HashPrimitives = require('./lib/HashPrimitives');
 const Identity = require('./lib/Identity');
 const Key = require('./lib/Key');
-const Pkcs11EcdsaKey = require('./lib/impl/ecdsa/pkcs11_key');
 const KeyValueStore = require('./lib/KeyValueStore');
 const Signer = require('./lib/Signer');
 const SigningIdentity = require('./lib/SigningIdentity');
@@ -48,7 +47,6 @@ module.exports = {
 	HashPrimitives,
 	Identity,
 	Key,
-	Pkcs11EcdsaKey,
 	KeyValueStore,
 	Signer,
 	SigningIdentity,

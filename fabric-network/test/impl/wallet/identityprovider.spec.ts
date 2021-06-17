@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ImportMock, MockManager } from 'ts-mock-imports';
+import { ImportMock } from 'ts-mock-imports';
 import {
 	HsmX509Identity,
 	HsmX509Provider
@@ -37,7 +37,6 @@ describe('IdentityProvider', () => {
 	const hsmIdentity: HsmX509Identity = {
 		credentials: {
 			certificate: 'CERTIFICATE',
-			privateKey: 'PRIVATE_HANDLE'
 		},
 		mspId: 'alice',
 		type: 'HSM-X.509',
@@ -55,15 +54,24 @@ describe('IdentityProvider', () => {
 	const providers: { [name: string]: ProviderData } = {
 		HsmX509: {
 			dataVersions: {
-				v1: {
+				v2: {
 					credentials: {
 						certificate: hsmIdentity.credentials.certificate,
-						privateKey: hsmIdentity.credentials.privateKey
+						privateKey: 'something'
 					},
 					mspId: hsmIdentity.mspId,
 					type: hsmIdentity.type,
 					version: 2,
 				} as IdentityData,
+				v1: {
+					credentials: {
+						certificate: hsmIdentity.credentials.certificate,
+					},
+					mspId: hsmIdentity.mspId,
+					type: hsmIdentity.type,
+					version: 1,
+				} as IdentityData,
+
 			},
 			identity: hsmIdentity,
 			provider: new HsmX509Provider({
@@ -144,22 +152,6 @@ describe('IdentityProvider', () => {
 					await provider.getUserContext({} as any, 'dummy');
 				} catch (error) {
 					expect(error.message).to.contain('X.509 identity is missing the credential data');
-				}
-			});
-
-			it('getUserContext fails with message containing missing identity credential privateKey', async () => {
-				try {
-					await provider.getUserContext({credentials: {}} as any, 'dummy');
-				} catch (error) {
-					expect(error.message).to.contain('X.509 identity data is missing the private key');
-				}
-			});
-
-			it('getUserContext fails with message containing missing identity credential privateKey', async () => {
-				try {
-					await provider.getUserContext({credentials: {privateKey: ''}} as any, 'dummy');
-				} catch (error) {
-					expect(error.message).to.contain('X.509 identity data is missing the private key');
 				}
 			});
 		}));
