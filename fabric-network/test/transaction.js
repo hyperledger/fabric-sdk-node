@@ -11,29 +11,30 @@ const chai = require('chai');
 const expect = chai.expect;
 chai.use(require('chai-as-promised'));
 
+const path = require('path');
+
 const Client = require('fabric-common/lib/Client');
 const Channel = require('fabric-common/lib/Channel');
 const Endorsement = require('fabric-common/lib/Endorsement');
 const Endorser = require('fabric-common/lib/Endorser');
 const QueryProposal = require('fabric-common/lib/Query');
 const Commit = require('fabric-common/lib/Commit');
-const IdentityContext = require('fabric-common/lib/IdentityContext');
 const DiscoveryHandler = require('fabric-common/lib/DiscoveryHandler');
 const Committer = require('fabric-common/lib/Committer');
 
-const {ContractImpl: Contract} = require('fabric-network/lib/contract');
-const {NetworkImpl: Network} = require('../lib/network');
 const {Gateway} = require('fabric-network/lib/gateway');
 const {Transaction} = require('fabric-network/lib/transaction');
 const {TransactionEventHandler} = require('fabric-network/lib/impl/event/transactioneventhandler');
 const {QueryImpl: Query} = require('fabric-network/lib/impl/query/query');
-const QueryStrategies = require('fabric-network/lib/impl/query/defaultqueryhandlerstrategies');
+const {Wallets} = require('../lib/impl/wallet/wallets');
+const DiscoveryService = require('fabric-common/lib/DiscoveryService');
+const Discoverer = require('fabric-common/lib/Discoverer');
 
 describe('Transaction', () => {
+	const networkName = 'NETWORK_NAME';
 	const transactionName = 'TRANSACTION_NAME';
 	const chaincodeId = 'chaincode-id';
 	const expectedResult = Buffer.from('42');
-	const transactionId = 'TX_ID';
 
 	const peerInfo = {name: 'peer1', url: 'grpc://fakehost:9999'};
 	const validEnsorsementResponse = {
@@ -87,77 +88,78 @@ describe('Transaction', () => {
 	let commit;
 	let queryHandler;
 	let network;
-	let identityContext;
-	let gatewayOptions;
 	let discoveryHandler;
 	let client;
 	let committers;
+	let eventHandler;
+	let gateway;
 
-	beforeEach(() => {
-		contract = sinon.createStubInstance(Contract);
-		network = sinon.createStubInstance(Network);
-		network.queryHandler = queryHandler;
-		contract.network = network;
+	beforeEach(async () => {
+		client = Client.newClient('test');
 
-		identityContext = sinon.createStubInstance(IdentityContext);
-		identityContext.clone.returnsThis();
-		identityContext.calculateTransactionId.callsFake(() => {
-			identityContext.transactionId = transactionId;
-			return identityContext;
-		});
+		const discoverer = sinon.createStubInstance(Discoverer);
+		sinon.replace(client, 'newDiscoverer', sinon.fake.returns(discoverer));
 
-		endorser = sinon.createStubInstance(Endorser);
-
-		queryProposal = sinon.createStubInstance(QueryProposal);
-		queryProposal.send.resolves(newProposalResponse([validEnsorsementResponse]));
+		channel = sinon.createStubInstance(Channel);
+		sinon.replace(client, 'getChannel', sinon.fake.returns(channel));
+		channel.client = client;
 
 		endorsement = sinon.createStubInstance(Endorsement);
 		endorsement.send.resolves(newProposalResponse([validEnsorsementResponse]));
 		commit = sinon.createStubInstance(Commit);
 		commit.send.resolves({status: 'SUCCESS'});
-		commit.build.returns();
 		endorsement.newCommit.returns(commit);
-
-		channel = sinon.createStubInstance(Channel);
 		channel.newEndorsement.returns(endorsement);
-		channel.newQuery.withArgs(chaincodeId).returns(queryProposal);
-		channel.getEndorsers.returns([endorser]);
-		network.getChannel.returns(channel);
-		queryHandler = {
-			evaluate: sinon.stub().resolves(expectedResult)
-		};
-		network.queryHandler = queryHandler;
 
-		contract.chaincodeId = chaincodeId;
-		discoveryHandler = sinon.createStubInstance(DiscoveryHandler);
-		contract.getDiscoveryHandler.resolves(discoveryHandler);
+		queryProposal = sinon.createStubInstance(QueryProposal);
+		queryProposal.send.resolves(newProposalResponse([validEnsorsementResponse]));
+		channel.newQuery.withArgs(chaincodeId).returns(queryProposal);
+
+		endorser = sinon.createStubInstance(Endorser);
+		endorser.name = peerInfo.name;
+		channel.getEndorsers.returns([endorser]);
+
+		channel.getEndorser.callsFake(name => {
+			const result = sinon.createStubInstance(Endorser);
+			result.name = name;
+			return result;
+		});
+
 		committers = [sinon.createStubInstance(Committer)];
 		channel.getCommitters.returns(committers);
 
-		client = sinon.createStubInstance(Client);
-		client.getConfigSetting.returnsArg(1); // Return the default value passed in
+		const discoveryService = sinon.createStubInstance(DiscoveryService);
+		discoveryService.hasDiscoveryResults.returns(true);
+		discoveryHandler = sinon.createStubInstance(DiscoveryHandler);
+		discoveryService.newHandler.returns(discoveryHandler);
+		channel.newDiscoveryService.returns(discoveryService);
 
-		const mockGateway = sinon.createStubInstance(Gateway);
-		mockGateway.client = client;
-		mockGateway.identityContext = identityContext;
+		queryHandler = {
+			evaluate: sinon.fake.resolves(expectedResult)
+		};
+		eventHandler = sinon.createStubInstance(TransactionEventHandler);
 
-		gatewayOptions = {
+		const wallet = await Wallets.newFileSystemWallet(path.join(__dirname, 'wallet'));
+		gateway = new Gateway();
+		await gateway.connect(client, {
 			queryHandlerOptions: {
-				strategy: QueryStrategies.MSPID_SCOPE_SINGLE
+				strategy: () => queryHandler,
 			},
 			eventHandlerOptions: {
-				strategy: null
+				endorseTimeout: 55,
+				commitTimeout: 55,
+				strategy: () => eventHandler,
 			},
 			discovery: {
 				enabled: true,
-				asLocalhost: false
-			}
-		};
-		mockGateway.getOptions.returns(gatewayOptions);
+				asLocalhost: false,
+			},
+			wallet,
+			identity: 'testuser'
+		});
 
-		contract.gateway = mockGateway;
-		contract.network = network;
-
+		network = await gateway.getNetwork(networkName);
+		contract = network.getContract(chaincodeId);
 		transaction = new Transaction(contract, transactionName);
 	});
 
@@ -177,13 +179,6 @@ describe('Transaction', () => {
 		it('return the name', () => {
 			const result = transaction.getName();
 			expect(result).to.equal(transactionName);
-		});
-	});
-
-	describe('#getTransactionId', () => {
-		it('returns transaction ID obtained from identity context', () => {
-			const result = transaction.getTransactionId();
-			expect(result).to.equal(transactionId);
 		});
 	});
 
@@ -303,21 +298,21 @@ describe('Transaction', () => {
 		});
 
 		it('uses event handler strategy from gateway options', async () => {
-			const stubEventHandler = sinon.createStubInstance(TransactionEventHandler);
-			const stubEventHandlerFactoryFn = sinon.stub().withArgs(transactionId, network).returns(stubEventHandler);
-			gatewayOptions.eventHandlerOptions.strategy = stubEventHandlerFactoryFn;
 			transaction = new Transaction(contract, transactionName);
 
 			await transaction.submit();
 
-			sinon.assert.called(stubEventHandler.startListening);
-			sinon.assert.called(stubEventHandler.waitForEvents);
+			sinon.assert.called(eventHandler.startListening);
+			sinon.assert.called(eventHandler.waitForEvents);
 		});
 
 		it('uses event handler set on the transaction', async () => {
-			const stubEventHandler = sinon.createStubInstance(TransactionEventHandler);
-			const stubEventHandlerFactoryFn = sinon.stub().withArgs(transactionId, network).returns(stubEventHandler);
 			transaction = new Transaction(contract, transactionName);
+
+			const stubEventHandler = sinon.createStubInstance(TransactionEventHandler);
+			const stubEventHandlerFactoryFn = sinon.stub()
+				.withArgs(transaction.getTransactionId(), network)
+				.returns(stubEventHandler);
 
 			await transaction.setEventHandler(stubEventHandlerFactoryFn)
 				.submit();
@@ -341,11 +336,10 @@ describe('Transaction', () => {
 		});
 
 		it('sends proposal using endorsement timeout from gateway options', async () => {
-			gatewayOptions.eventHandlerOptions.endorseTimeout = 55;
-
 			await transaction.submit();
 
-			sinon.assert.calledWithMatch(endorsement.send, {requestTimeout: 55000});
+			const expected = gateway.getOptions().eventHandlerOptions.endorseTimeout * 1000;
+			sinon.assert.calledWithMatch(endorsement.send, {requestTimeout: expected});
 		});
 
 		it('sends proposal to specified peers without discovery', async () => {
@@ -395,19 +389,11 @@ describe('Transaction', () => {
 			sinon.assert.calledWithMatch(endorsement.send, {handler: discoveryHandler, requiredOrgs: orgs});
 		});
 
-		it('getm the handler from the contract', async () => {
-			network.discoveryService = sinon.stub();
-			await transaction.submit();
-
-			sinon.assert.called(contract.getDiscoveryHandler);
-		});
-
 		it('commits using timeout from gateway options', async () => {
-			gatewayOptions.eventHandlerOptions.commitTimeout = 55;
-
 			await transaction.submit();
 
-			sinon.assert.calledWithMatch(commit.send, {requestTimeout: 55000});
+			const expected = gateway.getOptions().eventHandlerOptions.commitTimeout * 1000;
+			sinon.assert.calledWithMatch(commit.send, {requestTimeout: expected});
 		});
 
 		it('commit with discovery uses discovery handler', async () => {
@@ -431,7 +417,7 @@ describe('Transaction', () => {
 		it('prevents proposal build from changing transaction ID on identity context', async () => {
 			await transaction.submit();
 
-			sinon.assert.calledWithMatch(endorsement.build, identityContext, {generateTransactionId: false});
+			sinon.assert.calledWith(endorsement.build, gateway.identityContext, sinon.match({generateTransactionId: false}));
 		});
 	});
 
@@ -449,7 +435,7 @@ describe('Transaction', () => {
 		it('builds correct request for no-args invocation', async () => {
 			await transaction.evaluate();
 
-			sinon.assert.calledWith(queryProposal.build, identityContext, sinon.match({
+			sinon.assert.calledWith(queryProposal.build, gateway.identityContext, sinon.match({
 				fcn: transactionName,
 				args: []
 			}));
@@ -460,7 +446,7 @@ describe('Transaction', () => {
 
 			await transaction.evaluate(...args);
 
-			sinon.assert.calledWith(queryProposal.build, identityContext, sinon.match({
+			sinon.assert.calledWith(queryProposal.build, gateway.identityContext, sinon.match({
 				fcn: transactionName,
 				args
 			}));
@@ -472,7 +458,7 @@ describe('Transaction', () => {
 
 			await transaction.evaluate();
 
-			sinon.assert.calledWith(queryProposal.build, identityContext, sinon.match({transientMap}));
+			sinon.assert.calledWith(queryProposal.build, gateway.identityContext, sinon.match({transientMap}));
 		});
 
 		it('returns empty string response', async () => {
@@ -486,7 +472,58 @@ describe('Transaction', () => {
 		it('prevents proposal build from changing transaction ID on identity context', async () => {
 			await transaction.evaluate();
 
-			sinon.assert.calledWithMatch(queryProposal.build, identityContext, {generateTransactionId: false});
+			sinon.assert.calledWith(queryProposal.build, gateway.identityContext, sinon.match({generateTransactionId: false}));
 		});
 	});
+
+
+	describe('#serialize', () => {
+		async function testSubmit(originalTx) {
+			const serializedTx = originalTx.serialize();
+			const deserializedTx = contract.deserializeTransaction(serializedTx);
+
+			await originalTx.submit();
+			const [expectedIdentityContext, expectedBuildRequest] = endorsement.build.getCall(0).args;
+			const expectedSendRequest = endorsement.send.getCall(0).args[0];
+
+			endorsement.build.resetHistory();
+			endorsement.send.resetHistory();
+
+			await deserializedTx.submit();
+			const [actualIdentityContext, actualBuildRequest] = endorsement.build.getCall(0).args;
+			const actualSendRequest = endorsement.send.getCall(0).args[0];
+
+			expect(actualIdentityContext.nonce, 'nonce mismatch').to.deep.equal(expectedIdentityContext.nonce);
+			expect(actualIdentityContext.transactionId, 'transaction ID mismatch').to.equal(expectedIdentityContext.transactionId);
+			expect(actualBuildRequest, 'build request mismatch').to.deep.equal(expectedBuildRequest);
+			expect(actualSendRequest, 'send request mismatch').to.deep.equal(expectedSendRequest);
+		}
+
+		it('allows identical transaction submit for basic transaction', async () => {
+			const tx = contract.createTransaction('penguin');
+			await testSubmit(tx);
+		});
+
+		it('allows identical transaction submit for transient data', async () => {
+			const tx = contract.createTransaction('penguin')
+				.setTransient({
+					key: Buffer.from('value'),
+				});
+			await testSubmit(tx);
+		});
+
+		it('allows identical transaction submit for endorsing organizations', async () => {
+			const tx = contract.createTransaction('penguin')
+				.setEndorsingOrganizations('org1');
+			await testSubmit(tx);
+		});
+
+		it('allows identical transaction submit for endorsing peers', async () => {
+			const peer = channel.getEndorser('peer1');
+			const tx = contract.createTransaction('penguin')
+				.setEndorsingPeers([peer]);
+			await testSubmit(tx);
+		});
+	});
+
 });

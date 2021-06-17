@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Transaction } from './transaction';
+import { Transaction, TransactionState } from './transaction';
 import { ContractListenerSession } from './impl/event/contractlistenersession';
 import { ListenerSession, addListener, removeListener } from './impl/event/listenersession';
 import * as Logger from './logger';
@@ -12,7 +12,7 @@ const logger = Logger.getLogger('Contract');
 import util = require('util');
 import { NetworkImpl } from './network';
 import { ContractListener, ListenerOptions } from './events';
-import { DiscoveryService, DiscoveryHandler } from 'fabric-common';
+import { DiscoveryService, DiscoveryHandler, IdentityContext } from 'fabric-common';
 import { Gateway } from './gateway';
 
 /**
@@ -53,6 +53,7 @@ export interface Contract {
 	readonly chaincodeId: string;
 	readonly namespace: string;
 	createTransaction(name: string): Transaction;
+	deserializeTransaction(data: Buffer): Transaction;
 	evaluateTransaction(name: string, ...args: string[]): Promise<Buffer>;
 	submitTransaction(name: string, ...args: string[]): Promise<Buffer>;
 	addContractListener(listener: ContractListener, options?: ListenerOptions): Promise<ContractListener>;
@@ -91,6 +92,13 @@ export interface Contract {
  * @memberof module:fabric-network
  * @param {string} name Transaction function name.
  * @returns {module:fabric-network.Transaction} A transaction object.
+ */
+/**
+ * Deserialize a transaction from previously saved state.
+ * @method Contract#deserializeTransaction
+ * @memberof module:fabric-network
+ * @param {Buffer} data Serialized transaction data.
+ * @return {module:fabric-network.Transaction} A transaction object.
  */
 /**
  * Submit a transaction to the ledger. The transaction function <code>name</code>
@@ -207,6 +215,11 @@ export class ContractImpl {
 		const transaction = new Transaction(this, qualifiedName);
 
 		return transaction;
+	}
+
+	deserializeTransaction(data: Buffer): Transaction {
+		const state: TransactionState = JSON.parse(data.toString());
+		return new Transaction(this, state.name, state);
 	}
 
 	async submitTransaction(name: string, ...args: string[]): Promise<Buffer> {

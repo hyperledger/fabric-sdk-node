@@ -77,6 +77,15 @@ export interface TransientMap {
 	[key: string]: Buffer;
 }
 
+export interface TransactionState {
+	name: string;
+	nonce: string;
+	transactionId: string;
+	transientData?: { [key: string]: string };
+	endorsingOrgs?: string[];
+	endorsingPeers?: string[];
+}
+
 /**
  * Represents a specific invocation of a transaction function, and provides
  * flexibility over how that transaction is invoked. Applications should
@@ -98,27 +107,43 @@ export class Transaction {
 	private endorsingPeers?: Endorser[]; // for user assigned endorsements
 	private endorsingOrgs?: string[];
 	private readonly identityContext: IdentityContext;
-	private readonly transactionId: string;
 
-	/*
-	 * @param {Contract} contract Contract to which this transaction belongs.
-	 * @param {String} name Fully qualified transaction name.
-	 * @param {function} eventStrategyFactory - A factory function that will return
-	 * an EventStrategy.
+	/**
+	 * Transaction instances should be obtained only by calling
+	 * [Contract.createTransaction()]{@link module:fabric-network.Contract#createTransaction}. This constructor should
+	 * not be used directly.
+	 * @private
 	 */
-	constructor(contract: ContractImpl, name: string) {
+	constructor(contract: ContractImpl, name: string, state?: TransactionState) {
 		const method = `constructor[${name}]`;
 		logger.debug('%s - start', method);
 
-		this.contract = contract;
 		this.name = name;
+		this.contract = contract;
 		this.gatewayOptions = contract.gateway.getOptions();
 		this.eventHandlerStrategyFactory = this.gatewayOptions.eventHandlerOptions.strategy || EventHandlers.NONE;
 		this.queryHandler = contract.network.queryHandler!;
 
-		// Store the returned copy to prevent state being modified by other code before it is used to send proposals
-		this.identityContext = this.contract.gateway.identityContext!.calculateTransactionId();
-		this.transactionId = this.identityContext.transactionId;
+		if (!state) {
+			// Store the returned copy to prevent state being modified by other code before it is used to send proposals
+			this.identityContext = contract.gateway.identityContext!.calculateTransactionId();
+		} else {
+			this.identityContext = (contract.gateway.identityContext! as any).clone({
+				nonce: Buffer.from(state.nonce, 'base64'),
+				transactionId: state.transactionId,
+			});
+
+			this.endorsingOrgs = state.endorsingOrgs;
+			this.endorsingPeers = state.endorsingPeers?.map(peerName => contract.network.getChannel().getEndorser(peerName))
+				.filter(endorser => endorser !== undefined);
+
+			if (state.transientData) {
+				this.transientMap = {};
+				for (const [key, value] of Object.entries(state.transientData)) {
+					this.transientMap[key] = Buffer.from(value, 'base64');
+				}
+			}
+		}
 	}
 
 	/**
@@ -151,7 +176,7 @@ export class Transaction {
 	 * @returns {string} A transaction ID.
 	 */
 	getTransactionId(): string {
-		return this.transactionId;
+		return this.identityContext.transactionId;
 	}
 
 	/**
@@ -347,6 +372,33 @@ export class Transaction {
 		logger.debug('%s - queryHandler completed', method);
 
 		return results;
+	}
+
+	/**
+	 * Extract the state of this transaction in a form that can be reconstructed using
+	 * [Contract#deserializeTransaction()]{@link module:fabric-network.Contract#deserializeTransaction}. This allows a
+	 * transaction to persisted, and then reconstructed and resubmitted following a client application restart. There is
+	 * no guarantee of compatibility for the serialized data between different versions of this package.
+	 * @returns {Buffer} A serialized transaction.
+	 */
+	serialize(): Buffer {
+		const state: TransactionState = {
+			name: this.name,
+			nonce: this.identityContext.nonce.toString('base64'),
+			transactionId: this.identityContext.transactionId,
+			endorsingOrgs: this.endorsingOrgs,
+			endorsingPeers: this.endorsingPeers?.map(endorser => endorser.name),
+		};
+
+		if (this.transientMap) {
+			state.transientData = {};
+			for (const [key, value] of Object.entries(this.transientMap)) {
+				state.transientData[key] = value.toString('base64');
+			}
+		}
+
+		const json = JSON.stringify(state);
+		return Buffer.from(json);
 	}
 
 	private newBuildProposalRequest(args: string[]): BuildProposalRequest {
