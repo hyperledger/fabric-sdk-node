@@ -62,7 +62,10 @@ const IdentityContext = class {
 		this.transactionId = Buffer.from(trans_hash).toString();
 		logger.debug('%s - txid:%s', method, this.transactionId);
 
-		return this.clone();
+		return this.clone({
+			nonce: this.nonce,
+			transactionId: this.transactionId
+		});
 	}
 
 	/**
@@ -103,10 +106,10 @@ const IdentityContext = class {
 	 * @private
 	 * @return {IdentityContext} An identity context.
 	 */
-	clone() {
+	clone(state) {
 		const result = new IdentityContext(this.user, this.client);
-		result.transactionId = this.transactionId;
-		result.nonce = this.nonce;
+		result.transactionId = state.transactionId;
+		result.nonce = state.nonce;
 		return result;
 	}
 };
