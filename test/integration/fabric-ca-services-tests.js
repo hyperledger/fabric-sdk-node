@@ -495,6 +495,8 @@ async function timeOutTest(signingIdentity, t) {
 			// Verification build sometimes failed with ENETUNREACH. It seems to relate to gateway on the build machine.
 			// Do not fail in this case.
 			t.pass('Calling non-routable endpoint failed with ENETUNREACH error');
+		} else if (e.message.includes('Error: connect EHOSTUNREACH')) {
+			t.pass('Calling non-routable endpoint failed with EHOSTUNREACH error');
 		} else {
 			t.fail('Calling non-routable endpoint failed with unexpected error: ' + e.toString());
 		}

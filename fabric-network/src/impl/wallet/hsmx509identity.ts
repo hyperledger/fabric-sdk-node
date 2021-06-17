@@ -128,8 +128,9 @@ export class HsmX509Provider implements IdentityProvider {
 		}
 		const user = new User(name);
 		user.setCryptoSuite(this.cryptoSuite);
-		const handle = Buffer.from(identity.credentials.privateKey, 'hex');
-		const privateKey = new Pkcs11EcdsaKey({priv: handle}, this.cryptoSuite.getKeySize());
+		const ski = Buffer.from(identity.credentials.privateKey, 'hex');
+		const handle = Buffer.from((await this.cryptoSuite.getKey(ski.toString())).getHandle(), 'hex');
+		const privateKey = new Pkcs11EcdsaKey({ priv: handle }, this.cryptoSuite.getKeySize());
 		await user.setEnrollment(privateKey, identity.credentials.certificate, identity.mspId);
 
 		return user;
