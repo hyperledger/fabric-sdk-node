@@ -25,23 +25,37 @@ const fakeCryptoSuite = {
 }
 ImportMock.mockFunction(Utils, 'newCryptoSuite', fakeCryptoSuite);
 import chai = require('chai');
+import { consoleTestResultHandler } from 'tslint/lib/test';
 const expect: Chai.ExpectStatic = chai.expect;
 
-interface ProviderData {
+
+type ProviderData = {
 	dataVersions: { [version: string]: IdentityData };
-	identity: Identity;
 	provider: IdentityProvider;
-}
+} & (
+	| {identityVersions: { [version: string]: Identity}; identity?: never}
+	| {identityVersions?: never; identity: Identity}
+)
 
 describe('IdentityProvider', () => {
-	const hsmIdentity: HsmX509Identity = {
+	const hsmIdentityv3: HsmX509Identity = {
 		credentials: {
 			certificate: 'CERTIFICATE',
-			privateKey: 'PRIVATE_HANDLE'
+			identifier: 'PRIVATE_HANDLE'
 		},
 		mspId: 'alice',
 		type: 'HSM-X.509',
 	};
+
+	const hsmIdentity: HsmX509Identity = {
+		credentials: {
+			certificate: 'CERTIFICATE',
+			identifier: ''
+		},
+		mspId: 'alice',
+		type: 'HSM-X.509',
+	};
+
 
 	const x509Identity: X509Identity = {
 		credentials: {
@@ -55,17 +69,38 @@ describe('IdentityProvider', () => {
 	const providers: { [name: string]: ProviderData } = {
 		HsmX509: {
 			dataVersions: {
-				v1: {
+				v3: {
+					credentials: {
+						certificate: hsmIdentityv3.credentials.certificate,
+						identifier: hsmIdentityv3.credentials.identifier
+					},
+					mspId: hsmIdentityv3.mspId,
+					type: hsmIdentityv3.type,
+					version: 3,
+				} as IdentityData,
+				v2: {
 					credentials: {
 						certificate: hsmIdentity.credentials.certificate,
-						privateKey: hsmIdentity.credentials.privateKey
+						privateKey: 'PRIVATE_HANDLE'
 					},
 					mspId: hsmIdentity.mspId,
 					type: hsmIdentity.type,
 					version: 2,
 				} as IdentityData,
+				v1: {
+					credentials: {
+						certificate: hsmIdentity.credentials.certificate,
+					},
+					mspId: hsmIdentity.mspId,
+					type: hsmIdentity.type,
+					version: 1,
+				} as IdentityData,
 			},
-			identity: hsmIdentity,
+			identityVersions: {
+				v3: hsmIdentityv3,
+				v2: hsmIdentity,
+				v1: hsmIdentity
+			},
 			provider: new HsmX509Provider({
 				lib: 'fakepath',
 				pin: '1234',
@@ -92,13 +127,14 @@ describe('IdentityProvider', () => {
 	Object.keys(providers).forEach((providerName: string) => describe(providerName + ' common behaviour', () => {
 		const providerData: ProviderData = providers[providerName];
 		const provider: IdentityProvider = providerData.provider;
-		const identity: Identity = providerData.identity;
 
 		Object.keys(providerData.dataVersions).forEach((dataVersion: string) => describe(dataVersion, () => {
 			let identityData: any;
+			let identity: Identity;
 
 			beforeEach(() => {
 				identityData = providerData.dataVersions[dataVersion];
+				identity = providerData.identityVersions && providerData.identityVersions[dataVersion] || providerData.identity;
 			});
 
 			it('Identity created from JSON', () => {
@@ -147,21 +183,30 @@ describe('IdentityProvider', () => {
 				}
 			});
 
-			it('getUserContext fails with message containing missing identity credential privateKey', async () => {
+			it('getUserContext fails with message containing missing identity credential privateKey or identifier', async () => {
 				try {
 					await provider.getUserContext({credentials: {}} as any, 'dummy');
 				} catch (error) {
-					expect(error.message).to.contain('X.509 identity data is missing the private key');
+					expect(error.message).to.contain('X.509 identity data is missing the');
 				}
 			});
 
-			it('getUserContext fails with message containing missing identity credential privateKey', async () => {
+			(providerName === 'HsmX509' ? it.skip : it)('getUserContext fails with message containing missing identity credential privateKey', async () => {
 				try {
 					await provider.getUserContext({credentials: {privateKey: ''}} as any, 'dummy');
 				} catch (error) {
 					expect(error.message).to.contain('X.509 identity data is missing the private key');
 				}
 			});
+
+			(providerName !== 'HsmX509' ? it.skip : it)('getUserContext fails with message containing missing identity credential identifier', async () => {
+				try {
+					await provider.getUserContext({credentials: {identifier: ''}} as any, 'dummy');
+				} catch (error) {
+					expect(error.message).to.contain('X.509 identity data is missing the identifier');
+				}
+			});
+
 		}));
 	}));
 });

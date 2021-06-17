@@ -23,18 +23,23 @@ Given(/^I have a (.+?) backed gateway named (.+?) with discovery set to (.+?) fo
 
 	if (gateways && gateways.has(gatewayName)) {
 		BaseUtils.logMsg(`Gateway named ${gatewayName} already exists`);
-		return;
-	} else {
-		try {
-			// Create and persist the new gateway
-			BaseUtils.logMsg(`Creating new Gateway named ${gatewayName}`);
-			const profilePath: string = path.join(__dirname, '../config', ccpName);
-			const ccp: CommonConnectionProfileHelper = new CommonConnectionProfileHelper(profilePath, true);
-			return await Gateway.createGateway(ccp, tls, userName, orgName || Constants.DEFAULT_ORG, gatewayName, JSON.parse(useDiscovery), walletType);
-		} catch (err) {
-			BaseUtils.logError(`Failed to create gateway named ${gatewayName}`, err);
-			return Promise.reject(err);
+		if (walletType !== Constants.HSM_WALLET) {
+			return;
 		}
+		gateways.get(gatewayName)!.gateway.disconnect();
+		gateways.delete(gatewayName);
+		BaseUtils.logMsg(`Gateway contained an HSM Wallet, discard the old one and create a new Gateway, reusing the in memory wallet holding the HSM identities`);
+	}
+
+	try {
+		// Create and persist the new gateway
+		BaseUtils.logMsg(`Creating new Gateway named ${gatewayName}`);
+		const profilePath: string = path.join(__dirname, '../config', ccpName);
+		const ccp: CommonConnectionProfileHelper = new CommonConnectionProfileHelper(profilePath, true);
+		return await Gateway.createGateway(ccp, tls, userName, orgName || Constants.DEFAULT_ORG, gatewayName, JSON.parse(useDiscovery), walletType);
+	} catch (err) {
+		BaseUtils.logError(`Failed to create gateway named ${gatewayName}`, err);
+		return Promise.reject(err);
 	}
 });
 

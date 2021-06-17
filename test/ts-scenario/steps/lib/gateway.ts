@@ -5,7 +5,7 @@
 'use strict';
 
 import * as FabricCAClient from 'fabric-ca-client';
-import { Contract, DefaultEventHandlerStrategies, DefaultQueryHandlerStrategies, Gateway, GatewayOptions, HsmOptions, HsmX509Provider, Identity, IdentityProvider, Network, QueryHandlerFactory, Transaction, TransientMap, TxEventHandlerFactory, Wallet, Wallets, DiscoveryInterest } from 'fabric-network';
+import { Contract, DefaultEventHandlerStrategies, DefaultQueryHandlerStrategies, Gateway, GatewayOptions, HsmOptions, HsmX509Provider, Identity, IdentityProvider, Network, QueryHandlerFactory, Transaction, TransientMap, TxEventHandlerFactory, Wallet, Wallets, DiscoveryInterest, HsmX509Identity } from 'fabric-network';
 import * as fs from 'fs';
 import * as path from 'path';
 import { createQueryHandler as sampleQueryStrategy } from '../../config/handlers/sample-query-handler';
@@ -26,7 +26,7 @@ const supportedWallets: string[] = [
 	Constants.HSM_WALLET as string
 ];
 
-const HSM_PROVIDER: string = Constants.HSM_PROVIDER;
+const HSM_PROVIDER = Constants.HSM_PROVIDER;
 const X509_PROVIDER: string = Constants.X509_PROVIDER;
 
 const EventStrategies: { [key: string]: TxEventHandlerFactory } = {
@@ -69,6 +69,11 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 	}
 
 	let useHSM = false;
+	const hsmOptions: HsmOptions = {
+		lib: getHSMLibPath(),
+		pin: process.env.PKCS11_PIN || '98765432',
+		slot: Number(process.env.PKCS11_SLOT || '0')
+	};
 
 	const myWalletReference: string = `${Constants.WALLET}_walletType`;
 	let wallet: Wallet = stateStore.get(myWalletReference);
@@ -92,18 +97,28 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 			case Constants.HSM_WALLET:
 				wallet = await Wallets.newInMemoryWallet();
 				useHSM = true;
-
-				const hsmOptions: HsmOptions = {
-					lib: getHSMLibPath(),
-					pin: process.env.PKCS11_PIN || '98765432',
-					slot: Number(process.env.PKCS11_SLOT || '0')
-				};
-
 				const hsmProvider = new HsmX509Provider(hsmOptions);
 				wallet.getProviderRegistry().addProvider(hsmProvider);
+
+				// only persist the wallet for an HSM so a new gateway can re-use
+				stateStore.set(myWalletReference, wallet);
 				break;
 			default:
 				BaseUtils.logAndThrow(`Unmatched wallet backing store`);
+		}
+	} else {
+		if (walletType === Constants.HSM_WALLET) {
+			const hsmProvider2 = wallet.getProviderRegistry().getProvider(HSM_PROVIDER);
+			const cryptoSuite: any = hsmProvider2.getCryptoSuite();
+			cryptoSuite.closeSession();
+			cryptoSuite.finalize();
+
+			// tslint:disable-next-line
+			console.log('reusing HSM Wallet');
+			BaseUtils.logMsg('Reusing HSM Wallet. Should expect the user to be found');
+			useHSM = true;
+			const hsmProvider = new HsmX509Provider(hsmOptions);
+			wallet.getProviderRegistry().addProvider(hsmProvider);
 		}
 	}
 
@@ -313,10 +328,10 @@ async function createHSMUser(wallet: Wallet, ccp: CommonConnectionProfileHelper,
 
 	// set the new identity into the wallet
 	const identityName: string = `${userName}@${orgName}`;
-	const identity = {
+	const identity: HsmX509Identity = {
 		credentials: {
 			certificate: enrollment.certificate,
-			privateKey: enrollment.key.getSKI()
+			identifier: enrollment.key.getSKI()
 		},
 		mspId: orgMsp,
 		type: HSM_PROVIDER

@@ -21,7 +21,7 @@ Feature: Configure Fabric using CLI and submit/evaluate using a network Gateway 
 	 	When I use the gateway named mycouchgateway to evaluate a transaction with args [queryCar,1001] for contract fabcar instantiated on channel gatewaychannel
 	  	Then The gateway named mycouchgateway has a evaluate type response matching {"color":"brown","docType":"car","make":"Trabant","model":"601 Estate","owner":"Simon"}
 
-	Scenario: Using a Gateway I recieve useful error messages when I submit or evaulate invalid transactions
+	Scenario: Using a Gateway I receive useful error messages when I submit or evaulate invalid transactions
 		When I use the gateway named mycouchgateway to submit a transaction with args [noSuchSubmitTransaction,1001,Trabant,601 Estate,brown,Simon] for contract fabcar instantiated on channel gatewaychannel
 		Then The gateway named mycouchgateway has a error type response containing Error: You've asked to invoke a function that does not exist: noSuchSubmitTransaction
 		When I use the gateway named mycouchgateway to submit a transaction with args [createCar,9,Ford] for contract fabcar instantiated on channel gatewaychannel
