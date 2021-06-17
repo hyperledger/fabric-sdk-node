@@ -112,7 +112,6 @@ export class Transaction {
 	 * Transaction instances should be obtained only by calling
 	 * [Contract.createTransaction()]{@link module:fabric-network.Contract#createTransaction}. This constructor should
 	 * not be used directly.
-	 * @private
 	 */
 	constructor(contract: ContractImpl, name: string, state?: TransactionState) {
 		const method = `constructor[${name}]`;
