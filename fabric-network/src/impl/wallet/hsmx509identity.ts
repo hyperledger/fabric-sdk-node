@@ -17,7 +17,6 @@ export interface HsmX509Identity extends Identity {
 	type: 'HSM-X.509';
 	credentials: {
 		certificate: string;
-		privateKey: string;
 	};
 }
 
@@ -30,12 +29,13 @@ interface HsmX509IdentityDataV1 extends IdentityData {
 	mspId: string;
 }
 
+// This is not a valid format, but can easily be migrated to the above valid format
 interface HsmX509IdentityDataV2 extends IdentityData {
 	type: 'HSM-X.509';
 	version: 2;
 	credentials: {
 		certificate: string;
-		privateKey: string; // the HSM handle to the key
+		privateKey: string;
 	};
 	mspId: string;
 }
@@ -84,18 +84,15 @@ export class HsmX509Provider implements IdentityProvider {
 			return {
 				credentials: {
 					certificate: x509Data.credentials.certificate,
-					privateKey: x509Data.credentials.privateKey,
 				},
 				mspId: x509Data.mspId,
 				type: 'HSM-X.509',
 			};
 		} else if (data.version === 1) {
 			const x509Data: HsmX509IdentityDataV1 = data as HsmX509IdentityDataV1;
-			logger.error('HSM-X.509 identity data is missing the privateKey handle. This credential must be saved using v2 format');
 			return {
 				credentials: {
 					certificate: x509Data.credentials.certificate,
-					privateKey: '' // force dummy in to fail later
 				},
 				mspId: x509Data.mspId,
 				type: 'HSM-X.509',
@@ -106,14 +103,13 @@ export class HsmX509Provider implements IdentityProvider {
 	}
 
 	public toJson(identity: HsmX509Identity): IdentityData {
-		const data: HsmX509IdentityDataV2 = {
+		const data: HsmX509IdentityDataV1 = {
 			credentials: {
 				certificate: identity.credentials.certificate,
-				privateKey: identity.credentials.privateKey
 			},
 			mspId: identity.mspId,
 			type: 'HSM-X.509',
-			version: 2,
+			version: 1,
 		};
 		return data;
 	}
@@ -123,13 +119,12 @@ export class HsmX509Provider implements IdentityProvider {
 			throw Error('HSM X.509 identity is missing');
 		} else if (!identity.credentials) {
 			throw Error('HSM X.509 identity is missing the credential data.');
-		} else if (!identity.credentials.privateKey) {
-			throw Error('HSM X.509 identity data is missing the private key handle. Check that the data has been saved to the wallet in v2 format');
 		}
 		const user = new User(name);
 		user.setCryptoSuite(this.cryptoSuite);
-		const handle = Buffer.from(identity.credentials.privateKey, 'hex');
-		const privateKey = new Pkcs11EcdsaKey({priv: handle}, this.cryptoSuite.getKeySize());
+
+		const publicKey = await this.cryptoSuite.importKey(identity.credentials.certificate);
+		const privateKey = await this.cryptoSuite.getKey(publicKey.getSKI());
 		await user.setEnrollment(privateKey, identity.credentials.certificate, identity.mspId);
 
 		return user;
