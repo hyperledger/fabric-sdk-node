@@ -8,8 +8,6 @@ const TYPE = 'User';
 const Identity = require('./Identity');
 const Signer = require('./Signer');
 const SigningIdentity = require('./SigningIdentity');
-const Pkcs11EcdsaKey = require('./impl/ecdsa/pkcs11_key');
-const CryptoSuite_PKCS11 = require('./impl/bccsp_pkcs11');
 const sdkUtils = require('./Utils');
 const logger = sdkUtils.getLogger(TYPE);
 const check = sdkUtils.checkParameter;
@@ -208,18 +206,7 @@ const User = class {
 			this._cryptoSuite.setCryptoKeyStore(sdkUtils.newCryptoKeyStore());
 		}
 
-		let pubKey;
-		// when the crypto suite and key are PKCS11 (HSM based) then we
-		// need to handle the public key differently
-		if (this._cryptoSuite instanceof CryptoSuite_PKCS11 && privateKey instanceof Pkcs11EcdsaKey) {
-			pubKey = privateKey.getPublicKey();
-			if (!pubKey) {
-				pubKey = await this._cryptoSuite.createKeyFromRaw(certificate);
-			}
-		} else {
-			pubKey = await this._cryptoSuite.createKeyFromRaw(certificate);
-		}
-
+		const pubKey = await this._cryptoSuite.createKeyFromRaw(certificate);
 		this._identity = new Identity(certificate, pubKey, mspId, this._cryptoSuite);
 		this._signingIdentity = new SigningIdentity(certificate, pubKey, mspId, this._cryptoSuite, new Signer(this._cryptoSuite, privateKey));
 	}
