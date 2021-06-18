@@ -5,53 +5,35 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-function filterExcludedFiles {
-  CHECK=`echo "$CHECK" \
-		| grep -v "^\.git/" \
-		| grep -v "^\.noignore/" \
-		| grep -v "^vendor/" \
-		| grep -v "test/fixtures/" \
-		| grep -v "^LICENSE$" \
-		| grep -v "\.png$" \
-		| grep -v "\.rst$" \
-		| grep -v "\.pem$" \
-		| grep -v "\.block$" \
-		| grep -v "\.tx$" \
-		| grep -v "\.txt$" \
-		| grep -v "_sk$" \
-		| grep -v "\.key$" \
-		| grep -v "\.gen\.go$" \
-		| grep -v "^Gopkg\.lock$" \
-		| grep -v "\.md$" \
-		| grep -v "\.pb\.go$" \
-		| grep -v "\.yaml$" \
-		| grep -v "\.yml$" \
-		| grep -v "\.json$" \
-		| grep -v "\.gradle$" \
-		| grep -v "\.cds$" \
-		| grep -v "\.jar$" \
-		| grep -v "\.csr$" \
-		| grep -v "\.proto$" \
-		| grep -v "bundle.js$" \
-		| grep -v "fabric-protos/types/index.d.ts$" \
-		| grep -v "\.id$" \
-		| sort -u`
-}
-
-CHECK=$(git diff --name-only --diff-filter=ACMRTUXB HEAD)
-filterExcludedFiles
-if [[ -z "$CHECK" ]]; then
-  LAST_COMMITS=($(git log -2 --pretty=format:"%h"))
-  CHECK=$(git diff-tree --no-commit-id --name-only --diff-filter=ACMRTUXB -r ${LAST_COMMITS[1]} ${LAST_COMMITS[0]})
-  filterExcludedFiles
-fi
+CHECK=$(find . -type f \
+    -not -path '*/.git/*' \
+    -not -path '*/node_modules/*' \
+    -not -path '*/vendor/*' \
+    -not -path './docs/*' \
+    -not -path './LICENSE' \
+    -not -path './test/fixtures/*' \
+    -not -path './test/ts-fixtures/*' \
+    -not -path './fabric-protos/bundle.js' \
+    -not -path './fabric-protos/types/index.d.ts' \
+    -not -name '.*' \
+    -not -name '*.txt' \
+    -not -name '*.rst' \
+    -not -name '*.json' \
+    -not -name '*.md' \
+    -not -name '*.yaml' \
+    -not -name '*.yml' \
+    -not -name '*.proto' \
+    -not -name '*.id' \
+    -not -name '*.gradle' \
+    -not -name '*.pem' \
+    -print | sort -u)
 
 if [[ -z "$CHECK" ]]; then
-   echo "All files are excluded from having license headers"
-   exit 0
+    echo "All files are excluded from having license headers"
+    exit 1
 fi
 
-missing=`echo "$CHECK" | xargs ls -d 2>/dev/null | xargs grep -L "SPDX-License-Identifier"`
+missing=`echo "$CHECK" | xargs grep -L "SPDX-License-Identifier"`
 if [[ -z "$missing" ]]; then
    echo "All files have SPDX-License-Identifier headers"
    exit 0
@@ -64,7 +46,7 @@ echo "SPDX-License-Identifier: Apache-2.0"
 
 echo
 echo "Checking committed files for traditional Apache License headers ..."
-missing=`echo "$missing" | xargs ls -d 2>/dev/null | xargs grep -L "http://www.apache.org/licenses/LICENSE-2.0"`
+missing=`echo "$missing" | xargs grep -L "http://www.apache.org/licenses/LICENSE-2.0"`
 if [[ -z "$missing" ]]; then
    echo "All remaining files have Apache 2.0 headers"
    exit 0
