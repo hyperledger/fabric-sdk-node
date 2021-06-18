@@ -1,3 +1,9 @@
+## v2.2.7
+Thu 17 Jun 2021 15:44:36 BST
+
+* [b48a1b77](https://github.com/hyperledger/fabric-sdk-node/commit/b48a1b77) [FABN-1714](https://jira.hyperledger.org/browse/FABN-1714): Fix JSDoc generation of Transaction class (#461)
+* [c905a9e5](https://github.com/hyperledger/fabric-sdk-node/commit/c905a9e5) [FABN-1714](https://jira.hyperledger.org/browse/FABN-1714): Allow transactions to be serialized (#459)
+
 ## v2.2.6
 Thu 27 May 2021 09:46:52 BST
 
