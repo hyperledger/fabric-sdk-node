@@ -56,10 +56,10 @@ describe('CryptoSuite_PKCS11', () => {
 			}).should.throw(/PKCS11 library path must be specified/);
 		});
 
-		it('should throw if pkcs11 slot not given', () => {
+		it('should throw if pkcs11 slot or label not given', () => {
 			(() => {
 				new PKCS11_Rewire(256, 'sha2', {lib: '/temp'});
-			}).should.throw(/PKCS11 slot must be specified/);
+			}).should.throw(/PKCS11 slot or label must be specified/);
 		});
 
 		it('should throw if invalid [string] pkcs11 slot given', () => {
@@ -112,6 +112,13 @@ describe('CryptoSuite_PKCS11', () => {
 			sinon.assert.calledWith(configStub, 'crypto-pkcs11-slot');
 		});
 
+		it('should retrieve crypto-pkcs11-label from config setting if no opts specified', () => {
+			PKCS11_Rewire.__set__('utils', utilsStub);
+			PKCS11_Rewire.prototype._pkcs11OpenSession = sandbox.stub();
+			new PKCS11_Rewire(256, 'sha2');
+			sinon.assert.calledWith(configStub, 'crypto-pkcs11-label');
+		});
+
 		it('should retrieve crypto-pkcs11-usertype from config setting if no opts specified', () => {
 			PKCS11_Rewire.__set__('utils', utilsStub);
 			PKCS11_Rewire.prototype._pkcs11OpenSession = sandbox.stub();
@@ -132,13 +139,27 @@ describe('CryptoSuite_PKCS11', () => {
 			new PKCS11_Rewire(256);
 			sinon.assert.calledWith(configStub, 'crypto-hash-algo');
 		});
-		describe('#getKeySize', () => {
-			it('should run', () => {
-				PKCS11_Rewire.__set__('utils', utilsStub);
-				PKCS11_Rewire.prototype._pkcs11OpenSession = sandbox.stub();
-				const key = new PKCS11_Rewire(256);
-				key.getKeySize().should.be.equal(256);
+
+		it('should not look for slot if label is provided', () => {
+			PKCS11_Rewire.__set__('utils', utilsStub);
+			const pkcs11OpenSessionStub = sandbox.stub();
+			PKCS11_Rewire.prototype._pkcs11OpenSession = pkcs11OpenSessionStub;
+			new PKCS11_Rewire(256, 'sha2', {
+				lib: 'lib',
+				pin: '1234',
+				label: 'someLabel'
 			});
+			const expectedSlot = null;
+			sinon.assert.calledOnceWithExactly(pkcs11OpenSessionStub, sinon.match.any, 'lib', 'someLabel', expectedSlot, '1234', sinon.match.any, sinon.match.any);
+		});
+	});
+
+	describe('#getKeySize', () => {
+		it('should run', () => {
+			PKCS11_Rewire.__set__('utils', utilsStub);
+			PKCS11_Rewire.prototype._pkcs11OpenSession = sandbox.stub();
+			const key = new PKCS11_Rewire(256);
+			key.getKeySize().should.be.equal(256);
 		});
 	});
 });

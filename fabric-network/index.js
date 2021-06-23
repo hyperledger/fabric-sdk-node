@@ -122,6 +122,7 @@
  * @property {string} [lib] Path to implementation-specific PKCS#11 library used to interact with the HSM.
  * @property {string} [pin] PIN used to access the HSM.
  * @property {number} [slot] The hardware slot number where data is stored in the HSM.
+ * @property {string} [label] The label for the token initialised in the slot overrides slot if provided (use as an alternative to locating a slot)
  * @property {number} [usertype=1] Specify the user type for accessing the HSM.
  * @property {boolean} [readwrite=true] True if the session should be read/write; false if read-only.
  */

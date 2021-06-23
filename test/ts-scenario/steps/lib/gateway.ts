@@ -69,11 +69,20 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 	}
 
 	let useHSM = false;
+
+	// these options will be used first, but only once
 	const hsmOptions: HsmOptions = {
 		lib: getHSMLibPath(),
 		pin: process.env.PKCS11_PIN || '98765432',
 		slot: Number(process.env.PKCS11_SLOT || '0')
 	};
+
+	// these options will be used for subsequent scenarios
+	const altHsmOptions: HsmOptions = {
+		lib: getHSMLibPath(),
+		pin: process.env.PKCS11_PIN || '98765432',
+		label: 'ForFabric'
+	}
 
 	const myWalletReference: string = `${Constants.WALLET}_walletType`;
 	let wallet: Wallet = stateStore.get(myWalletReference);
@@ -97,6 +106,7 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 			case Constants.HSM_WALLET:
 				wallet = await Wallets.newInMemoryWallet();
 				useHSM = true;
+				BaseUtils.logMsg(`Creating HSM Wallet with slot: ${hsmOptions.slot}.`);
 				const hsmProvider = new HsmX509Provider(hsmOptions);
 				wallet.getProviderRegistry().addProvider(hsmProvider);
 
@@ -115,12 +125,12 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 			cryptoSuite.closeSession();
 			cryptoSuite.finalize();
 
-			BaseUtils.logMsg('Reusing HSM Wallet. Should expect the user to be found');
+			BaseUtils.logMsg(`Reusing HSM Wallet with new provider label: ${altHsmOptions.label}. Should expect the user to be found`);
 			useHSM = true;
 
 			// Create a new HSM provider which will result in a new cryptosuite establishing a new
 			// session (with a clean internal ski mapper cache)
-			const hsmProvider = new HsmX509Provider(hsmOptions);
+			const hsmProvider = new HsmX509Provider(altHsmOptions);
 			wallet.getProviderRegistry().addProvider(hsmProvider);
 		}
 	}
