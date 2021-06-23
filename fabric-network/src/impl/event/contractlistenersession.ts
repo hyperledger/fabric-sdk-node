@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { BlockEvent, BlockListener, ContractEvent, ContractListener, ListenerOptions, TransactionEvent } from '../../events';
+import { BlockListener, ContractEvent, ContractListener, ListenerOptions } from '../../events';
 import * as Logger from '../../logger';
 import { Network } from '../../network';
-import { ListenerSession } from './listenersession';
 import * as Listeners from './listeners';
+import { ListenerSession } from './listenersession';
 const logger = Logger.getLogger('ContractListenerSession');
 
 export class ContractListenerSession implements ListenerSession {

@@ -127,13 +127,12 @@ class Committer extends ServiceEndpoint {
 
 			const broadcast_timeout = setTimeout(() => {
 				logger.error(`${this.name} - ${method} timed out after:${rto}`);
-				broadcast.end();
 				return reject(new Error(error_msg));
 			}, rto);
 
 			broadcast.on('data', (response) => {
 				logger.debug('%s - on data response: %j', method, response);
-				broadcast.end();
+				clearTimeout(broadcast_timeout);
 				if (response && response.info) {
 					logger.debug(`${method} - response info :: ${response.info}`);
 				}
@@ -160,7 +159,6 @@ class Committer extends ServiceEndpoint {
 
 			broadcast.on('error', (err) => {
 				clearTimeout(broadcast_timeout);
-				broadcast.end();
 				if (err && err.code) {
 					if (err.code === 14) {
 						logger.error(`${method} - ${this.name} SERVICE UNAVAILABLE on error code: ${err.code}`);
@@ -172,6 +170,7 @@ class Committer extends ServiceEndpoint {
 			});
 
 			broadcast.write(envelope);
+			broadcast.end();
 			// the send of envelope has completed
 			// if it timeouts after this point we will get a REQUEST TIMEOUT
 			error_msg = 'REQUEST TIMEOUT';
