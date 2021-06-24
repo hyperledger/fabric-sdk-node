@@ -44,6 +44,7 @@ export interface HsmOptions {
 	lib?: string;
 	pin?: string;
 	slot?: number;
+	label?: string;
 	usertype?: number;
 	readwrite?: boolean;
 }
