@@ -316,6 +316,10 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 			logger.debug(__func() + 'C_GetSlotList: ' +
 				util.inspect(slots, {depth: null}));
 
+			if (!slots || slots.length === 0) {
+				throw new Error(__func() + 'PKCS11 no slots have been created');
+			}
+
 			let slot;
 			let tokenInfo;
 			if (pkcs11Label) {
@@ -329,10 +333,10 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 				}
 
 				if (!slot) {
-					throw new Error(__func() + 'PKCS11 label cannot be found in the slot list');
+					throw new Error(__func() + `PKCS11 label ${pkcs11Label} cannot be found in the slot list`);
 				}
 			} else {
-				if (pkcs11Slot >= slots.length) {
+				if (pkcs11Slot < 0 || pkcs11Slot >= slots.length) {
 					throw new Error(__func() + 'PKCS11 slot number non-exist');
 				}
 				slot = slots[pkcs11Slot];

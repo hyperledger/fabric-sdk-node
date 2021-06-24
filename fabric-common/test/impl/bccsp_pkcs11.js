@@ -8,6 +8,7 @@
 
 const rewire = require('rewire');
 const PKCS11_Rewire = rewire('../../lib/impl/bccsp_pkcs11');
+const pkcs11jsStub = require('./pkcs11jsStub');
 
 const chai = require('chai');
 chai.should();
@@ -18,6 +19,7 @@ describe('CryptoSuite_PKCS11', () => {
 	const sandbox = sinon.createSandbox();
 	let utilsStub;
 	let configStub;
+	let savedpkcs11OpenSessionFunction;
 
 	beforeEach(() => {
 		configStub = sandbox.stub();
@@ -31,10 +33,13 @@ describe('CryptoSuite_PKCS11', () => {
 		utilsStub = {
 			getConfigSetting: configStub
 		};
+		savedpkcs11OpenSessionFunction = PKCS11_Rewire.prototype._pkcs11OpenSession;
+
 	});
 
 	afterEach(() => {
 		sandbox.restore();
+		PKCS11_Rewire.prototype._pkcs11OpenSession = savedpkcs11OpenSessionFunction;
 	});
 
 	describe('#constructor', () => {
@@ -140,17 +145,143 @@ describe('CryptoSuite_PKCS11', () => {
 			sinon.assert.calledWith(configStub, 'crypto-hash-algo');
 		});
 
-		it('should not look for slot if label is provided', () => {
-			PKCS11_Rewire.__set__('utils', utilsStub);
-			const pkcs11OpenSessionStub = sandbox.stub();
-			PKCS11_Rewire.prototype._pkcs11OpenSession = pkcs11OpenSessionStub;
-			new PKCS11_Rewire(256, 'sha2', {
-				lib: 'lib',
-				pin: '1234',
-				label: 'someLabel'
+		describe('when determining whether to use slot or label', () => {
+			const slot1 = Buffer.from('1234');
+			const slot2 = Buffer.from('5678');
+			const tokenInfo = sandbox.stub();
+			tokenInfo.withArgs(slot1).returns({label: 'ForFabric'});
+			tokenInfo.withArgs(slot2).returns({label: 'someLabel'});
+
+			PKCS11_Rewire.__set__('pkcs11js', pkcs11jsStub);
+
+			beforeEach(() => {
+				pkcs11jsStub.reset();
+				pkcs11jsStub.pkcs11Stub.C_GetTokenInfo = tokenInfo;
 			});
-			const expectedSlot = null;
-			sinon.assert.calledOnceWithExactly(pkcs11OpenSessionStub, sinon.match.any, 'lib', 'someLabel', expectedSlot, '1234', sinon.match.any, sinon.match.any);
+
+			it('should throw an error if no slots are returned', () => {
+				pkcs11jsStub.pkcs11Stub.C_GetSlotList = () => [];
+
+				(() => {
+					new PKCS11_Rewire(256, 'sha2', {
+						lib: 'lib',
+						pin: '1234',
+						label: 'someLabel'
+					});
+				}).should.throw(/PKCS11 no slots have been created/);
+
+				pkcs11jsStub.pkcs11Stub.C_GetSlotList = () => null;
+
+				(() => {
+					new PKCS11_Rewire(256, 'sha2', {
+						lib: 'lib',
+						pin: '1234',
+						label: 'someLabel'
+					});
+				}).should.throw(/PKCS11 no slots have been created/);
+			});
+
+			it('should throw an error if label cannot be found and there are slots', () => {
+				pkcs11jsStub.pkcs11Stub.C_GetSlotList = () => [slot1, slot2];
+
+				(() => {
+					new PKCS11_Rewire(256, 'sha2', {
+						lib: 'lib',
+						pin: '1234',
+						label: 'someLabel1'
+					});
+				}).should.throw(/PKCS11 label someLabel1 cannot be found in the slot list/);
+			});
+
+			it('should throw an error if the slot index provided is not within the slot list range', () => {
+				pkcs11jsStub.pkcs11Stub.C_GetSlotList = () => [slot1, slot2];
+
+				(() => {
+					new PKCS11_Rewire(256, 'sha2', {
+						lib: 'lib',
+						pin: '1234',
+						slot: 3,
+					});
+				}).should.throw(/PKCS11 slot number non-exist/);
+
+				(() => {
+					new PKCS11_Rewire(256, 'sha2', {
+						lib: 'lib',
+						pin: '1234',
+						slot: -1,
+					});
+				}).should.throw(/PKCS11 slot number non-exist/);
+
+			});
+
+			it('should find the correct slot if the correct label is available', () => {
+				pkcs11jsStub.pkcs11Stub.C_GetSlotList = () => [slot1, slot2];
+
+				let openSessionStub = sandbox.stub();
+				pkcs11jsStub.pkcs11Stub.C_OpenSession = openSessionStub;
+
+				new PKCS11_Rewire(256, 'sha2', {
+					lib: 'lib',
+					pin: '1234',
+					label: 'someLabel'
+				});
+				sinon.assert.calledOnceWithExactly(openSessionStub, slot2, sinon.match.any);
+
+				pkcs11jsStub.pkcs11Stub.C_GetSlotList = () => [slot1];
+
+				openSessionStub = sandbox.stub();
+				pkcs11jsStub.pkcs11Stub.C_OpenSession = openSessionStub;
+
+				new PKCS11_Rewire(256, 'sha2', {
+					lib: 'lib',
+					pin: '1234',
+					label: 'ForFabric'
+				});
+				sinon.assert.calledOnceWithExactly(openSessionStub, slot1, sinon.match.any);
+
+			});
+
+			it('should use slot index if no label is provided', () => {
+				pkcs11jsStub.pkcs11Stub.C_GetSlotList = () => [slot1, slot2];
+
+				const openSessionStub = sandbox.stub();
+				pkcs11jsStub.pkcs11Stub.C_OpenSession = openSessionStub;
+
+				new PKCS11_Rewire(256, 'sha2', {
+					lib: 'lib',
+					pin: '1234',
+					slot: 0,
+				});
+				sinon.assert.calledOnceWithExactly(openSessionStub, slot1, sinon.match.any);
+			});
+
+			it('should throw an error if label cannot be found even if a valid slot index is provided', () => {
+				pkcs11jsStub.pkcs11Stub.C_GetSlotList = () => [slot1, slot2];
+
+				(() => {
+					new PKCS11_Rewire(256, 'sha2', {
+						lib: 'lib',
+						pin: '1234',
+						slot: 0,
+						label: 'someLabel1'
+					});
+				}).should.throw(/PKCS11 label someLabel1 cannot be found in the slot list/);
+			});
+
+			it('should find the correct slot by label even if a valid slot index is provided', () => {
+				pkcs11jsStub.pkcs11Stub.C_GetSlotList = () => [slot1, slot2];
+
+				const openSessionStub = sandbox.stub();
+				pkcs11jsStub.pkcs11Stub.C_OpenSession = openSessionStub;
+
+				new PKCS11_Rewire(256, 'sha2', {
+					lib: 'lib',
+					pin: '1234',
+					slot: 0,
+					label: 'someLabel'
+				});
+				sinon.assert.calledOnceWithExactly(openSessionStub, slot2, sinon.match.any);
+			});
 		});
 	});
 
