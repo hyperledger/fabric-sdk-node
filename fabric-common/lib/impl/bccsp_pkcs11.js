@@ -76,6 +76,7 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 	 *   {
 	 *     lib: string,       // the library package to support this implementation
 	 *     slot: number,      // the hardware slot number
+	 *     label: string,     // the label assigned to the token at slot initialisation (overrides slot)
 	 *     pin: string,       // the user's PIN
 	 *     usertype: number,  // the user type
 	 *     readwrite: boolean // true if the session is read/write or false if read-only
@@ -88,6 +89,11 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 	 * If 'slot' is not specified or null, its value will be taken from the
 	 * CRYPTO_PKCS11_SLOT env var, and if the env var is not set, its value will
 	 * be taken from the crypto-pkcs11-slot key in the configuration file.
+	 *<br><br>
+	 * If 'label' is not specified or null, its value will be taken from the
+	 * CRYPTO_PKCS11_LABEL env var, and if the env var is not set, its value will
+	 * be taken from the crypto-pkcs11-label key in the configuration file.
+	 * If label is present then it will override any slot value provided
 	 *<br><br>
 	 * If 'pin' is not specified or null, its value will be taken from the
 	 * CRYPTO_PKCS11_PIN env var, and if the env var is not set, its value will
@@ -133,23 +139,36 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 			throw new Error(__func() + 'PKCS11 library path must be specified');
 		}
 		logger.debug(__func() + 'PKCS11 library: ' + pkcs11Lib);
-		/*
-		 * If no slot specified, get it from env var or config file.
-		 */
-		let pkcs11Slot = opts ? opts.slot : null;
-		if (!pkcs11Slot && pkcs11Slot !== 0) {
-			pkcs11Slot = utils.getConfigSetting('crypto-pkcs11-slot');
+
+		let pkcs11Label = opts ? opts.label : null;
+		if (!pkcs11Label) {
+			pkcs11Label = utils.getConfigSetting('crypto-pkcs11-label');
 		}
-		if (!pkcs11Slot && pkcs11Slot !== 0) {
-			throw new Error(__func() + 'PKCS11 slot must be specified');
+
+		let pkcs11Slot = null;
+		// If no label, then fall back to using slot
+		if (!pkcs11Label) {
+			pkcs11Slot = opts ? opts.slot : null;
+			/*
+			* If no slot specified, get it from env var or config file.
+			*/
+			if (!pkcs11Slot && pkcs11Slot !== 0) {
+				pkcs11Slot = utils.getConfigSetting('crypto-pkcs11-slot');
+			}
+			if (!pkcs11Slot && pkcs11Slot !== 0) {
+				throw new Error(__func() + 'PKCS11 slot or label must be specified');
+			}
+			if (typeof pkcs11Slot === 'string') {
+				pkcs11Slot = parseInt(pkcs11Slot);
+			}
+			if (!Number.isInteger(pkcs11Slot)) {
+				throw new Error(__func() + 'PKCS11 slot number invalid');
+			}
+			logger.debug(__func() + 'PKCS11 slot: ' + pkcs11Slot);
+		} else {
+			logger.debug(__func() + 'PKCS11 Label: ' + pkcs11Label);
 		}
-		if (typeof pkcs11Slot === 'string') {
-			pkcs11Slot = parseInt(pkcs11Slot);
-		}
-		if (!Number.isInteger(pkcs11Slot)) {
-			throw new Error(__func() + 'PKCS11 slot number invalid');
-		}
-		logger.debug(__func() + 'PKCS11 slot: ' + pkcs11Slot);
+
 		/*
 		 * If no user type is specified, check env var or config file, then
 		 * default to 1 (pkcs11js.CKU_USER)
@@ -230,7 +249,7 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 		}
 		this._pkcs11 = _pkcs11;
 
-		this._pkcs11OpenSession(this._pkcs11, pkcs11Lib, pkcs11Slot, pkcs11Pin, pkcs11UserType, pkcs11ReadWrite);
+		this._pkcs11OpenSession(this._pkcs11, pkcs11Lib, pkcs11Label, pkcs11Slot, pkcs11Pin, pkcs11UserType, pkcs11ReadWrite);
 
 		/*
 		 * SKI to key cache for getKey(ski) function.
@@ -278,8 +297,8 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 	/*
 	 * Open pkcs11 session and login.
 	 */
-	_pkcs11OpenSession(pkcs11, pkcs11Lib, pkcs11Slot, pkcs11Pin, pkcs11UserType, pkcs11ReadWrite) {
-		logger.debug(__func() + 'parameters are pkcs11Slot %s pkcs11Lib %s', pkcs11Slot, pkcs11Lib);
+	_pkcs11OpenSession(pkcs11, pkcs11Lib, pkcs11Label, pkcs11Slot, pkcs11Pin, pkcs11UserType, pkcs11ReadWrite) {
+		logger.debug(__func() + 'parameters are pkcs11Label %s, pkcs11Slot %s, pkcs11Lib %s', pkcs11Label, pkcs11Slot, pkcs11Lib);
 
 		if (!_initialized) {
 			pkcs11.load(pkcs11Lib);
@@ -294,18 +313,41 @@ class CryptoSuite_PKCS11 extends CryptoSuite {
 
 			// Getting list of slots
 			const slots = pkcs11.C_GetSlotList(true);
-			if (pkcs11Slot >= slots.length) {
-				throw new Error(__func() + 'PKCS11 slot number non-exist');
-			}
-			const slot = slots[pkcs11Slot];
 			logger.debug(__func() + 'C_GetSlotList: ' +
 				util.inspect(slots, {depth: null}));
+
+			if (!slots || slots.length === 0) {
+				throw new Error(__func() + 'PKCS11 no slots have been created');
+			}
+
+			let slot;
+			let tokenInfo;
+			if (pkcs11Label) {
+				pkcs11Label = pkcs11Label.trim();
+				for (const slotToCheck of slots) {
+					tokenInfo = pkcs11.C_GetTokenInfo(slotToCheck);
+					if (tokenInfo && tokenInfo.label && tokenInfo.label.trim() === pkcs11Label) {
+						slot = slotToCheck;
+						break;
+					}
+				}
+
+				if (!slot) {
+					throw new Error(__func() + `PKCS11 label ${pkcs11Label} cannot be found in the slot list`);
+				}
+			} else {
+				if (pkcs11Slot < 0 || pkcs11Slot >= slots.length) {
+					throw new Error(__func() + 'PKCS11 slot number non-exist');
+				}
+				slot = slots[pkcs11Slot];
+				tokenInfo = pkcs11.C_GetTokenInfo(slot);
+			}
 			// Getting info about slot
 			logger.debug(__func() + 'C_GetSlotInfo(' + pkcs11Slot + '): ' +
 				util.inspect(pkcs11.C_GetSlotInfo(slot), {depth: null}));
 			// Getting info about token
 			logger.debug(__func() + 'C_GetTokenInfo(' + pkcs11Slot + '): ' +
-				util.inspect(pkcs11.C_GetTokenInfo(slot), {depth: null}));
+				util.inspect(tokenInfo, {depth: null}));
 			// Getting info about Mechanism
 			logger.debug(__func() + 'C_GetMechanismList(' + pkcs11Slot + '): ' +
 				util.inspect(pkcs11.C_GetMechanismList(slot), {depth: null}));

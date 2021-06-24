@@ -67,7 +67,9 @@ if (identity && identity.type === 'X.509') {
 The SDK uses the [PKCS #11](https://en.wikipedia.org/wiki/PKCS_11) interface to
 make use of Hardware Security Module (HSM) devices for key management. Identities
 using an HSM-managed private key are similar to an X.509 identity but with the
-private key omitted (a handle to the key is used instead).
+private key omitted. The certificate is used to generate an SKI from the public key
+to locate HSM managed keys. HSM managed keys need to have their label or ID set to
+this SKI in order for the object to be located in the HSM.
 In order to use HSM-managed identities the containing wallet must be configured
 with details of the HSM that holds the private key. This is achieved by registering
 an `IdentityProvider` with the wallet, for example:
@@ -75,7 +77,7 @@ an `IdentityProvider` with the wallet, for example:
 const hsmProvider = new HsmX509Provider({
     lib: '/path/to/hsm-specific/pkcs11/library',
     pin: '1234567890',
-    slot: 0,
+    label: 'tokenLabel',
 });
 wallet.getProviderRegistry().addProvider(hsmProvider);
 ```
@@ -83,7 +85,7 @@ wallet.getProviderRegistry().addProvider(hsmProvider);
 Once the wallet has been confgured with details of the HSM, the crypto suite being
 used by the provider may be assigned to a new fabric certificate authority instance.
 The crypto suite will have been initialized with the `hsmProvider` option values
-( lib, pin, slot ) and it has opened a session with the HSM.
+( lib, pin, label ) and it has opened a session with the HSM.
 
 ```
 const hsmCAClient = new FabricCAClient(
@@ -110,3 +112,21 @@ const identity: HsmX509Identity = {
 };
 await wallet.put('bob', identity);
 ```
+
+### slot configuration option
+The HsmX509Provider still supports the use of the `slot` configuration option as follows
+```javascript
+const hsmProvider = new HsmX509Provider({
+    lib: '/path/to/hsm-specific/pkcs11/library',
+    pin: '1234567890',
+    slot: 0,
+});
+wallet.getProviderRegistry().addProvider(hsmProvider);
+```
+
+however this mechanism has problems in that if you initialise multiple slots then some HSM providers
+do not guarantee the order of the slot list and the slot value is just an index into this slot list
+which could result in unexpected behaviour.
+
+slot remains available for backward compatibility only but it's recommended that you use the label
+mechanism instead

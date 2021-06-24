@@ -71,6 +71,7 @@ function getHsmCryptoSuiteImpl() {
  * Returns a new instance of the CryptoSuite API implementation. Supports the following:
  * - newCryptoSuite({software: true, keysize: 256, algorithm: EC})
  * - newCryptoSuite({software: false, lib: '/usr/local/bin/pkcs11.so', slot: 0, pin: '1234'})
+ * - newCryptoSuite({software: false, lib: '/usr/local/bin/pkcs11.so', label: 'ForFabric', pin: '1234'})
  * - newCryptoSuite({keysize: 384})
  * - newCryptoSuite()
  * @param {CryptoSetting} [setting]
