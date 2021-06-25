@@ -138,7 +138,6 @@ class Endorser extends ServiceEndpoint {
 				rto = timeout;
 			}
 			const send_timeout = setTimeout(() => {
-				clearTimeout(send_timeout);
 				logger.error(`${method} - ${this.name} timed out after: ${rto}`);
 				const return_error = new Error('REQUEST TIMEOUT');
 				return reject(return_error);
