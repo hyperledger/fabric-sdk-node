@@ -64,7 +64,6 @@ class Discoverer extends ServiceEndpoint {
 			}
 
 			const send_timeout = setTimeout(() => {
-				clearTimeout(send_timeout);
 				logger.error(`${method} - timed out after:${rto}`);
 				const return_error = new Error('REQUEST TIMEOUT');
 				this.getCharacteristics(return_error);
