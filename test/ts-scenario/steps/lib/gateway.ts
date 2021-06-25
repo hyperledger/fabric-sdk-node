@@ -72,8 +72,8 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 	const hsmOptions: HsmOptions = {
 		lib: getHSMLibPath(),
 		pin: process.env.PKCS11_PIN || '98765432',
-		slot: Number(process.env.PKCS11_SLOT || '0')
-	};
+		label: 'ForFabric'
+	}
 
 	const myWalletReference: string = `${Constants.WALLET}_walletType`;
 	let wallet: Wallet = stateStore.get(myWalletReference);
@@ -115,7 +115,7 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 			cryptoSuite.closeSession();
 			cryptoSuite.finalize();
 
-			BaseUtils.logMsg('Reusing HSM Wallet. Should expect the user to be found');
+			BaseUtils.logMsg(`Reusing HSM Wallet. Should expect the user to be found`);
 			useHSM = true;
 
 			// Create a new HSM provider which will result in a new cryptosuite establishing a new

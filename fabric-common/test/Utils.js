@@ -133,6 +133,7 @@ describe('Utils', () => {
 				Utils.newCryptoSuite({lib: fakePath, slot: 0, pin: '1234'});
 			}).should.throw(fakePath);
 		});
+
 		it('should throw an error when using HSM and no library path is given', () => {
 			Utils.setConfigSetting('crypto-hsm', true);
 			Utils.setConfigSetting('crypto-suite-hsm', {'EC': 'fabric-common/lib/impl/bccsp_pkcs11.js'});
