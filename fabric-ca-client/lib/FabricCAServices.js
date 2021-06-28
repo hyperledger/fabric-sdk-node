@@ -95,6 +95,17 @@ class FabricCAServices extends BaseClient {
 	}
 
 	/**
+	* Returns info on the certificate authority.
+	*
+	* @returns {Promise} CA info
+	*/
+	async getCaInfo(registrar) {
+		checkRegistrar(registrar);
+
+		return this._fabricCAClient.getCaInfo(registrar.getSigningIdentity());
+	}
+
+	/**
 	 * @typedef {Object} RegisterRequest
 	 * @property {string} enrollmentID - ID which will be used for enrollment
 	 * @property {string} enrollmentSecret - Optional enrollment secret to set for the registered user.

@@ -134,6 +134,46 @@ describe('FabricCAServices', () => {
 		});
 	});
 
+	describe('#getCaInfo', () => {
+
+		let service;
+		let clientMock;
+
+		beforeEach(() => {
+			service = new FabricCAServicesRewire('http://penguin.com', null, 'ca_name', cryptoPrimitives);
+			clientMock = sinon.createStubInstance(FabricCAClient);
+			service._fabricCAClient = clientMock;
+		});
+
+		it('should call "checkRegistrar"', async () => {
+			await service.getCaInfo(new User('bob'));
+			sinon.assert.calledOnce(checkRegistrarStub);
+		});
+
+		it('should return a known object on success', async () => {
+			// Take control of the enroll
+			clientMock.getCaInfo.resolves({
+				caName: 'test_ca_name',
+				caChain: 'test_ca_chain',
+				issuerPublicKey: 'test_iss_pub_key',
+				issuerRevocationPublicKey: 'test_iss_rev_pub_key',
+				version: '1.4.9'
+			});
+
+			const registrar = new User('bob');
+
+			const result = await service.getCaInfo(registrar);
+
+			result.should.deep.equal({
+				caName: 'test_ca_name',
+				caChain: 'test_ca_chain',
+				issuerPublicKey: 'test_iss_pub_key',
+				issuerRevocationPublicKey: 'test_iss_rev_pub_key',
+				version: '1.4.9'
+			});
+		});
+	});
+
 	describe('#register', () => {
 
 		let service;
