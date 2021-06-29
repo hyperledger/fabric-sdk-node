@@ -9,8 +9,7 @@ Check top level `package.json` file properties **version** and **tag** are one a
 ## Submit Release PR
 
 - Create a jira for publish  - publish v2.2.4.
-- Run `scripts/changelog.sh` script from the project root directory.  It takes two arguments; last release commit hash and next release version number - `./scripts/changelog.sh <commithash> v2.2.4`.
-- Update the **version** and **tag** properties in the top-level `package.json` file to be the appropriate values - next release version *2.2.4* and release npm tag *latest*.  **[NOTE: This would be latest-2.2 when a new branch supercedes as latest.]**
+- Update the **version** and **tag** properties in the top-level `package.json` file to be the appropriate values - next release version *2.2.4* and release npm tag *latest*.  **[NOTE: This would become latest-2.2 when a new branch supersedes as latest.]**
 - Create `release_notes/v2.2.4.txt` file with appropriate text - "This is a maintenance release containing bug fixes".
 - Git add, submit, push and create PR.  The build once the PR is merged will do the npm publishing.  Check it has npm published at https://www.npmjs.com/package/fabric-client and https://www.npmjs.com/package/fabric-common
 
@@ -21,8 +20,8 @@ Check top level `package.json` file properties **version** and **tag** are one a
     - Be sure to set:
         - Title = v2.2.4
         - Tag version = v2.2.4
-        - Target Branch = release-2.2  [NOTE: Check that no commits have gone into the branch since the commit that did the npm publishing as just just selecting the branch will tag the latest commit.  If subsequent commits have gone in then the commit that did the publishing needs to be selected explicityly.]
-- Save as draft iniitallly.
+        - Target Branch = release-2.2  [NOTE: Check that no commits have gone into the branch since the commit that did the npm publishing as just just selecting the branch will tag the latest commit.  If subsequent commits have gone in then the commit that did the publishing needs to be selected explicitly.]
+- Save as draft initially.
 - When ready 'Publish release'.  Publishing the release in GitHub creates a corresponding Git tag.
 
 ## Post Release Clean-up
