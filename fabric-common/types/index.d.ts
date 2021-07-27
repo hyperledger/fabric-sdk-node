@@ -245,6 +245,15 @@ export class Proposal extends ServiceAction {
 	public compareProposalResponseResults(proposalResponses: any[]): boolean;
 }
 
+export class BlockDecoder {
+	constructor();
+	public static decode(blockBuf: Buffer): fabproto6.common.Block;
+	public static decodeBlock(blockProto: object): fabproto6.common.Block;
+	public static decodeFilteredBlock(filteredBlockProto: object): fabproto6.protos.FilteredBlock;
+	public static decodeBlockWithPrivateData(BlockAndPrivateData: object): fabproto6.protos.BlockAndPrivateData;
+	public static decodeTransaction(processedTransactionBuf: Buffer): fabproto6.protos.ProcessedTransaction;
+}
+
 export class DiscoveryService extends ServiceAction {
 	readonly targets: Discoverer[];
 	constructor(chaincodeName: string, channel: Channel);
