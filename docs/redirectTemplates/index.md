@@ -22,4 +22,4 @@ npm install fabric-network
 
 ## Samples
 
-Sample Node.js client applications can be found in the _Fabcar_ and _Commercial Paper_ samples within the [fabric-samples repository](https://github.com/hyperledger/fabric-samples).
+Sample Node.js client applications can be found in the _Asset Transfer_ samples within the [fabric-samples repository](https://github.com/hyperledger/fabric-samples).
