@@ -62,29 +62,23 @@ describe('ServiceAction', () => {
 
 	describe('#sign', () => {
 		it('should require param', () => {
-			(() => {
-				serviceAction.sign();
-			}).should.throw('Missing param parameter');
+			return serviceAction.sign().should.be.rejectedWith('Missing param parameter');
 		});
 		it('should require a payload', () => {
-			(() => {
-				serviceAction.sign(idx);
-			}).should.throw('The send payload has not been built');
+			return serviceAction.sign(idx).should.be.rejectedWith('The send payload has not been built');
 		});
 		it('should require a signature or identityContext', () => {
-			(() => {
-				serviceAction._payload = Buffer.from('payload');
-				serviceAction.sign({});
-			}).should.throw('param is an unknown signer or signature type');
-		});
-		it('should sign if identity context provided', () => {
 			serviceAction._payload = Buffer.from('payload');
-			serviceAction.sign(idx);
+			return serviceAction.sign({}).should.be.rejectedWith('param is an unknown signer or signature type');
+		});
+		it('should sign if identity context provided', async () => {
+			serviceAction._payload = Buffer.from('payload');
+			await serviceAction.sign(idx);
 			should.exist(serviceAction._signature);
 		});
-		it('should sign if signature (byte array) provided', () => {
+		it('should sign if signature (byte array) provided', async () => {
 			serviceAction._payload = Buffer.from('payload');
-			serviceAction.sign(Buffer.from('signature'));
+			await serviceAction.sign(Buffer.from('signature'));
 			should.exist(serviceAction._signature);
 		});
 	});

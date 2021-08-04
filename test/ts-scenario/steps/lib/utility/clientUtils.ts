@@ -144,7 +144,7 @@ export async function buildChannelRequest(requestName: string, contractName: str
 		// and the sending steps broken out into separate API's that must
 		// be called individually.
 		endorsement.build(idx, endorsementRequest);
-		endorsement.sign(idx);
+		await endorsement.sign(idx);
 
 		// unique connection information will be used to build an endpoint
 		// used on connect()
@@ -177,7 +177,7 @@ export async function buildChannelRequest(requestName: string, contractName: str
 		await discoverer.connect(endpoints[0]);
 		// use the endorsement to build the discovery request
 		discovery.build(idx, {endorsement: endorsement});
-		discovery.sign(idx);
+		await discovery.sign(idx);
 		// discovery results will be based on the chaincode of the endorsement
 		const discoveryResults = await discovery.send({targets: [discoverer], asLocalhost: true});
 
@@ -263,7 +263,7 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 			// The event service is channel based
 			const eventService: EventService = channel.newEventService(Constants.EVENT_HUB_DEFAULT_NAME);
 			eventService.build(requestObject.idx, {});
-			eventService.sign(requestObject.idx);
+			await eventService.sign(requestObject.idx);
 			const eventRequest: SendEventOptions = {
 				targets: [eventer],
 				requestTimeout: 10000
@@ -315,7 +315,7 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 			// -When signing internally the idx must have a user with a signing identity.
 			const commit: Commit = endorsement.newCommit();
 			commit.build(requestObject.idx, {});
-			commit.sign(requestObject.idx);
+			await commit.sign(requestObject.idx);
 
 			const commitRequest: any = {
 				targets: [orderer], // could also use the orderer names
@@ -422,7 +422,7 @@ export async function queryChannelRequest(clientName: string, channelName: strin
 
 			// Build and sign the query
 			query.build(idx, buildQueryRequest);
-			query.sign(idx);
+			await query.sign(idx);
 
 			// Construct query request
 			const queryRequest: any = {
@@ -661,7 +661,7 @@ export async function startEventService(
 		}
 
 		eventService.build(idx, buildOptions);
-		eventService.sign(idx);
+		await eventService.sign(idx);
 
 		const peerNames: any = ccp.getPeersForChannel(channelName);
 		const endpoints: Endpoint[] = [];

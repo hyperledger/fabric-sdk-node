@@ -53,20 +53,21 @@ const ServiceAction = class {
 	 * Use this method with a byte[] to set the signature
 	 * when the application has done the signed externally.
 	 * Use the results of the build as the bytes that will be signed.
+	 * @async
 	 * @param {IdentityContext | byte[]} param - When 'param' is a
 	 * {@link IdentityContext} the signing identity of the user
-	 *  will sign the current build bytes.
+	 *  will asynchronously sign the current build bytes.
 	 *  When the 'param' is a byte[], the bytes will be used as the final
 	 *  commit signature.
 	 */
-	sign(param = checkParameter('param')) {
+	async sign(param = checkParameter('param')) {
 		const method = `sign[${this.type}:${this.name}]`;
 		logger.debug('%s - start', method);
 		if (!this._payload) {
 			throw Error('The send payload has not been built');
 		}
 		if (param.type === IdentityContext.TYPE) {
-			this._signature = Buffer.from(param.sign(this._payload));
+			this._signature = Buffer.from(await param.sign(this._payload));
 		} else if (param instanceof Buffer) {
 			this._signature = param;
 		} else {

@@ -61,7 +61,7 @@ export interface ICryptoSuite {
 	hash(msg: string, opts: any): string;
 	importKey(pem: string, opts?: KeyOpts): ICryptoKey | Promise<ICryptoKey>;
 	setCryptoKeyStore(cryptoKeyStore: ICryptoKeyStore): void;
-	sign(key: ICryptoKey, digest: Buffer): Buffer;
+	sign(key: ICryptoKey, digest: Buffer): Buffer | Promise<Buffer>;
 	verify(key: ICryptoKey, signature: Buffer, digest: Buffer): boolean;
 }
 
@@ -188,7 +188,7 @@ export class Discoverer extends ServiceEndpoint {
 export class ServiceAction {
 	public readonly name: string;
 	constructor(name: string);
-	public sign(parm: IdentityContext | Buffer): ServiceAction;
+	public sign(parm: IdentityContext | Buffer): Promise<ServiceAction>;
 
 	public getSignedProposal(): any;
 	public getSignedEnvelope(): any;
@@ -403,7 +403,7 @@ export class IdentityContext {
 	constructor(user: User, client: Client);
 	calculateTransactionId(): IdentityContext;
 	serializeIdentity(): Buffer;
-	sign(payload: Buffer): Buffer;
+	sign(payload: Buffer): Promise<Buffer>;
 }
 
 export interface BlockData {

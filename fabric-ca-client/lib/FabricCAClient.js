@@ -266,7 +266,7 @@ const FabricCAClient = class {
 		};
 		if (signingIdentity) {
 			requestOptions.headers = {
-				Authorization: this.generateAuthToken(requestObj, signingIdentity, path, http_method)
+				Authorization: await this.generateAuthToken(requestObj, signingIdentity, path, http_method)
 			};
 		}
 		Object.assign(requestOptions, extraRequestOptions);
@@ -339,7 +339,7 @@ const FabricCAClient = class {
 	/*
 	 * Generate authorization token required for accessing fabric-ca APIs
 	 */
-	generateAuthToken(reqBody, signingIdentity, path, method) {
+	async generateAuthToken(reqBody, signingIdentity, path, method) {
 		// specific signing procedure is according to:
 		// https://github.com/hyperledger/fabric-ca/blob/main/util/util.go#L168
 		const cert = Buffer.from(signingIdentity._certificate).toString('base64');
@@ -356,7 +356,7 @@ const FabricCAClient = class {
 			signString = `${method}.${s}.${signString}`;
 		}
 
-		const sig = signingIdentity.sign(signString, {hashFunction: this._cryptoPrimitives.hash.bind(this._cryptoPrimitives)});
+		const sig = await signingIdentity.sign(signString, {hashFunction: this._cryptoPrimitives.hash.bind(this._cryptoPrimitives)});
 		logger.debug(`signString: ${signString}`);
 
 		const b64Sign = Buffer.from(sig, 'hex').toString('base64');

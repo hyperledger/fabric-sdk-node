@@ -81,14 +81,15 @@ const IdentityContext = class {
 
 	/**
 	 * Sign the bytes provided
+	 * @async
 	 * @param {Buffer} payload - The payload bytes that require a signature
-	 * @return {Buffer} - The signature in bytes
+	 * @return {Buffer} - The signature as promise bytes
 	 */
-	sign(payload = checkParameter('payload')) {
+	async sign(payload = checkParameter('payload')) {
 		const method = 'sign';
 		logger.debug('%s - start', method);
 		const signer = this.user.getSigningIdentity();
-		const signature = Buffer.from(signer.sign(payload));
+		const signature = Buffer.from(await signer.sign(payload));
 
 		logger.debug('%s - end', method);
 		return signature;
