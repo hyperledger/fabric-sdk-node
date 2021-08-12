@@ -28,7 +28,7 @@ describe('block listener', () => {
 	let eventServiceManager: EventServiceManager;
 	let eventService: StubEventService;
 	let gateway: sinon.SinonStubbedInstance<Gateway>;
-	let network: Network;
+	let network: NetworkImpl;
 	let channel: sinon.SinonStubbedInstance<Channel>;
 	let listener: StubBlockListener;
 	let listenerOptions: ListenerOptions;
@@ -277,6 +277,39 @@ describe('block listener', () => {
 			await startListener.completePromise;
 			sinon.assert.calledWith(stub, eventService, sinon.match.has('startBlock', Long.ONE));
 		});
+		it('retry initial connect of event service', async () => {
+			const startListener = testUtils.newAsyncListener<void>();
+			const stub = sinon.stub(eventServiceManager, "startEventService");
+			stub.onFirstCall().rejects();
+			stub.onSecondCall().callsFake(() => startListener());
+
+			await network.addBlockListener(listener, listenerOptions);
+			await startListener.completePromise
+
+			sinon.assert.callCount(stub, 2);
+		});
+
+		it('retry reconnect of event service after disconnection', async () => {
+			await network.addBlockListener(listener, listenerOptions);
+			const restartListener = testUtils.newAsyncListener<void>();
+			const stub = sinon.stub(eventServiceManager, "startEventService");
+			stub.onFirstCall().rejects();
+			stub.onSecondCall().callsFake(() => restartListener());
+
+			eventService.sendError(new Error('DISCONNECT'));
+			await restartListener.completePromise
+
+			sinon.assert.callCount(stub, 2);
+		});
+        it('end infinite event loop condition on peer disconnect', async () => {
+
+            await network.addBlockListener(listener, listenerOptions);
+            const startEventService = testUtils.newAsyncListener<void>(1);
+            sinon.stub(eventServiceManager, "startEventService").rejects();
+            eventService.sendError(new Error('DISCONNECT'));
+            network._dispose();
+
+        })
 
 		it('listener does not receive old blocks on reconnect', async () => {
 			listener = testUtils.newAsyncListener<BlockEvent>(2);
