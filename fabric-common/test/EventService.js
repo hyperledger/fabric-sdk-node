@@ -11,7 +11,8 @@ const Eventer = rewire('../lib/Eventer');
 const Client = rewire('../lib/Client');
 const User = require('../lib/User');
 const EventListener = require('../lib/EventListener');
-
+const fabproto6 = require('fabric-protos');
+const {common: {Status: {SUCCESS, NOT_FOUND}}} = fabproto6;
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
@@ -432,7 +433,7 @@ describe('EventService', () => {
 		it('throws if eventer stream is running', async () => {
 			const eventer1 = client.newEventer('eventer1');
 			eventer1.stream = sinon.stub();
-			eventService._payload =  Buffer.from('payload');
+			eventService._payload = Buffer.from('payload');
 			eventService._signature = Buffer.from('signature');
 			await eventService.send({targets: [eventer1]}).should.be.rejectedWith('Event service eventer1 is currently listening');
 		});
@@ -440,7 +441,7 @@ describe('EventService', () => {
 			const eventer1 = client.newEventer('eventer1');
 			eventer1.isConnectable = sinon.stub().returns(false);
 			eventer1.checkConnection = sinon.stub().returns(false);
-			eventService._payload =  Buffer.from('payload');
+			eventService._payload = Buffer.from('payload');
 			eventService._signature = Buffer.from('signature');
 			await eventService.send({targets: [eventer1]}).should.be.rejectedWith('Event service eventer1 is not connected');
 		});
@@ -450,7 +451,7 @@ describe('EventService', () => {
 			eventer1.connect = sinon.stub().resolves(true);
 			eventer1.checkConnection = sinon.stub().resolves(true);
 			sinon.stub(eventService, '_startService').resolves(eventer1);
-			eventService._payload =  Buffer.from('payload');
+			eventService._payload = Buffer.from('payload');
 			eventService._signature = Buffer.from('signature');
 			await eventService.send({targets: [eventer1]});
 			eventService._currentEventer.should.be.deep.equal(eventer1);
@@ -463,7 +464,7 @@ describe('EventService', () => {
 		it('rejects and has failed stream message', async () => {
 			const eventer1 = client.newEventer('eventer1');
 			sinon.stub(eventService, '_startService').rejects(Error('failed'));
-			eventService._payload =  Buffer.from('payload');
+			eventService._payload = Buffer.from('payload');
 			eventService._signature = Buffer.from('signature');
 			eventer1.isConnectable = sinon.stub().returns(true);
 			eventer1.connect = sinon.stub().resolves(true);
@@ -513,7 +514,7 @@ describe('EventService', () => {
 			const stream = sinon.stub();
 			stream.on = sinon.stub();
 			stream.write = sinon.stub();
-			eventer1.setStreamByType = function() {
+			eventer1.setStreamByType = function () {
 				this.stream = stream;
 			};
 			eventService.blockType = 'full';
@@ -526,7 +527,7 @@ describe('EventService', () => {
 			const stream = sinon.stub();
 			stream.on = sinon.stub();
 			stream.write = sinon.stub();
-			eventer1.setStreamByType = function() {
+			eventer1.setStreamByType = function () {
 				this.stream = stream;
 			};
 			eventService.blockType = 'full';
@@ -541,7 +542,7 @@ describe('EventService', () => {
 			const stream = sinon.stub();
 			stream.on = sinon.stub();
 			stream.write = sinon.stub().throws(Error('failed write'));
-			eventer1.setStreamByType = function() {
+			eventer1.setStreamByType = function () {
 				this.stream = stream;
 			};
 			eventService.blockType = 'full';
@@ -549,10 +550,12 @@ describe('EventService', () => {
 		});
 		it('rejects error on stream receive error', async () => {
 			util.inherits(Writer, Writable);
+
 			function Writer(opt) {
 				Writable.call(this, opt);
 			}
-			Writer.prototype._write = function(data, encoding, callback) {
+
+			Writer.prototype._write = function (data, encoding, callback) {
 				const myErr = new Error('ForcedError');
 				myErr.code = 14;
 				callback(myErr);
@@ -561,7 +564,7 @@ describe('EventService', () => {
 			const eventer1 = client.newEventer('eventer1');
 			eventer1.endpoint = endpoint;
 			eventer1.checkConnection = sinon.stub().returns(true);
-			eventer1.setStreamByType = function() {
+			eventer1.setStreamByType = function () {
 				this.stream = stream;
 			};
 			eventService.blockType = 'full';
@@ -569,10 +572,12 @@ describe('EventService', () => {
 		});
 		it('rejects error on stream receive error with eventer assigned', async () => {
 			util.inherits(Writer, Writable);
+
 			function Writer(opt) {
 				Writable.call(this, opt);
 			}
-			Writer.prototype._write = function(data, encoding, callback) {
+
+			Writer.prototype._write = function (data, encoding, callback) {
 				const myErr = new Error('ForcedError');
 				myErr.code = 14;
 				callback(myErr);
@@ -581,7 +586,7 @@ describe('EventService', () => {
 			const eventer1 = client.newEventer('eventer1');
 			eventer1.endpoint = endpoint;
 			eventer1.checkConnection = sinon.stub().returns(true);
-			eventer1.setStreamByType = function() {
+			eventer1.setStreamByType = function () {
 				this.stream = stream;
 			};
 			eventService.blockType = 'full';
@@ -676,7 +681,7 @@ describe('EventService', () => {
 			eventer1.waitForReady = sandbox.stub().resolves();
 			await eventer1.connect(endpoint);
 			eventService.blockType = 'full';
-			onStub.yields({Type: 'status', status: 'SUCCESS'});
+			onStub.yields({Type: 'status', status: SUCCESS});
 			eventService._close = sinon.stub();
 			eventService._endBlockSeen = true;
 			eventService.lastBlockNumber = Long.fromValue(1);
@@ -694,7 +699,7 @@ describe('EventService', () => {
 			eventer1.waitForReady = sandbox.stub().resolves();
 			await eventer1.connect(endpoint);
 			eventService.blockType = 'full';
-			onStub.yields({Type: 'status', status: 'SUCCESS'});
+			onStub.yields({Type: 'status', status: SUCCESS});
 			eventService._close = sinon.stub();
 			eventService._endBlockSeen = false;
 			eventService.lastBlockNumber = Long.fromValue(1);
@@ -712,7 +717,7 @@ describe('EventService', () => {
 			eventer1.waitForReady = sandbox.stub().resolves();
 			await eventer1.connect(endpoint);
 			eventService.blockType = 'full';
-			onStub.yields({Type: 'status', status: 'SUCCESS'});
+			onStub.yields({Type: 'status', status: SUCCESS});
 			eventService._close = sinon.stub();
 			eventService._endBlockSeen = false;
 			eventService.lastBlockNumber = Long.fromValue(1);
@@ -730,7 +735,7 @@ describe('EventService', () => {
 			eventer1.waitForReady = sandbox.stub().resolves();
 			await eventer1.connect(endpoint);
 			eventService.blockType = 'full';
-			onStub.yields({Type: 'status', status: 'SUCCESS'});
+			onStub.yields({Type: 'status', status: SUCCESS});
 			eventService._close = sinon.stub();
 			eventService._endBlockSeen = false;
 			eventService.lastBlockNumber = Long.fromValue(4);
@@ -748,7 +753,7 @@ describe('EventService', () => {
 			eventer1.waitForReady = sandbox.stub().resolves();
 			await eventer1.connect(endpoint);
 			eventService.blockType = 'full';
-			onStub.yields({Type: 'status', status: 'NOT_FOUND'});
+			onStub.yields({Type: 'status', status: NOT_FOUND});
 			eventService._close = sinon.stub();
 			eventService._endBlockSeen = false;
 			eventService.lastBlockNumber = Long.fromValue(1);
@@ -766,7 +771,7 @@ describe('EventService', () => {
 			eventer1.waitForReady = sandbox.stub().resolves();
 			await eventer1.connect(endpoint);
 			eventService.blockType = 'full';
-			onStub.yields({Type: 'status', status: 'NOT_FOUND'});
+			onStub.yields({Type: 'status', status: NOT_FOUND});
 			eventService._close = sinon.stub();
 			eventService._endBlockSeen = false;
 			eventService.lastBlockNumber = Long.fromValue(1);
@@ -784,7 +789,7 @@ describe('EventService', () => {
 			eventer1.waitForReady = sandbox.stub().resolves();
 			await eventer1.connect(endpoint);
 			eventService.blockType = 'full';
-			onStub.yields({Type: 'status', status: 'SUCCESS'});
+			onStub.yields({Type: 'status', status: SUCCESS});
 			eventService._close = sinon.stub();
 			// TEST CALL
 			await eventService._startService(eventer1, {}, 3000);
@@ -991,19 +996,19 @@ describe('EventService', () => {
 		});
 		it('should set the have flag', () => {
 			eventService._haveTxListeners.should.be.false;
-			eventService.registerTransactionListener('txid', sinon.stub(),  {unregister: false});
+			eventService.registerTransactionListener('txid', sinon.stub(), {unregister: false});
 			eventService._haveTxListeners.should.be.true;
 		});
 		it('should set the have flag when txid=all unregister false', () => {
 			eventService._haveTxListeners.should.be.false;
-			const eventListener = eventService.registerTransactionListener('ALL', sinon.stub(),  {unregister: false});
+			const eventListener = eventService.registerTransactionListener('ALL', sinon.stub(), {unregister: false});
 			eventService._haveTxListeners.should.be.true;
 			should.equal(eventListener.unregister, false);
 			should.equal(eventListener.event, 'all');
 		});
 		it('should set the have flag when txid=all unregister true', () => {
 			eventService._haveTxListeners.should.be.false;
-			const eventListener = eventService.registerTransactionListener('ALL', sinon.stub(),  {unregister: true});
+			const eventListener = eventService.registerTransactionListener('ALL', sinon.stub(), {unregister: true});
 			eventService._haveTxListeners.should.be.true;
 			should.equal(eventListener.unregister, true);
 			should.equal(eventListener.event, 'all');
