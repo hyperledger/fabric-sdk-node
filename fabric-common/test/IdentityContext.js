@@ -80,12 +80,10 @@ describe('IdentityContext', () => {
 
 	describe('#sign', () => {
 		it('should require a payload', () => {
-			(() => {
-				idx.sign();
-			}).should.throw('Missing payload parameter');
+			return idx.sign().should.be.rejectedWith('Missing payload parameter');
 		});
-		it('should serializeIdentity', () => {
-			const signature = idx.sign(Buffer.from('payload'));
+		it('should serializeIdentity', async () => {
+			const signature = await idx.sign(Buffer.from('payload'));
 			should.exist(signature);
 		});
 	});

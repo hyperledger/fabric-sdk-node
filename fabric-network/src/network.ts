@@ -333,7 +333,7 @@ export class NetworkImpl implements Network {
 
 			// do the three steps
 			this.discoveryService.build(idx);
-			this.discoveryService.sign(idx);
+			await this.discoveryService.sign(idx);
 			logger.debug('%s - will discover asLocalhost:%s', method, options.asLocalhost);
 			await this.discoveryService.send({
 				asLocalhost: options.asLocalhost,

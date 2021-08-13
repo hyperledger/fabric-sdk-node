@@ -149,7 +149,7 @@ export class StubEventService implements EventService {
 		return listener;
 	}
 
-	sign(parm: IdentityContext | Buffer): ServiceAction {
+	async sign(parm: IdentityContext | Buffer): Promise<ServiceAction> {
 		return null;
 	}
 
