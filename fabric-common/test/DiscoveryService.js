@@ -287,46 +287,46 @@ describe('DiscoveryService', () => {
 	describe('#send', () => {
 		it('throws if targets is missing', async () => {
 			discovery.build(idx);
-			discovery.sign(idx);
+			await discovery.sign(idx);
 			await discovery.send().should.be.rejectedWith('Missing targets parameter');
 		});
 		it('throws if targets is not an array', async () => {
 			discovery.build(idx);
-			discovery.sign(idx);
+			await discovery.sign(idx);
 			await discovery.send({targets: ''}).should.be.rejectedWith('Missing targets parameter');
 		});
 		it('throws if targets is an empty array', async () => {
 			discovery.build(idx);
-			discovery.sign(idx);
+			await discovery.sign(idx);
 			await discovery.send({targets: []}).should.be.rejectedWith('Missing targets parameter');
 		});
 		it('throws no results if targets is not missing', async () => {
 			discovery.build(idx);
-			discovery.sign(idx);
+			await discovery.sign(idx);
 			sinon.stub(discoverer, 'sendDiscovery').resolves({});
 			await discovery.send({targets: [discoverer]}).should.be.rejectedWith('DiscoveryService has failed to return results');
 		});
 		it('should be able to handle result error', async () => {
 			discovery.build(idx);
-			discovery.sign(idx);
+			await discovery.sign(idx);
 			sinon.stub(discoverer, 'sendDiscovery').resolves(new Error('forced error'));
 			await discovery.send({targets: [discoverer]}).should.be.rejectedWith('forced error');
 		});
 		it('should be able to handle rejected error', async () => {
 			discovery.build(idx);
-			discovery.sign(idx);
+			await discovery.sign(idx);
 			sinon.stub(discoverer, 'sendDiscovery').rejects(new Error('forced error'));
 			await discovery.send({targets: [discoverer]}).should.be.rejectedWith('forced error');
 		});
 		it('throws no results if results includes and error', async () => {
 			discovery.build(idx);
-			discovery.sign(idx);
+			await discovery.sign(idx);
 			sinon.stub(discoverer, 'sendDiscovery').resolves({results:[{result: 'error', error: {content: 'result error'}}]});
 			await discovery.send({targets: [discoverer]}).should.be.rejectedWith('DiscoveryService: mydiscovery error: result error');
 		});
 		it('handle results from config with preexist target', async () => {
 			discovery.build(idx);
-			discovery.sign(idx);
+			await discovery.sign(idx);
 			endorser.name = 'peer1';
 			sinon.stub(discoverer, 'sendDiscovery').resolves({results: [configResult]});
 			discovery.targets = [discoverer];
@@ -335,7 +335,7 @@ describe('DiscoveryService', () => {
 		});
 		it('handle results from config', async () => {
 			discovery.build(idx);
-			discovery.sign(idx);
+			await discovery.sign(idx);
 			endorser.name = 'peer1';
 			sinon.stub(discoverer, 'sendDiscovery').resolves({results: [configResult]});
 			const results = await discovery.send({targets: [discoverer]});
@@ -343,7 +343,7 @@ describe('DiscoveryService', () => {
 		});
 		it('handle results from config with no orderers', async () => {
 			discovery.build(idx);
-			discovery.sign(idx);
+			await discovery.sign(idx);
 			endorser.name = 'peer1';
 			sinon.stub(discoverer, 'sendDiscovery').resolves({results: [configResult2]});
 			const results = await discovery.send({targets: [discoverer]});
@@ -351,7 +351,7 @@ describe('DiscoveryService', () => {
 		});
 		it('handle results from config if endorser exist', async () => {
 			discovery.build(idx);
-			discovery.sign(idx);
+			await discovery.sign(idx);
 			endorser.name = 'host.com:1000';
 			channel.addEndorser(endorser);
 			sinon.stub(discoverer, 'sendDiscovery').resolves({results: [configResult]});
@@ -360,7 +360,7 @@ describe('DiscoveryService', () => {
 		});
 		it('handle results with members', async () => {
 			discovery.build(idx);
-			discovery.sign(idx);
+			await discovery.sign(idx);
 			endorser.name = 'peer2';
 			sinon.stub(discoverer, 'sendDiscovery').resolves({results: [configResult, members]});
 			const results = await discovery.send({targets: [discoverer]});
@@ -368,7 +368,7 @@ describe('DiscoveryService', () => {
 		});
 		it('handle results with bad members', async () => {
 			discovery.build(idx);
-			discovery.sign(idx);
+			await discovery.sign(idx);
 			endorser.name = 'peer3';
 			sinon.stub(discoverer, 'sendDiscovery').resolves({results: [configResult, bad_members]});
 			const results = await discovery.send({targets: [discoverer], asLocalhost: true});
@@ -377,7 +377,7 @@ describe('DiscoveryService', () => {
 		});
 		it('handle results with chaincode query res', async () => {
 			discovery.build(idx);
-			discovery.sign(idx);
+			await discovery.sign(idx);
 			endorser.name = 'peer4';
 			endorser.connect = sinon.stub().throws(new Error('bad connect'));
 			sinon.stub(discoverer, 'sendDiscovery').resolves({results: [configResult, ccQueryRes]});

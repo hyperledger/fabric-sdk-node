@@ -63,7 +63,7 @@ export class EventServiceManager {
 		}
 
 		eventService.build(this.identityContext, options);
-		eventService.sign(this.identityContext);
+		await eventService.sign(this.identityContext);
 		// targets must be previously assigned
 		await eventService.send();
 	}

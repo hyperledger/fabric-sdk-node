@@ -110,14 +110,14 @@ describe('Commit', () => {
 			endorsement._proposalResponses = [];
 			endorsement._proposalResponses.push(proposalResponse);
 			commit.build(idx);
-			commit.sign(idx);
+			await commit.sign(idx);
 			await commit.send().should.be.rejectedWith('Missing targets parameter');
 		});
 		it('uses a handler', async () => {
 			endorsement._proposalResponses = [];
 			endorsement._proposalResponses.push(proposalResponse);
 			commit.build(idx);
-			commit.sign(idx);
+			await commit.sign(idx);
 			const request = {
 				handler: fakeHandler
 			};
@@ -128,7 +128,7 @@ describe('Commit', () => {
 			endorsement._proposalResponses = [];
 			endorsement._proposalResponses.push(proposalResponse);
 			commit.build(idx);
-			commit.sign(idx);
+			await commit.sign(idx);
 			const request = {
 				targets: [fakeCommitter]
 			};
@@ -139,7 +139,7 @@ describe('Commit', () => {
 			endorsement._proposalResponses = [];
 			endorsement._proposalResponses.push(proposalResponse);
 			commit.build(idx);
-			commit.sign(idx);
+			await commit.sign(idx);
 			const request = {
 				targets: [fakeCommitter]
 			};
@@ -151,7 +151,7 @@ describe('Commit', () => {
 			endorsement._proposalResponses = [];
 			endorsement._proposalResponses.push(proposalResponse);
 			commit.build(idx);
-			commit.sign(idx);
+			await commit.sign(idx);
 			fakeCommitter.checkConnection.resolves(false);
 			const request = {
 				targets: [fakeCommitter]

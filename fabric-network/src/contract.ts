@@ -284,7 +284,7 @@ export class ContractImpl {
 
 			logger.debug('%s - using discovery interest %j', method, this.discoveryInterests);
 			this.discoveryService.build(idx, {interest: this.discoveryInterests});
-			this.discoveryService.sign(idx);
+			await this.discoveryService.sign(idx);
 
 			// go get the endorsement plan from the peer's discovery service
 			// to be ready to be used by the transaction's submit

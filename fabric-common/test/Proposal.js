@@ -229,12 +229,12 @@ describe('Proposal', () => {
 	describe('#send', () => {
 		it('throws if targets is missing', async () => {
 			proposal.build(idx);
-			proposal.sign(idx);
+			await proposal.sign(idx);
 			await proposal.send().should.be.rejectedWith('Missing targets parameter');
 		});
 		it('returns no results', async () => {
 			proposal.build(idx);
-			proposal.sign(idx);
+			await proposal.sign(idx);
 			sinon.stub(endorser, 'sendProposal').resolves({});
 			const results = await proposal.send({targets: [endorser]});
 			should.exist(results.errors);
@@ -244,7 +244,7 @@ describe('Proposal', () => {
 		});
 		it('should be able to handle result error', async () => {
 			proposal.build(idx);
-			proposal.sign(idx);
+			await proposal.sign(idx);
 			sinon.stub(endorser, 'sendProposal').resolves(new Error('forced resolved error'));
 			const results = await proposal.send({targets: [endorser]});
 			should.exist(results.errors);
@@ -254,7 +254,7 @@ describe('Proposal', () => {
 		});
 		it('should be able to handle rejected error', async () => {
 			proposal.build(idx);
-			proposal.sign(idx);
+			await proposal.sign(idx);
 			sinon.stub(endorser, 'sendProposal').rejects(new Error('forced rejected error'));
 			const results = await proposal.send({targets: [endorser]});
 			should.exist(results.errors);
@@ -264,7 +264,7 @@ describe('Proposal', () => {
 		});
 		it('should have responses when status included', async () => {
 			proposal.build(idx);
-			proposal.sign(idx);
+			await proposal.sign(idx);
 			sinon.stub(endorser, 'sendProposal').resolves({response: {status: 200}});
 			proposal.compareProposalResponseResults = sinon.stub().returns(true);
 			const results = await proposal.send({targets: [endorser]});
@@ -275,7 +275,7 @@ describe('Proposal', () => {
 		});
 		it('should have queryResults when this is a query', async () => {
 			proposal.build(idx);
-			proposal.sign(idx);
+			await proposal.sign(idx);
 			proposal.type = 'Query';
 			sinon.stub(endorser, 'sendProposal').resolves({response: {status: 400, payload: 'query payload'}});
 			const results = await proposal.send({targets: [endorser]});
@@ -286,7 +286,7 @@ describe('Proposal', () => {
 		});
 		it('should have empty queryResults when this is a query and no good responses', async () => {
 			proposal.build(idx);
-			proposal.sign(idx);
+			await proposal.sign(idx);
 			proposal.type = 'Query';
 			sinon.stub(endorser, 'sendProposal').resolves({response: {status: 200}});
 			const results = await proposal.send({targets: [endorser]});
@@ -294,7 +294,7 @@ describe('Proposal', () => {
 		});
 		it('should have empty queryResults when this is a query and unknown responses', async () => {
 			proposal.build(idx);
-			proposal.sign(idx);
+			await proposal.sign(idx);
 			proposal.type = 'Query';
 			sinon.stub(endorser, 'sendProposal').resolves({response: {payload: 'query payload'}});
 			const results = await proposal.send({targets: [endorser]});
@@ -302,7 +302,7 @@ describe('Proposal', () => {
 		});
 		it('should have responses from handler when status included', async () => {
 			proposal.build(idx);
-			proposal.sign(idx);
+			await proposal.sign(idx);
 			sinon.stub(handler, 'endorse').resolves([{response: {status: 200}}]);
 			proposal.compareProposalResponseResults = sinon.stub().returns(true);
 			const results = await proposal.send({handler: handler});
@@ -313,7 +313,7 @@ describe('Proposal', () => {
 		});
 		it('should have responses from handler when status included', async () => {
 			proposal.build(idx);
-			proposal.sign(idx);
+			await proposal.sign(idx);
 			proposal.type = 'Query';
 			sinon.stub(handler, 'query').resolves([{response: {status: 200}}]);
 			const results = await proposal.send({handler: handler});
@@ -324,7 +324,7 @@ describe('Proposal', () => {
 		});
 		it('should have errors from handler when error included', async () => {
 			proposal.build(idx);
-			proposal.sign(idx);
+			await proposal.sign(idx);
 			sinon.stub(handler, 'endorse').resolves([new Error('Endorsement has failed')]);
 			const results = await proposal.send({handler: handler});
 			should.exist(results.errors);
@@ -334,7 +334,7 @@ describe('Proposal', () => {
 		});
 		it('should have errors from handler when error included', async () => {
 			proposal.build(idx);
-			proposal.sign(idx);
+			await proposal.sign(idx);
 			proposal.type = 'Query';
 			sinon.stub(handler, 'query').resolves([new Error('Endorsement has failed')]);
 			const results = await proposal.send({handler: handler});

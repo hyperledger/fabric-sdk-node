@@ -256,7 +256,7 @@ export class Transaction {
 		// from the identity context
 		endorsement.build(this.identityContext, proposalBuildRequest);
 
-		endorsement.sign(this.identityContext);
+		await endorsement.sign(this.identityContext);
 
 		// ------- S E N D   P R O P O S A L
 		// This is where the request gets sent to the peers
@@ -299,7 +299,7 @@ export class Transaction {
 
 			const commit = endorsement.newCommit();
 			commit.build(this.identityContext);
-			commit.sign(this.identityContext);
+			await commit.sign(this.identityContext);
 
 			// -----  C O M M I T   E N D O R S E M E N T
 			// this is where the endorsement results are sent to the orderer
@@ -362,7 +362,7 @@ export class Transaction {
 
 		logger.debug('%s - build and sign the query', method);
 		queryProposal.build(this.identityContext, request);
-		queryProposal.sign(this.identityContext);
+		await queryProposal.sign(this.identityContext);
 
 		const query = new QueryImpl(queryProposal, this.gatewayOptions.queryHandlerOptions);
 

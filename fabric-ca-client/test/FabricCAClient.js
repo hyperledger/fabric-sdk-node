@@ -1002,7 +1002,7 @@ describe('FabricCAClient', () => {
 			callArgs[0].should.equal('InRlc3RfYm9keSI=.dGVzdF9jZXJ0');
 		});
 
-		it('should return a concatenation of the cert and signing in base64 string', () => {
+		it('should return a concatenation of the cert and signing in base64 string', async () => {
 			const connect_opts = {
 				caname: 'test-ca-name',
 				protocol: 'https',
@@ -1018,7 +1018,7 @@ describe('FabricCAClient', () => {
 				sign: signStub
 			};
 
-			client.generateAuthToken('test_body', fake).should.equal('dGVzdF9jZXJ0.');
+			(await client.generateAuthToken('test_body', fake)).should.equal('dGVzdF9jZXJ0.');
 		});
 	});
 
