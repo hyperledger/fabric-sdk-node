@@ -301,15 +301,21 @@ describe('block listener', () => {
 
 			sinon.assert.callCount(stub, 2);
 		});
-        it('end infinite event loop condition on peer disconnect', async () => {
 
-            await network.addBlockListener(listener, listenerOptions);
-            const startEventService = testUtils.newAsyncListener<void>(1);
-            sinon.stub(eventServiceManager, "startEventService").rejects();
-            eventService.sendError(new Error('DISCONNECT'));
-            network._dispose();
+		it('end infinite event loop condition on peer disconnect', async () => {
+			await network.addBlockListener(listener, listenerOptions);
+			const startEventService = testUtils.newAsyncListener<void>(1);
+			sinon.stub(eventServiceManager, "startEventService").rejects();
+			eventService.sendError(new Error('DISCONNECT'));
+			network._dispose();
+		});
 
-        })
+		it('end infinite event loop condition on peer initial connect', async () => {
+			const startEventService = testUtils.newAsyncListener<void>(1);
+			sinon.stub(eventServiceManager, "startEventService").rejects();
+			await network.addBlockListener(listener, listenerOptions);
+			network._dispose();
+		});
 
 		it('listener does not receive old blocks on reconnect', async () => {
 			listener = testUtils.newAsyncListener<BlockEvent>(2);

@@ -33,6 +33,8 @@ function asLong(value?: string | number | Long): Long | undefined {
 	return undefined;
 }
 
+type State = 'ready' | 'started' | 'stopped';
+
 export class BlockEventSource {
 	private readonly eventServiceManager: EventServiceManager;
 	private eventService?: EventService;
@@ -41,7 +43,7 @@ export class BlockEventSource {
 	private readonly blockQueue: OrderedBlockQueue;
 	private readonly asyncNotifier: AsyncNotifier<BlockEvent>;
 	private readonly blockType: EventType;
-	private state: 'ready' | 'started' | 'stopped' = 'ready';
+	private state: State = 'ready';
 	private restart?: NodeJS.Immediate;
 
 	constructor(eventServiceManager: EventServiceManager, options: ListenerOptions = {}) {
@@ -64,24 +66,28 @@ export class BlockEventSource {
 	removeBlockListener(listener: BlockListener): void {
 		this.listeners.delete(listener);
 	}
-	setState(state: 'ready' | 'started' | 'stopped') { if (this.state !== 'stopped') this.state = state; }
 
-	 close(){
-		 this.setState('stopped')
-		 logger.debug(' state set to  - :%s', this.state);
-		 this._close();
-
-	}
-	private _close(){
-			this.unregisterListener();
-			this.eventService?.close();
-			this.setState('ready')
-			logger.debug(' state set to  - :%s', this.state);
-			if (this.restart) {
-			clearImmediate(this.restart)
+	private setState(state: State) {
+		if (this.state !== 'stopped') {
+			this.state = state;
 		}
 	}
 
+	close() {
+		this.setState('stopped');
+		logger.debug('state set to  - :%s', this.state);
+		this._close();
+	}
+
+	private _close() {
+		this.unregisterListener();
+		this.eventService?.close();
+		this.setState('ready');
+		logger.debug('state set to  - :%s', this.state);
+		if (this.restart) {
+			clearImmediate(this.restart);
+		}
+	}
 
 	private async start() {
 		logger.debug('state - :%s', this.state);
