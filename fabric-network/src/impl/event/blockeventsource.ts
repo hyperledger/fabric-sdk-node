@@ -33,6 +33,8 @@ function asLong(value?: string | number | Long): Long | undefined {
 	return undefined;
 }
 
+type State = 'ready' | 'started' | 'stopped';
+
 export class BlockEventSource {
 	private readonly eventServiceManager: EventServiceManager;
 	private eventService?: EventService;
@@ -41,7 +43,8 @@ export class BlockEventSource {
 	private readonly blockQueue: OrderedBlockQueue;
 	private readonly asyncNotifier: AsyncNotifier<BlockEvent>;
 	private readonly blockType: EventType;
-	private started = false;
+	private state: State = 'ready';
+	private restart?: NodeJS.Immediate;
 
 	constructor(eventServiceManager: EventServiceManager, options: ListenerOptions = {}) {
 		this.eventServiceManager = eventServiceManager;
@@ -64,30 +67,44 @@ export class BlockEventSource {
 		this.listeners.delete(listener);
 	}
 
+	private setState(state: State) {
+		if (this.state !== 'stopped') {
+			this.state = state;
+		}
+	}
+
 	close() {
+		this.setState('stopped');
+		logger.debug('state set to  - :%s', this.state);
+		this._close();
+	}
+
+	private _close() {
 		this.unregisterListener();
 		this.eventService?.close();
-		this.started = false;
+		this.setState('ready');
+		logger.debug('state set to  - :%s', this.state);
+		if (this.restart) {
+			clearImmediate(this.restart);
+		}
 	}
 
 	private async start() {
-		logger.debug('start - started:%s', this.started);
-
-		if (this.started) {
+		logger.debug('state - :%s', this.state);
+		if (this.state !== 'ready') {
 			return;
 		}
-
-		this.started = true;
+		this.state = 'started';
 
 		try {
 			this.eventService = this.eventServiceManager.newDefaultEventService();
 			this.registerListener(); // Register before start so no events are missed
 			logger.debug('start - calling startEventService');
-
 			await this.startEventService();
 		} catch (error) {
 			logger.error('Failed to start event service', error);
-			this.close();
+			this._close();
+			this.restart = setImmediate(() => this.start());
 		}
 	}
 
@@ -127,8 +144,8 @@ export class BlockEventSource {
 
 	private blockEventCallback(error?: Error, event?: EventInfo)  {
 		if (error) {
-			this.close();
-			setImmediate(() => this.start()); // Must schedule after current event loop to avoid recursion in event service notification
+			this._close();
+			this.restart = setImmediate(() => this.start()); // Must schedule after current event loop to avoid recursion in event service notification
 		} else {
 			this.onBlockEvent(event!);
 		}
