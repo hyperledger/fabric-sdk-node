@@ -105,8 +105,6 @@ export class BlockEventSource {
 			logger.error('Failed to start event service', error);
 			this._close();
 			this.restart = setImmediate(() => this.start());
-			return;
-
 		}
 	}
 
