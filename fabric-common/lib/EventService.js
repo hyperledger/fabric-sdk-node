@@ -15,6 +15,7 @@ const EventListener = require('./EventListener.js');
 const logger = getLogger(TYPE);
 
 const fabproto6 = require('fabric-protos');
+const {common: {Status: {SUCCESS, NOT_FOUND}}} = fabproto6;
 
 // Special transaction id to indicate that the transaction listener will be
 // notified of all transactions
@@ -493,7 +494,7 @@ class EventService extends ServiceAction {
 						this._close(error);
 					}
 				} else if (deliverResponse.Type === 'status') {
-					if (deliverResponse.status === 'SUCCESS') {
+					if (deliverResponse.status === SUCCESS) {
 						logger.debug('on.data %s- received type status of SUCCESS', me);
 						if (this._endBlockSeen) {
 							// this is normal after the last block comes in when we set an ending block
@@ -513,7 +514,7 @@ class EventService extends ServiceAction {
 							this._close(new Error('Event Service connection has been shutdown. ' +
 								`Last block received ${this.lastBlockNumber.toNumber()}`));
 						}
-					} else if (deliverResponse.status === 'NOT_FOUND') {
+					} else if (deliverResponse.status === NOT_FOUND) {
 						logger.debug('on.data %s- received type status of NOT_FOUND', me);
 						if (this.endBlock) {
 							logger.error('on.data %s- Configured endblock does not exist', me);
