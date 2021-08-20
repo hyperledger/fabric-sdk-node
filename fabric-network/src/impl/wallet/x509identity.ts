@@ -52,7 +52,7 @@ export class X509Provider implements IdentityProvider {
 				type: 'X.509',
 			};
 		} else {
-			throw new Error(`Unsupported identity version:  ${data.version}`);
+			throw new Error(`Unsupported identity version: ${data.version}`);
 		}
 	}
 

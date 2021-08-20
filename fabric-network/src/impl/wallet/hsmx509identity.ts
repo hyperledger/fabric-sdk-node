@@ -102,7 +102,7 @@ export class HsmX509Provider implements IdentityProvider {
 				type: 'HSM-X.509',
 			};
 		} else {
-			throw new Error(`Unsupported identity version:  ${data.version}`);
+			throw new Error(`Unsupported identity version: ${data.version}`);
 		}
 	}
 
