@@ -11,7 +11,7 @@ import Long = require('long');
 import chai = require('chai');
 const expect = chai.expect;
 
-// tslint:disable: no-unused-expression
+
 
 describe('OrderedBlockQueue', () => {
 	let queue: OrderedBlockQueue;

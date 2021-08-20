@@ -11,7 +11,7 @@ export const VALID_STATUS = 'VALID';
 export function getStatusForCode(code: number): string {
 	const status = fabproto6.protos.TxValidationCode[code];
 	if (!status) {
-		throw new Error('Unexpected transaction status code: ' + code);
+		throw new Error(`Unexpected transaction status code: ${code}`);
 	}
 
 	return status;

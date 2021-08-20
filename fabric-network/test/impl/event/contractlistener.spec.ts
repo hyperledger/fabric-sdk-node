@@ -200,11 +200,11 @@ describe('contract event listener', () => {
 
 	function assertCanNavigateEvents(contractEvent: ContractEvent) {
 		const transactionEvent = contractEvent.getTransactionEvent();
-		expect(transactionEvent).to.exist; // tslint:disable-line: no-unused-expression
+		expect(transactionEvent).to.exist;
 		expect(transactionEvent.getContractEvents()).to.contain(contractEvent);
 
 		const blockEvent = transactionEvent.getBlockEvent();
-		expect(blockEvent).to.exist; // tslint:disable-line: no-unused-expression
+		expect(blockEvent).to.exist;
 		expect(blockEvent.getTransactionEvents()).to.contain(transactionEvent);
 	}
 
@@ -398,7 +398,7 @@ describe('contract event listener', () => {
 		eventService.sendEvent(goodEvent);
 
 		const contractEvents = await listener.completePromise;
-		expect(contractEvents[0].getTransactionEvent()).to.include({ isValid: true }); // tslint:disable-line: no-unused-expression
+		expect(contractEvents[0].getTransactionEvent()).to.include({ isValid: true });
 	});
 
 	it('filtered events do not contain payload', async () => {
@@ -412,7 +412,7 @@ describe('contract event listener', () => {
 		eventService.sendEvent(event);
 		const contractEvents = await listener.completePromise;
 
-		expect(contractEvents[0].payload).to.be.undefined; // tslint:disable-line: no-unused-expression
+		expect(contractEvents[0].payload).to.be.undefined;
 	});
 
 	it('full events contain payload', async () => {

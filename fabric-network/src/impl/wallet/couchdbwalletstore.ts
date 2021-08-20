@@ -6,7 +6,7 @@
 
 import nano = require('nano');
 
-import { WalletStore } from './walletstore';
+import {WalletStore} from './walletstore';
 
 const encoding = 'utf8';
 

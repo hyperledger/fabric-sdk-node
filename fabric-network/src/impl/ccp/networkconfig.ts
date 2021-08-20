@@ -5,14 +5,18 @@
 */
 
 import fs = require('fs');
-import { Utils, Client, ConnectOptions } from 'fabric-common';
+import {Utils, Client, ConnectOptions} from 'fabric-common';
 
 const logger = Utils.getLogger('NetworkConfig');
+
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
 /**
  * Configures a client object using a supplied connection profile JSON object.
  * @private
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function loadFromConfig(client: Client, config: any = {}): Promise<void> {
 	const method = 'loadFromConfig';
 	logger.debug('%s - start', method);
@@ -39,7 +43,9 @@ export async function loadFromConfig(client: Client, config: any = {}): Promise<
 	logger.debug('%s - end', method);
 }
 
-async function buildChannel(client: Client, channelName: string, channelConfig: any): Promise<void> {
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function buildChannel(client: Client, channelName: string, channelConfig: any): Promise<void> {
 	const method = 'buildChannel';
 	logger.debug('%s - start - %s', method, channelName);
 
@@ -68,9 +74,10 @@ async function buildChannel(client: Client, channelName: string, channelConfig: 
 	} else {
 		logger.debug('%s - no orderers in config', method);
 	}
-
+	return Promise.resolve();
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function buildOrderer(client: Client, ordererName: string, ordererConfig: any): Promise<void> {
 	const method = 'buildOrderer';
 	logger.debug('%s - start - %s', method, ordererName);
@@ -89,6 +96,7 @@ async function buildOrderer(client: Client, ordererName: string, ordererConfig: 
 	}
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function buildPeer(client: Client, peerName: string, peerConfig: any, config: any): Promise<void> {
 	const method = 'buildPeer';
 	logger.debug('%s - start - %s', method, peerName);
@@ -107,6 +115,7 @@ async function buildPeer(client: Client, peerName: string, peerConfig: any, conf
 	}
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function findPeerMspid(name: string, config: any): string | undefined {
 	const method = 'findPeerMspid';
 	logger.debug('%s - start for %s', method, name);
@@ -127,6 +136,7 @@ function findPeerMspid(name: string, config: any): string | undefined {
 	return mspid;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function buildOptions(endpointConfig: any): Promise<ConnectOptions> {
 	const method = 'buildOptions';
 	logger.debug(`${method} - start`);

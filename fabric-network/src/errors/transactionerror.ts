@@ -6,7 +6,7 @@
 
 'use strict';
 
-import { FabricError } from './fabricerror';
+import {FabricError} from './fabricerror';
 
 export interface TransactionErrorInfo {
 	message: string;

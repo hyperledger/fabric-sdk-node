@@ -24,7 +24,7 @@ async function createTempDir(): Promise<string> {
 	return await fs.promises.mkdtemp(prefix);
 }
 
-// tslint:disable: no-unused-expression
+
 
 describe('WalletStore', () => {
 	let tmpDir: string|undefined;

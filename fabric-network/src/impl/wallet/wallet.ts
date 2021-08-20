@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Identity } from './identity';
-import { IdentityProviderRegistry, newDefaultProviderRegistry } from './identityproviderregistry';
-import { WalletStore } from './walletstore';
+import {Identity} from './identity';
+import {IdentityProviderRegistry, newDefaultProviderRegistry} from './identityproviderregistry';
+import {WalletStore} from './walletstore';
 
 const encoding = 'utf8';
 
@@ -38,7 +38,7 @@ export class Wallet {
 	public async put(label: string, identity: Identity): Promise<void> {
 		const json = this.providerRegistry.getProvider(identity.type).toJson(identity);
 		const jsonString = JSON.stringify(json);
-		const buffer = Buffer.from(jsonString, encoding) as Buffer;
+		const buffer = Buffer.from(jsonString, encoding) ;
 		await this.store.put(label, buffer);
 	}
 
@@ -54,7 +54,9 @@ export class Wallet {
 		}
 
 		const jsonString = buffer.toString(encoding);
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		const json = JSON.parse(jsonString);
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 		return this.providerRegistry.getProvider(json.type).fromJson(json);
 	}
 

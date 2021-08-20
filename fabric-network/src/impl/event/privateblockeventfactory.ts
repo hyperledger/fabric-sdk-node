@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { EventInfo, PrivateData } from 'fabric-common';
+import {EventInfo, PrivateData} from 'fabric-common';
 import * as fabproto6 from 'fabric-protos';
 
-import { BlockEvent, TransactionEvent } from '../../events';
-import { cachedResult } from '../gatewayutils';
-import { newFullBlockEvent } from './fullblockeventfactory';
-import { newFullContractEvents } from './fullcontracteventfactory';
-import { getTransactionEnvelopeIndexes, newFullTransactionEvent } from './fulltransactioneventfactory';
+import {BlockEvent, TransactionEvent} from '../../events';
+import {cachedResult} from '../gatewayutils';
+import {newFullBlockEvent} from './fullblockeventfactory';
+import {newFullContractEvents} from './fullcontracteventfactory';
+import {getTransactionEnvelopeIndexes, newFullTransactionEvent} from './fulltransactioneventfactory';
 
 import util = require('util');
 
@@ -37,6 +37,7 @@ function newPrivateTransactionEvents(blockEvent: BlockEvent, privateData: Privat
 		.map((index) => newPrivateTransactionEvent(blockEvent, index, privateData[index]));
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function newPrivateTransactionEvent(blockEvent: BlockEvent, index: number, privateData: any): TransactionEvent {
 	const fullTransactionEvent = newFullTransactionEvent(blockEvent, index);
 
@@ -45,6 +46,7 @@ function newPrivateTransactionEvent(blockEvent: BlockEvent, index: number, priva
 		status: fullTransactionEvent.status,
 		transactionData: fullTransactionEvent.transactionData,
 		isValid: fullTransactionEvent.isValid,
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		privateData,
 		getBlockEvent: () => blockEvent,
 		getContractEvents: cachedResult(() => newFullContractEvents(privateTransactionEvent))

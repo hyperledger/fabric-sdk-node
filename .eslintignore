@@ -8,3 +8,7 @@ docs/**
 fabric-network/lib/**
 fabric-protos/**
 test/typescript/**
+fabric-common/**/*.ts
+test/**/*.ts
+fabric-ca-client/**
+fabric-network/test

@@ -12,7 +12,7 @@ import path = require('path');
 
 import { expect } from 'chai';
 
-// tslint:disable: no-unused-expression
+
 
 const testWalletPath = path.join(__dirname, '..', '..', '..', '..', 'test', 'fixtures', 'test-wallet');
 

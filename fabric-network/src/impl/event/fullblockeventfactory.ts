@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { EventInfo } from 'fabric-common';
+import {EventInfo} from 'fabric-common';
 import * as fabproto6 from 'fabric-protos';
 
-import { BlockEvent, TransactionEvent } from '../../events';
-import { cachedResult } from '../gatewayutils';
-import { getTransactionEnvelopeIndexes, newFullTransactionEvent } from './fulltransactioneventfactory';
+import {BlockEvent, TransactionEvent} from '../../events';
+import {cachedResult} from '../gatewayutils';
+import {getTransactionEnvelopeIndexes, newFullTransactionEvent} from './fulltransactioneventfactory';
 import util = require('util');
 
 export function newFullBlockEvent(eventInfo: EventInfo): BlockEvent {

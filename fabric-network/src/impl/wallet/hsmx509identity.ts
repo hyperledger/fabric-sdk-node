@@ -4,13 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ICryptoSuite, Pkcs11EcdsaKey, User } from 'fabric-common';
+import {ICryptoSuite,  User} from 'fabric-common';
 
-import { Identity } from './identity';
-import { IdentityData } from './identitydata';
-import { IdentityProvider } from './identityprovider';
+import {Identity} from './identity';
+import {IdentityData} from './identitydata';
+import {IdentityProvider} from './identityprovider';
 
 import * as Logger from '../../logger';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const logger = Logger.getLogger('HsmX509Identity');
 
 export interface HsmX509Identity extends Identity {
@@ -56,6 +57,7 @@ export interface HsmOptions {
  */
 export class HsmX509Provider implements IdentityProvider {
 	public readonly type: string = 'HSM-X.509';
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private readonly options: any;
 	private readonly cryptoSuite: ICryptoSuite;
 
@@ -67,6 +69,7 @@ export class HsmX509Provider implements IdentityProvider {
 	public constructor(options: HsmOptions = {}) {
 		this.options = {};
 		Object.assign(this.options, options);
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 		this.options.software = false; // Must be set to enable HSM
 		this.cryptoSuite = User.newCryptoSuite(this.options);
 	}
@@ -99,7 +102,7 @@ export class HsmX509Provider implements IdentityProvider {
 				type: 'HSM-X.509',
 			};
 		} else {
-			throw new Error('Unsupported identity version: ' + data.version);
+			throw new Error(`Unsupported identity version:  ${data.version}`);
 		}
 	}
 

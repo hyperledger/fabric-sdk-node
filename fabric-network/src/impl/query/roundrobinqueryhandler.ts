@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { FabricError } from '../../errors/fabricerror';
-import { QueryHandler } from './queryhandler';
-import { Query } from './query';
+import {FabricError} from '../../errors/fabricerror';
+import {QueryHandler} from './queryhandler';
+import {Query} from './query';
 
-import { Endorser } from 'fabric-common';
+import {Endorser} from 'fabric-common';
 
 import util = require('util');
 
@@ -24,7 +24,7 @@ export class RoundRobinQueryHandler implements QueryHandler {
 		this.peers = peers;
 	}
 
-	async evaluate(query: Query) {
+	async evaluate(query: Query):Promise<Buffer> {
 		const method = 'evaluate';
 		logger.debug('%s - start', method);
 

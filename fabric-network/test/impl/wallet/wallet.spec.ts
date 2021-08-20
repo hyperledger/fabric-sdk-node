@@ -14,7 +14,7 @@ import chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 const expect = chai.expect;
 
-// tslint:disable: no-unused-expression
+
 
 describe('Wallet', () => {
 	const identity: X509Identity = {

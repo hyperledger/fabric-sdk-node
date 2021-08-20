@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ListenerSession } from './listenersession';
+import {ListenerSession} from './listenersession';
 import {
 	CommitError,
 	CommitEvent,
 	CommitListener
 } from '../../events';
-import { EventServiceManager } from './eventservicemanager';
+import {EventServiceManager} from './eventservicemanager';
 import {
 	Endorser,
 	EventListener,
@@ -19,7 +19,7 @@ import {
 } from 'fabric-common';
 
 import * as Logger from '../../logger';
-import { newCommitEvent } from './commiteventfactory';
+import {newCommitEvent} from './commiteventfactory';
 const logger = Logger.getLogger('CommitListenerSession');
 
 export class CommitListenerSession implements ListenerSession {
@@ -41,7 +41,7 @@ export class CommitListenerSession implements ListenerSession {
 		}
 	}
 
-	public async start() {
+	public async start() :Promise<void> {
 		const startErrors = await this.registerTransactionListeners();
 		// Notify listeners of errors after all registrations are complete so listeners can remove themselves in response
 		for (const error of startErrors) {
@@ -49,7 +49,7 @@ export class CommitListenerSession implements ListenerSession {
 		}
 	}
 
-	public close() {
+	public close():void {
 		for (const eventListener of this.eventListeners) {
 			eventListener.unregisterEventListener();
 		}
@@ -89,7 +89,7 @@ export class CommitListenerSession implements ListenerSession {
 	private registerTransactionListener(eventService: EventService): EventListener {
 		const peer = this.getEndorserForEventService(eventService);
 		const callback: EventCallback = (error, event) => {
-			const commitError = error ? Object.assign(error, { peer }) : undefined;
+			const commitError = error ? Object.assign(error, {peer}) : undefined;
 			const commitEvent = event ? newCommitEvent(peer, event) : undefined;
 			this.notifyListener(commitError, commitEvent);
 		};

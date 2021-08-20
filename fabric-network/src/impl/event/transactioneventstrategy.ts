@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Endorser } from 'fabric-common';
+import {Endorser} from 'fabric-common';
 
 import * as Logger from '../../logger';
 const logger = Logger.getLogger('TransactionEventStrategy');
@@ -55,7 +55,7 @@ export abstract class TransactionEventStrategy {
 	 * Called by event handler to obtain the peers to which it should listen.
 	 * @returns {Endorser[]} Peers.
 	 */
-	getPeers() {
+	getPeers(): Endorser[] {
 		return this.peers;
 	}
 
@@ -64,7 +64,7 @@ export abstract class TransactionEventStrategy {
 	 * @param {Function} successFn Callback function to invoke if this event satisfies the strategy.
 	 * @param {Function} failFn Callback function to invoke if this event fails the strategy.
 	 */
-	eventReceived(successFn: SuccessCallback, failFn: FailCallback) {
+	eventReceived(successFn: SuccessCallback, failFn: FailCallback): void {
 		this.counts.success++;
 		this.checkCompletion(this.counts, successFn, failFn);
 	}
@@ -74,7 +74,7 @@ export abstract class TransactionEventStrategy {
 	 * @param {Function} successFn Callback function to invoke if this error satisfies the strategy.
 	 * @param {Function} failFn Callback function to invoke if this error fails the strategy.
 	 */
-	errorReceived(successFn: SuccessCallback, failFn: FailCallback) {
+	errorReceived(successFn: SuccessCallback, failFn: FailCallback): void {
 		this.counts.fail++;
 		this.checkCompletion(this.counts, successFn, failFn);
 	}

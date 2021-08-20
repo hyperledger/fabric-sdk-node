@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Query as CommonQuery, Endorser } from 'fabric-common';
+import {Query as CommonQuery, Endorser} from 'fabric-common';
 
 import * as Logger from '../../logger';
 const logger = Logger.getLogger('Query');
@@ -38,10 +38,13 @@ export class QueryImpl implements Query {
 	 * @returns {Object} options - options to be used when sending the request to
 	 * fabric-common service endpoint {Endorser} peer.
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	constructor(query: CommonQuery, options: any = {}) {
 		this.query = query;
 		this.requestTimeout = 3000; // default 3 seconds
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 		if (Number.isInteger(options.timeout)) {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 			this.requestTimeout = options.timeout * 1000; // need ms;
 		}
 	}
@@ -98,6 +101,7 @@ export class QueryImpl implements Query {
 		} catch (error) {
 			// if we get an error, return this error for each peer
 			for (const peer of peers) {
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 				results[peer.name] = error;
 				logger.error('%s - problem with query to peer %s error:%s', method, peer.name, error);
 			}

@@ -17,7 +17,7 @@ import {
 } from 'fabric-common';
 import Long = require('long');
 
-// tslint:disable:max-classes-per-file
+
 
 interface TransactionListenerInfo {
 	readonly transactionId: string;

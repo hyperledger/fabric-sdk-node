@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { TimeoutError } from '../../errors/timeouterror';
-import { TransactionEventStrategy } from './transactioneventstrategy';
-import { Network } from '../../network';
-import { Endorser } from 'fabric-common';
-import { CommitError, CommitEvent, CommitListener } from '../../events';
-import { TransactionError } from '../../errors/transactionerror';
+import {TimeoutError} from '../../errors/timeouterror';
+import {TransactionEventStrategy} from './transactioneventstrategy';
+import {Network} from '../../network';
+import {Endorser} from 'fabric-common';
+import {CommitError, CommitEvent, CommitListener} from '../../events';
+import {TransactionError} from '../../errors/transactionerror';
 
 import * as Logger from '../../logger';
 const logger = Logger.getLogger('TransactionEventHandler');
@@ -39,6 +39,7 @@ export class TransactionEventHandler implements TxEventHandler {
 	private readonly transactionId: string;
 	private readonly network: Network;
 	private readonly strategy: TransactionEventStrategy;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private readonly options: any;
 	private readonly peers: Endorser[];
 	private readonly notificationPromise: Promise<void>;
@@ -64,9 +65,11 @@ export class TransactionEventHandler implements TxEventHandler {
 		this.network = network;
 		this.strategy = strategy;
 
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const defaultOptions: any = {
 			commitTimeout: 30
 		};
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		this.options = Object.assign(defaultOptions, network.getGateway().getOptions().eventHandlerOptions);
 
 		logger.debug('%s: transactionId = %s, options = %j', method, this.transactionId, this.options);
@@ -83,7 +86,7 @@ export class TransactionEventHandler implements TxEventHandler {
 	/**
 	 * Called to initiate listening for transaction events.
 	 */
-	async startListening() {
+	async startListening():Promise<void> {
 		const method = 'startListening';
 
 		if (this.peers && this.peers.length > 0) {
@@ -101,7 +104,7 @@ export class TransactionEventHandler implements TxEventHandler {
 	 * Wait until enough events have been received from the event services to satisfy the event handling strategy.
 	 * @throws {Error} if the transaction commit is not successful within the timeout period.
 	 */
-	async waitForEvents() {
+	async waitForEvents() :Promise<void> {
 		logger.debug('waitForEvents start');
 		await this.notificationPromise;
 		logger.debug('waitForEvents end');
@@ -110,7 +113,7 @@ export class TransactionEventHandler implements TxEventHandler {
 	/**
 	 * Cancel listening for events.
 	 */
-	cancelListening() {
+	cancelListening():void {
 		logger.debug('cancelListening called');
 
 		if (this.timeoutHandler) {
@@ -129,6 +132,7 @@ export class TransactionEventHandler implements TxEventHandler {
 			}));
 		}
 
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		const peer = error?.peer || event!.peer;
 		if (!this.unrespondedPeers.delete(peer)) {
 			// Already seen a response from this peer
@@ -145,17 +149,20 @@ export class TransactionEventHandler implements TxEventHandler {
 	private setListenTimeout() {
 		const method = 'setListenTimeout';
 
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 		if (typeof this.options.commitTimeout !== 'number' || this.options.commitTimeout <= 0) {
 			logger.debug('%s - no commit timeout', method);
 			return;
 		}
 
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 		logger.debug('%s setTimeout(%s) in seconds for transaction %s', method, this.options.commitTimeout, this.transactionId);
 		this.timeoutHandler = setTimeout(
 			() => {
 				this.timeoutFail();
 				logger.error('%s - event handler timed out', method);
 			},
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 			this.options.commitTimeout * 1000
 		);
 		logger.debug('%s - end', method);

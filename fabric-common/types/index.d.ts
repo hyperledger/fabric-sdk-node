@@ -2,11 +2,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/* tslint:disable:max-classes-per-file */
-/* tslint:disable:ordered-imports */
-
 import * as Long from 'long';
 import * as fabproto6 from 'fabric-protos';
+import winston = require('winston');
 
 export interface IKeyValueStore {
 	getValue(name: string): Promise<string>;
@@ -14,7 +12,7 @@ export interface IKeyValueStore {
 }
 
 export class Utils {
-	public static getLogger(name: string): any;
+	public static getLogger(name: string): winston.LoggerInstance;
 	public static newCryptoSuite(options?: CryptoSetting): ICryptoSuite;
 	public static normalizeX509(pem: string): string;
 	public static newCryptoKeyStore(keyValueStore?: IKeyValueStore): ICryptoKeyStore;

@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Checkpointer } from './checkpointer';
-import { FileCheckpointer } from './impl/filecheckpointer';
+import {Checkpointer} from './checkpointer';
+import {FileCheckpointer} from './impl/filecheckpointer';
 
 /**
  * Provides static factory functions used to create instances of default

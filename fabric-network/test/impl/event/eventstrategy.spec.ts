@@ -16,7 +16,7 @@ import { TransactionEventStrategy } from '../../../src/impl/event/transactioneve
 import { AllForTxStrategy } from '../../../src/impl/event/allfortxstrategy';
 import { AnyForTxStrategy } from '../../../src/impl/event/anyfortxstrategy';
 
-// tslint:disable: no-unused-expression
+
 
 describe('Event Strategy Implementations', () => {
 	let peer1;

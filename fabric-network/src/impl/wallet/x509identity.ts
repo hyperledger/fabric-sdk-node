@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ICryptoSuite, ICryptoKey, User } from 'fabric-common';
+import {ICryptoSuite, ICryptoKey, User} from 'fabric-common';
 
-import { Identity } from './identity';
-import { IdentityData } from './identitydata';
-import { IdentityProvider } from './identityprovider';
+import {Identity} from './identity';
+import {IdentityData} from './identitydata';
+import {IdentityProvider} from './identityprovider';
 
 export interface X509Identity extends Identity {
 	type: 'X.509';
@@ -52,7 +52,7 @@ export class X509Provider implements IdentityProvider {
 				type: 'X.509',
 			};
 		} else {
-			throw new Error('Unsupported identity version: ' + data.version);
+			throw new Error(`Unsupported identity version:  ${data.version}`);
 		}
 	}
 

@@ -7,7 +7,7 @@
 import fs = require('fs');
 import path = require('path');
 
-import { WalletStore } from './walletstore';
+import {WalletStore} from './walletstore';
 
 const suffix = '.id';
 

@@ -21,20 +21,16 @@ export function sleep(ms: number): Promise<void> {
 
 export function logMsg(msg: string, obj?: any): void {
 	if (typeof obj === 'undefined') {
-		// tslint:disable-next-line:no-console
 		console.log(msg);
 	} else {
-		// tslint:disable-next-line:no-console
 		console.log(msg, obj);
 	}
 }
 
 export function logError(msg: string, obj?: any): void {
 	if (typeof obj === 'undefined') {
-		// tslint:disable-next-line:no-console
 		console.error('\n' + msg + '\n');
 	} else {
-		// tslint:disable-next-line:no-console
 		console.error('\n' + msg + '\n', obj);
 	}
 }
