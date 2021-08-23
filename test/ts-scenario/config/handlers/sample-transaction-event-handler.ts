@@ -26,6 +26,7 @@ import {Endorser} from 'fabric-common';
 class SampleTransactionEventHandler implements TxEventHandler {
 	private readonly network: Network;
 	private readonly transactionId: string;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private readonly notificationPromise: any;
 	private resolveNotificationPromise!: (value?: unknown) => void;
 	private rejectNotificationPromise!: (reason: Error) => void;

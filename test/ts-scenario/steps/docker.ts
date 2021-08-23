@@ -28,6 +28,7 @@ Given(/^I deploy a (.+?) Fabric network at (.+?) version/, {timeout: Constants.S
 
 	BaseUtils.logMsg(` **** checking for a deployed fabric network of type ${type} version ${version}`);
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const fabricState: any = stateStore.get(Constants.FABRIC_STATE);
 
 	if (fabricState) {

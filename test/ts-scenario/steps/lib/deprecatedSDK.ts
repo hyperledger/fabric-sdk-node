@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /**
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -132,6 +136,7 @@ export async function sdk_chaincode_install_for_org(ccType: 'golang' | 'car' | '
  * @param {Object} policy The endorsement policy object from the configuration file.
  * @return {Promise} The return promise.
  */
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export async function sdk_chaincode_instantiate(ccName: string, ccType: 'golang' | 'car' | 'java' | 'node', ccVersion: string, chaincodeId: string, args: string, upgrade: boolean, tls: boolean, ccp: CommonConnectionProfileHelper, orgName: string, channelName: string, policy: any): Promise<void> {
 	if (!supportedLanguageTypes.includes(ccType)) {
 		throw new Error(`Unsupported test ccType: ${ccType}`);
@@ -197,7 +202,8 @@ export async function sdk_chaincode_instantiate(ccName: string, ccType: 'golang'
 		await channel.initialize();
 
 		const transientMap: any = {test: 'transientValue'};
-		const proposalRequest: Client.ChaincodeInstantiateUpgradeRequest = buildChaincodeProposal(client, chaincodeId, ccVersion, ccType, args, upgrade, transientMap, policy);
+		const proposalRequest: Client.ChaincodeInstantiateUpgradeRequest = buildChaincodeProposal(client, chaincodeId,
+			ccVersion, ccType, args, upgrade, transientMap, policy);
 
 		let results: Client.ProposalResponseObject;
 		if (upgrade) {
@@ -228,6 +234,7 @@ export async function sdk_chaincode_instantiate(ccName: string, ccType: 'golang'
 		eventPromises.push(channel.sendTransaction(request));
 		eventHubs.forEach((eh: Client.ChannelEventHub) => {
 			const txPromise: Promise<any> = new Promise((resolve: any, reject: any): any => {
+				// eslint-disable-next-line @typescript-eslint/no-implied-eval
 				const handle: NodeJS.Timeout = setTimeout(reject, 300000);
 
 				eh.registerTxEvent(deployId.toString(), (tx: any, code: string) => {
@@ -257,6 +264,7 @@ export async function sdk_chaincode_instantiate(ccName: string, ccType: 'golang'
 			BaseUtils.logMsg(`Successfully performed ${type} transaction on chaincode with ID ${chaincodeId}@${ccVersion} using deprecated API`);
 			return await BaseUtils.sleep(Constants.INC_SHORT);
 		} else {
+			// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 			const msg = `Failed to order the ${type} transaction using deprecated API. Error code: ${eventResults[0].status}`;
 			BaseUtils.logError(msg);
 			throw new Error(msg);
@@ -264,6 +272,7 @@ export async function sdk_chaincode_instantiate(ccName: string, ccType: 'golang'
 	} catch (err) {
 		const msg = `Failed to perform ${type} instantiation on chaincode with ID ${chaincodeId}@${ccVersion} using deprecated API`;
 		BaseUtils.logError(msg, err);
+		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 		throw new Error(`${msg} due to error: ${err.stack ? err.stack : err}`);
 	}
 }

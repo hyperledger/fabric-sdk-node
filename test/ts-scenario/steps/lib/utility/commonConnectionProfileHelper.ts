@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /*
  * Copyright IBM Corp. All Rights Reserved.
  *
@@ -36,6 +40,7 @@ export class CommonConnectionProfileHelper {
 	 * @param {JSON} parent the JSON format common connection profile
 	 * @param {String} rootPath the root path to use when setting absolute
 	 */
+	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public _makeJsonPathsAbsolute(parent: any, rootPath: string): void {
 		if (parent && typeof parent === 'object') {
 			Object.entries(parent).forEach(([key, value]: [string, any]) => {
@@ -208,6 +213,7 @@ export class CommonConnectionProfileHelper {
 		if (peers) {
 			for (const key of Object.keys(peers)) {
 				const peer: any = peers[key];
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 				return (peer.url).includes('grpcs');
 			}
 		} else {

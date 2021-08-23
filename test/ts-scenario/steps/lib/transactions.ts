@@ -14,6 +14,7 @@ const stateStore: StateStore = StateStore.getInstance();
 
 export function addTransactionToStateStore(transactionName: string, transaction: Transaction): void {
 	// Map of maps
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 	let transactions: Map<string, Transaction> = stateStore.get(Constants.TRANSACTIONS);
 	if (transactions) {
 		transactions.set(transactionName, transaction);
@@ -31,6 +32,7 @@ export function addTransactionToStateStore(transactionName: string, transaction:
  * @typedef Transaction
  */
 export function retrieveTransactionFromStateStore(transactionName: string): Transaction | undefined {
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 	const transactions: Map<string, Transaction> = stateStore.get(Constants.TRANSACTIONS);
 	if (transactions) {
 		const txn: Transaction | undefined = transactions.get(transactionName);

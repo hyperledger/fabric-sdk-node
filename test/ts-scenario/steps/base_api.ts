@@ -27,8 +27,8 @@ Given(/^I have created a client named (.+?) based on information in profile (.+?
 	});
 
 Given(/^I have used the client named (.+?) to create a channel object for the channel named (.+?)$/, {timeout: Constants.HUGE_TIME as number},
-	async (clientName: string, channelName: string) => {
-		await ClientHelper.createChannelWithClient(clientName, channelName);
+	(clientName: string, channelName: string) => {
+		ClientHelper.createChannelWithClient(clientName, channelName);
 	});
 
 When(/^I build a new endorsement request named (.+?) for smart contract named (.+?) with arguments (.+?) as client (.+?) on channel (.+?)$/, {timeout: Constants.HUGE_TIME as number},
@@ -57,18 +57,21 @@ When(/^I submit a chaincode query named (.+?) with args (.+?) for contract (.+?)
 	});
 
 Then(/^the (request|query) named (.+?) for client (.+?) has a (.+?) result matching (.+?)$/, {timeout: Constants.INC_SHORT as number},
-	async (responseType: string, requestName: string, clientName: string, fieldName: string, expectedResult: string) => {
-		await ClientHelper.validateChannelRequestResponse(clientName, responseType === 'request', requestName, fieldName, expectedResult);
+	(responseType: string, requestName: string, clientName: string, fieldName: string, expectedResult: string) => {
+		ClientHelper.validateChannelRequestResponse(clientName, responseType === 'request', requestName, fieldName, expectedResult);
+		return Promise.resolve();
 	});
 
 Then(/^the request named (.+?) for client (.+?) has discovery results$/, {timeout: Constants.HUGE_TIME as number},
-	async (requestName: string, clientName: string) => {
-		await ClientHelper.validateDiscoveryResponse(clientName, requestName);
+	(requestName: string, clientName: string) => {
+		ClientHelper.validateDiscoveryResponse(clientName, requestName);
+		return Promise.resolve();
 	});
 
 When(/^I create an event service (.+?) as client (.+?) on channel (.+?)$/, {timeout: Constants.HUGE_TIME as number},
-	async (eventServiceName: string, clientName: string, channelName: string) => {
-		await ClientHelper.createEventService(eventServiceName, clientName, channelName);
+	(eventServiceName: string, clientName: string, channelName: string) => {
+		void ClientHelper.createEventService(eventServiceName, clientName, channelName);
+		return Promise.resolve();
 	});
 
 Then(/^I (.+?) the event service (.+?) as (.+?) blocks to start at block (.+?) and end at block (.+?) as client (.+?)$/, {timeout: Constants.INC_SHORT as number},

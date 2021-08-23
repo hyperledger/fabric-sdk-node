@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /**
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -5,7 +9,7 @@
 'use strict';
 
 import * as FabricCAClient from 'fabric-ca-client';
-import {Contract, DefaultEventHandlerStrategies, DefaultQueryHandlerStrategies, Gateway, GatewayOptions, HsmOptions, HsmX509Provider, Identity, IdentityProvider, Network, QueryHandlerFactory, Transaction, TransientMap, TxEventHandlerFactory, Wallet, Wallets, DiscoveryInterest, HsmX509Identity} from 'fabric-network';
+import {Contract, DefaultEventHandlerStrategies, DefaultQueryHandlerStrategies, Gateway, GatewayOptions, HsmOptions, HsmX509Provider, Identity, IdentityProvider, Network, QueryHandlerFactory, Transaction, TransientMap, TxEventHandlerFactory, Wallet, Wallets, HsmX509Identity} from 'fabric-network';
 import * as fs from 'fs';
 import * as path from 'path';
 import {createQueryHandler as sampleQueryStrategy} from '../../config/handlers/sample-query-handler';
@@ -46,7 +50,7 @@ interface GatewayData {
 	profile: any;
 	result?: {
 		type: string;
-		response: string | object;
+		response: string | Record<string, unknown>;
 	};
 }
 
@@ -61,10 +65,12 @@ interface GatewayData {
  * @param {String} walletType the type of wallet to back the gateway with (inMemory, fileBased, couchDB)
  * @return {Gateway} the connected gateway
  */
-export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boolean, userName: string, orgName: string, gatewayName: string, useDiscovery: boolean, walletType: string): Promise<void> {
+export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boolean, userName: string,
+	orgName: string, gatewayName: string, useDiscovery: boolean, walletType: string): Promise<void> {
 
 	// Might already have a wallet to use, but sanitize the passed walletType
 	if (!walletType || !supportedWallets.includes(walletType)) {
+		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 		BaseUtils.logAndThrow(`Passed wallet type [${walletType}] is not supported, must be one of: ${supportedWallets}`);
 	}
 
@@ -84,6 +90,7 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 				wallet = await Wallets.newInMemoryWallet();
 				break;
 			case Constants.FILE_WALLET:
+				// eslint-disable-next-line no-case-declarations
 				const tempDir: string = path.join(__dirname, Constants.LIB_TO_TEMP, Constants.FILE_WALLET);
 				if (fs.existsSync(tempDir)) {
 					BaseUtils.recursiveDirDelete(tempDir);
@@ -97,6 +104,7 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 			case Constants.HSM_WALLET:
 				wallet = await Wallets.newInMemoryWallet();
 				useHSM = true;
+				// eslint-disable-next-line no-case-declarations
 				const hsmProvider = new HsmX509Provider(hsmOptions);
 				wallet.getProviderRegistry().addProvider(hsmProvider);
 
@@ -111,8 +119,11 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 
 			// get the current HSM Provider and close it's pkcs session and logout
 			const currentHSMProvider = wallet.getProviderRegistry().getProvider(HSM_PROVIDER);
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const cryptoSuite: any = currentHSMProvider.getCryptoSuite();
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
 			cryptoSuite.closeSession();
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
 			cryptoSuite.finalize();
 
 			BaseUtils.logMsg('Reusing HSM Wallet. Should expect the user to be found');
@@ -351,7 +362,8 @@ async function createHSMUser(wallet: Wallet, ccp: CommonConnectionProfileHelper,
  * @param {String} txnType the type of transaction (submit/evaluate)
  * @param {String} handlerOption Optional: the handler option to use
  */
-export async function performGatewayTransaction(gatewayName: string, contractName: string, channelName: string, collectionName: string, args: string, txnType: string, handlerOption?: string, requiredOrgs?: string[], txnCount?: number): Promise<void> {
+export async function performGatewayTransaction(gatewayName: string, contractName: string, channelName: string,
+	collectionName: string, args: string, txnType: string, handlerOption?: string, requiredOrgs?: string[], txnCount?: number): Promise<void> {
 
 	const gatewayObj = getGatewayObject(gatewayName);
 	const gateway = gatewayObj.gateway;
@@ -446,6 +458,7 @@ export async function performGatewayTransaction(gatewayName: string, contractNam
 
 	} catch (error) {
 		gatewayObj.result = {type: 'error', response: error.toString()};
+		// eslint-disable-next-line @typescript-eslint/restrict-plus-operands
 		BaseUtils.logError(' --- in gateway transaction:' + error.toString());
 	}
 }
@@ -458,7 +471,8 @@ export async function performGatewayTransaction(gatewayName: string, contractNam
  * @param txnArgs transaction arguments [methodName, methodArgs...]
  * @param txnType the type of transaction (submit/evaluate)
  */
-export async function performTransientGatewayTransaction(gatewayName: string, contractName: string, channelName: string, args: string, txnType: string): Promise<void> {
+export async function performTransientGatewayTransaction(gatewayName: string, contractName: string, channelName: string,
+	args: string, txnType: string): Promise<void> {
 
 	// Retrieve gateway and contract
 	const gatewayObj = getGatewayObject(gatewayName);
@@ -493,6 +507,7 @@ export async function performTransientGatewayTransaction(gatewayName: string, co
 		gatewayObj.result = {type: txnType, response: result};
 	} catch (error) {
 		gatewayObj.result = {type: 'error', response: error.toString()};
+		// eslint-disable-next-line @typescript-eslint/restrict-plus-operands
 		BaseUtils.logError('--- in ' + txnType + ' with transient: ' + error.toString());
 	}
 }
@@ -505,6 +520,7 @@ export async function performTransientGatewayTransaction(gatewayName: string, co
 function isSubmit(txnType: string): boolean {
 
 	if (txnTypes.indexOf(txnType) === -1) {
+		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 		throw  new Error(`Unknown transaction type ${txnType}, must be one of ${txnTypes}`);
 	}
 	return txnType.localeCompare('submit') === 0 ;

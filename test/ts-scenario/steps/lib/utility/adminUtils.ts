@@ -1,3 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -93,7 +98,8 @@ async function getOrgAdminUser(client: Client, userOrg: string, ccp: CommonConne
  * @param {CommonConnectionProfileHelper} ccp the common connection profile
  * @return {Promise<User>} The retrieved and enrolled user object.
  */
-async function getMember(username: string, password: string, client: Client, userOrg: string, ccp: CommonConnectionProfileHelper): Promise<Client.User> {
+async function getMember(username: string, password: string, client: Client, userOrg: string,
+	ccp: CommonConnectionProfileHelper): Promise<Client.User> {
 
 	const org: any = ccp.getOrganization(userOrg);
 	if (!org) {
@@ -185,7 +191,7 @@ export async function assignOrgAdmin(client: Client, orgName: string, ccp: Commo
 	const cryptoSuite: Client.ICryptoSuite = Client.newCryptoSuite();
 	client.setCryptoSuite(cryptoSuite);
 
-	await client.setAdminSigningIdentity(keyPEM.toString(), certPEM.toString(), org.mspid);
+	client.setAdminSigningIdentity(keyPEM.toString(), certPEM.toString(), org.mspid);
 }
 
 /**
@@ -195,10 +201,11 @@ export async function assignOrgAdmin(client: Client, orgName: string, ccp: Commo
  * @param chaincodeName the name of the contract
  * @param chaincodeVersion the version of the contract
  */
-export async function isOrgChaincodeInstalled(orgName: string, ccp: CommonConnectionProfileHelper, chaincodeName: string, chaincodeVersion: string): Promise<boolean> {
+export async function isOrgChaincodeInstalled(orgName: string, ccp: CommonConnectionProfileHelper, chaincodeName: string,
+	chaincodeVersion: string): Promise<boolean> {
 	BaseUtils.logMsg(`Checking if smart contract ${chaincodeName} at version ${chaincodeVersion} has been installed`);
 	const clientPath: string = path.join(__dirname, Constants.UTIL_TO_CONFIG, orgName + '.json');
-	const orgClient: Client = await Client.loadFromConfig(clientPath);
+	const orgClient: Client = Client.loadFromConfig(clientPath);
 
 	// Augment it with full CCP
 	await assignOrgAdmin(orgClient, orgName, ccp);
@@ -221,7 +228,8 @@ export async function isOrgChaincodeInstalled(orgName: string, ccp: CommonConnec
 	return hasInstalled;
 }
 
-// export async function isOrgChaincodeLifecycleInstalledOnChannel(orgName: string, ccp: CommonConnectionProfileHelper, chaincodeName: string, channelName: string): Promise<boolean> {
+// export async function isOrgChaincodeLifecycleInstalledOnChannel(orgName: string, ccp: CommonConnectionProfileHelper,
+// chaincodeName: string, channelName: string): Promise<boolean> {
 // 	BaseUtils.logMsg(`Checking if smart contract ${chaincodeName} has been installed`);
 // 	const clientPath: string = path.join(__dirname, Constants.UTIL_TO_CONFIG, orgName + '.json');
 // 	const orgClient: Client = await Client.loadFromConfig(clientPath);
@@ -252,7 +260,8 @@ export async function isOrgChaincodeInstalled(orgName: string, ccp: CommonConnec
 // 	return hasInstalled;
 // }
 
-// export async function isOrgChaincodeLifecycleCommittedOnChannel(orgName: string, ccp: CommonConnectionProfileHelper, chaincodeName: string, deployedAs: string, channelName: string): Promise<boolean> {
+// export async function isOrgChaincodeLifecycleCommittedOnChannel(orgName: string, ccp: CommonConnectionProfileHelper,
+// chaincodeName: string, deployedAs: string, channelName: string): Promise<boolean> {
 // 	BaseUtils.logMsg(`Checking if smart contract has been committed to channel ${channelName} as ${deployedAs}`);
 // 	const clientPath: string = path.join(__dirname, Constants.UTIL_TO_CONFIG, orgName + '.json');
 // 	const orgClient: Client = await Client.loadFromConfig(clientPath);
@@ -297,10 +306,11 @@ export async function isOrgChaincodeInstalled(orgName: string, ccp: CommonConnec
  * @param chaincodeName the name of the contract
  * @param chaincodeVersion the version of the contract
  */
-export async function isChaincodeInstantiatedOnChannel(orgName: string, ccp: CommonConnectionProfileHelper, channelName: string, chaincodeName: string, chaincodeVersion: string): Promise<boolean> {
+export async function isChaincodeInstantiatedOnChannel(orgName: string, ccp: CommonConnectionProfileHelper, channelName: string,
+	chaincodeName: string, chaincodeVersion: string): Promise<boolean> {
 	BaseUtils.logMsg(`Checking if smart contract ${chaincodeName} has been instantiated on channel ${channelName}`);
 	const clientPath: string = path.join(__dirname, Constants.UTIL_TO_CONFIG, orgName + '.json');
-	const orgClient: Client = await Client.loadFromConfig(clientPath);
+	const orgClient: Client = Client.loadFromConfig(clientPath);
 
 	// Augment it with full CCP
 	await assignOrgAdmin(orgClient, orgName, ccp);
@@ -324,7 +334,8 @@ export async function isChaincodeInstantiatedOnChannel(orgName: string, ccp: Com
 	return isInstantiated;
 }
 
-// export async function performChannelQueryOperation(queryOperation: string, channelName: string, orgName: string, ccp: CommonConnectionProfileHelper, args: any): Promise<any> {
+// export async function performChannelQueryOperation(queryOperation: string, channelName: string, orgName: string,
+// ccp: CommonConnectionProfileHelper, args: any): Promise<any> {
 // 	const clientPath: string = path.join(__dirname, Constants.UTIL_TO_CONFIG, orgName + '.json');
 // 	const orgClient: Client = await Client.loadFromConfig(clientPath);
 
@@ -390,7 +401,8 @@ export async function isChaincodeInstantiatedOnChannel(orgName: string, ccp: Com
 // 			return await channel.queryBlockByHash(hashInfo.currentBlockHash, peer, true, false);
 // 		case 'queryBlockByTxId':
 // 			// Need to get a txId
-// 			const result: any = await Chaincode.performContractTransactionForOrg(args.contract, args.function, JSON.stringify(args.contractAgs), orgName, channelName, ccp, true, undefined, undefined);
+// 			const result: any = await Chaincode.performContractTransactionForOrg(args.contract, args.function,
+//			JSON.stringify(args.contractAgs), orgName, channelName, ccp, true, undefined, undefined);
 // 			return await channel.queryBlockByTxID(result.txId.getTransactionID(), peer, true, false);
 // 		default:
 // 			BaseUtils.logAndThrow(`Unknown channel query operation passed: ${queryOperation}`);
@@ -414,7 +426,7 @@ export function isChannelCreated(channelName: string): boolean {
  */
 export async function isOrgChannelJoined(orgName: string, ccp: CommonConnectionProfileHelper, channelName: string): Promise<boolean> {
 	const clientPath: string = path.join(__dirname, Constants.UTIL_TO_CONFIG, orgName + '.json');
-	const orgClient: Client = await Client.loadFromConfig(clientPath);
+	const orgClient: Client = Client.loadFromConfig(clientPath);
 
 	// Augment it with full CCP
 	await assignOrgAdmin(orgClient, orgName, ccp);
