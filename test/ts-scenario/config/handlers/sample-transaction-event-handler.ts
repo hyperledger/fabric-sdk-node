@@ -87,7 +87,8 @@ class SampleTransactionEventHandler implements TxEventHandler {
 			return this.fail(new Error(event.status));
 		}
 
-		const peer = error?.peer || event.peer;
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+		const peer = error?.peer || event!.peer;
 		this.unrespondedPeers.delete(peer);
 
 		if (this.unrespondedPeers.size === 0) {
