@@ -1,26 +1,27 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /**
  * SPDX-License-Identifier: Apache-2.0
  */
 
 'use strict';
 
-import { Constants } from './constants';
+import {Constants} from './constants';
 import * as Channel from './lib/channel';
 import * as Contract from './lib/contract';
 import * as BaseUtils from './lib/utility/baseUtils';
-import { CommonConnectionProfileHelper } from './lib/utility/commonConnectionProfileHelper';
-import { StateStore } from './lib/utility/stateStore';
+import {StateStore} from './lib/utility/stateStore';
 
-import { Given } from 'cucumber';
-import * as path from 'path';
+import {Given} from 'cucumber';
+
 
 const stateStore: StateStore = StateStore.getInstance();
 const orgNames: string[] = ['Org1', 'Org2'];
 
-const ccpNonTls: CommonConnectionProfileHelper = new CommonConnectionProfileHelper(path.join(__dirname, '../config', 'ccp.json'), true);
-const ccpTls: CommonConnectionProfileHelper = new CommonConnectionProfileHelper(path.join(__dirname, '../config', 'ccp-tls.json'), true);
 
-Given(/^I use the cli to create and join the channel named (.+?) on the deployed network/, { timeout: Constants.STEP_MED as number }, async (channelName: string) => {
+Given(/^I use the cli to create and join the channel named (.+?) on the deployed network/, {timeout: Constants.STEP_MED as number}, async (channelName: string) => {
 
 	const fabricState: any = stateStore.get(Constants.FABRIC_STATE);
 	if (!fabricState) {
@@ -52,7 +53,7 @@ Given(/^I use the cli to create and join the channel named (.+?) on the deployed
 	}
 });
 
-Given(/^I use the cli to update the channel with name (.+?) with config file (.+?) on the deployed network/, { timeout: Constants.STEP_MED as number }, async (channelName: string, configTxFile: string) => {
+Given(/^I use the cli to update the channel with name (.+?) with config file (.+?) on the deployed network/, {timeout: Constants.STEP_MED as number}, async (channelName: string, configTxFile: string) => {
 
 	const fabricState: any = stateStore.get(Constants.FABRIC_STATE);
 	if (!fabricState) {
@@ -68,14 +69,13 @@ Given(/^I use the cli to update the channel with name (.+?) with config file (.+
 	}
 });
 
-Given(/^I use the cli to deploy a (.+?) smart contract named (.+?) at version (.+?) for all organizations on channel (.+?) with endorsement policy (.+?) and arguments (.+?)$/, { timeout: Constants.STEP_MED as number }, async (ccType: string, ccName: string, ccVersion: string, channelName: string, policy: string, initArgs: string) => {
+Given(/^I use the cli to deploy a (.+?) smart contract named (.+?) at version (.+?) for all organizations on channel (.+?) with endorsement policy (.+?) and arguments (.+?)$/, {timeout: Constants.STEP_MED as number}, async (ccType: string, ccName: string, ccVersion: string, channelName: string, policy: string, initArgs: string) => {
 
 	const fabricState: any = stateStore.get(Constants.FABRIC_STATE);
 	if (!fabricState) {
 		throw new Error('Unable to create/join channel: no Fabric network deployed');
 	}
-	const tls: boolean = (fabricState.type.localeCompare('tls') === 0);
-	const ccp: CommonConnectionProfileHelper = tls ? ccpTls : ccpNonTls;
+
 
 	try {
 		let isInstantiated = false;
@@ -102,7 +102,7 @@ Given(/^I use the cli to deploy a (.+?) smart contract named (.+?) at version (.
 	}
 });
 
-Given(/^I use the cli to lifecycle deploy a (.+?) smart contract named (.+?) at version (.+?) as (.+?) for all organizations on channel (.+?) with default endorsement policy and init-required (.+?)$/, { timeout: Constants.STEP_LONG as number }, async (ccType: string, ccName: string, ccVersion: string, ccReference: string, channelName: string, init: string) => {
+Given(/^I use the cli to lifecycle deploy a (.+?) smart contract named (.+?) at version (.+?) as (.+?) for all organizations on channel (.+?) with default endorsement policy and init-required (.+?)$/, {timeout: Constants.STEP_LONG as number}, async (ccType: string, ccName: string, ccVersion: string, ccReference: string, channelName: string, init: string) => {
 	BaseUtils.logMsg(`\n -- Lifecycle deploy start for Smart contract ${ccName}`);
 
 	const fabricState: any = stateStore.get(Constants.FABRIC_STATE);
@@ -139,7 +139,8 @@ Given(/^I use the cli to lifecycle deploy a (.+?) smart contract named (.+?) at 
 			// TODO: Use CLI
 			// const isInstalled: boolean = await AdminUtils.isOrgChaincodeLifecycleInstalledOnChannel(orgName, ccp, ccName, channelName);
 			// if (isInstalled) {
-			// 	BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} has already been lifecycle installed on the peers for organization ${orgName}`);
+			// 	BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} has already been
+			// lifecycle installed on the peers for organization ${orgName}`);
 			// } else {
 			await Contract.cli_lifecycle_chaincode_install(ccName, orgName.toLowerCase());
 			BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} has been installed on organization ${orgName} `);

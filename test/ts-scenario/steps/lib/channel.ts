@@ -4,10 +4,10 @@
 
 'use strict';
 
-import { Constants } from '../constants';
+import {Constants} from '../constants';
 import * as AdminUtils from './utility/adminUtils';
 import * as BaseUtils from './utility/baseUtils';
-import { CommandRunner } from './utility/commandRunner';
+import {CommandRunner} from './utility/commandRunner';
 
 const commandRunner: CommandRunner = CommandRunner.getInstance();
 
@@ -113,7 +113,7 @@ export async function cli_get_channels(orgName: string, tls: boolean): Promise<s
 		];
 
 		command = command.concat(tlsOptions);
-		const channelNames = await commandRunner.runShellCommand(true, command.join(' '), VERBOSE_CLI) as any;
+		const channelNames = await commandRunner.runShellCommand(true, command.join(' '), VERBOSE_CLI) ;
 
 		const results = channelNames.stdout as string;
 		BaseUtils.logMsg(`Channel names ==>${results}<== have been joined by organization ${orgName}`);

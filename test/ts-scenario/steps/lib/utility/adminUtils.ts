@@ -27,7 +27,7 @@ export async function tlsEnroll(fabricCAEndpoint: string, caName: string): Promi
 		trustedRoots: [],
 		verify: false,
 	};
-	const caService: FabricCAServices = new FabricCAServices(fabricCAEndpoint, tlsOptions as any, caName);
+	const caService: FabricCAServices = new FabricCAServices(fabricCAEndpoint, tlsOptions, caName);
 	const req: any = {
 		enrollmentID: 'admin',
 		enrollmentSecret: 'adminpw',
@@ -123,7 +123,7 @@ async function getMember(username: string, password: string, client: Client, use
 			trustedRoots: [],
 			verify: false,
 		};
-		const cop: FabricCAServices = new FabricCAServices(caUrl, tlsOptions as any, org.ca.name);
+		const cop: FabricCAServices = new FabricCAServices(caUrl, tlsOptions, org.ca.name);
 
 		const enrollment: FabricCAServices.IEnrollResponse = await cop.enroll({
 			enrollmentID: username,
@@ -132,7 +132,7 @@ async function getMember(username: string, password: string, client: Client, use
 
 		await member.setEnrollment(enrollment.key, enrollment.certificate, org.mspid);
 
-		const skipPersistence: boolean = true;
+		const skipPersistence = true;
 		await client.setUserContext(member, skipPersistence);
 		return member;
 	} catch (error) {
@@ -143,7 +143,7 @@ async function getMember(username: string, password: string, client: Client, use
 
 export function getPeerObjectsForClientOnChannel(orgClient: Client, channelName: string, ccp: CommonConnectionProfileHelper): Client.Peer[] {
 	const peerObjects: Client.Peer[] = [];
-	const peerNames: string[] = Object.keys(ccp.getPeersForChannel(channelName)) as string[];
+	const peerNames: string[] = Object.keys(ccp.getPeersForChannel(channelName)) ;
 
 	peerNames.forEach((peerName: string) => {
 		const peer: any = ccp.getPeer(peerName);
@@ -210,7 +210,7 @@ export async function isOrgChaincodeInstalled(orgName: string, ccp: CommonConnec
 	const message: Client.ChaincodeQueryResponse = await orgClient.queryInstalledChaincodes(peer, true);
 
 	// loop over message array if present
-	let hasInstalled: boolean = false;
+	let hasInstalled = false;
 	for (const chaincode of message.chaincodes) {
 		if ((chaincode.name.localeCompare(chaincodeName) === 0) && (chaincode.version.localeCompare(chaincodeVersion) === 0)) {
 			hasInstalled = true;
@@ -313,7 +313,7 @@ export async function isChaincodeInstantiatedOnChannel(orgName: string, ccp: Com
 	const message: Client.ChaincodeQueryResponse = await channel.queryInstantiatedChaincodes(peer, true);
 
 	// loop over message array if present
-	let isInstantiated: boolean = false;
+	let isInstantiated = false;
 	for (const chaincode of message.chaincodes) {
 		if ((chaincode.name.localeCompare(chaincodeName) === 0) && (chaincode.version.localeCompare(chaincodeVersion) === 0)) {
 			isInstantiated = true;
@@ -426,7 +426,7 @@ export async function isOrgChannelJoined(orgName: string, ccp: CommonConnectionP
 	const message: Client.ChannelQueryResponse = await orgClient.queryChannels(peer, true);
 
 	// loop over message array if present
-	let hasJoined: boolean = false;
+	let hasJoined = false;
 	for (const msg of message.channels) {
 		if (msg.channel_id.localeCompare(channelName) === 0) {
 			hasJoined = true;

@@ -4,11 +4,11 @@
 
 'use strict';
 
-import { BlockEvent, BlockListener, Checkpointer, Contract, ContractEvent, ContractListener, EventType, Gateway, ListenerOptions, Network, DefaultCheckpointers } from 'fabric-network';
-import { Constants } from '../constants';
+import {BlockEvent, BlockListener, Checkpointer, Contract, ContractEvent, ContractListener, EventType, Gateway, ListenerOptions, Network, DefaultCheckpointers} from 'fabric-network';
+import {Constants} from '../constants';
 import * as GatewayHelper from './gateway';
 import * as BaseUtils from './utility/baseUtils';
-import { StateStore } from './utility/stateStore';
+import {StateStore} from './utility/stateStore';
 import Long = require('long');
 import fs = require('fs');
 import path = require('path');
@@ -109,7 +109,7 @@ export async function getFileCheckpointer(): Promise<Checkpointer> {
 function getListenerObject(listenerName: string): any {
 	const listener = getListeners().get(listenerName);
 	if (!listener) {
-		const msg: string = `Unable to find listener with name ${listenerName}`;
+		const msg = `Unable to find listener with name ${listenerName}`;
 		BaseUtils.logAndThrow(msg);
 	} else {
 		return listener;
@@ -131,7 +131,7 @@ function getListeners(): Map<string, any> {
 }
 
 export async function checkListenerCallNumber(listenerName: string, compareNumber: number, type: string): Promise<void> {
-	await new Promise( (resolve: any): any => {
+	await new Promise((resolve: any): any => {
 		let timeout: any = null;
 		const interval: NodeJS.Timeout = setInterval(() => {
 			let condition: boolean;
@@ -167,10 +167,10 @@ export async function checkListenerCallNumber(listenerName: string, compareNumbe
 	switch (type) {
 		case Constants.EXACT:
 			if (Number(gatewayListenerCalls) !== Number(compareNumber)) {
-				const msg: string = `Expected ${listenerName} to be called ${compareNumber} times, but was called ${gatewayListenerCalls} times`;
+				const msg = `Expected ${listenerName} to be called ${compareNumber} times, but was called ${gatewayListenerCalls} times`;
 				BaseUtils.logAndThrow(msg);
 			} else {
-				const msg: string = `Verified that the listener was called exactly ${compareNumber} times`;
+				const msg = `Verified that the listener was called exactly ${compareNumber} times`;
 				BaseUtils.logMsg(msg);
 			}
 			break;
@@ -178,18 +178,18 @@ export async function checkListenerCallNumber(listenerName: string, compareNumbe
 			if (Number(gatewayListenerCalls) < Number(compareNumber)) {
 				throw new Error(`Expected ${listenerName} to be called a minimum ${compareNumber} times, but called ${gatewayListenerCalls} times`);
 			} else {
-				const msg: string = `Verified that the listener was called at least ${compareNumber} times`;
+				const msg = `Verified that the listener was called at least ${compareNumber} times`;
 				BaseUtils.logMsg(msg);
 			}
 			break;
 		case Constants.LESS_THAN:
-				if (Number(gatewayListenerCalls) > Number(compareNumber)) {
-					throw new Error(`Expected ${listenerName} to be called a maximum ${compareNumber} times, but called ${gatewayListenerCalls} times`);
-				} else {
-					const msg: string = `Verified that the listener was called a maximum ${compareNumber} times`;
-					BaseUtils.logMsg(msg);
-				}
-				break;
+			if (Number(gatewayListenerCalls) > Number(compareNumber)) {
+				throw new Error(`Expected ${listenerName} to be called a maximum ${compareNumber} times, but called ${gatewayListenerCalls} times`);
+			} else {
+				const msg = `Verified that the listener was called a maximum ${compareNumber} times`;
+				BaseUtils.logMsg(msg);
+			}
+			break;
 		default:
 			throw new Error(`Unknown condition type ${type} passed to checkListenerCallNumber()`);
 	}
@@ -199,8 +199,8 @@ export function checkContractListenerDetails(listenerName: string, listenerType:
 	const listenerObject: any = getListenerObject(listenerName);
 
 	// Check the listener properties
-	if ( (listenerObject.active !== isActive) || (listenerObject.type.localeCompare(listenerType) !== 0) || (listenerObject.eventName.localeCompare(eventName) !== 0) || (listenerObject.eventType !== eventType)) {
-		const msg: string = `Listener named ${listenerName} does not have the expected properties [type: ${listenerType}, eventName: ${eventName}, eventType: ${eventType}, active: ${isActive}]`;
+	if ((listenerObject.active !== isActive) || (listenerObject.type.localeCompare(listenerType) !== 0) || (listenerObject.eventName.localeCompare(eventName) !== 0) || (listenerObject.eventType !== eventType)) {
+		const msg = `Listener named ${listenerName} does not have the expected properties [type: ${listenerType}, eventName: ${eventName}, eventType: ${eventType}, active: ${isActive}]`;
 		BaseUtils.logAndThrow(msg);
 	}
 }
@@ -209,8 +209,8 @@ export function checkBlockListenerDetails(listenerName: string, listenerType: st
 	const listenerObject: any = getListenerObject(listenerName);
 
 	// Check the listener properties
-	if ( (listenerObject.active !== isActive) || (listenerObject.type.localeCompare(listenerType) !== 0) || (listenerObject.eventType !== eventType)) {
-		const msg: string = `Listener named ${listenerName} does not have the expected properties [type: ${listenerType}, eventType: ${eventType}, active: ${isActive}]`;
+	if ((listenerObject.active !== isActive) || (listenerObject.type.localeCompare(listenerType) !== 0) || (listenerObject.eventType !== eventType)) {
+		const msg = `Listener named ${listenerName} does not have the expected properties [type: ${listenerType}, eventType: ${eventType}, active: ${isActive}]`;
 		BaseUtils.logAndThrow(msg);
 	}
 }
@@ -235,7 +235,7 @@ export function checkBlockListenerPrivatePayloads(listenerName: string, checkDat
 	if (found) {
 		BaseUtils.logMsg('->Transaction Payload privateData checks out', listenerName);
 	} else {
-		const msg: string = `Listener named ${listenerName} does not have the expected private data payload [${checkData}]`;
+		const msg = `Listener named ${listenerName} does not have the expected private data payload [${checkData}]`;
 		BaseUtils.logAndThrow(msg);
 	}
 }
@@ -254,7 +254,7 @@ export function checkContractListenerPayloads(listenerName: string, checkData: s
 	if (found) {
 		BaseUtils.logMsg('->Contract Event payload matches what we expect:', checkData);
 	} else {
-		const msg: string = `Listener named ${listenerName} does not have the expected contract event payload [${checkData}]`;
+		const msg = `Listener named ${listenerName} does not have the expected contract event payload [${checkData}]`;
 		BaseUtils.logAndThrow(msg);
 	}
 }
@@ -263,8 +263,8 @@ export function checkTransactionListenerDetails(listenerName: string, listenerTy
 	const listenerObject: any = getListenerObject(listenerName);
 
 	// Check the listener properties
-	if ( (listenerObject.active !== isActive) || (listenerObject.type.localeCompare(listenerType) !== 0) ) {
-		const msg: string = `Listener named ${listenerName} does not have the expected properties [type: ${listenerType}, active: ${isActive}]`;
+	if ((listenerObject.active !== isActive) || (listenerObject.type.localeCompare(listenerType) !== 0)) {
+		const msg = `Listener named ${listenerName} does not have the expected properties [type: ${listenerType}, active: ${isActive}]`;
 		BaseUtils.logAndThrow(msg);
 	}
 }

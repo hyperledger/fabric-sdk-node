@@ -7,6 +7,7 @@
 // State store items (just in case you don't want to look at the code)
 // - Users Map<userName: string, user: User>
 
+// eslint-disable-next-line no-shadow
 export enum Constants {
 	// Timeouts and steps
 	HUGE_TIME  = 1200000,

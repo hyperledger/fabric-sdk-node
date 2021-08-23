@@ -1,3 +1,9 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /**
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -5,15 +11,17 @@
 'use strict';
 
 import * as Client from 'fabric-client';
-import { Constants } from '../constants';
+import {Constants} from '../constants';
 import * as AdminUtils from './utility/adminUtils';
 import * as BaseUtils from './utility/baseUtils';
 
 // import * as fs from 'fs';
 // import * as path from 'path';
-import { CommonConnectionProfileHelper } from './utility/commonConnectionProfileHelper';
+import {CommonConnectionProfileHelper} from './utility/commonConnectionProfileHelper';
 
-export async function commitProposal(proposalType: string, txId: Client.TransactionId, proposalResponses: any, proposal: any, channel: Client.Channel): Promise<void> {
+
+export async function commitProposal(proposalType: string, txId: Client.TransactionId, proposalResponses: any, proposal: any,
+	channel: Client.Channel): Promise<void> {
 	const deployId: string = txId.getTransactionID();
 	const request: Client.TransactionRequest = {
 		proposal,
@@ -46,6 +54,7 @@ export async function commitProposal(proposalType: string, txId: Client.Transact
 					resolve(code);
 				}
 			}, (err: Error) => {
+				// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 				BaseUtils.logError(`There was a problem with the event ${err}`);
 				clearTimeout(handle);
 				reject(err);
@@ -62,6 +71,7 @@ export async function commitProposal(proposalType: string, txId: Client.Transact
 		const allPromises = Array.of<Promise<any>>(sendPromise, ...eventPromises);
 		await Promise.all(allPromises);
 	} catch (error) {
+		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 		BaseUtils.logAndThrow(`The ${proposalType} transaction failed :: ${error}`);
 	}
 
@@ -82,7 +92,8 @@ export async function commitProposal(proposalType: string, txId: Client.Transact
 	}
 }
 
-// export async function packageContractForOrg(orgName: string, contractName: string, contractType: string, contractVersion: string,  initRequired: boolean, ccp: CommonConnectionProfileHelper): Promise<void> {
+// export async function packageContractForOrg(orgName: string, contractName: string, contractType: string, contractVersion: string,
+// initRequired: boolean, ccp: CommonConnectionProfileHelper): Promise<void> {
 // 	const contractSaveName: string = `contract-${orgName}-${contractName}`;
 
 // 	// Determine path for contract and metadata
@@ -167,7 +178,8 @@ export async function commitProposal(proposalType: string, txId: Client.Transact
 // 	}
 // }
 
-// export async function approveInstalledContractForOrg(orgName: string, contractName: string, channelName: string, ccp: CommonConnectionProfileHelper, policyType: string): Promise<void> {
+// export async function approveInstalledContractForOrg(orgName: string, contractName: string, channelName: string,
+// ccp: CommonConnectionProfileHelper, policyType: string): Promise<void> {
 // 	const contractSaveName: string = `contract-${orgName}-${contractName}`;
 
 // 	// Get the Client for passed Org
@@ -211,7 +223,8 @@ export async function commitProposal(proposalType: string, txId: Client.Transact
 // 					if (response.response.status === 200) {
 // 						BaseUtils.logMsg(`Chaincode approve - Good peer response status :: ${response.response.status}`);
 // 					} else {
-// 						BaseUtils.logAndThrow(`Chaincode approve - Problem with the chaincode approval :: ${response.response.status} ${response.response.message}`);
+// 						BaseUtils.logAndThrow(`Chaincode approve - Problem with the chaincode approval ::
+// 							${response.response.status} ${response.response.message}`);
 // 					}
 // 				} else {
 // 					BaseUtils.logAndThrow('Chaincode approve - Problem with the chaincode approval no response(s) returned');
@@ -229,7 +242,8 @@ export async function commitProposal(proposalType: string, txId: Client.Transact
 // 	}
 // }
 
-// export async function queryCommitReadinessAsOrgOnChannel(orgName: string, contractName: string, channelName: string, ccp: CommonConnectionProfileHelper, expectedStatus: any): Promise<void> {
+// export async function queryCommitReadinessAsOrgOnChannel(orgName: string, contractName: string, channelName: string,
+//	ccp: CommonConnectionProfileHelper, expectedStatus: any): Promise<void> {
 // 	const contractSaveName: string = `contract-${orgName}-${contractName}`;
 
 // 	// Get the Client for passed Org
@@ -260,7 +274,8 @@ export async function commitProposal(proposalType: string, txId: Client.Transact
 // 					BaseUtils.logAndThrow(`Missing approval response for ${key}`);
 // 				}
 // 				if (results.approvals[key] !== expectedStatus[key]) {
-// 					BaseUtils.logAndThrow(`Unexpected approval response from  ${key}: expected ${expectedStatus[key]} but had ${results.approvals[key]}`);
+// 					BaseUtils.logAndThrow(`Unexpected approval response from  ${key}: ,
+//						expected ${expectedStatus[key]} but had ${results.approvals[key]}`);
 // 				}
 // 			}
 // 			BaseUtils.logMsg(`Query commit status - Good peer response, the commit status map: ${results}`);
@@ -272,7 +287,8 @@ export async function commitProposal(proposalType: string, txId: Client.Transact
 // 	}
 // }
 
-// export async function retrieveContractPackageAsOrgOnChannel(orgName: string, contractName: string, channelName: string, ccp: CommonConnectionProfileHelper): Promise<Client.GetInstalledChaincodePackageResult | undefined> {
+// export async function retrieveContractPackageAsOrgOnChannel(orgName: string, contractName: string, channelName: string,
+//	ccp: CommonConnectionProfileHelper): Promise<Client.GetInstalledChaincodePackageResult | undefined> {
 // 	const contractSaveName: string = `contract-${orgName}-${contractName}`;
 
 // 	// Get the Client for passed Org
@@ -310,7 +326,8 @@ export async function commitProposal(proposalType: string, txId: Client.Transact
 // 	}
 // }
 
-// export async function queryForDefinedContractAsOrgOnChannel(orgName: string, contractName: string, channelName: string, ccp: CommonConnectionProfileHelper, expected: any): Promise<void> {
+// export async function queryForDefinedContractAsOrgOnChannel(orgName: string, contractName: string, channelName: string, ,
+//	ccp: CommonConnectionProfileHelper, expected: any): Promise<void> {
 // 	const contractSaveName: string = `contract-${orgName}-${contractName}`;
 
 // 	// Get the Client for passed Org
@@ -359,7 +376,8 @@ export async function commitProposal(proposalType: string, txId: Client.Transact
 // 	}
 // }
 
-// export async function performContractCommitWithOrgOnChannel(contractName: string, orgName: string, channelName: string, ccp: CommonConnectionProfileHelper): Promise<void> {
+// export async function performContractCommitWithOrgOnChannel(contractName: string, orgName: string, channelName: string,
+//	ccp: CommonConnectionProfileHelper): Promise<void> {
 // 	const contractSaveName: string = `contract-${orgName}-${contractName}`;
 
 // 	// Get the Client for passed Org
@@ -393,7 +411,8 @@ export async function commitProposal(proposalType: string, txId: Client.Transact
 // 					if (response.response.status === 200) {
 // 						BaseUtils.logMsg(`Valid response status: ${response.response.status}`);
 // 					} else {
-// 						BaseUtils.logAndThrow(`Problem with the chaincode commit :: status: ${response.response.status} message: ${response.response.message}`);
+// 						BaseUtils.logAndThrow(`Problem with the chaincode commit :: status: ${response.response.status}
+//							message: ${response.response.message}`);
 // 					}
 // 				} else {
 // 					BaseUtils.logAndThrow('Problem with the chaincode commit no response returned');
@@ -410,14 +429,16 @@ export async function commitProposal(proposalType: string, txId: Client.Transact
 // 	}
 // }
 
-export async function performContractTransactionForOrg(contract: string, contractFunction: string, contractArgs: any, orgName: string, channelName: string, ccp: CommonConnectionProfileHelper, isSubmit: boolean, expectedResult: any, expectedError: any): Promise<any> {
+export async function performContractTransactionForOrg(contract: string, contractFunction: string,
+	contractArgs: any, orgName: string, channelName: string, ccp: CommonConnectionProfileHelper, isSubmit: boolean,
+	expectedResult: any, expectedError: any): Promise<any> {
 
 	// Get the Client for passed Org
-	const orgClient: any = await Client.loadFromConfig(ccp.getProfile());
+	const orgClient: any = Client.loadFromConfig(ccp.getProfile());
 	await AdminUtils.getSubmitter(orgClient, true, orgName, ccp);
 
 	// get all the peers
-	const targets: Client.Peer[] = AdminUtils.getPeerObjectsForClientOnChannel(orgClient, channelName, ccp) as Client.Peer[];
+	const targets: Client.Peer[] = AdminUtils.getPeerObjectsForClientOnChannel(orgClient, channelName, ccp) ;
 
 	const channel: Client.Channel = orgClient.getChannel(channelName) as Client.Channel;
 	const txId: any = orgClient.newTransactionID(true);
@@ -446,8 +467,8 @@ export async function performContractTransactionForOrg(contract: string, contrac
 			await queryChannelRequest(channel, request, expectedError, expectedResult);
 		}
 	} catch (error) {
-		BaseUtils.logError(`Unexpected error thrown in channel.sendTransactionProposal`, error);
-		throw(error);
+		BaseUtils.logError('Unexpected error thrown in channel.sendTransactionProposal', error);
+		throw (error);
 	}
 
 	// Conceivably, we might want to return something for a test to use, so create an object to pass back.
@@ -457,7 +478,8 @@ export async function performContractTransactionForOrg(contract: string, contrac
 }
 
 async function submitChannelRequest(channel: Client.Channel, request: any, expectedError: any, expectedResult: any): Promise<void> {
-	const results: [(Client.ProposalResponse | Client.ProposalErrorResponse)[], Client.Proposal] = await channel.sendTransactionProposal(request, Constants.STEP_MED);
+	const results: [(Client.ProposalResponse | Client.ProposalErrorResponse)[],
+		Client.Proposal] = await channel.sendTransactionProposal(request, Constants.STEP_MED);
 	if (results && results[0]) {
 		const proposalResponses: any = results[0];
 		for (const response of proposalResponses) {
@@ -465,18 +487,18 @@ async function submitChannelRequest(channel: Client.Channel, request: any, expec
 				// We might be forcing an error, so can condition for that here
 				if (expectedError) {
 					if ((response as any).status !== expectedError.status) {
-						const msg: string = `Expected channel.sendTransactionProposal() to have status ${expectedError.status} but was ${(response as any).status}`;
+						const msg = `Expected channel.sendTransactionProposal() to have status ${expectedError.status} but was ${(response as any).status}`;
 						BaseUtils.logAndThrow(msg);
 					}
 					if (!response.message.includes(expectedError.message)) {
-						const msg: string = `Expected channel.sendTransactionProposal() fail with message text ${expectedError.message} but was ${response.message}`;
+						const msg = `Expected channel.sendTransactionProposal() fail with message text ${expectedError.message} but was ${response.message}`;
 						BaseUtils.logAndThrow(msg);
 					}
 					// We were expecting this error, and it passed the check, so return here
-					BaseUtils.logMsg(`Expected channel.sendTransactionProposal() failure condition met`);
+					BaseUtils.logMsg('Expected channel.sendTransactionProposal() failure condition met');
 					return;
 				} else {
-					const msg: string = `Unconditioned error in channel.sendTransactionProposal() with response: ${response}`;
+					const msg = `Unconditioned error in channel.sendTransactionProposal() with response: ${response}`;
 					BaseUtils.logAndThrow(msg);
 				}
 			} else if (response.response && response.response.status) {
@@ -508,7 +530,7 @@ async function submitChannelRequest(channel: Client.Channel, request: any, expec
 
 		// if we get this far then all responses are good (status = 200), go ahead and commit
 		await commitProposal(Constants.SUBMIT, request.txId, proposalResponses, proposal, channel);
-		BaseUtils.logMsg(` Committed Channel Request`);
+		BaseUtils.logMsg(' Committed Channel Request');
 	} else {
 		BaseUtils.logAndThrow('No chaincode invoke proposalResponses was returned');
 	}

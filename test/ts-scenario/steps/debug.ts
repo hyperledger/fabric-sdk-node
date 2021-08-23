@@ -4,11 +4,12 @@
 
 'use strict';
 
-import { Constants } from './constants';
+import {Constants} from './constants';
 import * as BaseUtils from './lib/utility/baseUtils';
-import { Given, Then } from 'cucumber';
+import {Given, Then} from 'cucumber';
 
-Given(/^I place a scenario start message (.+?)$/, { timeout: Constants.STEP_SHORT as number }, async (featureType: string) => {
+// eslint-disable-next-line @typescript-eslint/require-await
+Given(/^I place a scenario start message (.+?)$/, {timeout: Constants.STEP_SHORT as number}, async (featureType: string) => {
 	BaseUtils.logScenarioStart(featureType);
 });
 

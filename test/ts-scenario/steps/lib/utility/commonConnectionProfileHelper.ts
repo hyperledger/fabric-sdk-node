@@ -105,7 +105,7 @@ export class CommonConnectionProfileHelper {
 		for (const [orgName, org] of Object.entries<any>(orgs)) {
 			const orgPeers: Array<string> = org.peers;
 
-			if (orgPeers.filter( (peerName: string) => channelPeers.includes(peerName)).length > 0) {
+			if (orgPeers.filter((peerName: string) => channelPeers.includes(peerName)).length > 0) {
 				channelOrgs.push(orgName);
 			}
 		}

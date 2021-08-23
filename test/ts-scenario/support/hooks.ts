@@ -4,18 +4,18 @@
 
 'use strict';
 
-import { Constants } from '../steps/constants';
+import {Constants} from '../steps/constants';
 import * as Gateway from '../steps/lib/gateway';
 import * as BaseUtils from '../steps/lib/utility/baseUtils';
-import { CommandRunner } from '../steps/lib/utility/commandRunner';
-import { StateStore } from '../steps/lib/utility/stateStore';
+import {CommandRunner} from '../steps/lib/utility/commandRunner';
+import {StateStore} from '../steps/lib/utility/stateStore';
 
-import { AfterAll } from 'cucumber';
+import {AfterAll} from 'cucumber';
 
 const commandRunner: CommandRunner = CommandRunner.getInstance();
 const stateStore: StateStore = StateStore.getInstance();
 
-AfterAll({ timeout: Constants.HUGE_TIME as number }, async () => {
+AfterAll({timeout: Constants.HUGE_TIME as number}, async () => {
 	// Clean off Docker step
 	BaseUtils.logMsg('Tearing down network ...', null);
 	await commandRunner.runShellCommand(undefined, 'docker kill $(docker ps -aq); docker rm $(docker ps -aq)');

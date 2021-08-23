@@ -84,7 +84,7 @@ export function retrieveClientObject(clientName: string): any {
 	if (clientMap && clientMap.has(clientName)) {
 		return clientMap.get(clientName);
 	} else {
-		const msg: string = `Required client named ${clientName} does not exist`;
+		const msg = `Required client named ${clientName} does not exist`;
 		BaseUtils.logMsg(msg);
 		throw new Error(msg);
 	}
@@ -110,7 +110,7 @@ export async function buildChannelRequest(requestName: string, contractName: str
 
 	// We have arguments
 	const argArray: string[] = requestArgs.slice(1, -1).split(',');
-	let initRequired: boolean = false;
+	let initRequired = false;
 	if (argArray[0].includes('init')) {
 		initRequired = true;
 	}
@@ -445,14 +445,14 @@ export async function queryChannelRequest(clientName: string, channelName: strin
 				const queryResponse: ProposalResponse = await query.send(queryRequest);
 				BaseUtils.logError('query submission checking results');
 				queryObject.results = {};
-				let inc: number = 0;
+				let inc = 0;
 				if (queryResponse.errors.length > 0) {
 					// failure
-					BaseUtils.logMsg(`Query failure detected`);
+					BaseUtils.logMsg('Query failure detected');
 					queryObject.results.general = JSON.stringify({result: 'FAILURE'});
 					if (checkSendingtoContract) {
-						BaseUtils.logMsg(`Query during chaincodecheck failure detected`);
-						queryObject.results['chaincodecheck'] = queryObject.results.general;
+						BaseUtils.logMsg('Query during chaincodecheck failure detected');
+						queryObject.results.chaincodecheck = queryObject.results.general;
 					}
 					for (const error of queryResponse.errors) {
 						queryObject.results[`peer${inc}`] = error.toString();
@@ -462,7 +462,7 @@ export async function queryChannelRequest(clientName: string, channelName: strin
 				}
 				if (queryResponse.queryResults.length > 0) {
 					// Success
-					BaseUtils.logMsg(`Query success detected`);
+					BaseUtils.logMsg('Query success detected');
 					queryObject.results.general = JSON.stringify({result: 'SUCCESS'});
 					for (const result of queryResponse.queryResults) {
 						queryObject.results[`peer${inc}`] = JSON.parse(result.toString());
@@ -470,7 +470,7 @@ export async function queryChannelRequest(clientName: string, channelName: strin
 						inc++;
 					}
 				} else {
-					BaseUtils.logMsg(`No Query success detected`);
+					BaseUtils.logMsg('No Query success detected');
 				}
 			} catch (error) {
 				// Swallow error as we might be testing a failure path, but modify request object with error msg and status

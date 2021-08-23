@@ -4,24 +4,24 @@
 
 'use strict';
 
-import { Constants } from './constants';
+import {Constants} from './constants';
 import * as Listeners from './lib/listeners';
 
-import { Given, Then, When } from 'cucumber';
-import { EventType, ListenerOptions } from 'fabric-network';
+import {Given, Then, When} from 'cucumber';
+import {EventType, ListenerOptions} from 'fabric-network';
 
-Given(/^I am listening for (filtered|full) contract events named (.+?) with a listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number }, async (type: EventType, eventName: string, listenerName: string) => {
-	const isActive: boolean = true;
+Given(/^I am listening for (filtered|full) contract events named (.+?) with a listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number}, async (type: EventType, eventName: string, listenerName: string) => {
+	const isActive = true;
 	Listeners.checkContractListenerDetails(listenerName, Constants.CONTRACT, type, eventName, isActive);
 });
 
-Given(/^I am listening for (filtered|full|private) block events with a listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number }, async (type: EventType, listenerName: string) => {
-	const isActive: boolean = true;
+Given(/^I am listening for (filtered|full|private) block events with a listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number}, async (type: EventType, listenerName: string) => {
+	const isActive = true;
 	Listeners.checkBlockListenerDetails(listenerName, Constants.BLOCK, type, isActive);
 });
 
-Given(/^I am listening for transaction events with a listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number }, async (listenerName: string) => {
-	const isActive: boolean = true;
+Given(/^I am listening for transaction events with a listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number}, async (listenerName: string) => {
+	const isActive = true;
 	Listeners.checkTransactionListenerDetails(listenerName, Constants.TRANSACTION, isActive);
 });
 
@@ -90,26 +90,26 @@ When(/^I use the gateway named (.+?) to listen for (filtered|full|private) block
 });
 
 // Unregister
-When(/^I unregister the listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number }, (listenerName: string) => {
+When(/^I unregister the listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number}, (listenerName: string) => {
 	Listeners.unregisterListener(listenerName);
 });
 
-Then(/^I receive ([0-9]+) events from the listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number }, async (calls: number, listenerName: string) => {
+Then(/^I receive ([0-9]+) events from the listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number}, async (calls: number, listenerName: string) => {
 	await Listeners.checkListenerCallNumber(listenerName, calls, Constants.EXACT);
 });
 
-Then(/^I receive a minimum ([0-9]+) events from the listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number }, async (calls: number, listenerName: string) => {
+Then(/^I receive a minimum ([0-9]+) events from the listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number}, async (calls: number, listenerName: string) => {
 	await Listeners.checkListenerCallNumber(listenerName, calls, Constants.GREATER_THAN);
 });
 
-Then(/^I receive a maximum ([0-9]+) events from the listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number }, async (calls: number, listenerName: string) => {
+Then(/^I receive a maximum ([0-9]+) events from the listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number}, async (calls: number, listenerName: string) => {
 	await Listeners.checkListenerCallNumber(listenerName, calls, Constants.LESS_THAN);
 });
 
-Then('the listener named {word} should have private data containing {string}', {timeout: Constants.STEP_SHORT as number }, async (listenerName: string, privateData: string) => {
+Then('the listener named {word} should have private data containing {string}', {timeout: Constants.STEP_SHORT as number}, async (listenerName: string, privateData: string) => {
 	Listeners.checkBlockListenerPrivatePayloads(listenerName, privateData);
 });
 
-Then('the listener named {word} should have contract events with payload containing {string}', {timeout: Constants.STEP_SHORT as number }, async (listenerName: string, payload: string) => {
+Then('the listener named {word} should have contract events with payload containing {string}', {timeout: Constants.STEP_SHORT as number}, async (listenerName: string, payload: string) => {
 	Listeners.checkContractListenerPayloads(listenerName, payload);
 });

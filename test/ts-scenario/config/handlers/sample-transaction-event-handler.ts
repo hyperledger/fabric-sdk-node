@@ -12,7 +12,7 @@ import {
 	TxEventHandler,
 	TxEventHandlerFactory
 } from 'fabric-network';
-import { Endorser } from 'fabric-common';
+import {Endorser} from 'fabric-common';
 
 // --- Plug-in event handler sample where the user takes full responsibility for event handling
 
@@ -86,7 +86,7 @@ class SampleTransactionEventHandler implements TxEventHandler {
 			return this.fail(new Error(event.status));
 		}
 
-		const peer = error?.peer || event!.peer;
+		const peer = error?.peer || event.peer;
 		this.unrespondedPeers.delete(peer);
 
 		if (this.unrespondedPeers.size === 0) {

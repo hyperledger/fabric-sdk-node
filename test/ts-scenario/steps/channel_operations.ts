@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /**
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -7,17 +11,18 @@
 // import { Constants } from './constants';
 // import * as AdminUtils from './lib/utility/adminUtils';
 import * as BaseUtils from './lib/utility/baseUtils';
-import { CommonConnectionProfileHelper } from './lib/utility/commonConnectionProfileHelper';
-import { StateStore } from './lib/utility/stateStore';
+
 
 // import { When } from 'cucumber';
-import * as path from 'path';
+
 
 // const stateStore: StateStore = StateStore.getInstance();
 // const ccpNonTls: CommonConnectionProfileHelper = new CommonConnectionProfileHelper(path.join(__dirname, '../config', 'ccp.json'), true);
 // const ccpTls: CommonConnectionProfileHelper = new CommonConnectionProfileHelper(path.join(__dirname, '../config', 'ccp-tls.json'), true);
 
-// When(/^I perform a (.+?) operation on channel (.+?) with (.+?) the response (includes|matches|mirrors) fields (.+?)$/, { timeout: Constants.HUGE_TIME as number }, async (queryOperation: string, channelName: string, orgName: string, compareType: 'includes' | 'matches' | 'mirrors', expectedResponse: string) => {
+// When(/^I perform a (.+?) operation on channel (.+?) with (.+?) the response (includes|matches|mirrors) fields (.+?)$/,
+// { timeout: Constants.HUGE_TIME as number }, async (queryOperation: string, channelName: string,
+// orgName: string, compareType: 'includes' | 'matches' | 'mirrors', expectedResponse: string) => {
 
 // 	const fabricState: any = stateStore.get(Constants.FABRIC_STATE);
 // 	if (!fabricState) {
@@ -35,7 +40,11 @@ import * as path from 'path';
 
 // });
 
-// When(/^I perform a (.+?) operation with arguments (.+?) on channel (.+?) with (.+?) the response (includes|matches|mirrors) fields (.+?)$/, { timeout: Constants.HUGE_TIME as number }, async (queryOperation: string, args: string, channelName: string, orgName: string, compareType: 'includes' | 'matches' | 'mirrors' , expectedResponse: string) => {
+// When(/^I perform a (.+?) operation with arguments (.+?) on
+// channel (.+?) with (.+?) the response (includes|matches|mirrors) fields (.+?)$/,
+// { timeout: Constants.HUGE_TIME as number },
+// async (queryOperation: string, args: string,
+// channelName: string, orgName: string, compareType: 'includes' | 'matches' | 'mirrors' , expectedResponse: string) => {
 
 // 	const fabricState: any = stateStore.get(Constants.FABRIC_STATE);
 // 	if (!fabricState) {
@@ -60,16 +69,16 @@ import * as path from 'path';
  * @param actual actual item
  * @param {string} compareType the match type being run (include | match | mirror)
  */
-function validateObjectKeyMatch(expected: any, actual: any, compareType: 'includes' | 'matches' | 'mirrors' ): any {
+function validateObjectKeyMatch(expected: any, actual: any, compareType: 'includes' | 'matches' | 'mirrors'): any {
 	// walk down the expected and keep in line with the response
 	if (expected instanceof Object) {
 		if (Array.isArray(expected) && (compareType.localeCompare('includes') === 0)) {
 			// Have an array that may be an object or a value
 
-			for (let index: number = 0; index < expected.length; index++) {
+			for (let index = 0; index < expected.length; index++) {
 				const expectedItem: any = expected[index];
-				let detected: boolean = false;
-				for (let iterate: number = 0; iterate < actual.length; iterate++) {
+				let detected = false;
+				for (let iterate = 0; iterate < actual.length; iterate++) {
 					const actualItem: any = actual[iterate];
 					const wasFound: boolean = validateObjectKeyMatch(expectedItem, actualItem, compareType);
 					if (wasFound) {
@@ -86,6 +95,7 @@ function validateObjectKeyMatch(expected: any, actual: any, compareType: 'includ
 				if (Object.prototype.hasOwnProperty.call(actual, key)) {
 					// recursive call to scan property
 					BaseUtils.logMsg(`->Recursively checking response key ${key}`);
+					// eslint-disable-next-line @typescript-eslint/no-unused-vars
 					return validateObjectKeyMatch(expected[key], actual[key], compareType);
 				} else {
 					BaseUtils.logAndThrow(`-->Missing key in response expected field ${key} to be present in ${{actual}}`);
@@ -110,7 +120,7 @@ function validateObjectKeyMatch(expected: any, actual: any, compareType: 'includ
 					return true;
 				}
 			case 'mirrors':
-				BaseUtils.logMsg(`-->Confirmed existence of required 'mirror' key name and presence of a value`);
+				BaseUtils.logMsg('-->Confirmed existence of required \'mirror\' key name and presence of a value');
 				break;
 			default:
 				throw new Error(`Unconditioned switch type ${compareType} passed to validate match`);
