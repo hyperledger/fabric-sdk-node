@@ -5,8 +5,8 @@
  */
 
 import * as Listeners from '../../../src/impl/event/listeners';
-import { StubCheckpointer } from './stubcheckpointer';
-import { BlockEvent, BlockListener, TransactionEvent, ContractEvent } from '../../../src/events';
+import {StubCheckpointer} from './stubcheckpointer';
+import {BlockEvent, BlockListener, TransactionEvent, ContractEvent} from '../../../src/events';
 import Long = require('long');
 import chai = require('chai');
 import sinon = require('sinon');
@@ -40,7 +40,7 @@ describe('listeners', () => {
 
 	const noOpListener = () => undefined;
 
-	let checkpointer;
+	let checkpointer:StubCheckpointer;
 
 	beforeEach(() => {
 		checkpointer = new StubCheckpointer();
@@ -71,6 +71,7 @@ describe('listeners', () => {
 		});
 
 		it('checkpoint block number not incremented on listener failure', async () => {
+			// eslint-disable-next-line @typescript-eslint/require-await
 			const listener: BlockListener = async () => {
 				throw new Error('LISTENER_FAIL');
 			};

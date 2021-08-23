@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { BlockEvent } from '../../../src/events';
-import { OrderedBlockQueue } from '../../../src/impl/event/orderedblockqueue';
+import {BlockEvent} from '../../../src/events';
+import {OrderedBlockQueue} from '../../../src/impl/event/orderedblockqueue';
 import Long = require('long');
 
 import chai = require('chai');

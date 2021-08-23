@@ -115,7 +115,8 @@ export class BlockEventSource {
 			startBlock: this.getNextBlockNumber(),
 			unregister: false
 		};
-		this.eventListener = this.getEventService().registerBlockListener(callback, options);
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+		this.eventListener = this.eventService!.registerBlockListener(callback, options);
 	}
 
 	private unregisterListener() {
@@ -140,7 +141,8 @@ export class BlockEventSource {
 			startBlock
 		};
 
-		await this.eventServiceManager.startEventService(this.getEventService(), options);
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+		await this.eventServiceManager.startEventService(this.eventService!, options);
 	}
 
 	private blockEventCallback(error?: Error, event?: EventInfo)  {
@@ -190,10 +192,5 @@ export class BlockEventSource {
 		return this.blockQueue.getNextBlockNumber();
 	}
 
-	private getEventService(): EventService {
-		if (!this.eventService) {
-			throw new Error('no event service');
-		}
-		return this.eventService;
-	}
+
 }

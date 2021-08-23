@@ -19,11 +19,6 @@ import Long = require('long');
 
 
 
-interface TransactionListenerInfo {
-	readonly transactionId: string;
-	readonly callback: EventCallback;
-	readonly options: EventRegistrationOptions;
-}
 
 class StubTransactionEventListener implements EventListener {
 	readonly transactionId: string;
@@ -79,7 +74,7 @@ export class StubEventService implements EventService {
 	startBlock: string | Long;
 	endBlock: string | Long;
 	blockType: BlockType = 'filtered';
-	inUse: boolean = false;
+	inUse = false;
 
 	started = false;
 
@@ -93,11 +88,13 @@ export class StubEventService implements EventService {
 		return this.inUse;
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	setEventer(discoverer: Eventer): EventService {
 		throw new Error('Method not implemented.');
 	}
 
-	setTargets(targets: Eventer[]) {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	setTargets(targets: Eventer[]) :void {
 		// No-op
 	}
 
@@ -105,14 +102,16 @@ export class StubEventService implements EventService {
 		throw new Error('Method not implemented.');
 	}
 
-	close() {
+	close():void {
 		this.eventListeners.clear();
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars,@typescript-eslint/explicit-module-boundary-types,@typescript-eslint/no-explicit-any
 	build(idContext: IdentityContext, request: any): Buffer {
 		return Buffer.from('');
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/explicit-module-boundary-types,@typescript-eslint/no-unused-vars
 	send(request: any): Promise<any> {
 		return null;
 	}
@@ -139,6 +138,7 @@ export class StubEventService implements EventService {
 		return listener;
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	registerChaincodeListener(chaincodeId: string, eventName: string, callback: EventCallback, options: EventRegistrationOptions): import('fabric-common').EventListener {
 		throw new Error('Method not implemented.');
 	}
@@ -149,23 +149,24 @@ export class StubEventService implements EventService {
 		return listener;
 	}
 
-	async sign(parm: IdentityContext | Buffer): Promise<ServiceAction> {
-		return null;
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	sign(parm: IdentityContext | Buffer): Promise<ServiceAction> {
+		return Promise.resolve(null);
 	}
 
-	getSignedProposal() {
+	getSignedProposal():void {
 		throw new Error('Method not implemented.');
 	}
 
-	getSignedEnvelope() {
+	getSignedEnvelope() :void {
 		throw new Error('Method not implemented.');
 	}
 
-	sendEvent(event: EventInfo) {
+	sendEvent(event: EventInfo):void {
 		this.eventListeners.forEach((listener) => listener.onEvent(undefined, event));
 	}
 
-	sendError(error: Error) {
+	sendError(error: Error) :void {
 		this.eventListeners.forEach((listener) => listener.onEvent(error, undefined));
 	}
 }

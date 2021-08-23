@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /*
  * Copyright 2020 IBM All Rights Reserved.
  *
@@ -8,17 +9,17 @@ import sinon = require('sinon');
 import chai = require('chai');
 const expect = chai.expect;
 
-import { Channel, Client, Endorser, Eventer, EventInfo, IdentityContext } from 'fabric-common';
-import { BlockEvent, BlockListener, ListenerOptions } from '../../../src/events';
-import { EventServiceManager } from '../../../src/impl/event/eventservicemanager';
-import { Network, NetworkImpl } from '../../../src/network';
+import {Channel, Client, Endorser, Eventer, EventInfo, IdentityContext} from 'fabric-common';
+import {BlockEvent, BlockListener, ListenerOptions} from '../../../src/events';
+import {EventServiceManager} from '../../../src/impl/event/eventservicemanager';
+import {NetworkImpl} from '../../../src/network';
 import * as testUtils from '../../testutils';
-import { StubEventService } from './stubeventservice';
+import {StubEventService} from './stubeventservice';
 
 import Long = require('long');
 
-import { Gateway } from '../../../src/gateway';
-import { StubCheckpointer } from './stubcheckpointer';
+import {Gateway} from '../../../src/gateway';
+import {StubCheckpointer} from './stubcheckpointer';
 
 interface StubBlockListener extends BlockListener {
 	completePromise: Promise<BlockEvent[]>;
@@ -33,7 +34,7 @@ describe('block listener', () => {
 	let listener: StubBlockListener;
 	let listenerOptions: ListenerOptions;
 
-	beforeEach(async () => {
+	beforeEach(() => {
 		eventService = new StubEventService('stub');
 
 		gateway = sinon.createStubInstance(Gateway);
@@ -47,16 +48,19 @@ describe('block listener', () => {
 		channel.newEventService.returns(eventService);
 
 		const endorser = sinon.createStubInstance(Endorser);
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		(endorser as any).name = 'endorser';
 		channel.getEndorsers.returns([endorser]);
 
 		const client = sinon.createStubInstance(Client);
 		const eventer = sinon.createStubInstance(Eventer);
 		client.newEventer.returns(eventer);
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		(channel as any).client = client;
 
 		network = new NetworkImpl(gateway as unknown as Gateway, channel);
 
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-explicit-any
 		eventServiceManager = (network as any).eventServiceManager;
 
 		listener = testUtils.newAsyncListener<BlockEvent>();
@@ -158,7 +162,8 @@ describe('block listener', () => {
 
 		it('listener can remove itself when receiving event', async () => {
 			listener = testUtils.newAsyncListener<BlockEvent>(2);
-			const fake = sinon.fake(async (event: BlockEvent) => {
+			// eslint-disable-next-line @typescript-eslint/require-await
+			const fake = sinon.fake(async() => {
 				network.removeBlockListener(fake);
 			});
 
@@ -279,12 +284,12 @@ describe('block listener', () => {
 		});
 		it('retry initial connect of event service', async () => {
 			const startListener = testUtils.newAsyncListener<void>();
-			const stub = sinon.stub(eventServiceManager, "startEventService");
+			const stub = sinon.stub(eventServiceManager, 'startEventService');
 			stub.onFirstCall().rejects();
 			stub.onSecondCall().callsFake(() => startListener());
 
 			await network.addBlockListener(listener, listenerOptions);
-			await startListener.completePromise
+			await startListener.completePromise;
 
 			sinon.assert.callCount(stub, 2);
 		});
@@ -292,27 +297,25 @@ describe('block listener', () => {
 		it('retry reconnect of event service after disconnection', async () => {
 			await network.addBlockListener(listener, listenerOptions);
 			const restartListener = testUtils.newAsyncListener<void>();
-			const stub = sinon.stub(eventServiceManager, "startEventService");
+			const stub = sinon.stub(eventServiceManager, 'startEventService');
 			stub.onFirstCall().rejects();
 			stub.onSecondCall().callsFake(() => restartListener());
 
 			eventService.sendError(new Error('DISCONNECT'));
-			await restartListener.completePromise
+			await restartListener.completePromise;
 
 			sinon.assert.callCount(stub, 2);
 		});
 
 		it('end infinite event loop condition on peer disconnect', async () => {
 			await network.addBlockListener(listener, listenerOptions);
-			const startEventService = testUtils.newAsyncListener<void>(1);
-			sinon.stub(eventServiceManager, "startEventService").rejects();
+			sinon.stub(eventServiceManager, 'startEventService').rejects();
 			eventService.sendError(new Error('DISCONNECT'));
 			network._dispose();
 		});
 
 		it('end infinite event loop condition on peer initial connect', async () => {
-			const startEventService = testUtils.newAsyncListener<void>(1);
-			sinon.stub(eventServiceManager, "startEventService").rejects();
+			sinon.stub(eventServiceManager, 'startEventService').rejects();
 			await network.addBlockListener(listener, listenerOptions);
 			network._dispose();
 		});
@@ -322,7 +325,7 @@ describe('block listener', () => {
 			const event1 = newFilteredBlockEventInfo(1);
 			const event2 = newFilteredBlockEventInfo(2);
 			const startListener = testUtils.newAsyncListener<void>(2);
-			const stub = sinon.stub(eventServiceManager, 'startEventService').callsFake(() => startListener());
+			sinon.stub(eventServiceManager, 'startEventService').callsFake(() => startListener());
 
 			await network.addBlockListener(listener, listenerOptions);
 			eventService.sendEvent(event1);

@@ -1,0 +1,20 @@
+{
+	"compilerOptions": {
+		"allowJs": false,
+		"declaration": true,
+		"alwaysStrict": true,
+		"module": "commonjs",
+		"outDir": "./lib",
+		"rootDir": "./src",
+		"sourceMap": true,
+		"strict": true,
+		"target": "es2017",
+		"forceConsistentCasingInFileNames": true
+	},
+	"include": [
+		"src/","test/"
+	],
+	"exclude": [
+		"node_modules/"
+	]
+}

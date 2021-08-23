@@ -40,7 +40,6 @@ describe('Gateway', () => {
 
 	beforeEach(() => {
 		revert = [];
-
 		clientHelper = sinon.stub();
 		clientHelper.loadFromConfig = sinon.stub().resolves('ccp');
 		revert.push(GatewayRewire.__set__('NetworkConfig', clientHelper));

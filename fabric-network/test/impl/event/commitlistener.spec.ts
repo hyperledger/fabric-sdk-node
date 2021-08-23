@@ -18,11 +18,11 @@ import {
 } from 'fabric-common';
 import Long = require('long');
 
-import { Network, NetworkImpl } from '../../../src/network';
-import { EventServiceManager } from '../../../src/impl/event/eventservicemanager';
-import { Gateway } from '../../../src/gateway';
-import { StubEventService } from './stubeventservice';
-import { CommitEvent } from '../../../src/events';
+import {NetworkImpl} from '../../../src/network';
+import {EventServiceManager} from '../../../src/impl/event/eventservicemanager';
+import {Gateway} from '../../../src/gateway';
+import {StubEventService} from './stubeventservice';
+import {CommitEvent} from '../../../src/events';
 
 describe('commit listener', () => {
 	let eventServiceManager: EventServiceManager;
@@ -30,13 +30,14 @@ describe('commit listener', () => {
 	let peer: Endorser;
 	let peers: Endorser[];
 	let gateway: sinon.SinonStubbedInstance<Gateway>;
-	let network: Network;
+	let network: NetworkImpl;
 	let channel: sinon.SinonStubbedInstance<Channel>;
 	let eventInfo: EventInfo;
 	const transactionId = 'TX_ID';
 
-	beforeEach(async () => {
+	beforeEach(() => {
 		peer = sinon.createStubInstance(Endorser);
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-explicit-any
 		(peer as any).name = 'peer1';
 		peers = [peer];
 
@@ -62,10 +63,13 @@ describe('commit listener', () => {
 		const client = sinon.createStubInstance(Client);
 		const eventer = sinon.createStubInstance(Eventer);
 		client.newEventer.withArgs(peer.name).returns(eventer);
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-explicit-any
 		(channel as any).client = client;
 
 		network = new NetworkImpl(gateway as unknown as Gateway, channel);
 
+		// eslint-disable-next-line max-len
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-explicit-any
 		eventServiceManager = (network as any).eventServiceManager;
 	});
 
@@ -122,7 +126,7 @@ describe('commit listener', () => {
 		await network.addCommitListener(listener, peers, transactionId);
 		eventService.sendError(error);
 
-		sinon.assert.calledWithMatch(listener, { peer }, undefined);
+		sinon.assert.calledWithMatch(listener, {peer}, undefined);
 	});
 
 	it('removed listener does not receive events', async () => {
@@ -184,10 +188,11 @@ describe('commit listener', () => {
 
 		await network.addCommitListener(listener, peers, transactionId);
 
-		sinon.assert.calledWithMatch(listener, { peer }, undefined);
+		sinon.assert.calledWithMatch(listener, {peer}, undefined);
 	});
 
 	it('listener can remove itself on error starting event service', async () => {
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const listener = sinon.fake((err, event) => {
 			if (err) {
 				network.removeCommitListener(listener);

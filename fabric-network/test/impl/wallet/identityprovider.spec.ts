@@ -1,28 +1,29 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /*
  * Copyright 2019 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ImportMock } from 'ts-mock-imports';
+import {ImportMock} from 'ts-mock-imports';
 import {
 	HsmX509Identity,
 	HsmX509Provider
 } from '../../../src/impl/wallet/hsmx509identity';
-import { Identity } from '../../../src/impl/wallet/identity';
-import { IdentityData } from '../../../src/impl/wallet/identitydata';
-import { IdentityProvider } from '../../../src/impl/wallet/identityprovider';
+import {Identity} from '../../../src/impl/wallet/identity';
+import {IdentityData} from '../../../src/impl/wallet/identitydata';
+import {IdentityProvider} from '../../../src/impl/wallet/identityprovider';
 import {
 	X509Identity,
 	X509Provider,
 } from '../../../src/impl/wallet/x509identity';
 
-import { Utils } from 'fabric-common';
+import {Utils} from 'fabric-common';
 const fakeCryptoSuite = {
 	getKeySize: () => {
 		return 256;
 	}
-}
+};
 ImportMock.mockFunction(Utils, 'newCryptoSuite', fakeCryptoSuite);
 import chai = require('chai');
 const expect: Chai.ExpectStatic = chai.expect;
@@ -103,7 +104,8 @@ describe('IdentityProvider', () => {
 		const identity: Identity = providerData.identity;
 
 		Object.keys(providerData.dataVersions).forEach((dataVersion: string) => describe(dataVersion, () => {
-			let identityData: any;
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			let identityData:any;
 
 			beforeEach(() => {
 				identityData = providerData.dataVersions[dataVersion];
@@ -123,7 +125,7 @@ describe('IdentityProvider', () => {
 			it('Throws for JSON with unsupported version', () => {
 				identityData.version = Number.MAX_SAFE_INTEGER;
 				expect(() => provider.fromJson(identityData))
-					.to.throw('Unsupported identity version: ' + Number.MAX_SAFE_INTEGER);
+					.to.throw(`Unsupported identity version: ${Number.MAX_SAFE_INTEGER}`);
 			});
 
 			it('Throws for JSON with incorrect type', () => {
@@ -149,6 +151,7 @@ describe('IdentityProvider', () => {
 
 			it('getUserContext fails with message containing missing identity credentials', async () => {
 				try {
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
 					await provider.getUserContext({} as any, 'dummy');
 				} catch (error) {
 					expect(error.message).to.contain('X.509 identity is missing the credential data');

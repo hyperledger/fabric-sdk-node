@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Checkpointer } from '../../src/checkpointer';
-import { DefaultCheckpointers } from '../../src/defaultcheckpointers';
+import {Checkpointer} from '../../src/checkpointer';
+import {DefaultCheckpointers} from '../../src/defaultcheckpointers';
 import * as testUtils from '../testutils';
 import Long = require('long');
 import path = require('path');

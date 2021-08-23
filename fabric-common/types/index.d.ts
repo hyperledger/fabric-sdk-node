@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /**
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -81,7 +83,7 @@ export interface ConnectionInfo {
 	type: string;
 	name: string;
 	url: string;
-	options: object;
+	options: Record<string, unknown>;
 }
 export interface ServiceError extends Error {
 	connection: ConnectionInfo;
@@ -307,7 +309,8 @@ export class EventService extends ServiceAction {
 	public isListening(): boolean;
 	public unregisterEventListener(eventListener: EventListener): EventService;
 	public registerTransactionListener(txid: string, callback: EventCallback, options: EventRegistrationOptions): EventListener;
-	public registerChaincodeListener(chaincodeId: string, eventName: string, callback: EventCallback, options: EventRegistrationOptions): EventListener;
+	public registerChaincodeListener(chaincodeId: string, eventName: string,
+		callback: EventCallback, options: EventRegistrationOptions): EventListener;
 	public registerBlockListener(callback: EventCallback, options: EventRegistrationOptions): EventListener;
 	public setTargets(targets: Eventer[]): void;
 	public isStarted(): boolean;
@@ -337,7 +340,7 @@ export class Client {
 	public newIdentityContext(user: User): IdentityContext;
 
 	public getConnectionOptions(options?: ConnectOptions): ConnectOptions;
-	public setCentralizedConnectionOptions(options: object): Client;
+	public setCentralizedConnectionOptions(options: Record<string, unknown>): Client;
 	public newEndpoint(options: ConnectOptions): Endpoint;
 	public newEndorser(name: string, mspid?: string): Endorser;
 	public getEndorser(name: string, mspid?: string): Endorser;

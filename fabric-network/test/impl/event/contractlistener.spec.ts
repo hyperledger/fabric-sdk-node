@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /*
  * Copyright 2020 IBM All Rights Reserved.
  *
@@ -5,18 +7,18 @@
  */
 
 import sinon = require('sinon');
-import { expect } from 'chai';
+import {expect} from 'chai';
 import Long = require('long');
 
-import { Channel, Client, Endorser, Eventer, EventInfo, IdentityContext } from 'fabric-common';
+import {Channel, Client, Endorser, Eventer, EventInfo, IdentityContext} from 'fabric-common';
 import * as fabproto6 from 'fabric-protos';
-import { BlockEvent, ContractEvent, ContractListener, ListenerOptions } from '../../../src/events';
-import { NetworkImpl } from '../../../src/network';
+import {BlockEvent, ContractEvent, ContractListener, ListenerOptions} from '../../../src/events';
+import {NetworkImpl} from '../../../src/network';
 import * as testUtils from '../../testutils';
-import { StubEventService } from './stubeventservice';
-import { Contract, ContractImpl } from '../../../src/contract';
-import { Gateway } from '../../../src/gateway';
-import { StubCheckpointer } from './stubcheckpointer';
+import {StubEventService} from './stubeventservice';
+import {Contract, ContractImpl} from '../../../src/contract';
+import {Gateway} from '../../../src/gateway';
+import {StubCheckpointer} from './stubcheckpointer';
 
 interface StubContractListener extends ContractListener {
 	completePromise: Promise<ContractEvent[]>;
@@ -34,7 +36,7 @@ describe('contract event listener', () => {
 	const chaincodeId = 'bourbons';
 	const eventPayload = 'payload';
 
-	beforeEach(async () => {
+	beforeEach(() => {
 		eventService = new StubEventService('stub');
 
 		gateway = sinon.createStubInstance(Gateway);
@@ -48,12 +50,14 @@ describe('contract event listener', () => {
 		channel.newEventService.returns(eventService);
 
 		const endorser = sinon.createStubInstance(Endorser);
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-explicit-any
 		(endorser as any).name = 'endorser';
 		channel.getEndorsers.returns([endorser]);
 
 		const client = sinon.createStubInstance(Client);
 		const eventer = sinon.createStubInstance(Eventer);
 		client.newEventer.returns(eventer);
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-explicit-any
 		(channel as any).client = client;
 
 		network = new NetworkImpl(gateway as unknown as Gateway, channel);
@@ -61,7 +65,7 @@ describe('contract event listener', () => {
 		listener = testUtils.newAsyncListener<ContractEvent>();
 		spyListener = sinon.spy(listener);
 
-		const namespace: string = 'biscuitContract';
+		const namespace = 'biscuitContract';
 		contract = new ContractImpl(network, chaincodeId, namespace);
 	});
 
@@ -95,11 +99,16 @@ describe('contract event listener', () => {
 		return block;
 	}
 
-	function addTransaction(event: any, transaction: any, statusCode: number = fabproto6.protos.TxValidationCode.VALID, index: number = 0, transactionId?: string): void {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	function addTransaction(event: any, transaction: any,
+		statusCode: number = fabproto6.protos.TxValidationCode.VALID, index = 0, transactionId?: string): void {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
 		event.block.data.data.push(newEnvelope(transaction, transactionId));
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 		event.block.metadata.metadata[fabproto6.common.BlockMetadataIndex.TRANSACTIONS_FILTER][index] = statusCode;
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	function newEnvelope(transaction: any, transactionId?: string): any {
 		const channelHeader = new fabproto6.common.ChannelHeader();
 		channelHeader.type = fabproto6.common.HeaderType.ENDORSER_TRANSACTION;
@@ -108,26 +117,31 @@ describe('contract event listener', () => {
 		const payload = new fabproto6.common.Payload();
 		payload.header =  new fabproto6.common.Header();
 		payload.header.channel_header = channelHeader as unknown as Buffer;
+
 		payload.data = transaction;
 
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const envelope: any = {};
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 		envelope.payload = payload;
 
 		return envelope;
 	}
 
-	function newTransaction(ccId: string = contract.chaincodeId): any {
+	function newTransaction(ccId: string = contract.chaincodeId): fabproto6.protos.Transaction {
 		const transaction = new fabproto6.protos.Transaction();
 		transaction.actions.push(newTransactionAction(ccId));
 		return transaction;
 	}
 
-	function newTransactionAction(ccId: string): any {
+
+	function newTransactionAction(ccId: string): fabproto6.protos.TransactionAction {
 		const transactionAction = new fabproto6.protos.TransactionAction();
 		transactionAction.payload = newChaincodeActionPayload(ccId);
 		return transactionAction;
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	function newChaincodeActionPayload(ccId: string): any {
 		const chaincodeActionPayload = new fabproto6.protos.ChaincodeActionPayload();
 		chaincodeActionPayload.action = newChaincodeEndorsedAction(ccId);
@@ -233,7 +247,7 @@ describe('contract event listener', () => {
 		eventService.sendEvent(event);
 		await listener.completePromise;
 
-		sinon.assert.calledOnceWithExactly(spyListener, sinon.match({ chaincodeId, eventName }));
+		sinon.assert.calledOnceWithExactly(spyListener, sinon.match({chaincodeId, eventName}));
 	});
 
 	it('stops listening for events after the listener has been removed', async () => {
@@ -263,8 +277,8 @@ describe('contract event listener', () => {
 		eventService.sendEvent(event);
 		await listener.completePromise;
 
-		sinon.assert.calledWith(spyListener.getCall(0), sinon.match({ chaincodeId, eventName }));
-		sinon.assert.calledWith(spyListener.getCall(1), sinon.match({ chaincodeId, eventName }));
+		sinon.assert.calledWith(spyListener.getCall(0), sinon.match({chaincodeId, eventName}));
+		sinon.assert.calledWith(spyListener.getCall(1), sinon.match({chaincodeId, eventName}));
 	});
 
 	it('listener only receives events matching its chaincode id', async () => {
@@ -279,7 +293,7 @@ describe('contract event listener', () => {
 		eventService.sendEvent(goodEvent);
 		await listener.completePromise;
 
-		sinon.assert.calledOnceWithExactly(spyListener, sinon.match({ chaincodeId, eventName }));
+		sinon.assert.calledOnceWithExactly(spyListener, sinon.match({chaincodeId, eventName}));
 	});
 
 	it('error thrown by listener does not disrupt other listeners', async () => {
@@ -346,6 +360,7 @@ describe('contract event listener', () => {
 	});
 
 	it('listener defaults to full blocks', async () => {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 		const eventServiceManager = (network as any).eventServiceManager;
 		const stub = sinon.stub(eventServiceManager, 'startEventService');
 
@@ -355,6 +370,7 @@ describe('contract event listener', () => {
 	});
 
 	it('listener can receive filtered blocks', async () => {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 		const eventServiceManager = (network as any).eventServiceManager;
 		const stub = sinon.stub(eventServiceManager, 'startEventService');
 		const event = newFilteredEvent(1);
@@ -371,6 +387,7 @@ describe('contract event listener', () => {
 	});
 
 	it('listener can receive private blocks', async () => {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 		const eventServiceManager = (network as any).eventServiceManager;
 		const stub = sinon.stub(eventServiceManager, 'startEventService');
 		const event = newPrivateEvent(1);
@@ -398,7 +415,7 @@ describe('contract event listener', () => {
 		eventService.sendEvent(goodEvent);
 
 		const contractEvents = await listener.completePromise;
-		expect(contractEvents[0].getTransactionEvent()).to.include({ isValid: true });
+		expect(contractEvents[0].getTransactionEvent()).to.include({isValid: true});
 	});
 
 	it('filtered events do not contain payload', async () => {
@@ -485,7 +502,7 @@ describe('contract event listener', () => {
 			eventService.sendEvent(event);
 			await listener.completePromise;
 
-			sinon.assert.calledOnceWithExactly(spyListener, sinon.match({ chaincodeId, eventName }));
+			sinon.assert.calledOnceWithExactly(spyListener, sinon.match({chaincodeId, eventName}));
 		});
 
 		it('checkpoint listener receives events from checkpoint block number', async () => {

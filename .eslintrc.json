@@ -73,7 +73,7 @@
     },
     "overrides": [
         {
-        "files": ["fabric-network/src/**"],
+        "files": ["**/*.ts"],
         "parser": "@typescript-eslint/parser",
         "plugins": [
             "@typescript-eslint",
@@ -92,7 +92,7 @@
         "ecmaFeatures":{
             "modules":true
         },
-        "project": ["./fabric-network/tsconfig.json"]
+        "project": ["./fabric-network/tsconfig.lint.json","./test/ts-scenario/tsconfig.json","./fabric-common/types/tsconfig.json"]
         },
         "rules": {
             "indent": "off",

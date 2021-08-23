@@ -12,9 +12,9 @@ import util = require('util');
 import rawRimraf = require('rimraf');
 const rimraf = util.promisify(rawRimraf);
 
-import { FileSystemWalletStore } from '../../../src/impl/wallet/filesystemwalletstore';
-import { InMemoryWalletStore } from '../../../src/impl/wallet/inmemorywalletstore';
-import { WalletStore } from '../../../src/impl/wallet/walletstore';
+import {FileSystemWalletStore} from '../../../src/impl/wallet/filesystemwalletstore';
+import {InMemoryWalletStore} from '../../../src/impl/wallet/inmemorywalletstore';
+import {WalletStore} from '../../../src/impl/wallet/walletstore';
 
 import chai = require('chai');
 const expect = chai.expect;
@@ -33,7 +33,7 @@ describe('WalletStore', () => {
 			tmpDir = await createTempDir();
 			return await FileSystemWalletStore.newInstance(tmpDir);
 		},
-		InMemoryWalletStore: async () => new InMemoryWalletStore(),
+		InMemoryWalletStore:  () => Promise.resolve(new InMemoryWalletStore()),
 	};
 
 	async function deleteTmpDir(): Promise<void> {

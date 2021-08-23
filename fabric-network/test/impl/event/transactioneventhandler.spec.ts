@@ -1,3 +1,6 @@
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /*
  * Copyright 2019 IBM All Rights Reserved.
  *
@@ -18,12 +21,12 @@ import {
 } from 'fabric-common';
 import Long = require('long');
 
-import { Gateway } from '../../../src/gateway';
-import { Network, NetworkImpl } from '../../../src/network';
-import { EventServiceManager } from '../../../src/impl/event/eventservicemanager';
-import { TransactionEventStrategy } from '../../../src/impl/event/transactioneventstrategy';
-import { StubEventService } from './stubeventservice';
-import { TransactionEventHandler } from '../../../src/impl/event/transactioneventhandler';
+import {Gateway} from '../../../src/gateway';
+import {Network, NetworkImpl} from '../../../src/network';
+import {EventServiceManager} from '../../../src/impl/event/eventservicemanager';
+import {TransactionEventStrategy} from '../../../src/impl/event/transactioneventstrategy';
+import {StubEventService} from './stubeventservice';
+import {TransactionEventHandler} from '../../../src/impl/event/transactioneventhandler';
 
 describe('TransactionEventHandler', () => {
 	let eventServiceManager: sinon.SinonStubbedInstance<EventServiceManager>;
@@ -38,8 +41,9 @@ describe('TransactionEventHandler', () => {
 	let strategy: TransactionEventStrategy;
 	let options: any;
 
-	beforeEach(async () => {
+	beforeEach(() => {
 		peer = sinon.createStubInstance(Endorser);
+
 		(peer as any).name = 'peer1';
 
 		eventService = new StubEventService(peer.name);
@@ -81,7 +85,7 @@ describe('TransactionEventHandler', () => {
 
 		stubStrategy = sinon.createStubInstance(TransactionEventStrategy);
 		stubStrategy.getPeers.returns([peer]);
-		strategy = stubStrategy as any;
+		strategy = stubStrategy as any as TransactionEventStrategy ;
 	});
 
 	afterEach(() => {
@@ -97,7 +101,7 @@ describe('TransactionEventHandler', () => {
 	});
 
 	describe('event handling', () => {
-		let handler;
+		let handler:TransactionEventHandler;
 
 		beforeEach(() => {
 			handler = new TransactionEventHandler(transactionId, network, strategy);
@@ -241,8 +245,8 @@ describe('TransactionEventHandler', () => {
 	});
 
 	describe('timeouts', () => {
-		let handler;
-		let clock;
+		let handler:TransactionEventHandler;
+		let clock:sinon.SinonFakeTimers;
 
 		beforeEach(() => {
 			clock = sinon.useFakeTimers();

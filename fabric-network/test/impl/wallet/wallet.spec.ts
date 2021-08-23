@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Identity } from '../../../src/impl/wallet/identity';
-import { Wallet } from '../../../src/impl/wallet/wallet';
-import { Wallets } from '../../../src/impl/wallet/wallets';
-import { X509Identity } from '../../../src/impl/wallet/x509identity';
+import {Identity} from '../../../src/impl/wallet/identity';
+import {Wallet} from '../../../src/impl/wallet/wallet';
+import {Wallets} from '../../../src/impl/wallet/wallets';
+import {X509Identity} from '../../../src/impl/wallet/x509identity';
 
 import chai = require('chai');
 import chaiAsPromised = require('chai-as-promised');
@@ -93,6 +93,6 @@ describe('Wallet', () => {
 		const wallet = await newWallet();
 		const promise = wallet.put('label', badIdentity);
 
-		expect(promise).to.be.rejectedWith(badIdentity.type);
+		void expect(promise).to.be.rejectedWith(badIdentity.type);
 	});
 });

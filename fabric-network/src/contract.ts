@@ -194,7 +194,7 @@ export class ContractImpl {
 	private discoveryService?: DiscoveryService;
 	private readonly contractListeners: Map<ContractListener, ListenerSession> = new Map();
 	private discoveryInterests: DiscoveryInterest[];
-	private discoveryResultsListeners: DiscoveryResultsCallback[] = [];
+	private discoveryResultsListeners: DiscoveryResultsCallback[] = new Array<DiscoveryResultsCallback>();
 
 	constructor(network: NetworkImpl, chaincodeId: string, namespace: string) {
 		const method = `constructor[${namespace}]`;

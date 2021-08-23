@@ -208,19 +208,19 @@ describe('Contract', () => {
 	describe('#registerDiscoveryResultsListener', () => {
 		it('add', () => {
 			contract.registerDiscoveryResultsListener(() => {});
-			expect(contract.discoveryResultsListners.length).to.be.equal(1);
+			expect(contract.discoveryResultsListeners.length).to.be.equal(1);
 		});
 	});
 
 	describe('#notifyDiscoveryResultsListeners', () => {
 		it('run with none added', () => {
 			contract.notifyDiscoveryResultsListeners();
-			expect(contract.discoveryResultsListners.length).to.be.equal(0);
+			expect(contract.discoveryResultsListeners.length).to.be.equal(0);
 		});
 		it('run with one added', () => {
 			contract.registerDiscoveryResultsListener(() => {});
 			contract.notifyDiscoveryResultsListeners();
-			expect(contract.discoveryResultsListners.length).to.be.equal(0);
+			expect(contract.discoveryResultsListeners.length).to.be.equal(0);
 		});
 	});
 

@@ -8,14 +8,14 @@ import sinon = require('sinon');
 import chai = require('chai');
 const expect = chai.expect;
 
-import { Channel, Endorser } from 'fabric-common';
+import {Channel, Endorser} from 'fabric-common';
 
-import { Network, NetworkImpl } from '../../../src/network';
-import { Gateway } from '../../../src/gateway';
+import {Network, NetworkImpl} from '../../../src/network';
+import {ConnectedGatewayOptions, Gateway} from '../../../src/gateway';
 
-import { AllForTxStrategy } from '../../../src/impl/event/allfortxstrategy';
-import { AnyForTxStrategy } from '../../../src/impl/event/anyfortxstrategy';
-import { TransactionEventHandler } from '../../../src/impl/event/transactioneventhandler';
+import {AllForTxStrategy} from '../../../src/impl/event/allfortxstrategy';
+import {AnyForTxStrategy} from '../../../src/impl/event/anyfortxstrategy';
+import {TransactionEventHandler, TxEventHandlerFactory} from '../../../src/impl/event/transactioneventhandler';
 import * as EventStrategies from '../../../src/impl/event/defaulteventhandlerstrategies';
 
 describe('DefaultEventHandlerStrategies', () => {
@@ -55,7 +55,7 @@ describe('DefaultEventHandlerStrategies', () => {
 		channel.getEndorsers.withArgs(otherMspId).returns([]);
 
 		gateway = sinon.createStubInstance(Gateway);
-		gateway.getOptions.returns({} as any);
+		gateway.getOptions.returns({} as ConnectedGatewayOptions);
 		gateway.getIdentity.returns({
 			mspId,
 			type: 'stub'
@@ -71,7 +71,9 @@ describe('DefaultEventHandlerStrategies', () => {
 	});
 
 	strategyNames.forEach((strategyName) => describe(strategyName, () => {
-		const createTxEventHandler = EventStrategies[strategyName];
+
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+		const createTxEventHandler:TxEventHandlerFactory = EventStrategies[strategyName];
 
 		let eventHandler;
 
@@ -84,22 +86,28 @@ describe('DefaultEventHandlerStrategies', () => {
 		});
 
 		it('Sets transaction ID on event handler', () => {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 			expect(eventHandler.transactionId).to.equal(transactionId);
 		});
 
 		it('Sets correct strategy on event handler', () => {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			const expectedType = expectedStrategyTypes[strategyName];
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 			expect(eventHandler.strategy).to.be.an.instanceOf(expectedType);
 		});
 
 		it('Sets correct peers', () => {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			const expectedPeers = expectedStrategyPeers[strategyName];
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
 			expect(eventHandler.strategy.getPeers()).to.equal(expectedPeers);
 		});
 	}));
 
 	strategyNames.filter((strategyName) => strategyName.startsWith('PREFER_')).forEach((strategyName) => describe(`${strategyName} (no peers in organization)`, () => {
-		const createTxEventHandler = EventStrategies[strategyName];
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+		const createTxEventHandler:TxEventHandlerFactory = EventStrategies[strategyName];
 
 		let eventHandler;
 
@@ -112,7 +120,7 @@ describe('DefaultEventHandlerStrategies', () => {
 		});
 
 		it('Sets correct peers', () => {
-			const expectedPeers = expectedStrategyPeers[strategyName];
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
 			expect(eventHandler.strategy.getPeers()).to.equal(networkPeers);
 		});
 	}));
