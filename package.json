@@ -1,7 +1,7 @@
 {
   "name": "fabric-sdk-node",
-  "version": "2.3.0-snapshot",
-  "tag": "unstable",
+  "version": "2.2.9",
+  "tag": "latest",
   "main": "index.js",
   "private": true,
   "repository": {
