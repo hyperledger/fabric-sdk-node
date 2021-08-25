@@ -13,8 +13,7 @@ import * as path from 'path';
 const commandRunner: CommandRunner = CommandRunner.getInstance();
 
 // CLI verbosity in commands
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-const VERBOSE_CLI: boolean = JSON.parse(Constants.CLI_VERBOSITY);
+const VERBOSE_CLI: boolean = BaseUtils.getVerboseCLI();
 
 /**
  * Use the CLI container to install chaincode on an organization peer
@@ -70,9 +69,7 @@ export async function cli_is_chaincode_install_for_org(ccName: string, ccVersion
 			'--connTimeout', Constants.CLI_TIMEOUT as string,
 		];
 
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		const results = await commandRunner.runShellCommand(true, command.join(' '), VERBOSE_CLI) ;
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 		const list = results.stdout as string;
 		BaseUtils.logMsg(`\n CLI found ==>${list}<==`);
 
@@ -114,9 +111,7 @@ export async function cli_is_chaincode_instantiated_for_org(channelName: string,
 			'--connTimeout', Constants.CLI_TIMEOUT as string,
 		];
 
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		const results = await commandRunner.runShellCommand(true, command.join(' '), VERBOSE_CLI) ;
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 		const list = results.stdout as string;
 		BaseUtils.logMsg(`\n CLI found ==>${list}<==`);
 
@@ -226,9 +221,7 @@ export async function cli_chaincode_list_instantiated(channelName: string): Prom
 		'-C', channelName,
 	];
 
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-explicit-any
-	const instantiated: any = await commandRunner.runShellCommand(true, listInstantiatedCommand.join(' '), VERBOSE_CLI) ;
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+	const instantiated = await commandRunner.runShellCommand(true, listInstantiatedCommand.join(' '), VERBOSE_CLI) ;
 	return instantiated.stdout as string;
 }
 
@@ -241,9 +234,7 @@ export async function cli_lifecycle_chaincode_query_installed(orgName: string): 
 		'docker', 'exec', `${orgName}_cli`, 'peer', 'lifecycle', 'chaincode', 'queryinstalled',
 	];
 
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-explicit-any
-	const installed: any = await commandRunner.runShellCommand(true, queryInstalledCommand.join(' '), VERBOSE_CLI) ;
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+	const installed = await commandRunner.runShellCommand(true, queryInstalledCommand.join(' '), VERBOSE_CLI) ;
 	return installed.stdout as string;
 }
 
@@ -417,7 +408,7 @@ export async function cli_lifecycle_chaincode_query_commit(
 		BaseUtils.logMsg(`Smart contract with name ${ccName} is committed for organization ${orgName} using the CLI`);
 		return Promise.resolve(true);
 	} catch (err) {
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
 		if (err.stderr.includes('404')) {
 			BaseUtils.logMsg(`Smart contract with name ${ccName} is not committed for organization ${orgName} using the CLI`);
 			return Promise.resolve(false);

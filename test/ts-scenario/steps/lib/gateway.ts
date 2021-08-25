@@ -1,10 +1,11 @@
+/**
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/**
- * SPDX-License-Identifier: Apache-2.0
- */
 
 'use strict';
 
@@ -19,6 +20,7 @@ import * as AdminUtils from './utility/adminUtils';
 import * as BaseUtils from './utility/baseUtils';
 import {CommonConnectionProfileHelper} from './utility/commonConnectionProfileHelper';
 import {StateStore} from './utility/stateStore';
+import util = require('util');
 
 const stateStore: StateStore = StateStore.getInstance();
 const txnTypes: string[] = ['evaluate', 'submit'];
@@ -45,7 +47,7 @@ const QueryStrategies: { [key: string]: QueryHandlerFactory } = {
 	MSPID_SCOPE_ROUND_ROBIN : DefaultQueryHandlerStrategies.MSPID_SCOPE_ROUND_ROBIN,
 };
 
-interface GatewayData {
+export interface GatewayData {
 	gateway: Gateway;
 	profile: any;
 	result?: {
@@ -70,8 +72,7 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 
 	// Might already have a wallet to use, but sanitize the passed walletType
 	if (!walletType || !supportedWallets.includes(walletType)) {
-		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-		BaseUtils.logAndThrow(`Passed wallet type [${walletType}] is not supported, must be one of: ${supportedWallets}`);
+		BaseUtils.logAndThrow(`Passed wallet type [${walletType}] is not supported, must be one of: ${String(supportedWallets)}`);
 	}
 
 	let useHSM = false;
@@ -90,26 +91,28 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 				wallet = await Wallets.newInMemoryWallet();
 				break;
 			case Constants.FILE_WALLET:
-				// eslint-disable-next-line no-case-declarations
-				const tempDir: string = path.join(__dirname, Constants.LIB_TO_TEMP, Constants.FILE_WALLET);
-				if (fs.existsSync(tempDir)) {
-					BaseUtils.recursiveDirDelete(tempDir);
+				{
+					const tempDir: string = path.join(__dirname, Constants.LIB_TO_TEMP, Constants.FILE_WALLET);
+					if (fs.existsSync(tempDir)) {
+						BaseUtils.recursiveDirDelete(tempDir);
+					}
+					fs.mkdirSync(tempDir);
+					wallet = await Wallets.newFileSystemWallet(tempDir);
 				}
-				fs.mkdirSync(tempDir);
-				wallet = await Wallets.newFileSystemWallet(tempDir);
 				break;
 			case Constants.COUCH_WALLET:
 				wallet = await Wallets.newCouchDBWallet({url: Constants.COUCH_WALLET_URL as string});
 				break;
 			case Constants.HSM_WALLET:
-				wallet = await Wallets.newInMemoryWallet();
-				useHSM = true;
-				// eslint-disable-next-line no-case-declarations
-				const hsmProvider = new HsmX509Provider(hsmOptions);
-				wallet.getProviderRegistry().addProvider(hsmProvider);
+				{
+					wallet = await Wallets.newInMemoryWallet();
+					useHSM = true;
+					const hsmProvider = new HsmX509Provider(hsmOptions);
+					wallet.getProviderRegistry().addProvider(hsmProvider);
 
-				// only persist the wallet for an HSM so a new gateway can re-use
-				stateStore.set(myWalletReference, wallet);
+					// only persist the wallet for an HSM so a new gateway can re-use
+					stateStore.set(myWalletReference, wallet);
+				}
 				break;
 			default:
 				BaseUtils.logAndThrow('Unmatched wallet backing store');
@@ -119,11 +122,8 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 
 			// get the current HSM Provider and close it's pkcs session and logout
 			const currentHSMProvider = wallet.getProviderRegistry().getProvider(HSM_PROVIDER);
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const cryptoSuite: any = currentHSMProvider.getCryptoSuite();
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
 			cryptoSuite.closeSession();
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
 			cryptoSuite.finalize();
 
 			BaseUtils.logMsg('Reusing HSM Wallet. Should expect the user to be found');
@@ -458,8 +458,7 @@ export async function performGatewayTransaction(gatewayName: string, contractNam
 
 	} catch (error) {
 		gatewayObj.result = {type: 'error', response: error.toString()};
-		// eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-		BaseUtils.logError(' --- in gateway transaction:' + error.toString());
+		BaseUtils.logError(` --- in gateway transaction: ${error.toString() as string}`);
 	}
 }
 
@@ -507,8 +506,7 @@ export async function performTransientGatewayTransaction(gatewayName: string, co
 		gatewayObj.result = {type: txnType, response: result};
 	} catch (error) {
 		gatewayObj.result = {type: 'error', response: error.toString()};
-		// eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-		BaseUtils.logError('--- in ' + txnType + ' with transient: ' + error.toString());
+		BaseUtils.logError(`--- in ${txnType} with transient: ${error.toString() as string}`);
 	}
 }
 
@@ -520,8 +518,7 @@ export async function performTransientGatewayTransaction(gatewayName: string, co
 function isSubmit(txnType: string): boolean {
 
 	if (txnTypes.indexOf(txnType) === -1) {
-		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-		throw  new Error(`Unknown transaction type ${txnType}, must be one of ${txnTypes}`);
+		throw  new Error(`Unknown transaction type ${txnType}, must be one of ${util.inspect(txnTypes)}`);
 	}
 	return txnType.localeCompare('submit') === 0 ;
 }
@@ -573,7 +570,7 @@ export function lastTransactionTypeCompare(gatewayName: string, type: string): b
  * Retrieve the last gateway transaction result
  * @param {String} gatewayName the gateway to get the result from
  */
-export function getLastTransactionResult(gatewayName: string): any {
+export function getLastTransactionResult(gatewayName: string): { type: string; response: string | Record<string, unknown>; } | undefined {
 	return getGatewayObject(gatewayName).result;
 }
 

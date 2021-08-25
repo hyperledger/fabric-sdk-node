@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /**
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -12,7 +8,7 @@ import {Constants} from './constants';
 import * as Channel from './lib/channel';
 import * as Contract from './lib/contract';
 import * as BaseUtils from './lib/utility/baseUtils';
-import {StateStore} from './lib/utility/stateStore';
+import {StateStore, FabricState} from './lib/utility/stateStore';
 
 import {Given} from 'cucumber';
 
@@ -23,7 +19,7 @@ const orgNames: string[] = ['Org1', 'Org2'];
 
 Given(/^I use the cli to create and join the channel named (.+?) on the deployed network/, {timeout: Constants.STEP_MED as number}, async (channelName: string) => {
 
-	const fabricState: any = stateStore.get(Constants.FABRIC_STATE);
+	const fabricState = stateStore.get(Constants.FABRIC_STATE) as FabricState;
 	if (!fabricState) {
 		throw new Error('Unable to create/join channel: no Fabric network deployed');
 	}
@@ -47,7 +43,6 @@ Given(/^I use the cli to create and join the channel named (.+?) on the deployed
 			}
 		}
 
-		return Promise.resolve();
 	} catch (err) {
 		return Promise.reject(err);
 	}
@@ -55,7 +50,7 @@ Given(/^I use the cli to create and join the channel named (.+?) on the deployed
 
 Given(/^I use the cli to update the channel with name (.+?) with config file (.+?) on the deployed network/, {timeout: Constants.STEP_MED as number}, async (channelName: string, configTxFile: string) => {
 
-	const fabricState: any = stateStore.get(Constants.FABRIC_STATE);
+	const fabricState = stateStore.get(Constants.FABRIC_STATE) as FabricState;
 	if (!fabricState) {
 		throw new Error('Unable to update channel: no Fabric network deployed');
 	}
@@ -63,7 +58,6 @@ Given(/^I use the cli to update the channel with name (.+?) with config file (.+
 	try {
 		// Update channel
 		await Channel.cli_channel_update(channelName, configTxFile, (fabricState.type.localeCompare('tls') === 0));
-		return Promise.resolve();
 	} catch (err) {
 		return Promise.reject(err);
 	}
@@ -71,7 +65,7 @@ Given(/^I use the cli to update the channel with name (.+?) with config file (.+
 
 Given(/^I use the cli to deploy a (.+?) smart contract named (.+?) at version (.+?) for all organizations on channel (.+?) with endorsement policy (.+?) and arguments (.+?)$/, {timeout: Constants.STEP_MED as number}, async (ccType: string, ccName: string, ccVersion: string, channelName: string, policy: string, initArgs: string) => {
 
-	const fabricState: any = stateStore.get(Constants.FABRIC_STATE);
+	const fabricState = stateStore.get(Constants.FABRIC_STATE) as FabricState;
 	if (!fabricState) {
 		throw new Error('Unable to create/join channel: no Fabric network deployed');
 	}
@@ -105,7 +99,7 @@ Given(/^I use the cli to deploy a (.+?) smart contract named (.+?) at version (.
 Given(/^I use the cli to lifecycle deploy a (.+?) smart contract named (.+?) at version (.+?) as (.+?) for all organizations on channel (.+?) with default endorsement policy and init-required (.+?)$/, {timeout: Constants.STEP_LONG as number}, async (ccType: string, ccName: string, ccVersion: string, ccReference: string, channelName: string, init: string) => {
 	BaseUtils.logMsg(`\n -- Lifecycle deploy start for Smart contract ${ccName}`);
 
-	const fabricState: any = stateStore.get(Constants.FABRIC_STATE);
+	const fabricState = stateStore.get(Constants.FABRIC_STATE) as FabricState;
 	if (!fabricState) {
 		throw new Error('Unable to lifecycle deploy: no Fabric network deployed');
 	}
@@ -136,16 +130,8 @@ Given(/^I use the cli to lifecycle deploy a (.+?) smart contract named (.+?) at 
 
 		// Install on each org
 		for (const orgName of orgNames) {
-			// TODO: Use CLI
-			// const isInstalled: boolean = await AdminUtils.isOrgChaincodeLifecycleInstalledOnChannel(orgName, ccp, ccName, channelName);
-			// if (isInstalled) {
-			// 	BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} has already been
-			// lifecycle installed on the peers for organization ${orgName}`);
-			// } else {
 			await Contract.cli_lifecycle_chaincode_install(ccName, orgName.toLowerCase());
 			BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} has been installed on organization ${orgName} `);
-
-			// }
 		}
 
 		BaseUtils.logMsg(`\n -- Lifecycle deploy step four - approve Smart contract ${ccName}`);

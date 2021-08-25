@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /**
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -12,9 +8,6 @@ import {Constants} from './constants';
 import * as BaseUtils from './lib/utility/baseUtils';
 import {CommandRunner} from './lib/utility/commandRunner';
 import {StateStore} from './lib/utility/stateStore';
-// const os = require('os');
-
-
 import {Given} from 'cucumber';
 import * as path from 'path';
 
@@ -28,8 +21,7 @@ Given(/^I deploy a (.+?) Fabric network at (.+?) version/, {timeout: Constants.S
 
 	BaseUtils.logMsg(` **** checking for a deployed fabric network of type ${type} version ${version}`);
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const fabricState: any = stateStore.get(Constants.FABRIC_STATE);
+	const fabricState = stateStore.get(Constants.FABRIC_STATE) as {deployed:boolean, type:string, version:string};
 
 	if (fabricState) {
 		if (fabricState.deployed) {

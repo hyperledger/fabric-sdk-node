@@ -10,20 +10,17 @@ import * as Listeners from './lib/listeners';
 import {Given, Then, When} from 'cucumber';
 import {EventType, ListenerOptions} from 'fabric-network';
 
-// eslint-disable-next-line @typescript-eslint/require-await
-Given(/^I am listening for (filtered|full) contract events named (.+?) with a listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number}, async (type: EventType, eventName: string, listenerName: string) => {
+Given(/^I am listening for (filtered|full) contract events named (.+?) with a listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number}, (type: EventType, eventName: string, listenerName: string) => {
 	const isActive = true;
 	Listeners.checkContractListenerDetails(listenerName, Constants.CONTRACT, type, eventName, isActive);
 });
 
-// eslint-disable-next-line @typescript-eslint/require-await
-Given(/^I am listening for (filtered|full|private) block events with a listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number}, async (type: EventType, listenerName: string) => {
+Given(/^I am listening for (filtered|full|private) block events with a listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number}, (type: EventType, listenerName: string) => {
 	const isActive = true;
 	Listeners.checkBlockListenerDetails(listenerName, Constants.BLOCK, type, isActive);
 });
 
-// eslint-disable-next-line @typescript-eslint/require-await
-Given(/^I am listening for transaction events with a listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number}, async (listenerName: string) => {
+Given(/^I am listening for transaction events with a listener named (.+?)$/, {timeout: Constants.STEP_SHORT as number}, (listenerName: string) => {
 	const isActive = true;
 	Listeners.checkTransactionListenerDetails(listenerName, Constants.TRANSACTION, isActive);
 });
@@ -109,12 +106,10 @@ Then(/^I receive a maximum ([0-9]+) events from the listener named (.+?)$/, {tim
 	await Listeners.checkListenerCallNumber(listenerName, calls, Constants.LESS_THAN);
 });
 
-// eslint-disable-next-line @typescript-eslint/require-await
-Then('the listener named {word} should have private data containing {string}', {timeout: Constants.STEP_SHORT as number}, async (listenerName: string, privateData: string) => {
+Then('the listener named {word} should have private data containing {string}', {timeout: Constants.STEP_SHORT as number}, (listenerName: string, privateData: string) => {
 	Listeners.checkBlockListenerPrivatePayloads(listenerName, privateData);
 });
 
 Then('the listener named {word} should have contract events with payload containing {string}', {timeout: Constants.STEP_SHORT as number}, (listenerName: string, payload: string) => {
 	Listeners.checkContractListenerPayloads(listenerName, payload);
-	return Promise.resolve();
 });

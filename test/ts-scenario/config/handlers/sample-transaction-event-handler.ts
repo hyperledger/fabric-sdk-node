@@ -26,8 +26,7 @@ import {Endorser} from 'fabric-common';
 class SampleTransactionEventHandler implements TxEventHandler {
 	private readonly network: Network;
 	private readonly transactionId: string;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	private readonly notificationPromise: any;
+	private readonly notificationPromise: Promise<unknown>;
 	private resolveNotificationPromise!: (value?: unknown) => void;
 	private rejectNotificationPromise!: (reason: Error) => void;
 	private timeoutHandler?: NodeJS.Timeout;
@@ -44,7 +43,6 @@ class SampleTransactionEventHandler implements TxEventHandler {
 		if (peers.length === 0) {
 			throw new Error(`No peers supplied to handle events for transaction ID ${transactionId}`);
 		}
-
 		this.network = network;
 		this.transactionId = transactionId;
 		this.peers = peers;

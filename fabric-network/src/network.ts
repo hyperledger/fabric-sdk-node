@@ -378,7 +378,7 @@ export class NetworkImpl implements Network {
 		} else if (type === 'private') {
 			return new SharedBlockListenerSession(listener, this.realtimePrivateBlockEventSource);
 		} else {
-			throw new Error(`Unsupported event listener type: ${type as unknown as string} `);
+			throw new Error(`Unsupported event listener type: ${type as unknown as string}`);
 		}
 	}
 }

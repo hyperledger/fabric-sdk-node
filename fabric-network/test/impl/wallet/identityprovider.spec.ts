@@ -1,9 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /*
  * Copyright 2019 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
 import {ImportMock} from 'ts-mock-imports';
 import {
@@ -151,8 +152,7 @@ describe('IdentityProvider', () => {
 
 			it('getUserContext fails with message containing missing identity credentials', async () => {
 				try {
-					// eslint-disable-next-line @typescript-eslint/no-explicit-any
-					await provider.getUserContext({} as any, 'dummy');
+					await provider.getUserContext({} as unknown as Identity, 'dummy');
 				} catch (error) {
 					expect(error.message).to.contain('X.509 identity is missing the credential data');
 				}

@@ -1,64 +1,16 @@
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /**
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 'use strict';
 
-// import { Constants } from './constants';
-// import * as AdminUtils from './lib/utility/adminUtils';
 import * as BaseUtils from './lib/utility/baseUtils';
-
-
-// import { When } from 'cucumber';
-
-
-// const stateStore: StateStore = StateStore.getInstance();
-// const ccpNonTls: CommonConnectionProfileHelper = new CommonConnectionProfileHelper(path.join(__dirname, '../config', 'ccp.json'), true);
-// const ccpTls: CommonConnectionProfileHelper = new CommonConnectionProfileHelper(path.join(__dirname, '../config', 'ccp-tls.json'), true);
-
-// When(/^I perform a (.+?) operation on channel (.+?) with (.+?) the response (includes|matches|mirrors) fields (.+?)$/,
-// { timeout: Constants.HUGE_TIME as number }, async (queryOperation: string, channelName: string,
-// orgName: string, compareType: 'includes' | 'matches' | 'mirrors', expectedResponse: string) => {
-
-// 	const fabricState: any = stateStore.get(Constants.FABRIC_STATE);
-// 	if (!fabricState) {
-// 		throw new Error('Unable to create/join channel: no Fabric network deployed');
-// 	}
-// 	const tls: boolean = (fabricState.type.localeCompare('tls') === 0);
-// 	const ccp: CommonConnectionProfileHelper = tls ? ccpTls : ccpNonTls;
-
-// 	// Perform query
-// 	const response: any = await AdminUtils.performChannelQueryOperation(queryOperation, channelName, orgName, ccp, undefined);
-
-// 	// check response
-// 	BaseUtils.logMsg(`Recursively checking response object from ${queryOperation}`);
-// 	validateObjectKeyMatch(JSON.parse(expectedResponse), response, compareType);
-
-// });
-
-// When(/^I perform a (.+?) operation with arguments (.+?) on
-// channel (.+?) with (.+?) the response (includes|matches|mirrors) fields (.+?)$/,
-// { timeout: Constants.HUGE_TIME as number },
-// async (queryOperation: string, args: string,
-// channelName: string, orgName: string, compareType: 'includes' | 'matches' | 'mirrors' , expectedResponse: string) => {
-
-// 	const fabricState: any = stateStore.get(Constants.FABRIC_STATE);
-// 	if (!fabricState) {
-// 		throw new Error('Unable to create/join channel: no Fabric network deployed');
-// 	}
-// 	const tls: boolean = (fabricState.type.localeCompare('tls') === 0);
-// 	const ccp: CommonConnectionProfileHelper = tls ? ccpTls : ccpNonTls;
-
-// 	const response: any = await AdminUtils.performChannelQueryOperation(queryOperation, channelName, orgName, ccp, JSON.parse(args));
-
-// 	// check response
-// 	BaseUtils.logMsg(`Recursively checking response object from ${queryOperation}`);
-// 	validateObjectKeyMatch(JSON.parse(expectedResponse), response, compareType);
-// });
+import util = require('util')
 
 /**
  * Validate two passed items against a match requirement:
@@ -98,7 +50,7 @@ function validateObjectKeyMatch(expected: any, actual: any, compareType: 'includ
 					// eslint-disable-next-line @typescript-eslint/no-unused-vars
 					return validateObjectKeyMatch(expected[key], actual[key], compareType);
 				} else {
-					BaseUtils.logAndThrow(`-->Missing key in response expected field ${key} to be present in ${{actual}}`);
+					BaseUtils.logAndThrow(`-->Missing key in response expected field ${key} to be present in ${util.inspect(actual)}`);
 				}
 			}
 		}
@@ -107,23 +59,23 @@ function validateObjectKeyMatch(expected: any, actual: any, compareType: 'includ
 		switch (compareType) {
 			case 'matches':
 				if (expected !== actual) {
-					BaseUtils.logAndThrow(`-->Mismatched items expected ${expected} but found ${actual}`);
+					BaseUtils.logAndThrow(`-->Mismatched items expected ${util.inspect(expected)} but found ${util.inspect(actual)}`);
 				} else {
-					BaseUtils.logMsg(`-->Confirmed match of expected key value ${actual}`);
+					BaseUtils.logMsg(`-->Confirmed match of expected key value ${util.inspect(actual)}`);
 				}
 				break;
 			case 'includes':
 				if (expected !== actual) {
 					return false;
 				} else {
-					BaseUtils.logMsg(`-->Confirmed existence of required 'include' key with value ${actual}`);
+					BaseUtils.logMsg(`-->Confirmed existence of required 'include' key with value ${util.inspect(actual)}`);
 					return true;
 				}
 			case 'mirrors':
 				BaseUtils.logMsg('-->Confirmed existence of required \'mirror\' key name and presence of a value');
 				break;
 			default:
-				throw new Error(`Unconditioned switch type ${compareType} passed to validate match`);
+				throw new Error(`Unconditioned switch type ${util.inspect(compareType)} passed to validate match`);
 		}
 	}
 }

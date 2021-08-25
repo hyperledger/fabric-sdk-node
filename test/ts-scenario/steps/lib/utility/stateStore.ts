@@ -4,6 +4,8 @@
 
 'use strict';
 
+export type FabricState = {deployed:boolean, type:string, version:string}
+
 export class StateStore {
 
 	public static getInstance(): StateStore {

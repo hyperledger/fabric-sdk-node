@@ -5,6 +5,7 @@
  */
 
 import {Identity} from './identity';
+import {IdentityData} from './identitydata';
 import {IdentityProviderRegistry, newDefaultProviderRegistry} from './identityproviderregistry';
 import {WalletStore} from './walletstore';
 
@@ -52,11 +53,8 @@ export class Wallet {
 		if (!buffer) {
 			return undefined;
 		}
-
 		const jsonString = buffer.toString(encoding);
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-		const json = JSON.parse(jsonString);
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+		const json = JSON.parse(jsonString) as IdentityData;
 		return this.providerRegistry.getProvider(json.type).fromJson(json);
 	}
 

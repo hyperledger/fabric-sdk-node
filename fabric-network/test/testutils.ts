@@ -21,7 +21,7 @@ const rimraf = util.promisify(_rimraf);
 export function newAsyncListener<T>(expectedCallCount = 1, maxSleep = 0):  {
 	(event: T): Promise<void>;
 	completePromise: Promise<T[]>;} {
-	let resolve;
+	let resolve: (value: T[] | PromiseLike<T[]>) => void;
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const completePromise = new Promise<T[]>((_resolve, _) => resolve = _resolve);
 
@@ -34,7 +34,6 @@ export function newAsyncListener<T>(expectedCallCount = 1, maxSleep = 0):  {
 		events.push(event);
 		expectedCallCount--;
 		if (expectedCallCount === 0) {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 			resolve(events);
 		}
 	};
@@ -57,8 +56,7 @@ export function getRandomInt(max: number) :number {
 }
 
 export async function createTempDir(): Promise<string> {
-	// eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-	const prefix = os.tmpdir + path.sep;
+	const prefix = `${os.tmpdir()}${path.sep}`;
 	return await fs.promises.mkdtemp(prefix);
 }
 

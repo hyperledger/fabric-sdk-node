@@ -13,7 +13,9 @@ import {
 	EventService,
 	IdentityContext,
 	ServiceAction,
-	EventInfo
+	EventInfo,
+	StartRequestOptions,
+	StartEventRequest
 } from 'fabric-common';
 import Long = require('long');
 
@@ -106,13 +108,13 @@ export class StubEventService implements EventService {
 		this.eventListeners.clear();
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars,@typescript-eslint/explicit-module-boundary-types,@typescript-eslint/no-explicit-any
-	build(idContext: IdentityContext, request: any): Buffer {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	build(idContext: IdentityContext, request: StartRequestOptions): Buffer {
 		return Buffer.from('');
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/explicit-module-boundary-types,@typescript-eslint/no-unused-vars
-	send(request: any): Promise<any> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	send(request: StartEventRequest): Promise<void> {
 		return null;
 	}
 

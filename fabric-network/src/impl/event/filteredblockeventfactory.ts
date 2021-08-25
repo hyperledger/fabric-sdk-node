@@ -47,8 +47,8 @@ function newFilteredTransactionEvent(blockEvent: BlockEvent, filteredTransaction
 function newFilteredContractEvents(transactionEvent: TransactionEvent): ContractEvent[] {
 	const chaincodeActions: fabproto6.protos.IFilteredChaincodeAction[] =
 		(transactionEvent.transactionData as fabproto6.protos.IFilteredTransaction).transaction_actions?.chaincode_actions || [];
-	// eslint-disable-next-line max-len
-	return chaincodeActions.map((ccAction) => newFilteredContractEvent(transactionEvent, ccAction.chaincode_event as fabproto6.protos.IChaincodeEvent));
+	return chaincodeActions.map((ccAction) => newFilteredContractEvent(transactionEvent,
+		ccAction.chaincode_event as fabproto6.protos.IChaincodeEvent));
 }
 
 function newFilteredContractEvent(transactionEvent: TransactionEvent, chaincodeEvent: fabproto6.protos.IChaincodeEvent): ContractEvent {

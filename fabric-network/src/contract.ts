@@ -220,7 +220,7 @@ export class ContractImpl {
 	}
 
 	deserializeTransaction(data: Buffer): Transaction {
-		const state: TransactionState = JSON.parse(data.toString()) as TransactionState ;
+		const state = JSON.parse(data.toString()) as TransactionState ;
 		return new Transaction(this, state.name, state);
 	}
 
@@ -327,8 +327,7 @@ export class ContractImpl {
 			}, 30000);
 
 			this.registerDiscoveryResultsListener(
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				(hasDiscoveryResults: boolean): any => {
+				(hasDiscoveryResults: boolean): void => {
 					clearTimeout(handle);
 					if (hasDiscoveryResults) {
 						logger.debug('%s - discovery results have been retieved', method);

@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /**
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -12,7 +8,7 @@ import {Constants} from './constants';
 import * as Gateway from './lib/gateway';
 import * as BaseUtils from './lib/utility/baseUtils';
 import {CommonConnectionProfileHelper} from './lib/utility/commonConnectionProfileHelper';
-import {StateStore} from './lib/utility/stateStore';
+import {StateStore, FabricState} from './lib/utility/stateStore';
 
 import {Given, Then, When} from 'cucumber';
 import * as path from 'path';
@@ -21,9 +17,8 @@ const stateStore: StateStore = StateStore.getInstance();
 
 Given(/^I have a (.+?) backed gateway named (.+?) with discovery set to (.+?) for user (.+?) (?:in organization (.+?) )?using the connection profile named (.+?)$/, {timeout: Constants.STEP_MED as number}, async (walletType: string, gatewayName: string, useDiscovery: string, userName: string, orgName: string, ccpName: string) => {
 
-	const gateways: Map<string, any> = stateStore.get(Constants.GATEWAYS);
-	const fabricState: any = stateStore.get(Constants.FABRIC_STATE);
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+	const gateways = stateStore.get(Constants.GATEWAYS) as  Map<string, Gateway.GatewayData>;
+	const fabricState = stateStore.get(Constants.FABRIC_STATE) as FabricState ;
 	const tls: boolean = (fabricState.type.localeCompare('tls') === 0);
 
 	if (gateways && gateways.has(gatewayName)) {
@@ -31,10 +26,13 @@ Given(/^I have a (.+?) backed gateway named (.+?) with discovery set to (.+?) fo
 		if (walletType !== Constants.HSM_WALLET) {
 			return;
 		}
-		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		gateways.get(gatewayName)!.gateway.disconnect();
-		gateways.delete(gatewayName);
-		BaseUtils.logMsg('Gateway contained an HSM Wallet, discard the old one and create a new Gateway, reusing the in memory wallet holding the HSM identities');
+		const gateway = gateways?.get(gatewayName);
+		if (gateway) {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
+			gateway.gateway.disconnect();
+			gateways.delete(gatewayName);
+			BaseUtils.logMsg('Gateway contained an HSM Wallet, discard the old one and create a new Gateway, reusing the in memory wallet holding the HSM identities');
+		}
 	}
 
 	try {
@@ -83,7 +81,7 @@ Then(/^The gateway named (.+?) has a (.+?) type response$/, {timeout: Constants.
 	if (Gateway.lastTransactionTypeCompare(gatewayName, type)) {
 		return Promise.resolve();
 	} else {
-		throw new Error('Expected and actual result type from previous transaction did not match. Expected [' + type + '] but had [' + (Gateway.getLastTransactionResult(gatewayName).type as string) + ']');
+		throw new Error('Expected and actual result type from previous transaction did not match. Expected [' + type + '] but had [' + (Gateway.getLastTransactionResult(gatewayName)?.type as string) + ']');
 	}
 });
 
@@ -93,7 +91,6 @@ Then(/^The gateway named (.+?) has a (.+?) type response (matching|containing) (
 	if (sameType && sameResponse) {
 		return Promise.resolve();
 	} else {
-		// eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-		throw new Error('Expected and actual results from previous transaction did not match. Expected [' + expected + '] but had [' + Gateway.getLastTransactionResult(gatewayName).response + ']');
+		throw new Error(`Expected and actual results from previous transaction did not match. Expected [${expected}] but had [${Gateway.getLastTransactionResult(gatewayName)?.response as string}]`);
 	}
 });

@@ -10,10 +10,6 @@ import {Identity} from './identity';
 import {IdentityData} from './identitydata';
 import {IdentityProvider} from './identityprovider';
 
-import * as Logger from '../../logger';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const logger = Logger.getLogger('HsmX509Identity');
-
 export interface HsmX509Identity extends Identity {
 	type: 'HSM-X.509';
 	credentials: {

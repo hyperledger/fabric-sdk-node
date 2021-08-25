@@ -93,6 +93,6 @@ describe('Wallet', () => {
 		const wallet = await newWallet();
 		const promise = wallet.put('label', badIdentity);
 
-		void expect(promise).to.be.rejectedWith(badIdentity.type);
+		await expect(promise).to.be.rejectedWith(badIdentity.type);
 	});
 });

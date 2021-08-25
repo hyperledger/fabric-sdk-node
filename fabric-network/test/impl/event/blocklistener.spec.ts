@@ -1,9 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /*
  * Copyright 2020 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
 import sinon = require('sinon');
 import chai = require('chai');
@@ -162,9 +163,9 @@ describe('block listener', () => {
 
 		it('listener can remove itself when receiving event', async () => {
 			listener = testUtils.newAsyncListener<BlockEvent>(2);
-			// eslint-disable-next-line @typescript-eslint/require-await
-			const fake = sinon.fake(async() => {
+			const fake = sinon.fake(() => {
 				network.removeBlockListener(fake);
+				return Promise.resolve();
 			});
 
 			await network.addBlockListener(listener, listenerOptions);

@@ -1,14 +1,14 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /**
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use strict';
 
-import {BlockEvent, BlockListener, Checkpointer, Contract, ContractEvent, ContractListener, EventType, Gateway, ListenerOptions, Network, DefaultCheckpointers} from 'fabric-network';
+import {BlockEvent, BlockListener, Checkpointer, Contract, ContractEvent, ContractListener, EventType, ListenerOptions, Network, DefaultCheckpointers, TransactionEvent} from 'fabric-network';
 import {Constants} from '../constants';
 import * as GatewayHelper from './gateway';
 import * as BaseUtils from './utility/baseUtils';
@@ -17,102 +17,113 @@ import Long = require('long');
 import fs = require('fs');
 import path = require('path');
 import os = require('os');
+import util = require('util');
 
 const stateStore: StateStore = StateStore.getInstance();
 const CHECKPOINT_FILE_KEY = 'checkpointFile';
 
 export async function createContractListener(gatewayName: string, channelName: string, ccName: string,
 	eventName: string, listenerName: string, listenerOptions: ListenerOptions): Promise<void> {
-	const gateways: Map<string, any> = stateStore.get(Constants.GATEWAYS);
-	const gateway: Gateway  = gateways.get(gatewayName).gateway;
-	const contract: Contract = await GatewayHelper.retrieveContractFromGateway(gateway, channelName, ccName);
+	const gateways = stateStore.get(Constants.GATEWAYS) as  Map<string, GatewayHelper.GatewayData>;
 
-	const payloads: ContractEvent[] = [];
+	const gateway = gateways.get(gatewayName);
 
-	// eslint-disable-next-line @typescript-eslint/require-await
-	const listener: ContractListener = async (event: ContractEvent) => {
-		BaseUtils.logMsg(`-> Received a contract event for listener [${listenerName}] of eventName ${eventName}`);
-		if (event.eventName === eventName) {
-			payloads.push(event);
-		}
-	};
-	await contract.addContractListener(listener, listenerOptions);
+	if (gateway) {
 
-	const listenerObject: any = {
-		active: true,
-		eventName,
-		eventType: listenerOptions.type,
-		listener,
-		payloads,
-		type: Constants.CONTRACT,
-		remove: () => contract.removeContractListener(listener)
-	};
-	putListenerObject(listenerName, listenerObject);
+		const contract: Contract = await GatewayHelper.retrieveContractFromGateway(gateway.gateway, channelName, ccName);
+		const payloads: ContractEvent[] = [];
+		const listener: ContractListener = (event: ContractEvent) => {
+			BaseUtils.logMsg(`-> Received a contract event for listener [${listenerName}] of eventName ${eventName}`);
+			if (event.eventName === eventName) {
+				payloads.push(event);
+			}
+			return Promise.resolve();
+		};
+		await contract.addContractListener(listener, listenerOptions);
+
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const listenerObject: any = {
+			active: true,
+			eventName,
+			eventType: listenerOptions.type,
+			listener,
+			payloads,
+			type: Constants.CONTRACT,
+			remove: () => contract.removeContractListener(listener),
+		};
+		putListenerObject(listenerName, listenerObject);
+	}
 }
 
 export async function createBlockListener(gatewayName: string, channelName: string, listenerName: string,
 	listenerOptions: ListenerOptions, endBlock?: number): Promise<void> {
-	const gateways: Map<string, any> = stateStore.get(Constants.GATEWAYS);
-	const gateway: Gateway = gateways.get(gatewayName).gateway;
-	const network: Network = await gateway.getNetwork(channelName);
+	const gateways = stateStore.get(Constants.GATEWAYS) as Map<string, GatewayHelper.GatewayData>;
 
-	const payloads: BlockEvent[] = [];
-	const startBlock = listenerOptions.startBlock ? Long.fromValue(listenerOptions.startBlock).toNumber() : undefined;
+	const gateway = gateways.get(gatewayName);
+	if (gateway) {
+		const network: Network = await gateway.gateway.getNetwork(channelName);
 
-	// Create the listener
-	// eslint-disable-next-line @typescript-eslint/require-await
-	const listener: BlockListener = async (blockEvent: BlockEvent) => {
-		BaseUtils.logMsg('->Received a block event', listenerName);
-		if (startBlock) {
-			BaseUtils.checkSizeEquality(blockEvent.blockNumber.toNumber(), startBlock - 1, true, true);
-		}
-		if (endBlock) {
-			BaseUtils.checkSizeEquality(blockEvent.blockNumber.toNumber(), endBlock + 1, false, true);
-		}
+		const payloads: BlockEvent[] = [];
+		const startBlock = listenerOptions.startBlock ? Long.fromValue(listenerOptions.startBlock).toNumber() : undefined;
 
-		payloads.push(blockEvent);
-		BaseUtils.logMsg('->Received a block event - added blockevent to payloads', listenerName);
-		const transactionEvents = blockEvent.getTransactionEvents();
-		for (const transactionEvent of transactionEvents) {
-			if (transactionEvent.privateData) {
-				BaseUtils.logMsg('->Received a block event - blockevent has privateData', JSON.stringify(transactionEvent.privateData));
+		// Create the listener
+		const listener: BlockListener = (blockEvent: BlockEvent) => {
+			BaseUtils.logMsg('->Received a block event', listenerName);
+			if (startBlock) {
+				BaseUtils.checkSizeEquality(blockEvent.blockNumber.toNumber(), startBlock - 1, true, true);
 			}
-		}
+			if (endBlock) {
+				BaseUtils.checkSizeEquality(blockEvent.blockNumber.toNumber(), endBlock + 1, false, true);
+			}
 
-		if (endBlock && blockEvent.blockNumber.greaterThanOrEqual(endBlock)) {
-			network.removeBlockListener(listener);
-		}
-	};
-	await network.addBlockListener(listener, listenerOptions);
+			payloads.push(blockEvent);
+			BaseUtils.logMsg('->Received a block event - added blockevent to payloads', listenerName);
+			const transactionEvents = blockEvent.getTransactionEvents();
+			for (const transactionEvent of transactionEvents) {
+				if (transactionEvent.privateData) {
+					BaseUtils.logMsg('->Received a block event - blockevent has privateData', JSON.stringify(transactionEvent.privateData));
+				}
+			}
 
-	const listenerObject: any = {
-		active: true,
-		eventType: listenerOptions.type,
-		listener,
-		payloads,
-		type: Constants.BLOCK,
-		remove: () => network.removeBlockListener(listener)
-	};
-	putListenerObject(listenerName, listenerObject);
-	BaseUtils.logMsg('->Stored a block event listener:', listenerName);
+			if (endBlock && blockEvent.blockNumber.greaterThanOrEqual(endBlock)) {
+				network.removeBlockListener(listener);
+			}
+			return Promise.resolve();
+		};
+		await network.addBlockListener(listener, listenerOptions);
+
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const listenerObject: any = {
+			active: true,
+			eventType: listenerOptions.type,
+			listener,
+			payloads,
+			type: Constants.BLOCK,
+			remove: () => {
+				network.removeBlockListener(listener);
+			}
+		};
+		putListenerObject(listenerName, listenerObject);
+		BaseUtils.logMsg('->Stored a block event listener:', listenerName);
+	}
 }
 
 export async function newFileCheckpointer(): Promise<Checkpointer> {
-	// eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-	const prefix = os.tmpdir + path.sep;
+	const prefix = `${os.tmpdir()}${path.sep}`;
 	const tmpDir = await fs.promises.mkdtemp(prefix);
 	const file = path.join(tmpDir, 'checkpoint.json');
-	const checkpointer = await DefaultCheckpointers.file(file);
+	const checkpointer:Checkpointer = await DefaultCheckpointers.file(file);
 	stateStore.set(CHECKPOINT_FILE_KEY, file);
 	return checkpointer;
 }
 
 export async function getFileCheckpointer(): Promise<Checkpointer> {
-	const file = stateStore.get(CHECKPOINT_FILE_KEY);
+	const file = stateStore.get(CHECKPOINT_FILE_KEY) as string;
 	if (!file) {
 		throw new Error('Checkpointer does not exist');
 	}
-	return await DefaultCheckpointers.file(file);
+	const checkpointer: Checkpointer = await DefaultCheckpointers.file(file);
+	return checkpointer;
 }
 
 function getListenerObject(listenerName: string): any {
@@ -130,7 +141,7 @@ function putListenerObject(name: string, listener: any): void {
 }
 
 function getListeners(): Map<string, any> {
-	let listeners: Map<string, any> = stateStore.get(Constants.LISTENERS);
+	let listeners = stateStore.get(Constants.LISTENERS) as  Map<string, any>;
 	if (!listeners) {
 		listeners = new Map();
 		stateStore.set(Constants.LISTENERS, listeners);
@@ -140,7 +151,7 @@ function getListeners(): Map<string, any> {
 }
 
 export async function checkListenerCallNumber(listenerName: string, compareNumber: number, type: string): Promise<void> {
-	await new Promise((resolve: any): any => {
+	await new Promise<void>((resolve): any => {
 		let timeout: any = null;
 		const interval: NodeJS.Timeout = setInterval(() => {
 			let condition: boolean;
@@ -211,8 +222,7 @@ export function checkContractListenerDetails(listenerName: string, listenerType:
 	// Check the listener properties
 	if ((listenerObject.active !== isActive) || (listenerObject.type.localeCompare(listenerType) !== 0) ||
 	(listenerObject.eventName.localeCompare(eventName) !== 0) || (listenerObject.eventType !== eventType)) {
-		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-		const msg = `Listener named ${listenerName} does not have the expected properties [type: ${listenerType}, eventName: ${eventName}, eventType: ${eventType}, active: ${isActive}]`;
+		const msg = `Listener named ${listenerName} does not have the expected properties [type: ${listenerType}, eventName: ${eventName}, eventType: ${eventType}, active: ${util.inspect(isActive)}]`;
 		BaseUtils.logAndThrow(msg);
 	}
 }
@@ -222,8 +232,7 @@ export function checkBlockListenerDetails(listenerName: string, listenerType: st
 
 	// Check the listener properties
 	if ((listenerObject.active !== isActive) || (listenerObject.type.localeCompare(listenerType) !== 0) || (listenerObject.eventType !== eventType)) {
-		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-		const msg = `Listener named ${listenerName} does not have the expected properties [type: ${listenerType}, eventType: ${eventType}, active: ${isActive}]`;
+		const msg = `Listener named ${listenerName} does not have the expected properties [type: ${listenerType}, eventType: ${eventType}, active: ${String(isActive)}]`;
 		BaseUtils.logAndThrow(msg);
 	}
 }
@@ -234,11 +243,11 @@ export function checkBlockListenerPrivatePayloads(listenerName: string, checkDat
 
 	const found = blockEvents.some((blockEvent) => {
 		return blockEvent.getTransactionEvents()
-			.filter((transactionEvent) => transactionEvent.privateData)
-			.map((transactionEvent) => {
+			.filter((transactionEvent:TransactionEvent) => transactionEvent.privateData)
+			.map((transactionEvent:TransactionEvent) => {
 				BaseUtils.logMsg('->Transaction Payload has privateData', JSON.stringify(transactionEvent.privateData));
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-return
-				return transactionEvent.privateData.ns_pvt_rwset[0].collection_pvt_rwset[0].rwset.writes[0].value.toString('utf-8');
+				return transactionEvent.privateData?.ns_pvt_rwset[0]?.collection_pvt_rwset[0]?.rwset.writes[0]?.value?.toString('utf-8');
 			})
 			.some((privateDataValue) => {
 				BaseUtils.logMsg('->privateData', privateDataValue);
@@ -278,8 +287,7 @@ export function checkTransactionListenerDetails(listenerName: string, listenerTy
 
 	// Check the listener properties
 	if ((listenerObject.active !== isActive) || (listenerObject.type.localeCompare(listenerType) !== 0)) {
-		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-		const msg = `Listener named ${listenerName} does not have the expected properties [type: ${listenerType}, active: ${isActive}]`;
+		const msg = `Listener named ${listenerName} does not have the expected properties [type: ${listenerType}, active: ${String(isActive)}]`;
 		BaseUtils.logAndThrow(msg);
 	}
 }

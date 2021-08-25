@@ -59,19 +59,16 @@ When(/^I submit a chaincode query named (.+?) with args (.+?) for contract (.+?)
 Then(/^the (request|query) named (.+?) for client (.+?) has a (.+?) result matching (.+?)$/, {timeout: Constants.INC_SHORT as number},
 	(responseType: string, requestName: string, clientName: string, fieldName: string, expectedResult: string) => {
 		ClientHelper.validateChannelRequestResponse(clientName, responseType === 'request', requestName, fieldName, expectedResult);
-		return Promise.resolve();
 	});
 
 Then(/^the request named (.+?) for client (.+?) has discovery results$/, {timeout: Constants.HUGE_TIME as number},
 	(requestName: string, clientName: string) => {
 		ClientHelper.validateDiscoveryResponse(clientName, requestName);
-		return Promise.resolve();
 	});
 
 When(/^I create an event service (.+?) as client (.+?) on channel (.+?)$/, {timeout: Constants.HUGE_TIME as number},
 	(eventServiceName: string, clientName: string, channelName: string) => {
 		void ClientHelper.createEventService(eventServiceName, clientName, channelName);
-		return Promise.resolve();
 	});
 
 Then(/^I (.+?) the event service (.+?) as (.+?) blocks to start at block (.+?) and end at block (.+?) as client (.+?)$/, {timeout: Constants.INC_SHORT as number},

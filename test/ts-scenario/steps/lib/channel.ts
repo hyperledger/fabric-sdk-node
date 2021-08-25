@@ -12,9 +12,7 @@ import {CommandRunner} from './utility/commandRunner';
 const commandRunner: CommandRunner = CommandRunner.getInstance();
 
 // CLI verbosity in commands
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-const VERBOSE_CLI: boolean = JSON.parse(Constants.CLI_VERBOSITY);
-
+const VERBOSE_CLI: boolean = BaseUtils.getVerboseCLI();
 /**
  * Create a channel
  * @param {string} channelName the channel to create
@@ -114,10 +112,7 @@ export async function cli_get_channels(orgName: string, tls: boolean): Promise<s
 		];
 
 		command = command.concat(tlsOptions);
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		const channelNames = await commandRunner.runShellCommand(true, command.join(' '), VERBOSE_CLI) ;
-
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 		const results = channelNames.stdout as string;
 		BaseUtils.logMsg(`Channel names ==>${results}<== have been joined by organization ${orgName}`);
 
@@ -166,8 +161,7 @@ export async function cli_channel_update(channelName: string, updateTx: string, 
 			BaseUtils.logMsg(`Channel ${channelName} has been updated`);
 		}
 	} catch (err) {
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-		BaseUtils.logError('Failed to update channels: ', (err.stack ? err.stack : err));
+		BaseUtils.logError('Failed to update channels: ', ((err as unknown as Error).stack ? (err as unknown as Error).stack : err));
 		return Promise.reject(err);
 	}
 }

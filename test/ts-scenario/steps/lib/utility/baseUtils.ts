@@ -1,11 +1,12 @@
+/**
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-implied-eval */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/**
- * SPDX-License-Identifier: Apache-2.0
- */
 
 'use strict';
 
@@ -15,6 +16,10 @@ import {StateStore} from './stateStore';
 import * as fs from 'fs';
 
 const stateStore: StateStore = StateStore.getInstance();
+
+export function getVerboseCLI(): boolean {
+	return String(Constants.CLI_VERBOSITY).toLowerCase() === 'true';
+}
 
 /**
  * Perform a sleep

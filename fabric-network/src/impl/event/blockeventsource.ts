@@ -192,5 +192,4 @@ export class BlockEventSource {
 		return this.blockQueue.getNextBlockNumber();
 	}
 
-
 }

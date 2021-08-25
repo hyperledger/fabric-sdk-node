@@ -5,6 +5,7 @@
  */
 
 import {Query as CommonQuery, Endorser} from 'fabric-common';
+import {DefaultQueryHandlerOptions} from '../../gateway';
 
 import * as Logger from '../../logger';
 const logger = Logger.getLogger('Query');
@@ -38,13 +39,10 @@ export class QueryImpl implements Query {
 	 * @returns {Object} options - options to be used when sending the request to
 	 * fabric-common service endpoint {Endorser} peer.
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	constructor(query: CommonQuery, options: any = {}) {
+	constructor(query: CommonQuery, options: DefaultQueryHandlerOptions = {}) {
 		this.query = query;
 		this.requestTimeout = 3000; // default 3 seconds
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-		if (Number.isInteger(options.timeout)) {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+		if (options.timeout && Number.isInteger(options.timeout)) {
 			this.requestTimeout = options.timeout * 1000; // need ms;
 		}
 	}

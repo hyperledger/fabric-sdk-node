@@ -1,10 +1,11 @@
+/**
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
-/**
- * SPDX-License-Identifier: Apache-2.0
- */
 
 'use strict';
 import {logMsg} from './baseUtils';
@@ -33,7 +34,7 @@ export class CommandRunner {
 	 * @param {String} cmd -  CLI command with parameters to be run
 	 * @return {Promise} - Promise that will be resolved or rejected with an error
 	 */
-	public runShellCommand(pass: any, cmd: string, verbose = true): Promise<any> {
+	public runShellCommand(pass: any, cmd: string, verbose = true): Promise<Record<string, unknown>> {
 		BaseUtils.logMsg(` -- runShellCommand ==>${cmd}<==`);
 
 		if (typeof cmd !== 'string') {

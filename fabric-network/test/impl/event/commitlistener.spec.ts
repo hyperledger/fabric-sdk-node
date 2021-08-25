@@ -68,9 +68,8 @@ describe('commit listener', () => {
 
 		network = new NetworkImpl(gateway as unknown as Gateway, channel);
 
-		// eslint-disable-next-line max-len
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-explicit-any
-		eventServiceManager = (network as any).eventServiceManager;
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-explicit-any
+		eventServiceManager = (network as any).eventServiceManager as EventServiceManager;
 	});
 
 	afterEach(() => {
