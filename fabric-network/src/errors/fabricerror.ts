@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
-
 export interface FabricErrorInfo {
 	message?: string;
 	cause?: Error;

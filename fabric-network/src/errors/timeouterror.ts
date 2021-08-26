@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { FabricError, FabricErrorInfo } from './fabricerror';
+import {FabricError, FabricErrorInfo} from './fabricerror';
 
 /**
  * Error indicating a timeout.

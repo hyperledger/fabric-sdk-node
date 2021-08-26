@@ -12,7 +12,7 @@ import {
 	TxEventHandler,
 	TxEventHandlerFactory
 } from 'fabric-network';
-import { Endorser } from 'fabric-common';
+import {Endorser} from 'fabric-common';
 
 // --- Plug-in event handler sample where the user takes full responsibility for event handling
 
@@ -26,7 +26,7 @@ import { Endorser } from 'fabric-common';
 class SampleTransactionEventHandler implements TxEventHandler {
 	private readonly network: Network;
 	private readonly transactionId: string;
-	private readonly notificationPromise: any;
+	private readonly notificationPromise: Promise<unknown>;
 	private resolveNotificationPromise!: (value?: unknown) => void;
 	private rejectNotificationPromise!: (reason: Error) => void;
 	private timeoutHandler?: NodeJS.Timeout;
@@ -43,7 +43,6 @@ class SampleTransactionEventHandler implements TxEventHandler {
 		if (peers.length === 0) {
 			throw new Error(`No peers supplied to handle events for transaction ID ${transactionId}`);
 		}
-
 		this.network = network;
 		this.transactionId = transactionId;
 		this.peers = peers;
@@ -86,6 +85,7 @@ class SampleTransactionEventHandler implements TxEventHandler {
 			return this.fail(new Error(event.status));
 		}
 
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		const peer = error?.peer || event!.peer;
 		this.unrespondedPeers.delete(peer);
 

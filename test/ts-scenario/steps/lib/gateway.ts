@@ -2,28 +2,32 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 import * as FabricCAClient from 'fabric-ca-client';
-import { Contract, DefaultEventHandlerStrategies, DefaultQueryHandlerStrategies, Gateway, GatewayOptions, HsmOptions, HsmX509Provider, Identity, IdentityProvider, Network, QueryHandlerFactory, Transaction, TransientMap, TxEventHandlerFactory, Wallet, Wallets, DiscoveryInterest, HsmX509Identity } from 'fabric-network';
+import {Contract, DefaultEventHandlerStrategies, DefaultQueryHandlerStrategies, Gateway, GatewayOptions, HsmOptions, HsmX509Provider, Identity, IdentityProvider, Network, QueryHandlerFactory, Transaction, TransientMap, TxEventHandlerFactory, Wallet, Wallets, HsmX509Identity} from 'fabric-network';
 import * as fs from 'fs';
 import * as path from 'path';
-import { createQueryHandler as sampleQueryStrategy } from '../../config/handlers/sample-query-handler';
-import { createTransactionEventHandler as sampleTxnEventStrategy } from '../../config/handlers/sample-transaction-event-handler';
-import { Constants } from '../constants';
+import {createQueryHandler as sampleQueryStrategy} from '../../config/handlers/sample-query-handler';
+import {createTransactionEventHandler as sampleTxnEventStrategy} from '../../config/handlers/sample-transaction-event-handler';
+import * as Constants from '../constants';
 import * as AdminUtils from './utility/adminUtils';
 import * as BaseUtils from './utility/baseUtils';
-import { CommonConnectionProfileHelper } from './utility/commonConnectionProfileHelper';
-import { StateStore } from './utility/stateStore';
+import {CommonConnectionProfileHelper} from './utility/commonConnectionProfileHelper';
+import {StateStore} from './utility/stateStore';
+import * as util from 'util';
 
 const stateStore: StateStore = StateStore.getInstance();
 const txnTypes: string[] = ['evaluate', 'submit'];
 const txnResponseTypes: string[] = ['evaluate', 'error', 'submit'];
 const supportedWallets: string[] = [
-	Constants.FILE_WALLET as string,
-	Constants.MEMORY_WALLET as string,
-	Constants.COUCH_WALLET as string,
-	Constants.HSM_WALLET as string
+	Constants.FILE_WALLET,
+	Constants.MEMORY_WALLET,
+	Constants.COUCH_WALLET,
+	Constants.HSM_WALLET
 ];
 
 const HSM_PROVIDER = Constants.HSM_PROVIDER;
@@ -41,13 +45,20 @@ const QueryStrategies: { [key: string]: QueryHandlerFactory } = {
 	MSPID_SCOPE_ROUND_ROBIN : DefaultQueryHandlerStrategies.MSPID_SCOPE_ROUND_ROBIN,
 };
 
-interface GatewayData {
+export interface GatewayData {
 	gateway: Gateway;
 	profile: any;
 	result?: {
 		type: string;
-		response: string | object;
+		response: string | Record<string, unknown>;
 	};
+}
+export function getGateway(gateways:Map<string, GatewayData>, name: string):GatewayData {
+	const gateway = gateways.get(name);
+	if (!gateway) {
+		throw new Error(`No gateway named ${name} defined`);
+	}
+	return gateway;
 }
 
 /**
@@ -61,11 +72,12 @@ interface GatewayData {
  * @param {String} walletType the type of wallet to back the gateway with (inMemory, fileBased, couchDB)
  * @return {Gateway} the connected gateway
  */
-export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boolean, userName: string, orgName: string, gatewayName: string, useDiscovery: boolean, walletType: string): Promise<void> {
+export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boolean, userName: string,
+	orgName: string, gatewayName: string, useDiscovery: boolean, walletType: string): Promise<void> {
 
 	// Might already have a wallet to use, but sanitize the passed walletType
 	if (!walletType || !supportedWallets.includes(walletType)) {
-		BaseUtils.logAndThrow(`Passed wallet type [${walletType}] is not supported, must be one of: ${supportedWallets}`);
+		BaseUtils.logAndThrow(`Passed wallet type [${walletType}] is not supported, must be one of: ${String(supportedWallets)}`);
 	}
 
 	let useHSM = false;
@@ -73,9 +85,9 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 		lib: getHSMLibPath(),
 		pin: process.env.PKCS11_PIN || '98765432',
 		label: 'ForFabric'
-	}
+	};
 
-	const myWalletReference: string = `${Constants.WALLET}_walletType`;
+	const myWalletReference = `${Constants.WALLET}_walletType`;
 	let wallet: Wallet = stateStore.get(myWalletReference);
 	if (!wallet) {
 		BaseUtils.logMsg(`Creating wallet of type ${walletType}`);
@@ -84,27 +96,31 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 				wallet = await Wallets.newInMemoryWallet();
 				break;
 			case Constants.FILE_WALLET:
-				const tempDir: string = path.join(__dirname, Constants.LIB_TO_TEMP, Constants.FILE_WALLET);
-				if (fs.existsSync(tempDir)) {
-					BaseUtils.recursiveDirDelete(tempDir);
+				{
+					const tempDir: string = path.join(__dirname, Constants.LIB_TO_TEMP, Constants.FILE_WALLET);
+					if (fs.existsSync(tempDir)) {
+						BaseUtils.recursiveDirDelete(tempDir);
+					}
+					fs.mkdirSync(tempDir);
+					wallet = await Wallets.newFileSystemWallet(tempDir);
 				}
-				fs.mkdirSync(tempDir);
-				wallet = await Wallets.newFileSystemWallet(tempDir);
 				break;
 			case Constants.COUCH_WALLET:
-				wallet = await Wallets.newCouchDBWallet({url: Constants.COUCH_WALLET_URL as string});
+				wallet = await Wallets.newCouchDBWallet({url: Constants.COUCH_WALLET_URL});
 				break;
 			case Constants.HSM_WALLET:
-				wallet = await Wallets.newInMemoryWallet();
-				useHSM = true;
-				const hsmProvider = new HsmX509Provider(hsmOptions);
-				wallet.getProviderRegistry().addProvider(hsmProvider);
+				{
+					wallet = await Wallets.newInMemoryWallet();
+					useHSM = true;
+					const hsmProvider = new HsmX509Provider(hsmOptions);
+					wallet.getProviderRegistry().addProvider(hsmProvider);
 
-				// only persist the wallet for an HSM so a new gateway can re-use
-				stateStore.set(myWalletReference, wallet);
+					// only persist the wallet for an HSM so a new gateway can re-use
+					stateStore.set(myWalletReference, wallet);
+				}
 				break;
 			default:
-				BaseUtils.logAndThrow(`Unmatched wallet backing store`);
+				BaseUtils.logAndThrow('Unmatched wallet backing store');
 		}
 	} else {
 		if (walletType === Constants.HSM_WALLET) {
@@ -115,7 +131,7 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 			cryptoSuite.closeSession();
 			cryptoSuite.finalize();
 
-			BaseUtils.logMsg(`Reusing HSM Wallet. Should expect the user to be found`);
+			BaseUtils.logMsg('Reusing HSM Wallet. Should expect the user to be found');
 			useHSM = true;
 
 			// Create a new HSM provider which will result in a new cryptosuite establishing a new
@@ -126,7 +142,7 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 	}
 
 	// Might already have a user@org in that wallet
-	const userId: string = `${userName}@${orgName}`;
+	const userId = `${userName}@${orgName}`;
 	const userIdentity: Identity | undefined = await wallet.get(userId);
 
 	// Will always be adding a gateway
@@ -200,7 +216,7 @@ function getGatewayObject(gatewayName: string): GatewayData {
 	const gateways: Map<string, GatewayData> = stateStore.get(Constants.GATEWAYS);
 	const gatewayData = gateways?.get(gatewayName);
 	if (!gatewayData) {
-		const msg: string = `Gateway named ${gatewayName} is not present in the state store`;
+		const msg = `Gateway named ${gatewayName} is not present in the state store`;
 		BaseUtils.logAndThrow(msg);
 	}
 
@@ -216,7 +232,7 @@ function getHSMLibPath(): string {
 		'/usr/lib/powerpc64le-linux-gnu/softhsm/libsofthsm2.so', // Power (can't test this)
 		'/usr/lib/libacsp-pkcs11.so' // LinuxOne
 	];
-	let pkcsLibPath: string = 'NOT FOUND';
+	let pkcsLibPath = 'NOT FOUND';
 	if (typeof process.env.PKCS11_LIB === 'string' && process.env.PKCS11_LIB !== '') {
 		pkcsLibPath  = process.env.PKCS11_LIB;
 	} else {
@@ -247,7 +263,7 @@ async function identitySetup(wallet: Wallet, ccp: CommonConnectionProfileHelper,
 	const org: any = ccp.getOrganization(orgName);
 	const orgMsp: string = org.mspid;
 
-	const identityName: string = `${userName}@${orgName}`;
+	const identityName = `${userName}@${orgName}`;
 
 	const userCertPath: string = org.signedCertPEM.path.replace(/Admin/g, userName);
 	const cert: string = fs.readFileSync(userCertPath).toString('utf8');
@@ -293,7 +309,7 @@ async function createHSMUser(wallet: Wallet, ccp: CommonConnectionProfileHelper,
 	const caClient = new FabricCAClient(fabricCAEndpoint, tlsOptions, caName);
 
 	// first setup the admin user
-	const adminName: string = `admin@${orgName}`;
+	const adminName = `admin@${orgName}`;
 
 	const adminOptions = {
 		enrollmentID: 'admin',
@@ -330,7 +346,7 @@ async function createHSMUser(wallet: Wallet, ccp: CommonConnectionProfileHelper,
 	const enrollment = await hsmCAClient.enroll(options);
 
 	// set the new identity into the wallet
-	const identityName: string = `${userName}@${orgName}`;
+	const identityName = `${userName}@${orgName}`;
 	const identity: HsmX509Identity = {
 		credentials: {
 			certificate: enrollment.certificate
@@ -351,7 +367,8 @@ async function createHSMUser(wallet: Wallet, ccp: CommonConnectionProfileHelper,
  * @param {String} txnType the type of transaction (submit/evaluate)
  * @param {String} handlerOption Optional: the handler option to use
  */
-export async function performGatewayTransaction(gatewayName: string, contractName: string, channelName: string, collectionName: string, args: string, txnType: string, handlerOption?: string, requiredOrgs?: string[], txnCount?: number): Promise<void> {
+export async function performGatewayTransaction(gatewayName: string, contractName: string, channelName: string,
+	collectionName: string, args: string, txnType: string, handlerOption?: string, requiredOrgs?: string[], txnCount?: number): Promise<void> {
 
 	const gatewayObj = getGatewayObject(gatewayName);
 	const gateway = gatewayObj.gateway;
@@ -370,7 +387,7 @@ export async function performGatewayTransaction(gatewayName: string, contractNam
 			// add event handler options
 			if (handlerOption.localeCompare('custom') === 0) {
 				currentOptions.eventHandlerOptions = {
-					strategy: sampleTxnEventStrategy as TxEventHandlerFactory
+					strategy: sampleTxnEventStrategy
 				};
 			} else {
 				currentOptions.eventHandlerOptions = {
@@ -381,7 +398,7 @@ export async function performGatewayTransaction(gatewayName: string, contractNam
 			// Add queryHandlerOptions
 			if (handlerOption.localeCompare('custom') === 0) {
 				currentOptions.queryHandlerOptions = {
-					strategy: sampleQueryStrategy as QueryHandlerFactory
+					strategy: sampleQueryStrategy
 				};
 			} else {
 				currentOptions.queryHandlerOptions = {
@@ -446,7 +463,7 @@ export async function performGatewayTransaction(gatewayName: string, contractNam
 
 	} catch (error) {
 		gatewayObj.result = {type: 'error', response: error.toString()};
-		BaseUtils.logError(' --- in gateway transaction:' + error.toString());
+		BaseUtils.logError(` --- in gateway transaction: ${error.toString() as string}`);
 	}
 }
 
@@ -458,7 +475,8 @@ export async function performGatewayTransaction(gatewayName: string, contractNam
  * @param txnArgs transaction arguments [methodName, methodArgs...]
  * @param txnType the type of transaction (submit/evaluate)
  */
-export async function performTransientGatewayTransaction(gatewayName: string, contractName: string, channelName: string, args: string, txnType: string): Promise<void> {
+export async function performTransientGatewayTransaction(gatewayName: string, contractName: string, channelName: string,
+	args: string, txnType: string): Promise<void> {
 
 	// Retrieve gateway and contract
 	const gatewayObj = getGatewayObject(gatewayName);
@@ -472,7 +490,7 @@ export async function performTransientGatewayTransaction(gatewayName: string, co
 
 	// Build Transient data
 	const transientMap: TransientMap = {};
-	let i: number = 0;
+	let i = 0;
 	for (const value of funcArgs) {
 		transientMap[`key${i}`] = Buffer.from(value);
 		i++;
@@ -493,7 +511,7 @@ export async function performTransientGatewayTransaction(gatewayName: string, co
 		gatewayObj.result = {type: txnType, response: result};
 	} catch (error) {
 		gatewayObj.result = {type: 'error', response: error.toString()};
-		BaseUtils.logError('--- in ' + txnType + ' with transient: ' + error.toString());
+		BaseUtils.logError(`--- in ${txnType} with transient: ${error.toString() as string}`);
 	}
 }
 
@@ -505,7 +523,7 @@ export async function performTransientGatewayTransaction(gatewayName: string, co
 function isSubmit(txnType: string): boolean {
 
 	if (txnTypes.indexOf(txnType) === -1) {
-		throw  new Error(`Unknown transaction type ${txnType}, must be one of ${txnTypes}`);
+		throw  new Error(`Unknown transaction type ${txnType}, must be one of ${util.inspect(txnTypes)}`);
 	}
 	return txnType.localeCompare('submit') === 0 ;
 }
@@ -557,7 +575,7 @@ export function lastTransactionTypeCompare(gatewayName: string, type: string): b
  * Retrieve the last gateway transaction result
  * @param {String} gatewayName the gateway to get the result from
  */
-export function getLastTransactionResult(gatewayName: string): any {
+export function getLastTransactionResult(gatewayName: string): { type: string; response: string | Record<string, unknown>; } | undefined {
 	return getGatewayObject(gatewayName).result;
 }
 

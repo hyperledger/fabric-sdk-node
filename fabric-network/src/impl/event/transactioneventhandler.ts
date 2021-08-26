@@ -4,14 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { TimeoutError } from '../../errors/timeouterror';
-import { TransactionEventStrategy } from './transactioneventstrategy';
-import { Network } from '../../network';
-import { Endorser } from 'fabric-common';
-import { CommitError, CommitEvent, CommitListener } from '../../events';
-import { TransactionError } from '../../errors/transactionerror';
+import {TimeoutError} from '../../errors/timeouterror';
+import {TransactionEventStrategy} from './transactioneventstrategy';
+import {Network} from '../../network';
+import {Endorser} from 'fabric-common';
+import {CommitError, CommitEvent, CommitListener} from '../../events';
+import {TransactionError} from '../../errors/transactionerror';
 
 import * as Logger from '../../logger';
+import {DefaultEventHandlerOptions} from '../../gateway';
 const logger = Logger.getLogger('TransactionEventHandler');
 
 export interface TxEventHandler {
@@ -39,7 +40,8 @@ export class TransactionEventHandler implements TxEventHandler {
 	private readonly transactionId: string;
 	private readonly network: Network;
 	private readonly strategy: TransactionEventStrategy;
-	private readonly options: any;
+
+	private readonly options: DefaultEventHandlerOptions;
 	private readonly peers: Endorser[];
 	private readonly notificationPromise: Promise<void>;
 	private readonly unrespondedPeers: Set<Endorser>;
@@ -64,7 +66,7 @@ export class TransactionEventHandler implements TxEventHandler {
 		this.network = network;
 		this.strategy = strategy;
 
-		const defaultOptions: any = {
+		const defaultOptions: DefaultEventHandlerOptions = {
 			commitTimeout: 30
 		};
 		this.options = Object.assign(defaultOptions, network.getGateway().getOptions().eventHandlerOptions);
@@ -83,7 +85,7 @@ export class TransactionEventHandler implements TxEventHandler {
 	/**
 	 * Called to initiate listening for transaction events.
 	 */
-	async startListening() {
+	async startListening():Promise<void> {
 		const method = 'startListening';
 
 		if (this.peers && this.peers.length > 0) {
@@ -101,7 +103,7 @@ export class TransactionEventHandler implements TxEventHandler {
 	 * Wait until enough events have been received from the event services to satisfy the event handling strategy.
 	 * @throws {Error} if the transaction commit is not successful within the timeout period.
 	 */
-	async waitForEvents() {
+	async waitForEvents() :Promise<void> {
 		logger.debug('waitForEvents start');
 		await this.notificationPromise;
 		logger.debug('waitForEvents end');
@@ -110,7 +112,7 @@ export class TransactionEventHandler implements TxEventHandler {
 	/**
 	 * Cancel listening for events.
 	 */
-	cancelListening() {
+	cancelListening():void {
 		logger.debug('cancelListening called');
 
 		if (this.timeoutHandler) {
@@ -129,6 +131,7 @@ export class TransactionEventHandler implements TxEventHandler {
 			}));
 		}
 
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		const peer = error?.peer || event!.peer;
 		if (!this.unrespondedPeers.delete(peer)) {
 			// Already seen a response from this peer

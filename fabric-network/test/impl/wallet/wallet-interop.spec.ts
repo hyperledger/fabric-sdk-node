@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Identity } from '../../../src/impl/wallet/identity';
-import { Wallets } from '../../../src/impl/wallet/wallets';
-import { Wallet } from '../../../src/impl/wallet/wallet';
+import {Identity} from '../../../src/impl/wallet/identity';
+import {Wallets} from '../../../src/impl/wallet/wallets';
+import {Wallet} from '../../../src/impl/wallet/wallet';
 
 import path = require('path');
 
-import { expect } from 'chai';
+import {expect} from 'chai';
 
-// tslint:disable: no-unused-expression
+
 
 const testWalletPath = path.join(__dirname, '..', '..', '..', '..', 'test', 'fixtures', 'test-wallet');
 
