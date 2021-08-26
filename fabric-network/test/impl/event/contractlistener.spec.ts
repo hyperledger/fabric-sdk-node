@@ -11,7 +11,7 @@
 
 import sinon = require('sinon');
 import {expect} from 'chai';
-import Long = require('long');
+import * as Long from 'long';
 
 import {Channel, Client, Endorser, Eventer, EventInfo, IdentityContext} from 'fabric-common';
 import * as fabproto6 from 'fabric-protos';

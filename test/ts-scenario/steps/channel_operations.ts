@@ -8,7 +8,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
 import * as BaseUtils from './lib/utility/baseUtils';
-import util = require('util')
+import * as util from 'util';
 
 /**
  * Validate two passed items against a match requirement:

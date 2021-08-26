@@ -9,7 +9,7 @@ import {ContractListenerSession} from './impl/event/contractlistenersession';
 import {ListenerSession, addListener, removeListener} from './impl/event/listenersession';
 import * as Logger from './logger';
 const logger = Logger.getLogger('Contract');
-import util = require('util');
+import * as util from 'util';
 import {NetworkImpl} from './network';
 import {ContractListener, ListenerOptions} from './events';
 import {DiscoveryService, DiscoveryHandler} from 'fabric-common';

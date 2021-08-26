@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import fs = require('fs');
-import os = require('os');
-import path = require('path');
-import util = require('util');
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+import * as util from 'util';
 
 import rawRimraf = require('rimraf');
 const rimraf = util.promisify(rawRimraf);

@@ -15,7 +15,7 @@ import {QueryImpl} from './impl/query/query';
 import {QueryHandler} from './impl/query/queryhandler';
 import * as EventHandlers from './impl/event/defaulteventhandlerstrategies';
 import * as Logger from './logger';
-import util = require('util');
+import * as util from 'util';
 import {ConnectedGatewayOptions} from './gateway';
 const logger = Logger.getLogger('Transaction');
 

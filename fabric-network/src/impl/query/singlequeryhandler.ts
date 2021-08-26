@@ -10,7 +10,7 @@ import {Query} from './query';
 
 import {Endorser} from 'fabric-common';
 
-import util = require('util');
+import * as util from 'util';
 
 import * as Logger from '../../logger';
 const logger = Logger.getLogger('SingleQueryHandler');

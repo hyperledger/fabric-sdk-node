@@ -18,7 +18,7 @@ import * as AdminUtils from './utility/adminUtils';
 import * as BaseUtils from './utility/baseUtils';
 import {CommonConnectionProfileHelper} from './utility/commonConnectionProfileHelper';
 import {StateStore} from './utility/stateStore';
-import util = require('util');
+import * as util from 'util';
 
 const stateStore: StateStore = StateStore.getInstance();
 const txnTypes: string[] = ['evaluate', 'submit'];

@@ -4,7 +4,7 @@
  SPDX-License-Identifier: Apache-2.0
 */
 
-import fs = require('fs');
+import * as fs from 'fs';
 import {Utils, Client, ConnectOptions} from 'fabric-common';
 
 const logger = Utils.getLogger('NetworkConfig');

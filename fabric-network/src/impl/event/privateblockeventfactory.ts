@@ -13,7 +13,7 @@ import {newFullBlockEvent} from './fullblockeventfactory';
 import {newFullContractEvents} from './fullcontracteventfactory';
 import {getTransactionEnvelopeIndexes, newFullTransactionEvent} from './fulltransactioneventfactory';
 
-import util = require('util');
+import * as util from 'util';
 
 export function newPrivateBlockEvent(eventInfo: EventInfo): BlockEvent {
 	const privateData = eventInfo.privateData;

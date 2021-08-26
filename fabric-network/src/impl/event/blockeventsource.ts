@@ -15,7 +15,7 @@ import {newFullBlockEvent} from './fullblockeventfactory';
 import {OrderedBlockQueue} from './orderedblockqueue';
 import {newPrivateBlockEvent} from './privateblockeventfactory';
 import {notNullish} from '../gatewayutils';
-import Long = require('long');
+import * as Long from 'long';
 
 const logger = Logger.getLogger('BlockEventSource');
 

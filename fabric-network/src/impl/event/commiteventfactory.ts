@@ -9,7 +9,7 @@ import {CommitEvent} from '../../events';
 import {cachedResult} from '../gatewayutils';
 import {newFilteredBlockEvent} from './filteredblockeventfactory';
 import * as TransactionStatus from './transactionstatus';
-import util = require('util');
+import * as util from 'util';
 
 export function newCommitEvent(peer: Endorser, eventInfo: EventInfo): CommitEvent {
 	if (!eventInfo.transactionId || !eventInfo.status) {

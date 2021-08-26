@@ -9,7 +9,7 @@
 
 import {QueryHandler, QueryHandlerFactory, Query, QueryResults} from 'fabric-network';
 import {Endorser} from 'fabric-common';
-import util = require('util');
+import * as util from 'util';
 
 /**
  * Query handler implementation

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import nano = require('nano');
+import * as nano from 'nano';
 
 import {WalletStore} from './walletstore';
 

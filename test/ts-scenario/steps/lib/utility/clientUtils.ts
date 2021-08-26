@@ -20,7 +20,7 @@ import * as Constants from '../../constants';
 import * as BaseUtils from './baseUtils';
 import {CommonConnectionProfileHelper} from './commonConnectionProfileHelper';
 import {StateStore} from './stateStore';
-import util =require('util');
+import * as util from 'util';
 
 const stateStore: StateStore = StateStore.getInstance();
 

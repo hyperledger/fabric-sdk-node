@@ -12,11 +12,11 @@ import * as Constants from '../constants';
 import * as GatewayHelper from './gateway';
 import * as BaseUtils from './utility/baseUtils';
 import {StateStore} from './utility/stateStore';
-import Long = require('long');
-import fs = require('fs');
-import path = require('path');
-import os = require('os');
-import util = require('util');
+import * as Long from 'long';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
+import * as util from 'util';
 
 
 const stateStore: StateStore = StateStore.getInstance();

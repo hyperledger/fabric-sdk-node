@@ -5,8 +5,8 @@
  */
 
 import {Checkpointer} from '../checkpointer';
-import Long = require('long');
-import fs = require('fs');
+import * as Long from 'long';
+import * as fs from 'fs';
 
 const encoding = 'utf8';
 
