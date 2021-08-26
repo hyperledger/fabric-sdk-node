@@ -16,7 +16,7 @@ import {
 } from 'fabric-common';
 import * as fs from 'fs';
 import * as Long from 'long';
-import {Constants} from '../../constants';
+import * as Constants from '../../constants';
 import * as BaseUtils from './baseUtils';
 import {CommonConnectionProfileHelper} from './commonConnectionProfileHelper';
 import {StateStore} from './stateStore';

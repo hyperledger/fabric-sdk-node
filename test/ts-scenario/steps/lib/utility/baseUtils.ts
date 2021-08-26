@@ -8,7 +8,7 @@
 /* eslint-disable @typescript-eslint/no-implied-eval */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import {Constants} from '../../constants';
+import * as Constants from '../../constants';
 import {StateStore} from './stateStore';
 
 import * as fs from 'fs';

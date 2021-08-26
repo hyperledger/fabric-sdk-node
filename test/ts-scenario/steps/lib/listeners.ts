@@ -8,7 +8,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {BlockEvent, BlockListener, Checkpointer, Contract, ContractEvent, ContractListener, EventType, ListenerOptions, Network, DefaultCheckpointers, TransactionEvent} from 'fabric-network';
-import {Constants} from '../constants';
+import * as Constants from '../constants';
 import * as GatewayHelper from './gateway';
 import * as BaseUtils from './utility/baseUtils';
 import {StateStore} from './utility/stateStore';

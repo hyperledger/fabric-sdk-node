@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {Constants} from './constants';
+import * as Constants from './constants';
 import * as Chaincode from './lib/chaincode';
 import {CommonConnectionProfileHelper} from './lib/utility/commonConnectionProfileHelper';
 import {StateStore, FabricState} from './lib/utility/stateStore';

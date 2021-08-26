@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {Constants} from '../steps/constants';
+import * as Constants from '../steps/constants';
 import * as Gateway from '../steps/lib/gateway';
 import * as BaseUtils from '../steps/lib/utility/baseUtils';
 import {CommandRunner} from '../steps/lib/utility/commandRunner';

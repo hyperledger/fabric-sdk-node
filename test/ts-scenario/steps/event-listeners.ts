@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {Constants} from './constants';
+import * as Constants from './constants';
 import * as Listeners from './lib/listeners';
 
 import {Given, Then, When} from 'cucumber';

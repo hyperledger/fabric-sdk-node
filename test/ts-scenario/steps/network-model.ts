@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {Constants} from './constants';
+import * as Constants from './constants';
 import * as Gateway from './lib/gateway';
 import * as BaseUtils from './lib/utility/baseUtils';
 import {CommonConnectionProfileHelper} from './lib/utility/commonConnectionProfileHelper';

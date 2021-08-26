@@ -4,7 +4,7 @@
 
 import * as ClientHelper from './lib/utility/clientUtils';
 import * as BaseUtils from './lib/utility/baseUtils';
-import {Constants} from './constants';
+import * as Constants from './constants';
 import {CommonConnectionProfileHelper} from './lib/utility/commonConnectionProfileHelper';
 
 import * as path from 'path';

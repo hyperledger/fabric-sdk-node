@@ -13,7 +13,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import {createQueryHandler as sampleQueryStrategy} from '../../config/handlers/sample-query-handler';
 import {createTransactionEventHandler as sampleTxnEventStrategy} from '../../config/handlers/sample-transaction-event-handler';
-import {Constants} from '../constants';
+import * as Constants from '../constants';
 import * as AdminUtils from './utility/adminUtils';
 import * as BaseUtils from './utility/baseUtils';
 import {CommonConnectionProfileHelper} from './utility/commonConnectionProfileHelper';
@@ -352,7 +352,7 @@ async function createHSMUser(wallet: Wallet, ccp: CommonConnectionProfileHelper,
 			certificate: enrollment.certificate
 		},
 		mspId: orgMsp,
-		type: HSM_PROVIDER as 'HSM-X.509'
+		type: HSM_PROVIDER
 	};
 	await wallet.put(identityName, identity);
 	BaseUtils.logMsg(`Adding HSM identity for ${userName}@${orgName} to wallet`);

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {Constants} from './constants';
+import * as Constants from './constants';
 import * as Channel from './lib/channel';
 import * as Contract from './lib/contract';
 import * as BaseUtils from './lib/utility/baseUtils';

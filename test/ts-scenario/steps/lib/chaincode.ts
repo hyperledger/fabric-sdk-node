@@ -10,7 +10,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
 import * as Client from 'fabric-client';
-import {Constants} from '../constants';
+import * as Constants from '../constants';
 import * as AdminUtils from './utility/adminUtils';
 import * as BaseUtils from './utility/baseUtils';
 
