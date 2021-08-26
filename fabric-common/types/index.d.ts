@@ -65,12 +65,23 @@ export interface ICryptoSuite {
 	sign(key: ICryptoKey, digest: Buffer): Buffer | Promise<Buffer>;
 	verify(key: ICryptoKey, signature: Buffer, digest: Buffer): boolean;
 }
+export type CryptoSetting = SoftwareCryptoSetting | HSMCryptoSetting;
 
-export interface CryptoSetting {
-	algorithm: string;
-	hash: string;
-	keysize: number;
-	software: boolean;
+export interface SoftwareCryptoSetting {
+	algorithm?: string;
+	hash?: string;
+	keysize?: number;
+	software?: true;
+}
+
+export interface HSMCryptoSetting {
+	lib?: string;
+	pin?: string;
+	slot?: number;
+	label?: string;
+	usertype?: number;
+	readwrite?: boolean;
+	software?: false;
 }
 
 export interface UserConfig {

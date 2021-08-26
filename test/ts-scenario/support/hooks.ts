@@ -16,7 +16,7 @@ const commandRunner: CommandRunner = CommandRunner.getInstance();
 const stateStore: StateStore = StateStore.getInstance();
 
 // eslint-disable-next-line @typescript-eslint/no-misused-promises
-AfterAll({timeout: Constants.HUGE_TIME as number}, async () => {
+AfterAll({timeout: Constants.HUGE_TIME}, async () => {
 	// Clean off Docker step
 	BaseUtils.logMsg('Tearing down network ...', null);
 	await commandRunner.runShellCommand(undefined, 'docker kill $(docker ps -aq); docker rm $(docker ps -aq)');
@@ -27,7 +27,7 @@ AfterAll({timeout: Constants.HUGE_TIME as number}, async () => {
 });
 
 
-AfterAll({timeout: Constants.HUGE_TIME as number}, () => {
+AfterAll({timeout: Constants.HUGE_TIME}, () => {
 	// If a test fails without disconnecting gateways, then the tests will hang
 	BaseUtils.logMsg('Disconnecting from all gateways ...',  null);
 	Gateway.disconnectAllGateways();

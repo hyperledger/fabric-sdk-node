@@ -37,7 +37,7 @@ export async function cli_chaincode_install_for_org(ccType: string, ccName: stri
 			'-n', ccName,
 			'-v', ccVersion,
 			'-p', ccPath,
-			'--connTimeout', Constants.CLI_TIMEOUT as string,
+			'--connTimeout', Constants.CLI_TIMEOUT,
 		];
 
 		await commandRunner.runShellCommand(true, installCommand.join(' '), VERBOSE_CLI);
@@ -66,7 +66,7 @@ export async function cli_is_chaincode_install_for_org(ccName: string, ccVersion
 		const command: string[] = [
 			'docker', 'exec', `${orgName}_cli`, 'peer', 'chaincode', 'list',
 			'--installed',
-			'--connTimeout', Constants.CLI_TIMEOUT as string,
+			'--connTimeout', Constants.CLI_TIMEOUT,
 		];
 
 		const results = await commandRunner.runShellCommand(true, command.join(' '), VERBOSE_CLI) ;
@@ -108,7 +108,7 @@ export async function cli_is_chaincode_instantiated_for_org(channelName: string,
 			'docker', 'exec', `${orgName}_cli`, 'peer', 'chaincode', 'list',
 			'--channelID', channelName,
 			'--instantiated',
-			'--connTimeout', Constants.CLI_TIMEOUT as string,
+			'--connTimeout', Constants.CLI_TIMEOUT,
 		];
 
 		const results = await commandRunner.runShellCommand(true, command.join(' '), VERBOSE_CLI) ;
@@ -149,7 +149,7 @@ export async function cli_chaincode_instantiate(ccType: string, ccName: string,
 
 		let tlsOptions: string[];
 		if (tls) {
-			tlsOptions = ['--tls', 'true', '--cafile', Constants.CLI_ORDERER_CA_FILE as string];
+			tlsOptions = ['--tls', 'true', '--cafile', Constants.CLI_ORDERER_CA_FILE];
 		} else {
 			tlsOptions = [];
 		}
@@ -160,10 +160,10 @@ export async function cli_chaincode_instantiate(ccType: string, ccName: string,
 				ccPolicy = [];
 				break;
 			case '1ofAny':
-				ccPolicy = ['-P', Constants.ENDORSEMENT_POLICY_1OF_ANY as string];
+				ccPolicy = ['-P', Constants.ENDORSEMENT_POLICY_1OF_ANY];
 				break;
 			case '2ofAny':
-				ccPolicy = ['-P', Constants.ENDORSEMENT_POLICY_2OF_ANY as string];
+				ccPolicy = ['-P', Constants.ENDORSEMENT_POLICY_2OF_ANY];
 				break;
 			default:
 				// leave it blank and let fabric decide
@@ -306,7 +306,7 @@ export async function cli_lifecycle_chaincode_install(packageName: string, orgNa
 		const installCommand: string[] = [
 			'docker', 'exec', `${orgName}_cli`, 'peer', 'lifecycle', 'chaincode', 'install',
 			`${packageName}.tar.gz`,
-			'--connTimeout', Constants.CLI_TIMEOUT as string,
+			'--connTimeout', Constants.CLI_TIMEOUT,
 		];
 
 		await commandRunner.runShellCommand(true, installCommand.join(' '), VERBOSE_CLI);

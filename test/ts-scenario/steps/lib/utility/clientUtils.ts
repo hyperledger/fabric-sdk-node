@@ -22,6 +22,7 @@ import {Constants} from '../../constants';
 import * as BaseUtils from './baseUtils';
 import {CommonConnectionProfileHelper} from './commonConnectionProfileHelper';
 import {StateStore} from './stateStore';
+import util =require('util');
 
 const stateStore: StateStore = StateStore.getInstance();
 
@@ -217,8 +218,7 @@ export async function buildChannelRequest(requestName: string, contractName: str
 			clientObject.requests = map;
 		}
 	} catch (error) {
-		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-		BaseUtils.logMsg(`failure in buildChannelRequest: ${error.toString()}`, {});
+		BaseUtils.logMsg(`failure in buildChannelRequest: ${error.toString() as string}`, {});
 		for (const target of targets) {
 			target.disconnect();
 		}
@@ -264,8 +264,7 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 				}
 			} catch (error) {
 				BaseUtils.logError(`Failed to connect to channel event hub ${eventer.toString()}`);
-				// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-				BaseUtils.logError(`Failed to connect ${error.stack}`);
+				BaseUtils.logError(`Failed to connect ${util.inspect(error.stack)}`);
 				throw error;
 			}
 
@@ -294,8 +293,7 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 							BaseUtils.logError(`Failed to receive transaction event for ${endorsement.getTransactionId()}`, {});
 							reject(error);
 						}
-						// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-						BaseUtils.logMsg(`Successfully received the transaction event for ${event.transactionId} with status of ${event.status} in block number ${event.blockNumber}`, {});
+						BaseUtils.logMsg(`Successfully received the transaction event for ${String(event.transactionId)} with status of ${String(event.status)} in block number ${String(event.blockNumber)}`, {});
 						resolve('Commit success');
 					},
 					{}
@@ -467,8 +465,7 @@ export async function queryChannelRequest(clientName: string, channelName: strin
 					}
 					for (const error of queryResponse.errors) {
 						queryObject.results[`peer${inc}`] = error.toString();
-						// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-						BaseUtils.logMsg(`Query failure ${queryObject.results[`peer${inc}`]}`);
+						BaseUtils.logMsg(`Query failure ${util.inspect(queryObject.results[`peer${inc}`])}`);
 						inc++;
 					}
 				}
@@ -478,8 +475,7 @@ export async function queryChannelRequest(clientName: string, channelName: strin
 					queryObject.results.general = JSON.stringify({result: 'SUCCESS'});
 					for (const result of queryResponse.queryResults) {
 						queryObject.results[`peer${inc}`] = JSON.parse(result.toString());
-						// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-						BaseUtils.logMsg(`Query results ${queryObject.results[`peer${inc}`]}`);
+						BaseUtils.logMsg(`Query results ${util.inspect(queryObject.results[`peer${inc}`])}`);
 						inc++;
 					}
 				} else {
@@ -569,8 +565,7 @@ export function validateChannelRequestResponse(clientName: string, isRequest: bo
 
 	if (results) {
 		const savedResult: any = results[fieldName];
-		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-		BaseUtils.logMsg(`clientUtils - fieldName: ${fieldName} - raw results of query = ${savedResult}`);
+		BaseUtils.logMsg(`clientUtils - fieldName: ${fieldName} - raw results of query = ${util.inspect(savedResult)}`);
 
 		let stringResult: string;
 		if (savedResult instanceof Buffer) {
@@ -620,7 +615,7 @@ export function validateDiscoveryResponse(clientName: string, requestName: strin
 	}
 }
 
-export  function createEventService(eventServiceName: string, clientName: string, channelName: string): Promise<void> {
+export function createEventService(eventServiceName: string, clientName: string, channelName: string): void {
 
 	// Best have a client object ready and waiting
 	const clientObject: any = retrieveClientObject(clientName);
@@ -637,10 +632,8 @@ export  function createEventService(eventServiceName: string, clientName: string
 			map.set(eventServiceName, {eventService, idx, channelName});
 			clientObject.eventServices = map;
 		}
-		return Promise.resolve();
 	} catch (error) {
-		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-		BaseUtils.logMsg(`failure in buildEventService: ${error.toString()}`, {});
+		BaseUtils.logMsg(`failure in buildEventService: ${error.toString() as string}`, {});
 		throw error;
 	}
 }
@@ -714,8 +707,7 @@ export async function startEventService(
 
 		await eventService.send({targets: targets});
 	} catch (error) {
-		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-		BaseUtils.logMsg(`failure in startEventService: ${error.toString()}`, {});
+		BaseUtils.logMsg(`failure in startEventService: ${error.toString() as string}`, {});
 		for (const target of targets) {
 			target.disconnect();
 		}
@@ -726,7 +718,7 @@ export async function startEventService(
 export function registerEventListener(
 	eventServiceName: string, clientName: string, listenerName: string, type: string,
 	startBlock: string, endBlock: string,
-	chaincodeEventName: string, chaincodeName: string): Promise<void> {
+	chaincodeEventName: string, chaincodeName: string): void {
 
 	const clientObject: any = retrieveClientObject(clientName);
 	const eventServiceObject: any = clientObject.eventServices.get(eventServiceName);
@@ -794,9 +786,7 @@ export function registerEventListener(
 						listenerObject.error = error;
 						return;
 					}
-
-					// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-					BaseUtils.logMsg(`Chaincode listener event received for ${listenerName} :: ${event}`);
+					BaseUtils.logMsg(`Chaincode listener event received for ${listenerName} :: ${util.inspect(event)}`);
 
 					if (event?.chaincodeEvents) {
 						for (const chaincodeEvent of event.chaincodeEvents) {
@@ -835,17 +825,15 @@ export function registerEventListener(
 		} else {
 			BaseUtils.logAndThrow(`Event listener type is not known ${type}`);
 		}
-		return Promise.resolve();
 	} catch (error) {
-		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-		BaseUtils.logMsg(`failure in registerEventListener: ${error.toString()}`, {});
+		BaseUtils.logMsg(`failure in registerEventListener: ${error.toString() as string}`, {});
 		throw error;
 	}
 }
 
 export function checkEventListenerResults(
 	eventServiceName: string, clientName: string, listenerName: string,
-	check: string): Promise<void> {
+	check: string): void {
 
 	const clientObject: any = retrieveClientObject(clientName);
 	const eventServiceObject: any = clientObject.eventServices.get(eventServiceName);
@@ -853,8 +841,7 @@ export function checkEventListenerResults(
 
 	if (listenerObject) {
 		if (listenerObject.error) {
-			// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-			BaseUtils.logMsg(`Received an error for ${listenerName} of ${listenerObject.error}`);
+			BaseUtils.logMsg(`Received an error for ${listenerName} of ${util.inspect(listenerObject.error)}`);
 			throw listenerObject.error;
 		}
 		if (listenerObject.results) {
@@ -869,14 +856,12 @@ export function checkEventListenerResults(
 	} else {
 		BaseUtils.logAndThrow(`Listener object not found ${listenerName}`);
 	}
-	return Promise.resolve();
 }
 
 export function disconnectEventService(
-	eventServiceName: string, clientName: string): Promise<void> {
+	eventServiceName: string, clientName: string): void {
 	const clientObject: any = retrieveClientObject(clientName);
 	const eventServiceObject: any = clientObject.eventServices.get(eventServiceName);
 
 	eventServiceObject.eventService.close();
-	return Promise.resolve();
 }

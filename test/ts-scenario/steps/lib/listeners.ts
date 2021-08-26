@@ -22,97 +22,100 @@ import util = require('util');
 const stateStore: StateStore = StateStore.getInstance();
 const CHECKPOINT_FILE_KEY = 'checkpointFile';
 
+function getGateway(gateways:Map<string, GatewayHelper.GatewayData>, name: string):GatewayHelper.GatewayData {
+	const gateway = gateways.get(name);
+	if (!gateway) {
+		throw new Error(`No gateway named ${name} defined`);
+	}
+	return gateway;
+}
+
 export async function createContractListener(gatewayName: string, channelName: string, ccName: string,
 	eventName: string, listenerName: string, listenerOptions: ListenerOptions): Promise<void> {
 	const gateways = stateStore.get(Constants.GATEWAYS) as  Map<string, GatewayHelper.GatewayData>;
 
-	const gateway = gateways.get(gatewayName);
+	const gateway = getGateway(gateways, gatewayName);
+	const contract: Contract = await GatewayHelper.retrieveContractFromGateway(gateway.gateway, channelName, ccName);
+	const payloads: ContractEvent[] = [];
+	const listener: ContractListener = (event: ContractEvent) => {
+		BaseUtils.logMsg(`-> Received a contract event for listener [${listenerName}] of eventName ${eventName}`);
+		if (event.eventName === eventName) {
+			payloads.push(event);
+		}
+		return Promise.resolve();
+	};
+	await contract.addContractListener(listener, listenerOptions);
 
-	if (gateway) {
-
-		const contract: Contract = await GatewayHelper.retrieveContractFromGateway(gateway.gateway, channelName, ccName);
-		const payloads: ContractEvent[] = [];
-		const listener: ContractListener = (event: ContractEvent) => {
-			BaseUtils.logMsg(`-> Received a contract event for listener [${listenerName}] of eventName ${eventName}`);
-			if (event.eventName === eventName) {
-				payloads.push(event);
-			}
-			return Promise.resolve();
-		};
-		await contract.addContractListener(listener, listenerOptions);
-
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const listenerObject: any = {
-			active: true,
-			eventName,
-			eventType: listenerOptions.type,
-			listener,
-			payloads,
-			type: Constants.CONTRACT,
-			remove: () => contract.removeContractListener(listener),
-		};
-		putListenerObject(listenerName, listenerObject);
-	}
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const listenerObject: any = {
+		active: true,
+		eventName,
+		eventType: listenerOptions.type,
+		listener,
+		payloads,
+		type: Constants.CONTRACT,
+		remove: () => contract.removeContractListener(listener),
+	};
+	putListenerObject(listenerName, listenerObject);
 }
 
 export async function createBlockListener(gatewayName: string, channelName: string, listenerName: string,
 	listenerOptions: ListenerOptions, endBlock?: number): Promise<void> {
 	const gateways = stateStore.get(Constants.GATEWAYS) as Map<string, GatewayHelper.GatewayData>;
 
-	const gateway = gateways.get(gatewayName);
-	if (gateway) {
-		const network: Network = await gateway.gateway.getNetwork(channelName);
+	const gateway = getGateway(gateways, gatewayName);
 
-		const payloads: BlockEvent[] = [];
-		const startBlock = listenerOptions.startBlock ? Long.fromValue(listenerOptions.startBlock).toNumber() : undefined;
+	const network: Network = await gateway.gateway.getNetwork(channelName);
 
-		// Create the listener
-		const listener: BlockListener = (blockEvent: BlockEvent) => {
-			BaseUtils.logMsg('->Received a block event', listenerName);
-			if (startBlock) {
-				BaseUtils.checkSizeEquality(blockEvent.blockNumber.toNumber(), startBlock - 1, true, true);
-			}
-			if (endBlock) {
-				BaseUtils.checkSizeEquality(blockEvent.blockNumber.toNumber(), endBlock + 1, false, true);
-			}
+	const payloads: BlockEvent[] = [];
+	const startBlock = listenerOptions.startBlock ? Long.fromValue(listenerOptions.startBlock).toNumber() : undefined;
 
-			payloads.push(blockEvent);
-			BaseUtils.logMsg('->Received a block event - added blockevent to payloads', listenerName);
-			const transactionEvents = blockEvent.getTransactionEvents();
-			for (const transactionEvent of transactionEvents) {
-				if (transactionEvent.privateData) {
-					BaseUtils.logMsg('->Received a block event - blockevent has privateData', JSON.stringify(transactionEvent.privateData));
-				}
-			}
+	// Create the listener
+	const listener: BlockListener = (blockEvent: BlockEvent) => {
+		BaseUtils.logMsg('->Received a block event', listenerName);
+		if (startBlock) {
+			BaseUtils.checkSizeEquality(blockEvent.blockNumber.toNumber(), startBlock - 1, true, true);
+		}
+		if (endBlock) {
+			BaseUtils.checkSizeEquality(blockEvent.blockNumber.toNumber(), endBlock + 1, false, true);
+		}
 
-			if (endBlock && blockEvent.blockNumber.greaterThanOrEqual(endBlock)) {
-				network.removeBlockListener(listener);
+		payloads.push(blockEvent);
+		BaseUtils.logMsg('->Received a block event - added blockevent to payloads', listenerName);
+		const transactionEvents = blockEvent.getTransactionEvents();
+		for (const transactionEvent of transactionEvents) {
+			if (transactionEvent.privateData) {
+				BaseUtils.logMsg('->Received a block event - blockevent has privateData', JSON.stringify(transactionEvent.privateData));
 			}
-			return Promise.resolve();
-		};
-		await network.addBlockListener(listener, listenerOptions);
+		}
 
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const listenerObject: any = {
-			active: true,
-			eventType: listenerOptions.type,
-			listener,
-			payloads,
-			type: Constants.BLOCK,
-			remove: () => {
-				network.removeBlockListener(listener);
-			}
-		};
-		putListenerObject(listenerName, listenerObject);
-		BaseUtils.logMsg('->Stored a block event listener:', listenerName);
-	}
+		if (endBlock && blockEvent.blockNumber.greaterThanOrEqual(endBlock)) {
+			network.removeBlockListener(listener);
+		}
+		return Promise.resolve();
+	};
+	await network.addBlockListener(listener, listenerOptions);
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const listenerObject: any = {
+		active: true,
+		eventType: listenerOptions.type,
+		listener,
+		payloads,
+		type: Constants.BLOCK,
+		remove: () => {
+			network.removeBlockListener(listener);
+		}
+	};
+	putListenerObject(listenerName, listenerObject);
+	BaseUtils.logMsg('->Stored a block event listener:', listenerName);
 }
 
 export async function newFileCheckpointer(): Promise<Checkpointer> {
 	const prefix = `${os.tmpdir()}${path.sep}`;
 	const tmpDir = await fs.promises.mkdtemp(prefix);
 	const file = path.join(tmpDir, 'checkpoint.json');
-	const checkpointer:Checkpointer = await DefaultCheckpointers.file(file);
+	const checkpointer = await DefaultCheckpointers.file(file);
 	stateStore.set(CHECKPOINT_FILE_KEY, file);
 	return checkpointer;
 }
@@ -122,7 +125,7 @@ export async function getFileCheckpointer(): Promise<Checkpointer> {
 	if (!file) {
 		throw new Error('Checkpointer does not exist');
 	}
-	const checkpointer: Checkpointer = await DefaultCheckpointers.file(file);
+	const checkpointer = await DefaultCheckpointers.file(file);
 	return checkpointer;
 }
 

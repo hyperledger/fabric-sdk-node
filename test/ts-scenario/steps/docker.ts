@@ -17,7 +17,7 @@ const stateStore: StateStore = StateStore.getInstance();
 const nonTlsNetwork = '../../ts-fixtures/docker-compose/docker-compose.yaml';
 const tlsNetwork = '../../ts-fixtures/docker-compose/docker-compose-tls.yaml';
 
-Given(/^I deploy a (.+?) Fabric network at (.+?) version/, {timeout: Constants.STEP_LONG as number}, async (type: string, version: string) => {
+Given(/^I deploy a (.+?) Fabric network at (.+?) version/, {timeout: Constants.STEP_LONG}, async (type: string, version: string) => {
 
 	BaseUtils.logMsg(` **** checking for a deployed fabric network of type ${type} version ${version}`);
 
@@ -69,14 +69,14 @@ Given(/^I deploy a (.+?) Fabric network at (.+?) version/, {timeout: Constants.S
 	BaseUtils.logMsg(` **** Using the deployed fabric network of type ${type} version ${version}`);
 });
 
-Given(/^I forcibly take down all docker containers/, {timeout: Constants.STEP_LONG as number}, async () => {
+Given(/^I forcibly take down all docker containers/, {timeout: Constants.STEP_LONG}, async () => {
 	await commandRunner.runShellCommand(undefined, 'rm -rf ~/.hlf-checkpoint');
 	await commandRunner.runShellCommand(undefined, 'docker kill $(docker ps -aq); docker rm $(docker ps -aq)');
 	stateStore.set(Constants.FABRIC_STATE, {deployed: false, type: null});
 	return await BaseUtils.sleep(Constants.INC_MED);
 });
 
-Given(/^I delete all dev images/, {timeout: Constants.STEP_LONG as number}, async () => {
+Given(/^I delete all dev images/, {timeout: Constants.STEP_LONG}, async () => {
 	await commandRunner.runShellCommand(undefined, 'docker rmi $(docker images dev-* -q)');
 	return await BaseUtils.sleep(Constants.INC_SHORT);
 });

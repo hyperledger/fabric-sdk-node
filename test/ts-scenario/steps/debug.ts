@@ -8,7 +8,7 @@ import {Constants} from './constants';
 import * as BaseUtils from './lib/utility/baseUtils';
 import {Given, Then} from 'cucumber';
 
-Given(/^I place a scenario start message (.+?)$/, {timeout: Constants.STEP_SHORT as number}, (featureType: string) => {
+Given(/^I place a scenario start message (.+?)$/, {timeout: Constants.STEP_SHORT}, (featureType: string) => {
 	BaseUtils.logScenarioStart(featureType);
 	return Promise.resolve();
 });

@@ -234,7 +234,7 @@ export async function sdk_chaincode_instantiate(ccName: string, ccType: 'golang'
 		const eventPromises: Promise<any>[] = [];
 		eventPromises.push(channel.sendTransaction(request));
 		eventHubs.forEach((eh: Client.ChannelEventHub) => {
-			const txPromise: Promise<any> = new Promise<void>((resolve, reject): any => {
+			const txPromise: Promise<void> = new Promise<void>((resolve, reject) => {
 				const handle: NodeJS.Timeout = setTimeout(() => reject(), 300000);
 
 				eh.registerTxEvent(deployId.toString(), (tx: any, code: string) => {

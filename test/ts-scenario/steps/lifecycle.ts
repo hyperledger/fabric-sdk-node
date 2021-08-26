@@ -18,7 +18,7 @@ const lifecycleCcp: CommonConnectionProfileHelper = new CommonConnectionProfileH
 const lifecycleCcpTls: CommonConnectionProfileHelper = new CommonConnectionProfileHelper(path.join(__dirname, '../config', 'ccp-lifecycle-tls.json'), true);
 
 
-Then(/^I can (submit|query) invalid function (.+?) on contract named (.+?) as organization (.+?) on channel (.+?) with args (.+?) I receive an error with status (.+?) and message containing (.+?)$/, {timeout: Constants.STEP_LONG as number}, async (submit: string, contractFunction: string, contractName: string, orgName: string, channelName: string, contractAgs: string, status: string, message: string) => {
+Then(/^I can (submit|query) invalid function (.+?) on contract named (.+?) as organization (.+?) on channel (.+?) with args (.+?) I receive an error with status (.+?) and message containing (.+?)$/, {timeout: Constants.STEP_LONG}, async (submit: string, contractFunction: string, contractName: string, orgName: string, channelName: string, contractAgs: string, status: string, message: string) => {
 
 	const fabricState = stateStore.get(Constants.FABRIC_STATE) as FabricState ;
 	const tls: boolean = (fabricState.type.localeCompare('tls') === 0);
@@ -33,7 +33,7 @@ Then(/^I can (submit|query) invalid function (.+?) on contract named (.+?) as or
 	await Chaincode.performContractTransactionForOrg(contractName, contractFunction, contractAgs, orgName, channelName, ccp, submit === 'submit', undefined, expectedError);
 });
 
-Then(/^I can submit function (.+?) on contract named (.+?) as organization (.+?) on channel (.+?) with args (\[.+?\])$/, {timeout: Constants.STEP_LONG as number}, async (contractFunction: string, contractName: string, orgName: string, channelName: string, contractAgs: string) => {
+Then(/^I can submit function (.+?) on contract named (.+?) as organization (.+?) on channel (.+?) with args (\[.+?\])$/, {timeout: Constants.STEP_LONG}, async (contractFunction: string, contractName: string, orgName: string, channelName: string, contractAgs: string) => {
 
 	const fabricState = stateStore.get(Constants.FABRIC_STATE) as  FabricState;
 	const tls: boolean = (fabricState.type.localeCompare('tls') === 0);
@@ -43,7 +43,7 @@ Then(/^I can submit function (.+?) on contract named (.+?) as organization (.+?)
 		channelName, ccp, true, undefined, undefined);
 });
 
-Then(/^I can (submit|query) function (.+?) on contract named (.+?) as organization (.+?) on channel (.+?) with args (\[.+?\]) returning expected result (.+?)$/, {timeout: Constants.STEP_LONG as number}, async (submit: string, contractFunction: string, contractName: string, orgName: string, channelName: string, contractAgs: string, expectedResult: string) => {
+Then(/^I can (submit|query) function (.+?) on contract named (.+?) as organization (.+?) on channel (.+?) with args (\[.+?\]) returning expected result (.+?)$/, {timeout: Constants.STEP_LONG}, async (submit: string, contractFunction: string, contractName: string, orgName: string, channelName: string, contractAgs: string, expectedResult: string) => {
 
 	const fabricState = stateStore.get(Constants.FABRIC_STATE) as  FabricState;
 	const tls: boolean = (fabricState.type.localeCompare('tls') === 0);

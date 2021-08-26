@@ -4,21 +4,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {ICryptoSuite,  User} from 'fabric-common';
+import {HSMCryptoSetting, ICryptoSuite,  User} from 'fabric-common';
 
 import {Identity} from './identity';
 import {IdentityData} from './identitydata';
 import {IdentityProvider} from './identityprovider';
 
+
 export interface HsmX509Identity extends Identity {
-	type: 'HSM-X.509';
+	type: string;
 	credentials: {
 		certificate: string;
 	};
 }
 
 interface HsmX509IdentityDataV1 extends IdentityData {
-	type: 'HSM-X.509';
+	type: string;
 	version: 1;
 	credentials: {
 		certificate: string;
@@ -28,7 +29,7 @@ interface HsmX509IdentityDataV1 extends IdentityData {
 
 // This is not a valid format, but can easily be migrated to the above valid format
 interface HsmX509IdentityDataV2 extends IdentityData {
-	type: 'HSM-X.509';
+	type: string;
 	version: 2;
 	credentials: {
 		certificate: string;
@@ -37,14 +38,7 @@ interface HsmX509IdentityDataV2 extends IdentityData {
 	mspId: string;
 }
 
-export interface HsmOptions {
-	lib?: string;
-	pin?: string;
-	slot?: number;
-	label?: string;
-	usertype?: number;
-	readwrite?: boolean;
-}
+export type HsmOptions = Omit<HSMCryptoSetting, 'software'>;
 
 /**
  * Identity provider to handle X.509 identities where the private key is stored in a hardware security module.
@@ -53,8 +47,6 @@ export interface HsmOptions {
  */
 export class HsmX509Provider implements IdentityProvider {
 	public readonly type: string = 'HSM-X.509';
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	private readonly options: any;
 	private readonly cryptoSuite: ICryptoSuite;
 
 	/**
@@ -63,11 +55,9 @@ export class HsmX509Provider implements IdentityProvider {
 	 * unless this information is provided through external configuration.
 	 */
 	public constructor(options: HsmOptions = {}) {
-		this.options = {};
-		Object.assign(this.options, options);
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-		this.options.software = false; // Must be set to enable HSM
-		this.cryptoSuite = User.newCryptoSuite(this.options);
+		// options.software must be set to false to enable HSM
+		const cryptoOptions = Object.assign({}, options, {software: false});
+		this.cryptoSuite = User.newCryptoSuite(cryptoOptions);
 	}
 
 	public getCryptoSuite(): ICryptoSuite {

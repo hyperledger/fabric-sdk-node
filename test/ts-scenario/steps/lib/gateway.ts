@@ -26,10 +26,10 @@ const stateStore: StateStore = StateStore.getInstance();
 const txnTypes: string[] = ['evaluate', 'submit'];
 const txnResponseTypes: string[] = ['evaluate', 'error', 'submit'];
 const supportedWallets: string[] = [
-	Constants.FILE_WALLET as string,
-	Constants.MEMORY_WALLET as string,
-	Constants.COUCH_WALLET as string,
-	Constants.HSM_WALLET as string
+	Constants.FILE_WALLET,
+	Constants.MEMORY_WALLET,
+	Constants.COUCH_WALLET,
+	Constants.HSM_WALLET
 ];
 
 const HSM_PROVIDER = Constants.HSM_PROVIDER;
@@ -101,7 +101,7 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 				}
 				break;
 			case Constants.COUCH_WALLET:
-				wallet = await Wallets.newCouchDBWallet({url: Constants.COUCH_WALLET_URL as string});
+				wallet = await Wallets.newCouchDBWallet({url: Constants.COUCH_WALLET_URL});
 				break;
 			case Constants.HSM_WALLET:
 				{

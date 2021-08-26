@@ -4,6 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
 import sinon = require('sinon');
 import {expect} from 'chai';
 import Long = require('long');
@@ -49,14 +54,12 @@ describe('contract event listener', () => {
 		channel.newEventService.returns(eventService);
 
 		const endorser = sinon.createStubInstance(Endorser);
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-explicit-any
 		(endorser as any).name = 'endorser';
 		channel.getEndorsers.returns([endorser]);
 
 		const client = sinon.createStubInstance(Client);
 		const eventer = sinon.createStubInstance(Eventer);
 		client.newEventer.returns(eventer);
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-explicit-any
 		(channel as any).client = client;
 
 		network = new NetworkImpl(gateway as unknown as Gateway, channel);
@@ -98,15 +101,13 @@ describe('contract event listener', () => {
 		return block;
 	}
 
-	function addTransaction(event: EventInfo, transaction:fabproto6.protos.ITransaction,
+	function addTransaction(event: any, transaction:any,
 		statusCode: number = fabproto6.protos.TxValidationCode.VALID, index = 0, transactionId?: string): void {
-		event.block.data.data.push(newEnvelope(transaction, transactionId) as unknown as Uint8Array);
+		event.block.data.data.push(newEnvelope(transaction, transactionId));
 		event.block.metadata.metadata[fabproto6.common.BlockMetadataIndex.TRANSACTIONS_FILTER][index] = statusCode;
 	}
 
-	function newEnvelope(transaction: fabproto6.protos.ITransaction, transactionId?: string): {
-		payload: fabproto6.common.Payload;
-	} {
+	function newEnvelope(transaction: any, transactionId?: string): any {
 		const channelHeader = new fabproto6.common.ChannelHeader();
 		channelHeader.type = fabproto6.common.HeaderType.ENDORSER_TRANSACTION;
 		channelHeader.tx_id = transactionId;
@@ -115,49 +116,49 @@ describe('contract event listener', () => {
 		payload.header =  new fabproto6.common.Header();
 		payload.header.channel_header = channelHeader as unknown as Buffer;
 
-		payload.data = transaction as Uint8Array;
-		const envelope = {} as {payload:fabproto6.common.Payload};
+		payload.data = transaction;
+		const envelope:any = {};
 		envelope.payload = payload;
 		return envelope;
 	}
 
-	function newTransaction(ccId: string = contract.chaincodeId): fabproto6.protos.Transaction {
+	function newTransaction(ccId: string = contract.chaincodeId): any {
 		const transaction = new fabproto6.protos.Transaction();
 		transaction.actions.push(newTransactionAction(ccId));
 		return transaction;
 	}
 
-	function newTransactionAction(ccId: string): fabproto6.protos.TransactionAction {
+	function newTransactionAction(ccId: string): any {
 		const transactionAction = new fabproto6.protos.TransactionAction();
-		transactionAction.payload = newChaincodeActionPayload(ccId) as unknown as Uint8Array;
+		transactionAction.payload = newChaincodeActionPayload(ccId);
 		return transactionAction;
 	}
 
-	function newChaincodeActionPayload(ccId: string): fabproto6.protos.ChaincodeActionPayload {
+	function newChaincodeActionPayload(ccId: string): any {
 		const chaincodeActionPayload = new fabproto6.protos.ChaincodeActionPayload();
 		chaincodeActionPayload.action = newChaincodeEndorsedAction(ccId);
 		return chaincodeActionPayload;
 	}
 
-	function newChaincodeEndorsedAction(ccId: string): fabproto6.protos.ChaincodeEndorsedAction {
+	function newChaincodeEndorsedAction(ccId: string): any {
 		const endorsedAction = new fabproto6.protos.ChaincodeEndorsedAction();
-		endorsedAction.proposal_response_payload = newProposalResponsePayload(ccId) as unknown as Uint8Array;
+		endorsedAction.proposal_response_payload = newProposalResponsePayload(ccId);
 		return endorsedAction;
 	}
 
-	function newProposalResponsePayload(ccId: string): fabproto6.protos.ProposalResponsePayload {
+	function newProposalResponsePayload(ccId: string): any {
 		const proposalResponsePayload = new fabproto6.protos.ProposalResponsePayload();
-		proposalResponsePayload.extension = newChaincodeAction(ccId) as unknown as Uint8Array;
+		proposalResponsePayload.extension = newChaincodeAction(ccId);
 		return proposalResponsePayload;
 	}
 
-	function newChaincodeAction(ccId: string): fabproto6.protos.ChaincodeAction {
+	function newChaincodeAction(ccId: string): any {
 		const chaincodeAction = new fabproto6.protos.ChaincodeAction();
-		chaincodeAction.events = newChaincodeEvent(ccId) as unknown as Uint8Array;
+		chaincodeAction.events = newChaincodeEvent(ccId);
 		return chaincodeAction;
 	}
 
-	function newChaincodeEvent(ccId: string): fabproto6.protos.ChaincodeEvent {
+	function newChaincodeEvent(ccId: string): any {
 		const chaincodeEvent = new fabproto6.protos.ChaincodeEvent();
 		chaincodeEvent.chaincode_id = ccId;
 		chaincodeEvent.event_name = eventName;
@@ -191,13 +192,13 @@ describe('contract event listener', () => {
 		return filteredTransaction;
 	}
 
-	function newFilteredTransactionAction(ccId: string): fabproto6.protos.FilteredTransactionActions {
+	function newFilteredTransactionAction(ccId: string): any {
 		const filteredTransactionAction = new fabproto6.protos.FilteredTransactionActions();
 		filteredTransactionAction.chaincode_actions = [newFilteredChaincodeAction(ccId)];
 		return filteredTransactionAction;
 	}
 
-	function newFilteredChaincodeAction(ccId: string): fabproto6.protos.FilteredChaincodeAction {
+	function newFilteredChaincodeAction(ccId: string): any {
 		const filteredChaincodeAction = new fabproto6.protos.FilteredChaincodeAction();
 		filteredChaincodeAction.chaincode_event = newChaincodeEvent(ccId);
 		return filteredChaincodeAction;
@@ -351,7 +352,6 @@ describe('contract event listener', () => {
 	});
 
 	it('listener defaults to full blocks', async () => {
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-explicit-any
 		const eventServiceManager = (network as any).eventServiceManager as EventServiceManager;
 		const stub = sinon.stub(eventServiceManager, 'startEventService');
 
@@ -360,7 +360,6 @@ describe('contract event listener', () => {
 	});
 
 	it('listener can receive filtered blocks', async () => {
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-explicit-any
 		const eventServiceManager = (network as any).eventServiceManager as EventServiceManager;
 		const stub = sinon.stub(eventServiceManager, 'startEventService');
 		const event = newFilteredEvent(1);
@@ -377,7 +376,6 @@ describe('contract event listener', () => {
 	});
 
 	it('listener can receive private blocks', async () => {
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-explicit-any
 		const eventServiceManager = (network as any).eventServiceManager as EventServiceManager;
 		const stub = sinon.stub(eventServiceManager, 'startEventService');
 		const event = newPrivateEvent(1);

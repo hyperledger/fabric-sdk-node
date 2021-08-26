@@ -71,10 +71,7 @@ describe('listeners', () => {
 		});
 
 		it('checkpoint block number not incremented on listener failure', async () => {
-			// eslint-disable-next-line @typescript-eslint/require-await
-			const listener: BlockListener = async () => {
-				throw new Error('LISTENER_FAIL');
-			};
+			const listener: BlockListener = () => Promise.reject(new Error('LISTENER_FAIL'));
 			await checkpointer.setBlockNumber(currentBlockNumber);
 			const checkpointListener = Listeners.checkpointBlockListener(listener, checkpointer);
 
