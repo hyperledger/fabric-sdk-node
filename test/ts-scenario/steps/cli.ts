@@ -96,6 +96,7 @@ Given(/^I use the cli to lifecycle deploy a (.+?) smart contract named (.+?) at 
 	// Skip if already committed on channel
 	if (await Contract.cli_lifecycle_chaincode_query_commit(ccName, orgNames[0].toLowerCase(), channelName, tls)) {
 		BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} has already been committed on channel ${channelName} as ${ccReference} `);
+		return;
 	} else {
 		BaseUtils.logMsg(`Smart contract ${ccName} at version ${ccVersion} is not committed on channel ${channelName} as ${ccReference} `);
 	}
