@@ -24,13 +24,12 @@ Given(/^I have a (.+?) backed gateway named (.+?) with discovery set to (.+?) fo
 		if (walletType !== Constants.HSM_WALLET) {
 			return;
 		}
-		const gateway = gateways?.get(gatewayName);
-		if (gateway) {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
-			gateway.gateway.disconnect();
-			gateways.delete(gatewayName);
-			BaseUtils.logMsg('Gateway contained an HSM Wallet, discard the old one and create a new Gateway, reusing the in memory wallet holding the HSM identities');
-		}
+		const gateway = Gateway.getGateway(gateways, gatewayName);
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call
+		gateway.gateway.disconnect();
+		gateways.delete(gatewayName);
+		BaseUtils.logMsg('Gateway contained an HSM Wallet, discard the old one and create a new Gateway, reusing the in memory wallet holding the HSM identities');
+
 	}
 
 	try {

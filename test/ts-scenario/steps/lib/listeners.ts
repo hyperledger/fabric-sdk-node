@@ -18,22 +18,16 @@ import path = require('path');
 import os = require('os');
 import util = require('util');
 
+
 const stateStore: StateStore = StateStore.getInstance();
 const CHECKPOINT_FILE_KEY = 'checkpointFile';
 
-function getGateway(gateways:Map<string, GatewayHelper.GatewayData>, name: string):GatewayHelper.GatewayData {
-	const gateway = gateways.get(name);
-	if (!gateway) {
-		throw new Error(`No gateway named ${name} defined`);
-	}
-	return gateway;
-}
+
 
 export async function createContractListener(gatewayName: string, channelName: string, ccName: string,
 	eventName: string, listenerName: string, listenerOptions: ListenerOptions): Promise<void> {
 	const gateways = stateStore.get(Constants.GATEWAYS) as  Map<string, GatewayHelper.GatewayData>;
-
-	const gateway = getGateway(gateways, gatewayName);
+	const gateway = GatewayHelper.getGateway(gateways, gatewayName);
 	const contract: Contract = await GatewayHelper.retrieveContractFromGateway(gateway.gateway, channelName, ccName);
 	const payloads: ContractEvent[] = [];
 	const listener: ContractListener = (event: ContractEvent) => {
@@ -62,7 +56,7 @@ export async function createBlockListener(gatewayName: string, channelName: stri
 	listenerOptions: ListenerOptions, endBlock?: number): Promise<void> {
 	const gateways = stateStore.get(Constants.GATEWAYS) as Map<string, GatewayHelper.GatewayData>;
 
-	const gateway = getGateway(gateways, gatewayName);
+	const gateway = GatewayHelper.getGateway(gateways, gatewayName);
 
 	const network: Network = await gateway.gateway.getNetwork(channelName);
 

@@ -53,6 +53,13 @@ export interface GatewayData {
 		response: string | Record<string, unknown>;
 	};
 }
+export function getGateway(gateways:Map<string, GatewayData>, name: string):GatewayData {
+	const gateway = gateways.get(name);
+	if (!gateway) {
+		throw new Error(`No gateway named ${name} defined`);
+	}
+	return gateway;
+}
 
 /**
  * Create a gateway
