@@ -13,17 +13,14 @@ import {
 	EventService,
 	IdentityContext,
 	ServiceAction,
-	EventInfo
+	EventInfo,
+	StartRequestOptions,
+	StartEventRequest
 } from 'fabric-common';
 import Long = require('long');
 
-// tslint:disable:max-classes-per-file
 
-interface TransactionListenerInfo {
-	readonly transactionId: string;
-	readonly callback: EventCallback;
-	readonly options: EventRegistrationOptions;
-}
+
 
 class StubTransactionEventListener implements EventListener {
 	readonly transactionId: string;
@@ -79,7 +76,7 @@ export class StubEventService implements EventService {
 	startBlock: string | Long;
 	endBlock: string | Long;
 	blockType: BlockType = 'filtered';
-	inUse: boolean = false;
+	inUse = false;
 
 	started = false;
 
@@ -93,11 +90,13 @@ export class StubEventService implements EventService {
 		return this.inUse;
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	setEventer(discoverer: Eventer): EventService {
 		throw new Error('Method not implemented.');
 	}
 
-	setTargets(targets: Eventer[]) {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	setTargets(targets: Eventer[]) :void {
 		// No-op
 	}
 
@@ -105,15 +104,17 @@ export class StubEventService implements EventService {
 		throw new Error('Method not implemented.');
 	}
 
-	close() {
+	close():void {
 		this.eventListeners.clear();
 	}
 
-	build(idContext: IdentityContext, request: any): Buffer {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	build(idContext: IdentityContext, request: StartRequestOptions): Buffer {
 		return Buffer.from('');
 	}
 
-	send(request: any): Promise<any> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	send(request: StartEventRequest): Promise<void> {
 		return null;
 	}
 
@@ -139,6 +140,7 @@ export class StubEventService implements EventService {
 		return listener;
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	registerChaincodeListener(chaincodeId: string, eventName: string, callback: EventCallback, options: EventRegistrationOptions): import('fabric-common').EventListener {
 		throw new Error('Method not implemented.');
 	}
@@ -149,23 +151,24 @@ export class StubEventService implements EventService {
 		return listener;
 	}
 
-	async sign(parm: IdentityContext | Buffer): Promise<ServiceAction> {
-		return null;
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	sign(parm: IdentityContext | Buffer): Promise<ServiceAction> {
+		return Promise.resolve(null);
 	}
 
-	getSignedProposal() {
+	getSignedProposal():void {
 		throw new Error('Method not implemented.');
 	}
 
-	getSignedEnvelope() {
+	getSignedEnvelope() :void {
 		throw new Error('Method not implemented.');
 	}
 
-	sendEvent(event: EventInfo) {
+	sendEvent(event: EventInfo):void {
 		this.eventListeners.forEach((listener) => listener.onEvent(undefined, event));
 	}
 
-	sendError(error: Error) {
+	sendError(error: Error) :void {
 		this.eventListeners.forEach((listener) => listener.onEvent(error, undefined));
 	}
 }

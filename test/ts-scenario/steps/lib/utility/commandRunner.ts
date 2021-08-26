@@ -2,10 +2,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
-import { logMsg } from './baseUtils';
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 
-import { ChildProcess, exec } from 'child_process';
+import {logMsg} from './baseUtils';
+
+import {ChildProcess, exec} from 'child_process';
 import stripAnsi from 'strip-ansi';
 import * as BaseUtils from '../utility/baseUtils';
 
@@ -29,15 +33,15 @@ export class CommandRunner {
 	 * @param {String} cmd -  CLI command with parameters to be run
 	 * @return {Promise} - Promise that will be resolved or rejected with an error
 	 */
-	public runShellCommand(pass: any, cmd: string, verbose: boolean = true): Promise<any> {
+	public runShellCommand(pass: any, cmd: string, verbose = true): Promise<Record<string, unknown>> {
 		BaseUtils.logMsg(` -- runShellCommand ==>${cmd}<==`);
 
 		if (typeof cmd !== 'string') {
 			return Promise.reject('Command passed to function was not a string');
 		} else {
 			const command: string = cmd.replace(/\s*[\n\r]+\s*/g, ' ');
-			let stdout: string = '';
-			let stderr: string = '';
+			let stdout = '';
+			let stderr = '';
 			const env: any = Object.create(process.env);
 
 			return new Promise((resolve: any, reject: any): any => {

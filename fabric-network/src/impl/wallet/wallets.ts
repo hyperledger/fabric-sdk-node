@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { CouchDBWalletStore } from './couchdbwalletstore';
-import { FileSystemWalletStore } from './filesystemwalletstore';
-import { InMemoryWalletStore } from './inmemorywalletstore';
-import { Wallet } from './wallet';
+import {CouchDBWalletStore} from './couchdbwalletstore';
+import {FileSystemWalletStore} from './filesystemwalletstore';
+import {InMemoryWalletStore} from './inmemorywalletstore';
+import {Wallet} from './wallet';
 
 import * as nano from 'nano';
 
@@ -21,9 +21,9 @@ export class Wallets {
 	 * private in-memory store.
 	 * @returns {Promise<module:fabric-network.Wallet>} A wallet.
 	 */
-	public static async newInMemoryWallet(): Promise<Wallet> {
+	public static  newInMemoryWallet(): Promise<Wallet> {
 		const store = new InMemoryWalletStore();
-		return new Wallet(store);
+		return Promise.resolve(new Wallet(store));
 	}
 
 	/**
@@ -42,7 +42,7 @@ export class Wallets {
 	 * @param {string} [dbName=wallet] Name of a database hosted on the CouchDB server.
 	 * @returns {Promise<module:fabric-network.Wallet>} A wallet.
 	 */
-	public static async newCouchDBWallet(config: string | nano.Configuration, dbName: string = 'wallet'): Promise<Wallet> {
+	public static async newCouchDBWallet(config: string | nano.Configuration, dbName = 'wallet'): Promise<Wallet> {
 		const store = await CouchDBWalletStore.newInstance(config, dbName);
 		return new Wallet(store);
 	}

@@ -4,14 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ICryptoSuite, Pkcs11EcdsaKey, User } from 'fabric-common';
+import {HSMCryptoSetting, ICryptoSuite,  User} from 'fabric-common';
 
-import { Identity } from './identity';
-import { IdentityData } from './identitydata';
-import { IdentityProvider } from './identityprovider';
+import {Identity} from './identity';
+import {IdentityData} from './identitydata';
+import {IdentityProvider} from './identityprovider';
 
-import * as Logger from '../../logger';
-const logger = Logger.getLogger('HsmX509Identity');
+
 
 export interface HsmX509Identity extends Identity {
 	type: 'HSM-X.509';
@@ -40,14 +39,7 @@ interface HsmX509IdentityDataV2 extends IdentityData {
 	mspId: string;
 }
 
-export interface HsmOptions {
-	lib?: string;
-	pin?: string;
-	slot?: number;
-	label?: string;
-	usertype?: number;
-	readwrite?: boolean;
-}
+export type HsmOptions = Omit<HSMCryptoSetting, 'software'>;
 
 /**
  * Identity provider to handle X.509 identities where the private key is stored in a hardware security module.
@@ -56,7 +48,6 @@ export interface HsmOptions {
  */
 export class HsmX509Provider implements IdentityProvider {
 	public readonly type: string = 'HSM-X.509';
-	private readonly options: any;
 	private readonly cryptoSuite: ICryptoSuite;
 
 	/**
@@ -65,10 +56,9 @@ export class HsmX509Provider implements IdentityProvider {
 	 * unless this information is provided through external configuration.
 	 */
 	public constructor(options: HsmOptions = {}) {
-		this.options = {};
-		Object.assign(this.options, options);
-		this.options.software = false; // Must be set to enable HSM
-		this.cryptoSuite = User.newCryptoSuite(this.options);
+		// options.software must be set to false to enable HSM
+		const cryptoOptions = Object.assign({}, options, {software: false});
+		this.cryptoSuite = User.newCryptoSuite(cryptoOptions);
 	}
 
 	public getCryptoSuite(): ICryptoSuite {
@@ -99,7 +89,7 @@ export class HsmX509Provider implements IdentityProvider {
 				type: 'HSM-X.509',
 			};
 		} else {
-			throw new Error('Unsupported identity version: ' + data.version);
+			throw new Error(`Unsupported identity version: ${data.version}`);
 		}
 	}
 

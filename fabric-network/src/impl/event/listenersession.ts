@@ -9,7 +9,9 @@ export interface ListenerSession {
 	close(): void;
 }
 
-export async function addListener<T>(listener: T, listenerSessions: Map<T, ListenerSession>, sessionSupplier: () => Promise<ListenerSession>) {
+
+export async function addListener<T>
+(listener: T, listenerSessions: Map<T, ListenerSession>, sessionSupplier: () => Promise<ListenerSession>): Promise<T> {
 	if (!listenerSessions.has(listener)) {
 		const session = await sessionSupplier();
 		// Store listener before starting in case start fires error events that trigger remove of the listener
@@ -20,7 +22,7 @@ export async function addListener<T>(listener: T, listenerSessions: Map<T, Liste
 
 }
 
-export function removeListener<T>(listener: T, listenerSessions: Map<T, ListenerSession>) {
+export function removeListener<T>(listener: T, listenerSessions: Map<T, ListenerSession>) :void {
 	const session = listenerSessions.get(listener);
 	if (session) {
 		session.close();

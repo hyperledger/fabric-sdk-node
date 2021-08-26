@@ -4,19 +4,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Channel, DiscoveryService, Endorser } from 'fabric-common';
-import { Contract, ContractImpl } from './contract';
-import { BlockListener, CommitListener, EventType, ListenerOptions } from './events';
-import { Gateway, DiscoveryOptions } from './gateway';
-import { BlockEventSource } from './impl/event/blockeventsource';
-import { CommitListenerSession } from './impl/event/commitlistenersession';
-import { EventServiceManager } from './impl/event/eventservicemanager';
-import { IsolatedBlockListenerSession } from './impl/event/isolatedblocklistenersession';
-import { checkpointBlockListener } from './impl/event/listeners';
-import { addListener, ListenerSession, removeListener } from './impl/event/listenersession';
-import { SharedBlockListenerSession } from './impl/event/sharedblocklistenersession';
-import { QueryHandler } from './impl/query/queryhandler';
-import { notNullish } from './impl/gatewayutils';
+import {Channel, DiscoveryService, Endorser} from 'fabric-common';
+import {Contract, ContractImpl} from './contract';
+import {BlockListener, CommitListener, EventType, ListenerOptions} from './events';
+import {Gateway, DiscoveryOptions} from './gateway';
+import {BlockEventSource} from './impl/event/blockeventsource';
+import {CommitListenerSession} from './impl/event/commitlistenersession';
+import {EventServiceManager} from './impl/event/eventservicemanager';
+import {IsolatedBlockListenerSession} from './impl/event/isolatedblocklistenersession';
+import {checkpointBlockListener} from './impl/event/listeners';
+import {addListener, ListenerSession, removeListener} from './impl/event/listenersession';
+import {SharedBlockListenerSession} from './impl/event/sharedblocklistenersession';
+import {QueryHandler} from './impl/query/queryhandler';
+import {notNullish} from './impl/gatewayutils';
 import * as Logger from './logger';
 
 const logger = Logger.getLogger('Network');
@@ -175,7 +175,7 @@ export class NetworkImpl implements Network {
 	private readonly gateway: Gateway;
 	private readonly channel: Channel;
 	private readonly contracts = new Map<string, Contract>();
-	private initialized: boolean = false;
+	private initialized = false;
 	private eventServiceManager: EventServiceManager;
 	private readonly commitListeners = new Map<CommitListener, ListenerSession>();
 	private readonly blockListeners = new Map<BlockListener, ListenerSession>();
@@ -195,16 +195,16 @@ export class NetworkImpl implements Network {
 		this.gateway = gateway;
 		this.channel = channel;
 		this.eventServiceManager = new EventServiceManager(this);
-		this.realtimeFilteredBlockEventSource = new BlockEventSource(this.eventServiceManager, { type: 'filtered' });
-		this.realtimeFullBlockEventSource = new BlockEventSource(this.eventServiceManager, { type: 'full' });
-		this.realtimePrivateBlockEventSource = new BlockEventSource(this.eventServiceManager, { type: 'private' });
+		this.realtimeFilteredBlockEventSource = new BlockEventSource(this.eventServiceManager, {type: 'filtered'});
+		this.realtimeFullBlockEventSource = new BlockEventSource(this.eventServiceManager, {type: 'full'});
+		this.realtimePrivateBlockEventSource = new BlockEventSource(this.eventServiceManager, {type: 'private'});
 	}
 
 	getGateway(): Gateway {
 		return this.gateway;
 	}
 
-	getContract(chaincodeId: string, name: string = ''): Contract {
+	getContract(chaincodeId: string, name = ''): Contract {
 		const method = 'getContract';
 		logger.debug('%s - start - name %s', method, name);
 
@@ -230,8 +230,8 @@ export class NetworkImpl implements Network {
 	}
 
 	async addCommitListener(listener: CommitListener, peers: Endorser[], transactionId: string): Promise<CommitListener> {
-		const sessionSupplier = async () => new CommitListenerSession(listener, this.eventServiceManager, peers, transactionId);
-		return await addListener(listener, this.commitListeners, sessionSupplier);
+		const sessionSupplier =  () => Promise.resolve(new CommitListenerSession(listener, this.eventServiceManager, peers, transactionId));
+		return await addListener(listener, this.commitListeners,  sessionSupplier);
 	}
 
 	removeCommitListener(listener: CommitListener): void {
@@ -285,7 +285,8 @@ export class NetworkImpl implements Network {
 		this.initialized = true;
 
 		// Must be created after channel initialization to ensure discovery has located the peers
-		const queryOptions = this.gateway.getOptions().queryHandlerOptions!;
+		const queryOptions = this.gateway.getOptions().queryHandlerOptions;
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		this.queryHandler = queryOptions.strategy!(this);
 		logger.debug('%s - end', method);
 	}
@@ -329,6 +330,7 @@ export class NetworkImpl implements Network {
 				discoverers.push(discoverer);
 			}
 			this.discoveryService = this.channel.newDiscoveryService(this.channel.name);
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			const idx = this.gateway.identityContext!;
 
 			// do the three steps
@@ -376,7 +378,7 @@ export class NetworkImpl implements Network {
 		} else if (type === 'private') {
 			return new SharedBlockListenerSession(listener, this.realtimePrivateBlockEventSource);
 		} else {
-			throw new Error('Unsupported event listener type: ' + type);
+			throw new Error(`Unsupported event listener type: ${type as unknown as string}`);
 		}
 	}
 }

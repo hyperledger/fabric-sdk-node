@@ -4,24 +4,26 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { WalletStore } from './walletstore';
+import {WalletStore} from './walletstore';
 
 export class InMemoryWalletStore implements WalletStore {
 	private readonly map: Map<string, Buffer> = new Map();
 
-	public async remove(label: string): Promise<void> {
+	public remove(label: string): Promise<void> {
 		this.map.delete(label);
+		return Promise.resolve();
 	}
 
-	public async get(label: string): Promise<Buffer|undefined> {
-		return this.map.get(label);
+	public get(label: string): Promise<Buffer|undefined> {
+		return Promise.resolve(this.map.get(label));
 	}
 
-	public async list(): Promise<string[]> {
-		return Array.from(this.map.keys());
+	public list(): Promise<string[]> {
+		return Promise.resolve(Array.from(this.map.keys()));
 	}
 
-	public async put(label: string, data: Buffer): Promise<void> {
+	public put(label: string, data: Buffer): Promise<void> {
 		this.map.set(label, data);
+		return Promise.resolve();
 	}
 }

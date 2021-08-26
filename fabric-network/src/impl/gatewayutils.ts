@@ -41,10 +41,10 @@ export function allSettled<T>(promises: Iterable<Promise<T>>): Promise<SettledPr
 function settle<T>(promise: Promise<T>): Promise<SettledPromiseResult<T>> {
 	return promise.then(
 		(value: T) => {
-			return { status: 'fulfilled', value };
+			return {status: 'fulfilled', value};
 		},
 		(reason: Error) => {
-			return { status: 'rejected', reason };
+			return {status: 'rejected', reason};
 		}
 	);
 }
