@@ -66,7 +66,7 @@ Then(/^the request named (.+?) for client (.+?) has discovery results$/, {timeou
 
 When(/^I create an event service (.+?) as client (.+?) on channel (.+?)$/, {timeout: Constants.HUGE_TIME},
 	(eventServiceName: string, clientName: string, channelName: string) => {
-		void ClientHelper.createEventService(eventServiceName, clientName, channelName);
+		ClientHelper.createEventService(eventServiceName, clientName, channelName);
 	});
 
 Then(/^I (.+?) the event service (.+?) as (.+?) blocks to start at block (.+?) and end at block (.+?) as client (.+?)$/, {timeout: Constants.INC_SHORT},
