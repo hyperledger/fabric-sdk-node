@@ -345,7 +345,7 @@ async function createHSMUser(wallet: Wallet, ccp: CommonConnectionProfileHelper,
 			certificate: enrollment.certificate
 		},
 		mspId: orgMsp,
-		type: HSM_PROVIDER
+		type: HSM_PROVIDER as 'HSM-X.509'
 	};
 	await wallet.put(identityName, identity);
 	BaseUtils.logMsg(`Adding HSM identity for ${userName}@${orgName} to wallet`);

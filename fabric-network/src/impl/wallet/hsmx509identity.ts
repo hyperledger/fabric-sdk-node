@@ -11,15 +11,16 @@ import {IdentityData} from './identitydata';
 import {IdentityProvider} from './identityprovider';
 
 
+
 export interface HsmX509Identity extends Identity {
-	type: string;
+	type: 'HSM-X.509';
 	credentials: {
 		certificate: string;
 	};
 }
 
 interface HsmX509IdentityDataV1 extends IdentityData {
-	type: string;
+	type: 'HSM-X.509';
 	version: 1;
 	credentials: {
 		certificate: string;
@@ -29,7 +30,7 @@ interface HsmX509IdentityDataV1 extends IdentityData {
 
 // This is not a valid format, but can easily be migrated to the above valid format
 interface HsmX509IdentityDataV2 extends IdentityData {
-	type: string;
+	type: 'HSM-X.509';
 	version: 2;
 	credentials: {
 		certificate: string;
