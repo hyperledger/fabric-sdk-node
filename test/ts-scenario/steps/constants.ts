@@ -2,8 +2,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
-
 // State store items (just in case you don't want to look at the code)
 // - Users Map<userName: string, user: User>
 

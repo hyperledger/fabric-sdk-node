@@ -7,8 +7,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
-'use strict';
-
 import * as FabricCAServices from 'fabric-ca-client';
 import {
 	Channel, Client, Commit, Committer, Endorsement, Endorser,

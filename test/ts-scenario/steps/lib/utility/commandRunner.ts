@@ -7,7 +7,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 
-'use strict';
 import {logMsg} from './baseUtils';
 
 import {ChildProcess, exec} from 'child_process';

@@ -6,7 +6,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-'use strict';
 
 import {BlockEvent, BlockListener, Checkpointer, Contract, ContractEvent, ContractListener, EventType, ListenerOptions, Network, DefaultCheckpointers, TransactionEvent} from 'fabric-network';
 import {Constants} from '../constants';

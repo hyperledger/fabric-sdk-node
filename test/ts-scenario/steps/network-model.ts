@@ -2,8 +2,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
-
 import {Constants} from './constants';
 import * as Gateway from './lib/gateway';
 import * as BaseUtils from './lib/utility/baseUtils';

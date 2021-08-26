@@ -7,8 +7,6 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
-'use strict';
-
 import * as BaseUtils from './lib/utility/baseUtils';
 import util = require('util')
 

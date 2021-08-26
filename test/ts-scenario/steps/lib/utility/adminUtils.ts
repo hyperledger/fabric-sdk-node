@@ -8,8 +8,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-'use strict';
-
 import {Constants} from '../../constants';
 import * as BaseUtils from './baseUtils';
 import {CommonConnectionProfileHelper} from './commonConnectionProfileHelper';

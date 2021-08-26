@@ -2,8 +2,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
-
 export type FabricState = {deployed:boolean, type:string, version:string}
 
 export class StateStore {

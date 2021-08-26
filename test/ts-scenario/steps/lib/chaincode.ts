@@ -9,8 +9,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
-'use strict';
-
 import * as Client from 'fabric-client';
 import {Constants} from '../constants';
 import * as AdminUtils from './utility/adminUtils';

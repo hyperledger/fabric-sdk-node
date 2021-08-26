@@ -8,8 +8,6 @@
 /* eslint-disable @typescript-eslint/no-implied-eval */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-'use strict';
-
 import {Constants} from '../../constants';
 import {StateStore} from './stateStore';
 

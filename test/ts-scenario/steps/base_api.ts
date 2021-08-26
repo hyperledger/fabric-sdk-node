@@ -2,8 +2,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
-
 import * as ClientHelper from './lib/utility/clientUtils';
 import * as BaseUtils from './lib/utility/baseUtils';
 import {Constants} from './constants';

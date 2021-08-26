@@ -2,8 +2,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
-
 import {Constants} from './constants';
 import * as Deprecated from './lib/deprecatedSDK';
 import * as AdminUtils from './lib/utility/adminUtils';
