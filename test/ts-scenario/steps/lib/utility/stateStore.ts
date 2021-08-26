@@ -2,7 +2,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type FabricState = {deployed:boolean, type:string, version:string}
+export interface FabricState {
+	deployed: boolean;
+	type: string;
+	version: string;
+}
 
 export class StateStore {
 
