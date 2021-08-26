@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { EventCount, SuccessCallback, FailCallback, TransactionEventStrategy } from './transactioneventstrategy';
+import {EventCount, SuccessCallback, FailCallback, TransactionEventStrategy} from './transactioneventstrategy';
 
-import Logger = require('../../logger');
+import * as Logger from '../../logger';
 const logger = Logger.getLogger('AllForTxStrategy');
 
 /**
@@ -20,7 +20,7 @@ const logger = Logger.getLogger('AllForTxStrategy');
  * @class
  */
 export class AllForTxStrategy extends TransactionEventStrategy {
-	checkCompletion(counts: EventCount, successFn: SuccessCallback, failFn: FailCallback) {
+	protected checkCompletion(counts: EventCount, successFn: SuccessCallback, failFn: FailCallback):void {
 		const method = 'checkCompletion';
 		logger.debug('%s:%j', method, counts);
 		const isAllResponsesReceived = (counts.success + counts.fail === counts.expected);

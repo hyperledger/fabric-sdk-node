@@ -5,7 +5,8 @@
 import {ICryptoSuite, ICryptoKey, User} from 'fabric-common';
 
 declare class FabricCAServices {
-	constructor(url: string | FabricCAServices.IFabricCAService, tlsOptions?: FabricCAServices.TLSOptions, caName?: string, cryptoSuite?: ICryptoSuite);
+	constructor(url: string | FabricCAServices.IFabricCAService,
+		tlsOptions?: FabricCAServices.TLSOptions, caName?: string, cryptoSuite?: ICryptoSuite);
 
 	getCaName(): string;
 
@@ -17,8 +18,10 @@ declare class FabricCAServices {
 
 	reenroll(currentUser: User, attrReqs: FabricCAServices.IAttributeRequest[]): Promise<FabricCAServices.IEnrollResponse>;
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	revoke(request: FabricCAServices.IRevokeRequest, registrar: User): Promise<any>;
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	generateCRL(request: FabricCAServices.IRestriction, registrar: User): Promise<any>;
 
 	newIdentityService(): FabricCAServices.IdentityService;
@@ -117,6 +120,7 @@ declare namespace FabricCAServices {
 
 	export interface IServiceResponse {
 		success: boolean;
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		result: any;
 		errors: IServiceResponseMessage[];
 		messages: IServiceResponseMessage[];
@@ -128,6 +132,7 @@ declare namespace FabricCAServices {
 		force?: boolean;
 	}
 
+	// eslint-disable-next-line no-shadow
 	export enum HFCAIdentityType {
 		PEER = 'peer',
 		ORDERER = 'orderer',
@@ -135,6 +140,7 @@ declare namespace FabricCAServices {
 		USER = 'user'
 	}
 
+	// eslint-disable-next-line no-shadow
 	export enum HFCAIdentityAttributes {
 		HFREGISTRARROLES = 'hf.Registrar.Roles',
 		HFREGISTRARDELEGATEROLES = 'hf.Registrar.DelegateRoles',

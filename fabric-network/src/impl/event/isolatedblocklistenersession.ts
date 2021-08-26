@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ListenerSession } from './listenersession';
-import { BlockListener } from '../../events';
-import { BlockEventSource } from './blockeventsource';
+import {ListenerSession} from './listenersession';
+import {BlockListener} from '../../events';
+import {BlockEventSource} from './blockeventsource';
 
 export class IsolatedBlockListenerSession implements ListenerSession {
 	private readonly listener: BlockListener;
@@ -17,11 +17,11 @@ export class IsolatedBlockListenerSession implements ListenerSession {
 		this.eventSource = eventSource;
 	}
 
-	public async start() {
+	public async start():Promise<void> {
 		await this.eventSource.addBlockListener(this.listener);
 	}
 
-	public close() {
+	public close():void {
 		this.eventSource.removeBlockListener(this.listener);
 		this.eventSource.close(); // Close non-shared event source
 	}

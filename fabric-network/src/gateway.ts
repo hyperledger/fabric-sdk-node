@@ -33,6 +33,7 @@ export interface GatewayOptions {
 	discovery?: DiscoveryOptions;
 	eventHandlerOptions?: DefaultEventHandlerOptions;
 	queryHandlerOptions?: DefaultQueryHandlerOptions;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	'connection-options'?: any;
 }
 
@@ -254,7 +255,7 @@ export class Gateway {
 	 *     wallet: wallet
 	 * });
 	 */
-	async connect(config: Client | object, options: GatewayOptions) {
+	async connect(config: Client | Record<string, unknown>, options: GatewayOptions): Promise<void> {
 		const method = 'connect';
 		logger.debug('%s - start', method);
 
@@ -293,6 +294,7 @@ export class Gateway {
 		if (typeof options.identity === 'string') {
 			logger.debug('%s - setting identity from wallet', method);
 			this.identity = await this._getWalletIdentity(options.identity);
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			const provider = options.wallet!.getProviderRegistry().getProvider(this.identity.type);
 			const user = await provider.getUserContext(this.identity, options.identity);
 			this.identityContext = this.client.newIdentityContext(user);

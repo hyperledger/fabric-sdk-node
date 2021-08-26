@@ -2,19 +2,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
-
-import { Constants } from '../constants';
+import * as Constants from '../constants';
 import * as BaseUtils from './utility/baseUtils';
-import { CommandRunner } from './utility/commandRunner';
+import {CommandRunner} from './utility/commandRunner';
 
 import * as path from 'path';
-import { CommonConnectionProfileHelper } from './utility/commonConnectionProfileHelper';
 
 const commandRunner: CommandRunner = CommandRunner.getInstance();
 
 // CLI verbosity in commands
-const VERBOSE_CLI: boolean = JSON.parse(Constants.CLI_VERBOSITY);
+const VERBOSE_CLI: boolean = BaseUtils.getVerboseCLI();
 
 /**
  * Use the CLI container to install chaincode on an organization peer
@@ -25,21 +22,20 @@ const VERBOSE_CLI: boolean = JSON.parse(Constants.CLI_VERBOSITY);
  */
 export async function cli_chaincode_install_for_org(ccType: string, ccName: string, ccVersion: string, orgName: string): Promise<void> {
 
-	const persistName: string = `${ccName}@${ccVersion}`;
+	const persistName = `${ccName}@${ccVersion}`;
 
 	try {
 		// Use CLI container to install smart contract (no TLS options required)
 		BaseUtils.logMsg(`Attempting to install smart contract ${persistName} for organization ${orgName} using the CLI`);
 
 		const ccPath: string = path.join('/', 'opt', 'gopath', 'src', 'github.com', 'chaincode', ccType, ccName);
-		let installCommand: string[];
-		installCommand = [
+		const installCommand: string[] = [
 			'docker', 'exec', `${orgName}_cli`, 'peer', 'chaincode', 'install',
 			'-l', ccType,
 			'-n', ccName,
 			'-v', ccVersion,
 			'-p', ccPath,
-			'--connTimeout', Constants.CLI_TIMEOUT as string,
+			'--connTimeout', Constants.CLI_TIMEOUT,
 		];
 
 		await commandRunner.runShellCommand(true, installCommand.join(' '), VERBOSE_CLI);
@@ -59,20 +55,19 @@ export async function cli_chaincode_install_for_org(ccType: string, ccName: stri
  */
 export async function cli_is_chaincode_install_for_org(ccName: string, ccVersion: string, orgName: string): Promise<boolean> {
 
-	const persistName: string = `${ccName}@${ccVersion}`;
+	const persistName = `${ccName}@${ccVersion}`;
 
 	try {
 		// Use CLI container check for installed smart contract (no TLS options required)
 		BaseUtils.logMsg(`Attempting to check for install smart contract ${persistName} for organization ${orgName} using the CLI`);
 
-		let command: string[];
-		command = [
+		const command: string[] = [
 			'docker', 'exec', `${orgName}_cli`, 'peer', 'chaincode', 'list',
 			'--installed',
-			'--connTimeout', Constants.CLI_TIMEOUT as string,
+			'--connTimeout', Constants.CLI_TIMEOUT,
 		];
 
-		const results = await commandRunner.runShellCommand(true, command.join(' '), VERBOSE_CLI) as any;
+		const results = await commandRunner.runShellCommand(true, command.join(' '), VERBOSE_CLI) ;
 		const list = results.stdout as string;
 		BaseUtils.logMsg(`\n CLI found ==>${list}<==`);
 
@@ -98,23 +93,23 @@ export async function cli_is_chaincode_install_for_org(ccName: string, ccVersion
  * @param {string} ccVersion The version of the chaincode being checked
  * @param {string} orgName The name of the organization to check
  */
-export async function cli_is_chaincode_instantiated_for_org(channelName: string, ccName: string, ccVersion: string, orgName: string): Promise<boolean> {
+export async function cli_is_chaincode_instantiated_for_org(channelName: string,
+	ccName: string, ccVersion: string, orgName: string): Promise<boolean> {
 
-	const persistName: string = `${ccName}@${ccVersion}`;
+	const persistName = `${ccName}@${ccVersion}`;
 
 	try {
 		// Use CLI container check for installed smart contract (no TLS options required)
 		BaseUtils.logMsg(`Attempting to check for instantiated smart contract ${persistName} for organization ${orgName} using the CLI`);
 
-		let command: string[];
-		command = [
+		const command: string[] = [
 			'docker', 'exec', `${orgName}_cli`, 'peer', 'chaincode', 'list',
 			'--channelID', channelName,
 			'--instantiated',
-			'--connTimeout', Constants.CLI_TIMEOUT as string,
+			'--connTimeout', Constants.CLI_TIMEOUT,
 		];
 
-		const results = await commandRunner.runShellCommand(true, command.join(' '), VERBOSE_CLI) as any;
+		const results = await commandRunner.runShellCommand(true, command.join(' '), VERBOSE_CLI) ;
 		const list = results.stdout as string;
 		BaseUtils.logMsg(`\n CLI found ==>${list}<==`);
 
@@ -143,15 +138,16 @@ export async function cli_is_chaincode_instantiated_for_org(channelName: string,
  * @param {string} policy The policy to use when instantiating
  * @param {boolean} tls boolean tls
  */
-export async function cli_chaincode_instantiate(ccType: string, ccName: string, ccVersion: string, initArgs: string, channelName: string, policy: string, tls: boolean): Promise<void> {
+export async function cli_chaincode_instantiate(ccType: string, ccName: string,
+	ccVersion: string, initArgs: string, channelName: string, policy: string, tls: boolean): Promise<void> {
 	try {
 		// Use CLI container to instantiate smart contract
-		const persistName: string = `${ccName}@${ccVersion}`;
+		const persistName = `${ccName}@${ccVersion}`;
 		BaseUtils.logMsg(`Attempting to instantiate smart contract ${persistName} on channel ${channelName} with args ${initArgs} using default container ${Constants.DEFAULT_CLI_CONTAINER}`);
 
 		let tlsOptions: string[];
 		if (tls) {
-			tlsOptions = ['--tls', 'true', '--cafile', Constants.CLI_ORDERER_CA_FILE as string];
+			tlsOptions = ['--tls', 'true', '--cafile', Constants.CLI_ORDERER_CA_FILE];
 		} else {
 			tlsOptions = [];
 		}
@@ -162,17 +158,17 @@ export async function cli_chaincode_instantiate(ccType: string, ccName: string, 
 				ccPolicy = [];
 				break;
 			case '1ofAny':
-				ccPolicy = ['-P', Constants.ENDORSEMENT_POLICY_1OF_ANY as string];
+				ccPolicy = ['-P', Constants.ENDORSEMENT_POLICY_1OF_ANY];
 				break;
 			case '2ofAny':
-				ccPolicy = ['-P', Constants.ENDORSEMENT_POLICY_2OF_ANY as string];
+				ccPolicy = ['-P', Constants.ENDORSEMENT_POLICY_2OF_ANY];
 				break;
 			default:
 				// leave it blank and let fabric decide
 				ccPolicy = [];
 		}
 
-		const ccArgs: string = `"{\\"Args\\": ${JSON.stringify(initArgs)}}"`;
+		const ccArgs = `"{\\"Args\\": ${JSON.stringify(initArgs)}}"`;
 
 		let instantiateCommand: string[];
 		instantiateCommand = [
@@ -190,8 +186,10 @@ export async function cli_chaincode_instantiate(ccType: string, ccName: string, 
 		await commandRunner.runShellCommand(true, instantiateCommand.join(' '), VERBOSE_CLI);
 
 		// Since using the CLI we should be sure that the chaincode has *actually* been instantiated before progressing from here
-		const timeoutId: NodeJS.Timeout = setTimeout(() => { throw new Error(`instantiate smart contract ${ccName} on channel ${channelName} exceeded the default timeout ${Constants.INSTANTIATE_TIMEOUT}ms`); }, Constants.INSTANTIATE_TIMEOUT);
-		let deployed: boolean = false;
+		const timeoutId: NodeJS.Timeout = setTimeout(() => {
+			throw new Error(`instantiate smart contract ${ccName} on channel ${channelName} exceeded the default timeout ${Constants.INSTANTIATE_TIMEOUT}ms`);
+		}, Constants.INSTANTIATE_TIMEOUT);
+		let deployed = false;
 		while (!deployed) {
 			const response: string = await cli_chaincode_list_instantiated(channelName);
 			if (response.includes(`Name: ${ccName}, Version: ${ccVersion}`)) {
@@ -221,7 +219,7 @@ export async function cli_chaincode_list_instantiated(channelName: string): Prom
 		'-C', channelName,
 	];
 
-	const instantiated: any = await commandRunner.runShellCommand(true, listInstantiatedCommand.join(' '), VERBOSE_CLI) as any;
+	const instantiated = await commandRunner.runShellCommand(true, listInstantiatedCommand.join(' '), VERBOSE_CLI) ;
 	return instantiated.stdout as string;
 }
 
@@ -234,7 +232,7 @@ export async function cli_lifecycle_chaincode_query_installed(orgName: string): 
 		'docker', 'exec', `${orgName}_cli`, 'peer', 'lifecycle', 'chaincode', 'queryinstalled',
 	];
 
-	const installed: any = await commandRunner.runShellCommand(true, queryInstalledCommand.join(' '), VERBOSE_CLI) as any;
+	const installed = await commandRunner.runShellCommand(true, queryInstalledCommand.join(' '), VERBOSE_CLI) ;
 	return installed.stdout as string;
 }
 
@@ -253,12 +251,12 @@ export async function retrievePackageIdForLabelOnOrg(label: string, orgName: str
 		if (row.includes(`Label: ${label}`)) {
 			// strip out the ID
 			const segment: string = row.split(',')[0];
-			return segment.substr(segment.lastIndexOf(' ') + 1) as string;
+			return segment.substr(segment.lastIndexOf(' ') + 1) ;
 		}
 	}
 
 	// if it is not found in the above, throw
-	const msg: string = `Unable to find packageId for contract label ${label}`;
+	const msg = `Unable to find packageId for contract label ${label}`;
 	BaseUtils.logMsg(msg);
 	throw new Error(msg);
 }
@@ -276,8 +274,7 @@ export async function cli_lifecycle_chaincode_package(ccType: string, ccName: st
 		BaseUtils.logMsg(`Attempting lifecyle package of smart contract ${ccName} with label ${label} for organization ${orgName} using the CLI`);
 
 		const ccPath: string = path.join('/', 'opt', 'gopath', 'src', 'github.com', 'chaincode', ccType, ccName);
-		let packageCommand: string[];
-		packageCommand = [
+		const packageCommand: string[] = [
 			'docker', 'exec', `${orgName}_cli`, 'peer', 'lifecycle', 'chaincode', 'package',
 			`${ccName}.tar.gz`,
 			'--lang', ccType,
@@ -304,11 +301,10 @@ export async function cli_lifecycle_chaincode_install(packageName: string, orgNa
 		// Use CLI container to package smart contract (no TLS options required)
 		BaseUtils.logMsg(`Attempting lifecycle install of smart contract package ${packageName} for organization ${orgName} using the CLI`);
 
-		let installCommand: string[];
-		installCommand = [
+		const installCommand: string[] = [
 			'docker', 'exec', `${orgName}_cli`, 'peer', 'lifecycle', 'chaincode', 'install',
 			`${packageName}.tar.gz`,
-			'--connTimeout', Constants.CLI_TIMEOUT as string,
+			'--connTimeout', Constants.CLI_TIMEOUT,
 		];
 
 		await commandRunner.runShellCommand(true, installCommand.join(' '), VERBOSE_CLI);
@@ -341,14 +337,13 @@ export async function cli_lifecycle_chaincode_approve(
 	ccType: string,
 	ccName: string,
 	init: boolean
-	): Promise<void> {
+): Promise<void> {
 	try {
 		// Use CLI container to package smart contract
 		BaseUtils.logMsg(`Attempting lifecycle approve of smart contract with reference ${ccReference} for organization ${orgName} using the CLI`);
 		const colPath: string = path.join('/', 'opt', 'gopath', 'src', 'github.com', 'chaincode', ccType, ccName, 'metadata/collections.json');
 
-		let approveCommand: string[];
-		approveCommand = [
+		const approveCommand: string[] = [
 			'docker', 'exec', `${orgName}_cli`, 'peer', 'lifecycle', 'chaincode', 'approveformyorg',
 			'--channelID', channelName,
 			'--name', ccReference,
@@ -387,13 +382,12 @@ export async function cli_lifecycle_chaincode_query_commit(
 	orgName: string,
 	channelName: string,
 	tls: boolean
-	): Promise<boolean> {
+): Promise<boolean> {
 	try {
 		// Use CLI container to query for a committed smart contract
 		BaseUtils.logMsg(`Attempting lifecycle query for committed smart contract with name ${ccName} for organization ${orgName} using the CLI`);
 
-		let command: string[];
-		command = [
+		const command: string[] = [
 			'docker', 'exec', `${orgName}_cli`, 'peer', 'lifecycle', 'chaincode', 'querycommitted',
 			'--channelID', channelName,
 			'--name', ccName,
@@ -412,6 +406,7 @@ export async function cli_lifecycle_chaincode_query_commit(
 		BaseUtils.logMsg(`Smart contract with name ${ccName} is committed for organization ${orgName} using the CLI`);
 		return Promise.resolve(true);
 	} catch (err) {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
 		if (err.stderr.includes('404')) {
 			BaseUtils.logMsg(`Smart contract with name ${ccName} is not committed for organization ${orgName} using the CLI`);
 			return Promise.resolve(false);
@@ -443,7 +438,7 @@ export async function cli_lifecycle_chaincode_commit(
 	ccType: string,
 	ccName: string,
 	init: boolean
-	): Promise<void> {
+): Promise<void> {
 	try {
 		// Use CLI container to commit smart contract
 		BaseUtils.logMsg(`Attempting lifecycle commit of smart contract with reference ${ccReference} for organization ${orgName} using the CLI`);
@@ -451,9 +446,8 @@ export async function cli_lifecycle_chaincode_commit(
 		const colPath: string = path.join('/', 'opt', 'gopath', 'src', 'github.com', 'chaincode', ccType, ccName, 'metadata/collections.json');
 
 		// --peerAddresses
-		const peerAddresses: string = `${Constants.CLI_ORG1_PEER_ADDRESS} ${Constants.CLI_ORG2_PEER_ADDRESS}`;
-		let commitCommand: string[];
-		commitCommand = [
+		const peerAddresses = `${Constants.CLI_ORG1_PEER_ADDRESS} ${Constants.CLI_ORG2_PEER_ADDRESS}`;
+		const commitCommand: string[] = [
 			'docker', 'exec', `${orgName}_cli`, 'peer', 'lifecycle', 'chaincode', 'commit',
 			'-o', 'orderer.example.com:7050',
 			'--channelID', channelName,
@@ -468,7 +462,7 @@ export async function cli_lifecycle_chaincode_commit(
 			commitCommand.push('--init-required');
 		}
 		if (tls) {
-			const tlsCerts: string = `${Constants.CLI_ORG1_CA_FILE} ${Constants.CLI_ORG2_CA_FILE}`;
+			const tlsCerts = `${Constants.CLI_ORG1_CA_FILE} ${Constants.CLI_ORG2_CA_FILE}`;
 			commitCommand.push('--tlsRootCertFiles', tlsCerts, '--tls', 'true', '--cafile', Constants.CLI_ORDERER_CA_FILE);
 		}
 

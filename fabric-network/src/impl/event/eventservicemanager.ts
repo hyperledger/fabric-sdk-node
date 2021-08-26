@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Network } from '../../network';
+import {Network} from '../../network';
 import * as GatewayUtils from '../gatewayutils';
 import {
 	Channel,
@@ -28,6 +28,7 @@ export class EventServiceManager {
 		this.network = network;
 		this.channel = network.getChannel();
 		this.mspId = network.getGateway().getIdentity().mspId;
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		this.identityContext = this.network.getGateway().identityContext!;
 		logger.debug('constructor - network:%s', this.network.getChannel().name);
 	}

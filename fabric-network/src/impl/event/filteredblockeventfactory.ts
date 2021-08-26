@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { EventInfo } from 'fabric-common';
+import {EventInfo} from 'fabric-common';
 import * as fabproto6 from 'fabric-protos';
-import { BlockEvent, ContractEvent, TransactionEvent } from '../../events';
-import { cachedResult } from '../gatewayutils';
+import {BlockEvent, ContractEvent, TransactionEvent} from '../../events';
+import {cachedResult} from '../gatewayutils';
 import * as TransactionStatus from './transactionstatus';
-import util = require('util');
+import * as util from 'util';
 
 export function newFilteredBlockEvent(eventInfo: EventInfo): BlockEvent {
 	if (!eventInfo.filteredBlock) {
@@ -47,7 +47,8 @@ function newFilteredTransactionEvent(blockEvent: BlockEvent, filteredTransaction
 function newFilteredContractEvents(transactionEvent: TransactionEvent): ContractEvent[] {
 	const chaincodeActions: fabproto6.protos.IFilteredChaincodeAction[] =
 		(transactionEvent.transactionData as fabproto6.protos.IFilteredTransaction).transaction_actions?.chaincode_actions || [];
-	return chaincodeActions.map((ccAction) => newFilteredContractEvent(transactionEvent, ccAction.chaincode_event as fabproto6.protos.IChaincodeEvent));
+	return chaincodeActions.map((ccAction) => newFilteredContractEvent(transactionEvent,
+		ccAction.chaincode_event as fabproto6.protos.IChaincodeEvent));
 }
 
 function newFilteredContractEvent(transactionEvent: TransactionEvent, chaincodeEvent: fabproto6.protos.IChaincodeEvent): ContractEvent {

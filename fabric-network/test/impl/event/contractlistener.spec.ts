@@ -4,19 +4,25 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import sinon = require('sinon');
-import { expect } from 'chai';
-import Long = require('long');
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
-import { Channel, Client, Endorser, Eventer, EventInfo, IdentityContext } from 'fabric-common';
+import sinon = require('sinon');
+import {expect} from 'chai';
+import * as Long from 'long';
+
+import {Channel, Client, Endorser, Eventer, EventInfo, IdentityContext} from 'fabric-common';
 import * as fabproto6 from 'fabric-protos';
-import { BlockEvent, ContractEvent, ContractListener, ListenerOptions } from '../../../src/events';
-import { NetworkImpl } from '../../../src/network';
+import {BlockEvent, ContractEvent, ContractListener, ListenerOptions} from '../../../src/events';
+import {NetworkImpl} from '../../../src/network';
 import * as testUtils from '../../testutils';
-import { StubEventService } from './stubeventservice';
-import { Contract, ContractImpl } from '../../../src/contract';
-import { Gateway } from '../../../src/gateway';
-import { StubCheckpointer } from './stubcheckpointer';
+import {StubEventService} from './stubeventservice';
+import {Contract, ContractImpl} from '../../../src/contract';
+import {Gateway} from '../../../src/gateway';
+import {StubCheckpointer} from './stubcheckpointer';
+import {EventServiceManager} from '../../../src/impl/event/eventservicemanager';
 
 interface StubContractListener extends ContractListener {
 	completePromise: Promise<ContractEvent[]>;
@@ -34,7 +40,7 @@ describe('contract event listener', () => {
 	const chaincodeId = 'bourbons';
 	const eventPayload = 'payload';
 
-	beforeEach(async () => {
+	beforeEach(() => {
 		eventService = new StubEventService('stub');
 
 		gateway = sinon.createStubInstance(Gateway);
@@ -61,7 +67,7 @@ describe('contract event listener', () => {
 		listener = testUtils.newAsyncListener<ContractEvent>();
 		spyListener = sinon.spy(listener);
 
-		const namespace: string = 'biscuitContract';
+		const namespace = 'biscuitContract';
 		contract = new ContractImpl(network, chaincodeId, namespace);
 	});
 
@@ -95,7 +101,8 @@ describe('contract event listener', () => {
 		return block;
 	}
 
-	function addTransaction(event: any, transaction: any, statusCode: number = fabproto6.protos.TxValidationCode.VALID, index: number = 0, transactionId?: string): void {
+	function addTransaction(event: any, transaction:any,
+		statusCode: number = fabproto6.protos.TxValidationCode.VALID, index = 0, transactionId?: string): void {
 		event.block.data.data.push(newEnvelope(transaction, transactionId));
 		event.block.metadata.metadata[fabproto6.common.BlockMetadataIndex.TRANSACTIONS_FILTER][index] = statusCode;
 	}
@@ -108,11 +115,10 @@ describe('contract event listener', () => {
 		const payload = new fabproto6.common.Payload();
 		payload.header =  new fabproto6.common.Header();
 		payload.header.channel_header = channelHeader as unknown as Buffer;
+
 		payload.data = transaction;
-
-		const envelope: any = {};
+		const envelope:any = {};
 		envelope.payload = payload;
-
 		return envelope;
 	}
 
@@ -200,11 +206,11 @@ describe('contract event listener', () => {
 
 	function assertCanNavigateEvents(contractEvent: ContractEvent) {
 		const transactionEvent = contractEvent.getTransactionEvent();
-		expect(transactionEvent).to.exist; // tslint:disable-line: no-unused-expression
+		expect(transactionEvent).to.exist;
 		expect(transactionEvent.getContractEvents()).to.contain(contractEvent);
 
 		const blockEvent = transactionEvent.getBlockEvent();
-		expect(blockEvent).to.exist; // tslint:disable-line: no-unused-expression
+		expect(blockEvent).to.exist;
 		expect(blockEvent.getTransactionEvents()).to.contain(transactionEvent);
 	}
 
@@ -233,7 +239,7 @@ describe('contract event listener', () => {
 		eventService.sendEvent(event);
 		await listener.completePromise;
 
-		sinon.assert.calledOnceWithExactly(spyListener, sinon.match({ chaincodeId, eventName }));
+		sinon.assert.calledOnceWithExactly(spyListener, sinon.match({chaincodeId, eventName}));
 	});
 
 	it('stops listening for events after the listener has been removed', async () => {
@@ -263,8 +269,8 @@ describe('contract event listener', () => {
 		eventService.sendEvent(event);
 		await listener.completePromise;
 
-		sinon.assert.calledWith(spyListener.getCall(0), sinon.match({ chaincodeId, eventName }));
-		sinon.assert.calledWith(spyListener.getCall(1), sinon.match({ chaincodeId, eventName }));
+		sinon.assert.calledWith(spyListener.getCall(0), sinon.match({chaincodeId, eventName}));
+		sinon.assert.calledWith(spyListener.getCall(1), sinon.match({chaincodeId, eventName}));
 	});
 
 	it('listener only receives events matching its chaincode id', async () => {
@@ -279,7 +285,7 @@ describe('contract event listener', () => {
 		eventService.sendEvent(goodEvent);
 		await listener.completePromise;
 
-		sinon.assert.calledOnceWithExactly(spyListener, sinon.match({ chaincodeId, eventName }));
+		sinon.assert.calledOnceWithExactly(spyListener, sinon.match({chaincodeId, eventName}));
 	});
 
 	it('error thrown by listener does not disrupt other listeners', async () => {
@@ -346,16 +352,15 @@ describe('contract event listener', () => {
 	});
 
 	it('listener defaults to full blocks', async () => {
-		const eventServiceManager = (network as any).eventServiceManager;
+		const eventServiceManager = (network as any).eventServiceManager as EventServiceManager;
 		const stub = sinon.stub(eventServiceManager, 'startEventService');
 
 		await contract.addContractListener(listener);
-
 		sinon.assert.calledOnceWithExactly(stub, sinon.match.any, sinon.match.has('blockType', 'full'));
 	});
 
 	it('listener can receive filtered blocks', async () => {
-		const eventServiceManager = (network as any).eventServiceManager;
+		const eventServiceManager = (network as any).eventServiceManager as EventServiceManager;
 		const stub = sinon.stub(eventServiceManager, 'startEventService');
 		const event = newFilteredEvent(1);
 		addFilteredTransaction(event, newFilteredTransaction());
@@ -371,7 +376,7 @@ describe('contract event listener', () => {
 	});
 
 	it('listener can receive private blocks', async () => {
-		const eventServiceManager = (network as any).eventServiceManager;
+		const eventServiceManager = (network as any).eventServiceManager as EventServiceManager;
 		const stub = sinon.stub(eventServiceManager, 'startEventService');
 		const event = newPrivateEvent(1);
 		addTransaction(event, newTransaction());
@@ -398,7 +403,7 @@ describe('contract event listener', () => {
 		eventService.sendEvent(goodEvent);
 
 		const contractEvents = await listener.completePromise;
-		expect(contractEvents[0].getTransactionEvent()).to.include({ isValid: true }); // tslint:disable-line: no-unused-expression
+		expect(contractEvents[0].getTransactionEvent()).to.include({isValid: true});
 	});
 
 	it('filtered events do not contain payload', async () => {
@@ -412,7 +417,7 @@ describe('contract event listener', () => {
 		eventService.sendEvent(event);
 		const contractEvents = await listener.completePromise;
 
-		expect(contractEvents[0].payload).to.be.undefined; // tslint:disable-line: no-unused-expression
+		expect(contractEvents[0].payload).to.be.undefined;
 	});
 
 	it('full events contain payload', async () => {
@@ -485,7 +490,7 @@ describe('contract event listener', () => {
 			eventService.sendEvent(event);
 			await listener.completePromise;
 
-			sinon.assert.calledOnceWithExactly(spyListener, sinon.match({ chaincodeId, eventName }));
+			sinon.assert.calledOnceWithExactly(spyListener, sinon.match({chaincodeId, eventName}));
 		});
 
 		it('checkpoint listener receives events from checkpoint block number', async () => {

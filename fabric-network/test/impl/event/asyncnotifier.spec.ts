@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { AsyncNotifier } from '../../../src/impl/event/asyncnotifier';
+import {AsyncNotifier} from '../../../src/impl/event/asyncnotifier';
 
 import * as testUtils from '../../testutils';
 
@@ -87,7 +87,7 @@ describe('AsyncNotifier', () => {
 		const notifier = new AsyncNotifier<number>(supplier, listener);
 
 		async function run() {
-			for (let i = 0; i < numEvents; ) {
+			for (let i = 0; i < numEvents;) {
 				events.push(++i);
 				notifier.notify();
 				const random = testUtils.getRandomInt(maxSleep);
