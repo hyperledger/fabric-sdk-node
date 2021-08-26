@@ -2,7 +2,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 import * as FabricCAServices from 'fabric-ca-client';
 import {
@@ -13,10 +16,11 @@ import {
 } from 'fabric-common';
 import * as fs from 'fs';
 import * as Long from 'long';
-import {Constants} from '../../constants';
+import * as Constants from '../../constants';
 import * as BaseUtils from './baseUtils';
 import {CommonConnectionProfileHelper} from './commonConnectionProfileHelper';
 import {StateStore} from './stateStore';
+import * as util from 'util';
 
 const stateStore: StateStore = StateStore.getInstance();
 
@@ -84,13 +88,15 @@ export function retrieveClientObject(clientName: string): any {
 	if (clientMap && clientMap.has(clientName)) {
 		return clientMap.get(clientName);
 	} else {
-		const msg: string = `Required client named ${clientName} does not exist`;
+		const msg = `Required client named ${clientName} does not exist`;
 		BaseUtils.logMsg(msg);
 		throw new Error(msg);
 	}
 }
 
-export async function buildChannelRequest(requestName: string, contractName: string, requestArgs: any, clientName: string, channelName: string, useDiscovery: boolean): Promise<void> {
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export async function buildChannelRequest(requestName: string, contractName: string, requestArgs: any, clientName: string,
+	channelName: string, useDiscovery: boolean): Promise<void> {
 
 	// Best have a client object ready and waiting
 	const clientObject: any = retrieveClientObject(clientName);
@@ -110,7 +116,7 @@ export async function buildChannelRequest(requestName: string, contractName: str
 
 	// We have arguments
 	const argArray: string[] = requestArgs.slice(1, -1).split(',');
-	let initRequired: boolean = false;
+	let initRequired = false;
 	if (argArray[0].includes('init')) {
 		initRequired = true;
 	}
@@ -210,7 +216,7 @@ export async function buildChannelRequest(requestName: string, contractName: str
 			clientObject.requests = map;
 		}
 	} catch (error) {
-		BaseUtils.logMsg(`failure in buildChannelRequest: ${error.toString()}`, {});
+		BaseUtils.logMsg(`failure in buildChannelRequest: ${error.toString() as string}`, {});
 		for (const target of targets) {
 			target.disconnect();
 		}
@@ -256,7 +262,7 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 				}
 			} catch (error) {
 				BaseUtils.logError(`Failed to connect to channel event hub ${eventer.toString()}`);
-				BaseUtils.logError(`Failed to connect ${error.stack}`);
+				BaseUtils.logError(`Failed to connect ${util.inspect(error.stack)}`);
 				throw error;
 			}
 
@@ -285,7 +291,7 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 							BaseUtils.logError(`Failed to receive transaction event for ${endorsement.getTransactionId()}`, {});
 							reject(error);
 						}
-						BaseUtils.logMsg(`Successfully received the transaction event for ${event.transactionId} with status of ${event.status} in block number ${event.blockNumber}`, {});
+						BaseUtils.logMsg(`Successfully received the transaction event for ${String(event.transactionId)} with status of ${String(event.status)} in block number ${String(event.blockNumber)}`, {});
 						resolve('Commit success');
 					},
 					{}
@@ -368,7 +374,8 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 	}
 }
 
-export async function queryChannelRequest(clientName: string, channelName: string, contractName: string, contractArgs: string, queryName: string, checkSendingtoContract: boolean): Promise<void> {
+export async function queryChannelRequest(clientName: string, channelName: string, contractName: string,
+	contractArgs: string, queryName: string, checkSendingtoContract: boolean): Promise<void> {
 	BaseUtils.logMsg(' -- starting clientUtils.queryChannelRequest');
 
 	// Requires that the endorsement is already built and signed (performed by buildChannelRequest())
@@ -445,32 +452,32 @@ export async function queryChannelRequest(clientName: string, channelName: strin
 				const queryResponse: ProposalResponse = await query.send(queryRequest);
 				BaseUtils.logError('query submission checking results');
 				queryObject.results = {};
-				let inc: number = 0;
+				let inc = 0;
 				if (queryResponse.errors.length > 0) {
 					// failure
-					BaseUtils.logMsg(`Query failure detected`);
+					BaseUtils.logMsg('Query failure detected');
 					queryObject.results.general = JSON.stringify({result: 'FAILURE'});
 					if (checkSendingtoContract) {
-						BaseUtils.logMsg(`Query during chaincodecheck failure detected`);
-						queryObject.results['chaincodecheck'] = queryObject.results.general;
+						BaseUtils.logMsg('Query during chaincodecheck failure detected');
+						queryObject.results.chaincodecheck = queryObject.results.general;
 					}
 					for (const error of queryResponse.errors) {
 						queryObject.results[`peer${inc}`] = error.toString();
-						BaseUtils.logMsg(`Query failure ${queryObject.results[`peer${inc}`]}`);
+						BaseUtils.logMsg(`Query failure ${util.inspect(queryObject.results[`peer${inc}`])}`);
 						inc++;
 					}
 				}
 				if (queryResponse.queryResults.length > 0) {
 					// Success
-					BaseUtils.logMsg(`Query success detected`);
+					BaseUtils.logMsg('Query success detected');
 					queryObject.results.general = JSON.stringify({result: 'SUCCESS'});
 					for (const result of queryResponse.queryResults) {
 						queryObject.results[`peer${inc}`] = JSON.parse(result.toString());
-						BaseUtils.logMsg(`Query results ${queryObject.results[`peer${inc}`]}`);
+						BaseUtils.logMsg(`Query results ${util.inspect(queryObject.results[`peer${inc}`])}`);
 						inc++;
 					}
 				} else {
-					BaseUtils.logMsg(`No Query success detected`);
+					BaseUtils.logMsg('No Query success detected');
 				}
 			} catch (error) {
 				// Swallow error as we might be testing a failure path, but modify request object with error msg and status
@@ -509,7 +516,8 @@ export function createAdminUserForOrg(ccp: CommonConnectionProfileHelper, orgNam
 	return User.createUser(Constants.ADMIN_NAME, Constants.ADMIN_PW, org.mspid, certPEM.toString(), keyPEM.toString());
 }
 
-async function getTlsEnrollmentResponseForOrgUser(user: User, orgName: string, ccp: CommonConnectionProfileHelper): Promise<FabricCAServices.IEnrollResponse> {
+async function getTlsEnrollmentResponseForOrgUser(user: User, orgName: string,
+	ccp: CommonConnectionProfileHelper): Promise<FabricCAServices.IEnrollResponse> {
 
 	const caName: string = ccp.getCertificateAuthoritiesForOrg(orgName)[0];
 	const ca: any = ccp.getCertificateAuthority(caName);
@@ -532,7 +540,8 @@ async function getTlsEnrollmentResponseForOrgUser(user: User, orgName: string, c
 	return await caService.enroll(request);
 }
 
-export function validateChannelRequestResponse(clientName: string, isRequest: boolean, requestName: string, fieldName: string, expectedResult: string): boolean | void {
+export function validateChannelRequestResponse(clientName: string, isRequest: boolean, requestName: string, fieldName: string,
+	expectedResult: string): boolean | void {
 	const clientObject: any = retrieveClientObject(clientName);
 
 	let results: any;
@@ -554,7 +563,7 @@ export function validateChannelRequestResponse(clientName: string, isRequest: bo
 
 	if (results) {
 		const savedResult: any = results[fieldName];
-		BaseUtils.logMsg(`clientUtils - fieldName: ${fieldName} - raw results of query = ${savedResult}`);
+		BaseUtils.logMsg(`clientUtils - fieldName: ${fieldName} - raw results of query = ${util.inspect(savedResult)}`);
 
 		let stringResult: string;
 		if (savedResult instanceof Buffer) {
@@ -604,7 +613,7 @@ export function validateDiscoveryResponse(clientName: string, requestName: strin
 	}
 }
 
-export async function createEventService(eventServiceName: string, clientName: string, channelName: string): Promise<void> {
+export function createEventService(eventServiceName: string, clientName: string, channelName: string): void {
 
 	// Best have a client object ready and waiting
 	const clientObject: any = retrieveClientObject(clientName);
@@ -622,7 +631,7 @@ export async function createEventService(eventServiceName: string, clientName: s
 			clientObject.eventServices = map;
 		}
 	} catch (error) {
-		BaseUtils.logMsg(`failure in buildEventService: ${error.toString()}`, {});
+		BaseUtils.logMsg(`failure in buildEventService: ${error.toString() as string}`, {});
 		throw error;
 	}
 }
@@ -696,7 +705,7 @@ export async function startEventService(
 
 		await eventService.send({targets: targets});
 	} catch (error) {
-		BaseUtils.logMsg(`failure in startEventService: ${error.toString()}`, {});
+		BaseUtils.logMsg(`failure in startEventService: ${error.toString() as string}`, {});
 		for (const target of targets) {
 			target.disconnect();
 		}
@@ -704,10 +713,10 @@ export async function startEventService(
 	}
 }
 
-export async function registerEventListener(
+export function registerEventListener(
 	eventServiceName: string, clientName: string, listenerName: string, type: string,
 	startBlock: string, endBlock: string,
-	chaincodeEventName: string, chaincodeName: string): Promise<void> {
+	chaincodeEventName: string, chaincodeName: string): void {
 
 	const clientObject: any = retrieveClientObject(clientName);
 	const eventServiceObject: any = clientObject.eventServices.get(eventServiceName);
@@ -775,8 +784,7 @@ export async function registerEventListener(
 						listenerObject.error = error;
 						return;
 					}
-
-					BaseUtils.logMsg(`Chaincode listener event received for ${listenerName} :: ${event}`);
+					BaseUtils.logMsg(`Chaincode listener event received for ${listenerName} :: ${util.inspect(event)}`);
 
 					if (event?.chaincodeEvents) {
 						for (const chaincodeEvent of event.chaincodeEvents) {
@@ -794,6 +802,7 @@ export async function registerEventListener(
 
 			listenerObject.eventListener = eventService.registerTransactionListener(
 				'all',
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				(error, event) => {
 					if (error) {
 						if (error.toString().includes('Shutdown due to end block number has been seen')) {
@@ -815,14 +824,14 @@ export async function registerEventListener(
 			BaseUtils.logAndThrow(`Event listener type is not known ${type}`);
 		}
 	} catch (error) {
-		BaseUtils.logMsg(`failure in registerEventListener: ${error.toString()}`, {});
+		BaseUtils.logMsg(`failure in registerEventListener: ${error.toString() as string}`, {});
 		throw error;
 	}
 }
 
-export async function checkEventListenerResults(
+export function checkEventListenerResults(
 	eventServiceName: string, clientName: string, listenerName: string,
-	check: string): Promise<void> {
+	check: string): void {
 
 	const clientObject: any = retrieveClientObject(clientName);
 	const eventServiceObject: any = clientObject.eventServices.get(eventServiceName);
@@ -830,7 +839,7 @@ export async function checkEventListenerResults(
 
 	if (listenerObject) {
 		if (listenerObject.error) {
-			BaseUtils.logMsg(`Received an error for ${listenerName} of ${listenerObject.error}`);
+			BaseUtils.logMsg(`Received an error for ${listenerName} of ${util.inspect(listenerObject.error)}`);
 			throw listenerObject.error;
 		}
 		if (listenerObject.results) {
@@ -847,8 +856,8 @@ export async function checkEventListenerResults(
 	}
 }
 
-export async function disconnectEventService(
-	eventServiceName: string, clientName: string): Promise<void> {
+export function disconnectEventService(
+	eventServiceName: string, clientName: string): void {
 	const clientObject: any = retrieveClientObject(clientName);
 	const eventServiceObject: any = clientObject.eventServices.get(eventServiceName);
 
