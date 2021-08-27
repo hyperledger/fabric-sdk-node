@@ -5,7 +5,9 @@
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import sinon = require('sinon');
 import chai = require('chai');
 const expect = chai.expect;
@@ -21,6 +23,7 @@ import Long = require('long');
 
 import {Gateway} from '../../../src/gateway';
 import {StubCheckpointer} from './stubcheckpointer';
+import * as fabproto6 from 'fabric-protos';
 
 interface StubBlockListener extends BlockListener {
 	completePromise: Promise<BlockEvent[]>;
@@ -108,6 +111,31 @@ describe('block listener', () => {
 				'PRIVATE_DATA'
 			]
 		});
+	}
+
+	function addTransaction(event:EventInfo): EventInfo {
+		event.block.data = new fabproto6.common.BlockData();
+		event.block.data.data.push(newEnvelope(new fabproto6.protos.Transaction(), 'txn1'));
+		event.block.metadata = new fabproto6.common.BlockMetadata();
+		event.block.metadata.metadata = [];
+		event.block.metadata.metadata[fabproto6.common.BlockMetadataIndex.TRANSACTIONS_FILTER] = new Uint8Array(10);
+		return event;
+	}
+
+	function newEnvelope(transaction: any, transactionId?: string): any {
+		const channelHeader :any = {};
+		channelHeader.type = fabproto6.common.HeaderType.ENDORSER_TRANSACTION;
+		channelHeader.tx_id = transactionId;
+		const timestamp = new fabproto6.google.protobuf.Timestamp({seconds:1630075029083});
+		channelHeader.timestamp = new Date(timestamp.seconds as number).toISOString();
+		const payload = new fabproto6.common.Payload();
+		payload.header =  new fabproto6.common.Header();
+		payload.header.channel_header = channelHeader as unknown as Buffer;
+
+		payload.data = transaction;
+		const envelope:any = {};
+		envelope.payload = payload;
+		return envelope;
 	}
 
 	describe('common behavior', () => {
@@ -507,6 +535,30 @@ describe('block listener', () => {
 
 			const [actual] = await listener.completePromise;
 			expect(actual.blockNumber).to.equal(event.blockNumber);
+		});
+		it('Timestamp property exist in full block transactionevent', async () => {
+			const event = newFullBlockEventInfo(1);
+			addTransaction(event);
+			listenerOptions = {
+				type: 'full'
+			};
+			await network.addBlockListener(listener, listenerOptions);
+			eventService.sendEvent(event);
+			const actual = await listener.completePromise;
+			expect(actual[0].getTransactionEvents()[0].timestamp).not.null;
+		});
+
+		it('Timestamp property exist in private block transactionevent', async () => {
+			const event = newPrivateBlockEventInfo(1);
+			addTransaction(event);
+			listenerOptions = {
+				type: 'private'
+			};
+
+			await network.addBlockListener(listener, listenerOptions);
+			eventService.sendEvent(event);
+			const actual = await listener.completePromise;
+			expect(actual[0].getTransactionEvents()[0].timestamp).not.null;
 		});
 	});
 
