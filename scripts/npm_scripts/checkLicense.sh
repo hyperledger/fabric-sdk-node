@@ -9,12 +9,14 @@ CHECK=$(find . -type f \
     -not -path '*/.git/*' \
     -not -path '*/node_modules/*' \
     -not -path '*/vendor/*' \
+    -not -path './coverage/*' \
     -not -path './docs/*' \
     -not -path './LICENSE' \
     -not -path './test/fixtures/*' \
     -not -path './test/ts-fixtures/*' \
     -not -path './fabric-protos/bundle.js' \
     -not -path './fabric-protos/types/index.d.ts' \
+    -not -path './fabric-network/lib/*' \
     -not -name '.*' \
     -not -name '*.txt' \
     -not -name '*.rst' \
@@ -26,6 +28,7 @@ CHECK=$(find . -type f \
     -not -name '*.id' \
     -not -name '*.gradle' \
     -not -name '*.pem' \
+    -not -name '*.log' \
     -print | sort -u)
 
 if [[ -z "$CHECK" ]]; then
