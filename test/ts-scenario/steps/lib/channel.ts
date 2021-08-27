@@ -159,7 +159,7 @@ export async function cli_channel_update(channelName: string, updateTx: string, 
 			BaseUtils.logMsg(`Channel ${channelName} has been updated`);
 		}
 	} catch (err) {
-		BaseUtils.logError('Failed to update channels: ', ((err as unknown as Error).stack ? (err as unknown as Error).stack : err));
+		BaseUtils.logError('Failed to update channels: ', ((err as Error).stack ? (err as Error).stack : err));
 		return Promise.reject(err);
 	}
 }
