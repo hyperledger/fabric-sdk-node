@@ -28,6 +28,13 @@ export class SingleQueryHandler implements QueryHandler {
 		const method = 'evaluate';
 		logger.debug('%s - start', method);
 
+		if (this.peers.length == 0){
+			const message = util.format('Query failed. No available endorser peers.');
+			const error = new FabricError(message);
+			logger.error('evaluate:', error);
+			throw error;
+		}
+
 		const startPeerIndex = this.currentPeerIndex;
 		const errorMessages = [];
 
