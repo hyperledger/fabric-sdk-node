@@ -113,7 +113,7 @@ describe('block listener', () => {
 		});
 	}
 
-	function addTransaction(event:EventInfo, timestamp?:string): EventInfo {
+	function addTransaction(event:EventInfo, timestamp?:Date): EventInfo {
 		event.block.data = new fabproto6.common.BlockData();
 		event.block.data.data.push(newEnvelope(new fabproto6.protos.Transaction(), 'txn1', timestamp));
 		event.block.metadata = new fabproto6.common.BlockMetadata();
@@ -122,11 +122,22 @@ describe('block listener', () => {
 		return event;
 	}
 
-	function newEnvelope(transaction: any, transactionId?: string, timestamp?:string): any {
+	function addFilteredTransaction(event: EventInfo, filteredTransaction: fabproto6.protos.FilteredTransaction): void {
+		event.filteredBlock.filtered_transactions.push(filteredTransaction);
+	}
+	function newFilteredTransaction(): fabproto6.protos.FilteredTransaction {
+		const filteredTransaction = new fabproto6.protos.FilteredTransaction();
+		filteredTransaction.tx_validation_code = fabproto6.protos.TxValidationCode.VALID;
+		filteredTransaction.transaction_actions = {};
+		return filteredTransaction;
+	}
+
+	function newEnvelope(transaction: any, transactionId?: string, timestamp?:Date): any {
 		const channelHeader :any = {};
 		channelHeader.type = fabproto6.common.HeaderType.ENDORSER_TRANSACTION;
 		channelHeader.tx_id = transactionId;
-		channelHeader.timestamp = timestamp;
+		const protobufTimestamp = new fabproto6.google.protobuf.Timestamp({seconds:timestamp.getTime()});
+		channelHeader.timestamp = new Date(protobufTimestamp.seconds as number).toISOString();
 		const payload = new fabproto6.common.Payload();
 		payload.header =  new fabproto6.common.Header();
 		payload.header.channel_header = channelHeader as unknown as Buffer;
@@ -491,8 +502,8 @@ describe('block listener', () => {
 
 	describe('event types', () => {
 
-		const protoTimestampp = new fabproto6.google.protobuf.Timestamp({seconds:1630075029083});
-		const timestamp = new Date(protoTimestampp.seconds as number).toISOString();
+		const timestamp = new Date();
+
 
 		it('listener can specify filtered blocks', async () => {
 			const stub = sinon.stub(eventServiceManager, 'startEventService');
@@ -548,7 +559,7 @@ describe('block listener', () => {
 			await network.addBlockListener(listener, listenerOptions);
 			eventService.sendEvent(event);
 			const actual = await listener.completePromise;
-			expect(actual[0].getTransactionEvents()[0].timestamp).equal(timestamp);
+			expect(actual[0].getTransactionEvents()[0].timestamp.getTime()).equal(timestamp.getTime());
 		});
 
 		it('Timestamp matches in private block transactionevent', async () => {
@@ -557,11 +568,18 @@ describe('block listener', () => {
 			listenerOptions = {
 				type: 'private'
 			};
-
 			await network.addBlockListener(listener, listenerOptions);
 			eventService.sendEvent(event);
 			const actual = await listener.completePromise;
-			expect(actual[0].getTransactionEvents()[0].timestamp).equal(timestamp);
+			expect(actual[0].getTransactionEvents()[0].timestamp.getTime()).equal(timestamp.getTime());
+		});
+		it('Timestamp does not exist in filtered block transactionevent', async () => {
+			const event = newFilteredBlockEventInfo(1);
+			addFilteredTransaction(event, newFilteredTransaction());
+			await network.addBlockListener(listener, listenerOptions);
+			eventService.sendEvent(event);
+			const actual = await listener.completePromise;
+			expect(actual[0].getTransactionEvents()[0].timestamp).equal(undefined);
 		});
 	});
 

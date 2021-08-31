@@ -41,7 +41,7 @@ export function newFullTransactionEvent(blockEvent: BlockEvent, txEnvelopeIndex:
 
 		const envelope: any = block.data.data[txEnvelopeIndex];
 		const transactionId = envelope.payload.header.channel_header.tx_id;
-		const timestamp = envelope.payload.header.channel_header.timestamp;
+		const timestamp = new Date(envelope.payload.header.channel_header.timestamp);
 		const code = transactionStatusCodes[txEnvelopeIndex];
 		const status = TransactionStatus.getStatusForCode(code);
 
