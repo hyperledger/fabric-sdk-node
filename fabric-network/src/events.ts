@@ -24,7 +24,7 @@ export interface TransactionEvent {
 	readonly transactionData: fabproto6.protos.ITransaction | fabproto6.protos.IFilteredTransaction;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	readonly privateData?: any;
-	readonly timestamp?:string;
+	readonly timestamp?: Date;
 	getBlockEvent(): BlockEvent;
 	getContractEvents(): ContractEvent[];
 }
