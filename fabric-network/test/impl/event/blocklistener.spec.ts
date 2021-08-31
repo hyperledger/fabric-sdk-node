@@ -539,7 +539,7 @@ describe('block listener', () => {
 			const [actual] = await listener.completePromise;
 			expect(actual.blockNumber).to.equal(event.blockNumber);
 		});
-		it('Timestamp property exist in full block transactionevent', async () => {
+		it('Timestamp matches in full block transactionevent', async () => {
 			const event = newFullBlockEventInfo(1);
 			addTransaction(event, timestamp);
 			listenerOptions = {
@@ -551,7 +551,7 @@ describe('block listener', () => {
 			expect(actual[0].getTransactionEvents()[0].timestamp).equal(timestamp);
 		});
 
-		it('Timestamp property exist in private block transactionevent', async () => {
+		it('Timestamp matches in private block transactionevent', async () => {
 			const event = newPrivateBlockEventInfo(1);
 			addTransaction(event, timestamp);
 			listenerOptions = {
