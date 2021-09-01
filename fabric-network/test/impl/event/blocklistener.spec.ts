@@ -4,10 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import sinon = require('sinon');
 import chai = require('chai');
 const expect = chai.expect;
@@ -52,19 +48,20 @@ describe('block listener', () => {
 		channel.newEventService.returns(eventService);
 
 		const endorser = sinon.createStubInstance(Endorser);
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-member-access
 		(endorser as any).name = 'endorser';
 		channel.getEndorsers.returns([endorser]);
 
 		const client = sinon.createStubInstance(Client);
 		const eventer = sinon.createStubInstance(Eventer);
 		client.newEventer.returns(eventer);
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-member-access
 		(channel as any).client = client;
 
 		network = new NetworkImpl(gateway as unknown as Gateway, channel);
 
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-explicit-any
+		// eslint-disable-next-line max-len
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-member-access
 		eventServiceManager = (network as any).eventServiceManager;
 
 		listener = testUtils.newAsyncListener<BlockEvent>();
@@ -132,18 +129,22 @@ describe('block listener', () => {
 		return filteredTransaction;
 	}
 
-	function newEnvelope(transaction: any, transactionId?: string, timestamp?:Date): any {
-		const channelHeader :any = {};
-		channelHeader.type = fabproto6.common.HeaderType.ENDORSER_TRANSACTION;
-		channelHeader.tx_id = transactionId;
-		channelHeader.timestamp = timestamp.toISOString();
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	function newEnvelope(transaction: any, transactionId?: string, timestamp?: Date): any {
+		const channelHeader = {
+			type:fabproto6.common.HeaderType.ENDORSER_TRANSACTION,
+			tx_id:transactionId,
+			timestamp:timestamp?.toISOString()
+		};
 		const payload = new fabproto6.common.Payload();
 		payload.header =  new fabproto6.common.Header();
 		payload.header.channel_header = channelHeader as unknown as Buffer;
-
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		payload.data = transaction;
-		const envelope:any = {};
-		envelope.payload = payload;
+		const envelope = {
+			payload : payload
+		};
 		return envelope;
 	}
 
@@ -382,11 +383,13 @@ describe('block listener', () => {
 		it('listener changing event data does not affect other listeners', async () => {
 			const fake1 = sinon.fake(async (e) => {
 				await listener(e);
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 				e.blockNumber = Long.ONE;
 			});
 			const listener2 = testUtils.newAsyncListener<BlockEvent>();
 			const fake2 = sinon.fake(async (e) => {
 				await listener2(e);
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 				e.blockNumber = Long.fromNumber(2);
 			});
 			const event = newFilteredBlockEventInfo(0);
