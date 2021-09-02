@@ -317,5 +317,20 @@ describe('TransactionEventHandler', () => {
 				expect(error.transactionId).to.equal(transactionId);
 			}
 		});
+		it('timeout failure error message has timeout information', async () => {
+			options.eventHandlerOptions = {commitTimeout: 418};
+			handler = new TransactionEventHandler(transactionId, network, strategy);
+
+			await handler.startListening();
+			const promise = handler.waitForEvents();
+			await clock.runAllAsync();
+
+			try {
+				await promise;
+				chai.assert.fail('Expected an error');
+			} catch (error) {
+				expect(error.message).to.include('Event strategy not satisfied within the timeout period of 418 ms');
+			}
+		});
 	});
 });
