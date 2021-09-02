@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-
 import sinon = require('sinon');
 import chai = require('chai');
 const expect = chai.expect;
@@ -21,6 +19,7 @@ import Long = require('long');
 
 import {Gateway} from '../../../src/gateway';
 import {StubCheckpointer} from './stubcheckpointer';
+import * as fabproto6 from 'fabric-protos';
 
 interface StubBlockListener extends BlockListener {
 	completePromise: Promise<BlockEvent[]>;
@@ -49,19 +48,20 @@ describe('block listener', () => {
 		channel.newEventService.returns(eventService);
 
 		const endorser = sinon.createStubInstance(Endorser);
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-member-access
 		(endorser as any).name = 'endorser';
 		channel.getEndorsers.returns([endorser]);
 
 		const client = sinon.createStubInstance(Client);
 		const eventer = sinon.createStubInstance(Eventer);
 		client.newEventer.returns(eventer);
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-member-access
 		(channel as any).client = client;
 
 		network = new NetworkImpl(gateway as unknown as Gateway, channel);
 
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-explicit-any
+		// eslint-disable-next-line max-len
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-member-access
 		eventServiceManager = (network as any).eventServiceManager;
 
 		listener = testUtils.newAsyncListener<BlockEvent>();
@@ -108,6 +108,46 @@ describe('block listener', () => {
 				'PRIVATE_DATA'
 			]
 		});
+	}
+
+	function addTransaction(event:EventInfo, timestamp?:Date): EventInfo {
+		event.block.data = new fabproto6.common.BlockData();
+		event.block.data.data.push(newEnvelope(new fabproto6.protos.Transaction(), 'txn1', timestamp));
+		event.block.metadata = new fabproto6.common.BlockMetadata();
+		event.block.metadata.metadata = [];
+		event.block.metadata.metadata[fabproto6.common.BlockMetadataIndex.TRANSACTIONS_FILTER] = new Uint8Array(10);
+		return event;
+	}
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	function addFilteredTransaction(event: EventInfo, filteredTransaction: any): void {
+		event.filteredBlock.filtered_transactions.push(filteredTransaction);
+	}
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	function newFilteredTransaction(): any {
+		const filteredTransaction = new fabproto6.protos.FilteredTransaction();
+		filteredTransaction.tx_validation_code = fabproto6.protos.TxValidationCode.VALID;
+		filteredTransaction.transaction_actions = {};
+		return filteredTransaction;
+	}
+
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	function newEnvelope(transaction: any, transactionId?: string, timestamp?: Date): any {
+		const channelHeader = {
+			type:fabproto6.common.HeaderType.ENDORSER_TRANSACTION,
+			tx_id:transactionId,
+			timestamp:timestamp?.toISOString()
+		};
+		const payload = new fabproto6.common.Payload();
+		payload.header =  new fabproto6.common.Header();
+		payload.header.channel_header = channelHeader as unknown as Buffer;
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+		payload.data = transaction;
+		const envelope = {
+			payload : payload
+		};
+		return envelope;
 	}
 
 	describe('common behavior', () => {
@@ -345,11 +385,13 @@ describe('block listener', () => {
 		it('listener changing event data does not affect other listeners', async () => {
 			const fake1 = sinon.fake(async (e) => {
 				await listener(e);
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 				e.blockNumber = Long.ONE;
 			});
 			const listener2 = testUtils.newAsyncListener<BlockEvent>();
 			const fake2 = sinon.fake(async (e) => {
 				await listener2(e);
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 				e.blockNumber = Long.fromNumber(2);
 			});
 			const event = newFilteredBlockEventInfo(0);
@@ -463,6 +505,10 @@ describe('block listener', () => {
 	});
 
 	describe('event types', () => {
+
+		const timestamp = new Date();
+
+
 		it('listener can specify filtered blocks', async () => {
 			const stub = sinon.stub(eventServiceManager, 'startEventService');
 
@@ -507,6 +553,37 @@ describe('block listener', () => {
 
 			const [actual] = await listener.completePromise;
 			expect(actual.blockNumber).to.equal(event.blockNumber);
+		});
+		it('Timestamp matches in full block transactionevent', async () => {
+			const event = newFullBlockEventInfo(1);
+			addTransaction(event, timestamp);
+			listenerOptions = {
+				type: 'full'
+			};
+			await network.addBlockListener(listener, listenerOptions);
+			eventService.sendEvent(event);
+			const actual = await listener.completePromise;
+			expect(actual[0].getTransactionEvents()[0].timestamp.getTime()).equal(timestamp.getTime());
+		});
+
+		it('Timestamp matches in private block transactionevent', async () => {
+			const event = newPrivateBlockEventInfo(1);
+			addTransaction(event, timestamp);
+			listenerOptions = {
+				type: 'private'
+			};
+			await network.addBlockListener(listener, listenerOptions);
+			eventService.sendEvent(event);
+			const actual = await listener.completePromise;
+			expect(actual[0].getTransactionEvents()[0].timestamp.getTime()).equal(timestamp.getTime());
+		});
+		it('Timestamp does not exist in filtered block transactionevent', async () => {
+			const event = newFilteredBlockEventInfo(1);
+			addFilteredTransaction(event, newFilteredTransaction());
+			await network.addBlockListener(listener, listenerOptions);
+			eventService.sendEvent(event);
+			const actual = await listener.completePromise;
+			expect(actual[0].getTransactionEvents()[0].timestamp).equal(undefined);
 		});
 	});
 

@@ -41,6 +41,7 @@ export function newFullTransactionEvent(blockEvent: BlockEvent, txEnvelopeIndex:
 
 		const envelope: any = block.data.data[txEnvelopeIndex];
 		const transactionId = envelope.payload.header.channel_header.tx_id;
+		const timestamp = new Date(envelope.payload.header.channel_header.timestamp);
 		const code = transactionStatusCodes[txEnvelopeIndex];
 		const status = TransactionStatus.getStatusForCode(code);
 
@@ -49,6 +50,7 @@ export function newFullTransactionEvent(blockEvent: BlockEvent, txEnvelopeIndex:
 			status,
 			transactionData: envelope.payload.data,
 			isValid: status === TransactionStatus.VALID_STATUS,
+			timestamp,
 			getBlockEvent: () => blockEvent,
 			getContractEvents: cachedResult(() => newFullContractEvents(transactionEvent))
 		};
