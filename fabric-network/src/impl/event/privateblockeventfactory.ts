@@ -46,6 +46,7 @@ function newPrivateTransactionEvent(blockEvent: BlockEvent, index: number, priva
 		status: fullTransactionEvent.status,
 		transactionData: fullTransactionEvent.transactionData,
 		isValid: fullTransactionEvent.isValid,
+		timestamp:fullTransactionEvent.timestamp,
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		privateData,
 		getBlockEvent: () => blockEvent,
