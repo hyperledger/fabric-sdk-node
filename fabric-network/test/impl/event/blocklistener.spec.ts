@@ -119,10 +119,12 @@ describe('block listener', () => {
 		return event;
 	}
 
-	function addFilteredTransaction(event: EventInfo, filteredTransaction: fabproto6.protos.FilteredTransaction): void {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	function addFilteredTransaction(event: EventInfo, filteredTransaction: any): void {
 		event.filteredBlock.filtered_transactions.push(filteredTransaction);
 	}
-	function newFilteredTransaction(): fabproto6.protos.FilteredTransaction {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	function newFilteredTransaction(): any {
 		const filteredTransaction = new fabproto6.protos.FilteredTransaction();
 		filteredTransaction.tx_validation_code = fabproto6.protos.TxValidationCode.VALID;
 		filteredTransaction.transaction_actions = {};
