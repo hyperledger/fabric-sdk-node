@@ -168,7 +168,7 @@ export class TransactionEventHandler implements TxEventHandler {
 			.map((peer) => peer.name)
 			.join(', ');
 		const errorInfo = {
-			message: `Event strategy not satisfied within the timeout period of ${String(this.options.commitTimeout)} sec. No response received from peers:  ${unrespondedPeerNames}`,
+			message: `Event strategy not satisfied within the timeout period of ${String(this.options.commitTimeout)} seconds. No response received from peers:  ${unrespondedPeerNames}`,
 			transactionId: this.transactionId
 		};
 		const error = new TimeoutError(errorInfo);
