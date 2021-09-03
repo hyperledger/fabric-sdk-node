@@ -329,7 +329,7 @@ describe('TransactionEventHandler', () => {
 				await promise;
 				chai.assert.fail('Expected an error');
 			} catch (error) {
-				expect(error.message).to.include('Event strategy not satisfied within the timeout period of 418 ms');
+				await expect(promise).to.be.rejectedWith('418');
 			}
 		});
 	});
