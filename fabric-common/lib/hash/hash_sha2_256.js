@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/**
- * Implement hash primitives.
- */
+
 const crypto = require('crypto');
 const Hash = require('../Hash');
-
+/*
+ * Implement hash primitives.
+ */
 class hash_sha2_256 extends Hash {
 
 	constructor() {
