@@ -324,13 +324,7 @@ describe('TransactionEventHandler', () => {
 			await handler.startListening();
 			const promise = handler.waitForEvents();
 			await clock.runAllAsync();
-
-			try {
-				await promise;
-				chai.assert.fail('Expected an error');
-			} catch (error) {
-				await expect(promise).to.be.rejectedWith('418');
-			}
+			await expect(promise).to.be.rejectedWith('418');
 		});
 	});
 });
