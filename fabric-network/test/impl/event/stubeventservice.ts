@@ -152,8 +152,8 @@ export class StubEventService implements EventService {
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	sign(parm: IdentityContext | Buffer): Promise<ServiceAction> {
-		return Promise.resolve(null);
+	sign(parm: IdentityContext | Buffer): ServiceAction {
+		return null;
 	}
 
 	getSignedProposal():void {
