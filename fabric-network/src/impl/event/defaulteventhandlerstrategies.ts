@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { AllForTxStrategy } from './allfortxstrategy';
-import { AnyForTxStrategy } from './anyfortxstrategy';
-import { TxEventHandlerFactory, TransactionEventHandler, TxEventHandler } from './transactioneventhandler';
-import { Network } from '../../network';
-import { Endorser } from 'fabric-common';
+import {AllForTxStrategy} from './allfortxstrategy';
+import {AnyForTxStrategy} from './anyfortxstrategy';
+import {TxEventHandlerFactory, TransactionEventHandler, TxEventHandler} from './transactioneventhandler';
+import {Network} from '../../network';
+import {Endorser} from 'fabric-common';
 
 function getOrganizationPeers(network: Network): Endorser[] {
 	const mspId = network.getGateway().getIdentity().mspId;
@@ -105,6 +105,7 @@ const noOpEventHandler: TxEventHandler = {
 	}
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const NONE: TxEventHandlerFactory = (transactionId, network) => {
 	return noOpEventHandler;
 };

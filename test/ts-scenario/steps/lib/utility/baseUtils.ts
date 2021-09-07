@@ -2,14 +2,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+/* eslint-disable @typescript-eslint/no-implied-eval */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Constants } from '../../constants';
-import { StateStore } from './stateStore';
+import * as Constants from '../../constants';
+import {StateStore} from './stateStore';
 
 import * as fs from 'fs';
 
 const stateStore: StateStore = StateStore.getInstance();
+
+export function getVerboseCLI(): boolean {
+	return String(Constants.CLI_VERBOSITY).toLowerCase() === 'true';
+}
 
 /**
  * Perform a sleep
@@ -21,20 +29,16 @@ export function sleep(ms: number): Promise<void> {
 
 export function logMsg(msg: string, obj?: any): void {
 	if (typeof obj === 'undefined') {
-		// tslint:disable-next-line:no-console
 		console.log(msg);
 	} else {
-		// tslint:disable-next-line:no-console
 		console.log(msg, obj);
 	}
 }
 
 export function logError(msg: string, obj?: any): void {
 	if (typeof obj === 'undefined') {
-		// tslint:disable-next-line:no-console
 		console.error('\n' + msg + '\n');
 	} else {
-		// tslint:disable-next-line:no-console
 		console.error('\n' + msg + '\n', obj);
 	}
 }
@@ -50,7 +54,7 @@ export function logAndThrow(msg: any): never {
 
 export function checkString(actual: string, expected: string, enableThrow: boolean): Error | void {
 	if (actual.localeCompare(expected) !== 0) {
-		const msg: string = `Expected ${actual} to be ${expected}`;
+		const msg = `Expected ${actual} to be ${expected}`;
 		if (enableThrow) {
 			logAndThrow(msg);
 		} else {
@@ -61,7 +65,7 @@ export function checkString(actual: string, expected: string, enableThrow: boole
 
 export function checkProperty(object: any, expectedProperty: string, enableThrow: boolean): Error | void {
 	if (!Object.prototype.hasOwnProperty.call(object, expectedProperty)) {
-		const msg: string = `Property ${expectedProperty} missing from object ${JSON.stringify(object)}`;
+		const msg = `Property ${expectedProperty} missing from object ${JSON.stringify(object)}`;
 		if (enableThrow) {
 			logAndThrow(msg);
 		} else {
@@ -72,7 +76,7 @@ export function checkProperty(object: any, expectedProperty: string, enableThrow
 
 export function checkSizeEquality(item0: number, item1: number, greaterThan: boolean, enableThrow: boolean): Error | void {
 	if (greaterThan && item0 < item1) {
-		const msg: string = `Property ${item0} to be larger than ${item1}`;
+		const msg = `Property ${item0} to be larger than ${item1}`;
 		if (enableThrow) {
 			logAndThrow(msg);
 		} else {
@@ -81,7 +85,7 @@ export function checkSizeEquality(item0: number, item1: number, greaterThan: boo
 	}
 
 	if (!greaterThan && item0 > item1) {
-		const msg: string = `Property ${item0} to be less than ${item1}`;
+		const msg = `Property ${item0} to be less than ${item1}`;
 		if (enableThrow) {
 			logAndThrow(msg);
 		} else {
@@ -93,7 +97,7 @@ export function checkSizeEquality(item0: number, item1: number, greaterThan: boo
 export function logScenarioStart(featureType: string): void {
 	const features: Map<string, number> = stateStore.get(Constants.FEATURES);
 
-	let counter: number = 0;
+	let counter = 0;
 
 	if (!features) {
 		// does not exist
@@ -127,7 +131,7 @@ export function recursiveDirDelete(dirPath: string): void {
 		return;
 	}
 	if (files.length > 0) {
-		for (let i: number = 0; i < files.length; i++) {
+		for (let i = 0; i < files.length; i++) {
 			const filePath: string = dirPath + '/' + files[i];
 			if (fs.statSync(filePath).isFile()) {
 				fs.unlinkSync(filePath);
@@ -137,4 +141,4 @@ export function recursiveDirDelete(dirPath: string): void {
 		}
 	}
 	fs.rmdirSync(dirPath);
-  }
+}

@@ -4,27 +4,29 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Checkpointer } from '../../../src/checkpointer';
-import Long = require('long');
+import {Checkpointer} from '../../../src/checkpointer';
+import * as Long from 'long';
 
 export class StubCheckpointer implements Checkpointer {
 	private blockNumber: Long;
 	private readonly transactionIds: Set<string> = new Set();
 
-	async addTransactionId(transactionId: string): Promise<void> {
+	addTransactionId(transactionId: string): Promise<void> {
 		this.transactionIds.add(transactionId);
+		return Promise.resolve();
 	}
 
-	async getBlockNumber(): Promise<Long | undefined> {
-		return this.blockNumber;
+	getBlockNumber(): Promise<Long | undefined> {
+		return Promise.resolve(this.blockNumber);
 	}
 
-	async getTransactionIds(): Promise<Set<string>> {
-		return this.transactionIds;
+	getTransactionIds(): Promise<Set<string>> {
+		return Promise.resolve(this.transactionIds);
 	}
 
-	async setBlockNumber(blockNumber: Long): Promise<void> {
+	setBlockNumber(blockNumber: Long): Promise<void> {
 		this.transactionIds.clear();
 		this.blockNumber = blockNumber;
+		return Promise.resolve();
 	}
 }

@@ -4,18 +4,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Checkpointer } from '../../src/checkpointer';
-import { DefaultCheckpointers } from '../../src/defaultcheckpointers';
+import {Checkpointer} from '../../src/checkpointer';
+import {DefaultCheckpointers} from '../../src/defaultcheckpointers';
 import * as testUtils from '../testutils';
-import Long = require('long');
-import path = require('path');
-import fs = require('fs');
+import * as Long from 'long';
+import * as path  from 'path';
+import * as fs from 'fs';
 import chai = require('chai');
 import chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 const expect = chai.expect;
 
-// tslint:disable: no-unused-expression
+
 
 describe('FileCheckpointer', () => {
 	let dir: string;

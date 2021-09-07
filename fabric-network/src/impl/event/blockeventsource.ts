@@ -4,18 +4,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { EventCallback, EventInfo, EventListener, EventRegistrationOptions, EventService, StartRequestOptions } from 'fabric-common';
-import { BlockEvent, BlockListener, EventType, ListenerOptions } from '../../events';
+import {EventCallback, EventInfo, EventListener, EventRegistrationOptions, EventService, StartRequestOptions} from 'fabric-common';
+import {BlockEvent, BlockListener, EventType, ListenerOptions} from '../../events';
 import * as Logger from '../../logger';
 import * as GatewayUtils from '../gatewayutils';
-import { AsyncNotifier } from './asyncnotifier';
-import { EventServiceManager } from './eventservicemanager';
-import { newFilteredBlockEvent } from './filteredblockeventfactory';
-import { newFullBlockEvent } from './fullblockeventfactory';
-import { OrderedBlockQueue } from './orderedblockqueue';
-import { newPrivateBlockEvent } from './privateblockeventfactory';
-import { notNullish } from '../gatewayutils';
-import Long = require('long');
+import {AsyncNotifier} from './asyncnotifier';
+import {EventServiceManager} from './eventservicemanager';
+import {newFilteredBlockEvent} from './filteredblockeventfactory';
+import {newFullBlockEvent} from './fullblockeventfactory';
+import {OrderedBlockQueue} from './orderedblockqueue';
+import {newPrivateBlockEvent} from './privateblockeventfactory';
+import {notNullish} from '../gatewayutils';
+import * as Long from 'long';
 
 const logger = Logger.getLogger('BlockEventSource');
 
@@ -72,14 +72,13 @@ export class BlockEventSource {
 			this.state = state;
 		}
 	}
-
-	close() {
+	close():void {
 		this.setState('stopped');
 		logger.debug('state set to  - :%s', this.state);
 		this._close();
 	}
 
-	private _close() {
+	private _close(): void {
 		this.unregisterListener();
 		this.eventService?.close();
 		this.setState('ready');
@@ -89,7 +88,7 @@ export class BlockEventSource {
 		}
 	}
 
-	private async start() {
+	private async start(): Promise<void> {
 		logger.debug('state - :%s', this.state);
 		if (this.state !== 'ready') {
 			return;
@@ -104,7 +103,9 @@ export class BlockEventSource {
 		} catch (error) {
 			logger.error('Failed to start event service', error);
 			this._close();
-			this.restart = setImmediate(() => this.start());
+			this.restart = setImmediate(() => {
+				void this.start();
+			});
 		}
 	}
 
@@ -114,6 +115,7 @@ export class BlockEventSource {
 			startBlock: this.getNextBlockNumber(),
 			unregister: false
 		};
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		this.eventListener = this.eventService!.registerBlockListener(callback, options);
 	}
 
@@ -139,14 +141,18 @@ export class BlockEventSource {
 			startBlock
 		};
 
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		await this.eventServiceManager.startEventService(this.eventService!, options);
 	}
 
 	private blockEventCallback(error?: Error, event?: EventInfo)  {
 		if (error) {
 			this._close();
-			this.restart = setImmediate(() => this.start()); // Must schedule after current event loop to avoid recursion in event service notification
+			this.restart = setImmediate(() => {
+				void this.start();
+			}); // Must schedule after current event loop to avoid recursion in event service notification
 		} else {
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			this.onBlockEvent(event!);
 		}
 	}
@@ -167,7 +173,7 @@ export class BlockEventSource {
 		} else if (this.blockType === 'private') {
 			return newPrivateBlockEvent(eventInfo);
 		} else {
-			throw new Error('Unsupported event type: ' + this.blockType);
+			throw new Error(`Unsupported event type: ${this.blockType as string}`);
 		}
 	}
 
