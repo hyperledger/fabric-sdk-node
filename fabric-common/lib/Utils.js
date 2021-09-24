@@ -561,11 +561,10 @@ module.exports.convertBytetoString = (buffer_array, encoding) => {
 	}
 	if (Array.isArray(buffer_array)) {
 		const a_strings = [];
-		for (const index in buffer_array) {
-			const buffer = buffer_array[index];
+		buffer_array.forEach((buffer) => {
 			const hex_string = buffer.toString(decode_as);
 			a_strings.push(hex_string);
-		}
+		});
 		result = a_strings.join('');
 	} else {
 		result = buffer_array.toString(decode_as);
