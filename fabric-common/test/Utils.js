@@ -85,6 +85,15 @@ describe('Utils', () => {
 			const normalized = Utils.byteToNormalizedPEM(twoCerts);
 			normalized.should.be.equal(pem + pem + pem);
 		});
+
+		it('should convert empty array-like input to an empty string', () => {
+	       const arraylike = [];
+	       arraylike.foo = () => 'bar';
+
+	       const normalized = Utils.byteToNormalizedPEM(arraylike);
+
+	       normalized.should.equal('');
+        });
 	});
 
 	describe('#newCryptoSuite', () => {
