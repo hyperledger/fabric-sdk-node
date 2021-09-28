@@ -59,7 +59,6 @@ You can build the docker images in your native host (Mac, Ubuntu, Windows, etc.)
   * Test user management by member services with the following tests that exercise the fabric-ca-client package with a KeyValueStore implementations for a file-based KeyValueStore as well as a CouchDB KeyValueStore. To successfully run this test, you must first set up a CouchDB database instance on your local machine. Please see the instructions below.
     * `test/integration/fabric-ca-services-tests.js`
     * `test/integration/couchdb-fabricca-tests.js`
-    * `test/integration/cloudant-fabricca-tests.js`
   * To re-run `node test/integration/e2e.js` or `fabric-ca-services-tests.js` stop the network (ctrl-c), clean up the docker instances (`docker rm $(docker ps -aq)`) and restart the network with `docker-compose up` as described above.
 
 ### Special Tests for Hardware Security Module support via PKCS#11 interface
