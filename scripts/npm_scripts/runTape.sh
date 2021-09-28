@@ -24,7 +24,7 @@ runTape() {
 
     # Tests have to be executed in the following order
 
-	# first run the ca-tests that tests all the member registration and enrollment scenarios (good and bad calls). 
+	# first run the ca-tests that tests all the member registration and enrollment scenarios (good and bad calls).
     # Then the rest of the tests will re-use the same key value store that has saved the user certificates so they can interact with the network
     npx tape test/unit/config.js \
     test/integration/fabric-ca-affiliation-service-tests.js \
@@ -38,7 +38,6 @@ runTape() {
     test/integration/query.js \
     test/integration/client.js \
     test/integration/orderer-channel-tests.js \
-    test/integration/cloudant-fabricca-tests.js \
     test/integration/couchdb-fabricca-tests.js \
     test/integration/fileKeyValueStore-fabricca-tests.js \
     test/integration/install.js \
@@ -62,4 +61,4 @@ runTape() {
     | npx tap-colorize
 }
 
-runTape $* 
+runTape $*
