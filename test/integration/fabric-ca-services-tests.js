@@ -443,6 +443,24 @@ test('\n\n ** FabricCAClient: Test enroll With a CSR **\n\n', async (t) => {
 	}
 });
 
+test('\n\n ** FabricCAClient: Test get CA Info **\n\n', async (t) => {
+	try {
+		testUtil.resetDefaults();
+		const caService = getFabricCAService();
+		const admin = await enrollAdminTest(caService, t);
+
+		const caInfo = await caService.getCaInfo(admin);
+		t.pass('Successfully get ca info');
+
+		// check that we got back CA name
+		t.equal(caInfo.caName, caService.caName, 'CA Name should be ' + caService.caName);
+		t.pass('Successfully tested get CA Info');
+	} catch (error) {
+		t.fail(error.message);
+		t.end();
+	}
+});
+
 function getFabricCAService() {
 	FabricCAServices.addConfigFile(path.join(__dirname, 'e2e', 'config.json'));
 	ORGS = FabricCAServices.getConfigSetting('test-network');
