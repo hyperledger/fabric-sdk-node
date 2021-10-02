@@ -1293,6 +1293,33 @@ describe('FabricCAClient', () => {
 			callArgs[2].should.equal('signingIdentity');
 		});
 
+		it('should return the caInfo on success', async () => {
+			const connect_opts = {
+				caname: 'test-ca-name',
+				protocol: 'http',
+				hostname: 'testHost'
+			};
+
+			const postStub = sinon.stub();
+			postStub.resolves({
+				result: {
+					'CAName' : 'test_ca_name',
+					'CAChain': 'dGVzdF9jaGFpbg==',
+					'IssuerPublicKey': 'dGVzdF9pc3NfcHViX2tleQ==',
+					'IssuerRevocationPublicKey': 'dGVzdF9pc3NfcmV2X3B1Yl9rZXk=',
+					'Version': '1.4.9'
+				}});
+			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
+
+			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
+			const result = await client.getCaInfo('signingIdentity');
+			result.caName.should.equal('test_ca_name');
+			result.caChain.toString('utf8').should.equal('test_chain');
+			result.issuerPublicKey.toString('utf8').should.equal('test_iss_pub_key');
+			result.issuerRevocationPublicKey.toString('utf8').should.equal('test_iss_rev_pub_key');
+			result.version.should.equal('1.4.9');
+		});
+
 		it('should reject on POST failure', async () => {
 			const connect_opts = {
 				caname: 'test-ca-name',
