@@ -76,11 +76,11 @@ class Proposal extends ServiceAction {
 	 * chaincodes and collections that this chaincode code will call.
 	 * @example
 	 *    [
-	 *      { name: "mychaincode", collectionNames: ["mycollection"] }
+	 *      { name: 'mychaincode', collectionNames: ['mycollection'] }
 	 *    ]
 	 * @example
 	 *    [
-	 *      { name: "mychaincode", collectionNames: ["mycollection"], noPrivateReads: true }
+	 *      { name: 'mychaincode', collectionNames: ['mycollection'], noPrivateReads: true }
 	 *    ]
 	 */
 	buildProposalInterest() {
@@ -399,12 +399,13 @@ message Endorsement {
 
 		this._proposalResponses = [];
 		this._proposalErrors = [];
-		this._queryResults = [];
+
 
 		if (handler) {
 			logger.debug('%s - endorsing with a handler', method);
 			let results;
 			if (this.type === 'Query') {
+				// TODO should we move it to Query.js
 				results = await handler.query(signedEnvelope, request);
 			} else {
 				results = await handler.endorse(signedEnvelope, request);
@@ -459,24 +460,10 @@ message Endorsement {
 			throw Error('Missing targets parameter');
 		}
 
-		const return_results = {
+		return {
 			errors: this._proposalErrors,
 			responses: this._proposalResponses
 		};
-
-		if (this.type === 'Query') {
-			this._proposalResponses.forEach((response) => {
-				if (response.endorsement && response.response && response.response.payload) {
-					logger.debug('%s - have payload', method);
-					this._queryResults.push(response.response.payload);
-				} else {
-					logger.debug('%s - no payload in query', method);
-				}
-			});
-			return_results.queryResults = this._queryResults;
-		}
-
-		return return_results;
 	}
 
 	/**
