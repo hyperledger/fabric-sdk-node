@@ -81,16 +81,17 @@ const Pkcs11EcdsaKey = class extends Key {
 		csr.asn1SignatureAlg = new asn1.x509.AlgorithmIdentifier({
 			name: sigAlgName,
 		});
+		const csri = new asn1.csr.CertificationRequestInfo(csr.params);
 
 		const digest = this._cryptoSuite.hash(
-			Buffer.from(csr.params.csrinfo.getEncodedHex(), 'hex')
+			Buffer.from(csri.getEncodedHex(), 'hex')
 		);
 		const sig = this._cryptoSuite.sign(this, Buffer.from(digest, 'hex'));
-		csr.sighex = sig.toString('hex');
+		csr.params.sighex = sig.toString('hex');
 
-		csr.asn1Sig = new asn1.DERBitString({hex: '00' + csr.sighex});
+		csr.asn1Sig = new asn1.DERBitString({hex: '00' + csr.params.sighex});
 		const seq = new asn1.DERSequence({
-			array: [csr.params.csrinfo, csr.asn1SignatureAlg, csr.asn1Sig],
+			array: [csri, csr.asn1SignatureAlg, csr.asn1Sig],
 		});
 		csr.hTLV = seq.getEncodedHex();
 		csr.isModified = false;
