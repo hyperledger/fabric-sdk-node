@@ -112,19 +112,23 @@ const Pkcs11EcdsaKey = class extends Key {
 		}
 		const ecdsa = new EC(this._cryptoSuite._ecdsaCurve);
 		const pubKey = ecdsa.keyFromPublic(this._pub._ecpt);
-		const csri = new _KJUR_asn1_csr.CertificationRequestInfo({
-			subject: param.subject,
-			sbjpubkey: {xy: pubKey.getPublic('hex'), curve: 'secp256r1'},
-		});
+		const extreq = [];
 		if (param.ext !== undefined && param.ext.length !== undefined) {
 			for (const ext of param.ext) {
-				for (const key in ext) {
-					csri.appendExtensionByName(key, ext[key]);
+				for (const extname in ext) {
+					const extObj = ext[extname];
+					extObj.extname = extname;
+					extreq.push(extObj);
 				}
 			}
 		}
 
-		const csr = new _KJUR_asn1_csr.CertificationRequest({csrinfo: csri});
+		const csr = new _KJUR_asn1_csr.CertificationRequest({
+			subject: param.subject,
+			sbjpubkey: {xy: pubKey.getPublic('hex'), curve: 'secp256r1'},
+			sigalg: param.sigalg,
+			extreq: extreq
+		});
 		this.signCSR(csr, param.sigalg);
 
 		const pem = csr.getPEM();
