@@ -82,7 +82,6 @@ const Pkcs11EcdsaKey = class extends Key {
 			name: sigAlgName,
 		});
 		const csri = new asn1.csr.CertificationRequestInfo(csr.params);
-
 		const digest = this._cryptoSuite.hash(
 			Buffer.from(csri.getEncodedHex(), 'hex')
 		);
@@ -124,7 +123,6 @@ const Pkcs11EcdsaKey = class extends Key {
 			}
 		}
 		const sigAlgName = param.sigalg;
-
 		const csr = new _KJUR_asn1_csr.CertificationRequest({
 			subject: param.subject,
 			sbjpubkey: {xy: pubKey.getPublic('hex'), curve: 'secp256r1'},
