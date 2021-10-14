@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
-	<title>Hyperledger Fabric SDK for Node.js Class: CryptoSuite_PKCS11</title>
+	<title>Hyperledger Fabric SDK for Node.js Interface: Contract</title>
 
 	<!--[if lt IE 9]>
 	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -93,16 +93,16 @@
 		<div id="main">
 			
 
-	<h1 class="page-title">Class: CryptoSuite_PKCS11</h1>
+	<h1 class="page-title">Interface: Contract</h1>
 <section>
 
 <header>
     
         <h2>
-        CryptoSuite_PKCS11
-        </h2>
+            <span class="ancestors"><a href="module-fabric-network.html">fabric-network</a>.</span>
         
-            <div class="class-description">PKCS#11-compliant implementation to support Hardware Security Modules.</div>
+        Contract
+        </h2>
         
     
 </header>
@@ -112,14 +112,311 @@
     <div class="container-overview">
     
         
+            <div class="description"><p>Represents a smart contract (chaincode) instance in a network.
+Applications should get a Contract instance using the
+networks's <a href="module-fabric-network.Network.html#getContract">getContract</a> method.</p>
+
+<p>The Contract allows applications to:</p>
+<ul>
+  <li>Submit transactions that store state to the ledger using
+      <a href="module-fabric-network.Contract.html#submitTransaction">submitTransaction</a>.</li>
+  <li>Evaluate transactions that query state from the ledger using
+      <a href="module-fabric-network.Contract.html#evaluateTransaction">evaluateTransaction</a>.</li>
+  <li>Listen for new chaincode events and replay previous chaincode events emitted by the smart contract using
+      <a href="module-fabric-network.Contract.html#addContractListener">addContractListener</a>.</li>
+</ul>
+
+<p>If more control over transaction invocation is required, such as including transient data,
+<a href="module-fabric-network.Contract.html#createTransaction">createTransaction</a> can be used to build a transaction
+request that is submitted to or evaluated by the smart contract.</p></div>
+        
+
+        
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        <dl>
+            
 <hr>
 <dt>
-    <h4 class="name" id="CryptoSuite_PKCS11"><span class="type-signature"></span>new CryptoSuite_PKCS11(keySize, hash, opts)</h4>
+    <h4 class="name" id="addContractListener"><span class="type-signature"></span>addContractListener(listener [, options])</h4>
     
     
 </dt>
 <dd>
 
+    
+    <div class="description">
+        Add a listener to receive all chaincode events emitted by the smart contract as part of successfully committed
+transactions. The default is to listen for full contract events from the current block position.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>listener</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-fabric-network.html#.ContractListener">module:fabric-network.ContractListener</a></span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">A contract listener callback function.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-fabric-network.ListenerOptions.html">module:fabric-network.ListenerOptions</a></span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Listener options.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    The added listener.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise.&lt;<a href="module-fabric-network.html#.ContractListener">module:fabric-network.ContractListener</a>></span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+        <h5>Example</h5>
+        
+    <pre class="sunlight-highlight-javascript">const listener: ContractListener = async (event) =&gt; {
+    if (event.eventName === &#x27;newOrder&#x27;) {
+        const details = event.payload.toString(&#x27;utf8&#x27;);
+        // Run business process to handle orders
+    }
+};
+contract.addContractListener(listener);</pre>
+
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="addDiscoveryInterest"><span class="type-signature"></span>addDiscoveryInterest(interest)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Provide a Discovery Interest settings to help the peer's discovery service
+build an endorsement plan. This chaincode Id will be include by default in
+the list of discovery interests. If this contract's chaincode is in one or
+more collections then use this method with this chaincode Id to change the
+default discovery interest to include those collection names.
+    </div>
     
 
     
@@ -153,13 +450,13 @@
 
         <tr>
             
-                <td class="name"><code>keySize</code></td>
+                <td class="name"><code>interest</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">number</span>
+<span class="param-type">DiscoveryInterest</span>
 
 
 
@@ -170,14 +467,146 @@
 
             
 
-            <td class="description last">Length of key (in bytes), a.k.a "security level"</td>
+            <td class="description last">These will be added to the existing discovery interests and used when
+<a href="module-fabric-network.Transaction.html#submit">module:fabric-network.Transaction#submit</a> is called.</td>
         </tr>
 
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    This Contract instance
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Contract</span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="createTransaction"><span class="type-signature"></span>createTransaction(name)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Create an object representing a specific invocation of a transaction
+function implemented by this contract, and provides more control over
+the transaction invocation. A new transaction object <strong>must</strong>
+be created for each transaction invocation.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
     
 
         <tr>
             
-                <td class="name"><code>hash</code></td>
+                <td class="name"><code>name</code></td>
             
 
             <td class="type">
@@ -194,20 +623,148 @@
 
             
 
-            <td class="description last">Optional. Hash algorithm, supported values are "SHA2" and "SHA3"</td>
+            <td class="description last">Transaction function name.</td>
         </tr>
 
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    A transaction object.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="module-fabric-network.Transaction.html">module:fabric-network.Transaction</a></span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="deserializeTransaction"><span class="type-signature"></span>deserializeTransaction(data)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Deserialize a transaction from previously saved state.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
     
 
         <tr>
             
-                <td class="name"><code>opts</code></td>
+                <td class="name"><code>data</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Object</span>
+<span class="param-type">Buffer</span>
 
 
 
@@ -218,51 +775,465 @@
 
             
 
-            <td class="description last">Options are of the form
-<pre>
-  {
-    lib: string,       // the library package to support this implementation
-    slot: number,      // the hardware slot number
-    label: string,     // the label assigned to the token at slot initialisation (overrides slot)
-    pin: string,       // the user's PIN
-    usertype: number,  // the user type
-    readwrite: boolean // true if the session is read/write or false if read-only
-  }
-</pre>
-If 'lib' is not specified or null, its value will be taken from the
-CRYPTO_PKCS11_LIB env var, and if the env var is not set, its value will
-be taken from the crypto-pkcs11-lib key in the configuration file.
-<br><br>
-If 'slot' is not specified or null, its value will be taken from the
-CRYPTO_PKCS11_SLOT env var, and if the env var is not set, its value will
-be taken from the crypto-pkcs11-slot key in the configuration file.
-<br><br>
-If 'label' is not specified or null, its value will be taken from the
-CRYPTO_PKCS11_LABEL env var, and if the env var is not set, its value will
-be taken from the crypto-pkcs11-label key in the configuration file.
-If label is present then it will override any slot value provided
-<br><br>
-If 'pin' is not specified or null, its value will be taken from the
-CRYPTO_PKCS11_PIN env var, and if the env var is not set, its value will
-be taken from the crypto-pkcs11-pin key in the configuration file.
-<br><br>
-If 'usertype' is not specified or null, its value will be taken from the
-CRYPTO_PKCS11_USERTYPE env var, if the env var is not set, its value will
-be taken from the crypto-pkcs11-usertype key in the configuration file,
-if the config value is not set, its value will default to 1.
-The value will not be validated, assumes the C_Login will validate.
---- from http://docs.oasis-open.org/pkcs11/pkcs11-base/v2.40/os/pkcs11-base-v2.40-os.html
-<pre>
-0          CKU_SO                          0UL
-1          CKU_USER                        1UL
-2          CKU_CONTEXT_SPECIFIC            2UL
-4294967295 max allowed            0xFFFFFFFFUL
-</pre>
-<br>
-If 'readwrite' is not specified or null, its value will be taken from the
-CRYPTO_PKCS11_READWRITE env var, if the env var is not set, its value will
-be taken from the crypto-pkcs11-readwrite key in the configuration file,
-if the config value is not set, its value will default to true.</td>
+            <td class="description last">Serialized transaction data.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    A transaction object.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="module-fabric-network.Transaction.html">module:fabric-network.Transaction</a></span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="evaluateTransaction"><span class="type-signature"></span>evaluateTransaction(name [, args])</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Evaluate a transaction function and return its results.
+The transaction function <code>name</code>
+will be evaluated on the endorsing peers but the responses will not be sent to
+the ordering service and hence will not be committed to the ledger.
+This is used for querying the world state.
+This function is equivalent to calling <code>createTransaction(name).evaluate()</code>.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>name</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Transaction function name.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>args</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                    &lt;repeatable><br>
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Transaction function arguments.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    Payload response from the transaction function.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Buffer</span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="getDiscoveryInterests"><span class="type-signature"></span>getDiscoveryInterests()</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Retrieve the Discovery Interest settings that will help the peer's
+discovery service build an endorsement plan.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    - An array of DiscoveryInterest
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array.&lt;DiscoveryInterest></span>
+
+
+
+    </dd>
+</dl>
+
+
+        
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="removeContractListener"><span class="type-signature"></span>removeContractListener(listener)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Remove a previously added contract listener.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>listener</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-fabric-network.html#.ContractListener">module:fabric-network.ContractListener</a></span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A contract listener callback function.</td>
         </tr>
 
     
@@ -326,18 +1297,269 @@ if the config value is not set, its value will default to true.</td>
     
 </dd>
 
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="resetDiscoveryInterests"><span class="type-signature"></span>resetDiscoveryInterests()</h4>
     
-    </div>
+    
+</dt>
+<dd>
 
     
-        <h3 class="subsection-title">Extends</h3>
+    <div class="description">
+        reset Discovery interest to default of this contracts chaincode name
+and no collection names and no other chaincode names.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Returns:</h5>
+    
+            
+<div class="param-desc">
+    This Contract instance
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Contract</span>
+
+
+
+    </dd>
+</dl>
+
 
         
 
+    
+</dd>
 
-    <ul>
-        <li>module:api.CryptoSuite</li>
-    </ul>
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id="submitTransaction"><span class="type-signature"></span>submitTransaction(name [, args])</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        Submit a transaction to the ledger. The transaction function <code>name</code>
+will be evaluated on the endorsing peers and then submitted to the ordering service
+for committing to the ledger.
+This function is equivalent to calling <code>createTransaction(name).submit()</code>.
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>name</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Transaction function name.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>args</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                    &lt;repeatable><br>
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Transaction function arguments.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
 
 
     
@@ -349,408 +1571,42 @@ if the config value is not set, its value will default to true.</td>
     
 
     
-
+    <h5>Throws:</h5>
     
+            
 
-    
-        <h3 class="subsection-title">Methods</h3>
-
+<dl>
+    <dt>
+        <div class="param-desc">
+        If the transaction was successfully submitted to the orderer but
+timed out before a commit event was received from peers.
+        </div>
+    </dt>
+    <dt>
         <dl>
-            
-<hr>
-<dt>
-    <h4 class="name" id="createKeyFromRaw"><span class="type-signature"></span>createKeyFromRaw()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        This is an implementation of module:api.CryptoSuite#createKeyFromRaw
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type"><a href="module-fabric-network.TimeoutError.html">module:fabric-network.TimeoutError</a></span>
 
 
 
-	
-
-	
-
-	
-
-	
+            </dd>
+        </dl>
+    </dt>
 </dl>
 
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
 
         
-            
-<hr>
-<dt>
-    <h4 class="name" id="decrypt"><span class="type-signature"></span>decrypt()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        This is an implementation of module:api.CryptoSuite#decrypt
-Decrypts cipherText using key.
-The opts argument is not supported yet.
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="deriveKey"><span class="type-signature"></span>deriveKey()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        This is an implementation of module:api.CryptoSuite#deriveKey
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="encrypt"><span class="type-signature"></span>encrypt()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        This is an implementation of module:api.CryptoSuite#encrypt
-Encrypts plainText using key.
-The opts argument is not supported.
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="generateEphemeralKey"><span class="type-signature"></span>generateEphemeralKey()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        This is an implementation of module:api.CryptoSuite#generateEphemeralKey
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
 
     
     <h5>Returns:</h5>
     
             
 <div class="param-desc">
-    Promise of an instance of module:Pkcs11EcdsaKey
-containing the private key and the public key.
+    Payload response from the transaction function.
 </div>
 
 
@@ -761,7 +1617,7 @@ containing the private key and the public key.
     </dt>
     <dd>
         
-<span class="param-type">module:api.Key</span>
+<span class="param-type">Buffer</span>
 
 
 
@@ -770,585 +1626,6 @@ containing the private key and the public key.
 
 
         
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="generateKey"><span class="type-signature"></span>generateKey()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        This is an implementation of module:api.CryptoSuite#generateKey
-Returns an instance of module.api.Key representing the private key,
-which also encapsulates the public key. The key (keypair) will be saved
-across PKCS11 sessions by the HSM hardware. Use generateEphemeralKey to
-retrieve an ephmeral key.
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <h5>Returns:</h5>
-    
-            
-<div class="param-desc">
-    Promise of an instance of module:Pkcs11EcdsaKey
-containing the private key and the public key.
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">module:api.Key</span>
-
-
-
-    </dd>
-</dl>
-
-
-        
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="getKey"><span class="type-signature"></span>getKey()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        This is an implementation of module:api.CryptoSuite#getKey
-Returns the key this CSP associates to the Subject Key Identifier ski.
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="getKeySize"><span class="type-signature"></span>getKeySize()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        This is an implementation of module:api.CryptoSuite#getKeySize
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="hash"><span class="type-signature"></span>hash()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        This is an implementation of module:api.CryptoSuite#hash
-The opts argument is not supported yet.
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="importKey"><span class="type-signature">&lt;async> </span>importKey()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        This is an implementation of module:api.CryptoSuite#importKey
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="sign"><span class="type-signature"></span>sign()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        This is an implementation of module:api.CryptoSuite#sign
-Signs digest using key k.
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id="verify"><span class="type-signature"></span>verify()</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        This is an implementation of module:api.CryptoSuite#verify
-Verifies signature against key k and digest
-    </div>
-    
-
-    
-
-    
-
-    
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
 
     
 </dd>

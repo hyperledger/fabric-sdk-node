@@ -47,7 +47,7 @@
 			<li class="dropdown">
 				<a href="interfaces.list.html" class="dropdown-toggle" data-toggle="dropdown">Interfaces<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
-					<li><a href="module-fabric-network.BlockEvent.html">fabric-network.BlockEvent</a></li><li><a href="module-fabric-network.Checkpointer.html">fabric-network.Checkpointer</a></li><li><a href="module-fabric-network.CommitError.html">fabric-network.CommitError</a></li><li><a href="module-fabric-network.CommitEvent.html">fabric-network.CommitEvent</a></li><li><a href="module-fabric-network.ContractEvent.html">fabric-network.ContractEvent</a></li><li><a href="module-fabric-network.DefaultEventHandlerOptions.html">fabric-network.DefaultEventHandlerOptions</a></li><li><a href="module-fabric-network.DefaultQueryHandlerOptions.html">fabric-network.DefaultQueryHandlerOptions</a></li><li><a href="module-fabric-network.DiscoveryOptions.html">fabric-network.DiscoveryOptions</a></li><li><a href="module-fabric-network.GatewayOptions.html">fabric-network.GatewayOptions</a></li><li><a href="module-fabric-network.HsmOptions.html">fabric-network.HsmOptions</a></li><li><a href="module-fabric-network.HsmX509Identity.html">fabric-network.HsmX509Identity</a></li><li><a href="module-fabric-network.Identity.html">fabric-network.Identity</a></li><li><a href="module-fabric-network.IdentityProvider.html">fabric-network.IdentityProvider</a></li><li><a href="module-fabric-network.ListenerOptions.html">fabric-network.ListenerOptions</a></li><li><a href="module-fabric-network.Network.html">fabric-network.Network</a></li><li><a href="module-fabric-network.Query.html">fabric-network.Query</a></li><li><a href="module-fabric-network.QueryHandler.html">fabric-network.QueryHandler</a></li><li><a href="module-fabric-network.TransactionEvent.html">fabric-network.TransactionEvent</a></li><li><a href="module-fabric-network.TxEventHandler.html">fabric-network.TxEventHandler</a></li><li><a href="module-fabric-network.WalletStore.html">fabric-network.WalletStore</a></li><li><a href="module-fabric-network.X509Identity.html">fabric-network.X509Identity</a></li>
+					<li><a href="module-fabric-network.BlockEvent.html">fabric-network.BlockEvent</a></li><li><a href="module-fabric-network.Checkpointer.html">fabric-network.Checkpointer</a></li><li><a href="module-fabric-network.CommitError.html">fabric-network.CommitError</a></li><li><a href="module-fabric-network.CommitEvent.html">fabric-network.CommitEvent</a></li><li><a href="module-fabric-network.Contract.html">fabric-network.Contract</a></li><li><a href="module-fabric-network.ContractEvent.html">fabric-network.ContractEvent</a></li><li><a href="module-fabric-network.DefaultEventHandlerOptions.html">fabric-network.DefaultEventHandlerOptions</a></li><li><a href="module-fabric-network.DefaultQueryHandlerOptions.html">fabric-network.DefaultQueryHandlerOptions</a></li><li><a href="module-fabric-network.DiscoveryOptions.html">fabric-network.DiscoveryOptions</a></li><li><a href="module-fabric-network.GatewayOptions.html">fabric-network.GatewayOptions</a></li><li><a href="module-fabric-network.HsmOptions.html">fabric-network.HsmOptions</a></li><li><a href="module-fabric-network.HsmX509Identity.html">fabric-network.HsmX509Identity</a></li><li><a href="module-fabric-network.Identity.html">fabric-network.Identity</a></li><li><a href="module-fabric-network.IdentityProvider.html">fabric-network.IdentityProvider</a></li><li><a href="module-fabric-network.ListenerOptions.html">fabric-network.ListenerOptions</a></li><li><a href="module-fabric-network.Network.html">fabric-network.Network</a></li><li><a href="module-fabric-network.Query.html">fabric-network.Query</a></li><li><a href="module-fabric-network.QueryHandler.html">fabric-network.QueryHandler</a></li><li><a href="module-fabric-network.TransactionEvent.html">fabric-network.TransactionEvent</a></li><li><a href="module-fabric-network.TxEventHandler.html">fabric-network.TxEventHandler</a></li><li><a href="module-fabric-network.WalletStore.html">fabric-network.WalletStore</a></li><li><a href="module-fabric-network.X509Identity.html">fabric-network.X509Identity</a></li>
 				</ul>
 			</li>
 			
@@ -107,7 +107,7 @@
             <div class="class-description">Represents a specific invocation of a transaction function, and provides
 flexibility over how that transaction is invoked. Applications should
 obtain instances of this class by calling
-Contract#createTransaction().
+<a href="module-fabric-network.Contract.html#createTransaction">Contract#createTransaction()</a>.
 <br><br>
 Instances of this class are stateful. A new instance <strong>must</strong>
 be created for each transaction invocation.</div>
@@ -131,7 +131,7 @@ be created for each transaction invocation.</div>
     
     <div class="description">
         Transaction instances should be obtained only by calling
-Contract.createTransaction(). This constructor should
+<a href="module-fabric-network.Contract.html#createTransaction">Contract.createTransaction()</a>. This constructor should
 not be used directly.
     </div>
     
@@ -603,7 +603,7 @@ This is used for querying the world state.
     
     <div class="description">
         Extract the state of this transaction in a form that can be reconstructed using
-Contract#deserializeTransaction(). This allows a
+<a href="module-fabric-network.Contract.html#deserializeTransaction">Contract#deserializeTransaction()</a>. This allows a
 transaction to persisted, and then reconstructed and resubmitted following a client application restart. There is
 no guarantee of compatibility for the serialized data between different versions of this package.
     </div>
@@ -1460,8 +1460,8 @@ for committing to the ledger.
 
     
     <h5>Throws:</h5>
-    
-            
+    <ul>
+            <li>
 
 <dl>
     <dt>
@@ -1486,8 +1486,35 @@ timed out before a commit event was received from peers.
     </dt>
 </dl>
 
-
+</li>
         
+            <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        If the transaction committed with an unsuccessful transaction
+validation code, and so did not update the ledger.
+        </div>
+    </dt>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type"><a href="module-fabric-network.TransactionError.html">module:fabric-network.TransactionError</a></span>
+
+
+
+            </dd>
+        </dl>
+    </dt>
+</dl>
+
+</li>
+        </ul>
 
     
     <h5>Returns:</h5>
@@ -1568,7 +1595,7 @@ timed out before a commit event was received from peers.
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.7</a>
 	
-		on 2021-10-14T08:38:13+00:00
+		on 2021-10-14T16:47:55+00:00
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>
