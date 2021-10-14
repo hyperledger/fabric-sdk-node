@@ -242,6 +242,8 @@ export class Transaction {
 	 * @returns {Buffer} Payload response from the transaction function.
 	 * @throws {module:fabric-network.TimeoutError} If the transaction was successfully submitted to the orderer but
 	 * timed out before a commit event was received from peers.
+	 * @throws {module:fabric-network.TransactionError} If the transaction committed with an unsuccessful transaction
+	 * validation code, and so did not update the ledger.
 	 */
 	async submit(...args: string[]): Promise<Buffer> {
 		const method = `submit[${this.name}]`;
