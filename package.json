@@ -23,7 +23,7 @@
     "dockerClean": "./scripts/npm_scripts/dockerClean.sh",
     "compile": "tsc --project fabric-network/tsconfig.json",
     "lint": "eslint . --ext .ts,.js",
-    "docs": "node -e 'require(\"./scripts/npm_scripts/testFunctions.js\").cleanUpDocs()' && jsdoc -c docs/jsdoc.json -t ./node_modules/ink-docstrap/template",
+    "docs": "node -e 'require(\"./scripts/npm_scripts/testFunctions.js\").cleanUpDocs()' && jsdoc -c docs/jsdoc.json -t ./node_modules/ink-docstrap/template --pedantic --recurse",
     "unitTest:all": "export HFC_LOGGING='{\"debug\":\"test/temp/debug.log\"}' && nyc run-s unitTest:common unitTest:ca-client unitTest:network",
     "unitTest:common": "mocha --reporter list 'fabric-common/test/**/*.js'",
     "unitTest:ca-client": "mocha --reporter list 'fabric-ca-client/test/**/*.js'",

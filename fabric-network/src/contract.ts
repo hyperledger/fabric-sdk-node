@@ -62,6 +62,9 @@ export interface Contract {
 	resetDiscoveryInterests(): Contract;
 }
 
+
+type DiscoveryResultsCallback = (hasResults: boolean) => void;
+
 /**
  * <p>Represents a smart contract (chaincode) instance in a network.
  * Applications should get a Contract instance using the
@@ -175,7 +178,6 @@ export interface Contract {
  * @memberof module:fabric-network
  * @return {DiscoveryInterest[]} - An array of DiscoveryInterest
  */
-
 /**
  * A callback function that will be invoked when a block event is received.
  * @callback ContractListener
@@ -184,8 +186,6 @@ export interface Contract {
  * @param {module:fabric-network.ContractEvent} event Contract event.
  * @returns {Promise<void>}
  */
-type DiscoveryResultsCallback = (hasResults: boolean) => void;
-
 export class ContractImpl {
 	readonly chaincodeId: string;
 	readonly namespace: string;
