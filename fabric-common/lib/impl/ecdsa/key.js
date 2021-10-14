@@ -162,18 +162,17 @@ class ECDSA_KEY extends Key {
 			sbjpubkey: this.getPublicKey()._key,
 			ext: [
 				{
-					basicConstraints: {
-						cA: false,
-						critical: true
-					}
+					extname: 'basicConstraints',
+					cA: false,
+					critical: true
 				},
 				{
-					keyUsage: {bin: '11'}
+					extname: 'keyUsage',
+					bin: '11'
 				},
 				{
-					extKeyUsage: {
-						array: [{name: 'clientAuth'}]
-					}
+					extname: 'extKeyUsage',
+					array: [{name: 'clientAuth'}]
 				}
 			],
 			cakey: this._key
