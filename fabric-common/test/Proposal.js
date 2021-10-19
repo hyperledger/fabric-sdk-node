@@ -273,33 +273,7 @@ describe('Proposal', () => {
 				should.equal(results.responses[0].response.status, 200);
 			}
 		});
-		it('should have queryResults when this is a query', async () => {
-			proposal.build(idx);
-			await proposal.sign(idx);
-			proposal.type = 'Query';
-			sinon.stub(endorser, 'sendProposal').resolves({response: {status: 400, payload: 'query payload'}});
-			const results = await proposal.send({targets: [endorser]});
-			should.exist(results.queryResults);
-			if (results.queryResults && results.queryResults[0]) {
-				should.equal(results.queryResults[0], 'query payload');
-			}
-		});
-		it('should have empty queryResults when this is a query and no good responses', async () => {
-			proposal.build(idx);
-			await proposal.sign(idx);
-			proposal.type = 'Query';
-			sinon.stub(endorser, 'sendProposal').resolves({response: {status: 200}});
-			const results = await proposal.send({targets: [endorser]});
-			results.queryResults.should.be.an('array').that.is.empty;
-		});
-		it('should have empty queryResults when this is a query and unknown responses', async () => {
-			proposal.build(idx);
-			await proposal.sign(idx);
-			proposal.type = 'Query';
-			sinon.stub(endorser, 'sendProposal').resolves({response: {payload: 'query payload'}});
-			const results = await proposal.send({targets: [endorser]});
-			results.queryResults.should.be.an('array').that.is.empty;
-		});
+
 		it('should have responses from handler when status included', async () => {
 			proposal.build(idx);
 			await proposal.sign(idx);

@@ -17,6 +17,7 @@ CHECK=$(find . -type f \
     -not -path './fabric-protos/bundle.js' \
     -not -path './fabric-protos/types/index.d.ts' \
     -not -path './fabric-network/lib/*' \
+    -not -path './.idea/*' \
     -not -name '.*' \
     -not -name '*.txt' \
     -not -name '*.rst' \

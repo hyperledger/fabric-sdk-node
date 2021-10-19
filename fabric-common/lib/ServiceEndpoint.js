@@ -10,7 +10,7 @@ const {checkParameter, getLogger} = require('./Utils.js');
 const logger = getLogger(TYPE);
 
 /**
- * The ServiceEndpoint class represents a the base class for all Service nodes (Endorser, Committer, Discoverer, and Eventer).
+ * The ServiceEndpoint class represents a the base class for all Service nodes
  *
  * @class
  */

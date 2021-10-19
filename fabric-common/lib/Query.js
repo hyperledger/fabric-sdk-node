@@ -34,6 +34,7 @@ class Query extends Proposal {
 		const method = `constructor[${chaincodeId}]`;
 		logger.debug('%s - start', method);
 		this.type = TYPE;
+		this._queryResults = [];
 	}
 
 	/**
@@ -42,6 +43,23 @@ class Query extends Proposal {
 	toString() {
 
 		return `Query: {chaincodeId: ${this.chaincodeId}, channel: ${this.channel.name}}`;
+	}
+
+	/**
+	 * Send a signed transaction query proposal
+	 * @override
+	 * @param {SendProposalRequest} request options
+	 * @returns {ProposalResponse} The results of sending
+	 */
+	async send(request = {}) {
+		const return_results = await super.send(request);
+		return_results.responses.forEach((response) => {
+			if (response.endorsement && response.response && response.response.payload) {
+				this._queryResults.push(response.response.payload);
+			}
+		});
+		return_results.queryResults = this._queryResults;
+		return return_results;
 	}
 }
 

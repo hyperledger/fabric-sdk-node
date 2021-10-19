@@ -176,9 +176,7 @@ class Commit extends Proposal {
 
 		if (handler) {
 			logger.debug('%s - calling the handler', method);
-			const result = await handler.commit(envelope, request);
-
-			return result;
+			return await handler.commit(envelope, request);
 		} else if (targets) {
 			logger.debug('%s - sending to the targets', method);
 			const committers = this.channel.getTargetCommitters(targets);

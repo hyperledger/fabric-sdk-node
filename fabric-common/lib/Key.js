@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
-
 /**
  * Key represents a cryptographic key. It can be symmetric or asymmetric. In the case of an
  * asymmetric key, the key can be public or private. In the case of a private asymmetric
@@ -18,29 +16,30 @@
 class Key {
 
 	/**
-	 * Returns the subject key identifier of this key
 	 *
+	 * Returns the subject key identifier of this key
+	 * @abstract
 	 * @returns {string} The subject key identifier of this key as a hexidecial encoded string
 	 */
 	getSKI() {}
 
 	/**
 	 * Returns the key's HSM handle in string format
-	 *
+	 * @abstract
 	 * @returns {string} The handle identifier of this key as a hexidecial encoded string
 	 */
 	getHandle() {}
 
 	/**
 	 * Returns true if this key is a symmetric key, false is this key is asymmetric
-	 *
+	 * @abstract
 	 * @returns {boolean} if this key is a symmetric key
 	 */
 	isSymmetric() {}
 
 	/**
 	 * Returns true if this key is an asymmetric private key, false otherwise.
-	 *
+	 * @abstract
 	 * @returns {boolean} if this key is an asymmetric private key
 	 */
 	isPrivate() {}
@@ -48,7 +47,7 @@ class Key {
 	/**
 	 * Returns the corresponding public key if this key is an asymmetric private key.
 	 * If this key is already public, returns this key itself.
-	 *
+	 * @abstract
 	 * @returns {module:api.Key} the corresponding public key if this key is an asymmetric private key.
 	 * If this key is already public, returns this key itself.
 	 */
@@ -56,7 +55,7 @@ class Key {
 
 	/**
 	 * Converts this key to its PEM representation, if this operation is allowed.
-	 *
+	 * @abstract
 	 * @returns {string} the PEM string representation of the key
 	 */
 	toBytes() {}
