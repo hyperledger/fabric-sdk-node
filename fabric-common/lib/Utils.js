@@ -554,24 +554,15 @@ module.exports.checkIntegerConfig = (opts, configName) => {
 };
 
 module.exports.convertBytetoString = (buffer_array, encoding) => {
-	let result;
-	let decode_as = 'utf8';
-	if (!encoding) {
-		decode_as = encoding;
-	}
-	if (Array.isArray(buffer_array)) {
-		const a_strings = [];
-		for (const index in buffer_array) {
-			const buffer = buffer_array[index];
-			const hex_string = buffer.toString(decode_as);
-			a_strings.push(hex_string);
-		}
-		result = a_strings.join('');
-	} else {
-		result = buffer_array.toString(decode_as);
+	const decode_as = encoding || 'utf8';
+
+	if (!Array.isArray(buffer_array)) {
+		return buffer_array.toString(decode_as);
 	}
 
-	return result;
+	return buffer_array
+		.map(buffer => buffer.toString(decode_as))
+		.join('');
 };
 
 module.exports.byteToNormalizedPEM = (buffer_array, encoding) => {
