@@ -270,7 +270,6 @@ export class Transaction {
 
 		await endorsement.sign(this.identityContext);
 
-		// ------- S E N D   P R O P O S A L
 		// This is where the request gets sent to the peers
 		const proposalSendRequest: SendProposalRequest = {};
 		if (isInteger(transactionOptions.endorseTimeout)) {

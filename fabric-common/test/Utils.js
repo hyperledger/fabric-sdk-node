@@ -87,17 +87,6 @@ describe('Utils', () => {
 		});
 	});
 
-	describe('#convertBytetoString', () => {
-		it('should ignore additional fields on array-like input', () => {
-			const arraylike = [];
-			arraylike.foo = () => 'bar';
-
-			const normalized = Utils.convertBytetoString(arraylike);
-
-			normalized.should.equal('');
-		});
-	});
-
 	describe('#newCryptoSuite', () => {
 
 		beforeEach(() => {

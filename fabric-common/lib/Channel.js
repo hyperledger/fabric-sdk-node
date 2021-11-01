@@ -27,7 +27,7 @@ const logger = getLogger(TYPE);
  *
  * @class
  */
-const Channel = class {
+class Channel {
 
 	/**
 	 * Returns a new instance of the Channel class.
@@ -83,6 +83,7 @@ const Channel = class {
 	/**
 	 * Gets an Endorsement instance for this channel.
 	 * @param {string} chaincodeId
+	 * @return Endorsement
 	 */
 	newEndorsement(chaincodeId = checkParameter('chaincodeId')) {
 		const method = `newEndorsement[${this.name}]`;
@@ -94,6 +95,7 @@ const Channel = class {
 	/**
 	 * Gets a Query instance for this channel.
 	 * @param {string} chaincodeId
+	 * @return Query
 	 */
 	newQuery(chaincodeId = checkParameter('chaincodeId')) {
 		const method = `newQuery[${this.name}]`;
@@ -133,11 +135,7 @@ const Channel = class {
 	 * @param {string} name - The name of this discovery service.
 	 */
 	newDiscoveryService(name = checkParameter('name')) {
-		const method = `newDiscoveryService[${this.name}]`;
-		logger.debug(`${method} - start`);
-		const discoveryService = new DiscoveryService(name, this);
-
-		return discoveryService;
+		return new DiscoveryService(name, this);
 	}
 
 	/**
@@ -539,7 +537,7 @@ const Channel = class {
 
 		return JSON.stringify(state).toString();
 	}
-};
+}
 
 function buildCurrentTimestamp() {
 	const method = `buildCurrentTimestamp[${this.name}]`;

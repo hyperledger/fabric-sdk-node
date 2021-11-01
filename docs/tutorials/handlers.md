@@ -24,18 +24,23 @@ control to the handler to complete the processing. The custom code may
 decide to retry, try another end point, or use discovery to help
 complete the task.
 
-### Service Handler
-fabric-common includes a handler called `DiscoveryHandler`.
-The included handler was designed to be used with the Hyperledger Fabric's
+### DiscoveryHandler
+fabric-common includes a Proposal manager called `DiscoveryHandler`.
+It was designed to be used with the Hyperledger Fabric's
 discovery service. The discovery service will provide the peers and orderers
 required for endorsing and committing transactions automatically.
 
-A custom service handler should extend the {@link ServiceHandler} and be passed
-to the `send` method of the service in the options object attribute `handler`.
 
-The following shows how to get a discovery handler from the discover service
+**Strategy in DiscoveryHandler**
+Commit 
+  - When we have multiple orderer, DiscoveryHandler will loop through the committers trying to complete one successfully. 
+  - If all failed, then try to loop through the committers and try     
+
+
+The following shows how to get a discovery handler from the discovery service
 and then use that handler on the endorsement call.
 
+// TODO WIP give a code snippet
 ```
 	// connect to the peer with discover service
 	await discoverer.connect(peer1_endpoint);

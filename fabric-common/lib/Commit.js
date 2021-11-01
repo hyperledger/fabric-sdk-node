@@ -23,11 +23,11 @@ const fabproto6 = require('fabric-protos');
 class Commit extends Proposal {
 
 	/**
-	 * Construct a Proposal object.
 	 *
-	 * @param {string} chaincodeId - The chaincode this proposal will execute
-	 * @param {Channel} channel - The channel of this proposal
-	 * @returns {Proposal} The Proposal instance.
+	 * @constructor
+	 * @param {string} chaincodeId
+	 * @param {Channel} channel
+	 * @param endorsement
 	 */
 	constructor(chaincodeId = checkParameter('chaincodeId'), channel = checkParameter('channel'), endorsement) {
 		super(chaincodeId, channel);
@@ -142,7 +142,7 @@ class Commit extends Proposal {
 
 	/**
 	 * @typedef {Object} CommitSendRequest
-	 * @property {Committers[]} [targets] - Optional. The Committers to send the endorsements.
+	 * @property {Committer[]} [targets] - Optional. The Committers to send the endorsements.
 	 * When not included an handler must be included.
 	 * @property {ServiceHandler} - [handler] - Optional. The handler to send the endorsements.
 	 * When not included, targets must be included.
@@ -163,8 +163,8 @@ class Commit extends Proposal {
 	 * This method will use the proposal responses returned from the {@link Proposal#endorse} along
 	 * with the proposal that was sent for endorsement.
 	 *
-	 * @param {CommitSendRequest} request - {@link CommitRequest}
-	 * @returns commit results
+	 * @param {CommitSendRequest} request - {@link CommitSendRequest}
+	 * @returns BroadcastResponse
 	 */
 	async send(request = {}) {
 		const method = `send[${this.chaincodeId}]`;
@@ -177,7 +177,8 @@ class Commit extends Proposal {
 		if (handler) {
 			logger.debug('%s - calling the handler', method);
 			return await handler.commit(envelope, request);
-		} else if (targets) {
+		} else {
+			checkParameter('targets');
 			logger.debug('%s - sending to the targets', method);
 			const committers = this.channel.getTargetCommitters(targets);
 			let result;
@@ -202,8 +203,6 @@ class Commit extends Proposal {
 			}
 
 			return result;
-		} else {
-			throw checkParameter('targets');
 		}
 	}
 

@@ -1,5 +1,6 @@
 /**
  * Copyright 2018 IBM All Rights Reserved.
+ * Copyright 2021 Oracle All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -37,7 +38,6 @@ const Proposal = require('./lib/Proposal');
 const Query = require('./lib/Query');
 const ServiceAction = require('./lib/ServiceAction');
 const ServiceEndpoint = require('./lib/ServiceEndpoint');
-const ServiceHandler = require('./lib/ServiceHandler');
 
 module.exports = {
 	Client,
@@ -72,5 +72,4 @@ module.exports = {
 	Query,
 	ServiceAction,
 	ServiceEndpoint,
-	ServiceHandler
 };

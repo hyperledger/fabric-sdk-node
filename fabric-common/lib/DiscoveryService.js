@@ -31,7 +31,6 @@ class DiscoveryService extends ServiceAction {
 	 * connection with the fabric network endpoint.
 	 *
 	 * @param {string} name - The name of this discovery peer
-	 * @param {Client} client - The client instance
 	 * @param {Channel} channel
 	 * @returns {DiscoveryService} The DiscoveryService instance.
 	 */
@@ -66,7 +65,7 @@ class DiscoveryService extends ServiceAction {
 			throw Error('targets parameter is not an array');
 		}
 
-		if (targets.length < 1) {
+		if (targets.length === 0) {
 			throw Error('No targets provided');
 		}
 
@@ -90,9 +89,6 @@ class DiscoveryService extends ServiceAction {
 	 * @returns {DiscoveryHandler} Discovery handler
 	 */
 	newHandler() {
-		const method = `newHandler[${this.name}]`;
-		logger.debug(`${method} - start`);
-
 		return new DiscoveryHandler(this);
 	}
 
@@ -126,16 +122,16 @@ class DiscoveryService extends ServiceAction {
 	 *  ]
 	 * @example <caption>"single chaincode with a collection"</caption>
 	 *  [
-	 *     { name: "mychaincode", collectionNames: ["mycollection"] }
+	 *     { name: "mychaincode", collectionNames: ['mycollection'] }
 	 *  ]
 	 * @example <caption>"single chaincode with a collection allowing no private data reads"</caption>
 	 *  [
-	 *     { name: "mychaincode", collectionNames: ["mycollection"], noPrivateReads: true }
+	 *     { name: "mychaincode", collectionNames: ['mycollection'], noPrivateReads: true }
 	 *  ]
 	 * @example <caption>"chaincode to chaincode with a collection"</caption>
 	 *  [
-	 *     { name: "mychaincode", collectionNames: ["mycollection"] },
-	 *     { name: "myotherchaincode", collectionNames: ["mycollection"] }}
+	 *     { name: "mychaincode", collectionNames: ['mycollection'] },
+	 *     { name: "myotherchaincode", collectionNames: ['mycollection'] }}
 	 *  ]
 	 * @example <caption>"chaincode to chaincode with collections"</caption>
 	 *  [
@@ -169,7 +165,7 @@ class DiscoveryService extends ServiceAction {
 		logger.debug(`${method} - start`);
 
 		// always get the config, we need the MSPs, do not need local
-		const {config = true, local = false, interest, endorsement} = request;
+		const {config = true, local = false, interest, endorsement: discoveryProposal} = request;
 		this._reset();
 
 		const authentication = fabproto6.discovery.AuthInfo.create({
@@ -179,8 +175,8 @@ class DiscoveryService extends ServiceAction {
 
 		let fullproposalInterest = null;
 
-		if (endorsement) {
-			fullproposalInterest = endorsement.buildProposalInterest();
+		if (discoveryProposal) {
+			fullproposalInterest = discoveryProposal.buildProposalInterest();
 			logger.debug('%s - endorsement built interest: %j', method, fullproposalInterest);
 		} else if (interest) {
 			fullproposalInterest = interest;
@@ -256,7 +252,7 @@ class DiscoveryService extends ServiceAction {
 			authentication: authentication,
 
 		});
-		this._payload  = fabproto6.discovery.Request.encode(
+		this._payload = fabproto6.discovery.Request.encode(
 			this._action.request
 		).finish();
 
@@ -298,7 +294,7 @@ class DiscoveryService extends ServiceAction {
 		}
 		this.refreshAge = refreshAge;
 		this.requestTimeout = requestTimeout;
-		if (targets && Array.isArray(targets) && targets.length > 0)  {
+		if (targets && Array.isArray(targets) && targets.length > 0) {
 			this.targets = targets;
 		} else if (this.targets) {
 			logger.debug('%s - using preassigned targets', method);
@@ -402,17 +398,11 @@ class DiscoveryService extends ServiceAction {
 	}
 
 	/**
-	 * Indicates if this discovery service has retreived results
+	 * Indicates if this discovery service has retrieved results
 	 */
 	hasDiscoveryResults() {
-		const method = `hasDiscoveryResults[${this.name}]`;
-		logger.debug(`${method} - start`);
 
-		if (this.discoveryResults) {
-			return true;
-		}
-
-		return false;
+		return !!this.discoveryResults;
 	}
 
 	/* internal method
@@ -433,20 +423,18 @@ class DiscoveryService extends ServiceAction {
 				}
 				// support both names
 				if (chaincode.collection_names) {
-					_getCollectionNames(chaincode.collection_names, chaincodeCall);
+					chaincodeCall.collection_names = chaincode.collection_names;
 				} else if (chaincode.collectionNames) {
-					_getCollectionNames(chaincode.collectionNames, chaincodeCall);
+					chaincodeCall.collection_names = chaincode.collectionNames;
 				}
 				chaincodeCalls.push(chaincodeCall);
 			} else {
 				throw Error('Chaincode name must be a string');
 			}
 		}
-		const chaincodeInterest = fabproto6.discovery.ChaincodeInterest.create({
+		return fabproto6.discovery.ChaincodeInterest.create({
 			chaincodes: chaincodeCalls
 		});
-
-		return chaincodeInterest;
 	}
 
 	// -- process the ChaincodeQueryResult - fabproto6.discovery.QueryResult.ChaincodeQueryResult
@@ -794,24 +782,6 @@ class DiscoveryService extends ServiceAction {
 	toString() {
 
 		return `DiscoveryService: {name: ${this.name}, channel: ${this.channel.name}}`;
-	}
-}
-
-function _getCollectionNames(names, chaincodeCall) {
-	if (Array.isArray(names)) {
-		const collection_names = [];
-		names.map(name => {
-			if (typeof name === 'string') {
-				collection_names.push(name);
-			} else {
-				throw Error('The collection name must be a string');
-			}
-		});
-		// this collection_names must be in snake case as it will
-		// be used by the gRPC create message
-		chaincodeCall.collection_names = collection_names;
-	} else {
-		throw Error('Collection names must be an array of strings');
 	}
 }
 

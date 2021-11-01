@@ -12,6 +12,14 @@ const logger = getLogger(TYPE);
 const Proposal = require('./Proposal.js');
 
 /**
+ * @typedef {ProposalResponse} QueryResponse
+ * @property {Buffer[]} queryResults - the results as extracted from the
+ *  endorsement {@link EndorsementResponse} from an {@link Query} endorsement
+ *  that will not be committed.
+ */
+
+
+/**
  * @classdesc
  * This class represents a Query definition.
  * This class allows an application to contain all proposal attributes and
@@ -22,11 +30,9 @@ const Proposal = require('./Proposal.js');
 class Query extends Proposal {
 
 	/**
-	 * Construct a Proposal object.
-	 *
-	 * @param {string} chaincodeId - The chaincode this proposal will execute
-	 * @param {Channel} channel - The channel of this proposal
-	 * @returns {Proposal} The Proposal instance.
+	 * @constructor
+	 * @param {string} chaincodeId
+	 * @param {Channel} channel
 	 */
 	constructor(chaincodeId = checkParameter('chaincodeId'), channel = checkParameter('channel')) {
 		super(chaincodeId, channel);
@@ -49,7 +55,7 @@ class Query extends Proposal {
 	 * Send a signed transaction query proposal
 	 * @override
 	 * @param {SendProposalRequest} request options
-	 * @returns {ProposalResponse} The results of sending
+	 * @returns {QueryResponse}
 	 */
 	async send(request = {}) {
 		const return_results = await super.send(request);

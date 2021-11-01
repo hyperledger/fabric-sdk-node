@@ -623,33 +623,33 @@ describe('DiscoveryHandler', () => {
 
 	describe('#_buildRequiredOrgPlan', () => {
 		it('should run ok with all', () => {
-			const results = discoveryHandler._buildRequiredOrgPlan(config_results.peers_by_org, ['Org1MSP', 'Org2MSP', 'Org3MSP']);
+			const results = DiscoveryHandler._buildRequiredOrgPlan(config_results.peers_by_org, ['Org1MSP', 'Org2MSP', 'Org3MSP']);
 			results.should.deep.equal(organization_plan);
 		});
 		it('should run ok with one', () => {
-			const results = discoveryHandler._buildRequiredOrgPlan(config_results.peers_by_org, ['Org3MSP']);
+			const results = DiscoveryHandler._buildRequiredOrgPlan(config_results.peers_by_org, ['Org3MSP']);
 			results.should.deep.equal(organization_plan_one);
 		});
 		it('should throw for one missing with no peers', () => {
 			(() => {
-				discoveryHandler._buildRequiredOrgPlan(config_results.peers_by_org, ['Org4MSP']);
+				DiscoveryHandler._buildRequiredOrgPlan(config_results.peers_by_org, ['Org4MSP']);
 			}).should.throw('The discovery service did not find any peers active for Org4MSP organizations');
 		});
 		it('should throw for two missing when not included in list', () => {
 			(() => {
-				discoveryHandler._buildRequiredOrgPlan(config_results.peers_by_org, ['Org5MSP', 'Org6MSP']);
+				DiscoveryHandler._buildRequiredOrgPlan(config_results.peers_by_org, ['Org5MSP', 'Org6MSP']);
 			}).should.throw('The discovery service did not find any peers active for Org5MSP,Org6MSP organizations');
 		});
 	});
 
 	describe('#_buildAllOrgPlan', () => {
 		it('should run ok with all', () => {
-			const results = discoveryHandler._buildAllOrgPlan(config_results.peers_by_org);
+			const results = DiscoveryHandler._buildAllOrgPlan(config_results.peers_by_org);
 			results.should.deep.equal(organization_plan_three);
 		});
 		it('should throw for no peers', () => {
 			(() => {
-				discoveryHandler._buildAllOrgPlan({Org4MSP: {peers: []}});
+				DiscoveryHandler._buildAllOrgPlan({Org4MSP: {peers: []}});
 			}).should.throw('The discovery service did not find any peers active');
 		});
 	});
@@ -828,26 +828,26 @@ describe('DiscoveryHandler', () => {
 	describe('#_create_map', () => {
 		it('should run ok with undefined', async () => {
 			// TEST CALL
-			const results = discoveryHandler._create_map();
+			const results = DiscoveryHandler._create_map();
 			results.should.be.instanceof(Map);
 		});
 		it('should run ok with null', async () => {
 			// TEST CALL
-			const results = discoveryHandler._create_map(
+			const results = DiscoveryHandler._create_map(
 				null
 			);
 			results.should.be.instanceof(Map);
 		});
 		it('should run ok with string', async () => {
 			// TEST CALL
-			const results = discoveryHandler._create_map(
+			const results = DiscoveryHandler._create_map(
 				'something'
 			);
 			results.should.be.instanceof(Map);
 		});
 		it('should run ok with an array', async () => {
 			// TEST CALL
-			const results = discoveryHandler._create_map(
+			const results = DiscoveryHandler._create_map(
 				[1, 2, 3]
 			);
 			results.should.be.instanceof(Map);
@@ -857,9 +857,9 @@ describe('DiscoveryHandler', () => {
 	describe('#_removePeers', () => {
 		it('should ignore endorsers and orgs', async () => {
 			// TEST CALL
-			const results = discoveryHandler._removePeers(
-				discoveryHandler._create_map([org1[1], org2[1]]), // ignored_endorsers
-				discoveryHandler._create_map([org3[0]]), // ignored_orgs
+			const results = DiscoveryHandler._removePeers(
+				DiscoveryHandler._create_map([org1[1], org2[1]]), // ignored_endorsers
+				DiscoveryHandler._create_map([org3[0]]), // ignored_orgs
 				new Map(), // required_endorsers
 				new Map(), // required_orgs
 				endorsement_plan.groups.G3.peers // peers
@@ -870,11 +870,11 @@ describe('DiscoveryHandler', () => {
 		});
 		it('should require endorsers and orgs', async () => {
 			// TEST CALL
-			const results = discoveryHandler._removePeers(
+			const results = DiscoveryHandler._removePeers(
 				new Map(), // ignored_endorsers
 				new Map(), // ignored_orgs
-				discoveryHandler._create_map([org3[2]]), // required_endorsers
-				discoveryHandler._create_map([org2[0]]), // required_orgs
+				DiscoveryHandler._create_map([org3[2]]), // required_endorsers
+				DiscoveryHandler._create_map([org2[0]]), // required_orgs
 				endorsement_plan.groups.G3.peers // peers
 			);
 			results[0].name.should.be.equal(org2[1]);
@@ -895,7 +895,7 @@ describe('DiscoveryHandler', () => {
 				{ledgerHeight: ledgerHeight}
 			];
 			// TEST CALL
-			const results = discoveryHandler._findHighest(
+			const results = DiscoveryHandler._findHighest(
 				peers // peers
 			);
 			results.low.should.be.equal(200);
@@ -909,12 +909,12 @@ describe('DiscoveryHandler', () => {
 				{ledgerHeight: highest},
 				{ledgerHeight: ledgerHeight}
 			];
-			(() => {
 				// TEST CALL
-				discoveryHandler._findHighest(
-					peers // peers
-				);
-			}).should.throw('Unable to find highest block value :: TypeError: peer.ledgerHeight.greaterThan is not a function');
+			DiscoveryHandler._findHighest(
+				peers
+			);
+
+			// should not throw 'Unable to find highest block value', here we skip on NaN number
 		});
 	});
 
@@ -929,7 +929,7 @@ describe('DiscoveryHandler', () => {
 				{name: 'peer6', ledgerHeight: ledgerHeight}
 			];
 			// TEST CALL
-			let results = discoveryHandler._sortPeerList(
+			const results = DiscoveryHandler._sortPeerList(
 				'ledgerHeight',
 				peers // peers
 			);
@@ -937,13 +937,11 @@ describe('DiscoveryHandler', () => {
 			results[0].name.should.be.equal('peer5');
 			results[4].name.should.be.equal('peer3');
 
-			discoveryHandler._getRandom = sinon.stub().returns('random');
 			// TEST CALL
-			results = discoveryHandler._sortPeerList(
+			DiscoveryHandler._sortPeerList(
 				'random',
 				peers // peers
 			);
-			results.should.contain('random');
 		});
 	});
 
@@ -962,10 +960,10 @@ describe('DiscoveryHandler', () => {
 
 		it('should run all', async () => {
 			const sorted_list = [peer1, peer2, peer3, peer4, peer5, peer6, peer7, peer8, peer9, peerA];
-			const preferred_endorsers = discoveryHandler._create_map([
+			const preferred_endorsers = DiscoveryHandler._create_map([
 				'peer10'
 			]);
-			const preferred_orgs = discoveryHandler._create_map([
+			const preferred_orgs = DiscoveryHandler._create_map([
 				'msp2'
 			]);
 			const preferred_height_gap = Long.fromValue(5);
@@ -974,7 +972,7 @@ describe('DiscoveryHandler', () => {
 			discoveryHandler._getRandom = sinon.stub().returns(priority_list);
 
 			// TEST CALL
-			const results = discoveryHandler._splitList(
+			const results = DiscoveryHandler._splitList(
 				preferred_endorsers,
 				preferred_orgs,
 				preferred_height_gap,
@@ -989,11 +987,11 @@ describe('DiscoveryHandler', () => {
 		});
 		it('should run with no highest', async () => {
 			const sorted_list = [peer1, peer2, peer3, peer4, peer5, peer6, peer7, peer8, peer9, peerA, peerB];
-			const preferred_endorsers = discoveryHandler._create_map([
+			const preferred_endorsers = DiscoveryHandler._create_map([
 				'peer10',
 				'peer3'
 			]);
-			const preferred_orgs = discoveryHandler._create_map([
+			const preferred_orgs = DiscoveryHandler._create_map([
 				'msp2'
 			]);
 			const preferred_height_gap = Long.fromValue(0);
@@ -1002,7 +1000,7 @@ describe('DiscoveryHandler', () => {
 			discoveryHandler._getRandom = sinon.stub().returns(priority_list);
 
 			// TEST CALL
-			const results = discoveryHandler._splitList(
+			const results = DiscoveryHandler._splitList(
 				preferred_endorsers,
 				preferred_orgs,
 				preferred_height_gap,
@@ -1126,12 +1124,12 @@ describe('DiscoveryHandler', () => {
 	describe('#_getProposalResponseResults', () => {
 		it('should require a proposalResponse', () => {
 			(() => {
-				discoveryHandler._getProposalResponseResults();
+				DiscoveryHandler._getProposalResponseResults();
 			}).should.throw('Missing proposalResponse parameter');
 		});
 		it('should require a proposalResponse.payload', () => {
 			(() => {
-				discoveryHandler._getProposalResponseResults({});
+				DiscoveryHandler._getProposalResponseResults({});
 			}).should.throw('Parameter must be a ProposalResponse Object');
 		});
 	});

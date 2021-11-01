@@ -1,5 +1,6 @@
 /*
  Copyright 2019 IBM All Rights Reserved.
+ Copyright 2021 Oracle All Rights Reserved.
 
  SPDX-License-Identifier: Apache-2.0
 
@@ -10,7 +11,6 @@ const TYPE = 'DiscoveryHandler';
 const Long = require('long');
 const settle = require('promise-settle');
 
-const ServiceHandler = require('./ServiceHandler.js');
 const fabproto6 = require('fabric-protos');
 const {randomize, checkParameter, getLogger, getConfigSetting, convertToLong} = require('./Utils.js');
 
@@ -20,21 +20,18 @@ const BLOCK_HEIGHT = 'ledgerHeight';
 const RANDOM = 'random';
 
 /**
- * This is an implementation for a handler.
+ * This is an collection for a handler implementation.
  *
  * @class
- * @extends ServiceHandler
  */
-class DiscoveryHandler extends ServiceHandler {
+class DiscoveryHandler {
 
 	/**
-	 * constructor
 	 *
+	 * @constructor
 	 * @param {DiscoveryService} discoveryService - The discovery service for this handler.
 	 */
 	constructor(discoveryService) {
-		logger.debug('DiscoveryHandler.constructor - start');
-		super();
 		this.discoveryService = discoveryService;
 		this.type = TYPE;
 	}
@@ -42,7 +39,7 @@ class DiscoveryHandler extends ServiceHandler {
 	/**
 	 * This will send transactions to all peers found by discovery.
 	 * @param {*} signedProposal
-	 * @param {Object} request - Include a 'mspid' when just peers from
+	 * @param {{requestTimeout:number, mspid:string}} request - Include a 'mspid' when just peers from
 	 *  an organization are required
 	 */
 	async query(signedProposal = checkParameter('signedProposal'), request = {}) {
@@ -50,7 +47,6 @@ class DiscoveryHandler extends ServiceHandler {
 		logger.debug('%s - start', method);
 
 		const {requestTimeout, mspid} = request;
-		let results;
 
 		let timeout = getConfigSetting('requestTimeout');
 		if (requestTimeout) {
@@ -61,24 +57,23 @@ class DiscoveryHandler extends ServiceHandler {
 		await this.discoveryService.getDiscoveryResults(true);
 		const responses = [];
 		const endorsers = this.discoveryService.channel.getEndorsers(mspid);
-		if (endorsers && endorsers.length > 0) {
-			logger.debug('%s - found %s endorsers assigned to channel', method, endorsers.length);
-			const promises = endorsers.map(async (endorser) => {
-				return endorser.sendProposal(signedProposal, timeout);
-			});
-			results = await settle(promises);
-			results.forEach((result) => {
-				if (result.isFulfilled()) {
-					logger.debug(`query - Promise is fulfilled: ${result.value()}`);
-					responses.push(result.value());
-				} else {
-					logger.debug(`query - Promise is rejected: ${result.reason()}`);
-					responses.push(result.reason());
-				}
-			});
-		} else {
+		if (endorsers.length === 0) {
 			throw new Error('No endorsers assigned to the channel');
 		}
+		logger.debug('%s - found %s endorsers assigned to channel', method, endorsers.length);
+		const promises = endorsers.map(async (endorser) => {
+			return endorser.sendProposal(signedProposal, timeout);
+		});
+		const results = await settle(promises);
+		results.forEach((result) => {
+			if (result.isFulfilled()) {
+				logger.debug(`query - Promise is fulfilled: ${result.value()}`);
+				responses.push(result.value());
+			} else {
+				logger.debug(`query - Promise is rejected: ${result.reason()}`);
+				responses.push(result.reason());
+			}
+		});
 
 		return responses;
 	}
@@ -86,12 +81,10 @@ class DiscoveryHandler extends ServiceHandler {
 	/**
 	 * This will submit transactions to be committed to one committer at a
 	 * time from a list currently assigned to the channel.
-	 * @param {*} signedProposal
+	 * @param signedEnvelope
 	 * @param {Object} request
 	 */
 	async commit(signedEnvelope = checkParameter('signedEnvelope'), request = {}) {
-		const method = 'commit';
-		logger.debug('%s - start', method);
 
 		const {requestTimeout, mspid} = request;
 
@@ -104,39 +97,34 @@ class DiscoveryHandler extends ServiceHandler {
 		await this.discoveryService.getDiscoveryResults(true);
 
 		const committers = this.discoveryService.channel.getCommitters(mspid);
-		if (committers && committers.length > 0) {
-			logger.debug('%s - found %s committers assigned to channel', method, committers.length);
-			randomize(committers);
-
-			let results;
-			// first pass only try a committer that is in good standing
-			results = await this._commitSend(committers, signedEnvelope, timeout, false);
-			if (results.error) {
-				// since we did not get a good result, try another pass, this time try to
-				// have the orderers reconnect
-				results = await this._commitSend(committers, signedEnvelope, timeout, true);
-			}
-
-			if (results.commit) {
-				logger.debug('%s - return commit status %s ', method, results.commit);
-				return results.commit;
-			}
-
-			logger.debug('%s - return error %s ', method, results.error);
-			throw results.error;
-		} else {
+		if (committers.length === 0) {
 			throw new Error('No committers assigned to the channel');
 		}
+		randomize(committers);
+
+		let results;
+		// first pass only try a committer that is in good standing
+		results = await DiscoveryHandler._commitSend(committers, signedEnvelope, timeout, false);
+		if (results.error) {
+			// since we did not get a good result, try another pass, this time try to
+			// have the orderers reconnect
+			results = await DiscoveryHandler._commitSend(committers, signedEnvelope, timeout, true);
+		}
+
+		if (results.commit) {
+			return results.commit;
+		}
+
+		throw results.error;
 	}
 
-	async _commitSend(committers, signedEnvelope, timeout, reconnect) {
+	static async _commitSend(committers, signedEnvelope, timeout, reconnect) {
 		const method = 'commit';
 		logger.debug('%s - start', method);
 
 		let return_error;
 		// loop through the committers trying to complete one successfully
 		for (const committer of committers) {
-			logger.debug('%s - sending to committer %s', method, committer.name);
 			try {
 				const isConnected = await committer.checkConnection(reconnect);
 				if (isConnected) {
@@ -144,7 +132,7 @@ class DiscoveryHandler extends ServiceHandler {
 					if (commit) {
 						if (commit.status === 'SUCCESS') {
 							logger.debug('%s - Successfully sent transaction to the committer %s', method, committer.name);
-							return {error: undefined,  commit};
+							return {error: undefined, commit};
 						} else {
 							logger.debug('%s - Failed, status was not "success" from the send transaction to the committer. status:%s', method, commit.status);
 							return_error = new Error('Failed to send transaction successfully to the committer. status:' + commit.status);
@@ -161,12 +149,10 @@ class DiscoveryHandler extends ServiceHandler {
 					return_error = new Error(error_message);
 				}
 			} catch (error) {
-				logger.debug('%s - Caught: %s', method, error.toString());
 				return_error = error;
 			}
 		}
 
-		logger.debug('%s - return error %s ', method, return_error.toString());
 		return {error: return_error};
 	}
 
@@ -190,7 +176,7 @@ class DiscoveryHandler extends ServiceHandler {
 		if (results && results.peers_by_org && request.requiredOrgs) {
 			// special case when user knows which organizations to send the endorsement
 			// let's build our own endorsement plan so that we can use the sorting and sending code
-			const endorsement_plan = this._buildRequiredOrgPlan(results.peers_by_org, request.requiredOrgs);
+			const endorsement_plan = DiscoveryHandler._buildRequiredOrgPlan(results.peers_by_org, request.requiredOrgs);
 
 			// remove conflicting settings
 			const orgs_request = {
@@ -198,38 +184,37 @@ class DiscoveryHandler extends ServiceHandler {
 				preferredHeightGap: request.preferredHeightGap
 			};
 
-			return this._endorse(endorsement_plan, orgs_request, signedProposal, timeout);
+			return DiscoveryHandler._endorse(endorsement_plan, orgs_request, signedProposal, timeout);
 		} else if (results && results.endorsement_plan) {
 			// normal processing of the discovery results
 			const working_discovery = JSON.parse(JSON.stringify(results.endorsement_plan));
 
-			return this._endorse(working_discovery, request, signedProposal, timeout);
+			return DiscoveryHandler._endorse(working_discovery, request, signedProposal, timeout);
 		} else if (results && results.peers_by_org) {
 			// special case when the chaincode is system chaincode without an endorsement policy
-			const endorsement_plan = this._buildAllOrgPlan(results.peers_by_org);
+			const endorsement_plan = DiscoveryHandler._buildAllOrgPlan(results.peers_by_org);
 
-			return this._endorse(endorsement_plan, request, signedProposal, timeout);
+			return DiscoveryHandler._endorse(endorsement_plan, request, signedProposal, timeout);
 		} else {
 			throw Error('No endorsement plan available');
 		}
 	}
 
-	async _endorse(endorsement_plan = checkParameter('endorsement_plan'), request = {}, proposal = checkParameter('proposal'), timeout) {
+	static async _endorse(endorsement_plan = checkParameter('endorsement_plan'), request = {}, proposal = checkParameter('proposal'), timeout) {
 		const method = '_endorse';
 		logger.debug('%s - starting', method);
 
 		endorsement_plan.endorsements = {};
-		const results = {};
-		results.endorsements = null; // will be from just one layout
-		results.failed_endorsements = []; // from all failed layouts
-		results.success = false;
+		let success = false;
+		let endorsements; // will be from just one layout
+		let failed_endorsements = []; // from all failed layouts
 
-		const required = this._create_map(request.required, 'endpoint');
-		const preferred = this._create_map(request.preferred, 'endpoint');
-		const ignored = this._create_map(request.ignored, 'endpoint');
-		const required_orgs = this._create_map(request.requiredOrgs, 'mspid');
-		const preferred_orgs = this._create_map(request.preferredOrgs, 'mspid');
-		const ignored_orgs = this._create_map(request.ignoredOrgs, 'mspid');
+		const required = DiscoveryHandler._create_map(request.required, 'endpoint');
+		const preferred = DiscoveryHandler._create_map(request.preferred, 'endpoint');
+		const ignored = DiscoveryHandler._create_map(request.ignored, 'endpoint');
+		const required_orgs = DiscoveryHandler._create_map(request.requiredOrgs, 'mspid');
+		const preferred_orgs = DiscoveryHandler._create_map(request.preferredOrgs, 'mspid');
+		const ignored_orgs = DiscoveryHandler._create_map(request.ignoredOrgs, 'mspid');
 
 		let preferred_height_gap = Long.fromInt(1); // default of one block
 		try {
@@ -252,7 +237,7 @@ class DiscoveryHandler extends ServiceHandler {
 		}
 
 		// fix the peer group lists to reflect the options the user has provided
-		this._modify_groups(
+		DiscoveryHandler._modify_groups(
 			required,
 			preferred,
 			ignored,
@@ -265,51 +250,53 @@ class DiscoveryHandler extends ServiceHandler {
 		);
 
 		// always randomize the layouts
-		endorsement_plan.layouts = this._getRandom(endorsement_plan.layouts);
+		randomize(endorsement_plan.layouts);
 
 		let matchError = false;
 
 		// loop through the layouts trying to complete one successfully
 		for (const layout_index in endorsement_plan.layouts) {
 			logger.debug('%s - starting layout plan %s', method, layout_index);
-			const layout_results = await this._endorse_layout(layout_index, endorsement_plan, proposal, timeout);
+			const layout_results = await DiscoveryHandler._endorse_layout(layout_index, endorsement_plan, proposal, timeout);
 			// if this layout is successful then we are done
 			if (layout_results.success) {
 				// make sure all responses have the same endorsement read/write set
-				if (this.compareProposalResponseResults(layout_results.endorsements)) {
+				if (DiscoveryHandler.compareProposalResponseResults(layout_results.endorsements)) {
 					logger.debug('%s - layout plan %s completed successfully', method, layout_index);
-					results.endorsements = layout_results.endorsements;
-					results.success = true;
+					endorsements = layout_results.endorsements;
+					success = true;
 					break;
 				} else {
 					matchError = true;
 				}
 			}
 			logger.debug('%s - layout plan %s did not complete successfully', method, layout_index);
-			results.failed_endorsements = results.failed_endorsements.concat(layout_results.endorsements);
+			failed_endorsements = failed_endorsements.concat(layout_results.endorsements);
 		}
 
-		if (!results.success) {
+		if (!success) {
 			let error;
 			if (matchError) {
-				error =  new Error('Peer endorsements do not match');
+				error = new Error('Peer endorsements do not match');
 			} else {
 				error = new Error('Endorsement has failed');
 			}
-			error.endorsements = results.failed_endorsements;
+			error.endorsements = failed_endorsements;
 			return [error];
 		}
 
-		return results.endorsements;
+		return endorsements;
 	}
 
-	async _endorse_layout(layout_index, endorsement_plan, proposal, timeout) {
+	static async _endorse_layout(layout_index, endorsement_plan, proposal, timeout) {
 		const method = '_endorse_layout';
 		logger.debug('%s - start', method);
 
-		const results = {};
-		results.endorsements = [];
-		results.success = true;
+		const results = {
+			endorsements: [],
+			success: true
+		};
+
 		const layout = endorsement_plan.layouts[layout_index];
 		let endorser_process_index = 0;
 		const endorsers = [];
@@ -332,7 +319,8 @@ class DiscoveryHandler extends ServiceHandler {
 		}
 
 		if (results.success) {
-			results.endorsements = await this._execute_endorsements(endorsers);
+
+			results.endorsements = await Promise.all(endorsers);
 			for (const endorsement of results.endorsements) {
 				if (endorsement instanceof Error) {
 					results.success = false;
@@ -345,25 +333,7 @@ class DiscoveryHandler extends ServiceHandler {
 		return results;
 	}
 
-	async _execute_endorsements(endorser_processes) {
-		const method = '_execute_endorsements';
-		logger.debug('%s - start', method);
-
-		const results = await Promise.all(endorser_processes);
-		const responses = [];
-		for (const result of results) {
-			if (result instanceof Error) {
-				logger.debug('%s - endorsement failed: %s', method, result);
-			} else {
-				logger.debug('%s - endorsement is complete', method);
-			}
-			responses.push(result);
-		}
-
-		return responses;
-	}
-
-	_buildRequiredOrgPlan(peers_by_org, required_orgs) {
+	static _buildRequiredOrgPlan(peers_by_org, required_orgs) {
 		const method = '_buildRequiredOrgPlan';
 		logger.debug('%s - starting', method);
 		const endorsement_plan = {plan_id: 'required organizations'};
@@ -391,7 +361,7 @@ class DiscoveryHandler extends ServiceHandler {
 		return endorsement_plan;
 	}
 
-	_buildAllOrgPlan(peers_by_org) {
+	static _buildAllOrgPlan(peers_by_org) {
 		const method = '_buildAllOrgPlan';
 		logger.debug('%s - starting', method);
 		const endorsement_plan = {plan_id: 'all organizations'};
@@ -422,7 +392,7 @@ class DiscoveryHandler extends ServiceHandler {
 	 * utility method to build a promise that will return one of the required
 	 * endorsements or an error object
 	 */
-	_build_endorse_group_member(endorsement_plan, group, proposal, timeout, endorser_process_index, group_name) {
+	async _build_endorse_group_member(endorsement_plan, group, proposal, timeout, endorser_process_index, group_name) {
 		const method = '_build_endorse_group_member >> ' + group_name + ':' + endorser_process_index;
 		logger.debug('%s - start', method);
 
@@ -493,18 +463,8 @@ class DiscoveryHandler extends ServiceHandler {
 	 *      -- pull peers from non priority bucket
 	 *  - return modified group
 	 */
-	_modify_groups(required, preferred, ignored, required_orgs, preferred_orgs, ignored_orgs, preferred_height_gap, sort, endorsement_plan) {
+	static _modify_groups(required, preferred, ignored, required_orgs, preferred_orgs, ignored_orgs, preferred_height_gap, sort, endorsement_plan) {
 		const method = '_modify_groups';
-		logger.debug('%s - start', method);
-		logger.debug('%s - required:%j', method, required);
-		logger.debug('%s - preferred:%j', method, preferred);
-		logger.debug('%s - ignored:%j', method, ignored);
-		logger.debug('%s - required_orgs:%j', method, required_orgs);
-		logger.debug('%s - preferred_orgs:%j', method, preferred_orgs);
-		logger.debug('%s - ignored_orgs:%j', method, ignored_orgs);
-		logger.debug('%s - preferred_height_gap:%s', method, preferred_height_gap);
-		logger.debug('%s - sort: %s', method, sort);
-		logger.debug('%s - endorsement_plan:%j', method, endorsement_plan);
 
 		for (const group_name in endorsement_plan.groups) {
 			const group = endorsement_plan.groups[group_name];
@@ -513,28 +473,26 @@ class DiscoveryHandler extends ServiceHandler {
 			}
 
 			// remove ignored and non-required
-			const clean_list = this._removePeers(ignored, ignored_orgs, required, required_orgs, group.peers);
+			const clean_list = DiscoveryHandler._removePeers(ignored, ignored_orgs, required, required_orgs, group.peers);
 
 			// get the highest ledger height if needed
 			let highest = null;
 			if (sort === BLOCK_HEIGHT) {
-				highest = this._findHighest(clean_list);
+				highest = DiscoveryHandler._findHighest(clean_list);
 			}
 
 			// sort based on ledger height or randomly
-			const sorted_list = this._sortPeerList(sort, clean_list);
+			const sorted_list = DiscoveryHandler._sortPeerList(sort, clean_list);
 			// pop the priority peers off the sorted list
-			const split_lists = this._splitList(preferred, preferred_orgs, preferred_height_gap, highest, sorted_list);
-			// put the priorities on top
-			const reordered_list = split_lists.priority.concat(split_lists.non_priority);
-			// set the rebuilt peer list into the group
-			group.peers = reordered_list;
+			const split_lists = DiscoveryHandler._splitList(preferred, preferred_orgs, preferred_height_gap, highest, sorted_list);
+			// put the priorities on top and set the rebuilt peer list into the group
+			group.peers = split_lists.priority.concat(split_lists.non_priority);
 		}
 
 		logger.debug('%s - updated endorsement_plan:%j', method, endorsement_plan);
 	}
 
-	_create_map(array) {
+	static _create_map(array) {
 		const map = new Map();
 		if (array && Array.isArray(array)) {
 			array.forEach((item) => {
@@ -548,7 +506,7 @@ class DiscoveryHandler extends ServiceHandler {
 	/*
 	 * utility method to remove peers that are ignored or not on the required list
 	 */
-	_removePeers(ignored_peers, ignored_orgs, required_peers, required_orgs, peers) {
+	static _removePeers(ignored_peers, ignored_orgs, required_peers, required_orgs, peers) {
 		const method = '_removePeers';
 		logger.debug('%s - start', method);
 
@@ -583,27 +541,25 @@ class DiscoveryHandler extends ServiceHandler {
 		return keep_list;
 	}
 
-	_findHighest(peers) {
-		let highest = Long.fromValue(0);
+	static _findHighest(peers) {
+		let highest = -1;
 		for (const peer of peers) {
-			try {
-				if (peer.ledgerHeight.greaterThan(highest)) {
-					highest = peer.ledgerHeight;
-				}
-			} catch (error) {
-				logger.error('problem finding highest block with %s', error);
-				throw Error(`Unable to find highest block value :: ${error.toString()}`);
+			if (Number.parseInt(peer.ledgerHeight) > highest) {
+				highest = peer.ledgerHeight;
 			}
-		}
 
+		}
+		if (highest < 0) {
+			throw Error('Unable to find highest block value, all ledgerHeight are invalid format');
+		}
 		return highest;
 	}
 
-	_sortPeerList(sort, peers) {
+	static _sortPeerList(sort, peers) {
 		const method = '_sortList';
 		logger.debug('%s - start - %s', method, sort);
 
-		let sorted = null;
+		let sorted;
 
 		if (sort === BLOCK_HEIGHT) {
 			sorted = peers.sort((a, b) => {
@@ -624,14 +580,16 @@ class DiscoveryHandler extends ServiceHandler {
 				}
 			});
 		} else { // must be random
-			sorted = this._getRandom(peers);
+			const _shallowCopy = [...peers];
+			randomize(_shallowCopy);
+			sorted = _shallowCopy;
 		}
 
 		return sorted;
 	}
 
 
-	_splitList(preferred_peers, preferred_orgs, preferred_height_gap, highest, sorted_list) {
+	static _splitList(preferred_peers, preferred_orgs, preferred_height_gap, highest, sorted_list) {
 		const method = '_splitList';
 		logger.debug('%s - start', method);
 
@@ -681,28 +639,10 @@ class DiscoveryHandler extends ServiceHandler {
 			}
 		}
 
-		// priority peers are all the same, try not to use the same
-		// one everytime
-		const randomized_priority  = this._getRandom(priority);
+		// priority peers are all the same, try not to use the same one everytime
+		randomize(priority);
 
-		return {priority: randomized_priority, non_priority};
-	}
-
-	/*
-	 * utility function to return a random list
-	 */
-	_getRandom(start_list) {
-		let len = start_list.length;
-		const result_list = new Array(len);
-		const taken = new Array(len);
-		let n = len;
-		while (n--) {
-			const x = Math.floor(Math.random() * len);
-			result_list[n] = start_list[x in taken ? taken[x] : x];
-			taken[x] = --len in taken ? taken[len] : len;
-		}
-
-		return result_list;
+		return {priority, non_priority};
 	}
 
 	/*
@@ -713,7 +653,7 @@ class DiscoveryHandler extends ServiceHandler {
 		if (address) {
 			const host_port = address.split(':');
 			const url = this.discoveryService._buildUrl(host_port[0], host_port[1]);
-			const peers = 	this.discoveryService.channel.getEndorsers();
+			const peers = this.discoveryService.channel.getEndorsers();
 			for (const peer of peers) {
 				if (peer.endpoint && peer.endpoint.url === url) {
 					result = peer;
@@ -726,7 +666,7 @@ class DiscoveryHandler extends ServiceHandler {
 	}
 
 	// internal utility method to decode and get the write set from an endorsement
-	_getProposalResponseResults(proposaResponse = checkParameter('proposalResponse')) {
+	static _getProposalResponseResults(proposaResponse = checkParameter('proposalResponse')) {
 		if (!proposaResponse.payload) {
 			throw new Error('Parameter must be a ProposalResponse Object');
 		}
@@ -746,7 +686,7 @@ class DiscoveryHandler extends ServiceHandler {
 	 * from all endorsing peers
 	 * @returns {boolean} True when all proposals compare equally, false otherwise.
 	 */
-	compareProposalResponseResults(proposalResponses = checkParameter('proposalResponses')) {
+	static compareProposalResponseResults(proposalResponses = checkParameter('proposalResponses')) {
 		const method = `compareProposalResponseResults[${this.chaincodeId}]`;
 		logger.debug('%s - start', method);
 
@@ -762,9 +702,9 @@ class DiscoveryHandler extends ServiceHandler {
 			return false;
 		}
 
-		const first_one = this._getProposalResponseResults(proposalResponses[0]);
+		const first_one = DiscoveryHandler._getProposalResponseResults(proposalResponses[0]);
 		for (let i = 1; i < proposalResponses.length; i++) {
-			const next_one = this._getProposalResponseResults(proposalResponses[i]);
+			const next_one = DiscoveryHandler._getProposalResponseResults(proposalResponses[i]);
 			if (next_one.equals(first_one)) {
 				logger.debug('%s - read/writes result sets match index=%s', method, i);
 			} else {

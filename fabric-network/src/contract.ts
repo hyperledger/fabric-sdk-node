@@ -6,14 +6,15 @@
 
 import {Transaction, TransactionState} from './transaction';
 import {ContractListenerSession} from './impl/event/contractlistenersession';
-import {ListenerSession, addListener, removeListener} from './impl/event/listenersession';
+import {addListener, ListenerSession, removeListener} from './impl/event/listenersession';
 import * as Logger from './logger';
-const logger = Logger.getLogger('Contract');
 import * as util from 'util';
 import {NetworkImpl} from './network';
 import {ContractListener, ListenerOptions} from './events';
-import {DiscoveryService, DiscoveryHandler} from 'fabric-common';
+import {DiscoveryHandler, DiscoveryService} from 'fabric-common';
 import {Gateway} from './gateway';
+
+const logger = Logger.getLogger('Contract');
 
 /**
  * Ensure transaction name is a non-empty string.
@@ -22,7 +23,7 @@ import {Gateway} from './gateway';
  * @throws {Error} if the name is invalid.
  */
 function verifyTransactionName(name: string): void {
-	if (typeof name !== 'string' || name.length === 0) {
+	if (name.length === 0) {
 		const msg = util.format('Transaction name must be a non-empty string: %j', name);
 		logger.error('verifyTransactionName:', msg);
 		throw new Error(msg);
@@ -36,7 +37,7 @@ function verifyTransactionName(name: string): void {
  * @throws {Error} if the namespace is invalid.
  */
 function verifyNamespace(namespace?: string): void {
-	if (namespace && typeof namespace !== 'string') {
+	if (namespace === '') {
 		const msg = util.format('Namespace must be a non-empty string: %j', namespace);
 		logger.error('verifyNamespace:', msg);
 		throw new Error(msg);
@@ -171,6 +172,7 @@ type DiscoveryResultsCallback = (hasResults: boolean) => void;
  * @memberof module:fabric-network
  * @return {Contract} This Contract instance
  */
+
 /**
  * Retrieve the Discovery Interest settings that will help the peer's
  * discovery service build an endorsement plan.
@@ -214,13 +216,11 @@ export class ContractImpl {
 	createTransaction(name: string): Transaction {
 		verifyTransactionName(name);
 		const qualifiedName = this._getQualifiedName(name);
-		const transaction = new Transaction(this, qualifiedName);
-
-		return transaction;
+		return new Transaction(this, qualifiedName);
 	}
 
 	deserializeTransaction(data: Buffer): Transaction {
-		const state = JSON.parse(data.toString()) as TransactionState ;
+		const state = JSON.parse(data.toString()) as TransactionState;
 		return new Transaction(this, state.name, state);
 	}
 
@@ -233,7 +233,7 @@ export class ContractImpl {
 	}
 
 	async addContractListener(listener: ContractListener, options?: ListenerOptions): Promise<ContractListener> {
-		const sessionSupplier =  () => Promise.resolve(new ContractListenerSession(listener, this.chaincodeId, this.network, options));
+		const sessionSupplier = () => Promise.resolve(new ContractListenerSession(listener, this.chaincodeId, this.network, options));
 		const contractListener = await addListener(listener, this.contractListeners, sessionSupplier);
 		return contractListener;
 	}
@@ -281,7 +281,6 @@ export class ContractImpl {
 			this.discoveryService = this.network.getChannel().newDiscoveryService(this.chaincodeId);
 
 			const targets = this.network.discoveryService.targets;
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			const idx = this.gateway.identityContext!;
 			const asLocalhost = this.gateway.getOptions().discovery.asLocalhost;
 
@@ -347,8 +346,6 @@ export class ContractImpl {
 	 * discovery results are ready to be used.
 	 */
 	registerDiscoveryResultsListener(callback: DiscoveryResultsCallback): void {
-		const method = `registerDiscoveryResultsListener[${this.chaincodeId}]`;
-		logger.debug('%s - start', method);
 		this.discoveryResultsListeners.push(callback);
 	}
 

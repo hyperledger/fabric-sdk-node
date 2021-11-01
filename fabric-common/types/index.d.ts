@@ -7,7 +7,7 @@
 
 import * as Long from 'long';
 import * as fabproto6 from 'fabric-protos';
-import winston = require('winston');
+import * as winston from 'winston';
 
 export interface IKeyValueStore {
 	getValue(name: string): Promise<string>;
@@ -20,6 +20,7 @@ export class Utils {
 	public static normalizeX509(pem: string): string;
 	public static newCryptoKeyStore(keyValueStore?: IKeyValueStore): ICryptoKeyStore;
 }
+
 export interface ICryptoKey {
 	getSKI(): string;
 	getHandle(): string;
@@ -37,13 +38,6 @@ export class Pkcs11EcdsaKey implements ICryptoKey {
 	isPrivate(): boolean;
 	getPublicKey(): ICryptoKey;
 	toBytes(): string;
-}
-
-export interface EDSAKeyAttr {
-	ski?: Buffer;
-	ecpt?: Buffer;
-	pub?: Buffer;
-	priv?: Buffer;
 }
 
 export interface ICryptoKeyStore {
@@ -65,6 +59,7 @@ export interface ICryptoSuite {
 	sign(key: ICryptoKey, digest: Buffer): Buffer | Promise<Buffer>;
 	verify(key: ICryptoKey, signature: Buffer, digest: Buffer): boolean;
 }
+
 export type CryptoSetting = SoftwareCryptoSetting | HSMCryptoSetting;
 
 export interface SoftwareCryptoSetting {
@@ -97,6 +92,7 @@ export interface ConnectionInfo {
 	url: string;
 	options: Record<string, unknown>;
 }
+
 export interface ServiceError extends Error {
 	connection: ConnectionInfo;
 }
@@ -104,6 +100,9 @@ export interface ServiceError extends Error {
 export interface ProposalResponse {
 	errors: ServiceError[];
 	responses: EndorsementResponse[];
+}
+
+export interface QueryResponse extends ProposalResponse {
 	queryResults: Buffer[];
 }
 
@@ -149,17 +148,15 @@ export class Endpoint {
 	public isTLS(): boolean;
 }
 
-export class ServiceHandler {
-	commit(signedEnvelope: Buffer, request: any): Promise<any>;
-	endorse(signedProposal: Buffer, request: any): Promise<any>;
-	query(signedProposal: Buffer, request: any): Promise<any>;
-}
-export class DiscoveryHandler extends ServiceHandler {
+export type ServiceHandler = (signedEnvelope: Buffer, request: any) => Promise<{ responses: [], errors: [] }>;
+
+export class DiscoveryHandler {
+
 	constructor(discovery: DiscoveryService)
-	commit(signedEnvelope: Buffer, request: any): Promise<any>;
-	endorse(signedProposal: Buffer, request: any): Promise<any>;
-	query(signedProposal: Buffer, request: any): Promise<any>;
+	//TODO WIP
+
 }
+
 
 export class ServiceEndpoint {
 	public readonly name: string;
@@ -243,18 +240,20 @@ export interface SendProposalRequest {
 }
 
 export class Proposal extends ServiceAction {
-	readonly chaincodeId: string;
+	chaincodeId: string;
+	channel: Channel;
 	constructor(chaincodeName: string, channel: Channel);
 	public getTransactionId(): string;
-	public buildProposalInterest(): any;
-	public addCollectionInterest(collectionName: string): Proposal;
-	public setNoPrivateReads(noPrivateReads: boolean): Proposal;
-	public addChaincodeCollectionsInterest(collectionName: string, collectionNames: string[]): Proposal;
-	public addChaincodeNoPrivateReadsCollectionsInterest(collectionName: string, noPrivateReads: boolean, collectionNames: string[]): Proposal;
 	public build(idContext: IdentityContext, request?: BuildProposalRequest): Buffer;
 	public send(request?: SendProposalRequest): Promise<ProposalResponse>;
-	public verifyProposalResponse(proposalResponse?: any): boolean;
-	public compareProposalResponseResults(proposalResponses: any[]): boolean;
+}
+
+export class DiscoveryProposal extends Proposal {
+	public buildProposalInterest(): any;
+	public addCollectionInterest(collectionName: string): DiscoveryProposal;
+	public setNoPrivateReads(noPrivateReads: boolean): DiscoveryProposal;
+	public addChaincodeCollectionsInterest(collectionName: string, collectionNames: string[]): DiscoveryProposal;
+	public addChaincodeNoPrivateReadsCollectionsInterest(collectionName: string, noPrivateReads: boolean, collectionNames: string[]): DiscoveryProposal;
 }
 
 export class DiscoveryService extends ServiceAction {
@@ -267,9 +266,10 @@ export class DiscoveryService extends ServiceAction {
 	public close(): void;
 	public hasDiscoveryResults(): boolean;
 }
+
 export interface RegistrationOpts {
-	startBlock?: number|string|Long;
-	endBlock?: number|string|Long;
+	startBlock?: number | string | Long;
+	endBlock?: number | string | Long;
 	unregister?: boolean;
 }
 
@@ -378,6 +378,7 @@ export interface ConnectOptions {
 	clientCert?: string;
 	requestTimeout?: number;
 	'ssl-target-name-override'?: string;
+
 	[propName: string]: any;
 }
 
@@ -386,6 +387,7 @@ export class Channel {
 	readonly client: Client;
 
 	constructor(name: string, client: Client);
+
 	public close(): void;
 
 	public newEndorsement(chaincodeName: string): Endorsement;
@@ -475,6 +477,7 @@ export interface DiscoveryResultEndpoint {
 	port: number;
 	name?: string;
 }
+
 export interface DiscoveryResultEndpoints {
 	endpoints: DiscoveryResultEndpoint[];
 }
@@ -491,6 +494,7 @@ export interface DiscoveryResultPeer {
 	name: string;
 	chaincodes: DiscoveryResultChaincode[];
 }
+
 export interface DiscoveryResultPeers {
 	peers: DiscoveryResultPeer[];
 }
@@ -498,6 +502,7 @@ export interface DiscoveryResultPeers {
 export interface DiscoveryResultEndorsementGroup {
 	peers: DiscoveryResultPeer[];
 }
+
 export interface DiscoveryResultEndorsementLayout {
 	[groupName: string]: number;
 }

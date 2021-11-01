@@ -23,11 +23,10 @@ const Commit = require('./Commit.js');
 class Endorsement extends Proposal {
 
 	/**
-	 * Construct a Proposal object.
 	 *
-	 * @param {string} chaincodeId - The chaincode this proposal will execute
-	 * @param {Channel} channel - The channel of this proposal
-	 * @returns {Proposal} The Proposal instance.
+	 * @constructor
+	 * @param {string} chaincodeId
+	 * @param {Channel} channel
 	 */
 	constructor(chaincodeId = checkParameter('chaincodeId'), channel = checkParameter('channel')) {
 		super(chaincodeId, channel);
