@@ -63,3 +63,5 @@ export async function createTempDir(): Promise<string> {
 export async function rmdir(directory: string): Promise<void> {
 	await rimraf(directory);
 }
+
+export type Mutable<T> = { -readonly [P in keyof T]: T[P]; }

@@ -9,10 +9,16 @@
 
 import {logMsg} from './baseUtils';
 
-import {ChildProcess, exec} from 'child_process';
+import {exec} from 'child_process';
 import stripAnsi from 'strip-ansi';
 import * as BaseUtils from '../utility/baseUtils';
 
+export interface CommandResult {
+	stdout: string;
+	stderr: string;
+	error?: Error;
+	code?: number;
+}
 export class CommandRunner {
 
 	public static getInstance(): CommandRunner {
@@ -21,7 +27,7 @@ export class CommandRunner {
 	}
 
 	private static instance: CommandRunner;
-	protected lastResp: any;
+	protected lastResp?: CommandResult;
 
 	private constructor() {
 		// Prevent external instantiation
@@ -33,7 +39,7 @@ export class CommandRunner {
 	 * @param {String} cmd -  CLI command with parameters to be run
 	 * @return {Promise} - Promise that will be resolved or rejected with an error
 	 */
-	public runShellCommand(pass: any, cmd: string, verbose = true): Promise<Record<string, unknown>> {
+	public runShellCommand(pass: any, cmd: string, verbose = true): Promise<CommandResult> {
 		BaseUtils.logMsg(` -- runShellCommand ==>${cmd}<==`);
 
 		if (typeof cmd !== 'string') {
@@ -48,12 +54,10 @@ export class CommandRunner {
 
 				logMsg('SCENARIO CMD:', cmd);
 
-				const options: any = {
+				const childCliProcess = exec(command, {
 					env,
 					maxBuffer: 100000000,
-				};
-
-				const childCliProcess: ChildProcess = exec(command, options);
+				});
 
 				if (!childCliProcess || !childCliProcess.stdout || !childCliProcess.stderr) {
 					reject('ChildProcess object failed to create');
@@ -71,7 +75,7 @@ export class CommandRunner {
 						stderr += data;
 					});
 
-					childCliProcess.on('error', (error: any) => {
+					childCliProcess.on('error', error => {
 						logMsg('SCENARIO CMD - STDOUT:\n', stdout);
 						logMsg('SCENARIO CMD - STDERR:\n', stderr);
 						this.lastResp = {
@@ -84,7 +88,7 @@ export class CommandRunner {
 						}
 					});
 
-					childCliProcess.on('close', (code: any) => {
+					childCliProcess.on('close', (code: number) => {
 						if (verbose) {
 							logMsg('SCENARIO CMD - STDOUT:\n', stdout);
 							logMsg('SCENARIO CMD - STDERR:\n', stderr);

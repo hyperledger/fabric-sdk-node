@@ -11,6 +11,7 @@ import {StateStore, FabricState} from './lib/utility/stateStore';
 
 import {Given} from 'cucumber';
 import * as path from 'path';
+import {EndorsementPolicy} from 'fabric-client';
 
 const stateStore: StateStore = StateStore.getInstance();
 
@@ -29,7 +30,7 @@ Given(/^I use the deprecated sdk to (.+?) a (.+?) smart contract named (.+?) at 
 	const isUpgrade: boolean = (deployType.localeCompare('upgrade') === 0);
 	// eslint-disable-next-line max-len
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-var-requires,@typescript-eslint/no-explicit-any
-	const policy:any = require(path.join(__dirname, Constants.STEPS_TO_POLICIES))[policyType];
+	const policy: EndorsementPolicy = require(path.join(__dirname, Constants.STEPS_TO_POLICIES))[policyType];
 	for (const orgName of Object.keys(ccp.getOrganizations())) {
 		const isInstalled: boolean = await AdminUtils.isOrgChaincodeInstalled(orgName, ccp, ccName, ccVersion);
 		if (isInstalled) {

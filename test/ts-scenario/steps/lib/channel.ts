@@ -111,7 +111,7 @@ export async function cli_get_channels(orgName: string, tls: boolean): Promise<s
 
 		command = command.concat(tlsOptions);
 		const channelNames = await commandRunner.runShellCommand(true, command.join(' '), VERBOSE_CLI) ;
-		const results = channelNames.stdout as string;
+		const results = channelNames.stdout;
 		BaseUtils.logMsg(`Channel names ==>${results}<== have been joined by organization ${orgName}`);
 
 		return results;

@@ -4,7 +4,7 @@
 
 import * as Constants from '../constants';
 import * as BaseUtils from './utility/baseUtils';
-import {CommandRunner} from './utility/commandRunner';
+import {CommandResult, CommandRunner} from './utility/commandRunner';
 
 import * as path from 'path';
 
@@ -68,7 +68,7 @@ export async function cli_is_chaincode_install_for_org(ccName: string, ccVersion
 		];
 
 		const results = await commandRunner.runShellCommand(true, command.join(' '), VERBOSE_CLI) ;
-		const list = results.stdout as string;
+		const list = results.stdout;
 		BaseUtils.logMsg(`\n CLI found ==>${list}<==`);
 
 		let found = false;
@@ -110,7 +110,7 @@ export async function cli_is_chaincode_instantiated_for_org(channelName: string,
 		];
 
 		const results = await commandRunner.runShellCommand(true, command.join(' '), VERBOSE_CLI) ;
-		const list = results.stdout as string;
+		const list = results.stdout;
 		BaseUtils.logMsg(`\n CLI found ==>${list}<==`);
 
 		let found = false;
@@ -220,7 +220,7 @@ export async function cli_chaincode_list_instantiated(channelName: string): Prom
 	];
 
 	const instantiated = await commandRunner.runShellCommand(true, listInstantiatedCommand.join(' '), VERBOSE_CLI) ;
-	return instantiated.stdout as string;
+	return instantiated.stdout;
 }
 
 /**
@@ -233,7 +233,7 @@ export async function cli_lifecycle_chaincode_query_installed(orgName: string): 
 	];
 
 	const installed = await commandRunner.runShellCommand(true, queryInstalledCommand.join(' '), VERBOSE_CLI) ;
-	return installed.stdout as string;
+	return installed.stdout;
 }
 
 /**
@@ -405,9 +405,8 @@ export async function cli_lifecycle_chaincode_query_commit(
 
 		BaseUtils.logMsg(`Smart contract with name ${ccName} is committed for organization ${orgName} using the CLI`);
 		return Promise.resolve(true);
-	} catch (err) {
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
-		if (err.stderr.includes('404')) {
+	} catch (err: unknown) {
+		if ((err as CommandResult).stderr.includes('404')) {
 			BaseUtils.logMsg(`Smart contract with name ${ccName} is not committed for organization ${orgName} using the CLI`);
 			return Promise.resolve(false);
 		}

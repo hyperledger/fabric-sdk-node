@@ -345,8 +345,8 @@ export class Transaction {
 
 			return result;
 		} catch (err) {
-			err.responses = proposalResponse.responses;
-			err.errors = proposalResponse.errors;
+			(err as any).responses = proposalResponse.responses;
+			(err as any).errors = proposalResponse.errors;
 			throw err;
 		}
 	}

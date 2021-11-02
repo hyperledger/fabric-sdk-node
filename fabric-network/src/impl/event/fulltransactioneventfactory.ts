@@ -19,7 +19,7 @@ export function getTransactionEnvelopeIndexes(blockData: fabproto6.common.IBlock
 	const txEnvelopeIndexes: number[] = [];
 	if (blockData.data) {
 		const envelopes: any[] = blockData.data.data || [];
-		envelopes.forEach((envelope: any, index: any) => {
+		envelopes.forEach((envelope: any, index: number) => {
 			if (isTransactionPayload(envelope.payload)) {
 				txEnvelopeIndexes.push(index);
 			}
@@ -37,11 +37,11 @@ export function newFullTransactionEvent(blockEvent: BlockEvent, txEnvelopeIndex:
 	const block = blockEvent.blockData as fabproto6.common.Block;
 	if (block.metadata && block.data && block.data.data) {
 		const blockMetadata: any[] = block.metadata.metadata || [];
-		const transactionStatusCodes = blockMetadata[fabproto6.common.BlockMetadataIndex.TRANSACTIONS_FILTER];
+		const transactionStatusCodes = blockMetadata[fabproto6.common.BlockMetadataIndex.TRANSACTIONS_FILTER] as number[];
 
 		const envelope: any = block.data.data[txEnvelopeIndex];
 		const transactionId = envelope.payload.header.channel_header.tx_id;
-		const timestamp = new Date(envelope.payload.header.channel_header.timestamp);
+		const timestamp = new Date(envelope.payload.header.channel_header.timestamp as number);
 		const code = transactionStatusCodes[txEnvelopeIndex];
 		const status = TransactionStatus.getStatusForCode(code);
 
