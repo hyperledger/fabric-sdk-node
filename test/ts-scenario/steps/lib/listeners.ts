@@ -148,8 +148,7 @@ function getListeners(): Map<string, any> {
 
 export async function checkListenerCallNumber(listenerName: string, compareNumber: number, type: string): Promise<void> {
 	await new Promise<void>((resolve): any => {
-		let timeout: any = null;
-		const interval: NodeJS.Timeout = setInterval(() => {
+		const interval = setInterval(() => {
 			let condition: boolean;
 			switch (type) {
 				case Constants.EXACT:
@@ -173,7 +172,7 @@ export async function checkListenerCallNumber(listenerName: string, compareNumbe
 		}, Constants.INC_TINY);
 
 		// Make sure this doesn't run forever! We condition actual errors in the following code block
-		timeout = setTimeout(() => {
+		const timeout = setTimeout(() => {
 			clearInterval(interval);
 			resolve();
 		}, Constants.STEP_SHORT);

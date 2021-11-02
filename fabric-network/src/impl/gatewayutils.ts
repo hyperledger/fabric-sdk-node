@@ -73,3 +73,5 @@ export function cachedResult<T>(f: () => T): () => T {
 export function notNullish<T>(value?: T): value is T {
 	return value !== null && value !== undefined;
 }
+
+export type Mandatory<T> = { [P in keyof T]-?: NonNullable<T[P]> };

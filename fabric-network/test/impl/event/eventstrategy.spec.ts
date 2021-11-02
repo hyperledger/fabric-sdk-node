@@ -14,13 +14,11 @@ import {Endorser} from 'fabric-common';
 
 import {AllForTxStrategy} from '../../../src/impl/event/allfortxstrategy';
 import {AnyForTxStrategy} from '../../../src/impl/event/anyfortxstrategy';
-
-
-
+import {Mutable} from '../../testutils';
 
 describe('Event Strategy Implementations', () => {
-	let peer1;
-	let peer2;
+	let peer1: Mutable<Endorser>;
+	let peer2: Mutable<Endorser>;
 	let stubSuccessFn:sinon.SinonStub;
 	let stubFailFn:sinon.SinonStub;
 

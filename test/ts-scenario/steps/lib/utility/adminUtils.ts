@@ -26,21 +26,23 @@ const stateStore: StateStore = StateStore.getInstance();
  * @param {string} caName name of caName
  * @return {Object} something useful in a promise
  */
-export async function tlsEnroll(fabricCAEndpoint: string, caName: string): Promise<any> {
-	const tlsOptions: any = {
+export async function tlsEnroll(fabricCAEndpoint: string, caName: string): Promise<{certificate: string, key: string}> {
+	const tlsOptions: FabricCAServices.TLSOptions = {
 		trustedRoots: [],
 		verify: false,
 	};
 	const caService: FabricCAServices = new FabricCAServices(fabricCAEndpoint, tlsOptions, caName);
-	const req: any = {
+	const req: FabricCAServices.IEnrollmentRequest = {
 		enrollmentID: 'admin',
 		enrollmentSecret: 'adminpw',
 		profile: 'tls',
 	};
 
-	const enrollment: any = await caService.enroll(req);
-	enrollment.key = enrollment.key.toBytes();
-	return enrollment;
+	const enrollment = await caService.enroll(req);
+	return {
+		certificate: enrollment.certificate,
+		key: enrollment.key.toBytes(),
+	};
 }
 
 export async function getSubmitter(client: Client, peerAdmin: boolean, org: string, ccp: CommonConnectionProfileHelper): Promise<Client.User> {
@@ -61,7 +63,7 @@ export async function getSubmitter(client: Client, peerAdmin: boolean, org: stri
 async function getOrgAdminUser(client: Client, userOrg: string, ccp: CommonConnectionProfileHelper): Promise<Client.User> {
 	try {
 
-		const org: any = ccp.getOrganization(userOrg);
+		const org = ccp.getOrganization(userOrg);
 		if (!org) {
 			throw new Error('Could not find ' + userOrg + ' in configuration');
 		}
@@ -100,20 +102,20 @@ async function getOrgAdminUser(client: Client, userOrg: string, ccp: CommonConne
 async function getMember(username: string, password: string, client: Client, userOrg: string,
 	ccp: CommonConnectionProfileHelper): Promise<Client.User> {
 
-	const org: any = ccp.getOrganization(userOrg);
+	const org = ccp.getOrganization(userOrg);
 	if (!org) {
 		throw new Error('Could not find ' + userOrg + ' in configuration');
 	}
 
-	const caUrl: string = org.ca.url;
-	const user: Client.User = await client.getUserContext(username, true);
+	const caUrl = org.ca.url;
+	const user = await client.getUserContext(username, true);
 
 	try {
 		if (user && user.isEnrolled()) {
 			return user;
 		}
 
-		const member: Client.User = new Client.User(username);
+		const member = new Client.User(username);
 		let cryptoSuite: Client.ICryptoSuite = client.getCryptoSuite();
 		if (!cryptoSuite) {
 			cryptoSuite = Client.newCryptoSuite();
@@ -124,7 +126,7 @@ async function getMember(username: string, password: string, client: Client, use
 		member.setCryptoSuite(cryptoSuite);
 
 		// need to enroll it with CA server
-		const tlsOptions: any = {
+		const tlsOptions: FabricCAServices.TLSOptions = {
 			trustedRoots: [],
 			verify: false,
 		};
@@ -151,7 +153,7 @@ export function getPeerObjectsForClientOnChannel(orgClient: Client, channelName:
 	const peerNames: string[] = Object.keys(ccp.getPeersForChannel(channelName)) ;
 
 	peerNames.forEach((peerName: string) => {
-		const peer: any = ccp.getPeer(peerName);
+		const peer = ccp.getPeer(peerName);
 		const data: Buffer = fs.readFileSync(peer.tlsCACerts.path);
 		peerObjects.push(orgClient.newPeer(
 			peer.url,
@@ -176,11 +178,11 @@ export async function assignOrgAdmin(client: Client, orgName: string, ccp: Commo
 	if (ccp.isTls()) {
 		const caName: string = ccp.getCertificateAuthoritiesForOrg(orgName)[0];
 		const fabricCAEndpoint: string = ccp.getCertificateAuthority(caName).url;
-		const tlsInfo: any = await tlsEnroll(fabricCAEndpoint, caName);
+		const tlsInfo = await tlsEnroll(fabricCAEndpoint, caName);
 		client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 	}
 
-	const org: any = ccp.getOrganization(orgName);
+	const org = ccp.getOrganization(orgName);
 	if (!org) {
 		throw new Error('Could not find ' + orgName + ' in configuration');
 	}

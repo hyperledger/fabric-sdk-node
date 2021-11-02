@@ -22,8 +22,7 @@ Then(/^I can (submit|query) invalid function (.+?) on contract named (.+?) as or
 	const tls: boolean = (fabricState.type.localeCompare('tls') === 0);
 	const ccp: CommonConnectionProfileHelper = tls ? lifecycleCcpTls : lifecycleCcp;
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const expectedError: any = {
+	const expectedError = {
 		message,
 		status: Number(status),
 	};

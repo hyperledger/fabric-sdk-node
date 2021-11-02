@@ -33,7 +33,7 @@ export interface GatewayOptions {
 	eventHandlerOptions?: DefaultEventHandlerOptions;
 	queryHandlerOptions?: DefaultQueryHandlerOptions;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	'connection-options'?: any;
+	'connection-options'?: Record<string, unknown>;
 }
 
 export interface ConnectedGatewayOptions extends GatewayOptions {
@@ -336,7 +336,7 @@ export class Gateway {
 		// Load connection profile after client configuration has been completed
 		if (loadCcp) {
 			logger.debug('%s - NetworkConfig loading client from ccp', method);
-			await NetworkConfig.loadFromConfig(this.client, config);
+			await NetworkConfig.loadFromConfig(this.client, config as Record<string, unknown>);
 		}
 
 		logger.debug('%s - end', method);
