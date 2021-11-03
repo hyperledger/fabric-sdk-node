@@ -21,7 +21,7 @@ import {
 } from 'fabric-common';
 import Long = require('long');
 
-import {Gateway} from '../../../src/gateway';
+import {Gateway, ConnectedGatewayOptions} from '../../../src/gateway';
 import {Network, NetworkImpl} from '../../../src/network';
 import {EventServiceManager} from '../../../src/impl/event/eventservicemanager';
 import {TransactionEventStrategy} from '../../../src/impl/event/transactioneventstrategy';
@@ -39,7 +39,7 @@ describe('TransactionEventHandler', () => {
 	const transactionId = 'TX_ID';
 	let stubStrategy: sinon.SinonStubbedInstance<TransactionEventStrategy>;
 	let strategy: TransactionEventStrategy;
-	let options: any;
+	let options: Partial<ConnectedGatewayOptions>;
 
 	beforeEach(() => {
 		peer = sinon.createStubInstance(Endorser);
@@ -65,14 +65,14 @@ describe('TransactionEventHandler', () => {
 		};
 
 		options = {
-			transaction: {
+			eventHandlerOptions: {
 				commitTimeout: 0
 			}
 		};
 
 		gateway = sinon.createStubInstance(Gateway);
 		gateway.identityContext = sinon.createStubInstance(IdentityContext);
-		gateway.getOptions.returns(options);
+		gateway.getOptions.returns(options as ConnectedGatewayOptions);
 		gateway.getIdentity.returns({
 			mspId: 'mspId',
 			type: 'stub'
@@ -122,6 +122,7 @@ describe('TransactionEventHandler', () => {
 
 			it('starts event service', async () => {
 				await handler.startListening();
+				// eslint-disable-next-line @typescript-eslint/unbound-method
 				sinon.assert.calledWith(eventServiceManager.startEventService, eventService);
 			});
 		});
@@ -130,6 +131,7 @@ describe('TransactionEventHandler', () => {
 			await handler.startListening();
 			eventService.sendEvent(validEventInfo);
 
+			// eslint-disable-next-line @typescript-eslint/unbound-method
 			sinon.assert.calledWith(stubStrategy.eventReceived, sinon.match.func, sinon.match.func);
 		});
 
@@ -137,6 +139,7 @@ describe('TransactionEventHandler', () => {
 			await handler.startListening();
 			eventService.sendEvent(validEventInfo);
 
+			// eslint-disable-next-line @typescript-eslint/unbound-method
 			sinon.assert.notCalled(stubStrategy.errorReceived);
 		});
 
@@ -144,6 +147,7 @@ describe('TransactionEventHandler', () => {
 			await handler.startListening();
 			eventService.sendError(new Error('PEER_ERROR'));
 
+			// eslint-disable-next-line @typescript-eslint/unbound-method
 			sinon.assert.calledWith(stubStrategy.errorReceived, sinon.match.func, sinon.match.func);
 		});
 
@@ -151,6 +155,7 @@ describe('TransactionEventHandler', () => {
 			await handler.startListening();
 			eventService.sendError(new Error('PEER_ERROR'));
 
+			// eslint-disable-next-line @typescript-eslint/unbound-method
 			sinon.assert.notCalled(stubStrategy.eventReceived);
 		});
 
@@ -214,7 +219,9 @@ describe('TransactionEventHandler', () => {
 			eventService.sendEvent(validEventInfo);
 			eventService.sendError(new Error('PEER_ERROR'));
 
+			// eslint-disable-next-line @typescript-eslint/unbound-method
 			sinon.assert.calledOnce(stubStrategy.eventReceived);
+			// eslint-disable-next-line @typescript-eslint/unbound-method
 			sinon.assert.notCalled(stubStrategy.errorReceived);
 		});
 
@@ -224,7 +231,9 @@ describe('TransactionEventHandler', () => {
 			eventService.sendEvent(validEventInfo);
 			eventService.sendError(new Error('two'));
 
+			// eslint-disable-next-line @typescript-eslint/unbound-method
 			sinon.assert.calledOnce(stubStrategy.errorReceived);
+			// eslint-disable-next-line @typescript-eslint/unbound-method
 			sinon.assert.notCalled(stubStrategy.eventReceived);
 		});
 

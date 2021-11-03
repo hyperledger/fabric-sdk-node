@@ -6,6 +6,7 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
+import {Utils} from 'fabric-common';
 import {ImportMock} from 'ts-mock-imports';
 import {
 	HsmX509Identity,
@@ -16,10 +17,10 @@ import {IdentityData} from '../../../src/impl/wallet/identitydata';
 import {IdentityProvider} from '../../../src/impl/wallet/identityprovider';
 import {
 	X509Identity,
-	X509Provider,
+	X509Provider
 } from '../../../src/impl/wallet/x509identity';
+import {Mutable} from '../../testutils';
 
-import {Utils} from 'fabric-common';
 const fakeCryptoSuite = {
 	getKeySize: () => {
 		return 256;
@@ -105,8 +106,7 @@ describe('IdentityProvider', () => {
 		const identity: Identity = providerData.identity;
 
 		Object.keys(providerData.dataVersions).forEach((dataVersion: string) => describe(dataVersion, () => {
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			let identityData:any;
+			let identityData: Mutable<IdentityData>;
 
 			beforeEach(() => {
 				identityData = providerData.dataVersions[dataVersion];
