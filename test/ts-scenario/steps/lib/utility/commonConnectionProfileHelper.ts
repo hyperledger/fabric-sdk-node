@@ -11,6 +11,28 @@
 
 import * as path from 'path';
 
+interface Credentials {
+	path: string;
+}
+
+interface CertificateAuthority {
+	name: string;
+	url: string;
+}
+
+interface Organization {
+	mspid: string;
+	adminPrivateKeyPEM: Credentials;
+	signedCertPEM: Credentials;
+	ca: CertificateAuthority;
+}
+
+interface Endpoint {
+	tlsCACerts: Credentials;
+	url: string;
+	grpcOptions: Record<string, string>;
+}
+
 /**
  * CommonConnectionProfileHelper
  *
@@ -42,7 +64,7 @@ export class CommonConnectionProfileHelper {
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	public _makeJsonPathsAbsolute(parent: any, rootPath: string): void {
 		if (parent && typeof parent === 'object') {
-			Object.entries(parent).forEach(([key, value]: [string, any]) => {
+			Object.entries(parent as Record<string, unknown>).forEach(([key, value]: [string, any]) => {
 				// key is either an array index or object key
 				if (key.localeCompare('path') === 0) {
 					if (!path.isAbsolute(String(value))) {
@@ -58,7 +80,7 @@ export class CommonConnectionProfileHelper {
 	/**
 	 * Retrieve the profile
 	 */
-	public getProfile(): any {
+	public getProfile(): Record<string, unknown> {
 		return this.profile;
 	}
 
@@ -92,7 +114,7 @@ export class CommonConnectionProfileHelper {
 	 * @param {String} orgName the organization of interest
 	 * @return {Object} the organization object
 	 */
-	public getOrganization(orgName: string): any {
+	public getOrganization(orgName: string): Organization {
 		return this.profile.organizations[orgName];
 	}
 
@@ -102,8 +124,8 @@ export class CommonConnectionProfileHelper {
 	 * @return {String[]} the organizations associated with a channel
 	 */
 	public getOrganizationsForChannel(channelName: string): Array<string> {
-		const channelPeers: string[] = Object.keys(this.profile.channels[channelName].peers);
-		const orgs: any = this.profile.organizations;
+		const channelPeers = Object.keys(this.profile.channels[channelName].peers as Record<string, unknown>);
+		const orgs: Record<string, unknown> = this.profile.organizations;
 
 		const channelOrgs: Array<string> = new Array<string>();
 		for (const [orgName, org] of Object.entries<any>(orgs)) {
@@ -130,7 +152,7 @@ export class CommonConnectionProfileHelper {
 	 * @param {String} ordererName the name of the orderer
 	 * @return {Object} the named orderer
 	 */
-	public getOrderer(ordererName: string): any {
+	public getOrderer(ordererName: string): Endpoint {
 		return this.profile.orderers[ordererName];
 	}
 
@@ -139,7 +161,7 @@ export class CommonConnectionProfileHelper {
 	 * @param {String} channelName the channel of interest
 	 * @return {Object[]} orderers for the named channel
 	 */
-	public getOrderersForChannel(channelName: string): any[] {
+	public getOrderersForChannel(channelName: string): string[] {
 		return this.profile.channels[channelName].orderers;
 	}
 
@@ -156,7 +178,7 @@ export class CommonConnectionProfileHelper {
 	 * @param {String} caName the name of the certificate authority
 	 * @return {Object} the certificate authority
 	 */
-	public getCertificateAuthority(caName: string): any {
+	public getCertificateAuthority(caName: string): Endpoint {
 		return this.profile.certificateAuthorities[caName];
 	}
 
@@ -165,7 +187,7 @@ export class CommonConnectionProfileHelper {
 	 * @param {String} orgName the organization name
 	 * @return {Object[]} certificate authorities for the named organization
 	 */
-	public getCertificateAuthoritiesForOrg(orgName: string): any[] {
+	public getCertificateAuthoritiesForOrg(orgName: string): string[] {
 		return this.profile.organizations[orgName].certificateAuthorities;
 	}
 
@@ -182,7 +204,7 @@ export class CommonConnectionProfileHelper {
 	 * @param {String} peerName the peer name
 	 * @return {Object} the peer object
 	 */
-	public getPeer(peerName: string): any {
+	public getPeer(peerName: string): Endpoint {
 		return this.profile.peers[peerName];
 	}
 
@@ -210,7 +232,7 @@ export class CommonConnectionProfileHelper {
 	public isTls(): boolean | undefined {
 		const peers: any = this.getPeers();
 		if (peers) {
-			for (const key of Object.keys(peers)) {
+			for (const key of Object.keys(peers as Record<string, unknown>)) {
 				const peer: any = peers[key];
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 				return (peer.url).includes('grpcs');

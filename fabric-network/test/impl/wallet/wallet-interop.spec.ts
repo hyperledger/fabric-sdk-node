@@ -7,12 +7,8 @@
 import {Identity} from '../../../src/impl/wallet/identity';
 import {Wallets} from '../../../src/impl/wallet/wallets';
 import {Wallet} from '../../../src/impl/wallet/wallet';
-
-import path = require('path');
-
+import * as path from 'path';
 import {expect} from 'chai';
-
-
 
 const testWalletPath = path.join(__dirname, '..', '..', '..', '..', 'test', 'fixtures', 'test-wallet');
 

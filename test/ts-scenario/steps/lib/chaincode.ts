@@ -18,6 +18,10 @@ import * as BaseUtils from './utility/baseUtils';
 // import * as path from 'path';
 import {CommonConnectionProfileHelper} from './utility/commonConnectionProfileHelper';
 
+export interface ExpectedError {
+	message: string;
+	status: number;
+}
 
 export async function commitProposal(proposalType: string, txId: Client.TransactionId, proposalResponses: any, proposal: any,
 	channel: Client.Channel): Promise<void> {
@@ -90,8 +94,8 @@ export async function commitProposal(proposalType: string, txId: Client.Transact
 }
 
 export async function performContractTransactionForOrg(contract: string, contractFunction: string,
-	contractArgs: any, orgName: string, channelName: string, ccp: CommonConnectionProfileHelper, isSubmit: boolean,
-	expectedResult: any, expectedError: any): Promise<any> {
+	contractArgs: string, orgName: string, channelName: string, ccp: CommonConnectionProfileHelper, isSubmit: boolean,
+	expectedResult: any, expectedError: ExpectedError | undefined): Promise<any> {
 
 	// Get the Client for passed Org
 	const orgClient: Client = Client.loadFromConfig(ccp.getProfile());
@@ -105,19 +109,19 @@ export async function performContractTransactionForOrg(contract: string, contrac
 
 	// cast string args into what the request requires
 	const args: any = JSON.parse(contractArgs);
-	const request: any = {
+	const request: Client.ChaincodeInvokeRequest = {
 		args,
 		chaincodeId: contract,
 		fcn: contractFunction,
 		targets,
 		txId,
-	} as  any;
+	};
 
 	// These are old style contracts that require init to be called by lifecycle.
 	// This will force this sendTransactionProposal to be direct call to the 'Init'
 	// method of the chaincode.
 	if (contractFunction === 'init') {
-		request.is_init = true;
+		(request as any).is_init = true;
 	}
 
 	try {
@@ -137,21 +141,24 @@ export async function performContractTransactionForOrg(contract: string, contrac
 	};
 }
 
-async function submitChannelRequest(channel: Client.Channel, request: any, expectedError: any, expectedResult: any): Promise<void> {
-	const results: [(Client.ProposalResponse | Client.ProposalErrorResponse)[],
-		Client.Proposal] = await channel.sendTransactionProposal(request, Constants.STEP_MED);
-	if (results && results[0]) {
-		const proposalResponses: any = results[0];
+async function submitChannelRequest(
+	channel: Client.Channel,
+	request: Client.ChaincodeInvokeRequest,
+	expectedError: ExpectedError | undefined,
+	expectedResult: any,
+): Promise<void> {
+	const [proposalResponses, proposal] = await channel.sendTransactionProposal(request, Constants.STEP_MED);
+	if (proposalResponses) {
 		for (const response of proposalResponses) {
 			if (response instanceof Error) {
 				// We might be forcing an error, so can condition for that here
 				if (expectedError) {
 					if ((response as any).status !== expectedError.status) {
-						const msg = `Expected channel.sendTransactionProposal() to have status ${expectedError.status as string} but was ${String((response as any).status)}`;
+						const msg = `Expected channel.sendTransactionProposal() to have status ${expectedError.status} but was ${String((response as any).status)}`;
 						BaseUtils.logAndThrow(msg);
 					}
 					if (!response.message.includes(expectedError.message)) {
-						const msg = `Expected channel.sendTransactionProposal() fail with message text ${expectedError.message as string} but was ${response.message}`;
+						const msg = `Expected channel.sendTransactionProposal() fail with message text ${expectedError.message} but was ${response.message}`;
 						BaseUtils.logAndThrow(msg);
 					}
 					// We were expecting this error, and it passed the check, so return here
@@ -165,7 +172,7 @@ async function submitChannelRequest(channel: Client.Channel, request: any, expec
 				if (response.response.status === 200) {
 					BaseUtils.logMsg(` - Good peer response ${response.response.status as number}`);
 				} else {
-					BaseUtils.logAndThrow(`Problem with the chaincode invoke :: status: ${response.response.status as string} message: ${response.response.message as string}`);
+					BaseUtils.logAndThrow(`Problem with the chaincode invoke :: status: ${response.response.status} message: ${response.response.message}`);
 				}
 			} else {
 				BaseUtils.logAndThrow('Problem with the chaincode invoke no response returned');
@@ -173,11 +180,10 @@ async function submitChannelRequest(channel: Client.Channel, request: any, expec
 		}
 
 		// Results from running are in each peer
-		const peerResponses: (Client.ProposalResponse | Client.ProposalErrorResponse)[] = results[0];
 		if (expectedResult) {
 			// Each peer should have the same result, so we check over each array item
-			for (const peerResponse of peerResponses) {
-				const txnResult: any = JSON.parse((peerResponse as any).response.payload.toString());
+			for (const peerResponse of proposalResponses as Client.ProposalResponse[]) {
+				const txnResult = JSON.parse(peerResponse.response.payload.toString());
 				if (txnResult !== expectedResult) {
 					BaseUtils.logAndThrow(`Expected peer submit response payload to be ${expectedResult as string} but was ${txnResult as string}`);
 				} else {
@@ -185,8 +191,6 @@ async function submitChannelRequest(channel: Client.Channel, request: any, expec
 				}
 			}
 		}
-
-		const proposal: Client.Proposal = results[1];
 
 		// if we get this far then all responses are good (status = 200), go ahead and commit
 		await commitProposal(Constants.SUBMIT, request.txId, proposalResponses, proposal, channel);
@@ -196,7 +200,12 @@ async function submitChannelRequest(channel: Client.Channel, request: any, expec
 	}
 }
 
-async function queryChannelRequest(channel: Client.Channel, request: any, expectedError: any, expectedResult: any): Promise<void> {
+async function queryChannelRequest(
+	channel: Client.Channel,
+	request: Client.ChaincodeQueryRequest,
+	expectedError: ExpectedError | undefined,
+	expectedResult: any,
+): Promise<void> {
 	const payloads: Buffer[] = await channel.queryByChaincode(request);
 	if (payloads) {
 		// Results from running are in each peer

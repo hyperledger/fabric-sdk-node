@@ -8,7 +8,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 import * as FabricCAClient from 'fabric-ca-client';
-import {Contract, DefaultEventHandlerStrategies, DefaultQueryHandlerStrategies, Gateway, GatewayOptions, HsmOptions, HsmX509Provider, Identity, IdentityProvider, Network, QueryHandlerFactory, Transaction, TransientMap, TxEventHandlerFactory, Wallet, Wallets, HsmX509Identity} from 'fabric-network';
+import {Contract, DefaultEventHandlerStrategies, DefaultQueryHandlerStrategies, Gateway, GatewayOptions, HsmOptions, HsmX509Provider, Identity, IdentityProvider, Network, QueryHandlerFactory, Transaction, TransientMap, TxEventHandlerFactory, Wallet, Wallets, HsmX509Identity, X509Identity} from 'fabric-network';
 import * as fs from 'fs';
 import * as path from 'path';
 import {createQueryHandler as sampleQueryStrategy} from '../../config/handlers/sample-query-handler';
@@ -31,7 +31,7 @@ const supportedWallets: string[] = [
 ];
 
 const HSM_PROVIDER = Constants.HSM_PROVIDER;
-const X509_PROVIDER: string = Constants.X509_PROVIDER;
+const X509_PROVIDER = Constants.X509_PROVIDER;
 
 const EventStrategies: { [key: string]: TxEventHandlerFactory } = {
 	MSPID_SCOPE_ALLFORTX : DefaultEventHandlerStrategies.MSPID_SCOPE_ALLFORTX,
@@ -47,7 +47,7 @@ const QueryStrategies: { [key: string]: QueryHandlerFactory } = {
 
 export interface GatewayData {
 	gateway: Gateway;
-	profile: any;
+	profile: Record<string, unknown>;
 	result?: {
 		type: string;
 		response: string | Record<string, unknown>;
@@ -169,7 +169,7 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 			const tlsInfo: any = await AdminUtils.tlsEnroll(fabricCAEndpoint, caName);
 			const caOrg: any = ccp.getOrganization(orgName);
 
-			const tlsIdentity: any = {
+			const tlsIdentity: X509Identity = {
 				credentials: {
 					certificate: tlsInfo.certificate,
 					privateKey: tlsInfo.key,
@@ -192,7 +192,7 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 	};
 
 	await gateway.connect(ccp.getProfile(), opts);
-	const gatewayObj: any = {
+	const gatewayObj: GatewayData = {
 		profile: ccp.getProfile(),
 		gateway,
 	};
@@ -271,7 +271,7 @@ async function identitySetup(wallet: Wallet, ccp: CommonConnectionProfileHelper,
 	const userKeyPath: string = org.adminPrivateKeyPEM.path.replace(/Admin/g, userName);
 	const key: string = fs.readFileSync(userKeyPath).toString('utf8');
 
-	const identity: any = {
+	const identity: X509Identity = {
 		credentials: {
 			certificate: cert,
 			privateKey: key,
@@ -328,7 +328,7 @@ async function createHSMUser(wallet: Wallet, ccp: CommonConnectionProfileHelper,
 	const adminUser = await provider.getUserContext(adminIdentity, 'admin');
 
 	// register the new user using the admin
-	const registerRequest: any = {
+	const registerRequest: FabricCAClient.IRegisterRequest = {
 		enrollmentID: userName,
 		affiliation: orgName.toLowerCase(),
 		attrs: [],
@@ -462,8 +462,8 @@ export async function performGatewayTransaction(gatewayName: string, contractNam
 		gatewayObj.result = {type: txnType, response: result};
 
 	} catch (error) {
-		gatewayObj.result = {type: 'error', response: error.toString()};
-		BaseUtils.logError(` --- in gateway transaction: ${error.toString() as string}`);
+		gatewayObj.result = {type: 'error', response: String(error)};
+		BaseUtils.logError(` --- in gateway transaction: ${String(error)}`);
 	}
 }
 
@@ -510,8 +510,8 @@ export async function performTransientGatewayTransaction(gatewayName: string, co
 		BaseUtils.logMsg(`Successfully performed ${txnType} transaction [${func}] with transient data with result of [${result}]`);
 		gatewayObj.result = {type: txnType, response: result};
 	} catch (error) {
-		gatewayObj.result = {type: 'error', response: error.toString()};
-		BaseUtils.logError(`--- in ${txnType} with transient: ${error.toString() as string}`);
+		gatewayObj.result = {type: 'error', response: String(error)};
+		BaseUtils.logError(`--- in ${txnType} with transient: ${String(error)}`);
 	}
 }
 

@@ -21,7 +21,7 @@ import * as util from 'util';
  */
 function validateObjectKeyMatch(expected: any, actual: any, compareType: 'includes' | 'matches' | 'mirrors'): any {
 	// walk down the expected and keep in line with the response
-	if (expected instanceof Object) {
+	if (typeof expected === 'object') {
 		if (Array.isArray(expected) && (compareType.localeCompare('includes') === 0)) {
 			// Have an array that may be an object or a value
 
@@ -41,7 +41,7 @@ function validateObjectKeyMatch(expected: any, actual: any, compareType: 'includ
 				}
 			}
 		} else {
-			for (const key of Object.keys(expected)) {
+			for (const key of Object.keys(expected as Record<string, unknown>)) {
 				if (Object.prototype.hasOwnProperty.call(actual, key)) {
 					// recursive call to scan property
 					BaseUtils.logMsg(`->Recursively checking response key ${key}`);

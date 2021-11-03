@@ -24,7 +24,7 @@ export function getVerboseCLI(): boolean {
  * @param ms the time in milliseconds to sleep for
  */
 export function sleep(ms: number): Promise<void> {
-	return new Promise((resolve: any): any => setTimeout(resolve, ms));
+	return new Promise<void>((resolve): any => setTimeout(resolve, ms));
 }
 
 export function logMsg(msg: string, obj?: any): void {
@@ -43,12 +43,13 @@ export function logError(msg: string, obj?: any): void {
 	}
 }
 
-export function logAndThrow(msg: any): never {
-	logError(msg);
-	if (msg instanceof Error) {
-		throw msg;
+export function logAndThrow(o: Error | string): never {
+	if (o instanceof Error) {
+		logError(o.message, o);
+		throw o;
 	} else {
-		throw new Error(msg);
+		logError(o);
+		throw new Error(o);
 	}
 }
 

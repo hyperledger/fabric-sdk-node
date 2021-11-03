@@ -53,7 +53,7 @@ export class FileCheckpointer implements Checkpointer {
 		if (data) {
 			const json = data.toString(encoding);
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-			const state = JSON.parse(json);
+			const state = JSON.parse(json) as PersistentState;
 			this.setState(state);
 		}
 	}

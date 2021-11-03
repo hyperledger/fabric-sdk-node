@@ -32,7 +32,7 @@ export async function sdk_chaincode_install_for_org(ccType: 'golang' | 'car' | '
 	if (tls) {
 		const caName: string = ccp.getCertificateAuthoritiesForOrg(orgName)[0];
 		const fabricCAEndpoint: string = ccp.getCertificateAuthority(caName).url;
-		const tlsInfo: any = await AdminUtils.tlsEnroll(fabricCAEndpoint, caName);
+		const tlsInfo = await AdminUtils.tlsEnroll(fabricCAEndpoint, caName);
 		client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 	}
 
@@ -44,9 +44,13 @@ export async function sdk_chaincode_install_for_org(ccType: 'golang' | 'car' | '
 	let data: Buffer = fs.readFileSync(caRootsPath);
 	const pem: string = Buffer.from(data).toString();
 
+	const orderer = ccp.getOrderer(ordererName);
+	if (!orderer) {
+		BaseUtils.logAndThrow(`Orderer ${ordererName} not found.`);
+	}
 	channel.addOrderer(
 		client.newOrderer(
-			ccp.getOrderer(ordererName).url,
+			orderer.url,
 			{
 				pem,
 				'ssl-target-name-override': ccp.getOrderer(ordererName).grpcOptions['ssl-target-name-override'],
@@ -57,7 +61,7 @@ export async function sdk_chaincode_install_for_org(ccType: 'golang' | 'car' | '
 	const targets: Client.Peer[] = [];
 	const peers: string[] = ccp.getPeersForOrganization(orgName);
 	peers.forEach((peerName: string) => {
-		const peer: any = ccp.getPeer(peerName);
+		const peer = ccp.getPeer(peerName);
 		data = fs.readFileSync(peer.tlsCACerts.path);
 		targets.push(
 			client.newPeer(
@@ -90,7 +94,7 @@ export async function sdk_chaincode_install_for_org(ccType: 'golang' | 'car' | '
 
 		BaseUtils.logMsg(`Using deprecated API to install chaincode with ID ${chaincodeId}@${ccVersion} on organization ${orgName} peers [${ccp.getPeersForOrganization(orgName).toString()}] ...`);
 
-		const results: Client.ProposalResponseObject = await client.installChaincode(request as any);
+		const results: Client.ProposalResponseObject = await client.installChaincode(request);
 
 		const proposalResponses: Array<Client.ProposalResponse | Client.ProposalErrorResponse> = results[0];
 		if (!proposalResponses) {
@@ -157,7 +161,7 @@ export async function sdk_chaincode_instantiate(ccName: string, ccType: 'golang'
 	if (tls) {
 		const caName: string = ccp.getCertificateAuthoritiesForOrg(orgName)[0];
 		const fabricCAEndpoint: string = ccp.getCertificateAuthority(caName).url;
-		const tlsInfo: any = await AdminUtils.tlsEnroll(fabricCAEndpoint, caName);
+		const tlsInfo = await AdminUtils.tlsEnroll(fabricCAEndpoint, caName);
 		client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 	}
 
@@ -183,7 +187,7 @@ export async function sdk_chaincode_instantiate(ccName: string, ccType: 'golang'
 
 		const peers: string[] = ccp.getPeersForOrganization(orgName);
 		peers.forEach((peerName: string) => {
-			const thisPeer: any = ccp.getPeer(peerName);
+			const thisPeer = ccp.getPeer(peerName);
 			data = fs.readFileSync(thisPeer.tlsCACerts.path);
 			const peer: Client.Peer = client.newPeer(
 				thisPeer.url,
@@ -206,9 +210,9 @@ export async function sdk_chaincode_instantiate(ccName: string, ccType: 'golang'
 
 		let results: Client.ProposalResponseObject;
 		if (upgrade) {
-			results = await channel.sendUpgradeProposal(proposalRequest as any);
+			results = await channel.sendUpgradeProposal(proposalRequest);
 		} else {
-			results = await channel.sendInstantiateProposal(proposalRequest as any);
+			results = await channel.sendInstantiateProposal(proposalRequest);
 		}
 
 		const proposalResponses: Array<Client.ProposalResponse> = results[0] as Array<Client.ProposalResponse>;
@@ -269,7 +273,7 @@ export async function sdk_chaincode_instantiate(ccName: string, ccType: 'golang'
 	} catch (err) {
 		const msg = `Failed to perform ${type} instantiation on chaincode with ID ${chaincodeId}@${ccVersion} using deprecated API`;
 		BaseUtils.logError(msg, err);
-		throw new Error(`${msg} due to error: ${String(err.stack ? err.stack : err)}`);
+		throw new Error(`${msg} due to error: ${String((err as Error).stack ? (err as Error).stack : err)}`);
 	}
 }
 

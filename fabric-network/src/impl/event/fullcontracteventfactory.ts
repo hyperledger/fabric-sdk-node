@@ -6,6 +6,7 @@
 
 import {ContractEvent, TransactionEvent} from '../../events';
 import {protos} from 'fabric-protos';
+import {Mandatory} from '../gatewayutils';
 
 export function newFullContractEvents(transactionEvent: TransactionEvent): ContractEvent[] {
 	const transactionActions: protos.ITransactionAction[] = (transactionEvent.transactionData as protos.ITransaction).actions || [];
@@ -16,12 +17,12 @@ export function newFullContractEvents(transactionEvent: TransactionEvent): Contr
 		const payload = transactionAction.payload as any;
 		// payload has been decoded by fabric-common event service before being stored as TransactionEvent
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-assignment
-		const chaincodeEvent = payload.action.proposal_response_payload.extension.events;
+		const chaincodeEvent = payload.action.proposal_response_payload.extension.events as Mandatory<protos.IChaincodeEvent>;
 		return newFullContractEvent(transactionEvent, chaincodeEvent);
 	});
 }
 
-function newFullContractEvent(transactionEvent: TransactionEvent, chaincodeEvent: protos.ChaincodeEvent): ContractEvent {
+function newFullContractEvent(transactionEvent: TransactionEvent, chaincodeEvent: Mandatory<protos.IChaincodeEvent>): ContractEvent {
 	const contractEvent: ContractEvent = {
 		chaincodeId: chaincodeEvent.chaincode_id,
 		eventName: chaincodeEvent.event_name,
