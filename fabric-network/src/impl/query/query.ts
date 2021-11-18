@@ -4,8 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {Query as CommonQuery, Endorser} from 'fabric-common';
+import {Query as CommonQuery, Endorser, EndorsementResponse} from 'fabric-common';
 import {DefaultQueryHandlerOptions} from '../../gateway';
+import {asBuffer, getTransactionResponse} from '../gatewayutils';
 
 import * as Logger from '../../logger';
 const logger = Logger.getLogger('Query');
@@ -71,12 +72,7 @@ export class QueryImpl implements Query {
 				if (responses.responses) {
 					for (const peerResponse of responses.responses) {
 						if (peerResponse.response) {
-							const response: QueryResponse = {
-								status: peerResponse.response.status,
-								payload: peerResponse.response.payload,
-								message: peerResponse.response.message,
-								isEndorsed: peerResponse.endorsement ? true : false
-							};
+							const response = newQueryResponse(peerResponse);
 							results[peerResponse.connection.name] = response;
 							logger.debug('%s - have results - peer: %s with status:%s',
 								method,
@@ -107,4 +103,15 @@ export class QueryImpl implements Query {
 		logger.debug('%s - end', method);
 		return results;
 	}
+}
+
+function newQueryResponse(endorseResponse: EndorsementResponse): QueryResponse {
+	const isEndorsed = endorseResponse.endorsement ? true : false;
+	const payload = isEndorsed ? asBuffer(getTransactionResponse(endorseResponse).payload) : endorseResponse.response.payload;
+	return {
+		isEndorsed,
+		message: endorseResponse.response.message,
+		payload,
+		status: endorseResponse.response.status,
+	};
 }

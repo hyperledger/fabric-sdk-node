@@ -4,10 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import * as os from 'os';
+import {EndorsementResponse} from 'fabric-common';
+import {protos} from 'fabric-protos';
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import * as util from 'util';
+
 import _rimraf = require('rimraf');
 const rimraf = util.promisify(_rimraf);
 
@@ -65,3 +68,32 @@ export async function rmdir(directory: string): Promise<void> {
 }
 
 export type Mutable<T> = { -readonly [P in keyof T]: T[P]; }
+
+export function newEndorsementResponse(response: protos.IResponse, properties: Partial<EndorsementResponse> = {}): EndorsementResponse {
+	const payload = protos.ProposalResponsePayload.encode({
+		extension: protos.ChaincodeAction.encode({
+			response,
+		}).finish(),
+	}).finish();
+
+	const template: EndorsementResponse = {
+		connection: {
+			name: 'name',
+			options: {},
+			type: 'peer',
+			url: 'grpc://example.org:1337',
+		},
+		endorsement: {
+			endorser: Buffer.alloc(0),
+			signature: Buffer.alloc(0),
+		},
+		payload: Buffer.from(payload),
+		response: {
+			message: response.message,
+			payload: Buffer.alloc(0),
+			status: response.status ?? 200,
+		},
+	};
+
+	return Object.assign(template, properties);
+}

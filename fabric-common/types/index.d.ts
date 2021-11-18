@@ -115,7 +115,7 @@ export interface EndorsementResponse {
 		payload: Buffer;
 	};
 	payload: Buffer;
-	endorsement: {
+	endorsement?: {
 		endorser: Buffer;
 		signature: Buffer;
 	};

@@ -9,14 +9,16 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import {BuildProposalRequest, CommitSendRequest, EndorsementResponse, Endorser, IdentityContext, ProposalResponse, SendProposalRequest} from 'fabric-common';
+import * as util from 'util';
 import {ContractImpl} from './contract';
+import {ConnectedGatewayOptions} from './gateway';
+import * as EventHandlers from './impl/event/defaulteventhandlerstrategies';
 import {TxEventHandlerFactory} from './impl/event/transactioneventhandler';
+import {asBuffer, getTransactionResponse} from './impl/gatewayutils';
 import {QueryImpl} from './impl/query/query';
 import {QueryHandler} from './impl/query/queryhandler';
-import * as EventHandlers from './impl/event/defaulteventhandlerstrategies';
 import * as Logger from './logger';
-import * as util from 'util';
-import {ConnectedGatewayOptions} from './gateway';
+
 const logger = Logger.getLogger('Transaction');
 
 function getResponsePayload(proposalResponse: ProposalResponse): Buffer {
@@ -28,7 +30,9 @@ function getResponsePayload(proposalResponse: ProposalResponse): Buffer {
 		throw error;
 	}
 
-	return validEndorsementResponse.response.payload;
+	const payload = getTransactionResponse(validEndorsementResponse).payload;
+
+	return asBuffer(payload);
 }
 
 function getValidEndorsementResponse(endorsementResponses: EndorsementResponse[]): EndorsementResponse | undefined {
