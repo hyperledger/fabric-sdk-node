@@ -11,6 +11,7 @@ const expect = require('chai').expect;
 
 const QueryProposal = require('fabric-common/lib/Query');
 const {QueryImpl: Query} = require('fabric-network/lib/impl/query/query');
+const {newEndorsementResponse} = require('../../testutils');
 
 describe('Query', () => {
 	let queryProposal;
@@ -24,27 +25,25 @@ describe('Query', () => {
 	const noresulterror = new Error('No responses returned for query');
 	const missingerror = new Error('Missing response from peer');
 	const response200 = {status: 200, payload: Buffer.from('good'), message: undefined};
-	const result200 = {status: 200, payload: Buffer.from('good'), message: undefined, isEndorsed: true};
-	const response200_peer1 = {
-		response: response200,
+	const result200 = {status: 200, payload: Buffer.from('good'), isEndorsed: true};
+	const response200_peer1 = newEndorsementResponse(response200, {
 		connection: {name: 'peer1'},
-		endorsement: {}
-	};
-	const response200_peer2 = {
-		response: response200,
+	});
+	const response200_peer2 = newEndorsementResponse(response200, {
 		connection: {name: 'peer2'},
-		endorsement: {}
-	};
+	});
 	const response500 = {status: 500, message: 'problem500', payload: undefined};
-	const result500 = {status: 500, message: 'problem500', payload: undefined, isEndorsed: false};
-	const response500_peer1 = {
-		response: response500,
-		connection: {name: 'peer1'}
-	};
-	const response500_peer2 = {
-		response: response500,
-		connection: {name: 'peer2'}
-	};
+	const result500 = {status: 500, message: 'problem500', isEndorsed: false};
+	const response500_peer1 = newEndorsementResponse(response500, {
+		connection: {name: 'peer1'},
+		endorsement: undefined,
+		payload: undefined,
+	});
+	const response500_peer2 = newEndorsementResponse(response500, {
+		connection: {name: 'peer2'},
+		endorsement: undefined,
+		payload: undefined,
+	});
 
 	const valid200Resonse = {responses: [response200_peer1]};
 	const valid200Resonses = {responses: [response200_peer1, response200_peer2]};
@@ -128,19 +127,15 @@ describe('Query', () => {
 
 			const result = await query.evaluate([peer1]);
 
-			const expected = {
-				peer1: result200
-			};
-			expect(result).to.own.deep.equal(expected);
+			expect(result).to.have.key('peer1');
+			expect(result.peer1).to.deep.include(result200);
 		});
 		it('returns query results from one peer status 500', async () => {
 			queryProposal.send.resolves(valid500Resonse);
 
 			const result = await query.evaluate([peer1]);
-			const expected = {
-				peer1: result500
-			};
-			expect(result).to.own.deep.equal(expected);
+			expect(result).to.have.key('peer1');
+			expect(result.peer1).to.deep.include(result500);
 		});
 		it('returns query error result from one peer', async () => {
 			queryProposal.send.resolves(errorResonse);
@@ -166,23 +161,18 @@ describe('Query', () => {
 
 			const result = await query.evaluate([peer1, peer2]);
 
-			const expected = {
-				peer1: result200,
-				peer2: result200
-			};
-			expect(result).to.own.deep.equal(expected);
+			expect(result).to.have.all.keys('peer1', 'peer2');
+			expect(result.peer1).to.deep.include(result200);
+			expect(result.peer2).to.deep.include(result200);
 		});
 		it('returns query results from two peers status 500', async () => {
 			queryProposal.send.resolves(valid500Resonses);
 
 			const result = await query.evaluate([peer1, peer2]);
-			const expected = {
-				peer1: result500,
-				peer2: result500
-			};
 
-			expect(result).to.own.deep.equal(expected);
-
+			expect(result).to.have.all.keys('peer1', 'peer2');
+			expect(result.peer1).to.deep.include(result500);
+			expect(result.peer2).to.deep.include(result500);
 		});
 		it('returns query error result from two peers', async () => {
 			queryProposal.send.resolves(errorResonses);
@@ -210,7 +200,7 @@ describe('Query', () => {
 
 			const result = await query.evaluate([peer1, peer2]);
 
-			expect(result.peer1).to.own.deep.equal(result200);
+			expect(result.peer1).to.own.deep.include(result200);
 			expect(result.peer2.message).to.own.deep.equal(missingerror.message);
 		});
 		it('returns empty result and valid result', async () => {
@@ -218,7 +208,7 @@ describe('Query', () => {
 
 			const result = await query.evaluate([peer1, peer2]);
 
-			expect(result.peer1).to.own.deep.equal(result200);
+			expect(result.peer1).to.own.deep.include(result200);
 			expect(result.peer2.message).to.own.deep.equal(missingerror.message);
 		});
 		it('returns no result error result from one peer and error from the other', async () => {
@@ -236,15 +226,15 @@ describe('Query', () => {
 
 			const result = await query.evaluate([peer1, peer2]);
 
-			expect(result.peer1).to.own.deep.equal(result200);
-			expect(result.peer2).to.own.deep.equal(result500);
+			expect(result.peer1).to.own.deep.include(result200);
+			expect(result.peer2).to.own.deep.include(result500);
 		});
 		it('returns mixed valid and error result from two peers', async () => {
 			queryProposal.send.resolves(vallidMixError);
 
 			const result = await query.evaluate([peer1, peer2]);
 
-			expect(result.peer1).to.own.deep.equal(result200);
+			expect(result.peer1).to.own.deep.include(result200);
 			expect(result.peer2.message).to.own.deep.equal(error2.message);
 		});
 	});
