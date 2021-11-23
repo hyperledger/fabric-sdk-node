@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import {EndorsementResponse} from 'fabric-common';
+import {protos} from 'fabric-protos';
+
 /**
  * Knuth shuffle of array elements. The supplied array is directly modified.
  * @private
@@ -75,3 +78,25 @@ export function notNullish<T>(value?: T): value is T {
 }
 
 export type Mandatory<T> = { [P in keyof T]-?: NonNullable<T[P]> };
+
+export function assertDefined<T>(value: T | null | undefined, message: string): T {
+	if (value == undefined) { // eslint-disable-line eqeqeq
+		throw new Error(message);
+	}
+
+	return value;
+}
+
+export function asBuffer(bytes: Uint8Array | null | undefined): Buffer {
+	if (!bytes) {
+		return Buffer.alloc(0);
+	}
+
+	return Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength); // Create a Buffer view to avoid copying
+}
+
+export function getTransactionResponse(proposalResponse: EndorsementResponse): protos.IResponse {
+	const responsePayload = protos.ProposalResponsePayload.decode(proposalResponse.payload);
+	const chaincodeAction = protos.ChaincodeAction.decode(responsePayload.extension);
+	return assertDefined(chaincodeAction.response, 'Missing chaincode action response');
+}
