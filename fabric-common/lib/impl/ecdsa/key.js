@@ -10,6 +10,7 @@
 const Key = require('../../Key');
 const HashPrimitives = require('../../HashPrimitives');
 const jsrsa = require('jsrsasign');
+const Utils = require('../../Utils');
 const asn1 = jsrsa.asn1;
 const KEYUTIL = jsrsa.KEYUTIL;
 const ECDSA = jsrsa.ECDSA;
@@ -118,20 +119,20 @@ class ECDSA_KEY extends Key {
 	 * @throws Will throw an error if CSR generation fails for any other reason
 	 */
 	generateCSR(subjectDN, extensions) {
-
 		// check to see if this is a private key
 		if (!this.isPrivate()) {
 			throw new Error('A CSR cannot be generated from a public key');
 		}
 
-		const csr = asn1.csr.CSRUtil.newCSRPEM({
+		const extreq = Utils.mapCSRExtensions(extensions);
+		const csr = new asn1.csr.CertificationRequest({
 			subject: {str: asn1.x509.X500Name.ldapToOneline(subjectDN)},
 			sbjpubkey: this.getPublicKey()._key,
 			sigalg: 'SHA256withECDSA',
 			sbjprvkey: this._key,
-			ext: extensions
+			extreq,
 		});
-		return csr;
+		return csr.getPEM();
 	}
 
 	/**

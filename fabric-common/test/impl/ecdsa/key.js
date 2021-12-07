@@ -6,6 +6,7 @@
 
 'use strict';
 
+const ECDSA_KEY = require('../../../lib/impl/ecdsa/key');
 const rewire = require('rewire');
 const ECDSA_KEY_REWIRE = rewire('../../../lib/impl/ecdsa/key');
 const jsrsa = require('jsrsasign');
@@ -121,8 +122,9 @@ describe('ECDSA_KEY', () => {
 	});
 
 	describe('#generateCSR', () => {
-
+		const {prvKeyObj: privateKey, pubKeyObj: publicKey} = KEYUTIL.generateKeypair('EC', 'P-256');
 		let revert;
+
 		afterEach(() => {
 			if (revert) {
 				revert();
@@ -131,92 +133,60 @@ describe('ECDSA_KEY', () => {
 		});
 
 		it('should throw when trying to generate if public', () => {
-			(() => {
-				const fakeKey = {type: 'EC', prvKeyHex: 'privateKey', pubKeyHex: 'publicKey'};
-				const myKey = new ECDSA_KEY_REWIRE(fakeKey);
-				myKey._key.should.deep.equal(fakeKey);
-				myKey.isPrivate = sinon.stub().returns(false);
-				myKey.generateCSR('CN=publickey');
-			}).should.throw(/A CSR cannot be generated from a public key/);
+			const key = new ECDSA_KEY(publicKey);
+
+			const test = () => key.generateCSR('CN=PublicKey');
+
+			test.should.throw('A CSR cannot be generated from a public key');
 		});
 
 		it('should rethrow internal errors', () => {
-			(() => {
-				const pemStub = sinon.stub().throws(new Error('MY_ERROR'));
-				const fakeAnsn1 = {
-					csr: {
-						CSRUtil: {
-							newCSRPEM: pemStub
-						}
-					},
-					x509: {
-						X500Name: {
-							ldapToOneline: sinon.stub()
-						}
-					}
-				};
-
-				revert = ECDSA_KEY_REWIRE.__set__('asn1', fakeAnsn1);
-				const fakeKey = {type: 'EC', prvKeyHex: 'privateKey', pubKeyHex: 'publicKey'};
-				const myKey = new ECDSA_KEY_REWIRE(fakeKey);
-				myKey._key.should.deep.equal(fakeKey);
-				myKey.isPrivate = sinon.stub().returns(true);
-				myKey.generateCSR('CN=publickey');
-			}).should.throw(/MY_ERROR/);
-		});
-
-		it('should call into jsra lib if private', () => {
-
-			const pemStub = sinon.stub().returns('your PEM sir');
-			const fakeAnsn1 = {
-				csr: {
-					CSRUtil: {
-						newCSRPEM: pemStub
-					}
-				},
-				x509: {
-					X500Name: {
-						ldapToOneline: sinon.stub()
-					}
-				}
+			const key = new ECDSA_KEY(privateKey);
+			const badExt = {
+				extname: 'FAIL',
 			};
 
-			revert = ECDSA_KEY_REWIRE.__set__('asn1', fakeAnsn1);
-			const fakeKey = {type: 'EC', prvKeyHex: 'privateKey', pubKeyHex: 'publicKey'};
-			const myKey = new ECDSA_KEY_REWIRE(fakeKey);
-			myKey._key.should.deep.equal(fakeKey);
-			myKey.isPrivate = sinon.stub().returns(true);
-			const csr = myKey.generateCSR('CN=publickey');
+			const test = () => key.generateCSR('CN=name', [badExt]);
 
-			csr.should.equal('your PEM sir');
-			sinon.assert.calledOnce(pemStub);
+			test.should.throw(badExt.extname);
 		});
 
-		it('should call into jsrsa lib if extensions are passed', () => {
-
-			const extensions = [{subjectAltName: {array: [{dns: 'host1'}, {dns: 'host2'}]}}];
-			const pemStub = sinon.stub().returns('your PEM sir');
-			const fakeAnsn1 = {
-				csr: {
-					CSRUtil: {
-						newCSRPEM: pemStub
-					}
+		it('should include extensions', () => {
+			const subjectAltNames = [
+				{dns: 'host1'},
+				{dns: 'host2'},
+			];
+			const subjectAltNameExt = {
+				subjectAltName: {
+					array: subjectAltNames,
 				},
-				x509: {
-					X500Name: {
-						ldapToOneline: sinon.stub()
-					}
-				}
 			};
+			const key = new ECDSA_KEY(privateKey);
 
-			revert = ECDSA_KEY_REWIRE.__set__('asn1', fakeAnsn1);
-			const fakeKey = {type: 'EC', prvKeyHex: 'privateKey', pubKeyHex: 'publicKey'};
-			const myKey = new ECDSA_KEY_REWIRE(fakeKey);
-			myKey.isPrivate = sinon.stub().returns(true);
-			const csr = myKey.generateCSR('CN=publickey', extensions);
+			const csrPem = key.generateCSR('CN=name', [subjectAltNameExt]);
+			const csr = jsrsa.asn1.csr.CSRUtil.getParam(csrPem);
 
-			csr.should.equal('your PEM sir');
-			sinon.assert.calledOnceWithExactly(pemStub, sinon.match.has('ext', extensions));
+			const expected = {
+				extname: 'subjectAltName',
+				array: subjectAltNames,
+			};
+			csr.should.have.property('extreq').that.deep.includes(expected);
+		});
+
+		it('should include extension request format extensions', () => {
+			const subjectAltName = {
+				extname: 'subjectAltName',
+				array: [
+					{dns: 'host1'},
+					{dns: 'host2'},
+				],
+			};
+			const key = new ECDSA_KEY(privateKey);
+
+			const csrPem = key.generateCSR('CN=name', [subjectAltName]);
+			const csr = jsrsa.asn1.csr.CSRUtil.getParam(csrPem);
+
+			csr.should.have.property('extreq').that.deep.includes(subjectAltName);
 		});
 	});
 
