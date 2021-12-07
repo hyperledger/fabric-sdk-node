@@ -8,6 +8,7 @@
 'use strict';
 
 const Key = require('../../Key');
+const Utils = require('../../Utils');
 const jsrsa = require('jsrsasign');
 const asn1 = jsrsa.asn1;
 
@@ -112,16 +113,7 @@ const Pkcs11EcdsaKey = class extends Key {
 		}
 		const ecdsa = new EC(this._cryptoSuite._ecdsaCurve);
 		const pubKey = ecdsa.keyFromPublic(this._pub._ecpt);
-		const extreq = [];
-		if (param.ext !== undefined && param.ext.length !== undefined) {
-			for (const ext of param.ext) {
-				for (const extname in ext) {
-					const extObj = ext[extname];
-					extObj.extname = extname;
-					extreq.push(extObj);
-				}
-			}
-		}
+		const extreq = Utils.mapCSRExtensions(param.ext);
 		const sigAlgName = param.sigalg;
 		const csr = new _KJUR_asn1_csr.CertificationRequest({
 			subject: param.subject,
