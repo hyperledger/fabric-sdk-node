@@ -129,32 +129,27 @@ const BasePackager = class {
 	 * @param desc
 	 * @returns {Promise}
 	 */
-	packEntry (pack, desc) {
-		return new Promise((resolve, reject) => {
-			// Use a synchronous read to reduce non-determinism
-			const content = fs.readFileSync(desc.fqp);
-			if (!content) {
-				reject(new Error('failed to read ' + desc.fqp));
-			} else {
-				// Use a deterministic "zero-time" for all date fields
-				const zeroTime = new Date(0);
-				const header = {
-					name: desc.name,
-					size: content.size,
-					mode: 0o100644,
-					atime: zeroTime,
-					mtime: zeroTime,
-					ctime: zeroTime
-				};
+	async packEntry (pack, desc) {
+		const content = await fs.promises.readFile(desc.fqp);
 
-				pack.entry(header, content, (err) => {
-					if (err) {
-						reject(err);
-					} else {
-						resolve(true);
-					}
-				});
-			}
+		// Use a deterministic "zero-time" for all date fields
+		const zeroTime = new Date(0);
+		const header = {
+			name: desc.name,
+			size: content.size,
+			mode: 0o100644,
+			atime: zeroTime,
+			mtime: zeroTime,
+			ctime: zeroTime
+		};
+
+		return new Promise((resolve, reject) => {
+			pack.entry(header, content, (err) => {
+				if (err) {
+					return reject(err);
+				}
+				resolve(true);
+			});
 		});
 	}
 
@@ -166,11 +161,14 @@ const BasePackager = class {
 	 * @returns {Promise}
 	 */
 	generateTarGz (descriptors, dest) {
+		logger.debug('generateTarGz ::', descriptors);
+
 		return new Promise((resolve, reject) => {
 			const pack = tar.pack();
 			// Setup the pipeline to compress on the fly and resolve/reject the promise
 			pack.pipe(zlib.createGzip()).pipe(dest)
 				.on('finish', () => {
+					logger.debug('generateTarGz - finish pipe');
 					resolve(true);
 				})
 				.on('error', (err) => {
@@ -180,18 +178,19 @@ const BasePackager = class {
 			// Iterate through each descriptor in the order it was provided and resolve
 			// the entry asynchronously.  We will gather results below before
 			// finalizing the tarball
-			const tasks = [];
+			let tasks = Promise.resolve();
 			for (const desc of descriptors) {
-				const task = this.packEntry(pack, desc);
-				tasks.push(task);
+				tasks = tasks.then(() => this.packEntry(pack, desc));
 			}
 
 			// Block here until all entries have been gathered, and then finalize the
 			// tarball.  This should result in a flush of the entire pipeline before
 			// resolving the top-level promise.
-			Promise.all(tasks).then(() => {
+			tasks.then(() => {
+				logger.debug('generateTarGz - finalize pack');
 				pack.finalize();
 			}).catch((err) => {
+				logger.error('generateTarGz - packEntry failed ::', err);
 				reject(err);
 			});
 		});

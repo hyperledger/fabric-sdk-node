@@ -21,6 +21,34 @@ const policiesPath = configRoot + '/policies.json';
 const instantiatedChaincodesOnChannels = new Map();
 const installedChaincodesOnPeers = new Map();
 
+function isChaincodeInstalled(orgName, ccId, version, ccType) {
+	const keys = installedChaincodesOnPeers.get(orgName) || [];
+	const key = getChaincodeKey(ccId, version, ccType);
+	return keys.includes(key);
+}
+
+function getChaincodeKey(ccId, version, ccType) {
+	return `${ccId}${version}${ccType}`;
+}
+
+function setChaincodeInstalled(orgName, ccId, version, ccType) {
+	const keys = installedChaincodesOnPeers.get(orgName) || [];
+	const key = getChaincodeKey(ccId, version, ccType);
+	installedChaincodesOnPeers.set(orgName, [...keys, key]);
+}
+
+function isChaincodeInstantiated(channelName, ccId, version, ccType) {
+	const keys = instantiatedChaincodesOnChannels.get(channelName) || [];
+	const key = getChaincodeKey(ccId, version, ccType);
+	return keys.includes(key);
+}
+
+function setChaincodeInstantiated(channelName, ccId, version, ccType) {
+	const keys = instantiatedChaincodesOnChannels.get(channelName) || [];
+	const key = getChaincodeKey(ccId, version, ccType);
+	instantiatedChaincodesOnChannels.set(channelName, [...keys, key]);
+}
+
 module.exports = function () {
 	this.Then(/^I can sleep (\d+)$/, {timeout: testUtil.TIMEOUTS.MED_STEP}, async (millis) => {
 		testUtil.logMsg(' .....sleeping ' + millis);
@@ -111,12 +139,9 @@ module.exports = function () {
 			tls = true;
 			profile =  new CCP(path.join(__dirname, tlsCcpPath), true);
 		}
-		if (!installedChaincodesOnPeers.has(orgName)) {
-			installedChaincodesOnPeers.set(orgName, []);
-		}
-		if (!installedChaincodesOnPeers.get(orgName).includes(`${ccName}${version}${ccType}`)) {
+		if (!isChaincodeInstalled(orgName, ccId, version, ccType)) {
 			await chaincode_util.installChaincode(ccName, ccName, ccType, version, tls, profile, orgName, channelName);
-			installedChaincodesOnPeers.set(orgName, [...installedChaincodesOnPeers.get(orgName), `${ccName}${version}${ccType}`]);
+			setChaincodeInstalled(orgName, ccId, version, ccType);
 		}
 		return true;
 	});
@@ -141,12 +166,9 @@ module.exports = function () {
 		// fixed version
 		const version = '1.0.0';
 
-		if (!installedChaincodesOnPeers.has(orgName)) {
-			installedChaincodesOnPeers.set(orgName, []);
-		}
-		if (!installedChaincodesOnPeers.get(orgName).includes(`${ccName}${version}${ccType}`)) {
+		if (!isChaincodeInstalled(orgName, ccName, version, ccType)) {
 			await chaincode_util.installChaincode(ccName, ccName, ccType, version, tls, profile, orgName, channelName);
-			installedChaincodesOnPeers.set(orgName, [installedChaincodesOnPeers.get(orgName), `${ccName}${version}${ccType}`]);
+			setChaincodeInstalled(orgName, ccName, version, ccType);
 		}
 		return true;
 	});
@@ -171,12 +193,9 @@ module.exports = function () {
 		// fixed version
 		const version = '1.0.0';
 
-		if (!installedChaincodesOnPeers.has(orgName)) {
-			installedChaincodesOnPeers.set(orgName, []);
-		}
-		if (!installedChaincodesOnPeers.get(orgName).includes(`${ccName}${version}${ccType}`)) {
+		if (!isChaincodeInstalled(orgName, ccId, version, ccType)) {
 			await chaincode_util.installChaincode(ccName, ccId, ccType, version, tls, profile, orgName, channelName);
-			installedChaincodesOnPeers.set(orgName, [...installedChaincodesOnPeers.get(orgName), `${ccName}${version}${ccType}`]);
+			setChaincodeInstalled(orgName, ccId, version, ccType);
 		}
 		return true;
 	});
@@ -200,12 +219,9 @@ module.exports = function () {
 		}
 
 		const policy = require(path.join(__dirname, policiesPath))[policyType];
-		if (!instantiatedChaincodesOnChannels.has(channelName)) {
-			instantiatedChaincodesOnChannels.set(channelName, []);
-		}
-		if (!instantiatedChaincodesOnChannels.get(channelName).includes(`${ccName}${version}${ccType}`)) {
+		if (!isChaincodeInstantiated(channelName, ccName, version, ccType)) {
 			await chaincode_util.instantiateChaincode(ccName, ccName, ccType, args, version, upgrade, tls, profile, orgName, channelName, policy);
-			instantiatedChaincodesOnChannels.set(channelName, [...instantiatedChaincodesOnChannels.get(channelName), `${ccName}${version}${ccType}`]);
+			setChaincodeInstantiated(channelName, ccName, version, ccType);
 		}
 		return true;
 	});
@@ -229,12 +245,9 @@ module.exports = function () {
 		}
 
 		const policy = require(path.join(__dirname, policiesPath))[policyType];
-		if (!instantiatedChaincodesOnChannels.has(channelName)) {
-			instantiatedChaincodesOnChannels.set(channelName, []);
-		}
-		if (!instantiatedChaincodesOnChannels.get(channelName).includes(`${ccName}${version}${ccType}`)) {
+		if (!isChaincodeInstantiated(channelName, ccId, version, ccType)) {
 			await chaincode_util.instantiateChaincode(ccName, ccId, ccType, args, version, upgrade, tls, profile, orgName, channelName, policy);
-			instantiatedChaincodesOnChannels.set(channelName, [...instantiatedChaincodesOnChannels.get(channelName), `${ccName}${version}${ccType}`]);
+			setChaincodeInstantiated(channelName, ccId, version, ccType);
 		}
 		return true;
 	});
@@ -284,21 +297,15 @@ module.exports = function () {
 		try {
 			for (const org in orgs) {
 				const orgName = orgs[org];
-				if (!installedChaincodesOnPeers.has(orgName)) {
-					installedChaincodesOnPeers.set(orgName, []);
-				}
-				if (!installedChaincodesOnPeers.get(orgName).includes(`${ccName}${version}${ccType}`)) {
+				if (!isChaincodeInstalled(orgName, ccId, version, ccType)) {
 					await chaincode_util.installChaincode(ccName, ccId, ccType, version, tls, profile, orgName, channelName);
-					installedChaincodesOnPeers.set(orgName, [...installedChaincodesOnPeers.get(orgName), `${ccName}${version}${ccType}`]);
+					setChaincodeInstalled(orgName, ccId, version, ccType);
 				}
 			}
 
-			if (!instantiatedChaincodesOnChannels.has(channelName)) {
-				instantiatedChaincodesOnChannels.set(channelName, []);
-			}
-			if (!instantiatedChaincodesOnChannels.get(channelName).includes(`${ccName}${version}${ccType}`)) {
+			if (!isChaincodeInstantiated(channelName, ccId, version, ccType)) {
 				await chaincode_util.instantiateChaincode(ccName, ccId, ccType, args, version, false, tls, profile, orgs[0], channelName, policy);
-				instantiatedChaincodesOnChannels.set(channelName, [...instantiatedChaincodesOnChannels.get(channelName), `${ccName}${version}${ccType}`]);
+				setChaincodeInstantiated(channelName, ccId, version, ccType);
 			}
 			return true;
 		} catch (err) {
@@ -322,23 +329,17 @@ module.exports = function () {
 		try {
 			for (const org in orgs) {
 				const orgName = orgs[org];
-				if (!installedChaincodesOnPeers.has(orgName)) {
-					installedChaincodesOnPeers.set(orgName, []);
-				}
-				if (!installedChaincodesOnPeers.get(orgName).includes(`${ccName}${version}${ccType}`)) {
+				if (!isChaincodeInstalled(orgName, ccId, version, ccType)) {
 					await chaincode_util.installChaincode(ccName, ccId, ccType, version, tls, profile, orgName, channelName);
-					installedChaincodesOnPeers.set(orgName, [...installedChaincodesOnPeers.get(orgName), `${ccName}${version}${ccType}`]);
+					setChaincodeInstalled(orgName, ccId, version, ccType);
 				}
 			}
 
-			if (!instantiatedChaincodesOnChannels.has(channelName)) {
-				instantiatedChaincodesOnChannels.set(channelName, []);
-			}
-			if (!instantiatedChaincodesOnChannels.get(channelName).includes(`${ccName}${version}${ccType}`)) {
+			if (!isChaincodeInstantiated(channelName, ccId, version, ccType)) {
 				await chaincode_util.instantiateChaincode(
 					ccName, ccId, ccType, args, version, false, tls, profile, orgs[0], channelName, policy, collections
 				);
-				instantiatedChaincodesOnChannels.set(channelName, [...instantiatedChaincodesOnChannels.get(channelName), `${ccName}${version}${ccType}`]);
+				setChaincodeInstantiated(channelName, ccId, version, ccType);
 			}
 			return true;
 		} catch (err) {

@@ -16,6 +16,7 @@ tmp
 .nyc_output/*
 *.csv
 *.heapsnapshot
+package-lock.json
 
 #test files
 test/typescript/**/*.js

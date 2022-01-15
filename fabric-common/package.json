@@ -26,12 +26,6 @@
   "dependencies": {
     "winston": "^2.4.0"
   },
-  "devDependencies": {
-    "mocha": "^5.2.0",
-    "nyc": "^15.0.0",
-    "rewire": "^4.0.1",
-    "sinon": "^6.3.5"
-  },
   "nyc": {
     "exclude": [
       "coverage/**",
