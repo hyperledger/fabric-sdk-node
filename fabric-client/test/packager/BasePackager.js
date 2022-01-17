@@ -186,41 +186,27 @@ describe('BasePackager', () => {
 
 	describe('#packEntry', () => {
 		let packager;
-		let readFileSyncStub;
+		let readFileStub;
 		let entryStub;
 		beforeEach(() => {
 			entryStub = sandbox.stub();
-			readFileSyncStub = sandbox.stub();
-			revert.push(BasePackager.__set__('fs.readFileSync', readFileSyncStub));
+			readFileStub = sandbox.stub();
+			revert.push(BasePackager.__set__('fs.promises.readFile', readFileStub));
 
 			packager = new ValidChild();
 		});
 
-		it('should throw an error if fs reads nothing', async() => {
-			readFileSyncStub.returns(null);
-			try {
-				await packager.packEntry({}, {fqp: 'file-name'});
-				should.fail();
-			} catch (err) {
-				err.should.be.instanceof(Error);
-				err.message.should.equal('failed to read file-name');
-			}
-		});
-
 		it('should reject with error if pack.entry callback has an error', async() => {
-			readFileSyncStub.returns({size: 10});
+			readFileStub.resolves({size: 10});
 			entryStub.yields(new Error('Entry error'));
-			try {
-				await packager.packEntry({entry: entryStub}, {fqp: 'file-name'});
-				should.fail();
-			} catch (err) {
-				err.should.be.instanceof(Error);
-				err.message.should.equal('Entry error');
-			}
+
+			const test = packager.packEntry({entry: entryStub}, {fqp: 'file-name'});
+
+			await test.should.be.rejectedWith('Entry error');
 		});
 
 		it('should resolve with true if pack.entry callback does not have an error', async() => {
-			readFileSyncStub.returns({size: 10});
+			readFileStub.resolves({size: 10});
 			entryStub.yields();
 			const result = await packager.packEntry({entry: entryStub}, {fqp: 'file-name', name: 'name'});
 			const header = {

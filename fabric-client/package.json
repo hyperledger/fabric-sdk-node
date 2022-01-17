@@ -27,12 +27,12 @@
     "elliptic": "^6.5.4",
     "fabric-ca-client": "file:../fabric-ca-client",
     "fs-extra": "^8.1.0",
-    "grpc": "1.24.3",
+    "grpc": "1.24.11",
     "ignore-walk": "^3.0.0",
     "js-sha3": "^0.7.0",
     "js-yaml": "^3.9.0",
     "jsrsasign": "^10.4.1",
-    "klaw": "^2.0.0",
+    "klaw": "^4.0.1",
     "lodash.clone": "4.5.0",
     "long": "^4.0.0",
     "nano": "^6.4.4",
@@ -40,20 +40,12 @@
     "promise-settle": "^0.3.0",
     "protobufjs": "5.0.3",
     "sjcl": "1.0.7",
-    "tar-stream": "2.1.4",
+    "tar-stream": "^2.2.0",
     "url": "^0.11.0",
     "winston": "^2.4.0"
   },
   "optionalDependencies": {
     "pkcs11js": "^1.0.6"
-  },
-  "devDependencies": {
-    "chai": "^4.1.2",
-    "chai-as-promised": "^7.1.1",
-    "mocha": "^7.1.2",
-    "nyc": "^15.1.0",
-    "rewire": "^4.0.1",
-    "sinon": "^6.3.5"
   },
   "license": "Apache-2.0",
   "licenses": [
