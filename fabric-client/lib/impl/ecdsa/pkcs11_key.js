@@ -10,6 +10,7 @@
 const api = require('../../api.js');
 const jsrsa = require('jsrsasign');
 const asn1 = jsrsa.asn1;
+const Utils = require('../../utils');
 
 const elliptic = require('elliptic');
 const EC = elliptic.ec;
@@ -109,16 +110,7 @@ const PKCS11_ECDSA_KEY = class extends api.Key {
 		}
 		const ecdsa = new EC(this._cryptoSuite._ecdsaCurve);
 		const pubKey = ecdsa.keyFromPublic(this._pub._ecpt);
-		const extreq = [];
-		if (param.ext !== undefined && param.ext.length !== undefined) {
-			for (const ext of param.ext) {
-				for (const extname in ext) {
-					const extObj = ext[extname];
-					extObj.extname = extname;
-					extreq.push(extObj);
-				}
-			}
-		}
+		const extreq = Utils.mapCSRExtensions(param.ext);
 		const sigAlgName = param.sigalg;
 		const csr = new _KJUR_asn1_csr.CertificationRequest({
 			subject: param.subject,
