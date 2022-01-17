@@ -27,7 +27,7 @@ const chaincodePath = '../../chaincode';
 async function installChaincode(ccName, ccId, ccType, ccVersion, tls, ccp, orgName, channelName) {
 
 	if (!supportedLanguageTypes.includes(ccType)) {
-		Promise.reject('Unsupported test ccType: ' + ccType);
+		throw new Error('Unsupported test ccType: ' + ccType);
 	}
 
 	Client.setConfigSetting('request-timeout', 60000);
@@ -98,7 +98,7 @@ async function installChaincode(ccName, ccId, ccType, ccVersion, tls, ccp, orgNa
 			chaincodeVersion: ccVersion
 		};
 
-		testUtil.logMsg('Installing chaincode with ID [' + ccId + '] on ' + orgName + ' peers [' + ccp.getPeersForOrganization(orgName).toString() + '] ...');
+		testUtil.logMsg(`Installing chaincode with ID [${ccId}] on ${orgName} peers [${ccp.getPeersForOrganization(orgName)}] ...`);
 
 		const results = await client.installChaincode(request);
 
@@ -118,7 +118,7 @@ async function installChaincode(ccName, ccId, ccType, ccVersion, tls, ccp, orgNa
 		if (!proposalResponsesValid) {
 			throw new Error('Failed to send install Proposal or receive valid response: %s', JSON.stringify(errors));
 		} else {
-			testUtil.logMsg('Successfully installed chaincode with ID [' + ccName + ']');
+			testUtil.logMsg('Successfully installed chaincode with ID [' + ccId + ']');
 			return await testUtil.sleep(testUtil.TIMEOUTS.SHORT_INC);
 		}
 	} catch (err) {
@@ -144,7 +144,7 @@ async function installChaincode(ccName, ccId, ccType, ccVersion, tls, ccp, orgNa
  */
 async function instantiateChaincode(ccName, ccId, ccType, args, version, upgrade, tls, ccp, orgName, channelName, policy, collections) {
 	if (!supportedLanguageTypes.includes(ccType)) {
-		Promise.reject('Unsupported test ccType: ' + ccType);
+		throw new Error('Unsupported test ccType: ' + ccType);
 	}
 
 	Client.setConfigSetting('request-timeout', 300000);
@@ -184,7 +184,7 @@ async function instantiateChaincode(ccName, ccId, ccType, args, version, upgrade
 	);
 
 	try {
-		testUtil.logMsg('Performing ' + type + ' transaction on chaincode with ID [' + ccName + '] as organization [' + orgName + '] ...');
+		testUtil.logMsg('Performing ' + type + ' transaction on chaincode with ID [' + ccId + '] as organization [' + orgName + '] ...');
 
 		const store = await Client.newDefaultKeyValueStore({path: testUtil.storePathForOrg(orgName)});
 		client.setStateStore(store);
@@ -265,15 +265,15 @@ async function instantiateChaincode(ccName, ccId, ccType, args, version, upgrade
 
 		results = await Promise.all(eventPromises);
 		if (results && !(results[0] instanceof Error) && results[0].status === 'SUCCESS') {
-			testUtil.logMsg('Successfully performed ' + type + ' transaction on chaincode with ID [' + ccName + ']');
+			testUtil.logMsg('Successfully performed ' + type + ' transaction on chaincode with ID [' + ccId + ']');
 			return await testUtil.sleep(testUtil.TIMEOUTS.SHORT_INC);
 		} else {
 			testUtil.logError('Failed to order the ' + type + 'transaction. Error code: ' + results[0].status);
 			throw new Error('Failed to order the ' + type + 'transaction. Error code: ' + results[0].status);
 		}
 	} catch (err) {
-		testUtil.logError('Failed to perform ' + type + ' instantiation on chaincode with ID [' + ccName + ']');
-		throw new Error('Failed to perform ' + type + ' instantiation on chaincode with ID [' + ccName + '] due to error: ' + err.stack ? err.stack : err);
+		testUtil.logError('Failed to perform ' + type + ' instantiation on chaincode with ID [' + ccId + ']');
+		throw new Error('Failed to perform ' + type + ' instantiation on chaincode with ID [' + ccId + '] due to error: ' + err.stack ? err.stack : err);
 	}
 }
 
