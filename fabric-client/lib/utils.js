@@ -573,3 +573,42 @@ module.exports.convertBytetoString = (buffer_array, encoding) => {
 
 	return result;
 };
+/**
+ * Map CSRUtil.newCSRPEM style extensions:
+ * ```
+ * {
+ *     subjectAltName: {
+ *         array: [...],
+ *     },
+ * }
+ * ```
+ *
+ * to CertificationRequest style extensions:
+ * ```
+ * {
+ *     extname: 'subjectAltName',
+ *     array: [...],
+ * }
+ * ```
+ * @private
+ */
+module.exports.mapCSRExtensions = (extensions) => {
+	if (!Array.isArray(extensions)) {
+		return extensions;
+	}
+
+	const results = [];
+	extensions.forEach(extension => {
+		const isCertificationRequestExtension = typeof extension.extname === 'string';
+		if (isCertificationRequestExtension) {
+			results.push(extension);
+		} else {
+			Object.entries(extension).forEach(([extname, props]) => {
+				const extensionRequest = Object.assign({}, props, {extname});
+				results.push(extensionRequest);
+			});
+		}
+	});
+
+	return results;
+};
