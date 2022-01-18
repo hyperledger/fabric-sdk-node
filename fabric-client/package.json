@@ -31,7 +31,7 @@
     "ignore-walk": "^3.0.0",
     "js-sha3": "^0.7.0",
     "js-yaml": "^3.9.0",
-    "jsrsasign": "^10.4.1",
+    "jsrsasign": "^8.0.20",
     "klaw": "^4.0.1",
     "lodash.clone": "4.5.0",
     "long": "^4.0.0",
