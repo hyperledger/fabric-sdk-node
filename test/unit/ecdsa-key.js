@@ -133,14 +133,15 @@ test('\n\n ** ECDSA Key Impl tests **\n\n', (t) => {
 	const subjectDN = 'CN=dummy';
 	try {
 		csrPEM = key3.generateCSR(subjectDN);
-		csrObject = asn1.csr.CSRUtil.getParam(csrPEM);
+		csrObject = asn1.csr.CSRUtil.getInfo(csrPEM);
 	} catch (err) {
 		t.fail('Failed to generate a CSR: ' + err.stack ? err.stack : err);
 	}
-	t.equal(asn1.x509.X500Name.onelineToLDAP(csrObject.subject.str), subjectDN,
+
+	t.equal(asn1.x509.X500Name.onelineToLDAP(csrObject.subject.name), subjectDN,
 		'Checking CSR subject matches subject from request');
 
-	t.equal(KEYUTIL.getKeyFromCSRPEM(csrPEM).pubKeyHex, key3.getPublicKey()._key.pubKeyHex,
+	t.equal(csrObject.pubkey.obj.pubKeyHex, key3.getPublicKey()._key.pubKeyHex,
 		'Checking CSR public key matches requested public key');
 
 	// test X509 generation

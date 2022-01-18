@@ -117,13 +117,13 @@ module.exports = class ECDSA_KEY extends api.Key {
 			throw new Error('A CSR cannot be generated from a public key');
 		}
 
-		const csr = new asn1.csr.CertificationRequest({
+		const csr = asn1.csr.CSRUtil.newCSRPEM({
 			subject: {str: asn1.x509.X500Name.ldapToOneline(subjectDN)},
 			sbjpubkey: this.getPublicKey()._key,
 			sigalg: 'SHA256withECDSA',
 			sbjprvkey: this._key
 		});
-		return csr.getPEM();
+		return csr;
 	}
 
 	/**
@@ -156,17 +156,18 @@ module.exports = class ECDSA_KEY extends api.Key {
 			sbjpubkey: this.getPublicKey()._key,
 			ext: [
 				{
-					extname: 'basicConstraints',
-					cA: false,
-					critical: true
+					basicConstraints: {
+						cA: false,
+						critical: true
+					}
 				},
 				{
-					extname: 'keyUsage',
-					bin: '11'
+					keyUsage: {bin: '11'}
 				},
 				{
-					extname: 'extKeyUsage',
-					array: [{name: 'clientAuth'}]
+					extKeyUsage: {
+						array: [{name: 'clientAuth'}]
+					}
 				}
 			],
 			cakey: this._key
