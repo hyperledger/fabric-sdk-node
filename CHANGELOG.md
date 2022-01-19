@@ -1,3 +1,10 @@
+## v1.4.19
+Tue 18 Jan 2022 17:54:17 GMT
+
+* [033866eb3](https://github.com/hyperledger/fabric-sdk-node/commit/033866eb3) Bump up the jsrsasign version from 8.0.24 to 10.4.1
+* [1a048a94f](https://github.com/hyperledger/fabric-sdk-node/commit/1a048a94f) Remove package-lock.json files (#543)
+* [82199a83a](https://github.com/hyperledger/fabric-sdk-node/commit/82199a83a) Remove Cloudant test for Fabric CA (#507)
+
 ## v1.4.18
 Tue 23 Mar 11:04:25 GMT 2021
 
