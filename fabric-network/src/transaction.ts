@@ -333,17 +333,17 @@ export class Transaction {
 
 
 
-			const commitResponse: CommitResponse = await commit.send(commitSendRequest);
+			const commitResponse: CommitResponse | undefined = await commit.send(commitSendRequest);
 
 			logger.debug('%s - commit response %j', method, commitResponse);
 			// while lint may suggest dot notation is better
 			// it requires an additional !== undefined check for the property (given commitResponse is defined, status must also be defined)
 			if (!commitResponse || (commitResponse && commitResponse.status && commitResponse.status !== 'SUCCESS')) {
 				let msg;
-				if (commitResponse) {
+				if (commitResponse !== undefined) {
 					msg = `Failed to commit transaction ${endorsement.getTransactionId()}, orderer response status: ${commitResponse.status}`;
 				} else {
-					msg = `Failed to commit transaction ${endorsement.getTransactionId()}, orderer response status: ERROR: no response from orderer, orderer is not connected. Transaction commitResponse was undefined. Check your network configuration and ensure that you have configured TLS correctly for your orderers.`;
+					msg = `Failed to commit transaction ${endorsement.getTransactionId()}, orderer response status: ERROR: no response from orderer, orderer is not connected. Transaction commitResponse was undefined. Check your network configuration.`;
 				}
 
 				logger.error('%s - %s', method, msg);
