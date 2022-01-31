@@ -337,7 +337,7 @@ export class Transaction {
 
 			if (!commitResponse || (commitResponse && commitResponse.status && commitResponse.status !== 'SUCCESS')) {
 				let msg;
-				if (commitResponse !== undefined) {
+				if (commitResponse.status) {
 					msg = `Failed to commit transaction ${endorsement.getTransactionId()}, orderer response status: ${commitResponse.status}`;
 				} else {
 					msg = `Failed to commit transaction ${endorsement.getTransactionId()}, orderer response status: ERROR: no response from orderer, orderer is not connected. Transaction commitResponse was undefined. Check your network configuration.`;
