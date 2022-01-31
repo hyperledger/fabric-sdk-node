@@ -212,6 +212,10 @@ export interface CommitSendRequest {
 	requestTimeout?: number;
 }
 
+export interface CommitResponse {
+	status: string; // this could be an ENUM!
+}
+
 export class Commit extends Proposal {
 	constructor(chaincodeName: string, channel: Channel, endorsement: Endorsement);
 	public build(idContext: IdentityContext, request?: any): Buffer;
@@ -268,8 +272,8 @@ export class DiscoveryService extends ServiceAction {
 	public hasDiscoveryResults(): boolean;
 }
 export interface RegistrationOpts {
-	startBlock?: number|string|Long;
-	endBlock?: number|string|Long;
+	startBlock?: number | string | Long;
+	endBlock?: number | string | Long;
 	unregister?: boolean;
 }
 

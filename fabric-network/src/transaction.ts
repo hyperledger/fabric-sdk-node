@@ -8,15 +8,15 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
-import {BuildProposalRequest, CommitSendRequest, EndorsementResponse, Endorser, IdentityContext, ProposalResponse, SendProposalRequest} from 'fabric-common';
+import { BuildProposalRequest, CommitResponse, CommitSendRequest, EndorsementResponse, Endorser, IdentityContext, ProposalResponse, SendProposalRequest } from 'fabric-common';
 import * as util from 'util';
-import {ContractImpl} from './contract';
-import {ConnectedGatewayOptions} from './gateway';
+import { ContractImpl } from './contract';
+import { ConnectedGatewayOptions } from './gateway';
 import * as EventHandlers from './impl/event/defaulteventhandlerstrategies';
-import {TxEventHandlerFactory} from './impl/event/transactioneventhandler';
-import {asBuffer, getTransactionResponse} from './impl/gatewayutils';
-import {QueryImpl} from './impl/query/query';
-import {QueryHandler} from './impl/query/queryhandler';
+import { TxEventHandlerFactory } from './impl/event/transactioneventhandler';
+import { asBuffer, getTransactionResponse } from './impl/gatewayutils';
+import { QueryImpl } from './impl/query/query';
+import { QueryHandler } from './impl/query/queryhandler';
 import * as Logger from './logger';
 
 const logger = Logger.getLogger('Transaction');
@@ -331,12 +331,21 @@ export class Transaction {
 			// by now we should have a discovery handler or use the target orderers
 			// that have been assigned from the channel to perform the commit
 
-			const commitResponse = await commit.send(commitSendRequest);
+
+
+			const commitResponse: CommitResponse = await commit.send(commitSendRequest);
 
 			logger.debug('%s - commit response %j', method, commitResponse);
+			// while lint may suggest dot notation is better
+			// it requires an additional !== undefined check for the property (given commitResponse is defined, status must also be defined)
+			if (!commitResponse || (commitResponse && commitResponse.status && commitResponse.status !== 'SUCCESS')) {
+				let msg;
+				if (commitResponse) {
+					msg = `Failed to commit transaction ${endorsement.getTransactionId()}, orderer response status: ${commitResponse.status}`;
+				} else {
+					msg = `Failed to commit transaction ${endorsement.getTransactionId()}, orderer response status: ERROR: no response from orderer, orderer is not connected. Transaction commitResponse was undefined. Check your network configuration and ensure that you have configured TLS correctly for your orderers.`;
+				}
 
-			if (commitResponse.status !== 'SUCCESS') {
-				const msg = `Failed to commit transaction %${endorsement.getTransactionId()}, orderer response status: ${commitResponse.status as string}`;
 				logger.error('%s - %s', method, msg);
 				eventHandler.cancelListening();
 				throw new Error(msg);
