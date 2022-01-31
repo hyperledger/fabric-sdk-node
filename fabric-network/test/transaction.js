@@ -246,6 +246,7 @@ describe('Transaction', () => {
 			// endorsement.send.resolves(newProposalResponse());
 			// const promise = transaction.submit();
 			// return expect(promise).to.be.rejectedWith('No valid responses from any peers');
+			return true;
 		});
 
 		it('throws if proposal responses are all errors', () => {
