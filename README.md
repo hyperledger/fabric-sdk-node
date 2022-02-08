@@ -17,6 +17,8 @@ This project publishes the following npm packages:
 * `fabric-network` - This package encapsulates the APIs to connect to a Fabric network, submit transactions and perform queries against the ledger at a higher level of abstraction than through the `fabric-common`.
 * `fabric-protos` - This package encapsulates the protobuffers that are used to communicate over gRPC
 
+> **Note:** When developing applications for Hyperledger Fabric v2.4 and later, you are strongly encouraged to use the new [Fabric Gateway client API](https://hyperledger.github.io/fabric-gateway/).
+
 ## Build and Test
 To build and test, the following pre-requisites must be installed first:
 * Node.js, version 10 is supported from 10.15.3 and higher
