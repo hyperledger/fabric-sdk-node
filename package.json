@@ -82,6 +82,7 @@
     "tape-promise": "^4.0.0",
     "ts-mocha": "^8.0.0",
     "ts-mock-imports": "^1.3.4",
+    "ts-node": "^10.5.0",
     "typescript": "~4.4.4",
     "winston": "^2.4.5"
   },
@@ -112,8 +113,5 @@
     "branches": 74,
     "functions": 77,
     "lines": 83
-  },
-  "dependencies": {
-    "uninstall": "^0.0.0"
   }
 }
