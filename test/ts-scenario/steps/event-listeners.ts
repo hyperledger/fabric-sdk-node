@@ -5,7 +5,7 @@
 import * as Constants from './constants';
 import * as Listeners from './lib/listeners';
 
-import {Given, Then, When} from 'cucumber';
+import {Given, Then, When} from '@cucumber/cucumber';
 import {EventType, ListenerOptions} from 'fabric-network';
 
 Given(/^I am listening for (filtered|full) contract events named (.+?) with a listener named (.+?)$/, {timeout: Constants.STEP_SHORT}, (type: EventType, eventName: string, listenerName: string) => {

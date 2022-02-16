@@ -7,7 +7,7 @@ import * as Channel from './lib/channel';
 import * as Contract from './lib/contract';
 import * as BaseUtils from './lib/utility/baseUtils';
 import {StateStore, FabricState} from './lib/utility/stateStore';
-import {Given} from 'cucumber';
+import {Given} from '@cucumber/cucumber';
 
 const stateStore: StateStore = StateStore.getInstance();
 const orgNames: string[] = ['Org1', 'Org2'];

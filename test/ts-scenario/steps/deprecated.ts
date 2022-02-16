@@ -9,7 +9,7 @@ import * as BaseUtils from './lib/utility/baseUtils';
 import {CommonConnectionProfileHelper} from './lib/utility/commonConnectionProfileHelper';
 import {StateStore, FabricState} from './lib/utility/stateStore';
 
-import {Given} from 'cucumber';
+import {Given} from '@cucumber/cucumber';
 import * as path from 'path';
 import {EndorsementPolicy} from 'fabric-client';
 
