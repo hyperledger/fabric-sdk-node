@@ -6,7 +6,7 @@ import * as Constants from './constants';
 import * as BaseUtils from './lib/utility/baseUtils';
 import {CommandRunner} from './lib/utility/commandRunner';
 import {StateStore} from './lib/utility/stateStore';
-import {Given} from 'cucumber';
+import {Given} from '@cucumber/cucumber';
 import * as path from 'path';
 
 const commandRunner: CommandRunner = CommandRunner.getInstance();

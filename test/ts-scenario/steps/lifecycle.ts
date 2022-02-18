@@ -7,7 +7,7 @@ import * as Chaincode from './lib/chaincode';
 import {CommonConnectionProfileHelper} from './lib/utility/commonConnectionProfileHelper';
 import {StateStore, FabricState} from './lib/utility/stateStore';
 
-import {Then} from 'cucumber';
+import {Then} from '@cucumber/cucumber';
 import * as path from 'path';
 
 const stateStore: StateStore = StateStore.getInstance();

@@ -12,7 +12,7 @@ import * as AdminUtils from './utility/adminUtils';
 import * as BaseUtils from './utility/baseUtils';
 import {CommonConnectionProfileHelper} from './utility/commonConnectionProfileHelper';
 
-import * as Client from 'fabric-client';
+import Client = require('fabric-client');
 import * as fs from 'fs';
 import * as path from 'path';
 

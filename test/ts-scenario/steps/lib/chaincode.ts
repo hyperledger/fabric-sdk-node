@@ -9,7 +9,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
-import * as Client from 'fabric-client';
+import Client = require('fabric-client') ;
 import * as Constants from '../constants';
 import * as AdminUtils from './utility/adminUtils';
 import * as BaseUtils from './utility/baseUtils';

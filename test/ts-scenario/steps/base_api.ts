@@ -8,7 +8,7 @@ import * as Constants from './constants';
 import {CommonConnectionProfileHelper} from './lib/utility/commonConnectionProfileHelper';
 
 import * as path from 'path';
-import {Given, When, Then} from 'cucumber';
+import {Given, When, Then} from '@cucumber/cucumber';
 
 Given(/^I have created a client named (.+?) based on information in profile (.+?) under organization (.+?)$/, {timeout: Constants.HUGE_TIME},
 	async (clientName: string, ccpName: string, userOrg: string) => {
