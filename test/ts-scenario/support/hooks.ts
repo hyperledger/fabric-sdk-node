@@ -8,7 +8,7 @@ import * as BaseUtils from '../steps/lib/utility/baseUtils';
 import {CommandRunner} from '../steps/lib/utility/commandRunner';
 import {StateStore} from '../steps/lib/utility/stateStore';
 
-import {AfterAll} from 'cucumber';
+import {AfterAll} from '@cucumber/cucumber';
 
 const commandRunner: CommandRunner = CommandRunner.getInstance();
 const stateStore: StateStore = StateStore.getInstance();

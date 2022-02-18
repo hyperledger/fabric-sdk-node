@@ -7,7 +7,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
-import * as FabricCAClient from 'fabric-ca-client';
+import FabricCAClient = require('fabric-ca-client');
 import {Contract, DefaultEventHandlerStrategies, DefaultQueryHandlerStrategies, Gateway, GatewayOptions, HsmOptions, HsmX509Provider, Identity, IdentityProvider, Network, QueryHandlerFactory, Transaction, TransientMap, TxEventHandlerFactory, Wallet, Wallets, HsmX509Identity, X509Identity} from 'fabric-network';
 import * as fs from 'fs';
 import * as path from 'path';
