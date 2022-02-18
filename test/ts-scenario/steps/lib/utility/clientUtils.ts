@@ -7,7 +7,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
-import * as FabricCAServices from 'fabric-ca-client';
+import FabricCAServices = require('fabric-ca-client');
 import {
 	Channel, Client, Commit, Endorsement, Endorser,
 	Endpoint, Eventer, EventService, Discoverer, DiscoveryService,

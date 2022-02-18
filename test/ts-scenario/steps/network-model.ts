@@ -8,7 +8,7 @@ import * as BaseUtils from './lib/utility/baseUtils';
 import {CommonConnectionProfileHelper} from './lib/utility/commonConnectionProfileHelper';
 import {StateStore, FabricState} from './lib/utility/stateStore';
 
-import {Given, Then, When} from 'cucumber';
+import {Given, Then, When} from '@cucumber/cucumber';
 import * as path from 'path';
 
 const stateStore: StateStore = StateStore.getInstance();

@@ -13,8 +13,8 @@ import * as BaseUtils from './baseUtils';
 import {CommonConnectionProfileHelper} from './commonConnectionProfileHelper';
 import {StateStore} from './stateStore';
 
-import * as FabricCAServices from 'fabric-ca-client';
-import * as Client from 'fabric-client';
+import FabricCAServices = require('fabric-ca-client');
+import  Client = require('fabric-client');
 import * as fs from 'fs';
 import * as path from 'path';
 
