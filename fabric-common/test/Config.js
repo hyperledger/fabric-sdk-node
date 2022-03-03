@@ -30,23 +30,17 @@ describe('Config', () => {
 	});
 
 	describe('#constructor', () => {
-		let mapSettingsStub;
 
 		beforeEach(() => {
 			sandbox.stub(nconf, 'use');
 			sandbox.stub(nconf, 'argv');
 			sandbox.stub(nconf, 'env');
-			nconf.stores.mapenv = 'mapenv';
-			mapSettingsStub = sandbox.stub();
-			revert.push(ConfigRewire.__set__('Config.prototype.mapSettings', mapSettingsStub));
 			revert.push(ConfigRewire.__set__('nconf', nconf));
 			process.env.property = 'test-property';
 		});
 
-		it('should call nconf, Config.mapSettings and set the correct properties', () => {
+		it('should call nconf and set the correct properties', () => {
 			const config = new ConfigRewire();
-			sinon.assert.calledWith(mapSettingsStub, nconf.stores.mapenv, sinon.match.hasOwn('property', 'test-property'));
-			sinon.assert.calledWith(nconf.use, 'memory');
 			sinon.assert.called(nconf.argv);
 			sinon.assert.called(nconf.env);
 			sinon.assert.calledWith(nconf.use, 'mapenv', {type: 'memory'});
@@ -57,25 +51,6 @@ describe('Config', () => {
 		afterEach(() => {
 			// Unset process.env.property
 			process.env.property = undefined;
-		});
-	});
-
-	describe('#mapSettings', () => {
-		let storeStub;
-
-		beforeEach(() => {
-			storeStub = {set: () => {}};
-			sandbox.stub(storeStub, 'set');
-		});
-
-		it('should add the settings to the store', () => {
-			const config = new Config();
-			config.mapSettings(storeStub, {'setting1': 'value1', 'setting2': 'value2'});
-			sinon.assert.calledTwice(storeStub.set);
-			storeStub.set.getCall(0).args[0].should.equal('setting1');
-			storeStub.set.getCall(0).args[1].should.equal('value1');
-			storeStub.set.getCall(1).args[0].should.equal('setting2');
-			storeStub.set.getCall(1).args[1].should.equal('value2');
 		});
 	});
 
