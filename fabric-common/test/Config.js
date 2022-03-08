@@ -4,14 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const nconf = require('nconf');
 const rewire = require('rewire');
 const Config = require('../lib/Config');
 const ConfigRewire = rewire('../lib/Config');
 
 const sinon = require('sinon');
 const chai = require('chai');
-chai.should();
+const should = chai.should();
 
 describe('Config', () => {
 	let sandbox;
@@ -27,31 +26,6 @@ describe('Config', () => {
 			revert.forEach(Function.prototype.call, Function.prototype.call);
 		}
 		sandbox.restore();
-	});
-
-	describe('#constructor', () => {
-
-		beforeEach(() => {
-			sandbox.stub(nconf, 'use');
-			sandbox.stub(nconf, 'argv');
-			sandbox.stub(nconf, 'env');
-			revert.push(ConfigRewire.__set__('nconf', nconf));
-			process.env.property = 'test-property';
-		});
-
-		it('should call nconf and set the correct properties', () => {
-			const config = new ConfigRewire();
-			sinon.assert.called(nconf.argv);
-			sinon.assert.called(nconf.env);
-			sinon.assert.calledWith(nconf.use, 'mapenv', {type: 'memory'});
-			config._fileStores.should.deep.equal([]);
-			config._config.should.deep.equal(nconf);
-		});
-
-		afterEach(() => {
-			// Unset process.env.property
-			process.env.property = undefined;
-		});
 	});
 
 	describe('#reorderFileStores', () => {
@@ -148,6 +122,43 @@ describe('Config', () => {
 			const result = config.get('name', 'default-value');
 			result.should.equal('default-value');
 			sinon.assert.calledWith(configStub.get, 'name');
+		});
+	});
+
+	describe('environment variables', () => {
+		let originalEnv;
+
+		beforeEach(() => {
+			originalEnv = Object.assign({}, process.env);
+		});
+
+		afterEach(() => {
+			Object.keys(process.env).forEach(key => delete process.env[key]);
+			Object.assign(process.env, originalEnv);
+		});
+
+		it('should convert number-like strings to numbers', () => {
+			process.env.testnumberproperty = '101';
+			const config = new Config();
+			const result = config.get('testnumberproperty');
+			should.exist(result);
+			result.should.equal(101);
+		});
+
+		it('should convert underscores to hyphens', () => {
+			process.env.test_underscore_property = 'PASS';
+			const config = new Config();
+			const result = config.get('test-underscore-property');
+			should.exist(result);
+			result.should.equal('PASS');
+		});
+
+		it('should convert to lowercase', () => {
+			process.env.TESTUPPERCASEPROPERTY = 'PASS';
+			const config = new Config();
+			const result = config.get('testuppercaseproperty');
+			should.exist(result);
+			result.should.equal('PASS');
 		});
 	});
 
