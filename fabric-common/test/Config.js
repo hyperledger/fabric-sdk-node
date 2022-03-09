@@ -137,29 +137,20 @@ describe('Config', () => {
 			Object.assign(process.env, originalEnv);
 		});
 
-		it('should convert number-like strings to numbers', () => {
-			process.env.testnumberproperty = '101';
-			const config = new Config();
-			const result = config.get('testnumberproperty');
-			should.exist(result);
-			result.should.equal(101);
-		});
+		const tests = [
+			{name: 'should convert number-like strings to numbers',   envName: 'testnumber',      value: '101',  expected: 101},
+			{name: 'should convert underscores to hyphens',           envName: 'test_underscore', value: 'PASS', configName: 'test-underscore'},
+			{name: 'should convert to lowercase',                     envName: 'TESTUPPERCASE',   value: 'PASS', configName: 'testuppercase'},
+			{name: 'should convert boolean-like strings to booleans', envName: 'testboolean',     value: 'true', expected: true},
+		];
 
-		it('should convert underscores to hyphens', () => {
-			process.env.test_underscore_property = 'PASS';
+		tests.forEach(test => it(`${test.name}`, () => {
+			process.env[test.envName] = test.value;
 			const config = new Config();
-			const result = config.get('test-underscore-property');
+			const result = config.get(test.configName || test.envName);
 			should.exist(result);
-			result.should.equal('PASS');
-		});
-
-		it('should convert to lowercase', () => {
-			process.env.TESTUPPERCASEPROPERTY = 'PASS';
-			const config = new Config();
-			const result = config.get('testuppercaseproperty');
-			should.exist(result);
-			result.should.equal('PASS');
-		});
+			result.should.equal(test.expected || test.value);
+		}));
 	});
 
 	describe('#set', () => {
