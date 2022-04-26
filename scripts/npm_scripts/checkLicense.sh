@@ -5,43 +5,29 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-function filterExcludedFiles {
-  CHECK=`echo "$CHECK" \
-		| grep -v "^\.git/" \
-		| grep -v "^vendor/" \
-		| grep -v "testdata/" \
-		| grep -v "test/data/" \
-		| grep -v "^LICENSE$" \
-		| grep -v "\.png$" \
-		| grep -v "\.rst$" \
-		| grep -v "\.block$" \
-		| grep -v "\.tx$" \
-		| grep -v "\.txt$" \
-		| grep -v "\.pem$" \
-		| grep -v ".crt$" \
-		| grep -v "\.key$" \
-		| grep -v "\.gen\.go$" \
-		| grep -v "^Gopkg\.lock$" \
-		| grep -v "\.md$" \
-		| grep -v "\.pb\.go$" \
-		| grep -v "\.yaml$" \
-		| grep -v "\.yml$" \
-		| grep -v "\.json$" \
-		| grep -v "\.gradle$" \
-		| grep -v "\.cds$" \
-		| grep -v "\.jar$" \
-		| grep -v "\.csr$" \
-		| grep -v "\.conf$" \
-		| sort -u`
-}
-
-CHECK=$(git diff --name-only --diff-filter=ACMRTUXB HEAD)
-filterExcludedFiles
-if [[ -z "$CHECK" ]]; then
-  LAST_COMMITS=($(git log -2 --pretty=format:"%h"))
-  CHECK=$(git diff-tree --no-commit-id --name-only --diff-filter=ACMRTUXB -r ${LAST_COMMITS[1]} ${LAST_COMMITS[0]})
-  filterExcludedFiles
-fi
+CHECK=$(find . -type f \
+    -not -path '*/.git/*' \
+    -not -path '*/node_modules/*' \
+    -not -path '*/vendor/*' \
+    -not -path './coverage/*' \
+    -not -path './docs/*' \
+    -not -path './LICENSE' \
+    -not -path './test/fixtures/*' \
+    -not -path './.idea/*' \
+    -not -path './fabric-client/test/data/*' \
+    -not -name '.*' \
+    -not -name '*.txt' \
+    -not -name '*.rst' \
+    -not -name '*.json' \
+    -not -name '*.md' \
+    -not -name '*.yaml' \
+    -not -name '*.yml' \
+    -not -name '*.proto' \
+    -not -name '*.id' \
+    -not -name '*.gradle' \
+    -not -name '*.pem' \
+    -not -name '*.log' \
+    -print | sort -u)
 
 if [[ -z "$CHECK" ]]; then
    echo "All files are excluded from having license headers"
