@@ -301,15 +301,15 @@ describe('Transaction', () => {
 		});
 
 		it('sends proposal with long timeout', async () => {
-			stubContract.getEventHandlerOptions.returns({commitTimeout: 999});
+			stubContract.getEventHandlerOptions.returns({endorseTimeout: 999});
 			await transaction.submit();
 			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal), 999000);
 		});
 
 		it('sends proposal with short timeout', async () => {
-			stubContract.getEventHandlerOptions.returns({commitTimeout: 3});
+			stubContract.getEventHandlerOptions.returns({endorseTimeout: 3});
 			await transaction.submit();
-			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal), 45000);
+			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal), 3000);
 		});
 
 		it('sends proposal to specified peers', async () => {

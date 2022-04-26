@@ -175,14 +175,11 @@ class Transaction {
 		}
 		request.endorsement_hint = {chaincodes: this._contract.getDiscoveryInterests()};
 
-		const commitTimeout = options.commitTimeout * 1000; // in ms
-		let timeout = this._contract.gateway.getClient().getConfigSetting('request-timeout', commitTimeout);
-		if (timeout < commitTimeout) {
-			timeout = commitTimeout;
-		}
+		// Same as v2.2, define the endorseTimeout property which is used as the timeout for endorsement of the proposal
+		const endorseTimeout = options.endorseTimeout * 1000; // in ms
 
 		// node sdk will target all peers on the channel that are endorsingPeer or do something special for a discovery environment
-		const results = await channel.sendTransactionProposal(request, timeout);
+		const results = await channel.sendTransactionProposal(request, endorseTimeout);
 		const proposalResponses = results[0];
 		const proposal = results[1];
 
