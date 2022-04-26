@@ -36,6 +36,8 @@ const logger = require('./logger').getLogger('Gateway');
  * @memberof module:fabric-network
  * @property {number} [commitTimeout = 300] The timeout period in seconds to wait for commit notification to
  * complete.
+ * @property {number} [endorseTimeout = 45] The timeout period in seconds to wait
+ * for the endorsement to complete.
  * @property {?module:fabric-network.Gateway~TxEventHandlerFactory} [strategy=MSPID_SCOPE_ALLFORTX] Event handling strategy to identify
  * successful transaction commits. A null value indicates that no event handling is desired. The default is
  * [MSPID_SCOPE_ALLFORTX]{@link module:fabric-network.DefaultEventHandlerStrategies}.
@@ -154,6 +156,7 @@ class Gateway {
 			},
 			eventHandlerOptions: {
 				commitTimeout: 300, // 5 minutes
+				endorseTimeout: 45, // Same as "request-timeout" default value in fabric-client/config/default.json
 				strategy: EventStrategies.MSPID_SCOPE_ALLFORTX
 			},
 			discovery: {
