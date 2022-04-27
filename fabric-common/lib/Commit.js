@@ -180,6 +180,11 @@ class Commit extends Proposal {
 		} else if (targets) {
 			logger.debug('%s - sending to the targets', method);
 			const committers = this.channel.getTargetCommitters(targets);
+
+			if (committers === undefined) {
+				throw new Error('Unable to find any target committers');
+			}
+
 			let result;
 			for (const committer of committers) {
 				const isConnected = await committer.checkConnection();
