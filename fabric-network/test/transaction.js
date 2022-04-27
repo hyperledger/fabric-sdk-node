@@ -281,6 +281,12 @@ describe('Transaction', () => {
 			return expect(promise).to.be.eventually.rejectedWith(status).and.have.deep.property('responses', [validEnsorsementResponse]);
 		});
 
+		it.only('throws with peer responses if the orderer returns an undefined response', async () => {
+			commit.send.rejects(new Error('Unable to find any target committers'));
+			const promise = transaction.submit();
+			return expect(promise).to.be.eventually.rejectedWith('Unable to find any target committers');
+		});
+
 		it('does not submit to orderer if proposal responses are all invalid', async () => {
 			endorsement.send.resolves(newProposalResponse([invalidEndorsementResponse]));
 			try {
