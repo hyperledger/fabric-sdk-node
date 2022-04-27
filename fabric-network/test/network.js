@@ -92,6 +92,7 @@ describe('Network', () => {
 			},
 			eventHandlerOptions: {
 				commitTimeout: 300,
+				endorseTimeout: 45,
 				strategy: EventStrategies.MSPID_SCOPE_ALLFORTX
 			},
 			queryHandlerOptions: {

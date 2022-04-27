@@ -300,16 +300,10 @@ describe('Transaction', () => {
 			return expect(promise).to.be.rejectedWith('Transaction has already been invoked');
 		});
 
-		it('sends proposal with long timeout', async () => {
-			stubContract.getEventHandlerOptions.returns({commitTimeout: 999});
+		it('uses endorseTimeout option as proposal timeout', async () => {
+			stubContract.getEventHandlerOptions.returns({endorseTimeout: 999});
 			await transaction.submit();
 			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal), 999000);
-		});
-
-		it('sends proposal with short timeout', async () => {
-			stubContract.getEventHandlerOptions.returns({commitTimeout: 3});
-			await transaction.submit();
-			sinon.assert.calledWith(channel.sendTransactionProposal, sinon.match(expectedProposal), 45000);
 		});
 
 		it('sends proposal to specified peers', async () => {
