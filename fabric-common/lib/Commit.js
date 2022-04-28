@@ -181,7 +181,7 @@ class Commit extends Proposal {
 			logger.debug('%s - sending to the targets', method);
 			const committers = this.channel.getTargetCommitters(targets);
 
-			if (committers === undefined) {
+			if (committers.length === 0) {
 				throw new Error('Unable to find any target committers');
 			}
 
