@@ -106,6 +106,14 @@ describe('Commit', () => {
 	});
 
 	describe('#send', () => {
+		it('throws if targets committers is missing', async () => {
+			commit.build(idx);
+			const request = {
+				targets: []
+			};
+			await commit.sign(idx);
+			await commit.send(request).should.be.rejectedWith('Unable to find any target committers');
+		});
 		it('throws if targets is missing', async () => {
 			endorsement._proposalResponses = [];
 			endorsement._proposalResponses.push(proposalResponse);
