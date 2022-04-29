@@ -20,9 +20,8 @@
     "test": "nyc mocha --recursive  -t 10000"
   },
   "engines": {
-    "node": "^10.15.3 || ^12.13.1 || ^14.13.1",
-    "npm": "^6.4.1"
-  },
+	"node": ">=14.15.0"
+},
   "types": "./types/index.d.ts",
   "dependencies": {
     "fabric-common": "file:../fabric-common",

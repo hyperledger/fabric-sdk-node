@@ -45,7 +45,7 @@
     "@ampretia/x509": "^0.4.8",
     "@cucumber/cucumber": "^7.3.2",
     "@cucumber/pretty-formatter": "^1.0.0-alpha.1",
-    "@tsconfig/node10": "^1.0.8",
+    "@tsconfig/node14": "^1.0.1",
     "@types/chai": "^4.2.18",
     "@types/chai-as-promised": "^7.1.4",
     "@types/mocha": "^8.2.3",
