@@ -20,7 +20,7 @@ pr:
   - release-1.4
 
 pool:
-  vmImage: 'ubuntu-18.04'
+  vmImage: 'ubuntu-20.04'
 
 variables:
 - group: credentials
@@ -44,6 +44,10 @@ stages:
             versionSpec: '10.x'
           Node12:
             versionSpec: '12.x'
+          Node14:
+            versionSpec: '14.x'
+          Node16:
+            versionSpec: '16.x'
       steps:
         - task: NodeTool@0
           inputs:
@@ -85,7 +89,7 @@ stages:
       steps:
         - task: NodeTool@0
           inputs:
-            versionSpec: '12.x'
+            versionSpec: '16.x'
           displayName: Install Node.js
         - script: npm install
           displayName: npm install
