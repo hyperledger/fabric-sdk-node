@@ -16,8 +16,7 @@
     "url": "https://github.com/hyperledger/fabric-sdk-node"
   },
   "engines": {
-    "node": "^10.15.3 || ^12.13.1 || ^14.13.1",
-    "npm": "^6.4.1"
+    "node": ">=10.13.0"
   },
   "keywords": [
     "hyperledger",
