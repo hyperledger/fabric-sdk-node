@@ -79,6 +79,6 @@ The following tables show versions of Fabric, Node and other dependencies that a
 
 |     | Tested | Supported |
 | --- | ------ | --------- |
-| **Fabric** | 1.4 | 1.4.x, 2.0.x |
-| **Node** | 10, 12 | 10.13+, 12.13+ |
-| **Platform** | Ubuntu 18.04 | |
+| **Fabric** | 1.4 | 1.4.x, 2.2.x |
+| **Node** | 10, 12, 14, 16 | 10 LTS, 12 LTS, 14 LTS, 16 LTS |
+| **Platform** | Ubuntu 20.04 | |
