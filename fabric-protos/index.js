@@ -25,7 +25,7 @@ module.exports.uint64ToNumber = (uint64Value) => {
 
 // Build the services
 // fabric.proto file must have an import for every needed proto files
-const protoPath = path.resolve(__dirname, 'protos', 'fabric.proto');
+const protoPath = path.resolve(__dirname, 'fabric.proto');
 const options = {
 	keepCase: true,
 	defaults: true,
