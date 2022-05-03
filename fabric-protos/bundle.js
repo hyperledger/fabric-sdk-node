@@ -5809,7 +5809,7 @@
             TxPvtReadWriteSetWithConfigInfo.decode = function decode(reader, length) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.transientstore.TxPvtReadWriteSetWithConfigInfo(), key;
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.transientstore.TxPvtReadWriteSetWithConfigInfo(), key, value;
                 while (reader.pos < end) {
                     var tag = reader.uint32();
                     switch (tag >>> 3) {
@@ -5820,12 +5820,26 @@
                         message.pvt_rwset = $root.rwset.TxPvtReadWriteSet.decode(reader, reader.uint32());
                         break;
                     case 3:
-                        reader.skip().pos++;
                         if (message.collection_configs === $util.emptyObject)
                             message.collection_configs = {};
-                        key = reader.string();
-                        reader.pos++;
-                        message.collection_configs[key] = $root.protos.CollectionConfigPackage.decode(reader, reader.uint32());
+                        var end2 = reader.uint32() + reader.pos;
+                        key = "";
+                        value = null;
+                        while (reader.pos < end2) {
+                            var tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.string();
+                                break;
+                            case 2:
+                                value = $root.protos.CollectionConfigPackage.decode(reader, reader.uint32());
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7);
+                                break;
+                            }
+                        }
+                        message.collection_configs[key] = value;
                         break;
                     default:
                         reader.skipType(tag & 7);
@@ -7018,11 +7032,11 @@
     
             /**
              * ApplicationPolicy channel_config_policy_reference.
-             * @member {string} channel_config_policy_reference
+             * @member {string|null|undefined} channel_config_policy_reference
              * @memberof protos.ApplicationPolicy
              * @instance
              */
-            ApplicationPolicy.prototype.channel_config_policy_reference = "";
+            ApplicationPolicy.prototype.channel_config_policy_reference = null;
     
             // OneOf field names bound to virtual getters and setters
             var $oneOfFields;
@@ -7220,6 +7234,1889 @@
             };
     
             return ApplicationPolicy;
+        })();
+    
+        protos.FilteredBlock = (function() {
+    
+            /**
+             * Properties of a FilteredBlock.
+             * @memberof protos
+             * @interface IFilteredBlock
+             * @property {string|null} [channel_id] FilteredBlock channel_id
+             * @property {number|Long|null} [number] FilteredBlock number
+             * @property {Array.<protos.IFilteredTransaction>|null} [filtered_transactions] FilteredBlock filtered_transactions
+             */
+    
+            /**
+             * Constructs a new FilteredBlock.
+             * @memberof protos
+             * @classdesc Represents a FilteredBlock.
+             * @implements IFilteredBlock
+             * @constructor
+             * @param {protos.IFilteredBlock=} [properties] Properties to set
+             */
+            function FilteredBlock(properties) {
+                this.filtered_transactions = [];
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * FilteredBlock channel_id.
+             * @member {string} channel_id
+             * @memberof protos.FilteredBlock
+             * @instance
+             */
+            FilteredBlock.prototype.channel_id = "";
+    
+            /**
+             * FilteredBlock number.
+             * @member {number|Long} number
+             * @memberof protos.FilteredBlock
+             * @instance
+             */
+            FilteredBlock.prototype.number = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    
+            /**
+             * FilteredBlock filtered_transactions.
+             * @member {Array.<protos.IFilteredTransaction>} filtered_transactions
+             * @memberof protos.FilteredBlock
+             * @instance
+             */
+            FilteredBlock.prototype.filtered_transactions = $util.emptyArray;
+    
+            /**
+             * Creates a new FilteredBlock instance using the specified properties.
+             * @function create
+             * @memberof protos.FilteredBlock
+             * @static
+             * @param {protos.IFilteredBlock=} [properties] Properties to set
+             * @returns {protos.FilteredBlock} FilteredBlock instance
+             */
+            FilteredBlock.create = function create(properties) {
+                return new FilteredBlock(properties);
+            };
+    
+            /**
+             * Encodes the specified FilteredBlock message. Does not implicitly {@link protos.FilteredBlock.verify|verify} messages.
+             * @function encode
+             * @memberof protos.FilteredBlock
+             * @static
+             * @param {protos.IFilteredBlock} message FilteredBlock message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            FilteredBlock.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.channel_id != null && Object.hasOwnProperty.call(message, "channel_id"))
+                    writer.uint32(/* id 1, wireType 2 =*/10).string(message.channel_id);
+                if (message.number != null && Object.hasOwnProperty.call(message, "number"))
+                    writer.uint32(/* id 2, wireType 0 =*/16).uint64(message.number);
+                if (message.filtered_transactions != null && message.filtered_transactions.length)
+                    for (var i = 0; i < message.filtered_transactions.length; ++i)
+                        $root.protos.FilteredTransaction.encode(message.filtered_transactions[i], writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified FilteredBlock message, length delimited. Does not implicitly {@link protos.FilteredBlock.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof protos.FilteredBlock
+             * @static
+             * @param {protos.IFilteredBlock} message FilteredBlock message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            FilteredBlock.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a FilteredBlock message from the specified reader or buffer.
+             * @function decode
+             * @memberof protos.FilteredBlock
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {protos.FilteredBlock} FilteredBlock
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            FilteredBlock.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.FilteredBlock();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.channel_id = reader.string();
+                        break;
+                    case 2:
+                        message.number = reader.uint64();
+                        break;
+                    case 4:
+                        if (!(message.filtered_transactions && message.filtered_transactions.length))
+                            message.filtered_transactions = [];
+                        message.filtered_transactions.push($root.protos.FilteredTransaction.decode(reader, reader.uint32()));
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a FilteredBlock message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof protos.FilteredBlock
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {protos.FilteredBlock} FilteredBlock
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            FilteredBlock.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a FilteredBlock message.
+             * @function verify
+             * @memberof protos.FilteredBlock
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            FilteredBlock.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.channel_id != null && message.hasOwnProperty("channel_id"))
+                    if (!$util.isString(message.channel_id))
+                        return "channel_id: string expected";
+                if (message.number != null && message.hasOwnProperty("number"))
+                    if (!$util.isInteger(message.number) && !(message.number && $util.isInteger(message.number.low) && $util.isInteger(message.number.high)))
+                        return "number: integer|Long expected";
+                if (message.filtered_transactions != null && message.hasOwnProperty("filtered_transactions")) {
+                    if (!Array.isArray(message.filtered_transactions))
+                        return "filtered_transactions: array expected";
+                    for (var i = 0; i < message.filtered_transactions.length; ++i) {
+                        var error = $root.protos.FilteredTransaction.verify(message.filtered_transactions[i]);
+                        if (error)
+                            return "filtered_transactions." + error;
+                    }
+                }
+                return null;
+            };
+    
+            /**
+             * Creates a FilteredBlock message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof protos.FilteredBlock
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {protos.FilteredBlock} FilteredBlock
+             */
+            FilteredBlock.fromObject = function fromObject(object) {
+                if (object instanceof $root.protos.FilteredBlock)
+                    return object;
+                var message = new $root.protos.FilteredBlock();
+                if (object.channel_id != null)
+                    message.channel_id = String(object.channel_id);
+                if (object.number != null)
+                    if ($util.Long)
+                        (message.number = $util.Long.fromValue(object.number)).unsigned = true;
+                    else if (typeof object.number === "string")
+                        message.number = parseInt(object.number, 10);
+                    else if (typeof object.number === "number")
+                        message.number = object.number;
+                    else if (typeof object.number === "object")
+                        message.number = new $util.LongBits(object.number.low >>> 0, object.number.high >>> 0).toNumber(true);
+                if (object.filtered_transactions) {
+                    if (!Array.isArray(object.filtered_transactions))
+                        throw TypeError(".protos.FilteredBlock.filtered_transactions: array expected");
+                    message.filtered_transactions = [];
+                    for (var i = 0; i < object.filtered_transactions.length; ++i) {
+                        if (typeof object.filtered_transactions[i] !== "object")
+                            throw TypeError(".protos.FilteredBlock.filtered_transactions: object expected");
+                        message.filtered_transactions[i] = $root.protos.FilteredTransaction.fromObject(object.filtered_transactions[i]);
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a FilteredBlock message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof protos.FilteredBlock
+             * @static
+             * @param {protos.FilteredBlock} message FilteredBlock
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            FilteredBlock.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.arrays || options.defaults)
+                    object.filtered_transactions = [];
+                if (options.defaults) {
+                    object.channel_id = "";
+                    if ($util.Long) {
+                        var long = new $util.Long(0, 0, true);
+                        object.number = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                    } else
+                        object.number = options.longs === String ? "0" : 0;
+                }
+                if (message.channel_id != null && message.hasOwnProperty("channel_id"))
+                    object.channel_id = message.channel_id;
+                if (message.number != null && message.hasOwnProperty("number"))
+                    if (typeof message.number === "number")
+                        object.number = options.longs === String ? String(message.number) : message.number;
+                    else
+                        object.number = options.longs === String ? $util.Long.prototype.toString.call(message.number) : options.longs === Number ? new $util.LongBits(message.number.low >>> 0, message.number.high >>> 0).toNumber(true) : message.number;
+                if (message.filtered_transactions && message.filtered_transactions.length) {
+                    object.filtered_transactions = [];
+                    for (var j = 0; j < message.filtered_transactions.length; ++j)
+                        object.filtered_transactions[j] = $root.protos.FilteredTransaction.toObject(message.filtered_transactions[j], options);
+                }
+                return object;
+            };
+    
+            /**
+             * Converts this FilteredBlock to JSON.
+             * @function toJSON
+             * @memberof protos.FilteredBlock
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            FilteredBlock.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return FilteredBlock;
+        })();
+    
+        protos.FilteredTransaction = (function() {
+    
+            /**
+             * Properties of a FilteredTransaction.
+             * @memberof protos
+             * @interface IFilteredTransaction
+             * @property {string|null} [txid] FilteredTransaction txid
+             * @property {common.HeaderType|null} [type] FilteredTransaction type
+             * @property {protos.TxValidationCode|null} [tx_validation_code] FilteredTransaction tx_validation_code
+             * @property {protos.IFilteredTransactionActions|null} [transaction_actions] FilteredTransaction transaction_actions
+             */
+    
+            /**
+             * Constructs a new FilteredTransaction.
+             * @memberof protos
+             * @classdesc Represents a FilteredTransaction.
+             * @implements IFilteredTransaction
+             * @constructor
+             * @param {protos.IFilteredTransaction=} [properties] Properties to set
+             */
+            function FilteredTransaction(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * FilteredTransaction txid.
+             * @member {string} txid
+             * @memberof protos.FilteredTransaction
+             * @instance
+             */
+            FilteredTransaction.prototype.txid = "";
+    
+            /**
+             * FilteredTransaction type.
+             * @member {common.HeaderType} type
+             * @memberof protos.FilteredTransaction
+             * @instance
+             */
+            FilteredTransaction.prototype.type = 0;
+    
+            /**
+             * FilteredTransaction tx_validation_code.
+             * @member {protos.TxValidationCode} tx_validation_code
+             * @memberof protos.FilteredTransaction
+             * @instance
+             */
+            FilteredTransaction.prototype.tx_validation_code = 0;
+    
+            /**
+             * FilteredTransaction transaction_actions.
+             * @member {protos.IFilteredTransactionActions|null|undefined} transaction_actions
+             * @memberof protos.FilteredTransaction
+             * @instance
+             */
+            FilteredTransaction.prototype.transaction_actions = null;
+    
+            // OneOf field names bound to virtual getters and setters
+            var $oneOfFields;
+    
+            /**
+             * FilteredTransaction Data.
+             * @member {"transaction_actions"|undefined} Data
+             * @memberof protos.FilteredTransaction
+             * @instance
+             */
+            Object.defineProperty(FilteredTransaction.prototype, "Data", {
+                get: $util.oneOfGetter($oneOfFields = ["transaction_actions"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+    
+            /**
+             * Creates a new FilteredTransaction instance using the specified properties.
+             * @function create
+             * @memberof protos.FilteredTransaction
+             * @static
+             * @param {protos.IFilteredTransaction=} [properties] Properties to set
+             * @returns {protos.FilteredTransaction} FilteredTransaction instance
+             */
+            FilteredTransaction.create = function create(properties) {
+                return new FilteredTransaction(properties);
+            };
+    
+            /**
+             * Encodes the specified FilteredTransaction message. Does not implicitly {@link protos.FilteredTransaction.verify|verify} messages.
+             * @function encode
+             * @memberof protos.FilteredTransaction
+             * @static
+             * @param {protos.IFilteredTransaction} message FilteredTransaction message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            FilteredTransaction.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.txid != null && Object.hasOwnProperty.call(message, "txid"))
+                    writer.uint32(/* id 1, wireType 2 =*/10).string(message.txid);
+                if (message.type != null && Object.hasOwnProperty.call(message, "type"))
+                    writer.uint32(/* id 2, wireType 0 =*/16).int32(message.type);
+                if (message.tx_validation_code != null && Object.hasOwnProperty.call(message, "tx_validation_code"))
+                    writer.uint32(/* id 3, wireType 0 =*/24).int32(message.tx_validation_code);
+                if (message.transaction_actions != null && Object.hasOwnProperty.call(message, "transaction_actions"))
+                    $root.protos.FilteredTransactionActions.encode(message.transaction_actions, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified FilteredTransaction message, length delimited. Does not implicitly {@link protos.FilteredTransaction.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof protos.FilteredTransaction
+             * @static
+             * @param {protos.IFilteredTransaction} message FilteredTransaction message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            FilteredTransaction.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a FilteredTransaction message from the specified reader or buffer.
+             * @function decode
+             * @memberof protos.FilteredTransaction
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {protos.FilteredTransaction} FilteredTransaction
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            FilteredTransaction.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.FilteredTransaction();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.txid = reader.string();
+                        break;
+                    case 2:
+                        message.type = reader.int32();
+                        break;
+                    case 3:
+                        message.tx_validation_code = reader.int32();
+                        break;
+                    case 4:
+                        message.transaction_actions = $root.protos.FilteredTransactionActions.decode(reader, reader.uint32());
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a FilteredTransaction message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof protos.FilteredTransaction
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {protos.FilteredTransaction} FilteredTransaction
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            FilteredTransaction.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a FilteredTransaction message.
+             * @function verify
+             * @memberof protos.FilteredTransaction
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            FilteredTransaction.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                var properties = {};
+                if (message.txid != null && message.hasOwnProperty("txid"))
+                    if (!$util.isString(message.txid))
+                        return "txid: string expected";
+                if (message.type != null && message.hasOwnProperty("type"))
+                    switch (message.type) {
+                    default:
+                        return "type: enum value expected";
+                    case 0:
+                    case 1:
+                    case 2:
+                    case 3:
+                    case 4:
+                    case 5:
+                    case 6:
+                    case 8:
+                        break;
+                    }
+                if (message.tx_validation_code != null && message.hasOwnProperty("tx_validation_code"))
+                    switch (message.tx_validation_code) {
+                    default:
+                        return "tx_validation_code: enum value expected";
+                    case 0:
+                    case 1:
+                    case 2:
+                    case 3:
+                    case 4:
+                    case 5:
+                    case 6:
+                    case 7:
+                    case 8:
+                    case 9:
+                    case 10:
+                    case 11:
+                    case 12:
+                    case 13:
+                    case 14:
+                    case 15:
+                    case 16:
+                    case 17:
+                    case 18:
+                    case 19:
+                    case 20:
+                    case 21:
+                    case 22:
+                    case 23:
+                    case 24:
+                    case 25:
+                    case 254:
+                    case 255:
+                        break;
+                    }
+                if (message.transaction_actions != null && message.hasOwnProperty("transaction_actions")) {
+                    properties.Data = 1;
+                    {
+                        var error = $root.protos.FilteredTransactionActions.verify(message.transaction_actions);
+                        if (error)
+                            return "transaction_actions." + error;
+                    }
+                }
+                return null;
+            };
+    
+            /**
+             * Creates a FilteredTransaction message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof protos.FilteredTransaction
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {protos.FilteredTransaction} FilteredTransaction
+             */
+            FilteredTransaction.fromObject = function fromObject(object) {
+                if (object instanceof $root.protos.FilteredTransaction)
+                    return object;
+                var message = new $root.protos.FilteredTransaction();
+                if (object.txid != null)
+                    message.txid = String(object.txid);
+                switch (object.type) {
+                case "MESSAGE":
+                case 0:
+                    message.type = 0;
+                    break;
+                case "CONFIG":
+                case 1:
+                    message.type = 1;
+                    break;
+                case "CONFIG_UPDATE":
+                case 2:
+                    message.type = 2;
+                    break;
+                case "ENDORSER_TRANSACTION":
+                case 3:
+                    message.type = 3;
+                    break;
+                case "ORDERER_TRANSACTION":
+                case 4:
+                    message.type = 4;
+                    break;
+                case "DELIVER_SEEK_INFO":
+                case 5:
+                    message.type = 5;
+                    break;
+                case "CHAINCODE_PACKAGE":
+                case 6:
+                    message.type = 6;
+                    break;
+                case "PEER_ADMIN_OPERATION":
+                case 8:
+                    message.type = 8;
+                    break;
+                }
+                switch (object.tx_validation_code) {
+                case "VALID":
+                case 0:
+                    message.tx_validation_code = 0;
+                    break;
+                case "NIL_ENVELOPE":
+                case 1:
+                    message.tx_validation_code = 1;
+                    break;
+                case "BAD_PAYLOAD":
+                case 2:
+                    message.tx_validation_code = 2;
+                    break;
+                case "BAD_COMMON_HEADER":
+                case 3:
+                    message.tx_validation_code = 3;
+                    break;
+                case "BAD_CREATOR_SIGNATURE":
+                case 4:
+                    message.tx_validation_code = 4;
+                    break;
+                case "INVALID_ENDORSER_TRANSACTION":
+                case 5:
+                    message.tx_validation_code = 5;
+                    break;
+                case "INVALID_CONFIG_TRANSACTION":
+                case 6:
+                    message.tx_validation_code = 6;
+                    break;
+                case "UNSUPPORTED_TX_PAYLOAD":
+                case 7:
+                    message.tx_validation_code = 7;
+                    break;
+                case "BAD_PROPOSAL_TXID":
+                case 8:
+                    message.tx_validation_code = 8;
+                    break;
+                case "DUPLICATE_TXID":
+                case 9:
+                    message.tx_validation_code = 9;
+                    break;
+                case "ENDORSEMENT_POLICY_FAILURE":
+                case 10:
+                    message.tx_validation_code = 10;
+                    break;
+                case "MVCC_READ_CONFLICT":
+                case 11:
+                    message.tx_validation_code = 11;
+                    break;
+                case "PHANTOM_READ_CONFLICT":
+                case 12:
+                    message.tx_validation_code = 12;
+                    break;
+                case "UNKNOWN_TX_TYPE":
+                case 13:
+                    message.tx_validation_code = 13;
+                    break;
+                case "TARGET_CHAIN_NOT_FOUND":
+                case 14:
+                    message.tx_validation_code = 14;
+                    break;
+                case "MARSHAL_TX_ERROR":
+                case 15:
+                    message.tx_validation_code = 15;
+                    break;
+                case "NIL_TXACTION":
+                case 16:
+                    message.tx_validation_code = 16;
+                    break;
+                case "EXPIRED_CHAINCODE":
+                case 17:
+                    message.tx_validation_code = 17;
+                    break;
+                case "CHAINCODE_VERSION_CONFLICT":
+                case 18:
+                    message.tx_validation_code = 18;
+                    break;
+                case "BAD_HEADER_EXTENSION":
+                case 19:
+                    message.tx_validation_code = 19;
+                    break;
+                case "BAD_CHANNEL_HEADER":
+                case 20:
+                    message.tx_validation_code = 20;
+                    break;
+                case "BAD_RESPONSE_PAYLOAD":
+                case 21:
+                    message.tx_validation_code = 21;
+                    break;
+                case "BAD_RWSET":
+                case 22:
+                    message.tx_validation_code = 22;
+                    break;
+                case "ILLEGAL_WRITESET":
+                case 23:
+                    message.tx_validation_code = 23;
+                    break;
+                case "INVALID_WRITESET":
+                case 24:
+                    message.tx_validation_code = 24;
+                    break;
+                case "INVALID_CHAINCODE":
+                case 25:
+                    message.tx_validation_code = 25;
+                    break;
+                case "NOT_VALIDATED":
+                case 254:
+                    message.tx_validation_code = 254;
+                    break;
+                case "INVALID_OTHER_REASON":
+                case 255:
+                    message.tx_validation_code = 255;
+                    break;
+                }
+                if (object.transaction_actions != null) {
+                    if (typeof object.transaction_actions !== "object")
+                        throw TypeError(".protos.FilteredTransaction.transaction_actions: object expected");
+                    message.transaction_actions = $root.protos.FilteredTransactionActions.fromObject(object.transaction_actions);
+                }
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a FilteredTransaction message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof protos.FilteredTransaction
+             * @static
+             * @param {protos.FilteredTransaction} message FilteredTransaction
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            FilteredTransaction.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.defaults) {
+                    object.txid = "";
+                    object.type = options.enums === String ? "MESSAGE" : 0;
+                    object.tx_validation_code = options.enums === String ? "VALID" : 0;
+                }
+                if (message.txid != null && message.hasOwnProperty("txid"))
+                    object.txid = message.txid;
+                if (message.type != null && message.hasOwnProperty("type"))
+                    object.type = options.enums === String ? $root.common.HeaderType[message.type] : message.type;
+                if (message.tx_validation_code != null && message.hasOwnProperty("tx_validation_code"))
+                    object.tx_validation_code = options.enums === String ? $root.protos.TxValidationCode[message.tx_validation_code] : message.tx_validation_code;
+                if (message.transaction_actions != null && message.hasOwnProperty("transaction_actions")) {
+                    object.transaction_actions = $root.protos.FilteredTransactionActions.toObject(message.transaction_actions, options);
+                    if (options.oneofs)
+                        object.Data = "transaction_actions";
+                }
+                return object;
+            };
+    
+            /**
+             * Converts this FilteredTransaction to JSON.
+             * @function toJSON
+             * @memberof protos.FilteredTransaction
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            FilteredTransaction.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return FilteredTransaction;
+        })();
+    
+        protos.FilteredTransactionActions = (function() {
+    
+            /**
+             * Properties of a FilteredTransactionActions.
+             * @memberof protos
+             * @interface IFilteredTransactionActions
+             * @property {Array.<protos.IFilteredChaincodeAction>|null} [chaincode_actions] FilteredTransactionActions chaincode_actions
+             */
+    
+            /**
+             * Constructs a new FilteredTransactionActions.
+             * @memberof protos
+             * @classdesc Represents a FilteredTransactionActions.
+             * @implements IFilteredTransactionActions
+             * @constructor
+             * @param {protos.IFilteredTransactionActions=} [properties] Properties to set
+             */
+            function FilteredTransactionActions(properties) {
+                this.chaincode_actions = [];
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * FilteredTransactionActions chaincode_actions.
+             * @member {Array.<protos.IFilteredChaincodeAction>} chaincode_actions
+             * @memberof protos.FilteredTransactionActions
+             * @instance
+             */
+            FilteredTransactionActions.prototype.chaincode_actions = $util.emptyArray;
+    
+            /**
+             * Creates a new FilteredTransactionActions instance using the specified properties.
+             * @function create
+             * @memberof protos.FilteredTransactionActions
+             * @static
+             * @param {protos.IFilteredTransactionActions=} [properties] Properties to set
+             * @returns {protos.FilteredTransactionActions} FilteredTransactionActions instance
+             */
+            FilteredTransactionActions.create = function create(properties) {
+                return new FilteredTransactionActions(properties);
+            };
+    
+            /**
+             * Encodes the specified FilteredTransactionActions message. Does not implicitly {@link protos.FilteredTransactionActions.verify|verify} messages.
+             * @function encode
+             * @memberof protos.FilteredTransactionActions
+             * @static
+             * @param {protos.IFilteredTransactionActions} message FilteredTransactionActions message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            FilteredTransactionActions.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.chaincode_actions != null && message.chaincode_actions.length)
+                    for (var i = 0; i < message.chaincode_actions.length; ++i)
+                        $root.protos.FilteredChaincodeAction.encode(message.chaincode_actions[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified FilteredTransactionActions message, length delimited. Does not implicitly {@link protos.FilteredTransactionActions.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof protos.FilteredTransactionActions
+             * @static
+             * @param {protos.IFilteredTransactionActions} message FilteredTransactionActions message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            FilteredTransactionActions.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a FilteredTransactionActions message from the specified reader or buffer.
+             * @function decode
+             * @memberof protos.FilteredTransactionActions
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {protos.FilteredTransactionActions} FilteredTransactionActions
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            FilteredTransactionActions.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.FilteredTransactionActions();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        if (!(message.chaincode_actions && message.chaincode_actions.length))
+                            message.chaincode_actions = [];
+                        message.chaincode_actions.push($root.protos.FilteredChaincodeAction.decode(reader, reader.uint32()));
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a FilteredTransactionActions message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof protos.FilteredTransactionActions
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {protos.FilteredTransactionActions} FilteredTransactionActions
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            FilteredTransactionActions.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a FilteredTransactionActions message.
+             * @function verify
+             * @memberof protos.FilteredTransactionActions
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            FilteredTransactionActions.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.chaincode_actions != null && message.hasOwnProperty("chaincode_actions")) {
+                    if (!Array.isArray(message.chaincode_actions))
+                        return "chaincode_actions: array expected";
+                    for (var i = 0; i < message.chaincode_actions.length; ++i) {
+                        var error = $root.protos.FilteredChaincodeAction.verify(message.chaincode_actions[i]);
+                        if (error)
+                            return "chaincode_actions." + error;
+                    }
+                }
+                return null;
+            };
+    
+            /**
+             * Creates a FilteredTransactionActions message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof protos.FilteredTransactionActions
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {protos.FilteredTransactionActions} FilteredTransactionActions
+             */
+            FilteredTransactionActions.fromObject = function fromObject(object) {
+                if (object instanceof $root.protos.FilteredTransactionActions)
+                    return object;
+                var message = new $root.protos.FilteredTransactionActions();
+                if (object.chaincode_actions) {
+                    if (!Array.isArray(object.chaincode_actions))
+                        throw TypeError(".protos.FilteredTransactionActions.chaincode_actions: array expected");
+                    message.chaincode_actions = [];
+                    for (var i = 0; i < object.chaincode_actions.length; ++i) {
+                        if (typeof object.chaincode_actions[i] !== "object")
+                            throw TypeError(".protos.FilteredTransactionActions.chaincode_actions: object expected");
+                        message.chaincode_actions[i] = $root.protos.FilteredChaincodeAction.fromObject(object.chaincode_actions[i]);
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a FilteredTransactionActions message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof protos.FilteredTransactionActions
+             * @static
+             * @param {protos.FilteredTransactionActions} message FilteredTransactionActions
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            FilteredTransactionActions.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.arrays || options.defaults)
+                    object.chaincode_actions = [];
+                if (message.chaincode_actions && message.chaincode_actions.length) {
+                    object.chaincode_actions = [];
+                    for (var j = 0; j < message.chaincode_actions.length; ++j)
+                        object.chaincode_actions[j] = $root.protos.FilteredChaincodeAction.toObject(message.chaincode_actions[j], options);
+                }
+                return object;
+            };
+    
+            /**
+             * Converts this FilteredTransactionActions to JSON.
+             * @function toJSON
+             * @memberof protos.FilteredTransactionActions
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            FilteredTransactionActions.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return FilteredTransactionActions;
+        })();
+    
+        protos.FilteredChaincodeAction = (function() {
+    
+            /**
+             * Properties of a FilteredChaincodeAction.
+             * @memberof protos
+             * @interface IFilteredChaincodeAction
+             * @property {protos.IChaincodeEvent|null} [chaincode_event] FilteredChaincodeAction chaincode_event
+             */
+    
+            /**
+             * Constructs a new FilteredChaincodeAction.
+             * @memberof protos
+             * @classdesc Represents a FilteredChaincodeAction.
+             * @implements IFilteredChaincodeAction
+             * @constructor
+             * @param {protos.IFilteredChaincodeAction=} [properties] Properties to set
+             */
+            function FilteredChaincodeAction(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * FilteredChaincodeAction chaincode_event.
+             * @member {protos.IChaincodeEvent|null|undefined} chaincode_event
+             * @memberof protos.FilteredChaincodeAction
+             * @instance
+             */
+            FilteredChaincodeAction.prototype.chaincode_event = null;
+    
+            /**
+             * Creates a new FilteredChaincodeAction instance using the specified properties.
+             * @function create
+             * @memberof protos.FilteredChaincodeAction
+             * @static
+             * @param {protos.IFilteredChaincodeAction=} [properties] Properties to set
+             * @returns {protos.FilteredChaincodeAction} FilteredChaincodeAction instance
+             */
+            FilteredChaincodeAction.create = function create(properties) {
+                return new FilteredChaincodeAction(properties);
+            };
+    
+            /**
+             * Encodes the specified FilteredChaincodeAction message. Does not implicitly {@link protos.FilteredChaincodeAction.verify|verify} messages.
+             * @function encode
+             * @memberof protos.FilteredChaincodeAction
+             * @static
+             * @param {protos.IFilteredChaincodeAction} message FilteredChaincodeAction message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            FilteredChaincodeAction.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.chaincode_event != null && Object.hasOwnProperty.call(message, "chaincode_event"))
+                    $root.protos.ChaincodeEvent.encode(message.chaincode_event, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified FilteredChaincodeAction message, length delimited. Does not implicitly {@link protos.FilteredChaincodeAction.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof protos.FilteredChaincodeAction
+             * @static
+             * @param {protos.IFilteredChaincodeAction} message FilteredChaincodeAction message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            FilteredChaincodeAction.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a FilteredChaincodeAction message from the specified reader or buffer.
+             * @function decode
+             * @memberof protos.FilteredChaincodeAction
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {protos.FilteredChaincodeAction} FilteredChaincodeAction
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            FilteredChaincodeAction.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.FilteredChaincodeAction();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.chaincode_event = $root.protos.ChaincodeEvent.decode(reader, reader.uint32());
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a FilteredChaincodeAction message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof protos.FilteredChaincodeAction
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {protos.FilteredChaincodeAction} FilteredChaincodeAction
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            FilteredChaincodeAction.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a FilteredChaincodeAction message.
+             * @function verify
+             * @memberof protos.FilteredChaincodeAction
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            FilteredChaincodeAction.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.chaincode_event != null && message.hasOwnProperty("chaincode_event")) {
+                    var error = $root.protos.ChaincodeEvent.verify(message.chaincode_event);
+                    if (error)
+                        return "chaincode_event." + error;
+                }
+                return null;
+            };
+    
+            /**
+             * Creates a FilteredChaincodeAction message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof protos.FilteredChaincodeAction
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {protos.FilteredChaincodeAction} FilteredChaincodeAction
+             */
+            FilteredChaincodeAction.fromObject = function fromObject(object) {
+                if (object instanceof $root.protos.FilteredChaincodeAction)
+                    return object;
+                var message = new $root.protos.FilteredChaincodeAction();
+                if (object.chaincode_event != null) {
+                    if (typeof object.chaincode_event !== "object")
+                        throw TypeError(".protos.FilteredChaincodeAction.chaincode_event: object expected");
+                    message.chaincode_event = $root.protos.ChaincodeEvent.fromObject(object.chaincode_event);
+                }
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a FilteredChaincodeAction message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof protos.FilteredChaincodeAction
+             * @static
+             * @param {protos.FilteredChaincodeAction} message FilteredChaincodeAction
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            FilteredChaincodeAction.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.defaults)
+                    object.chaincode_event = null;
+                if (message.chaincode_event != null && message.hasOwnProperty("chaincode_event"))
+                    object.chaincode_event = $root.protos.ChaincodeEvent.toObject(message.chaincode_event, options);
+                return object;
+            };
+    
+            /**
+             * Converts this FilteredChaincodeAction to JSON.
+             * @function toJSON
+             * @memberof protos.FilteredChaincodeAction
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            FilteredChaincodeAction.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return FilteredChaincodeAction;
+        })();
+    
+        protos.BlockAndPrivateData = (function() {
+    
+            /**
+             * Properties of a BlockAndPrivateData.
+             * @memberof protos
+             * @interface IBlockAndPrivateData
+             * @property {common.IBlock|null} [block] BlockAndPrivateData block
+             * @property {Object.<string,rwset.ITxPvtReadWriteSet>|null} [private_data_map] BlockAndPrivateData private_data_map
+             */
+    
+            /**
+             * Constructs a new BlockAndPrivateData.
+             * @memberof protos
+             * @classdesc Represents a BlockAndPrivateData.
+             * @implements IBlockAndPrivateData
+             * @constructor
+             * @param {protos.IBlockAndPrivateData=} [properties] Properties to set
+             */
+            function BlockAndPrivateData(properties) {
+                this.private_data_map = {};
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * BlockAndPrivateData block.
+             * @member {common.IBlock|null|undefined} block
+             * @memberof protos.BlockAndPrivateData
+             * @instance
+             */
+            BlockAndPrivateData.prototype.block = null;
+    
+            /**
+             * BlockAndPrivateData private_data_map.
+             * @member {Object.<string,rwset.ITxPvtReadWriteSet>} private_data_map
+             * @memberof protos.BlockAndPrivateData
+             * @instance
+             */
+            BlockAndPrivateData.prototype.private_data_map = $util.emptyObject;
+    
+            /**
+             * Creates a new BlockAndPrivateData instance using the specified properties.
+             * @function create
+             * @memberof protos.BlockAndPrivateData
+             * @static
+             * @param {protos.IBlockAndPrivateData=} [properties] Properties to set
+             * @returns {protos.BlockAndPrivateData} BlockAndPrivateData instance
+             */
+            BlockAndPrivateData.create = function create(properties) {
+                return new BlockAndPrivateData(properties);
+            };
+    
+            /**
+             * Encodes the specified BlockAndPrivateData message. Does not implicitly {@link protos.BlockAndPrivateData.verify|verify} messages.
+             * @function encode
+             * @memberof protos.BlockAndPrivateData
+             * @static
+             * @param {protos.IBlockAndPrivateData} message BlockAndPrivateData message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            BlockAndPrivateData.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.block != null && Object.hasOwnProperty.call(message, "block"))
+                    $root.common.Block.encode(message.block, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+                if (message.private_data_map != null && Object.hasOwnProperty.call(message, "private_data_map"))
+                    for (var keys = Object.keys(message.private_data_map), i = 0; i < keys.length; ++i) {
+                        writer.uint32(/* id 2, wireType 2 =*/18).fork().uint32(/* id 1, wireType 0 =*/8).uint64(keys[i]);
+                        $root.rwset.TxPvtReadWriteSet.encode(message.private_data_map[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
+                    }
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified BlockAndPrivateData message, length delimited. Does not implicitly {@link protos.BlockAndPrivateData.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof protos.BlockAndPrivateData
+             * @static
+             * @param {protos.IBlockAndPrivateData} message BlockAndPrivateData message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            BlockAndPrivateData.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a BlockAndPrivateData message from the specified reader or buffer.
+             * @function decode
+             * @memberof protos.BlockAndPrivateData
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {protos.BlockAndPrivateData} BlockAndPrivateData
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            BlockAndPrivateData.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.BlockAndPrivateData(), key, value;
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.block = $root.common.Block.decode(reader, reader.uint32());
+                        break;
+                    case 2:
+                        if (message.private_data_map === $util.emptyObject)
+                            message.private_data_map = {};
+                        var end2 = reader.uint32() + reader.pos;
+                        key = 0;
+                        value = null;
+                        while (reader.pos < end2) {
+                            var tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.uint64();
+                                break;
+                            case 2:
+                                value = $root.rwset.TxPvtReadWriteSet.decode(reader, reader.uint32());
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7);
+                                break;
+                            }
+                        }
+                        message.private_data_map[typeof key === "object" ? $util.longToHash(key) : key] = value;
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a BlockAndPrivateData message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof protos.BlockAndPrivateData
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {protos.BlockAndPrivateData} BlockAndPrivateData
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            BlockAndPrivateData.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a BlockAndPrivateData message.
+             * @function verify
+             * @memberof protos.BlockAndPrivateData
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            BlockAndPrivateData.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.block != null && message.hasOwnProperty("block")) {
+                    var error = $root.common.Block.verify(message.block);
+                    if (error)
+                        return "block." + error;
+                }
+                if (message.private_data_map != null && message.hasOwnProperty("private_data_map")) {
+                    if (!$util.isObject(message.private_data_map))
+                        return "private_data_map: object expected";
+                    var key = Object.keys(message.private_data_map);
+                    for (var i = 0; i < key.length; ++i) {
+                        if (!$util.key64Re.test(key[i]))
+                            return "private_data_map: integer|Long key{k:uint64} expected";
+                        {
+                            var error = $root.rwset.TxPvtReadWriteSet.verify(message.private_data_map[key[i]]);
+                            if (error)
+                                return "private_data_map." + error;
+                        }
+                    }
+                }
+                return null;
+            };
+    
+            /**
+             * Creates a BlockAndPrivateData message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof protos.BlockAndPrivateData
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {protos.BlockAndPrivateData} BlockAndPrivateData
+             */
+            BlockAndPrivateData.fromObject = function fromObject(object) {
+                if (object instanceof $root.protos.BlockAndPrivateData)
+                    return object;
+                var message = new $root.protos.BlockAndPrivateData();
+                if (object.block != null) {
+                    if (typeof object.block !== "object")
+                        throw TypeError(".protos.BlockAndPrivateData.block: object expected");
+                    message.block = $root.common.Block.fromObject(object.block);
+                }
+                if (object.private_data_map) {
+                    if (typeof object.private_data_map !== "object")
+                        throw TypeError(".protos.BlockAndPrivateData.private_data_map: object expected");
+                    message.private_data_map = {};
+                    for (var keys = Object.keys(object.private_data_map), i = 0; i < keys.length; ++i) {
+                        if (typeof object.private_data_map[keys[i]] !== "object")
+                            throw TypeError(".protos.BlockAndPrivateData.private_data_map: object expected");
+                        message.private_data_map[keys[i]] = $root.rwset.TxPvtReadWriteSet.fromObject(object.private_data_map[keys[i]]);
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a BlockAndPrivateData message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof protos.BlockAndPrivateData
+             * @static
+             * @param {protos.BlockAndPrivateData} message BlockAndPrivateData
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            BlockAndPrivateData.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.objects || options.defaults)
+                    object.private_data_map = {};
+                if (options.defaults)
+                    object.block = null;
+                if (message.block != null && message.hasOwnProperty("block"))
+                    object.block = $root.common.Block.toObject(message.block, options);
+                var keys2;
+                if (message.private_data_map && (keys2 = Object.keys(message.private_data_map)).length) {
+                    object.private_data_map = {};
+                    for (var j = 0; j < keys2.length; ++j)
+                        object.private_data_map[keys2[j]] = $root.rwset.TxPvtReadWriteSet.toObject(message.private_data_map[keys2[j]], options);
+                }
+                return object;
+            };
+    
+            /**
+             * Converts this BlockAndPrivateData to JSON.
+             * @function toJSON
+             * @memberof protos.BlockAndPrivateData
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            BlockAndPrivateData.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return BlockAndPrivateData;
+        })();
+    
+        protos.DeliverResponse = (function() {
+    
+            /**
+             * Properties of a DeliverResponse.
+             * @memberof protos
+             * @interface IDeliverResponse
+             * @property {common.Status|null} [status] DeliverResponse status
+             * @property {common.IBlock|null} [block] DeliverResponse block
+             * @property {protos.IFilteredBlock|null} [filtered_block] DeliverResponse filtered_block
+             * @property {protos.IBlockAndPrivateData|null} [block_and_private_data] DeliverResponse block_and_private_data
+             */
+    
+            /**
+             * Constructs a new DeliverResponse.
+             * @memberof protos
+             * @classdesc Represents a DeliverResponse.
+             * @implements IDeliverResponse
+             * @constructor
+             * @param {protos.IDeliverResponse=} [properties] Properties to set
+             */
+            function DeliverResponse(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * DeliverResponse status.
+             * @member {common.Status|null|undefined} status
+             * @memberof protos.DeliverResponse
+             * @instance
+             */
+            DeliverResponse.prototype.status = null;
+    
+            /**
+             * DeliverResponse block.
+             * @member {common.IBlock|null|undefined} block
+             * @memberof protos.DeliverResponse
+             * @instance
+             */
+            DeliverResponse.prototype.block = null;
+    
+            /**
+             * DeliverResponse filtered_block.
+             * @member {protos.IFilteredBlock|null|undefined} filtered_block
+             * @memberof protos.DeliverResponse
+             * @instance
+             */
+            DeliverResponse.prototype.filtered_block = null;
+    
+            /**
+             * DeliverResponse block_and_private_data.
+             * @member {protos.IBlockAndPrivateData|null|undefined} block_and_private_data
+             * @memberof protos.DeliverResponse
+             * @instance
+             */
+            DeliverResponse.prototype.block_and_private_data = null;
+    
+            // OneOf field names bound to virtual getters and setters
+            var $oneOfFields;
+    
+            /**
+             * DeliverResponse Type.
+             * @member {"status"|"block"|"filtered_block"|"block_and_private_data"|undefined} Type
+             * @memberof protos.DeliverResponse
+             * @instance
+             */
+            Object.defineProperty(DeliverResponse.prototype, "Type", {
+                get: $util.oneOfGetter($oneOfFields = ["status", "block", "filtered_block", "block_and_private_data"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+    
+            /**
+             * Creates a new DeliverResponse instance using the specified properties.
+             * @function create
+             * @memberof protos.DeliverResponse
+             * @static
+             * @param {protos.IDeliverResponse=} [properties] Properties to set
+             * @returns {protos.DeliverResponse} DeliverResponse instance
+             */
+            DeliverResponse.create = function create(properties) {
+                return new DeliverResponse(properties);
+            };
+    
+            /**
+             * Encodes the specified DeliverResponse message. Does not implicitly {@link protos.DeliverResponse.verify|verify} messages.
+             * @function encode
+             * @memberof protos.DeliverResponse
+             * @static
+             * @param {protos.IDeliverResponse} message DeliverResponse message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            DeliverResponse.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.status != null && Object.hasOwnProperty.call(message, "status"))
+                    writer.uint32(/* id 1, wireType 0 =*/8).int32(message.status);
+                if (message.block != null && Object.hasOwnProperty.call(message, "block"))
+                    $root.common.Block.encode(message.block, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+                if (message.filtered_block != null && Object.hasOwnProperty.call(message, "filtered_block"))
+                    $root.protos.FilteredBlock.encode(message.filtered_block, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+                if (message.block_and_private_data != null && Object.hasOwnProperty.call(message, "block_and_private_data"))
+                    $root.protos.BlockAndPrivateData.encode(message.block_and_private_data, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified DeliverResponse message, length delimited. Does not implicitly {@link protos.DeliverResponse.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof protos.DeliverResponse
+             * @static
+             * @param {protos.IDeliverResponse} message DeliverResponse message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            DeliverResponse.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a DeliverResponse message from the specified reader or buffer.
+             * @function decode
+             * @memberof protos.DeliverResponse
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {protos.DeliverResponse} DeliverResponse
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            DeliverResponse.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.DeliverResponse();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.status = reader.int32();
+                        break;
+                    case 2:
+                        message.block = $root.common.Block.decode(reader, reader.uint32());
+                        break;
+                    case 3:
+                        message.filtered_block = $root.protos.FilteredBlock.decode(reader, reader.uint32());
+                        break;
+                    case 4:
+                        message.block_and_private_data = $root.protos.BlockAndPrivateData.decode(reader, reader.uint32());
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a DeliverResponse message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof protos.DeliverResponse
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {protos.DeliverResponse} DeliverResponse
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            DeliverResponse.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a DeliverResponse message.
+             * @function verify
+             * @memberof protos.DeliverResponse
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            DeliverResponse.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                var properties = {};
+                if (message.status != null && message.hasOwnProperty("status")) {
+                    properties.Type = 1;
+                    switch (message.status) {
+                    default:
+                        return "status: enum value expected";
+                    case 0:
+                    case 200:
+                    case 400:
+                    case 403:
+                    case 404:
+                    case 413:
+                    case 500:
+                    case 501:
+                    case 503:
+                        break;
+                    }
+                }
+                if (message.block != null && message.hasOwnProperty("block")) {
+                    if (properties.Type === 1)
+                        return "Type: multiple values";
+                    properties.Type = 1;
+                    {
+                        var error = $root.common.Block.verify(message.block);
+                        if (error)
+                            return "block." + error;
+                    }
+                }
+                if (message.filtered_block != null && message.hasOwnProperty("filtered_block")) {
+                    if (properties.Type === 1)
+                        return "Type: multiple values";
+                    properties.Type = 1;
+                    {
+                        var error = $root.protos.FilteredBlock.verify(message.filtered_block);
+                        if (error)
+                            return "filtered_block." + error;
+                    }
+                }
+                if (message.block_and_private_data != null && message.hasOwnProperty("block_and_private_data")) {
+                    if (properties.Type === 1)
+                        return "Type: multiple values";
+                    properties.Type = 1;
+                    {
+                        var error = $root.protos.BlockAndPrivateData.verify(message.block_and_private_data);
+                        if (error)
+                            return "block_and_private_data." + error;
+                    }
+                }
+                return null;
+            };
+    
+            /**
+             * Creates a DeliverResponse message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof protos.DeliverResponse
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {protos.DeliverResponse} DeliverResponse
+             */
+            DeliverResponse.fromObject = function fromObject(object) {
+                if (object instanceof $root.protos.DeliverResponse)
+                    return object;
+                var message = new $root.protos.DeliverResponse();
+                switch (object.status) {
+                case "UNKNOWN":
+                case 0:
+                    message.status = 0;
+                    break;
+                case "SUCCESS":
+                case 200:
+                    message.status = 200;
+                    break;
+                case "BAD_REQUEST":
+                case 400:
+                    message.status = 400;
+                    break;
+                case "FORBIDDEN":
+                case 403:
+                    message.status = 403;
+                    break;
+                case "NOT_FOUND":
+                case 404:
+                    message.status = 404;
+                    break;
+                case "REQUEST_ENTITY_TOO_LARGE":
+                case 413:
+                    message.status = 413;
+                    break;
+                case "INTERNAL_SERVER_ERROR":
+                case 500:
+                    message.status = 500;
+                    break;
+                case "NOT_IMPLEMENTED":
+                case 501:
+                    message.status = 501;
+                    break;
+                case "SERVICE_UNAVAILABLE":
+                case 503:
+                    message.status = 503;
+                    break;
+                }
+                if (object.block != null) {
+                    if (typeof object.block !== "object")
+                        throw TypeError(".protos.DeliverResponse.block: object expected");
+                    message.block = $root.common.Block.fromObject(object.block);
+                }
+                if (object.filtered_block != null) {
+                    if (typeof object.filtered_block !== "object")
+                        throw TypeError(".protos.DeliverResponse.filtered_block: object expected");
+                    message.filtered_block = $root.protos.FilteredBlock.fromObject(object.filtered_block);
+                }
+                if (object.block_and_private_data != null) {
+                    if (typeof object.block_and_private_data !== "object")
+                        throw TypeError(".protos.DeliverResponse.block_and_private_data: object expected");
+                    message.block_and_private_data = $root.protos.BlockAndPrivateData.fromObject(object.block_and_private_data);
+                }
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a DeliverResponse message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof protos.DeliverResponse
+             * @static
+             * @param {protos.DeliverResponse} message DeliverResponse
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            DeliverResponse.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (message.status != null && message.hasOwnProperty("status")) {
+                    object.status = options.enums === String ? $root.common.Status[message.status] : message.status;
+                    if (options.oneofs)
+                        object.Type = "status";
+                }
+                if (message.block != null && message.hasOwnProperty("block")) {
+                    object.block = $root.common.Block.toObject(message.block, options);
+                    if (options.oneofs)
+                        object.Type = "block";
+                }
+                if (message.filtered_block != null && message.hasOwnProperty("filtered_block")) {
+                    object.filtered_block = $root.protos.FilteredBlock.toObject(message.filtered_block, options);
+                    if (options.oneofs)
+                        object.Type = "filtered_block";
+                }
+                if (message.block_and_private_data != null && message.hasOwnProperty("block_and_private_data")) {
+                    object.block_and_private_data = $root.protos.BlockAndPrivateData.toObject(message.block_and_private_data, options);
+                    if (options.oneofs)
+                        object.Type = "block_and_private_data";
+                }
+                return object;
+            };
+    
+            /**
+             * Converts this DeliverResponse to JSON.
+             * @function toJSON
+             * @memberof protos.DeliverResponse
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            DeliverResponse.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return DeliverResponse;
+        })();
+    
+        protos.Deliver = (function() {
+    
+            /**
+             * Constructs a new Deliver service.
+             * @memberof protos
+             * @classdesc Represents a Deliver
+             * @extends $protobuf.rpc.Service
+             * @constructor
+             * @param {$protobuf.RPCImpl} rpcImpl RPC implementation
+             * @param {boolean} [requestDelimited=false] Whether requests are length-delimited
+             * @param {boolean} [responseDelimited=false] Whether responses are length-delimited
+             */
+            function Deliver(rpcImpl, requestDelimited, responseDelimited) {
+                $protobuf.rpc.Service.call(this, rpcImpl, requestDelimited, responseDelimited);
+            }
+    
+            (Deliver.prototype = Object.create($protobuf.rpc.Service.prototype)).constructor = Deliver;
+    
+            /**
+             * Creates new Deliver service using the specified rpc implementation.
+             * @function create
+             * @memberof protos.Deliver
+             * @static
+             * @param {$protobuf.RPCImpl} rpcImpl RPC implementation
+             * @param {boolean} [requestDelimited=false] Whether requests are length-delimited
+             * @param {boolean} [responseDelimited=false] Whether responses are length-delimited
+             * @returns {Deliver} RPC service. Useful where requests and/or responses are streamed.
+             */
+            Deliver.create = function create(rpcImpl, requestDelimited, responseDelimited) {
+                return new this(rpcImpl, requestDelimited, responseDelimited);
+            };
+    
+            /**
+             * Callback as used by {@link protos.Deliver#deliver}.
+             * @memberof protos.Deliver
+             * @typedef DeliverCallback
+             * @type {function}
+             * @param {Error|null} error Error, if any
+             * @param {protos.DeliverResponse} [response] DeliverResponse
+             */
+    
+            /**
+             * Calls Deliver.
+             * @function deliver
+             * @memberof protos.Deliver
+             * @instance
+             * @param {common.IEnvelope} request Envelope message or plain object
+             * @param {protos.Deliver.DeliverCallback} callback Node-style callback called with the error, if any, and DeliverResponse
+             * @returns {undefined}
+             * @variation 1
+             */
+            Object.defineProperty(Deliver.prototype.deliver = function deliver(request, callback) {
+                return this.rpcCall(deliver, $root.common.Envelope, $root.protos.DeliverResponse, request, callback);
+            }, "name", { value: "Deliver" });
+    
+            /**
+             * Calls Deliver.
+             * @function deliver
+             * @memberof protos.Deliver
+             * @instance
+             * @param {common.IEnvelope} request Envelope message or plain object
+             * @returns {Promise<protos.DeliverResponse>} Promise
+             * @variation 2
+             */
+    
+            /**
+             * Callback as used by {@link protos.Deliver#deliverFiltered}.
+             * @memberof protos.Deliver
+             * @typedef DeliverFilteredCallback
+             * @type {function}
+             * @param {Error|null} error Error, if any
+             * @param {protos.DeliverResponse} [response] DeliverResponse
+             */
+    
+            /**
+             * Calls DeliverFiltered.
+             * @function deliverFiltered
+             * @memberof protos.Deliver
+             * @instance
+             * @param {common.IEnvelope} request Envelope message or plain object
+             * @param {protos.Deliver.DeliverFilteredCallback} callback Node-style callback called with the error, if any, and DeliverResponse
+             * @returns {undefined}
+             * @variation 1
+             */
+            Object.defineProperty(Deliver.prototype.deliverFiltered = function deliverFiltered(request, callback) {
+                return this.rpcCall(deliverFiltered, $root.common.Envelope, $root.protos.DeliverResponse, request, callback);
+            }, "name", { value: "DeliverFiltered" });
+    
+            /**
+             * Calls DeliverFiltered.
+             * @function deliverFiltered
+             * @memberof protos.Deliver
+             * @instance
+             * @param {common.IEnvelope} request Envelope message or plain object
+             * @returns {Promise<protos.DeliverResponse>} Promise
+             * @variation 2
+             */
+    
+            /**
+             * Callback as used by {@link protos.Deliver#deliverWithPrivateData}.
+             * @memberof protos.Deliver
+             * @typedef DeliverWithPrivateDataCallback
+             * @type {function}
+             * @param {Error|null} error Error, if any
+             * @param {protos.DeliverResponse} [response] DeliverResponse
+             */
+    
+            /**
+             * Calls DeliverWithPrivateData.
+             * @function deliverWithPrivateData
+             * @memberof protos.Deliver
+             * @instance
+             * @param {common.IEnvelope} request Envelope message or plain object
+             * @param {protos.Deliver.DeliverWithPrivateDataCallback} callback Node-style callback called with the error, if any, and DeliverResponse
+             * @returns {undefined}
+             * @variation 1
+             */
+            Object.defineProperty(Deliver.prototype.deliverWithPrivateData = function deliverWithPrivateData(request, callback) {
+                return this.rpcCall(deliverWithPrivateData, $root.common.Envelope, $root.protos.DeliverResponse, request, callback);
+            }, "name", { value: "DeliverWithPrivateData" });
+    
+            /**
+             * Calls DeliverWithPrivateData.
+             * @function deliverWithPrivateData
+             * @memberof protos.Deliver
+             * @instance
+             * @param {common.IEnvelope} request Envelope message or plain object
+             * @returns {Promise<protos.DeliverResponse>} Promise
+             * @variation 2
+             */
+    
+            return Deliver;
         })();
     
         protos.ChaincodeEvent = (function() {
@@ -7483,6 +9380,2198 @@
             };
     
             return ChaincodeEvent;
+        })();
+    
+        protos.ProcessedTransaction = (function() {
+    
+            /**
+             * Properties of a ProcessedTransaction.
+             * @memberof protos
+             * @interface IProcessedTransaction
+             * @property {common.IEnvelope|null} [transactionEnvelope] ProcessedTransaction transactionEnvelope
+             * @property {number|null} [validationCode] ProcessedTransaction validationCode
+             */
+    
+            /**
+             * Constructs a new ProcessedTransaction.
+             * @memberof protos
+             * @classdesc Represents a ProcessedTransaction.
+             * @implements IProcessedTransaction
+             * @constructor
+             * @param {protos.IProcessedTransaction=} [properties] Properties to set
+             */
+            function ProcessedTransaction(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * ProcessedTransaction transactionEnvelope.
+             * @member {common.IEnvelope|null|undefined} transactionEnvelope
+             * @memberof protos.ProcessedTransaction
+             * @instance
+             */
+            ProcessedTransaction.prototype.transactionEnvelope = null;
+    
+            /**
+             * ProcessedTransaction validationCode.
+             * @member {number} validationCode
+             * @memberof protos.ProcessedTransaction
+             * @instance
+             */
+            ProcessedTransaction.prototype.validationCode = 0;
+    
+            /**
+             * Creates a new ProcessedTransaction instance using the specified properties.
+             * @function create
+             * @memberof protos.ProcessedTransaction
+             * @static
+             * @param {protos.IProcessedTransaction=} [properties] Properties to set
+             * @returns {protos.ProcessedTransaction} ProcessedTransaction instance
+             */
+            ProcessedTransaction.create = function create(properties) {
+                return new ProcessedTransaction(properties);
+            };
+    
+            /**
+             * Encodes the specified ProcessedTransaction message. Does not implicitly {@link protos.ProcessedTransaction.verify|verify} messages.
+             * @function encode
+             * @memberof protos.ProcessedTransaction
+             * @static
+             * @param {protos.IProcessedTransaction} message ProcessedTransaction message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            ProcessedTransaction.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.transactionEnvelope != null && Object.hasOwnProperty.call(message, "transactionEnvelope"))
+                    $root.common.Envelope.encode(message.transactionEnvelope, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+                if (message.validationCode != null && Object.hasOwnProperty.call(message, "validationCode"))
+                    writer.uint32(/* id 2, wireType 0 =*/16).int32(message.validationCode);
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified ProcessedTransaction message, length delimited. Does not implicitly {@link protos.ProcessedTransaction.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof protos.ProcessedTransaction
+             * @static
+             * @param {protos.IProcessedTransaction} message ProcessedTransaction message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            ProcessedTransaction.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a ProcessedTransaction message from the specified reader or buffer.
+             * @function decode
+             * @memberof protos.ProcessedTransaction
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {protos.ProcessedTransaction} ProcessedTransaction
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            ProcessedTransaction.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.ProcessedTransaction();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.transactionEnvelope = $root.common.Envelope.decode(reader, reader.uint32());
+                        break;
+                    case 2:
+                        message.validationCode = reader.int32();
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a ProcessedTransaction message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof protos.ProcessedTransaction
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {protos.ProcessedTransaction} ProcessedTransaction
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            ProcessedTransaction.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a ProcessedTransaction message.
+             * @function verify
+             * @memberof protos.ProcessedTransaction
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            ProcessedTransaction.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.transactionEnvelope != null && message.hasOwnProperty("transactionEnvelope")) {
+                    var error = $root.common.Envelope.verify(message.transactionEnvelope);
+                    if (error)
+                        return "transactionEnvelope." + error;
+                }
+                if (message.validationCode != null && message.hasOwnProperty("validationCode"))
+                    if (!$util.isInteger(message.validationCode))
+                        return "validationCode: integer expected";
+                return null;
+            };
+    
+            /**
+             * Creates a ProcessedTransaction message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof protos.ProcessedTransaction
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {protos.ProcessedTransaction} ProcessedTransaction
+             */
+            ProcessedTransaction.fromObject = function fromObject(object) {
+                if (object instanceof $root.protos.ProcessedTransaction)
+                    return object;
+                var message = new $root.protos.ProcessedTransaction();
+                if (object.transactionEnvelope != null) {
+                    if (typeof object.transactionEnvelope !== "object")
+                        throw TypeError(".protos.ProcessedTransaction.transactionEnvelope: object expected");
+                    message.transactionEnvelope = $root.common.Envelope.fromObject(object.transactionEnvelope);
+                }
+                if (object.validationCode != null)
+                    message.validationCode = object.validationCode | 0;
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a ProcessedTransaction message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof protos.ProcessedTransaction
+             * @static
+             * @param {protos.ProcessedTransaction} message ProcessedTransaction
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            ProcessedTransaction.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.defaults) {
+                    object.transactionEnvelope = null;
+                    object.validationCode = 0;
+                }
+                if (message.transactionEnvelope != null && message.hasOwnProperty("transactionEnvelope"))
+                    object.transactionEnvelope = $root.common.Envelope.toObject(message.transactionEnvelope, options);
+                if (message.validationCode != null && message.hasOwnProperty("validationCode"))
+                    object.validationCode = message.validationCode;
+                return object;
+            };
+    
+            /**
+             * Converts this ProcessedTransaction to JSON.
+             * @function toJSON
+             * @memberof protos.ProcessedTransaction
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            ProcessedTransaction.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return ProcessedTransaction;
+        })();
+    
+        protos.Transaction = (function() {
+    
+            /**
+             * Properties of a Transaction.
+             * @memberof protos
+             * @interface ITransaction
+             * @property {Array.<protos.ITransactionAction>|null} [actions] Transaction actions
+             */
+    
+            /**
+             * Constructs a new Transaction.
+             * @memberof protos
+             * @classdesc Represents a Transaction.
+             * @implements ITransaction
+             * @constructor
+             * @param {protos.ITransaction=} [properties] Properties to set
+             */
+            function Transaction(properties) {
+                this.actions = [];
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * Transaction actions.
+             * @member {Array.<protos.ITransactionAction>} actions
+             * @memberof protos.Transaction
+             * @instance
+             */
+            Transaction.prototype.actions = $util.emptyArray;
+    
+            /**
+             * Creates a new Transaction instance using the specified properties.
+             * @function create
+             * @memberof protos.Transaction
+             * @static
+             * @param {protos.ITransaction=} [properties] Properties to set
+             * @returns {protos.Transaction} Transaction instance
+             */
+            Transaction.create = function create(properties) {
+                return new Transaction(properties);
+            };
+    
+            /**
+             * Encodes the specified Transaction message. Does not implicitly {@link protos.Transaction.verify|verify} messages.
+             * @function encode
+             * @memberof protos.Transaction
+             * @static
+             * @param {protos.ITransaction} message Transaction message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            Transaction.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.actions != null && message.actions.length)
+                    for (var i = 0; i < message.actions.length; ++i)
+                        $root.protos.TransactionAction.encode(message.actions[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified Transaction message, length delimited. Does not implicitly {@link protos.Transaction.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof protos.Transaction
+             * @static
+             * @param {protos.ITransaction} message Transaction message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            Transaction.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a Transaction message from the specified reader or buffer.
+             * @function decode
+             * @memberof protos.Transaction
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {protos.Transaction} Transaction
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            Transaction.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.Transaction();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        if (!(message.actions && message.actions.length))
+                            message.actions = [];
+                        message.actions.push($root.protos.TransactionAction.decode(reader, reader.uint32()));
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a Transaction message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof protos.Transaction
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {protos.Transaction} Transaction
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            Transaction.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a Transaction message.
+             * @function verify
+             * @memberof protos.Transaction
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            Transaction.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.actions != null && message.hasOwnProperty("actions")) {
+                    if (!Array.isArray(message.actions))
+                        return "actions: array expected";
+                    for (var i = 0; i < message.actions.length; ++i) {
+                        var error = $root.protos.TransactionAction.verify(message.actions[i]);
+                        if (error)
+                            return "actions." + error;
+                    }
+                }
+                return null;
+            };
+    
+            /**
+             * Creates a Transaction message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof protos.Transaction
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {protos.Transaction} Transaction
+             */
+            Transaction.fromObject = function fromObject(object) {
+                if (object instanceof $root.protos.Transaction)
+                    return object;
+                var message = new $root.protos.Transaction();
+                if (object.actions) {
+                    if (!Array.isArray(object.actions))
+                        throw TypeError(".protos.Transaction.actions: array expected");
+                    message.actions = [];
+                    for (var i = 0; i < object.actions.length; ++i) {
+                        if (typeof object.actions[i] !== "object")
+                            throw TypeError(".protos.Transaction.actions: object expected");
+                        message.actions[i] = $root.protos.TransactionAction.fromObject(object.actions[i]);
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a Transaction message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof protos.Transaction
+             * @static
+             * @param {protos.Transaction} message Transaction
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            Transaction.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.arrays || options.defaults)
+                    object.actions = [];
+                if (message.actions && message.actions.length) {
+                    object.actions = [];
+                    for (var j = 0; j < message.actions.length; ++j)
+                        object.actions[j] = $root.protos.TransactionAction.toObject(message.actions[j], options);
+                }
+                return object;
+            };
+    
+            /**
+             * Converts this Transaction to JSON.
+             * @function toJSON
+             * @memberof protos.Transaction
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            Transaction.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return Transaction;
+        })();
+    
+        protos.TransactionAction = (function() {
+    
+            /**
+             * Properties of a TransactionAction.
+             * @memberof protos
+             * @interface ITransactionAction
+             * @property {Uint8Array|null} [header] TransactionAction header
+             * @property {Uint8Array|null} [payload] TransactionAction payload
+             */
+    
+            /**
+             * Constructs a new TransactionAction.
+             * @memberof protos
+             * @classdesc Represents a TransactionAction.
+             * @implements ITransactionAction
+             * @constructor
+             * @param {protos.ITransactionAction=} [properties] Properties to set
+             */
+            function TransactionAction(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * TransactionAction header.
+             * @member {Uint8Array} header
+             * @memberof protos.TransactionAction
+             * @instance
+             */
+            TransactionAction.prototype.header = $util.newBuffer([]);
+    
+            /**
+             * TransactionAction payload.
+             * @member {Uint8Array} payload
+             * @memberof protos.TransactionAction
+             * @instance
+             */
+            TransactionAction.prototype.payload = $util.newBuffer([]);
+    
+            /**
+             * Creates a new TransactionAction instance using the specified properties.
+             * @function create
+             * @memberof protos.TransactionAction
+             * @static
+             * @param {protos.ITransactionAction=} [properties] Properties to set
+             * @returns {protos.TransactionAction} TransactionAction instance
+             */
+            TransactionAction.create = function create(properties) {
+                return new TransactionAction(properties);
+            };
+    
+            /**
+             * Encodes the specified TransactionAction message. Does not implicitly {@link protos.TransactionAction.verify|verify} messages.
+             * @function encode
+             * @memberof protos.TransactionAction
+             * @static
+             * @param {protos.ITransactionAction} message TransactionAction message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            TransactionAction.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.header != null && Object.hasOwnProperty.call(message, "header"))
+                    writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.header);
+                if (message.payload != null && Object.hasOwnProperty.call(message, "payload"))
+                    writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.payload);
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified TransactionAction message, length delimited. Does not implicitly {@link protos.TransactionAction.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof protos.TransactionAction
+             * @static
+             * @param {protos.ITransactionAction} message TransactionAction message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            TransactionAction.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a TransactionAction message from the specified reader or buffer.
+             * @function decode
+             * @memberof protos.TransactionAction
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {protos.TransactionAction} TransactionAction
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            TransactionAction.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.TransactionAction();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.header = reader.bytes();
+                        break;
+                    case 2:
+                        message.payload = reader.bytes();
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a TransactionAction message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof protos.TransactionAction
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {protos.TransactionAction} TransactionAction
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            TransactionAction.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a TransactionAction message.
+             * @function verify
+             * @memberof protos.TransactionAction
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            TransactionAction.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.header != null && message.hasOwnProperty("header"))
+                    if (!(message.header && typeof message.header.length === "number" || $util.isString(message.header)))
+                        return "header: buffer expected";
+                if (message.payload != null && message.hasOwnProperty("payload"))
+                    if (!(message.payload && typeof message.payload.length === "number" || $util.isString(message.payload)))
+                        return "payload: buffer expected";
+                return null;
+            };
+    
+            /**
+             * Creates a TransactionAction message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof protos.TransactionAction
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {protos.TransactionAction} TransactionAction
+             */
+            TransactionAction.fromObject = function fromObject(object) {
+                if (object instanceof $root.protos.TransactionAction)
+                    return object;
+                var message = new $root.protos.TransactionAction();
+                if (object.header != null)
+                    if (typeof object.header === "string")
+                        $util.base64.decode(object.header, message.header = $util.newBuffer($util.base64.length(object.header)), 0);
+                    else if (object.header.length)
+                        message.header = object.header;
+                if (object.payload != null)
+                    if (typeof object.payload === "string")
+                        $util.base64.decode(object.payload, message.payload = $util.newBuffer($util.base64.length(object.payload)), 0);
+                    else if (object.payload.length)
+                        message.payload = object.payload;
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a TransactionAction message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof protos.TransactionAction
+             * @static
+             * @param {protos.TransactionAction} message TransactionAction
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            TransactionAction.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.defaults) {
+                    if (options.bytes === String)
+                        object.header = "";
+                    else {
+                        object.header = [];
+                        if (options.bytes !== Array)
+                            object.header = $util.newBuffer(object.header);
+                    }
+                    if (options.bytes === String)
+                        object.payload = "";
+                    else {
+                        object.payload = [];
+                        if (options.bytes !== Array)
+                            object.payload = $util.newBuffer(object.payload);
+                    }
+                }
+                if (message.header != null && message.hasOwnProperty("header"))
+                    object.header = options.bytes === String ? $util.base64.encode(message.header, 0, message.header.length) : options.bytes === Array ? Array.prototype.slice.call(message.header) : message.header;
+                if (message.payload != null && message.hasOwnProperty("payload"))
+                    object.payload = options.bytes === String ? $util.base64.encode(message.payload, 0, message.payload.length) : options.bytes === Array ? Array.prototype.slice.call(message.payload) : message.payload;
+                return object;
+            };
+    
+            /**
+             * Converts this TransactionAction to JSON.
+             * @function toJSON
+             * @memberof protos.TransactionAction
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            TransactionAction.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return TransactionAction;
+        })();
+    
+        protos.ChaincodeActionPayload = (function() {
+    
+            /**
+             * Properties of a ChaincodeActionPayload.
+             * @memberof protos
+             * @interface IChaincodeActionPayload
+             * @property {Uint8Array|null} [chaincode_proposal_payload] ChaincodeActionPayload chaincode_proposal_payload
+             * @property {protos.IChaincodeEndorsedAction|null} [action] ChaincodeActionPayload action
+             */
+    
+            /**
+             * Constructs a new ChaincodeActionPayload.
+             * @memberof protos
+             * @classdesc Represents a ChaincodeActionPayload.
+             * @implements IChaincodeActionPayload
+             * @constructor
+             * @param {protos.IChaincodeActionPayload=} [properties] Properties to set
+             */
+            function ChaincodeActionPayload(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * ChaincodeActionPayload chaincode_proposal_payload.
+             * @member {Uint8Array} chaincode_proposal_payload
+             * @memberof protos.ChaincodeActionPayload
+             * @instance
+             */
+            ChaincodeActionPayload.prototype.chaincode_proposal_payload = $util.newBuffer([]);
+    
+            /**
+             * ChaincodeActionPayload action.
+             * @member {protos.IChaincodeEndorsedAction|null|undefined} action
+             * @memberof protos.ChaincodeActionPayload
+             * @instance
+             */
+            ChaincodeActionPayload.prototype.action = null;
+    
+            /**
+             * Creates a new ChaincodeActionPayload instance using the specified properties.
+             * @function create
+             * @memberof protos.ChaincodeActionPayload
+             * @static
+             * @param {protos.IChaincodeActionPayload=} [properties] Properties to set
+             * @returns {protos.ChaincodeActionPayload} ChaincodeActionPayload instance
+             */
+            ChaincodeActionPayload.create = function create(properties) {
+                return new ChaincodeActionPayload(properties);
+            };
+    
+            /**
+             * Encodes the specified ChaincodeActionPayload message. Does not implicitly {@link protos.ChaincodeActionPayload.verify|verify} messages.
+             * @function encode
+             * @memberof protos.ChaincodeActionPayload
+             * @static
+             * @param {protos.IChaincodeActionPayload} message ChaincodeActionPayload message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            ChaincodeActionPayload.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.chaincode_proposal_payload != null && Object.hasOwnProperty.call(message, "chaincode_proposal_payload"))
+                    writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.chaincode_proposal_payload);
+                if (message.action != null && Object.hasOwnProperty.call(message, "action"))
+                    $root.protos.ChaincodeEndorsedAction.encode(message.action, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified ChaincodeActionPayload message, length delimited. Does not implicitly {@link protos.ChaincodeActionPayload.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof protos.ChaincodeActionPayload
+             * @static
+             * @param {protos.IChaincodeActionPayload} message ChaincodeActionPayload message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            ChaincodeActionPayload.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a ChaincodeActionPayload message from the specified reader or buffer.
+             * @function decode
+             * @memberof protos.ChaincodeActionPayload
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {protos.ChaincodeActionPayload} ChaincodeActionPayload
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            ChaincodeActionPayload.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.ChaincodeActionPayload();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.chaincode_proposal_payload = reader.bytes();
+                        break;
+                    case 2:
+                        message.action = $root.protos.ChaincodeEndorsedAction.decode(reader, reader.uint32());
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a ChaincodeActionPayload message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof protos.ChaincodeActionPayload
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {protos.ChaincodeActionPayload} ChaincodeActionPayload
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            ChaincodeActionPayload.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a ChaincodeActionPayload message.
+             * @function verify
+             * @memberof protos.ChaincodeActionPayload
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            ChaincodeActionPayload.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.chaincode_proposal_payload != null && message.hasOwnProperty("chaincode_proposal_payload"))
+                    if (!(message.chaincode_proposal_payload && typeof message.chaincode_proposal_payload.length === "number" || $util.isString(message.chaincode_proposal_payload)))
+                        return "chaincode_proposal_payload: buffer expected";
+                if (message.action != null && message.hasOwnProperty("action")) {
+                    var error = $root.protos.ChaincodeEndorsedAction.verify(message.action);
+                    if (error)
+                        return "action." + error;
+                }
+                return null;
+            };
+    
+            /**
+             * Creates a ChaincodeActionPayload message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof protos.ChaincodeActionPayload
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {protos.ChaincodeActionPayload} ChaincodeActionPayload
+             */
+            ChaincodeActionPayload.fromObject = function fromObject(object) {
+                if (object instanceof $root.protos.ChaincodeActionPayload)
+                    return object;
+                var message = new $root.protos.ChaincodeActionPayload();
+                if (object.chaincode_proposal_payload != null)
+                    if (typeof object.chaincode_proposal_payload === "string")
+                        $util.base64.decode(object.chaincode_proposal_payload, message.chaincode_proposal_payload = $util.newBuffer($util.base64.length(object.chaincode_proposal_payload)), 0);
+                    else if (object.chaincode_proposal_payload.length)
+                        message.chaincode_proposal_payload = object.chaincode_proposal_payload;
+                if (object.action != null) {
+                    if (typeof object.action !== "object")
+                        throw TypeError(".protos.ChaincodeActionPayload.action: object expected");
+                    message.action = $root.protos.ChaincodeEndorsedAction.fromObject(object.action);
+                }
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a ChaincodeActionPayload message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof protos.ChaincodeActionPayload
+             * @static
+             * @param {protos.ChaincodeActionPayload} message ChaincodeActionPayload
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            ChaincodeActionPayload.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.defaults) {
+                    if (options.bytes === String)
+                        object.chaincode_proposal_payload = "";
+                    else {
+                        object.chaincode_proposal_payload = [];
+                        if (options.bytes !== Array)
+                            object.chaincode_proposal_payload = $util.newBuffer(object.chaincode_proposal_payload);
+                    }
+                    object.action = null;
+                }
+                if (message.chaincode_proposal_payload != null && message.hasOwnProperty("chaincode_proposal_payload"))
+                    object.chaincode_proposal_payload = options.bytes === String ? $util.base64.encode(message.chaincode_proposal_payload, 0, message.chaincode_proposal_payload.length) : options.bytes === Array ? Array.prototype.slice.call(message.chaincode_proposal_payload) : message.chaincode_proposal_payload;
+                if (message.action != null && message.hasOwnProperty("action"))
+                    object.action = $root.protos.ChaincodeEndorsedAction.toObject(message.action, options);
+                return object;
+            };
+    
+            /**
+             * Converts this ChaincodeActionPayload to JSON.
+             * @function toJSON
+             * @memberof protos.ChaincodeActionPayload
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            ChaincodeActionPayload.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return ChaincodeActionPayload;
+        })();
+    
+        protos.ChaincodeEndorsedAction = (function() {
+    
+            /**
+             * Properties of a ChaincodeEndorsedAction.
+             * @memberof protos
+             * @interface IChaincodeEndorsedAction
+             * @property {Uint8Array|null} [proposal_response_payload] ChaincodeEndorsedAction proposal_response_payload
+             * @property {Array.<protos.IEndorsement>|null} [endorsements] ChaincodeEndorsedAction endorsements
+             */
+    
+            /**
+             * Constructs a new ChaincodeEndorsedAction.
+             * @memberof protos
+             * @classdesc Represents a ChaincodeEndorsedAction.
+             * @implements IChaincodeEndorsedAction
+             * @constructor
+             * @param {protos.IChaincodeEndorsedAction=} [properties] Properties to set
+             */
+            function ChaincodeEndorsedAction(properties) {
+                this.endorsements = [];
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * ChaincodeEndorsedAction proposal_response_payload.
+             * @member {Uint8Array} proposal_response_payload
+             * @memberof protos.ChaincodeEndorsedAction
+             * @instance
+             */
+            ChaincodeEndorsedAction.prototype.proposal_response_payload = $util.newBuffer([]);
+    
+            /**
+             * ChaincodeEndorsedAction endorsements.
+             * @member {Array.<protos.IEndorsement>} endorsements
+             * @memberof protos.ChaincodeEndorsedAction
+             * @instance
+             */
+            ChaincodeEndorsedAction.prototype.endorsements = $util.emptyArray;
+    
+            /**
+             * Creates a new ChaincodeEndorsedAction instance using the specified properties.
+             * @function create
+             * @memberof protos.ChaincodeEndorsedAction
+             * @static
+             * @param {protos.IChaincodeEndorsedAction=} [properties] Properties to set
+             * @returns {protos.ChaincodeEndorsedAction} ChaincodeEndorsedAction instance
+             */
+            ChaincodeEndorsedAction.create = function create(properties) {
+                return new ChaincodeEndorsedAction(properties);
+            };
+    
+            /**
+             * Encodes the specified ChaincodeEndorsedAction message. Does not implicitly {@link protos.ChaincodeEndorsedAction.verify|verify} messages.
+             * @function encode
+             * @memberof protos.ChaincodeEndorsedAction
+             * @static
+             * @param {protos.IChaincodeEndorsedAction} message ChaincodeEndorsedAction message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            ChaincodeEndorsedAction.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.proposal_response_payload != null && Object.hasOwnProperty.call(message, "proposal_response_payload"))
+                    writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.proposal_response_payload);
+                if (message.endorsements != null && message.endorsements.length)
+                    for (var i = 0; i < message.endorsements.length; ++i)
+                        $root.protos.Endorsement.encode(message.endorsements[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified ChaincodeEndorsedAction message, length delimited. Does not implicitly {@link protos.ChaincodeEndorsedAction.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof protos.ChaincodeEndorsedAction
+             * @static
+             * @param {protos.IChaincodeEndorsedAction} message ChaincodeEndorsedAction message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            ChaincodeEndorsedAction.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a ChaincodeEndorsedAction message from the specified reader or buffer.
+             * @function decode
+             * @memberof protos.ChaincodeEndorsedAction
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {protos.ChaincodeEndorsedAction} ChaincodeEndorsedAction
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            ChaincodeEndorsedAction.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.ChaincodeEndorsedAction();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.proposal_response_payload = reader.bytes();
+                        break;
+                    case 2:
+                        if (!(message.endorsements && message.endorsements.length))
+                            message.endorsements = [];
+                        message.endorsements.push($root.protos.Endorsement.decode(reader, reader.uint32()));
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a ChaincodeEndorsedAction message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof protos.ChaincodeEndorsedAction
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {protos.ChaincodeEndorsedAction} ChaincodeEndorsedAction
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            ChaincodeEndorsedAction.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a ChaincodeEndorsedAction message.
+             * @function verify
+             * @memberof protos.ChaincodeEndorsedAction
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            ChaincodeEndorsedAction.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.proposal_response_payload != null && message.hasOwnProperty("proposal_response_payload"))
+                    if (!(message.proposal_response_payload && typeof message.proposal_response_payload.length === "number" || $util.isString(message.proposal_response_payload)))
+                        return "proposal_response_payload: buffer expected";
+                if (message.endorsements != null && message.hasOwnProperty("endorsements")) {
+                    if (!Array.isArray(message.endorsements))
+                        return "endorsements: array expected";
+                    for (var i = 0; i < message.endorsements.length; ++i) {
+                        var error = $root.protos.Endorsement.verify(message.endorsements[i]);
+                        if (error)
+                            return "endorsements." + error;
+                    }
+                }
+                return null;
+            };
+    
+            /**
+             * Creates a ChaincodeEndorsedAction message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof protos.ChaincodeEndorsedAction
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {protos.ChaincodeEndorsedAction} ChaincodeEndorsedAction
+             */
+            ChaincodeEndorsedAction.fromObject = function fromObject(object) {
+                if (object instanceof $root.protos.ChaincodeEndorsedAction)
+                    return object;
+                var message = new $root.protos.ChaincodeEndorsedAction();
+                if (object.proposal_response_payload != null)
+                    if (typeof object.proposal_response_payload === "string")
+                        $util.base64.decode(object.proposal_response_payload, message.proposal_response_payload = $util.newBuffer($util.base64.length(object.proposal_response_payload)), 0);
+                    else if (object.proposal_response_payload.length)
+                        message.proposal_response_payload = object.proposal_response_payload;
+                if (object.endorsements) {
+                    if (!Array.isArray(object.endorsements))
+                        throw TypeError(".protos.ChaincodeEndorsedAction.endorsements: array expected");
+                    message.endorsements = [];
+                    for (var i = 0; i < object.endorsements.length; ++i) {
+                        if (typeof object.endorsements[i] !== "object")
+                            throw TypeError(".protos.ChaincodeEndorsedAction.endorsements: object expected");
+                        message.endorsements[i] = $root.protos.Endorsement.fromObject(object.endorsements[i]);
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a ChaincodeEndorsedAction message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof protos.ChaincodeEndorsedAction
+             * @static
+             * @param {protos.ChaincodeEndorsedAction} message ChaincodeEndorsedAction
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            ChaincodeEndorsedAction.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.arrays || options.defaults)
+                    object.endorsements = [];
+                if (options.defaults)
+                    if (options.bytes === String)
+                        object.proposal_response_payload = "";
+                    else {
+                        object.proposal_response_payload = [];
+                        if (options.bytes !== Array)
+                            object.proposal_response_payload = $util.newBuffer(object.proposal_response_payload);
+                    }
+                if (message.proposal_response_payload != null && message.hasOwnProperty("proposal_response_payload"))
+                    object.proposal_response_payload = options.bytes === String ? $util.base64.encode(message.proposal_response_payload, 0, message.proposal_response_payload.length) : options.bytes === Array ? Array.prototype.slice.call(message.proposal_response_payload) : message.proposal_response_payload;
+                if (message.endorsements && message.endorsements.length) {
+                    object.endorsements = [];
+                    for (var j = 0; j < message.endorsements.length; ++j)
+                        object.endorsements[j] = $root.protos.Endorsement.toObject(message.endorsements[j], options);
+                }
+                return object;
+            };
+    
+            /**
+             * Converts this ChaincodeEndorsedAction to JSON.
+             * @function toJSON
+             * @memberof protos.ChaincodeEndorsedAction
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            ChaincodeEndorsedAction.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return ChaincodeEndorsedAction;
+        })();
+    
+        /**
+         * TxValidationCode enum.
+         * @name protos.TxValidationCode
+         * @enum {number}
+         * @property {number} VALID=0 VALID value
+         * @property {number} NIL_ENVELOPE=1 NIL_ENVELOPE value
+         * @property {number} BAD_PAYLOAD=2 BAD_PAYLOAD value
+         * @property {number} BAD_COMMON_HEADER=3 BAD_COMMON_HEADER value
+         * @property {number} BAD_CREATOR_SIGNATURE=4 BAD_CREATOR_SIGNATURE value
+         * @property {number} INVALID_ENDORSER_TRANSACTION=5 INVALID_ENDORSER_TRANSACTION value
+         * @property {number} INVALID_CONFIG_TRANSACTION=6 INVALID_CONFIG_TRANSACTION value
+         * @property {number} UNSUPPORTED_TX_PAYLOAD=7 UNSUPPORTED_TX_PAYLOAD value
+         * @property {number} BAD_PROPOSAL_TXID=8 BAD_PROPOSAL_TXID value
+         * @property {number} DUPLICATE_TXID=9 DUPLICATE_TXID value
+         * @property {number} ENDORSEMENT_POLICY_FAILURE=10 ENDORSEMENT_POLICY_FAILURE value
+         * @property {number} MVCC_READ_CONFLICT=11 MVCC_READ_CONFLICT value
+         * @property {number} PHANTOM_READ_CONFLICT=12 PHANTOM_READ_CONFLICT value
+         * @property {number} UNKNOWN_TX_TYPE=13 UNKNOWN_TX_TYPE value
+         * @property {number} TARGET_CHAIN_NOT_FOUND=14 TARGET_CHAIN_NOT_FOUND value
+         * @property {number} MARSHAL_TX_ERROR=15 MARSHAL_TX_ERROR value
+         * @property {number} NIL_TXACTION=16 NIL_TXACTION value
+         * @property {number} EXPIRED_CHAINCODE=17 EXPIRED_CHAINCODE value
+         * @property {number} CHAINCODE_VERSION_CONFLICT=18 CHAINCODE_VERSION_CONFLICT value
+         * @property {number} BAD_HEADER_EXTENSION=19 BAD_HEADER_EXTENSION value
+         * @property {number} BAD_CHANNEL_HEADER=20 BAD_CHANNEL_HEADER value
+         * @property {number} BAD_RESPONSE_PAYLOAD=21 BAD_RESPONSE_PAYLOAD value
+         * @property {number} BAD_RWSET=22 BAD_RWSET value
+         * @property {number} ILLEGAL_WRITESET=23 ILLEGAL_WRITESET value
+         * @property {number} INVALID_WRITESET=24 INVALID_WRITESET value
+         * @property {number} INVALID_CHAINCODE=25 INVALID_CHAINCODE value
+         * @property {number} NOT_VALIDATED=254 NOT_VALIDATED value
+         * @property {number} INVALID_OTHER_REASON=255 INVALID_OTHER_REASON value
+         */
+        protos.TxValidationCode = (function() {
+            var valuesById = {}, values = Object.create(valuesById);
+            values[valuesById[0] = "VALID"] = 0;
+            values[valuesById[1] = "NIL_ENVELOPE"] = 1;
+            values[valuesById[2] = "BAD_PAYLOAD"] = 2;
+            values[valuesById[3] = "BAD_COMMON_HEADER"] = 3;
+            values[valuesById[4] = "BAD_CREATOR_SIGNATURE"] = 4;
+            values[valuesById[5] = "INVALID_ENDORSER_TRANSACTION"] = 5;
+            values[valuesById[6] = "INVALID_CONFIG_TRANSACTION"] = 6;
+            values[valuesById[7] = "UNSUPPORTED_TX_PAYLOAD"] = 7;
+            values[valuesById[8] = "BAD_PROPOSAL_TXID"] = 8;
+            values[valuesById[9] = "DUPLICATE_TXID"] = 9;
+            values[valuesById[10] = "ENDORSEMENT_POLICY_FAILURE"] = 10;
+            values[valuesById[11] = "MVCC_READ_CONFLICT"] = 11;
+            values[valuesById[12] = "PHANTOM_READ_CONFLICT"] = 12;
+            values[valuesById[13] = "UNKNOWN_TX_TYPE"] = 13;
+            values[valuesById[14] = "TARGET_CHAIN_NOT_FOUND"] = 14;
+            values[valuesById[15] = "MARSHAL_TX_ERROR"] = 15;
+            values[valuesById[16] = "NIL_TXACTION"] = 16;
+            values[valuesById[17] = "EXPIRED_CHAINCODE"] = 17;
+            values[valuesById[18] = "CHAINCODE_VERSION_CONFLICT"] = 18;
+            values[valuesById[19] = "BAD_HEADER_EXTENSION"] = 19;
+            values[valuesById[20] = "BAD_CHANNEL_HEADER"] = 20;
+            values[valuesById[21] = "BAD_RESPONSE_PAYLOAD"] = 21;
+            values[valuesById[22] = "BAD_RWSET"] = 22;
+            values[valuesById[23] = "ILLEGAL_WRITESET"] = 23;
+            values[valuesById[24] = "INVALID_WRITESET"] = 24;
+            values[valuesById[25] = "INVALID_CHAINCODE"] = 25;
+            values[valuesById[254] = "NOT_VALIDATED"] = 254;
+            values[valuesById[255] = "INVALID_OTHER_REASON"] = 255;
+            return values;
+        })();
+    
+        /**
+         * MetaDataKeys enum.
+         * @name protos.MetaDataKeys
+         * @enum {number}
+         * @property {number} VALIDATION_PARAMETER=0 VALIDATION_PARAMETER value
+         * @property {number} VALIDATION_PARAMETER_V2=1 VALIDATION_PARAMETER_V2 value
+         */
+        protos.MetaDataKeys = (function() {
+            var valuesById = {}, values = Object.create(valuesById);
+            values[valuesById[0] = "VALIDATION_PARAMETER"] = 0;
+            values[valuesById[1] = "VALIDATION_PARAMETER_V2"] = 1;
+            return values;
+        })();
+    
+        protos.ProposalResponse = (function() {
+    
+            /**
+             * Properties of a ProposalResponse.
+             * @memberof protos
+             * @interface IProposalResponse
+             * @property {number|null} [version] ProposalResponse version
+             * @property {google.protobuf.ITimestamp|null} [timestamp] ProposalResponse timestamp
+             * @property {protos.IResponse|null} [response] ProposalResponse response
+             * @property {Uint8Array|null} [payload] ProposalResponse payload
+             * @property {protos.IEndorsement|null} [endorsement] ProposalResponse endorsement
+             */
+    
+            /**
+             * Constructs a new ProposalResponse.
+             * @memberof protos
+             * @classdesc Represents a ProposalResponse.
+             * @implements IProposalResponse
+             * @constructor
+             * @param {protos.IProposalResponse=} [properties] Properties to set
+             */
+            function ProposalResponse(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * ProposalResponse version.
+             * @member {number} version
+             * @memberof protos.ProposalResponse
+             * @instance
+             */
+            ProposalResponse.prototype.version = 0;
+    
+            /**
+             * ProposalResponse timestamp.
+             * @member {google.protobuf.ITimestamp|null|undefined} timestamp
+             * @memberof protos.ProposalResponse
+             * @instance
+             */
+            ProposalResponse.prototype.timestamp = null;
+    
+            /**
+             * ProposalResponse response.
+             * @member {protos.IResponse|null|undefined} response
+             * @memberof protos.ProposalResponse
+             * @instance
+             */
+            ProposalResponse.prototype.response = null;
+    
+            /**
+             * ProposalResponse payload.
+             * @member {Uint8Array} payload
+             * @memberof protos.ProposalResponse
+             * @instance
+             */
+            ProposalResponse.prototype.payload = $util.newBuffer([]);
+    
+            /**
+             * ProposalResponse endorsement.
+             * @member {protos.IEndorsement|null|undefined} endorsement
+             * @memberof protos.ProposalResponse
+             * @instance
+             */
+            ProposalResponse.prototype.endorsement = null;
+    
+            /**
+             * Creates a new ProposalResponse instance using the specified properties.
+             * @function create
+             * @memberof protos.ProposalResponse
+             * @static
+             * @param {protos.IProposalResponse=} [properties] Properties to set
+             * @returns {protos.ProposalResponse} ProposalResponse instance
+             */
+            ProposalResponse.create = function create(properties) {
+                return new ProposalResponse(properties);
+            };
+    
+            /**
+             * Encodes the specified ProposalResponse message. Does not implicitly {@link protos.ProposalResponse.verify|verify} messages.
+             * @function encode
+             * @memberof protos.ProposalResponse
+             * @static
+             * @param {protos.IProposalResponse} message ProposalResponse message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            ProposalResponse.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.version != null && Object.hasOwnProperty.call(message, "version"))
+                    writer.uint32(/* id 1, wireType 0 =*/8).int32(message.version);
+                if (message.timestamp != null && Object.hasOwnProperty.call(message, "timestamp"))
+                    $root.google.protobuf.Timestamp.encode(message.timestamp, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+                if (message.response != null && Object.hasOwnProperty.call(message, "response"))
+                    $root.protos.Response.encode(message.response, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+                if (message.payload != null && Object.hasOwnProperty.call(message, "payload"))
+                    writer.uint32(/* id 5, wireType 2 =*/42).bytes(message.payload);
+                if (message.endorsement != null && Object.hasOwnProperty.call(message, "endorsement"))
+                    $root.protos.Endorsement.encode(message.endorsement, writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified ProposalResponse message, length delimited. Does not implicitly {@link protos.ProposalResponse.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof protos.ProposalResponse
+             * @static
+             * @param {protos.IProposalResponse} message ProposalResponse message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            ProposalResponse.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a ProposalResponse message from the specified reader or buffer.
+             * @function decode
+             * @memberof protos.ProposalResponse
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {protos.ProposalResponse} ProposalResponse
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            ProposalResponse.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.ProposalResponse();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.version = reader.int32();
+                        break;
+                    case 2:
+                        message.timestamp = $root.google.protobuf.Timestamp.decode(reader, reader.uint32());
+                        break;
+                    case 4:
+                        message.response = $root.protos.Response.decode(reader, reader.uint32());
+                        break;
+                    case 5:
+                        message.payload = reader.bytes();
+                        break;
+                    case 6:
+                        message.endorsement = $root.protos.Endorsement.decode(reader, reader.uint32());
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a ProposalResponse message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof protos.ProposalResponse
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {protos.ProposalResponse} ProposalResponse
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            ProposalResponse.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a ProposalResponse message.
+             * @function verify
+             * @memberof protos.ProposalResponse
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            ProposalResponse.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.version != null && message.hasOwnProperty("version"))
+                    if (!$util.isInteger(message.version))
+                        return "version: integer expected";
+                if (message.timestamp != null && message.hasOwnProperty("timestamp")) {
+                    var error = $root.google.protobuf.Timestamp.verify(message.timestamp);
+                    if (error)
+                        return "timestamp." + error;
+                }
+                if (message.response != null && message.hasOwnProperty("response")) {
+                    var error = $root.protos.Response.verify(message.response);
+                    if (error)
+                        return "response." + error;
+                }
+                if (message.payload != null && message.hasOwnProperty("payload"))
+                    if (!(message.payload && typeof message.payload.length === "number" || $util.isString(message.payload)))
+                        return "payload: buffer expected";
+                if (message.endorsement != null && message.hasOwnProperty("endorsement")) {
+                    var error = $root.protos.Endorsement.verify(message.endorsement);
+                    if (error)
+                        return "endorsement." + error;
+                }
+                return null;
+            };
+    
+            /**
+             * Creates a ProposalResponse message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof protos.ProposalResponse
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {protos.ProposalResponse} ProposalResponse
+             */
+            ProposalResponse.fromObject = function fromObject(object) {
+                if (object instanceof $root.protos.ProposalResponse)
+                    return object;
+                var message = new $root.protos.ProposalResponse();
+                if (object.version != null)
+                    message.version = object.version | 0;
+                if (object.timestamp != null) {
+                    if (typeof object.timestamp !== "object")
+                        throw TypeError(".protos.ProposalResponse.timestamp: object expected");
+                    message.timestamp = $root.google.protobuf.Timestamp.fromObject(object.timestamp);
+                }
+                if (object.response != null) {
+                    if (typeof object.response !== "object")
+                        throw TypeError(".protos.ProposalResponse.response: object expected");
+                    message.response = $root.protos.Response.fromObject(object.response);
+                }
+                if (object.payload != null)
+                    if (typeof object.payload === "string")
+                        $util.base64.decode(object.payload, message.payload = $util.newBuffer($util.base64.length(object.payload)), 0);
+                    else if (object.payload.length)
+                        message.payload = object.payload;
+                if (object.endorsement != null) {
+                    if (typeof object.endorsement !== "object")
+                        throw TypeError(".protos.ProposalResponse.endorsement: object expected");
+                    message.endorsement = $root.protos.Endorsement.fromObject(object.endorsement);
+                }
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a ProposalResponse message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof protos.ProposalResponse
+             * @static
+             * @param {protos.ProposalResponse} message ProposalResponse
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            ProposalResponse.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.defaults) {
+                    object.version = 0;
+                    object.timestamp = null;
+                    object.response = null;
+                    if (options.bytes === String)
+                        object.payload = "";
+                    else {
+                        object.payload = [];
+                        if (options.bytes !== Array)
+                            object.payload = $util.newBuffer(object.payload);
+                    }
+                    object.endorsement = null;
+                }
+                if (message.version != null && message.hasOwnProperty("version"))
+                    object.version = message.version;
+                if (message.timestamp != null && message.hasOwnProperty("timestamp"))
+                    object.timestamp = $root.google.protobuf.Timestamp.toObject(message.timestamp, options);
+                if (message.response != null && message.hasOwnProperty("response"))
+                    object.response = $root.protos.Response.toObject(message.response, options);
+                if (message.payload != null && message.hasOwnProperty("payload"))
+                    object.payload = options.bytes === String ? $util.base64.encode(message.payload, 0, message.payload.length) : options.bytes === Array ? Array.prototype.slice.call(message.payload) : message.payload;
+                if (message.endorsement != null && message.hasOwnProperty("endorsement"))
+                    object.endorsement = $root.protos.Endorsement.toObject(message.endorsement, options);
+                return object;
+            };
+    
+            /**
+             * Converts this ProposalResponse to JSON.
+             * @function toJSON
+             * @memberof protos.ProposalResponse
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            ProposalResponse.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return ProposalResponse;
+        })();
+    
+        protos.Response = (function() {
+    
+            /**
+             * Properties of a Response.
+             * @memberof protos
+             * @interface IResponse
+             * @property {number|null} [status] Response status
+             * @property {string|null} [message] Response message
+             * @property {Uint8Array|null} [payload] Response payload
+             */
+    
+            /**
+             * Constructs a new Response.
+             * @memberof protos
+             * @classdesc Represents a Response.
+             * @implements IResponse
+             * @constructor
+             * @param {protos.IResponse=} [properties] Properties to set
+             */
+            function Response(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * Response status.
+             * @member {number} status
+             * @memberof protos.Response
+             * @instance
+             */
+            Response.prototype.status = 0;
+    
+            /**
+             * Response message.
+             * @member {string} message
+             * @memberof protos.Response
+             * @instance
+             */
+            Response.prototype.message = "";
+    
+            /**
+             * Response payload.
+             * @member {Uint8Array} payload
+             * @memberof protos.Response
+             * @instance
+             */
+            Response.prototype.payload = $util.newBuffer([]);
+    
+            /**
+             * Creates a new Response instance using the specified properties.
+             * @function create
+             * @memberof protos.Response
+             * @static
+             * @param {protos.IResponse=} [properties] Properties to set
+             * @returns {protos.Response} Response instance
+             */
+            Response.create = function create(properties) {
+                return new Response(properties);
+            };
+    
+            /**
+             * Encodes the specified Response message. Does not implicitly {@link protos.Response.verify|verify} messages.
+             * @function encode
+             * @memberof protos.Response
+             * @static
+             * @param {protos.IResponse} message Response message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            Response.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.status != null && Object.hasOwnProperty.call(message, "status"))
+                    writer.uint32(/* id 1, wireType 0 =*/8).int32(message.status);
+                if (message.message != null && Object.hasOwnProperty.call(message, "message"))
+                    writer.uint32(/* id 2, wireType 2 =*/18).string(message.message);
+                if (message.payload != null && Object.hasOwnProperty.call(message, "payload"))
+                    writer.uint32(/* id 3, wireType 2 =*/26).bytes(message.payload);
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified Response message, length delimited. Does not implicitly {@link protos.Response.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof protos.Response
+             * @static
+             * @param {protos.IResponse} message Response message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            Response.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a Response message from the specified reader or buffer.
+             * @function decode
+             * @memberof protos.Response
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {protos.Response} Response
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            Response.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.Response();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.status = reader.int32();
+                        break;
+                    case 2:
+                        message.message = reader.string();
+                        break;
+                    case 3:
+                        message.payload = reader.bytes();
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a Response message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof protos.Response
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {protos.Response} Response
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            Response.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a Response message.
+             * @function verify
+             * @memberof protos.Response
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            Response.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.status != null && message.hasOwnProperty("status"))
+                    if (!$util.isInteger(message.status))
+                        return "status: integer expected";
+                if (message.message != null && message.hasOwnProperty("message"))
+                    if (!$util.isString(message.message))
+                        return "message: string expected";
+                if (message.payload != null && message.hasOwnProperty("payload"))
+                    if (!(message.payload && typeof message.payload.length === "number" || $util.isString(message.payload)))
+                        return "payload: buffer expected";
+                return null;
+            };
+    
+            /**
+             * Creates a Response message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof protos.Response
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {protos.Response} Response
+             */
+            Response.fromObject = function fromObject(object) {
+                if (object instanceof $root.protos.Response)
+                    return object;
+                var message = new $root.protos.Response();
+                if (object.status != null)
+                    message.status = object.status | 0;
+                if (object.message != null)
+                    message.message = String(object.message);
+                if (object.payload != null)
+                    if (typeof object.payload === "string")
+                        $util.base64.decode(object.payload, message.payload = $util.newBuffer($util.base64.length(object.payload)), 0);
+                    else if (object.payload.length)
+                        message.payload = object.payload;
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a Response message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof protos.Response
+             * @static
+             * @param {protos.Response} message Response
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            Response.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.defaults) {
+                    object.status = 0;
+                    object.message = "";
+                    if (options.bytes === String)
+                        object.payload = "";
+                    else {
+                        object.payload = [];
+                        if (options.bytes !== Array)
+                            object.payload = $util.newBuffer(object.payload);
+                    }
+                }
+                if (message.status != null && message.hasOwnProperty("status"))
+                    object.status = message.status;
+                if (message.message != null && message.hasOwnProperty("message"))
+                    object.message = message.message;
+                if (message.payload != null && message.hasOwnProperty("payload"))
+                    object.payload = options.bytes === String ? $util.base64.encode(message.payload, 0, message.payload.length) : options.bytes === Array ? Array.prototype.slice.call(message.payload) : message.payload;
+                return object;
+            };
+    
+            /**
+             * Converts this Response to JSON.
+             * @function toJSON
+             * @memberof protos.Response
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            Response.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return Response;
+        })();
+    
+        protos.ProposalResponsePayload = (function() {
+    
+            /**
+             * Properties of a ProposalResponsePayload.
+             * @memberof protos
+             * @interface IProposalResponsePayload
+             * @property {Uint8Array|null} [proposal_hash] ProposalResponsePayload proposal_hash
+             * @property {Uint8Array|null} [extension] ProposalResponsePayload extension
+             */
+    
+            /**
+             * Constructs a new ProposalResponsePayload.
+             * @memberof protos
+             * @classdesc Represents a ProposalResponsePayload.
+             * @implements IProposalResponsePayload
+             * @constructor
+             * @param {protos.IProposalResponsePayload=} [properties] Properties to set
+             */
+            function ProposalResponsePayload(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * ProposalResponsePayload proposal_hash.
+             * @member {Uint8Array} proposal_hash
+             * @memberof protos.ProposalResponsePayload
+             * @instance
+             */
+            ProposalResponsePayload.prototype.proposal_hash = $util.newBuffer([]);
+    
+            /**
+             * ProposalResponsePayload extension.
+             * @member {Uint8Array} extension
+             * @memberof protos.ProposalResponsePayload
+             * @instance
+             */
+            ProposalResponsePayload.prototype.extension = $util.newBuffer([]);
+    
+            /**
+             * Creates a new ProposalResponsePayload instance using the specified properties.
+             * @function create
+             * @memberof protos.ProposalResponsePayload
+             * @static
+             * @param {protos.IProposalResponsePayload=} [properties] Properties to set
+             * @returns {protos.ProposalResponsePayload} ProposalResponsePayload instance
+             */
+            ProposalResponsePayload.create = function create(properties) {
+                return new ProposalResponsePayload(properties);
+            };
+    
+            /**
+             * Encodes the specified ProposalResponsePayload message. Does not implicitly {@link protos.ProposalResponsePayload.verify|verify} messages.
+             * @function encode
+             * @memberof protos.ProposalResponsePayload
+             * @static
+             * @param {protos.IProposalResponsePayload} message ProposalResponsePayload message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            ProposalResponsePayload.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.proposal_hash != null && Object.hasOwnProperty.call(message, "proposal_hash"))
+                    writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.proposal_hash);
+                if (message.extension != null && Object.hasOwnProperty.call(message, "extension"))
+                    writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.extension);
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified ProposalResponsePayload message, length delimited. Does not implicitly {@link protos.ProposalResponsePayload.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof protos.ProposalResponsePayload
+             * @static
+             * @param {protos.IProposalResponsePayload} message ProposalResponsePayload message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            ProposalResponsePayload.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a ProposalResponsePayload message from the specified reader or buffer.
+             * @function decode
+             * @memberof protos.ProposalResponsePayload
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {protos.ProposalResponsePayload} ProposalResponsePayload
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            ProposalResponsePayload.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.ProposalResponsePayload();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.proposal_hash = reader.bytes();
+                        break;
+                    case 2:
+                        message.extension = reader.bytes();
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a ProposalResponsePayload message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof protos.ProposalResponsePayload
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {protos.ProposalResponsePayload} ProposalResponsePayload
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            ProposalResponsePayload.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a ProposalResponsePayload message.
+             * @function verify
+             * @memberof protos.ProposalResponsePayload
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            ProposalResponsePayload.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.proposal_hash != null && message.hasOwnProperty("proposal_hash"))
+                    if (!(message.proposal_hash && typeof message.proposal_hash.length === "number" || $util.isString(message.proposal_hash)))
+                        return "proposal_hash: buffer expected";
+                if (message.extension != null && message.hasOwnProperty("extension"))
+                    if (!(message.extension && typeof message.extension.length === "number" || $util.isString(message.extension)))
+                        return "extension: buffer expected";
+                return null;
+            };
+    
+            /**
+             * Creates a ProposalResponsePayload message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof protos.ProposalResponsePayload
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {protos.ProposalResponsePayload} ProposalResponsePayload
+             */
+            ProposalResponsePayload.fromObject = function fromObject(object) {
+                if (object instanceof $root.protos.ProposalResponsePayload)
+                    return object;
+                var message = new $root.protos.ProposalResponsePayload();
+                if (object.proposal_hash != null)
+                    if (typeof object.proposal_hash === "string")
+                        $util.base64.decode(object.proposal_hash, message.proposal_hash = $util.newBuffer($util.base64.length(object.proposal_hash)), 0);
+                    else if (object.proposal_hash.length)
+                        message.proposal_hash = object.proposal_hash;
+                if (object.extension != null)
+                    if (typeof object.extension === "string")
+                        $util.base64.decode(object.extension, message.extension = $util.newBuffer($util.base64.length(object.extension)), 0);
+                    else if (object.extension.length)
+                        message.extension = object.extension;
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a ProposalResponsePayload message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof protos.ProposalResponsePayload
+             * @static
+             * @param {protos.ProposalResponsePayload} message ProposalResponsePayload
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            ProposalResponsePayload.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.defaults) {
+                    if (options.bytes === String)
+                        object.proposal_hash = "";
+                    else {
+                        object.proposal_hash = [];
+                        if (options.bytes !== Array)
+                            object.proposal_hash = $util.newBuffer(object.proposal_hash);
+                    }
+                    if (options.bytes === String)
+                        object.extension = "";
+                    else {
+                        object.extension = [];
+                        if (options.bytes !== Array)
+                            object.extension = $util.newBuffer(object.extension);
+                    }
+                }
+                if (message.proposal_hash != null && message.hasOwnProperty("proposal_hash"))
+                    object.proposal_hash = options.bytes === String ? $util.base64.encode(message.proposal_hash, 0, message.proposal_hash.length) : options.bytes === Array ? Array.prototype.slice.call(message.proposal_hash) : message.proposal_hash;
+                if (message.extension != null && message.hasOwnProperty("extension"))
+                    object.extension = options.bytes === String ? $util.base64.encode(message.extension, 0, message.extension.length) : options.bytes === Array ? Array.prototype.slice.call(message.extension) : message.extension;
+                return object;
+            };
+    
+            /**
+             * Converts this ProposalResponsePayload to JSON.
+             * @function toJSON
+             * @memberof protos.ProposalResponsePayload
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            ProposalResponsePayload.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return ProposalResponsePayload;
+        })();
+    
+        protos.Endorsement = (function() {
+    
+            /**
+             * Properties of an Endorsement.
+             * @memberof protos
+             * @interface IEndorsement
+             * @property {Uint8Array|null} [endorser] Endorsement endorser
+             * @property {Uint8Array|null} [signature] Endorsement signature
+             */
+    
+            /**
+             * Constructs a new Endorsement.
+             * @memberof protos
+             * @classdesc Represents an Endorsement.
+             * @implements IEndorsement
+             * @constructor
+             * @param {protos.IEndorsement=} [properties] Properties to set
+             */
+            function Endorsement(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * Endorsement endorser.
+             * @member {Uint8Array} endorser
+             * @memberof protos.Endorsement
+             * @instance
+             */
+            Endorsement.prototype.endorser = $util.newBuffer([]);
+    
+            /**
+             * Endorsement signature.
+             * @member {Uint8Array} signature
+             * @memberof protos.Endorsement
+             * @instance
+             */
+            Endorsement.prototype.signature = $util.newBuffer([]);
+    
+            /**
+             * Creates a new Endorsement instance using the specified properties.
+             * @function create
+             * @memberof protos.Endorsement
+             * @static
+             * @param {protos.IEndorsement=} [properties] Properties to set
+             * @returns {protos.Endorsement} Endorsement instance
+             */
+            Endorsement.create = function create(properties) {
+                return new Endorsement(properties);
+            };
+    
+            /**
+             * Encodes the specified Endorsement message. Does not implicitly {@link protos.Endorsement.verify|verify} messages.
+             * @function encode
+             * @memberof protos.Endorsement
+             * @static
+             * @param {protos.IEndorsement} message Endorsement message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            Endorsement.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.endorser != null && Object.hasOwnProperty.call(message, "endorser"))
+                    writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.endorser);
+                if (message.signature != null && Object.hasOwnProperty.call(message, "signature"))
+                    writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.signature);
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified Endorsement message, length delimited. Does not implicitly {@link protos.Endorsement.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof protos.Endorsement
+             * @static
+             * @param {protos.IEndorsement} message Endorsement message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            Endorsement.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes an Endorsement message from the specified reader or buffer.
+             * @function decode
+             * @memberof protos.Endorsement
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {protos.Endorsement} Endorsement
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            Endorsement.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.Endorsement();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.endorser = reader.bytes();
+                        break;
+                    case 2:
+                        message.signature = reader.bytes();
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes an Endorsement message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof protos.Endorsement
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {protos.Endorsement} Endorsement
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            Endorsement.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies an Endorsement message.
+             * @function verify
+             * @memberof protos.Endorsement
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            Endorsement.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.endorser != null && message.hasOwnProperty("endorser"))
+                    if (!(message.endorser && typeof message.endorser.length === "number" || $util.isString(message.endorser)))
+                        return "endorser: buffer expected";
+                if (message.signature != null && message.hasOwnProperty("signature"))
+                    if (!(message.signature && typeof message.signature.length === "number" || $util.isString(message.signature)))
+                        return "signature: buffer expected";
+                return null;
+            };
+    
+            /**
+             * Creates an Endorsement message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof protos.Endorsement
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {protos.Endorsement} Endorsement
+             */
+            Endorsement.fromObject = function fromObject(object) {
+                if (object instanceof $root.protos.Endorsement)
+                    return object;
+                var message = new $root.protos.Endorsement();
+                if (object.endorser != null)
+                    if (typeof object.endorser === "string")
+                        $util.base64.decode(object.endorser, message.endorser = $util.newBuffer($util.base64.length(object.endorser)), 0);
+                    else if (object.endorser.length)
+                        message.endorser = object.endorser;
+                if (object.signature != null)
+                    if (typeof object.signature === "string")
+                        $util.base64.decode(object.signature, message.signature = $util.newBuffer($util.base64.length(object.signature)), 0);
+                    else if (object.signature.length)
+                        message.signature = object.signature;
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from an Endorsement message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof protos.Endorsement
+             * @static
+             * @param {protos.Endorsement} message Endorsement
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            Endorsement.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.defaults) {
+                    if (options.bytes === String)
+                        object.endorser = "";
+                    else {
+                        object.endorser = [];
+                        if (options.bytes !== Array)
+                            object.endorser = $util.newBuffer(object.endorser);
+                    }
+                    if (options.bytes === String)
+                        object.signature = "";
+                    else {
+                        object.signature = [];
+                        if (options.bytes !== Array)
+                            object.signature = $util.newBuffer(object.signature);
+                    }
+                }
+                if (message.endorser != null && message.hasOwnProperty("endorser"))
+                    object.endorser = options.bytes === String ? $util.base64.encode(message.endorser, 0, message.endorser.length) : options.bytes === Array ? Array.prototype.slice.call(message.endorser) : message.endorser;
+                if (message.signature != null && message.hasOwnProperty("signature"))
+                    object.signature = options.bytes === String ? $util.base64.encode(message.signature, 0, message.signature.length) : options.bytes === Array ? Array.prototype.slice.call(message.signature) : message.signature;
+                return object;
+            };
+    
+            /**
+             * Converts this Endorsement to JSON.
+             * @function toJSON
+             * @memberof protos.Endorsement
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            Endorsement.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return Endorsement;
         })();
     
         protos.ChaincodeMessage = (function() {
@@ -12413,7 +16502,7 @@
             ChaincodeProposalPayload.decode = function decode(reader, length) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.ChaincodeProposalPayload(), key;
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.ChaincodeProposalPayload(), key, value;
                 while (reader.pos < end) {
                     var tag = reader.uint32();
                     switch (tag >>> 3) {
@@ -12421,12 +16510,26 @@
                         message.input = reader.bytes();
                         break;
                     case 2:
-                        reader.skip().pos++;
                         if (message.TransientMap === $util.emptyObject)
                             message.TransientMap = {};
-                        key = reader.string();
-                        reader.pos++;
-                        message.TransientMap[key] = reader.bytes();
+                        var end2 = reader.uint32() + reader.pos;
+                        key = "";
+                        value = [];
+                        while (reader.pos < end2) {
+                            var tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.string();
+                                break;
+                            case 2:
+                                value = reader.bytes();
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7);
+                                break;
+                            }
+                        }
+                        message.TransientMap[key] = value;
                         break;
                     default:
                         reader.skipType(tag & 7);
@@ -13183,7 +17286,7 @@
             ChaincodeInput.decode = function decode(reader, length) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.ChaincodeInput(), key;
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.ChaincodeInput(), key, value;
                 while (reader.pos < end) {
                     var tag = reader.uint32();
                     switch (tag >>> 3) {
@@ -13193,12 +17296,26 @@
                         message.args.push(reader.bytes());
                         break;
                     case 2:
-                        reader.skip().pos++;
                         if (message.decorations === $util.emptyObject)
                             message.decorations = {};
-                        key = reader.string();
-                        reader.pos++;
-                        message.decorations[key] = reader.bytes();
+                        var end2 = reader.uint32() + reader.pos;
+                        key = "";
+                        value = [];
+                        while (reader.pos < end2) {
+                            var tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.string();
+                                break;
+                            case 2:
+                                value = reader.bytes();
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7);
+                                break;
+                            }
+                        }
+                        message.decorations[key] = value;
                         break;
                     case 3:
                         message.is_init = reader.bool();
@@ -14858,5887 +18975,6 @@
             return ChaincodeData;
         })();
     
-        protos.ProposalResponse = (function() {
-    
-            /**
-             * Properties of a ProposalResponse.
-             * @memberof protos
-             * @interface IProposalResponse
-             * @property {number|null} [version] ProposalResponse version
-             * @property {google.protobuf.ITimestamp|null} [timestamp] ProposalResponse timestamp
-             * @property {protos.IResponse|null} [response] ProposalResponse response
-             * @property {Uint8Array|null} [payload] ProposalResponse payload
-             * @property {protos.IEndorsement|null} [endorsement] ProposalResponse endorsement
-             */
-    
-            /**
-             * Constructs a new ProposalResponse.
-             * @memberof protos
-             * @classdesc Represents a ProposalResponse.
-             * @implements IProposalResponse
-             * @constructor
-             * @param {protos.IProposalResponse=} [properties] Properties to set
-             */
-            function ProposalResponse(properties) {
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * ProposalResponse version.
-             * @member {number} version
-             * @memberof protos.ProposalResponse
-             * @instance
-             */
-            ProposalResponse.prototype.version = 0;
-    
-            /**
-             * ProposalResponse timestamp.
-             * @member {google.protobuf.ITimestamp|null|undefined} timestamp
-             * @memberof protos.ProposalResponse
-             * @instance
-             */
-            ProposalResponse.prototype.timestamp = null;
-    
-            /**
-             * ProposalResponse response.
-             * @member {protos.IResponse|null|undefined} response
-             * @memberof protos.ProposalResponse
-             * @instance
-             */
-            ProposalResponse.prototype.response = null;
-    
-            /**
-             * ProposalResponse payload.
-             * @member {Uint8Array} payload
-             * @memberof protos.ProposalResponse
-             * @instance
-             */
-            ProposalResponse.prototype.payload = $util.newBuffer([]);
-    
-            /**
-             * ProposalResponse endorsement.
-             * @member {protos.IEndorsement|null|undefined} endorsement
-             * @memberof protos.ProposalResponse
-             * @instance
-             */
-            ProposalResponse.prototype.endorsement = null;
-    
-            /**
-             * Creates a new ProposalResponse instance using the specified properties.
-             * @function create
-             * @memberof protos.ProposalResponse
-             * @static
-             * @param {protos.IProposalResponse=} [properties] Properties to set
-             * @returns {protos.ProposalResponse} ProposalResponse instance
-             */
-            ProposalResponse.create = function create(properties) {
-                return new ProposalResponse(properties);
-            };
-    
-            /**
-             * Encodes the specified ProposalResponse message. Does not implicitly {@link protos.ProposalResponse.verify|verify} messages.
-             * @function encode
-             * @memberof protos.ProposalResponse
-             * @static
-             * @param {protos.IProposalResponse} message ProposalResponse message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            ProposalResponse.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.version != null && Object.hasOwnProperty.call(message, "version"))
-                    writer.uint32(/* id 1, wireType 0 =*/8).int32(message.version);
-                if (message.timestamp != null && Object.hasOwnProperty.call(message, "timestamp"))
-                    $root.google.protobuf.Timestamp.encode(message.timestamp, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
-                if (message.response != null && Object.hasOwnProperty.call(message, "response"))
-                    $root.protos.Response.encode(message.response, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
-                if (message.payload != null && Object.hasOwnProperty.call(message, "payload"))
-                    writer.uint32(/* id 5, wireType 2 =*/42).bytes(message.payload);
-                if (message.endorsement != null && Object.hasOwnProperty.call(message, "endorsement"))
-                    $root.protos.Endorsement.encode(message.endorsement, writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified ProposalResponse message, length delimited. Does not implicitly {@link protos.ProposalResponse.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof protos.ProposalResponse
-             * @static
-             * @param {protos.IProposalResponse} message ProposalResponse message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            ProposalResponse.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a ProposalResponse message from the specified reader or buffer.
-             * @function decode
-             * @memberof protos.ProposalResponse
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {protos.ProposalResponse} ProposalResponse
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            ProposalResponse.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.ProposalResponse();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        message.version = reader.int32();
-                        break;
-                    case 2:
-                        message.timestamp = $root.google.protobuf.Timestamp.decode(reader, reader.uint32());
-                        break;
-                    case 4:
-                        message.response = $root.protos.Response.decode(reader, reader.uint32());
-                        break;
-                    case 5:
-                        message.payload = reader.bytes();
-                        break;
-                    case 6:
-                        message.endorsement = $root.protos.Endorsement.decode(reader, reader.uint32());
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a ProposalResponse message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof protos.ProposalResponse
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {protos.ProposalResponse} ProposalResponse
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            ProposalResponse.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a ProposalResponse message.
-             * @function verify
-             * @memberof protos.ProposalResponse
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            ProposalResponse.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (message.version != null && message.hasOwnProperty("version"))
-                    if (!$util.isInteger(message.version))
-                        return "version: integer expected";
-                if (message.timestamp != null && message.hasOwnProperty("timestamp")) {
-                    var error = $root.google.protobuf.Timestamp.verify(message.timestamp);
-                    if (error)
-                        return "timestamp." + error;
-                }
-                if (message.response != null && message.hasOwnProperty("response")) {
-                    var error = $root.protos.Response.verify(message.response);
-                    if (error)
-                        return "response." + error;
-                }
-                if (message.payload != null && message.hasOwnProperty("payload"))
-                    if (!(message.payload && typeof message.payload.length === "number" || $util.isString(message.payload)))
-                        return "payload: buffer expected";
-                if (message.endorsement != null && message.hasOwnProperty("endorsement")) {
-                    var error = $root.protos.Endorsement.verify(message.endorsement);
-                    if (error)
-                        return "endorsement." + error;
-                }
-                return null;
-            };
-    
-            /**
-             * Creates a ProposalResponse message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof protos.ProposalResponse
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {protos.ProposalResponse} ProposalResponse
-             */
-            ProposalResponse.fromObject = function fromObject(object) {
-                if (object instanceof $root.protos.ProposalResponse)
-                    return object;
-                var message = new $root.protos.ProposalResponse();
-                if (object.version != null)
-                    message.version = object.version | 0;
-                if (object.timestamp != null) {
-                    if (typeof object.timestamp !== "object")
-                        throw TypeError(".protos.ProposalResponse.timestamp: object expected");
-                    message.timestamp = $root.google.protobuf.Timestamp.fromObject(object.timestamp);
-                }
-                if (object.response != null) {
-                    if (typeof object.response !== "object")
-                        throw TypeError(".protos.ProposalResponse.response: object expected");
-                    message.response = $root.protos.Response.fromObject(object.response);
-                }
-                if (object.payload != null)
-                    if (typeof object.payload === "string")
-                        $util.base64.decode(object.payload, message.payload = $util.newBuffer($util.base64.length(object.payload)), 0);
-                    else if (object.payload.length)
-                        message.payload = object.payload;
-                if (object.endorsement != null) {
-                    if (typeof object.endorsement !== "object")
-                        throw TypeError(".protos.ProposalResponse.endorsement: object expected");
-                    message.endorsement = $root.protos.Endorsement.fromObject(object.endorsement);
-                }
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a ProposalResponse message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof protos.ProposalResponse
-             * @static
-             * @param {protos.ProposalResponse} message ProposalResponse
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            ProposalResponse.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (options.defaults) {
-                    object.version = 0;
-                    object.timestamp = null;
-                    object.response = null;
-                    if (options.bytes === String)
-                        object.payload = "";
-                    else {
-                        object.payload = [];
-                        if (options.bytes !== Array)
-                            object.payload = $util.newBuffer(object.payload);
-                    }
-                    object.endorsement = null;
-                }
-                if (message.version != null && message.hasOwnProperty("version"))
-                    object.version = message.version;
-                if (message.timestamp != null && message.hasOwnProperty("timestamp"))
-                    object.timestamp = $root.google.protobuf.Timestamp.toObject(message.timestamp, options);
-                if (message.response != null && message.hasOwnProperty("response"))
-                    object.response = $root.protos.Response.toObject(message.response, options);
-                if (message.payload != null && message.hasOwnProperty("payload"))
-                    object.payload = options.bytes === String ? $util.base64.encode(message.payload, 0, message.payload.length) : options.bytes === Array ? Array.prototype.slice.call(message.payload) : message.payload;
-                if (message.endorsement != null && message.hasOwnProperty("endorsement"))
-                    object.endorsement = $root.protos.Endorsement.toObject(message.endorsement, options);
-                return object;
-            };
-    
-            /**
-             * Converts this ProposalResponse to JSON.
-             * @function toJSON
-             * @memberof protos.ProposalResponse
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            ProposalResponse.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return ProposalResponse;
-        })();
-    
-        protos.Response = (function() {
-    
-            /**
-             * Properties of a Response.
-             * @memberof protos
-             * @interface IResponse
-             * @property {number|null} [status] Response status
-             * @property {string|null} [message] Response message
-             * @property {Uint8Array|null} [payload] Response payload
-             */
-    
-            /**
-             * Constructs a new Response.
-             * @memberof protos
-             * @classdesc Represents a Response.
-             * @implements IResponse
-             * @constructor
-             * @param {protos.IResponse=} [properties] Properties to set
-             */
-            function Response(properties) {
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * Response status.
-             * @member {number} status
-             * @memberof protos.Response
-             * @instance
-             */
-            Response.prototype.status = 0;
-    
-            /**
-             * Response message.
-             * @member {string} message
-             * @memberof protos.Response
-             * @instance
-             */
-            Response.prototype.message = "";
-    
-            /**
-             * Response payload.
-             * @member {Uint8Array} payload
-             * @memberof protos.Response
-             * @instance
-             */
-            Response.prototype.payload = $util.newBuffer([]);
-    
-            /**
-             * Creates a new Response instance using the specified properties.
-             * @function create
-             * @memberof protos.Response
-             * @static
-             * @param {protos.IResponse=} [properties] Properties to set
-             * @returns {protos.Response} Response instance
-             */
-            Response.create = function create(properties) {
-                return new Response(properties);
-            };
-    
-            /**
-             * Encodes the specified Response message. Does not implicitly {@link protos.Response.verify|verify} messages.
-             * @function encode
-             * @memberof protos.Response
-             * @static
-             * @param {protos.IResponse} message Response message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            Response.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.status != null && Object.hasOwnProperty.call(message, "status"))
-                    writer.uint32(/* id 1, wireType 0 =*/8).int32(message.status);
-                if (message.message != null && Object.hasOwnProperty.call(message, "message"))
-                    writer.uint32(/* id 2, wireType 2 =*/18).string(message.message);
-                if (message.payload != null && Object.hasOwnProperty.call(message, "payload"))
-                    writer.uint32(/* id 3, wireType 2 =*/26).bytes(message.payload);
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified Response message, length delimited. Does not implicitly {@link protos.Response.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof protos.Response
-             * @static
-             * @param {protos.IResponse} message Response message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            Response.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a Response message from the specified reader or buffer.
-             * @function decode
-             * @memberof protos.Response
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {protos.Response} Response
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            Response.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.Response();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        message.status = reader.int32();
-                        break;
-                    case 2:
-                        message.message = reader.string();
-                        break;
-                    case 3:
-                        message.payload = reader.bytes();
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a Response message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof protos.Response
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {protos.Response} Response
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            Response.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a Response message.
-             * @function verify
-             * @memberof protos.Response
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            Response.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (message.status != null && message.hasOwnProperty("status"))
-                    if (!$util.isInteger(message.status))
-                        return "status: integer expected";
-                if (message.message != null && message.hasOwnProperty("message"))
-                    if (!$util.isString(message.message))
-                        return "message: string expected";
-                if (message.payload != null && message.hasOwnProperty("payload"))
-                    if (!(message.payload && typeof message.payload.length === "number" || $util.isString(message.payload)))
-                        return "payload: buffer expected";
-                return null;
-            };
-    
-            /**
-             * Creates a Response message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof protos.Response
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {protos.Response} Response
-             */
-            Response.fromObject = function fromObject(object) {
-                if (object instanceof $root.protos.Response)
-                    return object;
-                var message = new $root.protos.Response();
-                if (object.status != null)
-                    message.status = object.status | 0;
-                if (object.message != null)
-                    message.message = String(object.message);
-                if (object.payload != null)
-                    if (typeof object.payload === "string")
-                        $util.base64.decode(object.payload, message.payload = $util.newBuffer($util.base64.length(object.payload)), 0);
-                    else if (object.payload.length)
-                        message.payload = object.payload;
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a Response message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof protos.Response
-             * @static
-             * @param {protos.Response} message Response
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            Response.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (options.defaults) {
-                    object.status = 0;
-                    object.message = "";
-                    if (options.bytes === String)
-                        object.payload = "";
-                    else {
-                        object.payload = [];
-                        if (options.bytes !== Array)
-                            object.payload = $util.newBuffer(object.payload);
-                    }
-                }
-                if (message.status != null && message.hasOwnProperty("status"))
-                    object.status = message.status;
-                if (message.message != null && message.hasOwnProperty("message"))
-                    object.message = message.message;
-                if (message.payload != null && message.hasOwnProperty("payload"))
-                    object.payload = options.bytes === String ? $util.base64.encode(message.payload, 0, message.payload.length) : options.bytes === Array ? Array.prototype.slice.call(message.payload) : message.payload;
-                return object;
-            };
-    
-            /**
-             * Converts this Response to JSON.
-             * @function toJSON
-             * @memberof protos.Response
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            Response.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return Response;
-        })();
-    
-        protos.ProposalResponsePayload = (function() {
-    
-            /**
-             * Properties of a ProposalResponsePayload.
-             * @memberof protos
-             * @interface IProposalResponsePayload
-             * @property {Uint8Array|null} [proposal_hash] ProposalResponsePayload proposal_hash
-             * @property {Uint8Array|null} [extension] ProposalResponsePayload extension
-             */
-    
-            /**
-             * Constructs a new ProposalResponsePayload.
-             * @memberof protos
-             * @classdesc Represents a ProposalResponsePayload.
-             * @implements IProposalResponsePayload
-             * @constructor
-             * @param {protos.IProposalResponsePayload=} [properties] Properties to set
-             */
-            function ProposalResponsePayload(properties) {
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * ProposalResponsePayload proposal_hash.
-             * @member {Uint8Array} proposal_hash
-             * @memberof protos.ProposalResponsePayload
-             * @instance
-             */
-            ProposalResponsePayload.prototype.proposal_hash = $util.newBuffer([]);
-    
-            /**
-             * ProposalResponsePayload extension.
-             * @member {Uint8Array} extension
-             * @memberof protos.ProposalResponsePayload
-             * @instance
-             */
-            ProposalResponsePayload.prototype.extension = $util.newBuffer([]);
-    
-            /**
-             * Creates a new ProposalResponsePayload instance using the specified properties.
-             * @function create
-             * @memberof protos.ProposalResponsePayload
-             * @static
-             * @param {protos.IProposalResponsePayload=} [properties] Properties to set
-             * @returns {protos.ProposalResponsePayload} ProposalResponsePayload instance
-             */
-            ProposalResponsePayload.create = function create(properties) {
-                return new ProposalResponsePayload(properties);
-            };
-    
-            /**
-             * Encodes the specified ProposalResponsePayload message. Does not implicitly {@link protos.ProposalResponsePayload.verify|verify} messages.
-             * @function encode
-             * @memberof protos.ProposalResponsePayload
-             * @static
-             * @param {protos.IProposalResponsePayload} message ProposalResponsePayload message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            ProposalResponsePayload.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.proposal_hash != null && Object.hasOwnProperty.call(message, "proposal_hash"))
-                    writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.proposal_hash);
-                if (message.extension != null && Object.hasOwnProperty.call(message, "extension"))
-                    writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.extension);
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified ProposalResponsePayload message, length delimited. Does not implicitly {@link protos.ProposalResponsePayload.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof protos.ProposalResponsePayload
-             * @static
-             * @param {protos.IProposalResponsePayload} message ProposalResponsePayload message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            ProposalResponsePayload.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a ProposalResponsePayload message from the specified reader or buffer.
-             * @function decode
-             * @memberof protos.ProposalResponsePayload
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {protos.ProposalResponsePayload} ProposalResponsePayload
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            ProposalResponsePayload.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.ProposalResponsePayload();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        message.proposal_hash = reader.bytes();
-                        break;
-                    case 2:
-                        message.extension = reader.bytes();
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a ProposalResponsePayload message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof protos.ProposalResponsePayload
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {protos.ProposalResponsePayload} ProposalResponsePayload
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            ProposalResponsePayload.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a ProposalResponsePayload message.
-             * @function verify
-             * @memberof protos.ProposalResponsePayload
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            ProposalResponsePayload.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (message.proposal_hash != null && message.hasOwnProperty("proposal_hash"))
-                    if (!(message.proposal_hash && typeof message.proposal_hash.length === "number" || $util.isString(message.proposal_hash)))
-                        return "proposal_hash: buffer expected";
-                if (message.extension != null && message.hasOwnProperty("extension"))
-                    if (!(message.extension && typeof message.extension.length === "number" || $util.isString(message.extension)))
-                        return "extension: buffer expected";
-                return null;
-            };
-    
-            /**
-             * Creates a ProposalResponsePayload message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof protos.ProposalResponsePayload
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {protos.ProposalResponsePayload} ProposalResponsePayload
-             */
-            ProposalResponsePayload.fromObject = function fromObject(object) {
-                if (object instanceof $root.protos.ProposalResponsePayload)
-                    return object;
-                var message = new $root.protos.ProposalResponsePayload();
-                if (object.proposal_hash != null)
-                    if (typeof object.proposal_hash === "string")
-                        $util.base64.decode(object.proposal_hash, message.proposal_hash = $util.newBuffer($util.base64.length(object.proposal_hash)), 0);
-                    else if (object.proposal_hash.length)
-                        message.proposal_hash = object.proposal_hash;
-                if (object.extension != null)
-                    if (typeof object.extension === "string")
-                        $util.base64.decode(object.extension, message.extension = $util.newBuffer($util.base64.length(object.extension)), 0);
-                    else if (object.extension.length)
-                        message.extension = object.extension;
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a ProposalResponsePayload message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof protos.ProposalResponsePayload
-             * @static
-             * @param {protos.ProposalResponsePayload} message ProposalResponsePayload
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            ProposalResponsePayload.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (options.defaults) {
-                    if (options.bytes === String)
-                        object.proposal_hash = "";
-                    else {
-                        object.proposal_hash = [];
-                        if (options.bytes !== Array)
-                            object.proposal_hash = $util.newBuffer(object.proposal_hash);
-                    }
-                    if (options.bytes === String)
-                        object.extension = "";
-                    else {
-                        object.extension = [];
-                        if (options.bytes !== Array)
-                            object.extension = $util.newBuffer(object.extension);
-                    }
-                }
-                if (message.proposal_hash != null && message.hasOwnProperty("proposal_hash"))
-                    object.proposal_hash = options.bytes === String ? $util.base64.encode(message.proposal_hash, 0, message.proposal_hash.length) : options.bytes === Array ? Array.prototype.slice.call(message.proposal_hash) : message.proposal_hash;
-                if (message.extension != null && message.hasOwnProperty("extension"))
-                    object.extension = options.bytes === String ? $util.base64.encode(message.extension, 0, message.extension.length) : options.bytes === Array ? Array.prototype.slice.call(message.extension) : message.extension;
-                return object;
-            };
-    
-            /**
-             * Converts this ProposalResponsePayload to JSON.
-             * @function toJSON
-             * @memberof protos.ProposalResponsePayload
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            ProposalResponsePayload.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return ProposalResponsePayload;
-        })();
-    
-        protos.Endorsement = (function() {
-    
-            /**
-             * Properties of an Endorsement.
-             * @memberof protos
-             * @interface IEndorsement
-             * @property {Uint8Array|null} [endorser] Endorsement endorser
-             * @property {Uint8Array|null} [signature] Endorsement signature
-             */
-    
-            /**
-             * Constructs a new Endorsement.
-             * @memberof protos
-             * @classdesc Represents an Endorsement.
-             * @implements IEndorsement
-             * @constructor
-             * @param {protos.IEndorsement=} [properties] Properties to set
-             */
-            function Endorsement(properties) {
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * Endorsement endorser.
-             * @member {Uint8Array} endorser
-             * @memberof protos.Endorsement
-             * @instance
-             */
-            Endorsement.prototype.endorser = $util.newBuffer([]);
-    
-            /**
-             * Endorsement signature.
-             * @member {Uint8Array} signature
-             * @memberof protos.Endorsement
-             * @instance
-             */
-            Endorsement.prototype.signature = $util.newBuffer([]);
-    
-            /**
-             * Creates a new Endorsement instance using the specified properties.
-             * @function create
-             * @memberof protos.Endorsement
-             * @static
-             * @param {protos.IEndorsement=} [properties] Properties to set
-             * @returns {protos.Endorsement} Endorsement instance
-             */
-            Endorsement.create = function create(properties) {
-                return new Endorsement(properties);
-            };
-    
-            /**
-             * Encodes the specified Endorsement message. Does not implicitly {@link protos.Endorsement.verify|verify} messages.
-             * @function encode
-             * @memberof protos.Endorsement
-             * @static
-             * @param {protos.IEndorsement} message Endorsement message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            Endorsement.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.endorser != null && Object.hasOwnProperty.call(message, "endorser"))
-                    writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.endorser);
-                if (message.signature != null && Object.hasOwnProperty.call(message, "signature"))
-                    writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.signature);
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified Endorsement message, length delimited. Does not implicitly {@link protos.Endorsement.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof protos.Endorsement
-             * @static
-             * @param {protos.IEndorsement} message Endorsement message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            Endorsement.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes an Endorsement message from the specified reader or buffer.
-             * @function decode
-             * @memberof protos.Endorsement
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {protos.Endorsement} Endorsement
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            Endorsement.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.Endorsement();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        message.endorser = reader.bytes();
-                        break;
-                    case 2:
-                        message.signature = reader.bytes();
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes an Endorsement message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof protos.Endorsement
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {protos.Endorsement} Endorsement
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            Endorsement.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies an Endorsement message.
-             * @function verify
-             * @memberof protos.Endorsement
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            Endorsement.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (message.endorser != null && message.hasOwnProperty("endorser"))
-                    if (!(message.endorser && typeof message.endorser.length === "number" || $util.isString(message.endorser)))
-                        return "endorser: buffer expected";
-                if (message.signature != null && message.hasOwnProperty("signature"))
-                    if (!(message.signature && typeof message.signature.length === "number" || $util.isString(message.signature)))
-                        return "signature: buffer expected";
-                return null;
-            };
-    
-            /**
-             * Creates an Endorsement message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof protos.Endorsement
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {protos.Endorsement} Endorsement
-             */
-            Endorsement.fromObject = function fromObject(object) {
-                if (object instanceof $root.protos.Endorsement)
-                    return object;
-                var message = new $root.protos.Endorsement();
-                if (object.endorser != null)
-                    if (typeof object.endorser === "string")
-                        $util.base64.decode(object.endorser, message.endorser = $util.newBuffer($util.base64.length(object.endorser)), 0);
-                    else if (object.endorser.length)
-                        message.endorser = object.endorser;
-                if (object.signature != null)
-                    if (typeof object.signature === "string")
-                        $util.base64.decode(object.signature, message.signature = $util.newBuffer($util.base64.length(object.signature)), 0);
-                    else if (object.signature.length)
-                        message.signature = object.signature;
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from an Endorsement message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof protos.Endorsement
-             * @static
-             * @param {protos.Endorsement} message Endorsement
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            Endorsement.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (options.defaults) {
-                    if (options.bytes === String)
-                        object.endorser = "";
-                    else {
-                        object.endorser = [];
-                        if (options.bytes !== Array)
-                            object.endorser = $util.newBuffer(object.endorser);
-                    }
-                    if (options.bytes === String)
-                        object.signature = "";
-                    else {
-                        object.signature = [];
-                        if (options.bytes !== Array)
-                            object.signature = $util.newBuffer(object.signature);
-                    }
-                }
-                if (message.endorser != null && message.hasOwnProperty("endorser"))
-                    object.endorser = options.bytes === String ? $util.base64.encode(message.endorser, 0, message.endorser.length) : options.bytes === Array ? Array.prototype.slice.call(message.endorser) : message.endorser;
-                if (message.signature != null && message.hasOwnProperty("signature"))
-                    object.signature = options.bytes === String ? $util.base64.encode(message.signature, 0, message.signature.length) : options.bytes === Array ? Array.prototype.slice.call(message.signature) : message.signature;
-                return object;
-            };
-    
-            /**
-             * Converts this Endorsement to JSON.
-             * @function toJSON
-             * @memberof protos.Endorsement
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            Endorsement.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return Endorsement;
-        })();
-    
-        protos.AnchorPeers = (function() {
-    
-            /**
-             * Properties of an AnchorPeers.
-             * @memberof protos
-             * @interface IAnchorPeers
-             * @property {Array.<protos.IAnchorPeer>|null} [anchor_peers] AnchorPeers anchor_peers
-             */
-    
-            /**
-             * Constructs a new AnchorPeers.
-             * @memberof protos
-             * @classdesc Represents an AnchorPeers.
-             * @implements IAnchorPeers
-             * @constructor
-             * @param {protos.IAnchorPeers=} [properties] Properties to set
-             */
-            function AnchorPeers(properties) {
-                this.anchor_peers = [];
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * AnchorPeers anchor_peers.
-             * @member {Array.<protos.IAnchorPeer>} anchor_peers
-             * @memberof protos.AnchorPeers
-             * @instance
-             */
-            AnchorPeers.prototype.anchor_peers = $util.emptyArray;
-    
-            /**
-             * Creates a new AnchorPeers instance using the specified properties.
-             * @function create
-             * @memberof protos.AnchorPeers
-             * @static
-             * @param {protos.IAnchorPeers=} [properties] Properties to set
-             * @returns {protos.AnchorPeers} AnchorPeers instance
-             */
-            AnchorPeers.create = function create(properties) {
-                return new AnchorPeers(properties);
-            };
-    
-            /**
-             * Encodes the specified AnchorPeers message. Does not implicitly {@link protos.AnchorPeers.verify|verify} messages.
-             * @function encode
-             * @memberof protos.AnchorPeers
-             * @static
-             * @param {protos.IAnchorPeers} message AnchorPeers message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            AnchorPeers.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.anchor_peers != null && message.anchor_peers.length)
-                    for (var i = 0; i < message.anchor_peers.length; ++i)
-                        $root.protos.AnchorPeer.encode(message.anchor_peers[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified AnchorPeers message, length delimited. Does not implicitly {@link protos.AnchorPeers.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof protos.AnchorPeers
-             * @static
-             * @param {protos.IAnchorPeers} message AnchorPeers message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            AnchorPeers.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes an AnchorPeers message from the specified reader or buffer.
-             * @function decode
-             * @memberof protos.AnchorPeers
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {protos.AnchorPeers} AnchorPeers
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            AnchorPeers.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.AnchorPeers();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        if (!(message.anchor_peers && message.anchor_peers.length))
-                            message.anchor_peers = [];
-                        message.anchor_peers.push($root.protos.AnchorPeer.decode(reader, reader.uint32()));
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes an AnchorPeers message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof protos.AnchorPeers
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {protos.AnchorPeers} AnchorPeers
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            AnchorPeers.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies an AnchorPeers message.
-             * @function verify
-             * @memberof protos.AnchorPeers
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            AnchorPeers.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (message.anchor_peers != null && message.hasOwnProperty("anchor_peers")) {
-                    if (!Array.isArray(message.anchor_peers))
-                        return "anchor_peers: array expected";
-                    for (var i = 0; i < message.anchor_peers.length; ++i) {
-                        var error = $root.protos.AnchorPeer.verify(message.anchor_peers[i]);
-                        if (error)
-                            return "anchor_peers." + error;
-                    }
-                }
-                return null;
-            };
-    
-            /**
-             * Creates an AnchorPeers message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof protos.AnchorPeers
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {protos.AnchorPeers} AnchorPeers
-             */
-            AnchorPeers.fromObject = function fromObject(object) {
-                if (object instanceof $root.protos.AnchorPeers)
-                    return object;
-                var message = new $root.protos.AnchorPeers();
-                if (object.anchor_peers) {
-                    if (!Array.isArray(object.anchor_peers))
-                        throw TypeError(".protos.AnchorPeers.anchor_peers: array expected");
-                    message.anchor_peers = [];
-                    for (var i = 0; i < object.anchor_peers.length; ++i) {
-                        if (typeof object.anchor_peers[i] !== "object")
-                            throw TypeError(".protos.AnchorPeers.anchor_peers: object expected");
-                        message.anchor_peers[i] = $root.protos.AnchorPeer.fromObject(object.anchor_peers[i]);
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from an AnchorPeers message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof protos.AnchorPeers
-             * @static
-             * @param {protos.AnchorPeers} message AnchorPeers
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            AnchorPeers.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (options.arrays || options.defaults)
-                    object.anchor_peers = [];
-                if (message.anchor_peers && message.anchor_peers.length) {
-                    object.anchor_peers = [];
-                    for (var j = 0; j < message.anchor_peers.length; ++j)
-                        object.anchor_peers[j] = $root.protos.AnchorPeer.toObject(message.anchor_peers[j], options);
-                }
-                return object;
-            };
-    
-            /**
-             * Converts this AnchorPeers to JSON.
-             * @function toJSON
-             * @memberof protos.AnchorPeers
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            AnchorPeers.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return AnchorPeers;
-        })();
-    
-        protos.AnchorPeer = (function() {
-    
-            /**
-             * Properties of an AnchorPeer.
-             * @memberof protos
-             * @interface IAnchorPeer
-             * @property {string|null} [host] AnchorPeer host
-             * @property {number|null} [port] AnchorPeer port
-             */
-    
-            /**
-             * Constructs a new AnchorPeer.
-             * @memberof protos
-             * @classdesc Represents an AnchorPeer.
-             * @implements IAnchorPeer
-             * @constructor
-             * @param {protos.IAnchorPeer=} [properties] Properties to set
-             */
-            function AnchorPeer(properties) {
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * AnchorPeer host.
-             * @member {string} host
-             * @memberof protos.AnchorPeer
-             * @instance
-             */
-            AnchorPeer.prototype.host = "";
-    
-            /**
-             * AnchorPeer port.
-             * @member {number} port
-             * @memberof protos.AnchorPeer
-             * @instance
-             */
-            AnchorPeer.prototype.port = 0;
-    
-            /**
-             * Creates a new AnchorPeer instance using the specified properties.
-             * @function create
-             * @memberof protos.AnchorPeer
-             * @static
-             * @param {protos.IAnchorPeer=} [properties] Properties to set
-             * @returns {protos.AnchorPeer} AnchorPeer instance
-             */
-            AnchorPeer.create = function create(properties) {
-                return new AnchorPeer(properties);
-            };
-    
-            /**
-             * Encodes the specified AnchorPeer message. Does not implicitly {@link protos.AnchorPeer.verify|verify} messages.
-             * @function encode
-             * @memberof protos.AnchorPeer
-             * @static
-             * @param {protos.IAnchorPeer} message AnchorPeer message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            AnchorPeer.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.host != null && Object.hasOwnProperty.call(message, "host"))
-                    writer.uint32(/* id 1, wireType 2 =*/10).string(message.host);
-                if (message.port != null && Object.hasOwnProperty.call(message, "port"))
-                    writer.uint32(/* id 2, wireType 0 =*/16).int32(message.port);
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified AnchorPeer message, length delimited. Does not implicitly {@link protos.AnchorPeer.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof protos.AnchorPeer
-             * @static
-             * @param {protos.IAnchorPeer} message AnchorPeer message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            AnchorPeer.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes an AnchorPeer message from the specified reader or buffer.
-             * @function decode
-             * @memberof protos.AnchorPeer
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {protos.AnchorPeer} AnchorPeer
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            AnchorPeer.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.AnchorPeer();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        message.host = reader.string();
-                        break;
-                    case 2:
-                        message.port = reader.int32();
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes an AnchorPeer message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof protos.AnchorPeer
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {protos.AnchorPeer} AnchorPeer
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            AnchorPeer.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies an AnchorPeer message.
-             * @function verify
-             * @memberof protos.AnchorPeer
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            AnchorPeer.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (message.host != null && message.hasOwnProperty("host"))
-                    if (!$util.isString(message.host))
-                        return "host: string expected";
-                if (message.port != null && message.hasOwnProperty("port"))
-                    if (!$util.isInteger(message.port))
-                        return "port: integer expected";
-                return null;
-            };
-    
-            /**
-             * Creates an AnchorPeer message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof protos.AnchorPeer
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {protos.AnchorPeer} AnchorPeer
-             */
-            AnchorPeer.fromObject = function fromObject(object) {
-                if (object instanceof $root.protos.AnchorPeer)
-                    return object;
-                var message = new $root.protos.AnchorPeer();
-                if (object.host != null)
-                    message.host = String(object.host);
-                if (object.port != null)
-                    message.port = object.port | 0;
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from an AnchorPeer message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof protos.AnchorPeer
-             * @static
-             * @param {protos.AnchorPeer} message AnchorPeer
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            AnchorPeer.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (options.defaults) {
-                    object.host = "";
-                    object.port = 0;
-                }
-                if (message.host != null && message.hasOwnProperty("host"))
-                    object.host = message.host;
-                if (message.port != null && message.hasOwnProperty("port"))
-                    object.port = message.port;
-                return object;
-            };
-    
-            /**
-             * Converts this AnchorPeer to JSON.
-             * @function toJSON
-             * @memberof protos.AnchorPeer
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            AnchorPeer.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return AnchorPeer;
-        })();
-    
-        protos.APIResource = (function() {
-    
-            /**
-             * Properties of a APIResource.
-             * @memberof protos
-             * @interface IAPIResource
-             * @property {string|null} [policy_ref] APIResource policy_ref
-             */
-    
-            /**
-             * Constructs a new APIResource.
-             * @memberof protos
-             * @classdesc Represents a APIResource.
-             * @implements IAPIResource
-             * @constructor
-             * @param {protos.IAPIResource=} [properties] Properties to set
-             */
-            function APIResource(properties) {
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * APIResource policy_ref.
-             * @member {string} policy_ref
-             * @memberof protos.APIResource
-             * @instance
-             */
-            APIResource.prototype.policy_ref = "";
-    
-            /**
-             * Creates a new APIResource instance using the specified properties.
-             * @function create
-             * @memberof protos.APIResource
-             * @static
-             * @param {protos.IAPIResource=} [properties] Properties to set
-             * @returns {protos.APIResource} APIResource instance
-             */
-            APIResource.create = function create(properties) {
-                return new APIResource(properties);
-            };
-    
-            /**
-             * Encodes the specified APIResource message. Does not implicitly {@link protos.APIResource.verify|verify} messages.
-             * @function encode
-             * @memberof protos.APIResource
-             * @static
-             * @param {protos.IAPIResource} message APIResource message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            APIResource.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.policy_ref != null && Object.hasOwnProperty.call(message, "policy_ref"))
-                    writer.uint32(/* id 1, wireType 2 =*/10).string(message.policy_ref);
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified APIResource message, length delimited. Does not implicitly {@link protos.APIResource.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof protos.APIResource
-             * @static
-             * @param {protos.IAPIResource} message APIResource message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            APIResource.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a APIResource message from the specified reader or buffer.
-             * @function decode
-             * @memberof protos.APIResource
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {protos.APIResource} APIResource
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            APIResource.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.APIResource();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        message.policy_ref = reader.string();
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a APIResource message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof protos.APIResource
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {protos.APIResource} APIResource
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            APIResource.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a APIResource message.
-             * @function verify
-             * @memberof protos.APIResource
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            APIResource.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (message.policy_ref != null && message.hasOwnProperty("policy_ref"))
-                    if (!$util.isString(message.policy_ref))
-                        return "policy_ref: string expected";
-                return null;
-            };
-    
-            /**
-             * Creates a APIResource message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof protos.APIResource
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {protos.APIResource} APIResource
-             */
-            APIResource.fromObject = function fromObject(object) {
-                if (object instanceof $root.protos.APIResource)
-                    return object;
-                var message = new $root.protos.APIResource();
-                if (object.policy_ref != null)
-                    message.policy_ref = String(object.policy_ref);
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a APIResource message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof protos.APIResource
-             * @static
-             * @param {protos.APIResource} message APIResource
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            APIResource.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (options.defaults)
-                    object.policy_ref = "";
-                if (message.policy_ref != null && message.hasOwnProperty("policy_ref"))
-                    object.policy_ref = message.policy_ref;
-                return object;
-            };
-    
-            /**
-             * Converts this APIResource to JSON.
-             * @function toJSON
-             * @memberof protos.APIResource
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            APIResource.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return APIResource;
-        })();
-    
-        protos.ACLs = (function() {
-    
-            /**
-             * Properties of a ACLs.
-             * @memberof protos
-             * @interface IACLs
-             * @property {Object.<string,protos.IAPIResource>|null} [acls] ACLs acls
-             */
-    
-            /**
-             * Constructs a new ACLs.
-             * @memberof protos
-             * @classdesc Represents a ACLs.
-             * @implements IACLs
-             * @constructor
-             * @param {protos.IACLs=} [properties] Properties to set
-             */
-            function ACLs(properties) {
-                this.acls = {};
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * ACLs acls.
-             * @member {Object.<string,protos.IAPIResource>} acls
-             * @memberof protos.ACLs
-             * @instance
-             */
-            ACLs.prototype.acls = $util.emptyObject;
-    
-            /**
-             * Creates a new ACLs instance using the specified properties.
-             * @function create
-             * @memberof protos.ACLs
-             * @static
-             * @param {protos.IACLs=} [properties] Properties to set
-             * @returns {protos.ACLs} ACLs instance
-             */
-            ACLs.create = function create(properties) {
-                return new ACLs(properties);
-            };
-    
-            /**
-             * Encodes the specified ACLs message. Does not implicitly {@link protos.ACLs.verify|verify} messages.
-             * @function encode
-             * @memberof protos.ACLs
-             * @static
-             * @param {protos.IACLs} message ACLs message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            ACLs.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.acls != null && Object.hasOwnProperty.call(message, "acls"))
-                    for (var keys = Object.keys(message.acls), i = 0; i < keys.length; ++i) {
-                        writer.uint32(/* id 1, wireType 2 =*/10).fork().uint32(/* id 1, wireType 2 =*/10).string(keys[i]);
-                        $root.protos.APIResource.encode(message.acls[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
-                    }
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified ACLs message, length delimited. Does not implicitly {@link protos.ACLs.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof protos.ACLs
-             * @static
-             * @param {protos.IACLs} message ACLs message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            ACLs.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a ACLs message from the specified reader or buffer.
-             * @function decode
-             * @memberof protos.ACLs
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {protos.ACLs} ACLs
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            ACLs.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.ACLs(), key;
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        reader.skip().pos++;
-                        if (message.acls === $util.emptyObject)
-                            message.acls = {};
-                        key = reader.string();
-                        reader.pos++;
-                        message.acls[key] = $root.protos.APIResource.decode(reader, reader.uint32());
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a ACLs message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof protos.ACLs
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {protos.ACLs} ACLs
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            ACLs.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a ACLs message.
-             * @function verify
-             * @memberof protos.ACLs
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            ACLs.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (message.acls != null && message.hasOwnProperty("acls")) {
-                    if (!$util.isObject(message.acls))
-                        return "acls: object expected";
-                    var key = Object.keys(message.acls);
-                    for (var i = 0; i < key.length; ++i) {
-                        var error = $root.protos.APIResource.verify(message.acls[key[i]]);
-                        if (error)
-                            return "acls." + error;
-                    }
-                }
-                return null;
-            };
-    
-            /**
-             * Creates a ACLs message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof protos.ACLs
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {protos.ACLs} ACLs
-             */
-            ACLs.fromObject = function fromObject(object) {
-                if (object instanceof $root.protos.ACLs)
-                    return object;
-                var message = new $root.protos.ACLs();
-                if (object.acls) {
-                    if (typeof object.acls !== "object")
-                        throw TypeError(".protos.ACLs.acls: object expected");
-                    message.acls = {};
-                    for (var keys = Object.keys(object.acls), i = 0; i < keys.length; ++i) {
-                        if (typeof object.acls[keys[i]] !== "object")
-                            throw TypeError(".protos.ACLs.acls: object expected");
-                        message.acls[keys[i]] = $root.protos.APIResource.fromObject(object.acls[keys[i]]);
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a ACLs message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof protos.ACLs
-             * @static
-             * @param {protos.ACLs} message ACLs
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            ACLs.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (options.objects || options.defaults)
-                    object.acls = {};
-                var keys2;
-                if (message.acls && (keys2 = Object.keys(message.acls)).length) {
-                    object.acls = {};
-                    for (var j = 0; j < keys2.length; ++j)
-                        object.acls[keys2[j]] = $root.protos.APIResource.toObject(message.acls[keys2[j]], options);
-                }
-                return object;
-            };
-    
-            /**
-             * Converts this ACLs to JSON.
-             * @function toJSON
-             * @memberof protos.ACLs
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            ACLs.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return ACLs;
-        })();
-    
-        protos.FilteredBlock = (function() {
-    
-            /**
-             * Properties of a FilteredBlock.
-             * @memberof protos
-             * @interface IFilteredBlock
-             * @property {string|null} [channel_id] FilteredBlock channel_id
-             * @property {number|Long|null} [number] FilteredBlock number
-             * @property {Array.<protos.IFilteredTransaction>|null} [filtered_transactions] FilteredBlock filtered_transactions
-             */
-    
-            /**
-             * Constructs a new FilteredBlock.
-             * @memberof protos
-             * @classdesc Represents a FilteredBlock.
-             * @implements IFilteredBlock
-             * @constructor
-             * @param {protos.IFilteredBlock=} [properties] Properties to set
-             */
-            function FilteredBlock(properties) {
-                this.filtered_transactions = [];
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * FilteredBlock channel_id.
-             * @member {string} channel_id
-             * @memberof protos.FilteredBlock
-             * @instance
-             */
-            FilteredBlock.prototype.channel_id = "";
-    
-            /**
-             * FilteredBlock number.
-             * @member {number|Long} number
-             * @memberof protos.FilteredBlock
-             * @instance
-             */
-            FilteredBlock.prototype.number = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
-    
-            /**
-             * FilteredBlock filtered_transactions.
-             * @member {Array.<protos.IFilteredTransaction>} filtered_transactions
-             * @memberof protos.FilteredBlock
-             * @instance
-             */
-            FilteredBlock.prototype.filtered_transactions = $util.emptyArray;
-    
-            /**
-             * Creates a new FilteredBlock instance using the specified properties.
-             * @function create
-             * @memberof protos.FilteredBlock
-             * @static
-             * @param {protos.IFilteredBlock=} [properties] Properties to set
-             * @returns {protos.FilteredBlock} FilteredBlock instance
-             */
-            FilteredBlock.create = function create(properties) {
-                return new FilteredBlock(properties);
-            };
-    
-            /**
-             * Encodes the specified FilteredBlock message. Does not implicitly {@link protos.FilteredBlock.verify|verify} messages.
-             * @function encode
-             * @memberof protos.FilteredBlock
-             * @static
-             * @param {protos.IFilteredBlock} message FilteredBlock message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            FilteredBlock.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.channel_id != null && Object.hasOwnProperty.call(message, "channel_id"))
-                    writer.uint32(/* id 1, wireType 2 =*/10).string(message.channel_id);
-                if (message.number != null && Object.hasOwnProperty.call(message, "number"))
-                    writer.uint32(/* id 2, wireType 0 =*/16).uint64(message.number);
-                if (message.filtered_transactions != null && message.filtered_transactions.length)
-                    for (var i = 0; i < message.filtered_transactions.length; ++i)
-                        $root.protos.FilteredTransaction.encode(message.filtered_transactions[i], writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified FilteredBlock message, length delimited. Does not implicitly {@link protos.FilteredBlock.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof protos.FilteredBlock
-             * @static
-             * @param {protos.IFilteredBlock} message FilteredBlock message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            FilteredBlock.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a FilteredBlock message from the specified reader or buffer.
-             * @function decode
-             * @memberof protos.FilteredBlock
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {protos.FilteredBlock} FilteredBlock
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            FilteredBlock.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.FilteredBlock();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        message.channel_id = reader.string();
-                        break;
-                    case 2:
-                        message.number = reader.uint64();
-                        break;
-                    case 4:
-                        if (!(message.filtered_transactions && message.filtered_transactions.length))
-                            message.filtered_transactions = [];
-                        message.filtered_transactions.push($root.protos.FilteredTransaction.decode(reader, reader.uint32()));
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a FilteredBlock message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof protos.FilteredBlock
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {protos.FilteredBlock} FilteredBlock
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            FilteredBlock.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a FilteredBlock message.
-             * @function verify
-             * @memberof protos.FilteredBlock
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            FilteredBlock.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (message.channel_id != null && message.hasOwnProperty("channel_id"))
-                    if (!$util.isString(message.channel_id))
-                        return "channel_id: string expected";
-                if (message.number != null && message.hasOwnProperty("number"))
-                    if (!$util.isInteger(message.number) && !(message.number && $util.isInteger(message.number.low) && $util.isInteger(message.number.high)))
-                        return "number: integer|Long expected";
-                if (message.filtered_transactions != null && message.hasOwnProperty("filtered_transactions")) {
-                    if (!Array.isArray(message.filtered_transactions))
-                        return "filtered_transactions: array expected";
-                    for (var i = 0; i < message.filtered_transactions.length; ++i) {
-                        var error = $root.protos.FilteredTransaction.verify(message.filtered_transactions[i]);
-                        if (error)
-                            return "filtered_transactions." + error;
-                    }
-                }
-                return null;
-            };
-    
-            /**
-             * Creates a FilteredBlock message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof protos.FilteredBlock
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {protos.FilteredBlock} FilteredBlock
-             */
-            FilteredBlock.fromObject = function fromObject(object) {
-                if (object instanceof $root.protos.FilteredBlock)
-                    return object;
-                var message = new $root.protos.FilteredBlock();
-                if (object.channel_id != null)
-                    message.channel_id = String(object.channel_id);
-                if (object.number != null)
-                    if ($util.Long)
-                        (message.number = $util.Long.fromValue(object.number)).unsigned = true;
-                    else if (typeof object.number === "string")
-                        message.number = parseInt(object.number, 10);
-                    else if (typeof object.number === "number")
-                        message.number = object.number;
-                    else if (typeof object.number === "object")
-                        message.number = new $util.LongBits(object.number.low >>> 0, object.number.high >>> 0).toNumber(true);
-                if (object.filtered_transactions) {
-                    if (!Array.isArray(object.filtered_transactions))
-                        throw TypeError(".protos.FilteredBlock.filtered_transactions: array expected");
-                    message.filtered_transactions = [];
-                    for (var i = 0; i < object.filtered_transactions.length; ++i) {
-                        if (typeof object.filtered_transactions[i] !== "object")
-                            throw TypeError(".protos.FilteredBlock.filtered_transactions: object expected");
-                        message.filtered_transactions[i] = $root.protos.FilteredTransaction.fromObject(object.filtered_transactions[i]);
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a FilteredBlock message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof protos.FilteredBlock
-             * @static
-             * @param {protos.FilteredBlock} message FilteredBlock
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            FilteredBlock.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (options.arrays || options.defaults)
-                    object.filtered_transactions = [];
-                if (options.defaults) {
-                    object.channel_id = "";
-                    if ($util.Long) {
-                        var long = new $util.Long(0, 0, true);
-                        object.number = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                    } else
-                        object.number = options.longs === String ? "0" : 0;
-                }
-                if (message.channel_id != null && message.hasOwnProperty("channel_id"))
-                    object.channel_id = message.channel_id;
-                if (message.number != null && message.hasOwnProperty("number"))
-                    if (typeof message.number === "number")
-                        object.number = options.longs === String ? String(message.number) : message.number;
-                    else
-                        object.number = options.longs === String ? $util.Long.prototype.toString.call(message.number) : options.longs === Number ? new $util.LongBits(message.number.low >>> 0, message.number.high >>> 0).toNumber(true) : message.number;
-                if (message.filtered_transactions && message.filtered_transactions.length) {
-                    object.filtered_transactions = [];
-                    for (var j = 0; j < message.filtered_transactions.length; ++j)
-                        object.filtered_transactions[j] = $root.protos.FilteredTransaction.toObject(message.filtered_transactions[j], options);
-                }
-                return object;
-            };
-    
-            /**
-             * Converts this FilteredBlock to JSON.
-             * @function toJSON
-             * @memberof protos.FilteredBlock
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            FilteredBlock.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return FilteredBlock;
-        })();
-    
-        protos.FilteredTransaction = (function() {
-    
-            /**
-             * Properties of a FilteredTransaction.
-             * @memberof protos
-             * @interface IFilteredTransaction
-             * @property {string|null} [txid] FilteredTransaction txid
-             * @property {common.HeaderType|null} [type] FilteredTransaction type
-             * @property {protos.TxValidationCode|null} [tx_validation_code] FilteredTransaction tx_validation_code
-             * @property {protos.IFilteredTransactionActions|null} [transaction_actions] FilteredTransaction transaction_actions
-             */
-    
-            /**
-             * Constructs a new FilteredTransaction.
-             * @memberof protos
-             * @classdesc Represents a FilteredTransaction.
-             * @implements IFilteredTransaction
-             * @constructor
-             * @param {protos.IFilteredTransaction=} [properties] Properties to set
-             */
-            function FilteredTransaction(properties) {
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * FilteredTransaction txid.
-             * @member {string} txid
-             * @memberof protos.FilteredTransaction
-             * @instance
-             */
-            FilteredTransaction.prototype.txid = "";
-    
-            /**
-             * FilteredTransaction type.
-             * @member {common.HeaderType} type
-             * @memberof protos.FilteredTransaction
-             * @instance
-             */
-            FilteredTransaction.prototype.type = 0;
-    
-            /**
-             * FilteredTransaction tx_validation_code.
-             * @member {protos.TxValidationCode} tx_validation_code
-             * @memberof protos.FilteredTransaction
-             * @instance
-             */
-            FilteredTransaction.prototype.tx_validation_code = 0;
-    
-            /**
-             * FilteredTransaction transaction_actions.
-             * @member {protos.IFilteredTransactionActions|null|undefined} transaction_actions
-             * @memberof protos.FilteredTransaction
-             * @instance
-             */
-            FilteredTransaction.prototype.transaction_actions = null;
-    
-            // OneOf field names bound to virtual getters and setters
-            var $oneOfFields;
-    
-            /**
-             * FilteredTransaction Data.
-             * @member {"transaction_actions"|undefined} Data
-             * @memberof protos.FilteredTransaction
-             * @instance
-             */
-            Object.defineProperty(FilteredTransaction.prototype, "Data", {
-                get: $util.oneOfGetter($oneOfFields = ["transaction_actions"]),
-                set: $util.oneOfSetter($oneOfFields)
-            });
-    
-            /**
-             * Creates a new FilteredTransaction instance using the specified properties.
-             * @function create
-             * @memberof protos.FilteredTransaction
-             * @static
-             * @param {protos.IFilteredTransaction=} [properties] Properties to set
-             * @returns {protos.FilteredTransaction} FilteredTransaction instance
-             */
-            FilteredTransaction.create = function create(properties) {
-                return new FilteredTransaction(properties);
-            };
-    
-            /**
-             * Encodes the specified FilteredTransaction message. Does not implicitly {@link protos.FilteredTransaction.verify|verify} messages.
-             * @function encode
-             * @memberof protos.FilteredTransaction
-             * @static
-             * @param {protos.IFilteredTransaction} message FilteredTransaction message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            FilteredTransaction.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.txid != null && Object.hasOwnProperty.call(message, "txid"))
-                    writer.uint32(/* id 1, wireType 2 =*/10).string(message.txid);
-                if (message.type != null && Object.hasOwnProperty.call(message, "type"))
-                    writer.uint32(/* id 2, wireType 0 =*/16).int32(message.type);
-                if (message.tx_validation_code != null && Object.hasOwnProperty.call(message, "tx_validation_code"))
-                    writer.uint32(/* id 3, wireType 0 =*/24).int32(message.tx_validation_code);
-                if (message.transaction_actions != null && Object.hasOwnProperty.call(message, "transaction_actions"))
-                    $root.protos.FilteredTransactionActions.encode(message.transaction_actions, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified FilteredTransaction message, length delimited. Does not implicitly {@link protos.FilteredTransaction.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof protos.FilteredTransaction
-             * @static
-             * @param {protos.IFilteredTransaction} message FilteredTransaction message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            FilteredTransaction.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a FilteredTransaction message from the specified reader or buffer.
-             * @function decode
-             * @memberof protos.FilteredTransaction
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {protos.FilteredTransaction} FilteredTransaction
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            FilteredTransaction.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.FilteredTransaction();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        message.txid = reader.string();
-                        break;
-                    case 2:
-                        message.type = reader.int32();
-                        break;
-                    case 3:
-                        message.tx_validation_code = reader.int32();
-                        break;
-                    case 4:
-                        message.transaction_actions = $root.protos.FilteredTransactionActions.decode(reader, reader.uint32());
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a FilteredTransaction message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof protos.FilteredTransaction
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {protos.FilteredTransaction} FilteredTransaction
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            FilteredTransaction.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a FilteredTransaction message.
-             * @function verify
-             * @memberof protos.FilteredTransaction
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            FilteredTransaction.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                var properties = {};
-                if (message.txid != null && message.hasOwnProperty("txid"))
-                    if (!$util.isString(message.txid))
-                        return "txid: string expected";
-                if (message.type != null && message.hasOwnProperty("type"))
-                    switch (message.type) {
-                    default:
-                        return "type: enum value expected";
-                    case 0:
-                    case 1:
-                    case 2:
-                    case 3:
-                    case 4:
-                    case 5:
-                    case 6:
-                    case 8:
-                        break;
-                    }
-                if (message.tx_validation_code != null && message.hasOwnProperty("tx_validation_code"))
-                    switch (message.tx_validation_code) {
-                    default:
-                        return "tx_validation_code: enum value expected";
-                    case 0:
-                    case 1:
-                    case 2:
-                    case 3:
-                    case 4:
-                    case 5:
-                    case 6:
-                    case 7:
-                    case 8:
-                    case 9:
-                    case 10:
-                    case 11:
-                    case 12:
-                    case 13:
-                    case 14:
-                    case 15:
-                    case 16:
-                    case 17:
-                    case 18:
-                    case 19:
-                    case 20:
-                    case 21:
-                    case 22:
-                    case 23:
-                    case 24:
-                    case 25:
-                    case 254:
-                    case 255:
-                        break;
-                    }
-                if (message.transaction_actions != null && message.hasOwnProperty("transaction_actions")) {
-                    properties.Data = 1;
-                    {
-                        var error = $root.protos.FilteredTransactionActions.verify(message.transaction_actions);
-                        if (error)
-                            return "transaction_actions." + error;
-                    }
-                }
-                return null;
-            };
-    
-            /**
-             * Creates a FilteredTransaction message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof protos.FilteredTransaction
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {protos.FilteredTransaction} FilteredTransaction
-             */
-            FilteredTransaction.fromObject = function fromObject(object) {
-                if (object instanceof $root.protos.FilteredTransaction)
-                    return object;
-                var message = new $root.protos.FilteredTransaction();
-                if (object.txid != null)
-                    message.txid = String(object.txid);
-                switch (object.type) {
-                case "MESSAGE":
-                case 0:
-                    message.type = 0;
-                    break;
-                case "CONFIG":
-                case 1:
-                    message.type = 1;
-                    break;
-                case "CONFIG_UPDATE":
-                case 2:
-                    message.type = 2;
-                    break;
-                case "ENDORSER_TRANSACTION":
-                case 3:
-                    message.type = 3;
-                    break;
-                case "ORDERER_TRANSACTION":
-                case 4:
-                    message.type = 4;
-                    break;
-                case "DELIVER_SEEK_INFO":
-                case 5:
-                    message.type = 5;
-                    break;
-                case "CHAINCODE_PACKAGE":
-                case 6:
-                    message.type = 6;
-                    break;
-                case "PEER_ADMIN_OPERATION":
-                case 8:
-                    message.type = 8;
-                    break;
-                }
-                switch (object.tx_validation_code) {
-                case "VALID":
-                case 0:
-                    message.tx_validation_code = 0;
-                    break;
-                case "NIL_ENVELOPE":
-                case 1:
-                    message.tx_validation_code = 1;
-                    break;
-                case "BAD_PAYLOAD":
-                case 2:
-                    message.tx_validation_code = 2;
-                    break;
-                case "BAD_COMMON_HEADER":
-                case 3:
-                    message.tx_validation_code = 3;
-                    break;
-                case "BAD_CREATOR_SIGNATURE":
-                case 4:
-                    message.tx_validation_code = 4;
-                    break;
-                case "INVALID_ENDORSER_TRANSACTION":
-                case 5:
-                    message.tx_validation_code = 5;
-                    break;
-                case "INVALID_CONFIG_TRANSACTION":
-                case 6:
-                    message.tx_validation_code = 6;
-                    break;
-                case "UNSUPPORTED_TX_PAYLOAD":
-                case 7:
-                    message.tx_validation_code = 7;
-                    break;
-                case "BAD_PROPOSAL_TXID":
-                case 8:
-                    message.tx_validation_code = 8;
-                    break;
-                case "DUPLICATE_TXID":
-                case 9:
-                    message.tx_validation_code = 9;
-                    break;
-                case "ENDORSEMENT_POLICY_FAILURE":
-                case 10:
-                    message.tx_validation_code = 10;
-                    break;
-                case "MVCC_READ_CONFLICT":
-                case 11:
-                    message.tx_validation_code = 11;
-                    break;
-                case "PHANTOM_READ_CONFLICT":
-                case 12:
-                    message.tx_validation_code = 12;
-                    break;
-                case "UNKNOWN_TX_TYPE":
-                case 13:
-                    message.tx_validation_code = 13;
-                    break;
-                case "TARGET_CHAIN_NOT_FOUND":
-                case 14:
-                    message.tx_validation_code = 14;
-                    break;
-                case "MARSHAL_TX_ERROR":
-                case 15:
-                    message.tx_validation_code = 15;
-                    break;
-                case "NIL_TXACTION":
-                case 16:
-                    message.tx_validation_code = 16;
-                    break;
-                case "EXPIRED_CHAINCODE":
-                case 17:
-                    message.tx_validation_code = 17;
-                    break;
-                case "CHAINCODE_VERSION_CONFLICT":
-                case 18:
-                    message.tx_validation_code = 18;
-                    break;
-                case "BAD_HEADER_EXTENSION":
-                case 19:
-                    message.tx_validation_code = 19;
-                    break;
-                case "BAD_CHANNEL_HEADER":
-                case 20:
-                    message.tx_validation_code = 20;
-                    break;
-                case "BAD_RESPONSE_PAYLOAD":
-                case 21:
-                    message.tx_validation_code = 21;
-                    break;
-                case "BAD_RWSET":
-                case 22:
-                    message.tx_validation_code = 22;
-                    break;
-                case "ILLEGAL_WRITESET":
-                case 23:
-                    message.tx_validation_code = 23;
-                    break;
-                case "INVALID_WRITESET":
-                case 24:
-                    message.tx_validation_code = 24;
-                    break;
-                case "INVALID_CHAINCODE":
-                case 25:
-                    message.tx_validation_code = 25;
-                    break;
-                case "NOT_VALIDATED":
-                case 254:
-                    message.tx_validation_code = 254;
-                    break;
-                case "INVALID_OTHER_REASON":
-                case 255:
-                    message.tx_validation_code = 255;
-                    break;
-                }
-                if (object.transaction_actions != null) {
-                    if (typeof object.transaction_actions !== "object")
-                        throw TypeError(".protos.FilteredTransaction.transaction_actions: object expected");
-                    message.transaction_actions = $root.protos.FilteredTransactionActions.fromObject(object.transaction_actions);
-                }
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a FilteredTransaction message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof protos.FilteredTransaction
-             * @static
-             * @param {protos.FilteredTransaction} message FilteredTransaction
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            FilteredTransaction.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (options.defaults) {
-                    object.txid = "";
-                    object.type = options.enums === String ? "MESSAGE" : 0;
-                    object.tx_validation_code = options.enums === String ? "VALID" : 0;
-                }
-                if (message.txid != null && message.hasOwnProperty("txid"))
-                    object.txid = message.txid;
-                if (message.type != null && message.hasOwnProperty("type"))
-                    object.type = options.enums === String ? $root.common.HeaderType[message.type] : message.type;
-                if (message.tx_validation_code != null && message.hasOwnProperty("tx_validation_code"))
-                    object.tx_validation_code = options.enums === String ? $root.protos.TxValidationCode[message.tx_validation_code] : message.tx_validation_code;
-                if (message.transaction_actions != null && message.hasOwnProperty("transaction_actions")) {
-                    object.transaction_actions = $root.protos.FilteredTransactionActions.toObject(message.transaction_actions, options);
-                    if (options.oneofs)
-                        object.Data = "transaction_actions";
-                }
-                return object;
-            };
-    
-            /**
-             * Converts this FilteredTransaction to JSON.
-             * @function toJSON
-             * @memberof protos.FilteredTransaction
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            FilteredTransaction.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return FilteredTransaction;
-        })();
-    
-        protos.FilteredTransactionActions = (function() {
-    
-            /**
-             * Properties of a FilteredTransactionActions.
-             * @memberof protos
-             * @interface IFilteredTransactionActions
-             * @property {Array.<protos.IFilteredChaincodeAction>|null} [chaincode_actions] FilteredTransactionActions chaincode_actions
-             */
-    
-            /**
-             * Constructs a new FilteredTransactionActions.
-             * @memberof protos
-             * @classdesc Represents a FilteredTransactionActions.
-             * @implements IFilteredTransactionActions
-             * @constructor
-             * @param {protos.IFilteredTransactionActions=} [properties] Properties to set
-             */
-            function FilteredTransactionActions(properties) {
-                this.chaincode_actions = [];
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * FilteredTransactionActions chaincode_actions.
-             * @member {Array.<protos.IFilteredChaincodeAction>} chaincode_actions
-             * @memberof protos.FilteredTransactionActions
-             * @instance
-             */
-            FilteredTransactionActions.prototype.chaincode_actions = $util.emptyArray;
-    
-            /**
-             * Creates a new FilteredTransactionActions instance using the specified properties.
-             * @function create
-             * @memberof protos.FilteredTransactionActions
-             * @static
-             * @param {protos.IFilteredTransactionActions=} [properties] Properties to set
-             * @returns {protos.FilteredTransactionActions} FilteredTransactionActions instance
-             */
-            FilteredTransactionActions.create = function create(properties) {
-                return new FilteredTransactionActions(properties);
-            };
-    
-            /**
-             * Encodes the specified FilteredTransactionActions message. Does not implicitly {@link protos.FilteredTransactionActions.verify|verify} messages.
-             * @function encode
-             * @memberof protos.FilteredTransactionActions
-             * @static
-             * @param {protos.IFilteredTransactionActions} message FilteredTransactionActions message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            FilteredTransactionActions.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.chaincode_actions != null && message.chaincode_actions.length)
-                    for (var i = 0; i < message.chaincode_actions.length; ++i)
-                        $root.protos.FilteredChaincodeAction.encode(message.chaincode_actions[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified FilteredTransactionActions message, length delimited. Does not implicitly {@link protos.FilteredTransactionActions.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof protos.FilteredTransactionActions
-             * @static
-             * @param {protos.IFilteredTransactionActions} message FilteredTransactionActions message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            FilteredTransactionActions.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a FilteredTransactionActions message from the specified reader or buffer.
-             * @function decode
-             * @memberof protos.FilteredTransactionActions
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {protos.FilteredTransactionActions} FilteredTransactionActions
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            FilteredTransactionActions.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.FilteredTransactionActions();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        if (!(message.chaincode_actions && message.chaincode_actions.length))
-                            message.chaincode_actions = [];
-                        message.chaincode_actions.push($root.protos.FilteredChaincodeAction.decode(reader, reader.uint32()));
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a FilteredTransactionActions message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof protos.FilteredTransactionActions
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {protos.FilteredTransactionActions} FilteredTransactionActions
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            FilteredTransactionActions.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a FilteredTransactionActions message.
-             * @function verify
-             * @memberof protos.FilteredTransactionActions
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            FilteredTransactionActions.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (message.chaincode_actions != null && message.hasOwnProperty("chaincode_actions")) {
-                    if (!Array.isArray(message.chaincode_actions))
-                        return "chaincode_actions: array expected";
-                    for (var i = 0; i < message.chaincode_actions.length; ++i) {
-                        var error = $root.protos.FilteredChaincodeAction.verify(message.chaincode_actions[i]);
-                        if (error)
-                            return "chaincode_actions." + error;
-                    }
-                }
-                return null;
-            };
-    
-            /**
-             * Creates a FilteredTransactionActions message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof protos.FilteredTransactionActions
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {protos.FilteredTransactionActions} FilteredTransactionActions
-             */
-            FilteredTransactionActions.fromObject = function fromObject(object) {
-                if (object instanceof $root.protos.FilteredTransactionActions)
-                    return object;
-                var message = new $root.protos.FilteredTransactionActions();
-                if (object.chaincode_actions) {
-                    if (!Array.isArray(object.chaincode_actions))
-                        throw TypeError(".protos.FilteredTransactionActions.chaincode_actions: array expected");
-                    message.chaincode_actions = [];
-                    for (var i = 0; i < object.chaincode_actions.length; ++i) {
-                        if (typeof object.chaincode_actions[i] !== "object")
-                            throw TypeError(".protos.FilteredTransactionActions.chaincode_actions: object expected");
-                        message.chaincode_actions[i] = $root.protos.FilteredChaincodeAction.fromObject(object.chaincode_actions[i]);
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a FilteredTransactionActions message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof protos.FilteredTransactionActions
-             * @static
-             * @param {protos.FilteredTransactionActions} message FilteredTransactionActions
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            FilteredTransactionActions.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (options.arrays || options.defaults)
-                    object.chaincode_actions = [];
-                if (message.chaincode_actions && message.chaincode_actions.length) {
-                    object.chaincode_actions = [];
-                    for (var j = 0; j < message.chaincode_actions.length; ++j)
-                        object.chaincode_actions[j] = $root.protos.FilteredChaincodeAction.toObject(message.chaincode_actions[j], options);
-                }
-                return object;
-            };
-    
-            /**
-             * Converts this FilteredTransactionActions to JSON.
-             * @function toJSON
-             * @memberof protos.FilteredTransactionActions
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            FilteredTransactionActions.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return FilteredTransactionActions;
-        })();
-    
-        protos.FilteredChaincodeAction = (function() {
-    
-            /**
-             * Properties of a FilteredChaincodeAction.
-             * @memberof protos
-             * @interface IFilteredChaincodeAction
-             * @property {protos.IChaincodeEvent|null} [chaincode_event] FilteredChaincodeAction chaincode_event
-             */
-    
-            /**
-             * Constructs a new FilteredChaincodeAction.
-             * @memberof protos
-             * @classdesc Represents a FilteredChaincodeAction.
-             * @implements IFilteredChaincodeAction
-             * @constructor
-             * @param {protos.IFilteredChaincodeAction=} [properties] Properties to set
-             */
-            function FilteredChaincodeAction(properties) {
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * FilteredChaincodeAction chaincode_event.
-             * @member {protos.IChaincodeEvent|null|undefined} chaincode_event
-             * @memberof protos.FilteredChaincodeAction
-             * @instance
-             */
-            FilteredChaincodeAction.prototype.chaincode_event = null;
-    
-            /**
-             * Creates a new FilteredChaincodeAction instance using the specified properties.
-             * @function create
-             * @memberof protos.FilteredChaincodeAction
-             * @static
-             * @param {protos.IFilteredChaincodeAction=} [properties] Properties to set
-             * @returns {protos.FilteredChaincodeAction} FilteredChaincodeAction instance
-             */
-            FilteredChaincodeAction.create = function create(properties) {
-                return new FilteredChaincodeAction(properties);
-            };
-    
-            /**
-             * Encodes the specified FilteredChaincodeAction message. Does not implicitly {@link protos.FilteredChaincodeAction.verify|verify} messages.
-             * @function encode
-             * @memberof protos.FilteredChaincodeAction
-             * @static
-             * @param {protos.IFilteredChaincodeAction} message FilteredChaincodeAction message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            FilteredChaincodeAction.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.chaincode_event != null && Object.hasOwnProperty.call(message, "chaincode_event"))
-                    $root.protos.ChaincodeEvent.encode(message.chaincode_event, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified FilteredChaincodeAction message, length delimited. Does not implicitly {@link protos.FilteredChaincodeAction.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof protos.FilteredChaincodeAction
-             * @static
-             * @param {protos.IFilteredChaincodeAction} message FilteredChaincodeAction message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            FilteredChaincodeAction.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a FilteredChaincodeAction message from the specified reader or buffer.
-             * @function decode
-             * @memberof protos.FilteredChaincodeAction
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {protos.FilteredChaincodeAction} FilteredChaincodeAction
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            FilteredChaincodeAction.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.FilteredChaincodeAction();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        message.chaincode_event = $root.protos.ChaincodeEvent.decode(reader, reader.uint32());
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a FilteredChaincodeAction message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof protos.FilteredChaincodeAction
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {protos.FilteredChaincodeAction} FilteredChaincodeAction
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            FilteredChaincodeAction.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a FilteredChaincodeAction message.
-             * @function verify
-             * @memberof protos.FilteredChaincodeAction
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            FilteredChaincodeAction.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (message.chaincode_event != null && message.hasOwnProperty("chaincode_event")) {
-                    var error = $root.protos.ChaincodeEvent.verify(message.chaincode_event);
-                    if (error)
-                        return "chaincode_event." + error;
-                }
-                return null;
-            };
-    
-            /**
-             * Creates a FilteredChaincodeAction message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof protos.FilteredChaincodeAction
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {protos.FilteredChaincodeAction} FilteredChaincodeAction
-             */
-            FilteredChaincodeAction.fromObject = function fromObject(object) {
-                if (object instanceof $root.protos.FilteredChaincodeAction)
-                    return object;
-                var message = new $root.protos.FilteredChaincodeAction();
-                if (object.chaincode_event != null) {
-                    if (typeof object.chaincode_event !== "object")
-                        throw TypeError(".protos.FilteredChaincodeAction.chaincode_event: object expected");
-                    message.chaincode_event = $root.protos.ChaincodeEvent.fromObject(object.chaincode_event);
-                }
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a FilteredChaincodeAction message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof protos.FilteredChaincodeAction
-             * @static
-             * @param {protos.FilteredChaincodeAction} message FilteredChaincodeAction
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            FilteredChaincodeAction.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (options.defaults)
-                    object.chaincode_event = null;
-                if (message.chaincode_event != null && message.hasOwnProperty("chaincode_event"))
-                    object.chaincode_event = $root.protos.ChaincodeEvent.toObject(message.chaincode_event, options);
-                return object;
-            };
-    
-            /**
-             * Converts this FilteredChaincodeAction to JSON.
-             * @function toJSON
-             * @memberof protos.FilteredChaincodeAction
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            FilteredChaincodeAction.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return FilteredChaincodeAction;
-        })();
-    
-        protos.BlockAndPrivateData = (function() {
-    
-            /**
-             * Properties of a BlockAndPrivateData.
-             * @memberof protos
-             * @interface IBlockAndPrivateData
-             * @property {common.IBlock|null} [block] BlockAndPrivateData block
-             * @property {Object.<string,rwset.ITxPvtReadWriteSet>|null} [private_data_map] BlockAndPrivateData private_data_map
-             */
-    
-            /**
-             * Constructs a new BlockAndPrivateData.
-             * @memberof protos
-             * @classdesc Represents a BlockAndPrivateData.
-             * @implements IBlockAndPrivateData
-             * @constructor
-             * @param {protos.IBlockAndPrivateData=} [properties] Properties to set
-             */
-            function BlockAndPrivateData(properties) {
-                this.private_data_map = {};
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * BlockAndPrivateData block.
-             * @member {common.IBlock|null|undefined} block
-             * @memberof protos.BlockAndPrivateData
-             * @instance
-             */
-            BlockAndPrivateData.prototype.block = null;
-    
-            /**
-             * BlockAndPrivateData private_data_map.
-             * @member {Object.<string,rwset.ITxPvtReadWriteSet>} private_data_map
-             * @memberof protos.BlockAndPrivateData
-             * @instance
-             */
-            BlockAndPrivateData.prototype.private_data_map = $util.emptyObject;
-    
-            /**
-             * Creates a new BlockAndPrivateData instance using the specified properties.
-             * @function create
-             * @memberof protos.BlockAndPrivateData
-             * @static
-             * @param {protos.IBlockAndPrivateData=} [properties] Properties to set
-             * @returns {protos.BlockAndPrivateData} BlockAndPrivateData instance
-             */
-            BlockAndPrivateData.create = function create(properties) {
-                return new BlockAndPrivateData(properties);
-            };
-    
-            /**
-             * Encodes the specified BlockAndPrivateData message. Does not implicitly {@link protos.BlockAndPrivateData.verify|verify} messages.
-             * @function encode
-             * @memberof protos.BlockAndPrivateData
-             * @static
-             * @param {protos.IBlockAndPrivateData} message BlockAndPrivateData message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            BlockAndPrivateData.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.block != null && Object.hasOwnProperty.call(message, "block"))
-                    $root.common.Block.encode(message.block, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
-                if (message.private_data_map != null && Object.hasOwnProperty.call(message, "private_data_map"))
-                    for (var keys = Object.keys(message.private_data_map), i = 0; i < keys.length; ++i) {
-                        writer.uint32(/* id 2, wireType 2 =*/18).fork().uint32(/* id 1, wireType 0 =*/8).uint64(keys[i]);
-                        $root.rwset.TxPvtReadWriteSet.encode(message.private_data_map[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
-                    }
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified BlockAndPrivateData message, length delimited. Does not implicitly {@link protos.BlockAndPrivateData.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof protos.BlockAndPrivateData
-             * @static
-             * @param {protos.IBlockAndPrivateData} message BlockAndPrivateData message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            BlockAndPrivateData.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a BlockAndPrivateData message from the specified reader or buffer.
-             * @function decode
-             * @memberof protos.BlockAndPrivateData
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {protos.BlockAndPrivateData} BlockAndPrivateData
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            BlockAndPrivateData.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.BlockAndPrivateData(), key;
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        message.block = $root.common.Block.decode(reader, reader.uint32());
-                        break;
-                    case 2:
-                        reader.skip().pos++;
-                        if (message.private_data_map === $util.emptyObject)
-                            message.private_data_map = {};
-                        key = reader.uint64();
-                        reader.pos++;
-                        message.private_data_map[typeof key === "object" ? $util.longToHash(key) : key] = $root.rwset.TxPvtReadWriteSet.decode(reader, reader.uint32());
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a BlockAndPrivateData message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof protos.BlockAndPrivateData
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {protos.BlockAndPrivateData} BlockAndPrivateData
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            BlockAndPrivateData.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a BlockAndPrivateData message.
-             * @function verify
-             * @memberof protos.BlockAndPrivateData
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            BlockAndPrivateData.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (message.block != null && message.hasOwnProperty("block")) {
-                    var error = $root.common.Block.verify(message.block);
-                    if (error)
-                        return "block." + error;
-                }
-                if (message.private_data_map != null && message.hasOwnProperty("private_data_map")) {
-                    if (!$util.isObject(message.private_data_map))
-                        return "private_data_map: object expected";
-                    var key = Object.keys(message.private_data_map);
-                    for (var i = 0; i < key.length; ++i) {
-                        if (!$util.key64Re.test(key[i]))
-                            return "private_data_map: integer|Long key{k:uint64} expected";
-                        {
-                            var error = $root.rwset.TxPvtReadWriteSet.verify(message.private_data_map[key[i]]);
-                            if (error)
-                                return "private_data_map." + error;
-                        }
-                    }
-                }
-                return null;
-            };
-    
-            /**
-             * Creates a BlockAndPrivateData message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof protos.BlockAndPrivateData
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {protos.BlockAndPrivateData} BlockAndPrivateData
-             */
-            BlockAndPrivateData.fromObject = function fromObject(object) {
-                if (object instanceof $root.protos.BlockAndPrivateData)
-                    return object;
-                var message = new $root.protos.BlockAndPrivateData();
-                if (object.block != null) {
-                    if (typeof object.block !== "object")
-                        throw TypeError(".protos.BlockAndPrivateData.block: object expected");
-                    message.block = $root.common.Block.fromObject(object.block);
-                }
-                if (object.private_data_map) {
-                    if (typeof object.private_data_map !== "object")
-                        throw TypeError(".protos.BlockAndPrivateData.private_data_map: object expected");
-                    message.private_data_map = {};
-                    for (var keys = Object.keys(object.private_data_map), i = 0; i < keys.length; ++i) {
-                        if (typeof object.private_data_map[keys[i]] !== "object")
-                            throw TypeError(".protos.BlockAndPrivateData.private_data_map: object expected");
-                        message.private_data_map[keys[i]] = $root.rwset.TxPvtReadWriteSet.fromObject(object.private_data_map[keys[i]]);
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a BlockAndPrivateData message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof protos.BlockAndPrivateData
-             * @static
-             * @param {protos.BlockAndPrivateData} message BlockAndPrivateData
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            BlockAndPrivateData.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (options.objects || options.defaults)
-                    object.private_data_map = {};
-                if (options.defaults)
-                    object.block = null;
-                if (message.block != null && message.hasOwnProperty("block"))
-                    object.block = $root.common.Block.toObject(message.block, options);
-                var keys2;
-                if (message.private_data_map && (keys2 = Object.keys(message.private_data_map)).length) {
-                    object.private_data_map = {};
-                    for (var j = 0; j < keys2.length; ++j)
-                        object.private_data_map[keys2[j]] = $root.rwset.TxPvtReadWriteSet.toObject(message.private_data_map[keys2[j]], options);
-                }
-                return object;
-            };
-    
-            /**
-             * Converts this BlockAndPrivateData to JSON.
-             * @function toJSON
-             * @memberof protos.BlockAndPrivateData
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            BlockAndPrivateData.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return BlockAndPrivateData;
-        })();
-    
-        protos.DeliverResponse = (function() {
-    
-            /**
-             * Properties of a DeliverResponse.
-             * @memberof protos
-             * @interface IDeliverResponse
-             * @property {common.Status|null} [status] DeliverResponse status
-             * @property {common.IBlock|null} [block] DeliverResponse block
-             * @property {protos.IFilteredBlock|null} [filtered_block] DeliverResponse filtered_block
-             * @property {protos.IBlockAndPrivateData|null} [block_and_private_data] DeliverResponse block_and_private_data
-             */
-    
-            /**
-             * Constructs a new DeliverResponse.
-             * @memberof protos
-             * @classdesc Represents a DeliverResponse.
-             * @implements IDeliverResponse
-             * @constructor
-             * @param {protos.IDeliverResponse=} [properties] Properties to set
-             */
-            function DeliverResponse(properties) {
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * DeliverResponse status.
-             * @member {common.Status} status
-             * @memberof protos.DeliverResponse
-             * @instance
-             */
-            DeliverResponse.prototype.status = 0;
-    
-            /**
-             * DeliverResponse block.
-             * @member {common.IBlock|null|undefined} block
-             * @memberof protos.DeliverResponse
-             * @instance
-             */
-            DeliverResponse.prototype.block = null;
-    
-            /**
-             * DeliverResponse filtered_block.
-             * @member {protos.IFilteredBlock|null|undefined} filtered_block
-             * @memberof protos.DeliverResponse
-             * @instance
-             */
-            DeliverResponse.prototype.filtered_block = null;
-    
-            /**
-             * DeliverResponse block_and_private_data.
-             * @member {protos.IBlockAndPrivateData|null|undefined} block_and_private_data
-             * @memberof protos.DeliverResponse
-             * @instance
-             */
-            DeliverResponse.prototype.block_and_private_data = null;
-    
-            // OneOf field names bound to virtual getters and setters
-            var $oneOfFields;
-    
-            /**
-             * DeliverResponse Type.
-             * @member {"status"|"block"|"filtered_block"|"block_and_private_data"|undefined} Type
-             * @memberof protos.DeliverResponse
-             * @instance
-             */
-            Object.defineProperty(DeliverResponse.prototype, "Type", {
-                get: $util.oneOfGetter($oneOfFields = ["status", "block", "filtered_block", "block_and_private_data"]),
-                set: $util.oneOfSetter($oneOfFields)
-            });
-    
-            /**
-             * Creates a new DeliverResponse instance using the specified properties.
-             * @function create
-             * @memberof protos.DeliverResponse
-             * @static
-             * @param {protos.IDeliverResponse=} [properties] Properties to set
-             * @returns {protos.DeliverResponse} DeliverResponse instance
-             */
-            DeliverResponse.create = function create(properties) {
-                return new DeliverResponse(properties);
-            };
-    
-            /**
-             * Encodes the specified DeliverResponse message. Does not implicitly {@link protos.DeliverResponse.verify|verify} messages.
-             * @function encode
-             * @memberof protos.DeliverResponse
-             * @static
-             * @param {protos.IDeliverResponse} message DeliverResponse message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            DeliverResponse.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.status != null && Object.hasOwnProperty.call(message, "status"))
-                    writer.uint32(/* id 1, wireType 0 =*/8).int32(message.status);
-                if (message.block != null && Object.hasOwnProperty.call(message, "block"))
-                    $root.common.Block.encode(message.block, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
-                if (message.filtered_block != null && Object.hasOwnProperty.call(message, "filtered_block"))
-                    $root.protos.FilteredBlock.encode(message.filtered_block, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
-                if (message.block_and_private_data != null && Object.hasOwnProperty.call(message, "block_and_private_data"))
-                    $root.protos.BlockAndPrivateData.encode(message.block_and_private_data, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified DeliverResponse message, length delimited. Does not implicitly {@link protos.DeliverResponse.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof protos.DeliverResponse
-             * @static
-             * @param {protos.IDeliverResponse} message DeliverResponse message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            DeliverResponse.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a DeliverResponse message from the specified reader or buffer.
-             * @function decode
-             * @memberof protos.DeliverResponse
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {protos.DeliverResponse} DeliverResponse
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            DeliverResponse.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.DeliverResponse();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        message.status = reader.int32();
-                        break;
-                    case 2:
-                        message.block = $root.common.Block.decode(reader, reader.uint32());
-                        break;
-                    case 3:
-                        message.filtered_block = $root.protos.FilteredBlock.decode(reader, reader.uint32());
-                        break;
-                    case 4:
-                        message.block_and_private_data = $root.protos.BlockAndPrivateData.decode(reader, reader.uint32());
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a DeliverResponse message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof protos.DeliverResponse
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {protos.DeliverResponse} DeliverResponse
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            DeliverResponse.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a DeliverResponse message.
-             * @function verify
-             * @memberof protos.DeliverResponse
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            DeliverResponse.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                var properties = {};
-                if (message.status != null && message.hasOwnProperty("status")) {
-                    properties.Type = 1;
-                    switch (message.status) {
-                    default:
-                        return "status: enum value expected";
-                    case 0:
-                    case 200:
-                    case 400:
-                    case 403:
-                    case 404:
-                    case 413:
-                    case 500:
-                    case 501:
-                    case 503:
-                        break;
-                    }
-                }
-                if (message.block != null && message.hasOwnProperty("block")) {
-                    if (properties.Type === 1)
-                        return "Type: multiple values";
-                    properties.Type = 1;
-                    {
-                        var error = $root.common.Block.verify(message.block);
-                        if (error)
-                            return "block." + error;
-                    }
-                }
-                if (message.filtered_block != null && message.hasOwnProperty("filtered_block")) {
-                    if (properties.Type === 1)
-                        return "Type: multiple values";
-                    properties.Type = 1;
-                    {
-                        var error = $root.protos.FilteredBlock.verify(message.filtered_block);
-                        if (error)
-                            return "filtered_block." + error;
-                    }
-                }
-                if (message.block_and_private_data != null && message.hasOwnProperty("block_and_private_data")) {
-                    if (properties.Type === 1)
-                        return "Type: multiple values";
-                    properties.Type = 1;
-                    {
-                        var error = $root.protos.BlockAndPrivateData.verify(message.block_and_private_data);
-                        if (error)
-                            return "block_and_private_data." + error;
-                    }
-                }
-                return null;
-            };
-    
-            /**
-             * Creates a DeliverResponse message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof protos.DeliverResponse
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {protos.DeliverResponse} DeliverResponse
-             */
-            DeliverResponse.fromObject = function fromObject(object) {
-                if (object instanceof $root.protos.DeliverResponse)
-                    return object;
-                var message = new $root.protos.DeliverResponse();
-                switch (object.status) {
-                case "UNKNOWN":
-                case 0:
-                    message.status = 0;
-                    break;
-                case "SUCCESS":
-                case 200:
-                    message.status = 200;
-                    break;
-                case "BAD_REQUEST":
-                case 400:
-                    message.status = 400;
-                    break;
-                case "FORBIDDEN":
-                case 403:
-                    message.status = 403;
-                    break;
-                case "NOT_FOUND":
-                case 404:
-                    message.status = 404;
-                    break;
-                case "REQUEST_ENTITY_TOO_LARGE":
-                case 413:
-                    message.status = 413;
-                    break;
-                case "INTERNAL_SERVER_ERROR":
-                case 500:
-                    message.status = 500;
-                    break;
-                case "NOT_IMPLEMENTED":
-                case 501:
-                    message.status = 501;
-                    break;
-                case "SERVICE_UNAVAILABLE":
-                case 503:
-                    message.status = 503;
-                    break;
-                }
-                if (object.block != null) {
-                    if (typeof object.block !== "object")
-                        throw TypeError(".protos.DeliverResponse.block: object expected");
-                    message.block = $root.common.Block.fromObject(object.block);
-                }
-                if (object.filtered_block != null) {
-                    if (typeof object.filtered_block !== "object")
-                        throw TypeError(".protos.DeliverResponse.filtered_block: object expected");
-                    message.filtered_block = $root.protos.FilteredBlock.fromObject(object.filtered_block);
-                }
-                if (object.block_and_private_data != null) {
-                    if (typeof object.block_and_private_data !== "object")
-                        throw TypeError(".protos.DeliverResponse.block_and_private_data: object expected");
-                    message.block_and_private_data = $root.protos.BlockAndPrivateData.fromObject(object.block_and_private_data);
-                }
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a DeliverResponse message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof protos.DeliverResponse
-             * @static
-             * @param {protos.DeliverResponse} message DeliverResponse
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            DeliverResponse.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (message.status != null && message.hasOwnProperty("status")) {
-                    object.status = options.enums === String ? $root.common.Status[message.status] : message.status;
-                    if (options.oneofs)
-                        object.Type = "status";
-                }
-                if (message.block != null && message.hasOwnProperty("block")) {
-                    object.block = $root.common.Block.toObject(message.block, options);
-                    if (options.oneofs)
-                        object.Type = "block";
-                }
-                if (message.filtered_block != null && message.hasOwnProperty("filtered_block")) {
-                    object.filtered_block = $root.protos.FilteredBlock.toObject(message.filtered_block, options);
-                    if (options.oneofs)
-                        object.Type = "filtered_block";
-                }
-                if (message.block_and_private_data != null && message.hasOwnProperty("block_and_private_data")) {
-                    object.block_and_private_data = $root.protos.BlockAndPrivateData.toObject(message.block_and_private_data, options);
-                    if (options.oneofs)
-                        object.Type = "block_and_private_data";
-                }
-                return object;
-            };
-    
-            /**
-             * Converts this DeliverResponse to JSON.
-             * @function toJSON
-             * @memberof protos.DeliverResponse
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            DeliverResponse.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return DeliverResponse;
-        })();
-    
-        protos.Deliver = (function() {
-    
-            /**
-             * Constructs a new Deliver service.
-             * @memberof protos
-             * @classdesc Represents a Deliver
-             * @extends $protobuf.rpc.Service
-             * @constructor
-             * @param {$protobuf.RPCImpl} rpcImpl RPC implementation
-             * @param {boolean} [requestDelimited=false] Whether requests are length-delimited
-             * @param {boolean} [responseDelimited=false] Whether responses are length-delimited
-             */
-            function Deliver(rpcImpl, requestDelimited, responseDelimited) {
-                $protobuf.rpc.Service.call(this, rpcImpl, requestDelimited, responseDelimited);
-            }
-    
-            (Deliver.prototype = Object.create($protobuf.rpc.Service.prototype)).constructor = Deliver;
-    
-            /**
-             * Creates new Deliver service using the specified rpc implementation.
-             * @function create
-             * @memberof protos.Deliver
-             * @static
-             * @param {$protobuf.RPCImpl} rpcImpl RPC implementation
-             * @param {boolean} [requestDelimited=false] Whether requests are length-delimited
-             * @param {boolean} [responseDelimited=false] Whether responses are length-delimited
-             * @returns {Deliver} RPC service. Useful where requests and/or responses are streamed.
-             */
-            Deliver.create = function create(rpcImpl, requestDelimited, responseDelimited) {
-                return new this(rpcImpl, requestDelimited, responseDelimited);
-            };
-    
-            /**
-             * Callback as used by {@link protos.Deliver#deliver}.
-             * @memberof protos.Deliver
-             * @typedef DeliverCallback
-             * @type {function}
-             * @param {Error|null} error Error, if any
-             * @param {protos.DeliverResponse} [response] DeliverResponse
-             */
-    
-            /**
-             * Calls Deliver.
-             * @function deliver
-             * @memberof protos.Deliver
-             * @instance
-             * @param {common.IEnvelope} request Envelope message or plain object
-             * @param {protos.Deliver.DeliverCallback} callback Node-style callback called with the error, if any, and DeliverResponse
-             * @returns {undefined}
-             * @variation 1
-             */
-            Object.defineProperty(Deliver.prototype.deliver = function deliver(request, callback) {
-                return this.rpcCall(deliver, $root.common.Envelope, $root.protos.DeliverResponse, request, callback);
-            }, "name", { value: "Deliver" });
-    
-            /**
-             * Calls Deliver.
-             * @function deliver
-             * @memberof protos.Deliver
-             * @instance
-             * @param {common.IEnvelope} request Envelope message or plain object
-             * @returns {Promise<protos.DeliverResponse>} Promise
-             * @variation 2
-             */
-    
-            /**
-             * Callback as used by {@link protos.Deliver#deliverFiltered}.
-             * @memberof protos.Deliver
-             * @typedef DeliverFilteredCallback
-             * @type {function}
-             * @param {Error|null} error Error, if any
-             * @param {protos.DeliverResponse} [response] DeliverResponse
-             */
-    
-            /**
-             * Calls DeliverFiltered.
-             * @function deliverFiltered
-             * @memberof protos.Deliver
-             * @instance
-             * @param {common.IEnvelope} request Envelope message or plain object
-             * @param {protos.Deliver.DeliverFilteredCallback} callback Node-style callback called with the error, if any, and DeliverResponse
-             * @returns {undefined}
-             * @variation 1
-             */
-            Object.defineProperty(Deliver.prototype.deliverFiltered = function deliverFiltered(request, callback) {
-                return this.rpcCall(deliverFiltered, $root.common.Envelope, $root.protos.DeliverResponse, request, callback);
-            }, "name", { value: "DeliverFiltered" });
-    
-            /**
-             * Calls DeliverFiltered.
-             * @function deliverFiltered
-             * @memberof protos.Deliver
-             * @instance
-             * @param {common.IEnvelope} request Envelope message or plain object
-             * @returns {Promise<protos.DeliverResponse>} Promise
-             * @variation 2
-             */
-    
-            /**
-             * Callback as used by {@link protos.Deliver#deliverWithPrivateData}.
-             * @memberof protos.Deliver
-             * @typedef DeliverWithPrivateDataCallback
-             * @type {function}
-             * @param {Error|null} error Error, if any
-             * @param {protos.DeliverResponse} [response] DeliverResponse
-             */
-    
-            /**
-             * Calls DeliverWithPrivateData.
-             * @function deliverWithPrivateData
-             * @memberof protos.Deliver
-             * @instance
-             * @param {common.IEnvelope} request Envelope message or plain object
-             * @param {protos.Deliver.DeliverWithPrivateDataCallback} callback Node-style callback called with the error, if any, and DeliverResponse
-             * @returns {undefined}
-             * @variation 1
-             */
-            Object.defineProperty(Deliver.prototype.deliverWithPrivateData = function deliverWithPrivateData(request, callback) {
-                return this.rpcCall(deliverWithPrivateData, $root.common.Envelope, $root.protos.DeliverResponse, request, callback);
-            }, "name", { value: "DeliverWithPrivateData" });
-    
-            /**
-             * Calls DeliverWithPrivateData.
-             * @function deliverWithPrivateData
-             * @memberof protos.Deliver
-             * @instance
-             * @param {common.IEnvelope} request Envelope message or plain object
-             * @returns {Promise<protos.DeliverResponse>} Promise
-             * @variation 2
-             */
-    
-            return Deliver;
-        })();
-    
-        protos.ProcessedTransaction = (function() {
-    
-            /**
-             * Properties of a ProcessedTransaction.
-             * @memberof protos
-             * @interface IProcessedTransaction
-             * @property {common.IEnvelope|null} [transactionEnvelope] ProcessedTransaction transactionEnvelope
-             * @property {number|null} [validationCode] ProcessedTransaction validationCode
-             */
-    
-            /**
-             * Constructs a new ProcessedTransaction.
-             * @memberof protos
-             * @classdesc Represents a ProcessedTransaction.
-             * @implements IProcessedTransaction
-             * @constructor
-             * @param {protos.IProcessedTransaction=} [properties] Properties to set
-             */
-            function ProcessedTransaction(properties) {
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * ProcessedTransaction transactionEnvelope.
-             * @member {common.IEnvelope|null|undefined} transactionEnvelope
-             * @memberof protos.ProcessedTransaction
-             * @instance
-             */
-            ProcessedTransaction.prototype.transactionEnvelope = null;
-    
-            /**
-             * ProcessedTransaction validationCode.
-             * @member {number} validationCode
-             * @memberof protos.ProcessedTransaction
-             * @instance
-             */
-            ProcessedTransaction.prototype.validationCode = 0;
-    
-            /**
-             * Creates a new ProcessedTransaction instance using the specified properties.
-             * @function create
-             * @memberof protos.ProcessedTransaction
-             * @static
-             * @param {protos.IProcessedTransaction=} [properties] Properties to set
-             * @returns {protos.ProcessedTransaction} ProcessedTransaction instance
-             */
-            ProcessedTransaction.create = function create(properties) {
-                return new ProcessedTransaction(properties);
-            };
-    
-            /**
-             * Encodes the specified ProcessedTransaction message. Does not implicitly {@link protos.ProcessedTransaction.verify|verify} messages.
-             * @function encode
-             * @memberof protos.ProcessedTransaction
-             * @static
-             * @param {protos.IProcessedTransaction} message ProcessedTransaction message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            ProcessedTransaction.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.transactionEnvelope != null && Object.hasOwnProperty.call(message, "transactionEnvelope"))
-                    $root.common.Envelope.encode(message.transactionEnvelope, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
-                if (message.validationCode != null && Object.hasOwnProperty.call(message, "validationCode"))
-                    writer.uint32(/* id 2, wireType 0 =*/16).int32(message.validationCode);
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified ProcessedTransaction message, length delimited. Does not implicitly {@link protos.ProcessedTransaction.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof protos.ProcessedTransaction
-             * @static
-             * @param {protos.IProcessedTransaction} message ProcessedTransaction message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            ProcessedTransaction.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a ProcessedTransaction message from the specified reader or buffer.
-             * @function decode
-             * @memberof protos.ProcessedTransaction
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {protos.ProcessedTransaction} ProcessedTransaction
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            ProcessedTransaction.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.ProcessedTransaction();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        message.transactionEnvelope = $root.common.Envelope.decode(reader, reader.uint32());
-                        break;
-                    case 2:
-                        message.validationCode = reader.int32();
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a ProcessedTransaction message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof protos.ProcessedTransaction
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {protos.ProcessedTransaction} ProcessedTransaction
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            ProcessedTransaction.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a ProcessedTransaction message.
-             * @function verify
-             * @memberof protos.ProcessedTransaction
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            ProcessedTransaction.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (message.transactionEnvelope != null && message.hasOwnProperty("transactionEnvelope")) {
-                    var error = $root.common.Envelope.verify(message.transactionEnvelope);
-                    if (error)
-                        return "transactionEnvelope." + error;
-                }
-                if (message.validationCode != null && message.hasOwnProperty("validationCode"))
-                    if (!$util.isInteger(message.validationCode))
-                        return "validationCode: integer expected";
-                return null;
-            };
-    
-            /**
-             * Creates a ProcessedTransaction message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof protos.ProcessedTransaction
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {protos.ProcessedTransaction} ProcessedTransaction
-             */
-            ProcessedTransaction.fromObject = function fromObject(object) {
-                if (object instanceof $root.protos.ProcessedTransaction)
-                    return object;
-                var message = new $root.protos.ProcessedTransaction();
-                if (object.transactionEnvelope != null) {
-                    if (typeof object.transactionEnvelope !== "object")
-                        throw TypeError(".protos.ProcessedTransaction.transactionEnvelope: object expected");
-                    message.transactionEnvelope = $root.common.Envelope.fromObject(object.transactionEnvelope);
-                }
-                if (object.validationCode != null)
-                    message.validationCode = object.validationCode | 0;
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a ProcessedTransaction message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof protos.ProcessedTransaction
-             * @static
-             * @param {protos.ProcessedTransaction} message ProcessedTransaction
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            ProcessedTransaction.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (options.defaults) {
-                    object.transactionEnvelope = null;
-                    object.validationCode = 0;
-                }
-                if (message.transactionEnvelope != null && message.hasOwnProperty("transactionEnvelope"))
-                    object.transactionEnvelope = $root.common.Envelope.toObject(message.transactionEnvelope, options);
-                if (message.validationCode != null && message.hasOwnProperty("validationCode"))
-                    object.validationCode = message.validationCode;
-                return object;
-            };
-    
-            /**
-             * Converts this ProcessedTransaction to JSON.
-             * @function toJSON
-             * @memberof protos.ProcessedTransaction
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            ProcessedTransaction.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return ProcessedTransaction;
-        })();
-    
-        protos.Transaction = (function() {
-    
-            /**
-             * Properties of a Transaction.
-             * @memberof protos
-             * @interface ITransaction
-             * @property {Array.<protos.ITransactionAction>|null} [actions] Transaction actions
-             */
-    
-            /**
-             * Constructs a new Transaction.
-             * @memberof protos
-             * @classdesc Represents a Transaction.
-             * @implements ITransaction
-             * @constructor
-             * @param {protos.ITransaction=} [properties] Properties to set
-             */
-            function Transaction(properties) {
-                this.actions = [];
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * Transaction actions.
-             * @member {Array.<protos.ITransactionAction>} actions
-             * @memberof protos.Transaction
-             * @instance
-             */
-            Transaction.prototype.actions = $util.emptyArray;
-    
-            /**
-             * Creates a new Transaction instance using the specified properties.
-             * @function create
-             * @memberof protos.Transaction
-             * @static
-             * @param {protos.ITransaction=} [properties] Properties to set
-             * @returns {protos.Transaction} Transaction instance
-             */
-            Transaction.create = function create(properties) {
-                return new Transaction(properties);
-            };
-    
-            /**
-             * Encodes the specified Transaction message. Does not implicitly {@link protos.Transaction.verify|verify} messages.
-             * @function encode
-             * @memberof protos.Transaction
-             * @static
-             * @param {protos.ITransaction} message Transaction message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            Transaction.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.actions != null && message.actions.length)
-                    for (var i = 0; i < message.actions.length; ++i)
-                        $root.protos.TransactionAction.encode(message.actions[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified Transaction message, length delimited. Does not implicitly {@link protos.Transaction.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof protos.Transaction
-             * @static
-             * @param {protos.ITransaction} message Transaction message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            Transaction.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a Transaction message from the specified reader or buffer.
-             * @function decode
-             * @memberof protos.Transaction
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {protos.Transaction} Transaction
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            Transaction.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.Transaction();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        if (!(message.actions && message.actions.length))
-                            message.actions = [];
-                        message.actions.push($root.protos.TransactionAction.decode(reader, reader.uint32()));
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a Transaction message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof protos.Transaction
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {protos.Transaction} Transaction
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            Transaction.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a Transaction message.
-             * @function verify
-             * @memberof protos.Transaction
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            Transaction.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (message.actions != null && message.hasOwnProperty("actions")) {
-                    if (!Array.isArray(message.actions))
-                        return "actions: array expected";
-                    for (var i = 0; i < message.actions.length; ++i) {
-                        var error = $root.protos.TransactionAction.verify(message.actions[i]);
-                        if (error)
-                            return "actions." + error;
-                    }
-                }
-                return null;
-            };
-    
-            /**
-             * Creates a Transaction message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof protos.Transaction
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {protos.Transaction} Transaction
-             */
-            Transaction.fromObject = function fromObject(object) {
-                if (object instanceof $root.protos.Transaction)
-                    return object;
-                var message = new $root.protos.Transaction();
-                if (object.actions) {
-                    if (!Array.isArray(object.actions))
-                        throw TypeError(".protos.Transaction.actions: array expected");
-                    message.actions = [];
-                    for (var i = 0; i < object.actions.length; ++i) {
-                        if (typeof object.actions[i] !== "object")
-                            throw TypeError(".protos.Transaction.actions: object expected");
-                        message.actions[i] = $root.protos.TransactionAction.fromObject(object.actions[i]);
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a Transaction message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof protos.Transaction
-             * @static
-             * @param {protos.Transaction} message Transaction
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            Transaction.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (options.arrays || options.defaults)
-                    object.actions = [];
-                if (message.actions && message.actions.length) {
-                    object.actions = [];
-                    for (var j = 0; j < message.actions.length; ++j)
-                        object.actions[j] = $root.protos.TransactionAction.toObject(message.actions[j], options);
-                }
-                return object;
-            };
-    
-            /**
-             * Converts this Transaction to JSON.
-             * @function toJSON
-             * @memberof protos.Transaction
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            Transaction.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return Transaction;
-        })();
-    
-        protos.TransactionAction = (function() {
-    
-            /**
-             * Properties of a TransactionAction.
-             * @memberof protos
-             * @interface ITransactionAction
-             * @property {Uint8Array|null} [header] TransactionAction header
-             * @property {Uint8Array|null} [payload] TransactionAction payload
-             */
-    
-            /**
-             * Constructs a new TransactionAction.
-             * @memberof protos
-             * @classdesc Represents a TransactionAction.
-             * @implements ITransactionAction
-             * @constructor
-             * @param {protos.ITransactionAction=} [properties] Properties to set
-             */
-            function TransactionAction(properties) {
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * TransactionAction header.
-             * @member {Uint8Array} header
-             * @memberof protos.TransactionAction
-             * @instance
-             */
-            TransactionAction.prototype.header = $util.newBuffer([]);
-    
-            /**
-             * TransactionAction payload.
-             * @member {Uint8Array} payload
-             * @memberof protos.TransactionAction
-             * @instance
-             */
-            TransactionAction.prototype.payload = $util.newBuffer([]);
-    
-            /**
-             * Creates a new TransactionAction instance using the specified properties.
-             * @function create
-             * @memberof protos.TransactionAction
-             * @static
-             * @param {protos.ITransactionAction=} [properties] Properties to set
-             * @returns {protos.TransactionAction} TransactionAction instance
-             */
-            TransactionAction.create = function create(properties) {
-                return new TransactionAction(properties);
-            };
-    
-            /**
-             * Encodes the specified TransactionAction message. Does not implicitly {@link protos.TransactionAction.verify|verify} messages.
-             * @function encode
-             * @memberof protos.TransactionAction
-             * @static
-             * @param {protos.ITransactionAction} message TransactionAction message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            TransactionAction.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.header != null && Object.hasOwnProperty.call(message, "header"))
-                    writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.header);
-                if (message.payload != null && Object.hasOwnProperty.call(message, "payload"))
-                    writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.payload);
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified TransactionAction message, length delimited. Does not implicitly {@link protos.TransactionAction.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof protos.TransactionAction
-             * @static
-             * @param {protos.ITransactionAction} message TransactionAction message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            TransactionAction.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a TransactionAction message from the specified reader or buffer.
-             * @function decode
-             * @memberof protos.TransactionAction
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {protos.TransactionAction} TransactionAction
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            TransactionAction.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.TransactionAction();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        message.header = reader.bytes();
-                        break;
-                    case 2:
-                        message.payload = reader.bytes();
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a TransactionAction message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof protos.TransactionAction
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {protos.TransactionAction} TransactionAction
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            TransactionAction.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a TransactionAction message.
-             * @function verify
-             * @memberof protos.TransactionAction
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            TransactionAction.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (message.header != null && message.hasOwnProperty("header"))
-                    if (!(message.header && typeof message.header.length === "number" || $util.isString(message.header)))
-                        return "header: buffer expected";
-                if (message.payload != null && message.hasOwnProperty("payload"))
-                    if (!(message.payload && typeof message.payload.length === "number" || $util.isString(message.payload)))
-                        return "payload: buffer expected";
-                return null;
-            };
-    
-            /**
-             * Creates a TransactionAction message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof protos.TransactionAction
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {protos.TransactionAction} TransactionAction
-             */
-            TransactionAction.fromObject = function fromObject(object) {
-                if (object instanceof $root.protos.TransactionAction)
-                    return object;
-                var message = new $root.protos.TransactionAction();
-                if (object.header != null)
-                    if (typeof object.header === "string")
-                        $util.base64.decode(object.header, message.header = $util.newBuffer($util.base64.length(object.header)), 0);
-                    else if (object.header.length)
-                        message.header = object.header;
-                if (object.payload != null)
-                    if (typeof object.payload === "string")
-                        $util.base64.decode(object.payload, message.payload = $util.newBuffer($util.base64.length(object.payload)), 0);
-                    else if (object.payload.length)
-                        message.payload = object.payload;
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a TransactionAction message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof protos.TransactionAction
-             * @static
-             * @param {protos.TransactionAction} message TransactionAction
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            TransactionAction.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (options.defaults) {
-                    if (options.bytes === String)
-                        object.header = "";
-                    else {
-                        object.header = [];
-                        if (options.bytes !== Array)
-                            object.header = $util.newBuffer(object.header);
-                    }
-                    if (options.bytes === String)
-                        object.payload = "";
-                    else {
-                        object.payload = [];
-                        if (options.bytes !== Array)
-                            object.payload = $util.newBuffer(object.payload);
-                    }
-                }
-                if (message.header != null && message.hasOwnProperty("header"))
-                    object.header = options.bytes === String ? $util.base64.encode(message.header, 0, message.header.length) : options.bytes === Array ? Array.prototype.slice.call(message.header) : message.header;
-                if (message.payload != null && message.hasOwnProperty("payload"))
-                    object.payload = options.bytes === String ? $util.base64.encode(message.payload, 0, message.payload.length) : options.bytes === Array ? Array.prototype.slice.call(message.payload) : message.payload;
-                return object;
-            };
-    
-            /**
-             * Converts this TransactionAction to JSON.
-             * @function toJSON
-             * @memberof protos.TransactionAction
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            TransactionAction.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return TransactionAction;
-        })();
-    
-        protos.ChaincodeActionPayload = (function() {
-    
-            /**
-             * Properties of a ChaincodeActionPayload.
-             * @memberof protos
-             * @interface IChaincodeActionPayload
-             * @property {Uint8Array|null} [chaincode_proposal_payload] ChaincodeActionPayload chaincode_proposal_payload
-             * @property {protos.IChaincodeEndorsedAction|null} [action] ChaincodeActionPayload action
-             */
-    
-            /**
-             * Constructs a new ChaincodeActionPayload.
-             * @memberof protos
-             * @classdesc Represents a ChaincodeActionPayload.
-             * @implements IChaincodeActionPayload
-             * @constructor
-             * @param {protos.IChaincodeActionPayload=} [properties] Properties to set
-             */
-            function ChaincodeActionPayload(properties) {
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * ChaincodeActionPayload chaincode_proposal_payload.
-             * @member {Uint8Array} chaincode_proposal_payload
-             * @memberof protos.ChaincodeActionPayload
-             * @instance
-             */
-            ChaincodeActionPayload.prototype.chaincode_proposal_payload = $util.newBuffer([]);
-    
-            /**
-             * ChaincodeActionPayload action.
-             * @member {protos.IChaincodeEndorsedAction|null|undefined} action
-             * @memberof protos.ChaincodeActionPayload
-             * @instance
-             */
-            ChaincodeActionPayload.prototype.action = null;
-    
-            /**
-             * Creates a new ChaincodeActionPayload instance using the specified properties.
-             * @function create
-             * @memberof protos.ChaincodeActionPayload
-             * @static
-             * @param {protos.IChaincodeActionPayload=} [properties] Properties to set
-             * @returns {protos.ChaincodeActionPayload} ChaincodeActionPayload instance
-             */
-            ChaincodeActionPayload.create = function create(properties) {
-                return new ChaincodeActionPayload(properties);
-            };
-    
-            /**
-             * Encodes the specified ChaincodeActionPayload message. Does not implicitly {@link protos.ChaincodeActionPayload.verify|verify} messages.
-             * @function encode
-             * @memberof protos.ChaincodeActionPayload
-             * @static
-             * @param {protos.IChaincodeActionPayload} message ChaincodeActionPayload message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            ChaincodeActionPayload.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.chaincode_proposal_payload != null && Object.hasOwnProperty.call(message, "chaincode_proposal_payload"))
-                    writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.chaincode_proposal_payload);
-                if (message.action != null && Object.hasOwnProperty.call(message, "action"))
-                    $root.protos.ChaincodeEndorsedAction.encode(message.action, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified ChaincodeActionPayload message, length delimited. Does not implicitly {@link protos.ChaincodeActionPayload.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof protos.ChaincodeActionPayload
-             * @static
-             * @param {protos.IChaincodeActionPayload} message ChaincodeActionPayload message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            ChaincodeActionPayload.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a ChaincodeActionPayload message from the specified reader or buffer.
-             * @function decode
-             * @memberof protos.ChaincodeActionPayload
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {protos.ChaincodeActionPayload} ChaincodeActionPayload
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            ChaincodeActionPayload.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.ChaincodeActionPayload();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        message.chaincode_proposal_payload = reader.bytes();
-                        break;
-                    case 2:
-                        message.action = $root.protos.ChaincodeEndorsedAction.decode(reader, reader.uint32());
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a ChaincodeActionPayload message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof protos.ChaincodeActionPayload
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {protos.ChaincodeActionPayload} ChaincodeActionPayload
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            ChaincodeActionPayload.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a ChaincodeActionPayload message.
-             * @function verify
-             * @memberof protos.ChaincodeActionPayload
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            ChaincodeActionPayload.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (message.chaincode_proposal_payload != null && message.hasOwnProperty("chaincode_proposal_payload"))
-                    if (!(message.chaincode_proposal_payload && typeof message.chaincode_proposal_payload.length === "number" || $util.isString(message.chaincode_proposal_payload)))
-                        return "chaincode_proposal_payload: buffer expected";
-                if (message.action != null && message.hasOwnProperty("action")) {
-                    var error = $root.protos.ChaincodeEndorsedAction.verify(message.action);
-                    if (error)
-                        return "action." + error;
-                }
-                return null;
-            };
-    
-            /**
-             * Creates a ChaincodeActionPayload message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof protos.ChaincodeActionPayload
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {protos.ChaincodeActionPayload} ChaincodeActionPayload
-             */
-            ChaincodeActionPayload.fromObject = function fromObject(object) {
-                if (object instanceof $root.protos.ChaincodeActionPayload)
-                    return object;
-                var message = new $root.protos.ChaincodeActionPayload();
-                if (object.chaincode_proposal_payload != null)
-                    if (typeof object.chaincode_proposal_payload === "string")
-                        $util.base64.decode(object.chaincode_proposal_payload, message.chaincode_proposal_payload = $util.newBuffer($util.base64.length(object.chaincode_proposal_payload)), 0);
-                    else if (object.chaincode_proposal_payload.length)
-                        message.chaincode_proposal_payload = object.chaincode_proposal_payload;
-                if (object.action != null) {
-                    if (typeof object.action !== "object")
-                        throw TypeError(".protos.ChaincodeActionPayload.action: object expected");
-                    message.action = $root.protos.ChaincodeEndorsedAction.fromObject(object.action);
-                }
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a ChaincodeActionPayload message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof protos.ChaincodeActionPayload
-             * @static
-             * @param {protos.ChaincodeActionPayload} message ChaincodeActionPayload
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            ChaincodeActionPayload.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (options.defaults) {
-                    if (options.bytes === String)
-                        object.chaincode_proposal_payload = "";
-                    else {
-                        object.chaincode_proposal_payload = [];
-                        if (options.bytes !== Array)
-                            object.chaincode_proposal_payload = $util.newBuffer(object.chaincode_proposal_payload);
-                    }
-                    object.action = null;
-                }
-                if (message.chaincode_proposal_payload != null && message.hasOwnProperty("chaincode_proposal_payload"))
-                    object.chaincode_proposal_payload = options.bytes === String ? $util.base64.encode(message.chaincode_proposal_payload, 0, message.chaincode_proposal_payload.length) : options.bytes === Array ? Array.prototype.slice.call(message.chaincode_proposal_payload) : message.chaincode_proposal_payload;
-                if (message.action != null && message.hasOwnProperty("action"))
-                    object.action = $root.protos.ChaincodeEndorsedAction.toObject(message.action, options);
-                return object;
-            };
-    
-            /**
-             * Converts this ChaincodeActionPayload to JSON.
-             * @function toJSON
-             * @memberof protos.ChaincodeActionPayload
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            ChaincodeActionPayload.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return ChaincodeActionPayload;
-        })();
-    
-        protos.ChaincodeEndorsedAction = (function() {
-    
-            /**
-             * Properties of a ChaincodeEndorsedAction.
-             * @memberof protos
-             * @interface IChaincodeEndorsedAction
-             * @property {Uint8Array|null} [proposal_response_payload] ChaincodeEndorsedAction proposal_response_payload
-             * @property {Array.<protos.IEndorsement>|null} [endorsements] ChaincodeEndorsedAction endorsements
-             */
-    
-            /**
-             * Constructs a new ChaincodeEndorsedAction.
-             * @memberof protos
-             * @classdesc Represents a ChaincodeEndorsedAction.
-             * @implements IChaincodeEndorsedAction
-             * @constructor
-             * @param {protos.IChaincodeEndorsedAction=} [properties] Properties to set
-             */
-            function ChaincodeEndorsedAction(properties) {
-                this.endorsements = [];
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * ChaincodeEndorsedAction proposal_response_payload.
-             * @member {Uint8Array} proposal_response_payload
-             * @memberof protos.ChaincodeEndorsedAction
-             * @instance
-             */
-            ChaincodeEndorsedAction.prototype.proposal_response_payload = $util.newBuffer([]);
-    
-            /**
-             * ChaincodeEndorsedAction endorsements.
-             * @member {Array.<protos.IEndorsement>} endorsements
-             * @memberof protos.ChaincodeEndorsedAction
-             * @instance
-             */
-            ChaincodeEndorsedAction.prototype.endorsements = $util.emptyArray;
-    
-            /**
-             * Creates a new ChaincodeEndorsedAction instance using the specified properties.
-             * @function create
-             * @memberof protos.ChaincodeEndorsedAction
-             * @static
-             * @param {protos.IChaincodeEndorsedAction=} [properties] Properties to set
-             * @returns {protos.ChaincodeEndorsedAction} ChaincodeEndorsedAction instance
-             */
-            ChaincodeEndorsedAction.create = function create(properties) {
-                return new ChaincodeEndorsedAction(properties);
-            };
-    
-            /**
-             * Encodes the specified ChaincodeEndorsedAction message. Does not implicitly {@link protos.ChaincodeEndorsedAction.verify|verify} messages.
-             * @function encode
-             * @memberof protos.ChaincodeEndorsedAction
-             * @static
-             * @param {protos.IChaincodeEndorsedAction} message ChaincodeEndorsedAction message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            ChaincodeEndorsedAction.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.proposal_response_payload != null && Object.hasOwnProperty.call(message, "proposal_response_payload"))
-                    writer.uint32(/* id 1, wireType 2 =*/10).bytes(message.proposal_response_payload);
-                if (message.endorsements != null && message.endorsements.length)
-                    for (var i = 0; i < message.endorsements.length; ++i)
-                        $root.protos.Endorsement.encode(message.endorsements[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified ChaincodeEndorsedAction message, length delimited. Does not implicitly {@link protos.ChaincodeEndorsedAction.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof protos.ChaincodeEndorsedAction
-             * @static
-             * @param {protos.IChaincodeEndorsedAction} message ChaincodeEndorsedAction message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            ChaincodeEndorsedAction.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a ChaincodeEndorsedAction message from the specified reader or buffer.
-             * @function decode
-             * @memberof protos.ChaincodeEndorsedAction
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {protos.ChaincodeEndorsedAction} ChaincodeEndorsedAction
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            ChaincodeEndorsedAction.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.ChaincodeEndorsedAction();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        message.proposal_response_payload = reader.bytes();
-                        break;
-                    case 2:
-                        if (!(message.endorsements && message.endorsements.length))
-                            message.endorsements = [];
-                        message.endorsements.push($root.protos.Endorsement.decode(reader, reader.uint32()));
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a ChaincodeEndorsedAction message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof protos.ChaincodeEndorsedAction
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {protos.ChaincodeEndorsedAction} ChaincodeEndorsedAction
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            ChaincodeEndorsedAction.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a ChaincodeEndorsedAction message.
-             * @function verify
-             * @memberof protos.ChaincodeEndorsedAction
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            ChaincodeEndorsedAction.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (message.proposal_response_payload != null && message.hasOwnProperty("proposal_response_payload"))
-                    if (!(message.proposal_response_payload && typeof message.proposal_response_payload.length === "number" || $util.isString(message.proposal_response_payload)))
-                        return "proposal_response_payload: buffer expected";
-                if (message.endorsements != null && message.hasOwnProperty("endorsements")) {
-                    if (!Array.isArray(message.endorsements))
-                        return "endorsements: array expected";
-                    for (var i = 0; i < message.endorsements.length; ++i) {
-                        var error = $root.protos.Endorsement.verify(message.endorsements[i]);
-                        if (error)
-                            return "endorsements." + error;
-                    }
-                }
-                return null;
-            };
-    
-            /**
-             * Creates a ChaincodeEndorsedAction message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof protos.ChaincodeEndorsedAction
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {protos.ChaincodeEndorsedAction} ChaincodeEndorsedAction
-             */
-            ChaincodeEndorsedAction.fromObject = function fromObject(object) {
-                if (object instanceof $root.protos.ChaincodeEndorsedAction)
-                    return object;
-                var message = new $root.protos.ChaincodeEndorsedAction();
-                if (object.proposal_response_payload != null)
-                    if (typeof object.proposal_response_payload === "string")
-                        $util.base64.decode(object.proposal_response_payload, message.proposal_response_payload = $util.newBuffer($util.base64.length(object.proposal_response_payload)), 0);
-                    else if (object.proposal_response_payload.length)
-                        message.proposal_response_payload = object.proposal_response_payload;
-                if (object.endorsements) {
-                    if (!Array.isArray(object.endorsements))
-                        throw TypeError(".protos.ChaincodeEndorsedAction.endorsements: array expected");
-                    message.endorsements = [];
-                    for (var i = 0; i < object.endorsements.length; ++i) {
-                        if (typeof object.endorsements[i] !== "object")
-                            throw TypeError(".protos.ChaincodeEndorsedAction.endorsements: object expected");
-                        message.endorsements[i] = $root.protos.Endorsement.fromObject(object.endorsements[i]);
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a ChaincodeEndorsedAction message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof protos.ChaincodeEndorsedAction
-             * @static
-             * @param {protos.ChaincodeEndorsedAction} message ChaincodeEndorsedAction
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            ChaincodeEndorsedAction.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (options.arrays || options.defaults)
-                    object.endorsements = [];
-                if (options.defaults)
-                    if (options.bytes === String)
-                        object.proposal_response_payload = "";
-                    else {
-                        object.proposal_response_payload = [];
-                        if (options.bytes !== Array)
-                            object.proposal_response_payload = $util.newBuffer(object.proposal_response_payload);
-                    }
-                if (message.proposal_response_payload != null && message.hasOwnProperty("proposal_response_payload"))
-                    object.proposal_response_payload = options.bytes === String ? $util.base64.encode(message.proposal_response_payload, 0, message.proposal_response_payload.length) : options.bytes === Array ? Array.prototype.slice.call(message.proposal_response_payload) : message.proposal_response_payload;
-                if (message.endorsements && message.endorsements.length) {
-                    object.endorsements = [];
-                    for (var j = 0; j < message.endorsements.length; ++j)
-                        object.endorsements[j] = $root.protos.Endorsement.toObject(message.endorsements[j], options);
-                }
-                return object;
-            };
-    
-            /**
-             * Converts this ChaincodeEndorsedAction to JSON.
-             * @function toJSON
-             * @memberof protos.ChaincodeEndorsedAction
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            ChaincodeEndorsedAction.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return ChaincodeEndorsedAction;
-        })();
-    
-        /**
-         * TxValidationCode enum.
-         * @name protos.TxValidationCode
-         * @enum {number}
-         * @property {number} VALID=0 VALID value
-         * @property {number} NIL_ENVELOPE=1 NIL_ENVELOPE value
-         * @property {number} BAD_PAYLOAD=2 BAD_PAYLOAD value
-         * @property {number} BAD_COMMON_HEADER=3 BAD_COMMON_HEADER value
-         * @property {number} BAD_CREATOR_SIGNATURE=4 BAD_CREATOR_SIGNATURE value
-         * @property {number} INVALID_ENDORSER_TRANSACTION=5 INVALID_ENDORSER_TRANSACTION value
-         * @property {number} INVALID_CONFIG_TRANSACTION=6 INVALID_CONFIG_TRANSACTION value
-         * @property {number} UNSUPPORTED_TX_PAYLOAD=7 UNSUPPORTED_TX_PAYLOAD value
-         * @property {number} BAD_PROPOSAL_TXID=8 BAD_PROPOSAL_TXID value
-         * @property {number} DUPLICATE_TXID=9 DUPLICATE_TXID value
-         * @property {number} ENDORSEMENT_POLICY_FAILURE=10 ENDORSEMENT_POLICY_FAILURE value
-         * @property {number} MVCC_READ_CONFLICT=11 MVCC_READ_CONFLICT value
-         * @property {number} PHANTOM_READ_CONFLICT=12 PHANTOM_READ_CONFLICT value
-         * @property {number} UNKNOWN_TX_TYPE=13 UNKNOWN_TX_TYPE value
-         * @property {number} TARGET_CHAIN_NOT_FOUND=14 TARGET_CHAIN_NOT_FOUND value
-         * @property {number} MARSHAL_TX_ERROR=15 MARSHAL_TX_ERROR value
-         * @property {number} NIL_TXACTION=16 NIL_TXACTION value
-         * @property {number} EXPIRED_CHAINCODE=17 EXPIRED_CHAINCODE value
-         * @property {number} CHAINCODE_VERSION_CONFLICT=18 CHAINCODE_VERSION_CONFLICT value
-         * @property {number} BAD_HEADER_EXTENSION=19 BAD_HEADER_EXTENSION value
-         * @property {number} BAD_CHANNEL_HEADER=20 BAD_CHANNEL_HEADER value
-         * @property {number} BAD_RESPONSE_PAYLOAD=21 BAD_RESPONSE_PAYLOAD value
-         * @property {number} BAD_RWSET=22 BAD_RWSET value
-         * @property {number} ILLEGAL_WRITESET=23 ILLEGAL_WRITESET value
-         * @property {number} INVALID_WRITESET=24 INVALID_WRITESET value
-         * @property {number} INVALID_CHAINCODE=25 INVALID_CHAINCODE value
-         * @property {number} NOT_VALIDATED=254 NOT_VALIDATED value
-         * @property {number} INVALID_OTHER_REASON=255 INVALID_OTHER_REASON value
-         */
-        protos.TxValidationCode = (function() {
-            var valuesById = {}, values = Object.create(valuesById);
-            values[valuesById[0] = "VALID"] = 0;
-            values[valuesById[1] = "NIL_ENVELOPE"] = 1;
-            values[valuesById[2] = "BAD_PAYLOAD"] = 2;
-            values[valuesById[3] = "BAD_COMMON_HEADER"] = 3;
-            values[valuesById[4] = "BAD_CREATOR_SIGNATURE"] = 4;
-            values[valuesById[5] = "INVALID_ENDORSER_TRANSACTION"] = 5;
-            values[valuesById[6] = "INVALID_CONFIG_TRANSACTION"] = 6;
-            values[valuesById[7] = "UNSUPPORTED_TX_PAYLOAD"] = 7;
-            values[valuesById[8] = "BAD_PROPOSAL_TXID"] = 8;
-            values[valuesById[9] = "DUPLICATE_TXID"] = 9;
-            values[valuesById[10] = "ENDORSEMENT_POLICY_FAILURE"] = 10;
-            values[valuesById[11] = "MVCC_READ_CONFLICT"] = 11;
-            values[valuesById[12] = "PHANTOM_READ_CONFLICT"] = 12;
-            values[valuesById[13] = "UNKNOWN_TX_TYPE"] = 13;
-            values[valuesById[14] = "TARGET_CHAIN_NOT_FOUND"] = 14;
-            values[valuesById[15] = "MARSHAL_TX_ERROR"] = 15;
-            values[valuesById[16] = "NIL_TXACTION"] = 16;
-            values[valuesById[17] = "EXPIRED_CHAINCODE"] = 17;
-            values[valuesById[18] = "CHAINCODE_VERSION_CONFLICT"] = 18;
-            values[valuesById[19] = "BAD_HEADER_EXTENSION"] = 19;
-            values[valuesById[20] = "BAD_CHANNEL_HEADER"] = 20;
-            values[valuesById[21] = "BAD_RESPONSE_PAYLOAD"] = 21;
-            values[valuesById[22] = "BAD_RWSET"] = 22;
-            values[valuesById[23] = "ILLEGAL_WRITESET"] = 23;
-            values[valuesById[24] = "INVALID_WRITESET"] = 24;
-            values[valuesById[25] = "INVALID_CHAINCODE"] = 25;
-            values[valuesById[254] = "NOT_VALIDATED"] = 254;
-            values[valuesById[255] = "INVALID_OTHER_REASON"] = 255;
-            return values;
-        })();
-    
-        /**
-         * MetaDataKeys enum.
-         * @name protos.MetaDataKeys
-         * @enum {number}
-         * @property {number} VALIDATION_PARAMETER=0 VALIDATION_PARAMETER value
-         * @property {number} VALIDATION_PARAMETER_V2=1 VALIDATION_PARAMETER_V2 value
-         */
-        protos.MetaDataKeys = (function() {
-            var valuesById = {}, values = Object.create(valuesById);
-            values[valuesById[0] = "VALIDATION_PARAMETER"] = 0;
-            values[valuesById[1] = "VALIDATION_PARAMETER_V2"] = 1;
-            return values;
-        })();
-    
-        protos.Endorser = (function() {
-    
-            /**
-             * Constructs a new Endorser service.
-             * @memberof protos
-             * @classdesc Represents an Endorser
-             * @extends $protobuf.rpc.Service
-             * @constructor
-             * @param {$protobuf.RPCImpl} rpcImpl RPC implementation
-             * @param {boolean} [requestDelimited=false] Whether requests are length-delimited
-             * @param {boolean} [responseDelimited=false] Whether responses are length-delimited
-             */
-            function Endorser(rpcImpl, requestDelimited, responseDelimited) {
-                $protobuf.rpc.Service.call(this, rpcImpl, requestDelimited, responseDelimited);
-            }
-    
-            (Endorser.prototype = Object.create($protobuf.rpc.Service.prototype)).constructor = Endorser;
-    
-            /**
-             * Creates new Endorser service using the specified rpc implementation.
-             * @function create
-             * @memberof protos.Endorser
-             * @static
-             * @param {$protobuf.RPCImpl} rpcImpl RPC implementation
-             * @param {boolean} [requestDelimited=false] Whether requests are length-delimited
-             * @param {boolean} [responseDelimited=false] Whether responses are length-delimited
-             * @returns {Endorser} RPC service. Useful where requests and/or responses are streamed.
-             */
-            Endorser.create = function create(rpcImpl, requestDelimited, responseDelimited) {
-                return new this(rpcImpl, requestDelimited, responseDelimited);
-            };
-    
-            /**
-             * Callback as used by {@link protos.Endorser#processProposal}.
-             * @memberof protos.Endorser
-             * @typedef ProcessProposalCallback
-             * @type {function}
-             * @param {Error|null} error Error, if any
-             * @param {protos.ProposalResponse} [response] ProposalResponse
-             */
-    
-            /**
-             * Calls ProcessProposal.
-             * @function processProposal
-             * @memberof protos.Endorser
-             * @instance
-             * @param {protos.ISignedProposal} request SignedProposal message or plain object
-             * @param {protos.Endorser.ProcessProposalCallback} callback Node-style callback called with the error, if any, and ProposalResponse
-             * @returns {undefined}
-             * @variation 1
-             */
-            Object.defineProperty(Endorser.prototype.processProposal = function processProposal(request, callback) {
-                return this.rpcCall(processProposal, $root.protos.SignedProposal, $root.protos.ProposalResponse, request, callback);
-            }, "name", { value: "ProcessProposal" });
-    
-            /**
-             * Calls ProcessProposal.
-             * @function processProposal
-             * @memberof protos.Endorser
-             * @instance
-             * @param {protos.ISignedProposal} request SignedProposal message or plain object
-             * @returns {Promise<protos.ProposalResponse>} Promise
-             * @variation 2
-             */
-    
-            return Endorser;
-        })();
-    
-        protos.ChaincodeQueryResponse = (function() {
-    
-            /**
-             * Properties of a ChaincodeQueryResponse.
-             * @memberof protos
-             * @interface IChaincodeQueryResponse
-             * @property {Array.<protos.IChaincodeInfo>|null} [chaincodes] ChaincodeQueryResponse chaincodes
-             */
-    
-            /**
-             * Constructs a new ChaincodeQueryResponse.
-             * @memberof protos
-             * @classdesc Represents a ChaincodeQueryResponse.
-             * @implements IChaincodeQueryResponse
-             * @constructor
-             * @param {protos.IChaincodeQueryResponse=} [properties] Properties to set
-             */
-            function ChaincodeQueryResponse(properties) {
-                this.chaincodes = [];
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * ChaincodeQueryResponse chaincodes.
-             * @member {Array.<protos.IChaincodeInfo>} chaincodes
-             * @memberof protos.ChaincodeQueryResponse
-             * @instance
-             */
-            ChaincodeQueryResponse.prototype.chaincodes = $util.emptyArray;
-    
-            /**
-             * Creates a new ChaincodeQueryResponse instance using the specified properties.
-             * @function create
-             * @memberof protos.ChaincodeQueryResponse
-             * @static
-             * @param {protos.IChaincodeQueryResponse=} [properties] Properties to set
-             * @returns {protos.ChaincodeQueryResponse} ChaincodeQueryResponse instance
-             */
-            ChaincodeQueryResponse.create = function create(properties) {
-                return new ChaincodeQueryResponse(properties);
-            };
-    
-            /**
-             * Encodes the specified ChaincodeQueryResponse message. Does not implicitly {@link protos.ChaincodeQueryResponse.verify|verify} messages.
-             * @function encode
-             * @memberof protos.ChaincodeQueryResponse
-             * @static
-             * @param {protos.IChaincodeQueryResponse} message ChaincodeQueryResponse message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            ChaincodeQueryResponse.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.chaincodes != null && message.chaincodes.length)
-                    for (var i = 0; i < message.chaincodes.length; ++i)
-                        $root.protos.ChaincodeInfo.encode(message.chaincodes[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified ChaincodeQueryResponse message, length delimited. Does not implicitly {@link protos.ChaincodeQueryResponse.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof protos.ChaincodeQueryResponse
-             * @static
-             * @param {protos.IChaincodeQueryResponse} message ChaincodeQueryResponse message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            ChaincodeQueryResponse.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a ChaincodeQueryResponse message from the specified reader or buffer.
-             * @function decode
-             * @memberof protos.ChaincodeQueryResponse
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {protos.ChaincodeQueryResponse} ChaincodeQueryResponse
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            ChaincodeQueryResponse.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.ChaincodeQueryResponse();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        if (!(message.chaincodes && message.chaincodes.length))
-                            message.chaincodes = [];
-                        message.chaincodes.push($root.protos.ChaincodeInfo.decode(reader, reader.uint32()));
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a ChaincodeQueryResponse message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof protos.ChaincodeQueryResponse
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {protos.ChaincodeQueryResponse} ChaincodeQueryResponse
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            ChaincodeQueryResponse.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a ChaincodeQueryResponse message.
-             * @function verify
-             * @memberof protos.ChaincodeQueryResponse
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            ChaincodeQueryResponse.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (message.chaincodes != null && message.hasOwnProperty("chaincodes")) {
-                    if (!Array.isArray(message.chaincodes))
-                        return "chaincodes: array expected";
-                    for (var i = 0; i < message.chaincodes.length; ++i) {
-                        var error = $root.protos.ChaincodeInfo.verify(message.chaincodes[i]);
-                        if (error)
-                            return "chaincodes." + error;
-                    }
-                }
-                return null;
-            };
-    
-            /**
-             * Creates a ChaincodeQueryResponse message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof protos.ChaincodeQueryResponse
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {protos.ChaincodeQueryResponse} ChaincodeQueryResponse
-             */
-            ChaincodeQueryResponse.fromObject = function fromObject(object) {
-                if (object instanceof $root.protos.ChaincodeQueryResponse)
-                    return object;
-                var message = new $root.protos.ChaincodeQueryResponse();
-                if (object.chaincodes) {
-                    if (!Array.isArray(object.chaincodes))
-                        throw TypeError(".protos.ChaincodeQueryResponse.chaincodes: array expected");
-                    message.chaincodes = [];
-                    for (var i = 0; i < object.chaincodes.length; ++i) {
-                        if (typeof object.chaincodes[i] !== "object")
-                            throw TypeError(".protos.ChaincodeQueryResponse.chaincodes: object expected");
-                        message.chaincodes[i] = $root.protos.ChaincodeInfo.fromObject(object.chaincodes[i]);
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a ChaincodeQueryResponse message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof protos.ChaincodeQueryResponse
-             * @static
-             * @param {protos.ChaincodeQueryResponse} message ChaincodeQueryResponse
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            ChaincodeQueryResponse.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (options.arrays || options.defaults)
-                    object.chaincodes = [];
-                if (message.chaincodes && message.chaincodes.length) {
-                    object.chaincodes = [];
-                    for (var j = 0; j < message.chaincodes.length; ++j)
-                        object.chaincodes[j] = $root.protos.ChaincodeInfo.toObject(message.chaincodes[j], options);
-                }
-                return object;
-            };
-    
-            /**
-             * Converts this ChaincodeQueryResponse to JSON.
-             * @function toJSON
-             * @memberof protos.ChaincodeQueryResponse
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            ChaincodeQueryResponse.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return ChaincodeQueryResponse;
-        })();
-    
-        protos.ChaincodeInfo = (function() {
-    
-            /**
-             * Properties of a ChaincodeInfo.
-             * @memberof protos
-             * @interface IChaincodeInfo
-             * @property {string|null} [name] ChaincodeInfo name
-             * @property {string|null} [version] ChaincodeInfo version
-             * @property {string|null} [path] ChaincodeInfo path
-             * @property {string|null} [input] ChaincodeInfo input
-             * @property {string|null} [escc] ChaincodeInfo escc
-             * @property {string|null} [vscc] ChaincodeInfo vscc
-             * @property {Uint8Array|null} [id] ChaincodeInfo id
-             */
-    
-            /**
-             * Constructs a new ChaincodeInfo.
-             * @memberof protos
-             * @classdesc Represents a ChaincodeInfo.
-             * @implements IChaincodeInfo
-             * @constructor
-             * @param {protos.IChaincodeInfo=} [properties] Properties to set
-             */
-            function ChaincodeInfo(properties) {
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * ChaincodeInfo name.
-             * @member {string} name
-             * @memberof protos.ChaincodeInfo
-             * @instance
-             */
-            ChaincodeInfo.prototype.name = "";
-    
-            /**
-             * ChaincodeInfo version.
-             * @member {string} version
-             * @memberof protos.ChaincodeInfo
-             * @instance
-             */
-            ChaincodeInfo.prototype.version = "";
-    
-            /**
-             * ChaincodeInfo path.
-             * @member {string} path
-             * @memberof protos.ChaincodeInfo
-             * @instance
-             */
-            ChaincodeInfo.prototype.path = "";
-    
-            /**
-             * ChaincodeInfo input.
-             * @member {string} input
-             * @memberof protos.ChaincodeInfo
-             * @instance
-             */
-            ChaincodeInfo.prototype.input = "";
-    
-            /**
-             * ChaincodeInfo escc.
-             * @member {string} escc
-             * @memberof protos.ChaincodeInfo
-             * @instance
-             */
-            ChaincodeInfo.prototype.escc = "";
-    
-            /**
-             * ChaincodeInfo vscc.
-             * @member {string} vscc
-             * @memberof protos.ChaincodeInfo
-             * @instance
-             */
-            ChaincodeInfo.prototype.vscc = "";
-    
-            /**
-             * ChaincodeInfo id.
-             * @member {Uint8Array} id
-             * @memberof protos.ChaincodeInfo
-             * @instance
-             */
-            ChaincodeInfo.prototype.id = $util.newBuffer([]);
-    
-            /**
-             * Creates a new ChaincodeInfo instance using the specified properties.
-             * @function create
-             * @memberof protos.ChaincodeInfo
-             * @static
-             * @param {protos.IChaincodeInfo=} [properties] Properties to set
-             * @returns {protos.ChaincodeInfo} ChaincodeInfo instance
-             */
-            ChaincodeInfo.create = function create(properties) {
-                return new ChaincodeInfo(properties);
-            };
-    
-            /**
-             * Encodes the specified ChaincodeInfo message. Does not implicitly {@link protos.ChaincodeInfo.verify|verify} messages.
-             * @function encode
-             * @memberof protos.ChaincodeInfo
-             * @static
-             * @param {protos.IChaincodeInfo} message ChaincodeInfo message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            ChaincodeInfo.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.name != null && Object.hasOwnProperty.call(message, "name"))
-                    writer.uint32(/* id 1, wireType 2 =*/10).string(message.name);
-                if (message.version != null && Object.hasOwnProperty.call(message, "version"))
-                    writer.uint32(/* id 2, wireType 2 =*/18).string(message.version);
-                if (message.path != null && Object.hasOwnProperty.call(message, "path"))
-                    writer.uint32(/* id 3, wireType 2 =*/26).string(message.path);
-                if (message.input != null && Object.hasOwnProperty.call(message, "input"))
-                    writer.uint32(/* id 4, wireType 2 =*/34).string(message.input);
-                if (message.escc != null && Object.hasOwnProperty.call(message, "escc"))
-                    writer.uint32(/* id 5, wireType 2 =*/42).string(message.escc);
-                if (message.vscc != null && Object.hasOwnProperty.call(message, "vscc"))
-                    writer.uint32(/* id 6, wireType 2 =*/50).string(message.vscc);
-                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
-                    writer.uint32(/* id 7, wireType 2 =*/58).bytes(message.id);
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified ChaincodeInfo message, length delimited. Does not implicitly {@link protos.ChaincodeInfo.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof protos.ChaincodeInfo
-             * @static
-             * @param {protos.IChaincodeInfo} message ChaincodeInfo message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            ChaincodeInfo.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a ChaincodeInfo message from the specified reader or buffer.
-             * @function decode
-             * @memberof protos.ChaincodeInfo
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {protos.ChaincodeInfo} ChaincodeInfo
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            ChaincodeInfo.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.ChaincodeInfo();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        message.name = reader.string();
-                        break;
-                    case 2:
-                        message.version = reader.string();
-                        break;
-                    case 3:
-                        message.path = reader.string();
-                        break;
-                    case 4:
-                        message.input = reader.string();
-                        break;
-                    case 5:
-                        message.escc = reader.string();
-                        break;
-                    case 6:
-                        message.vscc = reader.string();
-                        break;
-                    case 7:
-                        message.id = reader.bytes();
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a ChaincodeInfo message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof protos.ChaincodeInfo
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {protos.ChaincodeInfo} ChaincodeInfo
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            ChaincodeInfo.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a ChaincodeInfo message.
-             * @function verify
-             * @memberof protos.ChaincodeInfo
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            ChaincodeInfo.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (message.name != null && message.hasOwnProperty("name"))
-                    if (!$util.isString(message.name))
-                        return "name: string expected";
-                if (message.version != null && message.hasOwnProperty("version"))
-                    if (!$util.isString(message.version))
-                        return "version: string expected";
-                if (message.path != null && message.hasOwnProperty("path"))
-                    if (!$util.isString(message.path))
-                        return "path: string expected";
-                if (message.input != null && message.hasOwnProperty("input"))
-                    if (!$util.isString(message.input))
-                        return "input: string expected";
-                if (message.escc != null && message.hasOwnProperty("escc"))
-                    if (!$util.isString(message.escc))
-                        return "escc: string expected";
-                if (message.vscc != null && message.hasOwnProperty("vscc"))
-                    if (!$util.isString(message.vscc))
-                        return "vscc: string expected";
-                if (message.id != null && message.hasOwnProperty("id"))
-                    if (!(message.id && typeof message.id.length === "number" || $util.isString(message.id)))
-                        return "id: buffer expected";
-                return null;
-            };
-    
-            /**
-             * Creates a ChaincodeInfo message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof protos.ChaincodeInfo
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {protos.ChaincodeInfo} ChaincodeInfo
-             */
-            ChaincodeInfo.fromObject = function fromObject(object) {
-                if (object instanceof $root.protos.ChaincodeInfo)
-                    return object;
-                var message = new $root.protos.ChaincodeInfo();
-                if (object.name != null)
-                    message.name = String(object.name);
-                if (object.version != null)
-                    message.version = String(object.version);
-                if (object.path != null)
-                    message.path = String(object.path);
-                if (object.input != null)
-                    message.input = String(object.input);
-                if (object.escc != null)
-                    message.escc = String(object.escc);
-                if (object.vscc != null)
-                    message.vscc = String(object.vscc);
-                if (object.id != null)
-                    if (typeof object.id === "string")
-                        $util.base64.decode(object.id, message.id = $util.newBuffer($util.base64.length(object.id)), 0);
-                    else if (object.id.length)
-                        message.id = object.id;
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a ChaincodeInfo message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof protos.ChaincodeInfo
-             * @static
-             * @param {protos.ChaincodeInfo} message ChaincodeInfo
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            ChaincodeInfo.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (options.defaults) {
-                    object.name = "";
-                    object.version = "";
-                    object.path = "";
-                    object.input = "";
-                    object.escc = "";
-                    object.vscc = "";
-                    if (options.bytes === String)
-                        object.id = "";
-                    else {
-                        object.id = [];
-                        if (options.bytes !== Array)
-                            object.id = $util.newBuffer(object.id);
-                    }
-                }
-                if (message.name != null && message.hasOwnProperty("name"))
-                    object.name = message.name;
-                if (message.version != null && message.hasOwnProperty("version"))
-                    object.version = message.version;
-                if (message.path != null && message.hasOwnProperty("path"))
-                    object.path = message.path;
-                if (message.input != null && message.hasOwnProperty("input"))
-                    object.input = message.input;
-                if (message.escc != null && message.hasOwnProperty("escc"))
-                    object.escc = message.escc;
-                if (message.vscc != null && message.hasOwnProperty("vscc"))
-                    object.vscc = message.vscc;
-                if (message.id != null && message.hasOwnProperty("id"))
-                    object.id = options.bytes === String ? $util.base64.encode(message.id, 0, message.id.length) : options.bytes === Array ? Array.prototype.slice.call(message.id) : message.id;
-                return object;
-            };
-    
-            /**
-             * Converts this ChaincodeInfo to JSON.
-             * @function toJSON
-             * @memberof protos.ChaincodeInfo
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            ChaincodeInfo.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return ChaincodeInfo;
-        })();
-    
-        protos.ChannelQueryResponse = (function() {
-    
-            /**
-             * Properties of a ChannelQueryResponse.
-             * @memberof protos
-             * @interface IChannelQueryResponse
-             * @property {Array.<protos.IChannelInfo>|null} [channels] ChannelQueryResponse channels
-             */
-    
-            /**
-             * Constructs a new ChannelQueryResponse.
-             * @memberof protos
-             * @classdesc Represents a ChannelQueryResponse.
-             * @implements IChannelQueryResponse
-             * @constructor
-             * @param {protos.IChannelQueryResponse=} [properties] Properties to set
-             */
-            function ChannelQueryResponse(properties) {
-                this.channels = [];
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * ChannelQueryResponse channels.
-             * @member {Array.<protos.IChannelInfo>} channels
-             * @memberof protos.ChannelQueryResponse
-             * @instance
-             */
-            ChannelQueryResponse.prototype.channels = $util.emptyArray;
-    
-            /**
-             * Creates a new ChannelQueryResponse instance using the specified properties.
-             * @function create
-             * @memberof protos.ChannelQueryResponse
-             * @static
-             * @param {protos.IChannelQueryResponse=} [properties] Properties to set
-             * @returns {protos.ChannelQueryResponse} ChannelQueryResponse instance
-             */
-            ChannelQueryResponse.create = function create(properties) {
-                return new ChannelQueryResponse(properties);
-            };
-    
-            /**
-             * Encodes the specified ChannelQueryResponse message. Does not implicitly {@link protos.ChannelQueryResponse.verify|verify} messages.
-             * @function encode
-             * @memberof protos.ChannelQueryResponse
-             * @static
-             * @param {protos.IChannelQueryResponse} message ChannelQueryResponse message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            ChannelQueryResponse.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.channels != null && message.channels.length)
-                    for (var i = 0; i < message.channels.length; ++i)
-                        $root.protos.ChannelInfo.encode(message.channels[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified ChannelQueryResponse message, length delimited. Does not implicitly {@link protos.ChannelQueryResponse.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof protos.ChannelQueryResponse
-             * @static
-             * @param {protos.IChannelQueryResponse} message ChannelQueryResponse message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            ChannelQueryResponse.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a ChannelQueryResponse message from the specified reader or buffer.
-             * @function decode
-             * @memberof protos.ChannelQueryResponse
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {protos.ChannelQueryResponse} ChannelQueryResponse
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            ChannelQueryResponse.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.ChannelQueryResponse();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        if (!(message.channels && message.channels.length))
-                            message.channels = [];
-                        message.channels.push($root.protos.ChannelInfo.decode(reader, reader.uint32()));
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a ChannelQueryResponse message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof protos.ChannelQueryResponse
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {protos.ChannelQueryResponse} ChannelQueryResponse
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            ChannelQueryResponse.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a ChannelQueryResponse message.
-             * @function verify
-             * @memberof protos.ChannelQueryResponse
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            ChannelQueryResponse.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (message.channels != null && message.hasOwnProperty("channels")) {
-                    if (!Array.isArray(message.channels))
-                        return "channels: array expected";
-                    for (var i = 0; i < message.channels.length; ++i) {
-                        var error = $root.protos.ChannelInfo.verify(message.channels[i]);
-                        if (error)
-                            return "channels." + error;
-                    }
-                }
-                return null;
-            };
-    
-            /**
-             * Creates a ChannelQueryResponse message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof protos.ChannelQueryResponse
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {protos.ChannelQueryResponse} ChannelQueryResponse
-             */
-            ChannelQueryResponse.fromObject = function fromObject(object) {
-                if (object instanceof $root.protos.ChannelQueryResponse)
-                    return object;
-                var message = new $root.protos.ChannelQueryResponse();
-                if (object.channels) {
-                    if (!Array.isArray(object.channels))
-                        throw TypeError(".protos.ChannelQueryResponse.channels: array expected");
-                    message.channels = [];
-                    for (var i = 0; i < object.channels.length; ++i) {
-                        if (typeof object.channels[i] !== "object")
-                            throw TypeError(".protos.ChannelQueryResponse.channels: object expected");
-                        message.channels[i] = $root.protos.ChannelInfo.fromObject(object.channels[i]);
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a ChannelQueryResponse message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof protos.ChannelQueryResponse
-             * @static
-             * @param {protos.ChannelQueryResponse} message ChannelQueryResponse
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            ChannelQueryResponse.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (options.arrays || options.defaults)
-                    object.channels = [];
-                if (message.channels && message.channels.length) {
-                    object.channels = [];
-                    for (var j = 0; j < message.channels.length; ++j)
-                        object.channels[j] = $root.protos.ChannelInfo.toObject(message.channels[j], options);
-                }
-                return object;
-            };
-    
-            /**
-             * Converts this ChannelQueryResponse to JSON.
-             * @function toJSON
-             * @memberof protos.ChannelQueryResponse
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            ChannelQueryResponse.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return ChannelQueryResponse;
-        })();
-    
-        protos.ChannelInfo = (function() {
-    
-            /**
-             * Properties of a ChannelInfo.
-             * @memberof protos
-             * @interface IChannelInfo
-             * @property {string|null} [channel_id] ChannelInfo channel_id
-             */
-    
-            /**
-             * Constructs a new ChannelInfo.
-             * @memberof protos
-             * @classdesc Represents a ChannelInfo.
-             * @implements IChannelInfo
-             * @constructor
-             * @param {protos.IChannelInfo=} [properties] Properties to set
-             */
-            function ChannelInfo(properties) {
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * ChannelInfo channel_id.
-             * @member {string} channel_id
-             * @memberof protos.ChannelInfo
-             * @instance
-             */
-            ChannelInfo.prototype.channel_id = "";
-    
-            /**
-             * Creates a new ChannelInfo instance using the specified properties.
-             * @function create
-             * @memberof protos.ChannelInfo
-             * @static
-             * @param {protos.IChannelInfo=} [properties] Properties to set
-             * @returns {protos.ChannelInfo} ChannelInfo instance
-             */
-            ChannelInfo.create = function create(properties) {
-                return new ChannelInfo(properties);
-            };
-    
-            /**
-             * Encodes the specified ChannelInfo message. Does not implicitly {@link protos.ChannelInfo.verify|verify} messages.
-             * @function encode
-             * @memberof protos.ChannelInfo
-             * @static
-             * @param {protos.IChannelInfo} message ChannelInfo message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            ChannelInfo.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.channel_id != null && Object.hasOwnProperty.call(message, "channel_id"))
-                    writer.uint32(/* id 1, wireType 2 =*/10).string(message.channel_id);
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified ChannelInfo message, length delimited. Does not implicitly {@link protos.ChannelInfo.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof protos.ChannelInfo
-             * @static
-             * @param {protos.IChannelInfo} message ChannelInfo message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            ChannelInfo.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a ChannelInfo message from the specified reader or buffer.
-             * @function decode
-             * @memberof protos.ChannelInfo
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {protos.ChannelInfo} ChannelInfo
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            ChannelInfo.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.ChannelInfo();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        message.channel_id = reader.string();
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a ChannelInfo message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof protos.ChannelInfo
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {protos.ChannelInfo} ChannelInfo
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            ChannelInfo.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a ChannelInfo message.
-             * @function verify
-             * @memberof protos.ChannelInfo
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            ChannelInfo.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (message.channel_id != null && message.hasOwnProperty("channel_id"))
-                    if (!$util.isString(message.channel_id))
-                        return "channel_id: string expected";
-                return null;
-            };
-    
-            /**
-             * Creates a ChannelInfo message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof protos.ChannelInfo
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {protos.ChannelInfo} ChannelInfo
-             */
-            ChannelInfo.fromObject = function fromObject(object) {
-                if (object instanceof $root.protos.ChannelInfo)
-                    return object;
-                var message = new $root.protos.ChannelInfo();
-                if (object.channel_id != null)
-                    message.channel_id = String(object.channel_id);
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a ChannelInfo message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof protos.ChannelInfo
-             * @static
-             * @param {protos.ChannelInfo} message ChannelInfo
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            ChannelInfo.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (options.defaults)
-                    object.channel_id = "";
-                if (message.channel_id != null && message.hasOwnProperty("channel_id"))
-                    object.channel_id = message.channel_id;
-                return object;
-            };
-    
-            /**
-             * Converts this ChannelInfo to JSON.
-             * @function toJSON
-             * @memberof protos.ChannelInfo
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            ChannelInfo.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return ChannelInfo;
-        })();
-    
         protos.ChaincodeIdentifier = (function() {
     
             /**
@@ -21771,6 +20007,1840 @@
             return ConfigTree;
         })();
     
+        protos.AnchorPeers = (function() {
+    
+            /**
+             * Properties of an AnchorPeers.
+             * @memberof protos
+             * @interface IAnchorPeers
+             * @property {Array.<protos.IAnchorPeer>|null} [anchor_peers] AnchorPeers anchor_peers
+             */
+    
+            /**
+             * Constructs a new AnchorPeers.
+             * @memberof protos
+             * @classdesc Represents an AnchorPeers.
+             * @implements IAnchorPeers
+             * @constructor
+             * @param {protos.IAnchorPeers=} [properties] Properties to set
+             */
+            function AnchorPeers(properties) {
+                this.anchor_peers = [];
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * AnchorPeers anchor_peers.
+             * @member {Array.<protos.IAnchorPeer>} anchor_peers
+             * @memberof protos.AnchorPeers
+             * @instance
+             */
+            AnchorPeers.prototype.anchor_peers = $util.emptyArray;
+    
+            /**
+             * Creates a new AnchorPeers instance using the specified properties.
+             * @function create
+             * @memberof protos.AnchorPeers
+             * @static
+             * @param {protos.IAnchorPeers=} [properties] Properties to set
+             * @returns {protos.AnchorPeers} AnchorPeers instance
+             */
+            AnchorPeers.create = function create(properties) {
+                return new AnchorPeers(properties);
+            };
+    
+            /**
+             * Encodes the specified AnchorPeers message. Does not implicitly {@link protos.AnchorPeers.verify|verify} messages.
+             * @function encode
+             * @memberof protos.AnchorPeers
+             * @static
+             * @param {protos.IAnchorPeers} message AnchorPeers message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            AnchorPeers.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.anchor_peers != null && message.anchor_peers.length)
+                    for (var i = 0; i < message.anchor_peers.length; ++i)
+                        $root.protos.AnchorPeer.encode(message.anchor_peers[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified AnchorPeers message, length delimited. Does not implicitly {@link protos.AnchorPeers.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof protos.AnchorPeers
+             * @static
+             * @param {protos.IAnchorPeers} message AnchorPeers message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            AnchorPeers.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes an AnchorPeers message from the specified reader or buffer.
+             * @function decode
+             * @memberof protos.AnchorPeers
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {protos.AnchorPeers} AnchorPeers
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            AnchorPeers.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.AnchorPeers();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        if (!(message.anchor_peers && message.anchor_peers.length))
+                            message.anchor_peers = [];
+                        message.anchor_peers.push($root.protos.AnchorPeer.decode(reader, reader.uint32()));
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes an AnchorPeers message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof protos.AnchorPeers
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {protos.AnchorPeers} AnchorPeers
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            AnchorPeers.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies an AnchorPeers message.
+             * @function verify
+             * @memberof protos.AnchorPeers
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            AnchorPeers.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.anchor_peers != null && message.hasOwnProperty("anchor_peers")) {
+                    if (!Array.isArray(message.anchor_peers))
+                        return "anchor_peers: array expected";
+                    for (var i = 0; i < message.anchor_peers.length; ++i) {
+                        var error = $root.protos.AnchorPeer.verify(message.anchor_peers[i]);
+                        if (error)
+                            return "anchor_peers." + error;
+                    }
+                }
+                return null;
+            };
+    
+            /**
+             * Creates an AnchorPeers message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof protos.AnchorPeers
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {protos.AnchorPeers} AnchorPeers
+             */
+            AnchorPeers.fromObject = function fromObject(object) {
+                if (object instanceof $root.protos.AnchorPeers)
+                    return object;
+                var message = new $root.protos.AnchorPeers();
+                if (object.anchor_peers) {
+                    if (!Array.isArray(object.anchor_peers))
+                        throw TypeError(".protos.AnchorPeers.anchor_peers: array expected");
+                    message.anchor_peers = [];
+                    for (var i = 0; i < object.anchor_peers.length; ++i) {
+                        if (typeof object.anchor_peers[i] !== "object")
+                            throw TypeError(".protos.AnchorPeers.anchor_peers: object expected");
+                        message.anchor_peers[i] = $root.protos.AnchorPeer.fromObject(object.anchor_peers[i]);
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from an AnchorPeers message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof protos.AnchorPeers
+             * @static
+             * @param {protos.AnchorPeers} message AnchorPeers
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            AnchorPeers.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.arrays || options.defaults)
+                    object.anchor_peers = [];
+                if (message.anchor_peers && message.anchor_peers.length) {
+                    object.anchor_peers = [];
+                    for (var j = 0; j < message.anchor_peers.length; ++j)
+                        object.anchor_peers[j] = $root.protos.AnchorPeer.toObject(message.anchor_peers[j], options);
+                }
+                return object;
+            };
+    
+            /**
+             * Converts this AnchorPeers to JSON.
+             * @function toJSON
+             * @memberof protos.AnchorPeers
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            AnchorPeers.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return AnchorPeers;
+        })();
+    
+        protos.AnchorPeer = (function() {
+    
+            /**
+             * Properties of an AnchorPeer.
+             * @memberof protos
+             * @interface IAnchorPeer
+             * @property {string|null} [host] AnchorPeer host
+             * @property {number|null} [port] AnchorPeer port
+             */
+    
+            /**
+             * Constructs a new AnchorPeer.
+             * @memberof protos
+             * @classdesc Represents an AnchorPeer.
+             * @implements IAnchorPeer
+             * @constructor
+             * @param {protos.IAnchorPeer=} [properties] Properties to set
+             */
+            function AnchorPeer(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * AnchorPeer host.
+             * @member {string} host
+             * @memberof protos.AnchorPeer
+             * @instance
+             */
+            AnchorPeer.prototype.host = "";
+    
+            /**
+             * AnchorPeer port.
+             * @member {number} port
+             * @memberof protos.AnchorPeer
+             * @instance
+             */
+            AnchorPeer.prototype.port = 0;
+    
+            /**
+             * Creates a new AnchorPeer instance using the specified properties.
+             * @function create
+             * @memberof protos.AnchorPeer
+             * @static
+             * @param {protos.IAnchorPeer=} [properties] Properties to set
+             * @returns {protos.AnchorPeer} AnchorPeer instance
+             */
+            AnchorPeer.create = function create(properties) {
+                return new AnchorPeer(properties);
+            };
+    
+            /**
+             * Encodes the specified AnchorPeer message. Does not implicitly {@link protos.AnchorPeer.verify|verify} messages.
+             * @function encode
+             * @memberof protos.AnchorPeer
+             * @static
+             * @param {protos.IAnchorPeer} message AnchorPeer message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            AnchorPeer.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.host != null && Object.hasOwnProperty.call(message, "host"))
+                    writer.uint32(/* id 1, wireType 2 =*/10).string(message.host);
+                if (message.port != null && Object.hasOwnProperty.call(message, "port"))
+                    writer.uint32(/* id 2, wireType 0 =*/16).int32(message.port);
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified AnchorPeer message, length delimited. Does not implicitly {@link protos.AnchorPeer.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof protos.AnchorPeer
+             * @static
+             * @param {protos.IAnchorPeer} message AnchorPeer message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            AnchorPeer.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes an AnchorPeer message from the specified reader or buffer.
+             * @function decode
+             * @memberof protos.AnchorPeer
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {protos.AnchorPeer} AnchorPeer
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            AnchorPeer.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.AnchorPeer();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.host = reader.string();
+                        break;
+                    case 2:
+                        message.port = reader.int32();
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes an AnchorPeer message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof protos.AnchorPeer
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {protos.AnchorPeer} AnchorPeer
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            AnchorPeer.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies an AnchorPeer message.
+             * @function verify
+             * @memberof protos.AnchorPeer
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            AnchorPeer.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.host != null && message.hasOwnProperty("host"))
+                    if (!$util.isString(message.host))
+                        return "host: string expected";
+                if (message.port != null && message.hasOwnProperty("port"))
+                    if (!$util.isInteger(message.port))
+                        return "port: integer expected";
+                return null;
+            };
+    
+            /**
+             * Creates an AnchorPeer message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof protos.AnchorPeer
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {protos.AnchorPeer} AnchorPeer
+             */
+            AnchorPeer.fromObject = function fromObject(object) {
+                if (object instanceof $root.protos.AnchorPeer)
+                    return object;
+                var message = new $root.protos.AnchorPeer();
+                if (object.host != null)
+                    message.host = String(object.host);
+                if (object.port != null)
+                    message.port = object.port | 0;
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from an AnchorPeer message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof protos.AnchorPeer
+             * @static
+             * @param {protos.AnchorPeer} message AnchorPeer
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            AnchorPeer.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.defaults) {
+                    object.host = "";
+                    object.port = 0;
+                }
+                if (message.host != null && message.hasOwnProperty("host"))
+                    object.host = message.host;
+                if (message.port != null && message.hasOwnProperty("port"))
+                    object.port = message.port;
+                return object;
+            };
+    
+            /**
+             * Converts this AnchorPeer to JSON.
+             * @function toJSON
+             * @memberof protos.AnchorPeer
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            AnchorPeer.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return AnchorPeer;
+        })();
+    
+        protos.APIResource = (function() {
+    
+            /**
+             * Properties of a APIResource.
+             * @memberof protos
+             * @interface IAPIResource
+             * @property {string|null} [policy_ref] APIResource policy_ref
+             */
+    
+            /**
+             * Constructs a new APIResource.
+             * @memberof protos
+             * @classdesc Represents a APIResource.
+             * @implements IAPIResource
+             * @constructor
+             * @param {protos.IAPIResource=} [properties] Properties to set
+             */
+            function APIResource(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * APIResource policy_ref.
+             * @member {string} policy_ref
+             * @memberof protos.APIResource
+             * @instance
+             */
+            APIResource.prototype.policy_ref = "";
+    
+            /**
+             * Creates a new APIResource instance using the specified properties.
+             * @function create
+             * @memberof protos.APIResource
+             * @static
+             * @param {protos.IAPIResource=} [properties] Properties to set
+             * @returns {protos.APIResource} APIResource instance
+             */
+            APIResource.create = function create(properties) {
+                return new APIResource(properties);
+            };
+    
+            /**
+             * Encodes the specified APIResource message. Does not implicitly {@link protos.APIResource.verify|verify} messages.
+             * @function encode
+             * @memberof protos.APIResource
+             * @static
+             * @param {protos.IAPIResource} message APIResource message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            APIResource.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.policy_ref != null && Object.hasOwnProperty.call(message, "policy_ref"))
+                    writer.uint32(/* id 1, wireType 2 =*/10).string(message.policy_ref);
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified APIResource message, length delimited. Does not implicitly {@link protos.APIResource.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof protos.APIResource
+             * @static
+             * @param {protos.IAPIResource} message APIResource message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            APIResource.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a APIResource message from the specified reader or buffer.
+             * @function decode
+             * @memberof protos.APIResource
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {protos.APIResource} APIResource
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            APIResource.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.APIResource();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.policy_ref = reader.string();
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a APIResource message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof protos.APIResource
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {protos.APIResource} APIResource
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            APIResource.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a APIResource message.
+             * @function verify
+             * @memberof protos.APIResource
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            APIResource.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.policy_ref != null && message.hasOwnProperty("policy_ref"))
+                    if (!$util.isString(message.policy_ref))
+                        return "policy_ref: string expected";
+                return null;
+            };
+    
+            /**
+             * Creates a APIResource message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof protos.APIResource
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {protos.APIResource} APIResource
+             */
+            APIResource.fromObject = function fromObject(object) {
+                if (object instanceof $root.protos.APIResource)
+                    return object;
+                var message = new $root.protos.APIResource();
+                if (object.policy_ref != null)
+                    message.policy_ref = String(object.policy_ref);
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a APIResource message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof protos.APIResource
+             * @static
+             * @param {protos.APIResource} message APIResource
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            APIResource.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.defaults)
+                    object.policy_ref = "";
+                if (message.policy_ref != null && message.hasOwnProperty("policy_ref"))
+                    object.policy_ref = message.policy_ref;
+                return object;
+            };
+    
+            /**
+             * Converts this APIResource to JSON.
+             * @function toJSON
+             * @memberof protos.APIResource
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            APIResource.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return APIResource;
+        })();
+    
+        protos.ACLs = (function() {
+    
+            /**
+             * Properties of a ACLs.
+             * @memberof protos
+             * @interface IACLs
+             * @property {Object.<string,protos.IAPIResource>|null} [acls] ACLs acls
+             */
+    
+            /**
+             * Constructs a new ACLs.
+             * @memberof protos
+             * @classdesc Represents a ACLs.
+             * @implements IACLs
+             * @constructor
+             * @param {protos.IACLs=} [properties] Properties to set
+             */
+            function ACLs(properties) {
+                this.acls = {};
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * ACLs acls.
+             * @member {Object.<string,protos.IAPIResource>} acls
+             * @memberof protos.ACLs
+             * @instance
+             */
+            ACLs.prototype.acls = $util.emptyObject;
+    
+            /**
+             * Creates a new ACLs instance using the specified properties.
+             * @function create
+             * @memberof protos.ACLs
+             * @static
+             * @param {protos.IACLs=} [properties] Properties to set
+             * @returns {protos.ACLs} ACLs instance
+             */
+            ACLs.create = function create(properties) {
+                return new ACLs(properties);
+            };
+    
+            /**
+             * Encodes the specified ACLs message. Does not implicitly {@link protos.ACLs.verify|verify} messages.
+             * @function encode
+             * @memberof protos.ACLs
+             * @static
+             * @param {protos.IACLs} message ACLs message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            ACLs.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.acls != null && Object.hasOwnProperty.call(message, "acls"))
+                    for (var keys = Object.keys(message.acls), i = 0; i < keys.length; ++i) {
+                        writer.uint32(/* id 1, wireType 2 =*/10).fork().uint32(/* id 1, wireType 2 =*/10).string(keys[i]);
+                        $root.protos.APIResource.encode(message.acls[keys[i]], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim().ldelim();
+                    }
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified ACLs message, length delimited. Does not implicitly {@link protos.ACLs.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof protos.ACLs
+             * @static
+             * @param {protos.IACLs} message ACLs message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            ACLs.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a ACLs message from the specified reader or buffer.
+             * @function decode
+             * @memberof protos.ACLs
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {protos.ACLs} ACLs
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            ACLs.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.ACLs(), key, value;
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        if (message.acls === $util.emptyObject)
+                            message.acls = {};
+                        var end2 = reader.uint32() + reader.pos;
+                        key = "";
+                        value = null;
+                        while (reader.pos < end2) {
+                            var tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.string();
+                                break;
+                            case 2:
+                                value = $root.protos.APIResource.decode(reader, reader.uint32());
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7);
+                                break;
+                            }
+                        }
+                        message.acls[key] = value;
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a ACLs message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof protos.ACLs
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {protos.ACLs} ACLs
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            ACLs.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a ACLs message.
+             * @function verify
+             * @memberof protos.ACLs
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            ACLs.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.acls != null && message.hasOwnProperty("acls")) {
+                    if (!$util.isObject(message.acls))
+                        return "acls: object expected";
+                    var key = Object.keys(message.acls);
+                    for (var i = 0; i < key.length; ++i) {
+                        var error = $root.protos.APIResource.verify(message.acls[key[i]]);
+                        if (error)
+                            return "acls." + error;
+                    }
+                }
+                return null;
+            };
+    
+            /**
+             * Creates a ACLs message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof protos.ACLs
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {protos.ACLs} ACLs
+             */
+            ACLs.fromObject = function fromObject(object) {
+                if (object instanceof $root.protos.ACLs)
+                    return object;
+                var message = new $root.protos.ACLs();
+                if (object.acls) {
+                    if (typeof object.acls !== "object")
+                        throw TypeError(".protos.ACLs.acls: object expected");
+                    message.acls = {};
+                    for (var keys = Object.keys(object.acls), i = 0; i < keys.length; ++i) {
+                        if (typeof object.acls[keys[i]] !== "object")
+                            throw TypeError(".protos.ACLs.acls: object expected");
+                        message.acls[keys[i]] = $root.protos.APIResource.fromObject(object.acls[keys[i]]);
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a ACLs message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof protos.ACLs
+             * @static
+             * @param {protos.ACLs} message ACLs
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            ACLs.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.objects || options.defaults)
+                    object.acls = {};
+                var keys2;
+                if (message.acls && (keys2 = Object.keys(message.acls)).length) {
+                    object.acls = {};
+                    for (var j = 0; j < keys2.length; ++j)
+                        object.acls[keys2[j]] = $root.protos.APIResource.toObject(message.acls[keys2[j]], options);
+                }
+                return object;
+            };
+    
+            /**
+             * Converts this ACLs to JSON.
+             * @function toJSON
+             * @memberof protos.ACLs
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            ACLs.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return ACLs;
+        })();
+    
+        protos.Endorser = (function() {
+    
+            /**
+             * Constructs a new Endorser service.
+             * @memberof protos
+             * @classdesc Represents an Endorser
+             * @extends $protobuf.rpc.Service
+             * @constructor
+             * @param {$protobuf.RPCImpl} rpcImpl RPC implementation
+             * @param {boolean} [requestDelimited=false] Whether requests are length-delimited
+             * @param {boolean} [responseDelimited=false] Whether responses are length-delimited
+             */
+            function Endorser(rpcImpl, requestDelimited, responseDelimited) {
+                $protobuf.rpc.Service.call(this, rpcImpl, requestDelimited, responseDelimited);
+            }
+    
+            (Endorser.prototype = Object.create($protobuf.rpc.Service.prototype)).constructor = Endorser;
+    
+            /**
+             * Creates new Endorser service using the specified rpc implementation.
+             * @function create
+             * @memberof protos.Endorser
+             * @static
+             * @param {$protobuf.RPCImpl} rpcImpl RPC implementation
+             * @param {boolean} [requestDelimited=false] Whether requests are length-delimited
+             * @param {boolean} [responseDelimited=false] Whether responses are length-delimited
+             * @returns {Endorser} RPC service. Useful where requests and/or responses are streamed.
+             */
+            Endorser.create = function create(rpcImpl, requestDelimited, responseDelimited) {
+                return new this(rpcImpl, requestDelimited, responseDelimited);
+            };
+    
+            /**
+             * Callback as used by {@link protos.Endorser#processProposal}.
+             * @memberof protos.Endorser
+             * @typedef ProcessProposalCallback
+             * @type {function}
+             * @param {Error|null} error Error, if any
+             * @param {protos.ProposalResponse} [response] ProposalResponse
+             */
+    
+            /**
+             * Calls ProcessProposal.
+             * @function processProposal
+             * @memberof protos.Endorser
+             * @instance
+             * @param {protos.ISignedProposal} request SignedProposal message or plain object
+             * @param {protos.Endorser.ProcessProposalCallback} callback Node-style callback called with the error, if any, and ProposalResponse
+             * @returns {undefined}
+             * @variation 1
+             */
+            Object.defineProperty(Endorser.prototype.processProposal = function processProposal(request, callback) {
+                return this.rpcCall(processProposal, $root.protos.SignedProposal, $root.protos.ProposalResponse, request, callback);
+            }, "name", { value: "ProcessProposal" });
+    
+            /**
+             * Calls ProcessProposal.
+             * @function processProposal
+             * @memberof protos.Endorser
+             * @instance
+             * @param {protos.ISignedProposal} request SignedProposal message or plain object
+             * @returns {Promise<protos.ProposalResponse>} Promise
+             * @variation 2
+             */
+    
+            return Endorser;
+        })();
+    
+        protos.ChaincodeQueryResponse = (function() {
+    
+            /**
+             * Properties of a ChaincodeQueryResponse.
+             * @memberof protos
+             * @interface IChaincodeQueryResponse
+             * @property {Array.<protos.IChaincodeInfo>|null} [chaincodes] ChaincodeQueryResponse chaincodes
+             */
+    
+            /**
+             * Constructs a new ChaincodeQueryResponse.
+             * @memberof protos
+             * @classdesc Represents a ChaincodeQueryResponse.
+             * @implements IChaincodeQueryResponse
+             * @constructor
+             * @param {protos.IChaincodeQueryResponse=} [properties] Properties to set
+             */
+            function ChaincodeQueryResponse(properties) {
+                this.chaincodes = [];
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * ChaincodeQueryResponse chaincodes.
+             * @member {Array.<protos.IChaincodeInfo>} chaincodes
+             * @memberof protos.ChaincodeQueryResponse
+             * @instance
+             */
+            ChaincodeQueryResponse.prototype.chaincodes = $util.emptyArray;
+    
+            /**
+             * Creates a new ChaincodeQueryResponse instance using the specified properties.
+             * @function create
+             * @memberof protos.ChaincodeQueryResponse
+             * @static
+             * @param {protos.IChaincodeQueryResponse=} [properties] Properties to set
+             * @returns {protos.ChaincodeQueryResponse} ChaincodeQueryResponse instance
+             */
+            ChaincodeQueryResponse.create = function create(properties) {
+                return new ChaincodeQueryResponse(properties);
+            };
+    
+            /**
+             * Encodes the specified ChaincodeQueryResponse message. Does not implicitly {@link protos.ChaincodeQueryResponse.verify|verify} messages.
+             * @function encode
+             * @memberof protos.ChaincodeQueryResponse
+             * @static
+             * @param {protos.IChaincodeQueryResponse} message ChaincodeQueryResponse message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            ChaincodeQueryResponse.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.chaincodes != null && message.chaincodes.length)
+                    for (var i = 0; i < message.chaincodes.length; ++i)
+                        $root.protos.ChaincodeInfo.encode(message.chaincodes[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified ChaincodeQueryResponse message, length delimited. Does not implicitly {@link protos.ChaincodeQueryResponse.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof protos.ChaincodeQueryResponse
+             * @static
+             * @param {protos.IChaincodeQueryResponse} message ChaincodeQueryResponse message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            ChaincodeQueryResponse.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a ChaincodeQueryResponse message from the specified reader or buffer.
+             * @function decode
+             * @memberof protos.ChaincodeQueryResponse
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {protos.ChaincodeQueryResponse} ChaincodeQueryResponse
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            ChaincodeQueryResponse.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.ChaincodeQueryResponse();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        if (!(message.chaincodes && message.chaincodes.length))
+                            message.chaincodes = [];
+                        message.chaincodes.push($root.protos.ChaincodeInfo.decode(reader, reader.uint32()));
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a ChaincodeQueryResponse message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof protos.ChaincodeQueryResponse
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {protos.ChaincodeQueryResponse} ChaincodeQueryResponse
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            ChaincodeQueryResponse.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a ChaincodeQueryResponse message.
+             * @function verify
+             * @memberof protos.ChaincodeQueryResponse
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            ChaincodeQueryResponse.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.chaincodes != null && message.hasOwnProperty("chaincodes")) {
+                    if (!Array.isArray(message.chaincodes))
+                        return "chaincodes: array expected";
+                    for (var i = 0; i < message.chaincodes.length; ++i) {
+                        var error = $root.protos.ChaincodeInfo.verify(message.chaincodes[i]);
+                        if (error)
+                            return "chaincodes." + error;
+                    }
+                }
+                return null;
+            };
+    
+            /**
+             * Creates a ChaincodeQueryResponse message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof protos.ChaincodeQueryResponse
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {protos.ChaincodeQueryResponse} ChaincodeQueryResponse
+             */
+            ChaincodeQueryResponse.fromObject = function fromObject(object) {
+                if (object instanceof $root.protos.ChaincodeQueryResponse)
+                    return object;
+                var message = new $root.protos.ChaincodeQueryResponse();
+                if (object.chaincodes) {
+                    if (!Array.isArray(object.chaincodes))
+                        throw TypeError(".protos.ChaincodeQueryResponse.chaincodes: array expected");
+                    message.chaincodes = [];
+                    for (var i = 0; i < object.chaincodes.length; ++i) {
+                        if (typeof object.chaincodes[i] !== "object")
+                            throw TypeError(".protos.ChaincodeQueryResponse.chaincodes: object expected");
+                        message.chaincodes[i] = $root.protos.ChaincodeInfo.fromObject(object.chaincodes[i]);
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a ChaincodeQueryResponse message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof protos.ChaincodeQueryResponse
+             * @static
+             * @param {protos.ChaincodeQueryResponse} message ChaincodeQueryResponse
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            ChaincodeQueryResponse.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.arrays || options.defaults)
+                    object.chaincodes = [];
+                if (message.chaincodes && message.chaincodes.length) {
+                    object.chaincodes = [];
+                    for (var j = 0; j < message.chaincodes.length; ++j)
+                        object.chaincodes[j] = $root.protos.ChaincodeInfo.toObject(message.chaincodes[j], options);
+                }
+                return object;
+            };
+    
+            /**
+             * Converts this ChaincodeQueryResponse to JSON.
+             * @function toJSON
+             * @memberof protos.ChaincodeQueryResponse
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            ChaincodeQueryResponse.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return ChaincodeQueryResponse;
+        })();
+    
+        protos.ChaincodeInfo = (function() {
+    
+            /**
+             * Properties of a ChaincodeInfo.
+             * @memberof protos
+             * @interface IChaincodeInfo
+             * @property {string|null} [name] ChaincodeInfo name
+             * @property {string|null} [version] ChaincodeInfo version
+             * @property {string|null} [path] ChaincodeInfo path
+             * @property {string|null} [input] ChaincodeInfo input
+             * @property {string|null} [escc] ChaincodeInfo escc
+             * @property {string|null} [vscc] ChaincodeInfo vscc
+             * @property {Uint8Array|null} [id] ChaincodeInfo id
+             */
+    
+            /**
+             * Constructs a new ChaincodeInfo.
+             * @memberof protos
+             * @classdesc Represents a ChaincodeInfo.
+             * @implements IChaincodeInfo
+             * @constructor
+             * @param {protos.IChaincodeInfo=} [properties] Properties to set
+             */
+            function ChaincodeInfo(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * ChaincodeInfo name.
+             * @member {string} name
+             * @memberof protos.ChaincodeInfo
+             * @instance
+             */
+            ChaincodeInfo.prototype.name = "";
+    
+            /**
+             * ChaincodeInfo version.
+             * @member {string} version
+             * @memberof protos.ChaincodeInfo
+             * @instance
+             */
+            ChaincodeInfo.prototype.version = "";
+    
+            /**
+             * ChaincodeInfo path.
+             * @member {string} path
+             * @memberof protos.ChaincodeInfo
+             * @instance
+             */
+            ChaincodeInfo.prototype.path = "";
+    
+            /**
+             * ChaincodeInfo input.
+             * @member {string} input
+             * @memberof protos.ChaincodeInfo
+             * @instance
+             */
+            ChaincodeInfo.prototype.input = "";
+    
+            /**
+             * ChaincodeInfo escc.
+             * @member {string} escc
+             * @memberof protos.ChaincodeInfo
+             * @instance
+             */
+            ChaincodeInfo.prototype.escc = "";
+    
+            /**
+             * ChaincodeInfo vscc.
+             * @member {string} vscc
+             * @memberof protos.ChaincodeInfo
+             * @instance
+             */
+            ChaincodeInfo.prototype.vscc = "";
+    
+            /**
+             * ChaincodeInfo id.
+             * @member {Uint8Array} id
+             * @memberof protos.ChaincodeInfo
+             * @instance
+             */
+            ChaincodeInfo.prototype.id = $util.newBuffer([]);
+    
+            /**
+             * Creates a new ChaincodeInfo instance using the specified properties.
+             * @function create
+             * @memberof protos.ChaincodeInfo
+             * @static
+             * @param {protos.IChaincodeInfo=} [properties] Properties to set
+             * @returns {protos.ChaincodeInfo} ChaincodeInfo instance
+             */
+            ChaincodeInfo.create = function create(properties) {
+                return new ChaincodeInfo(properties);
+            };
+    
+            /**
+             * Encodes the specified ChaincodeInfo message. Does not implicitly {@link protos.ChaincodeInfo.verify|verify} messages.
+             * @function encode
+             * @memberof protos.ChaincodeInfo
+             * @static
+             * @param {protos.IChaincodeInfo} message ChaincodeInfo message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            ChaincodeInfo.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.name != null && Object.hasOwnProperty.call(message, "name"))
+                    writer.uint32(/* id 1, wireType 2 =*/10).string(message.name);
+                if (message.version != null && Object.hasOwnProperty.call(message, "version"))
+                    writer.uint32(/* id 2, wireType 2 =*/18).string(message.version);
+                if (message.path != null && Object.hasOwnProperty.call(message, "path"))
+                    writer.uint32(/* id 3, wireType 2 =*/26).string(message.path);
+                if (message.input != null && Object.hasOwnProperty.call(message, "input"))
+                    writer.uint32(/* id 4, wireType 2 =*/34).string(message.input);
+                if (message.escc != null && Object.hasOwnProperty.call(message, "escc"))
+                    writer.uint32(/* id 5, wireType 2 =*/42).string(message.escc);
+                if (message.vscc != null && Object.hasOwnProperty.call(message, "vscc"))
+                    writer.uint32(/* id 6, wireType 2 =*/50).string(message.vscc);
+                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                    writer.uint32(/* id 7, wireType 2 =*/58).bytes(message.id);
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified ChaincodeInfo message, length delimited. Does not implicitly {@link protos.ChaincodeInfo.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof protos.ChaincodeInfo
+             * @static
+             * @param {protos.IChaincodeInfo} message ChaincodeInfo message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            ChaincodeInfo.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a ChaincodeInfo message from the specified reader or buffer.
+             * @function decode
+             * @memberof protos.ChaincodeInfo
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {protos.ChaincodeInfo} ChaincodeInfo
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            ChaincodeInfo.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.ChaincodeInfo();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.name = reader.string();
+                        break;
+                    case 2:
+                        message.version = reader.string();
+                        break;
+                    case 3:
+                        message.path = reader.string();
+                        break;
+                    case 4:
+                        message.input = reader.string();
+                        break;
+                    case 5:
+                        message.escc = reader.string();
+                        break;
+                    case 6:
+                        message.vscc = reader.string();
+                        break;
+                    case 7:
+                        message.id = reader.bytes();
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a ChaincodeInfo message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof protos.ChaincodeInfo
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {protos.ChaincodeInfo} ChaincodeInfo
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            ChaincodeInfo.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a ChaincodeInfo message.
+             * @function verify
+             * @memberof protos.ChaincodeInfo
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            ChaincodeInfo.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.name != null && message.hasOwnProperty("name"))
+                    if (!$util.isString(message.name))
+                        return "name: string expected";
+                if (message.version != null && message.hasOwnProperty("version"))
+                    if (!$util.isString(message.version))
+                        return "version: string expected";
+                if (message.path != null && message.hasOwnProperty("path"))
+                    if (!$util.isString(message.path))
+                        return "path: string expected";
+                if (message.input != null && message.hasOwnProperty("input"))
+                    if (!$util.isString(message.input))
+                        return "input: string expected";
+                if (message.escc != null && message.hasOwnProperty("escc"))
+                    if (!$util.isString(message.escc))
+                        return "escc: string expected";
+                if (message.vscc != null && message.hasOwnProperty("vscc"))
+                    if (!$util.isString(message.vscc))
+                        return "vscc: string expected";
+                if (message.id != null && message.hasOwnProperty("id"))
+                    if (!(message.id && typeof message.id.length === "number" || $util.isString(message.id)))
+                        return "id: buffer expected";
+                return null;
+            };
+    
+            /**
+             * Creates a ChaincodeInfo message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof protos.ChaincodeInfo
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {protos.ChaincodeInfo} ChaincodeInfo
+             */
+            ChaincodeInfo.fromObject = function fromObject(object) {
+                if (object instanceof $root.protos.ChaincodeInfo)
+                    return object;
+                var message = new $root.protos.ChaincodeInfo();
+                if (object.name != null)
+                    message.name = String(object.name);
+                if (object.version != null)
+                    message.version = String(object.version);
+                if (object.path != null)
+                    message.path = String(object.path);
+                if (object.input != null)
+                    message.input = String(object.input);
+                if (object.escc != null)
+                    message.escc = String(object.escc);
+                if (object.vscc != null)
+                    message.vscc = String(object.vscc);
+                if (object.id != null)
+                    if (typeof object.id === "string")
+                        $util.base64.decode(object.id, message.id = $util.newBuffer($util.base64.length(object.id)), 0);
+                    else if (object.id.length)
+                        message.id = object.id;
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a ChaincodeInfo message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof protos.ChaincodeInfo
+             * @static
+             * @param {protos.ChaincodeInfo} message ChaincodeInfo
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            ChaincodeInfo.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.defaults) {
+                    object.name = "";
+                    object.version = "";
+                    object.path = "";
+                    object.input = "";
+                    object.escc = "";
+                    object.vscc = "";
+                    if (options.bytes === String)
+                        object.id = "";
+                    else {
+                        object.id = [];
+                        if (options.bytes !== Array)
+                            object.id = $util.newBuffer(object.id);
+                    }
+                }
+                if (message.name != null && message.hasOwnProperty("name"))
+                    object.name = message.name;
+                if (message.version != null && message.hasOwnProperty("version"))
+                    object.version = message.version;
+                if (message.path != null && message.hasOwnProperty("path"))
+                    object.path = message.path;
+                if (message.input != null && message.hasOwnProperty("input"))
+                    object.input = message.input;
+                if (message.escc != null && message.hasOwnProperty("escc"))
+                    object.escc = message.escc;
+                if (message.vscc != null && message.hasOwnProperty("vscc"))
+                    object.vscc = message.vscc;
+                if (message.id != null && message.hasOwnProperty("id"))
+                    object.id = options.bytes === String ? $util.base64.encode(message.id, 0, message.id.length) : options.bytes === Array ? Array.prototype.slice.call(message.id) : message.id;
+                return object;
+            };
+    
+            /**
+             * Converts this ChaincodeInfo to JSON.
+             * @function toJSON
+             * @memberof protos.ChaincodeInfo
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            ChaincodeInfo.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return ChaincodeInfo;
+        })();
+    
+        protos.ChannelQueryResponse = (function() {
+    
+            /**
+             * Properties of a ChannelQueryResponse.
+             * @memberof protos
+             * @interface IChannelQueryResponse
+             * @property {Array.<protos.IChannelInfo>|null} [channels] ChannelQueryResponse channels
+             */
+    
+            /**
+             * Constructs a new ChannelQueryResponse.
+             * @memberof protos
+             * @classdesc Represents a ChannelQueryResponse.
+             * @implements IChannelQueryResponse
+             * @constructor
+             * @param {protos.IChannelQueryResponse=} [properties] Properties to set
+             */
+            function ChannelQueryResponse(properties) {
+                this.channels = [];
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * ChannelQueryResponse channels.
+             * @member {Array.<protos.IChannelInfo>} channels
+             * @memberof protos.ChannelQueryResponse
+             * @instance
+             */
+            ChannelQueryResponse.prototype.channels = $util.emptyArray;
+    
+            /**
+             * Creates a new ChannelQueryResponse instance using the specified properties.
+             * @function create
+             * @memberof protos.ChannelQueryResponse
+             * @static
+             * @param {protos.IChannelQueryResponse=} [properties] Properties to set
+             * @returns {protos.ChannelQueryResponse} ChannelQueryResponse instance
+             */
+            ChannelQueryResponse.create = function create(properties) {
+                return new ChannelQueryResponse(properties);
+            };
+    
+            /**
+             * Encodes the specified ChannelQueryResponse message. Does not implicitly {@link protos.ChannelQueryResponse.verify|verify} messages.
+             * @function encode
+             * @memberof protos.ChannelQueryResponse
+             * @static
+             * @param {protos.IChannelQueryResponse} message ChannelQueryResponse message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            ChannelQueryResponse.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.channels != null && message.channels.length)
+                    for (var i = 0; i < message.channels.length; ++i)
+                        $root.protos.ChannelInfo.encode(message.channels[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified ChannelQueryResponse message, length delimited. Does not implicitly {@link protos.ChannelQueryResponse.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof protos.ChannelQueryResponse
+             * @static
+             * @param {protos.IChannelQueryResponse} message ChannelQueryResponse message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            ChannelQueryResponse.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a ChannelQueryResponse message from the specified reader or buffer.
+             * @function decode
+             * @memberof protos.ChannelQueryResponse
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {protos.ChannelQueryResponse} ChannelQueryResponse
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            ChannelQueryResponse.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.ChannelQueryResponse();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        if (!(message.channels && message.channels.length))
+                            message.channels = [];
+                        message.channels.push($root.protos.ChannelInfo.decode(reader, reader.uint32()));
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a ChannelQueryResponse message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof protos.ChannelQueryResponse
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {protos.ChannelQueryResponse} ChannelQueryResponse
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            ChannelQueryResponse.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a ChannelQueryResponse message.
+             * @function verify
+             * @memberof protos.ChannelQueryResponse
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            ChannelQueryResponse.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.channels != null && message.hasOwnProperty("channels")) {
+                    if (!Array.isArray(message.channels))
+                        return "channels: array expected";
+                    for (var i = 0; i < message.channels.length; ++i) {
+                        var error = $root.protos.ChannelInfo.verify(message.channels[i]);
+                        if (error)
+                            return "channels." + error;
+                    }
+                }
+                return null;
+            };
+    
+            /**
+             * Creates a ChannelQueryResponse message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof protos.ChannelQueryResponse
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {protos.ChannelQueryResponse} ChannelQueryResponse
+             */
+            ChannelQueryResponse.fromObject = function fromObject(object) {
+                if (object instanceof $root.protos.ChannelQueryResponse)
+                    return object;
+                var message = new $root.protos.ChannelQueryResponse();
+                if (object.channels) {
+                    if (!Array.isArray(object.channels))
+                        throw TypeError(".protos.ChannelQueryResponse.channels: array expected");
+                    message.channels = [];
+                    for (var i = 0; i < object.channels.length; ++i) {
+                        if (typeof object.channels[i] !== "object")
+                            throw TypeError(".protos.ChannelQueryResponse.channels: object expected");
+                        message.channels[i] = $root.protos.ChannelInfo.fromObject(object.channels[i]);
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a ChannelQueryResponse message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof protos.ChannelQueryResponse
+             * @static
+             * @param {protos.ChannelQueryResponse} message ChannelQueryResponse
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            ChannelQueryResponse.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.arrays || options.defaults)
+                    object.channels = [];
+                if (message.channels && message.channels.length) {
+                    object.channels = [];
+                    for (var j = 0; j < message.channels.length; ++j)
+                        object.channels[j] = $root.protos.ChannelInfo.toObject(message.channels[j], options);
+                }
+                return object;
+            };
+    
+            /**
+             * Converts this ChannelQueryResponse to JSON.
+             * @function toJSON
+             * @memberof protos.ChannelQueryResponse
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            ChannelQueryResponse.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return ChannelQueryResponse;
+        })();
+    
+        protos.ChannelInfo = (function() {
+    
+            /**
+             * Properties of a ChannelInfo.
+             * @memberof protos
+             * @interface IChannelInfo
+             * @property {string|null} [channel_id] ChannelInfo channel_id
+             */
+    
+            /**
+             * Constructs a new ChannelInfo.
+             * @memberof protos
+             * @classdesc Represents a ChannelInfo.
+             * @implements IChannelInfo
+             * @constructor
+             * @param {protos.IChannelInfo=} [properties] Properties to set
+             */
+            function ChannelInfo(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * ChannelInfo channel_id.
+             * @member {string} channel_id
+             * @memberof protos.ChannelInfo
+             * @instance
+             */
+            ChannelInfo.prototype.channel_id = "";
+    
+            /**
+             * Creates a new ChannelInfo instance using the specified properties.
+             * @function create
+             * @memberof protos.ChannelInfo
+             * @static
+             * @param {protos.IChannelInfo=} [properties] Properties to set
+             * @returns {protos.ChannelInfo} ChannelInfo instance
+             */
+            ChannelInfo.create = function create(properties) {
+                return new ChannelInfo(properties);
+            };
+    
+            /**
+             * Encodes the specified ChannelInfo message. Does not implicitly {@link protos.ChannelInfo.verify|verify} messages.
+             * @function encode
+             * @memberof protos.ChannelInfo
+             * @static
+             * @param {protos.IChannelInfo} message ChannelInfo message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            ChannelInfo.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.channel_id != null && Object.hasOwnProperty.call(message, "channel_id"))
+                    writer.uint32(/* id 1, wireType 2 =*/10).string(message.channel_id);
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified ChannelInfo message, length delimited. Does not implicitly {@link protos.ChannelInfo.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof protos.ChannelInfo
+             * @static
+             * @param {protos.IChannelInfo} message ChannelInfo message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            ChannelInfo.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a ChannelInfo message from the specified reader or buffer.
+             * @function decode
+             * @memberof protos.ChannelInfo
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {protos.ChannelInfo} ChannelInfo
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            ChannelInfo.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.protos.ChannelInfo();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.channel_id = reader.string();
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a ChannelInfo message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof protos.ChannelInfo
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {protos.ChannelInfo} ChannelInfo
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            ChannelInfo.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a ChannelInfo message.
+             * @function verify
+             * @memberof protos.ChannelInfo
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            ChannelInfo.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.channel_id != null && message.hasOwnProperty("channel_id"))
+                    if (!$util.isString(message.channel_id))
+                        return "channel_id: string expected";
+                return null;
+            };
+    
+            /**
+             * Creates a ChannelInfo message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof protos.ChannelInfo
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {protos.ChannelInfo} ChannelInfo
+             */
+            ChannelInfo.fromObject = function fromObject(object) {
+                if (object instanceof $root.protos.ChannelInfo)
+                    return object;
+                var message = new $root.protos.ChannelInfo();
+                if (object.channel_id != null)
+                    message.channel_id = String(object.channel_id);
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a ChannelInfo message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof protos.ChannelInfo
+             * @static
+             * @param {protos.ChannelInfo} message ChannelInfo
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            ChannelInfo.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.defaults)
+                    object.channel_id = "";
+                if (message.channel_id != null && message.hasOwnProperty("channel_id"))
+                    object.channel_id = message.channel_id;
+                return object;
+            };
+    
+            /**
+             * Converts this ChannelInfo to JSON.
+             * @function toJSON
+             * @memberof protos.ChannelInfo
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            ChannelInfo.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return ChannelInfo;
+        })();
+    
         protos.SignedChaincodeDeploymentSpec = (function() {
     
             /**
@@ -22578,11 +22648,11 @@
     
             /**
              * SignaturePolicy signed_by.
-             * @member {number} signed_by
+             * @member {number|null|undefined} signed_by
              * @memberof common.SignaturePolicy
              * @instance
              */
-            SignaturePolicy.prototype.signed_by = 0;
+            SignaturePolicy.prototype.signed_by = null;
     
             /**
              * SignaturePolicy n_out_of.
@@ -23300,11 +23370,11 @@
     
             /**
              * ApplicationPolicy channel_config_policy_reference.
-             * @member {string} channel_config_policy_reference
+             * @member {string|null|undefined} channel_config_policy_reference
              * @memberof common.ApplicationPolicy
              * @instance
              */
-            ApplicationPolicy.prototype.channel_config_policy_reference = "";
+            ApplicationPolicy.prototype.channel_config_policy_reference = null;
     
             // OneOf field names bound to virtual getters and setters
             var $oneOfFields;
@@ -24690,1002 +24760,6 @@
             };
     
             return CombinedPrincipal;
-        })();
-    
-        common.CollectionConfigPackage = (function() {
-    
-            /**
-             * Properties of a CollectionConfigPackage.
-             * @memberof common
-             * @interface ICollectionConfigPackage
-             * @property {Array.<common.ICollectionConfig>|null} [config] CollectionConfigPackage config
-             */
-    
-            /**
-             * Constructs a new CollectionConfigPackage.
-             * @memberof common
-             * @classdesc Represents a CollectionConfigPackage.
-             * @implements ICollectionConfigPackage
-             * @constructor
-             * @param {common.ICollectionConfigPackage=} [properties] Properties to set
-             */
-            function CollectionConfigPackage(properties) {
-                this.config = [];
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * CollectionConfigPackage config.
-             * @member {Array.<common.ICollectionConfig>} config
-             * @memberof common.CollectionConfigPackage
-             * @instance
-             */
-            CollectionConfigPackage.prototype.config = $util.emptyArray;
-    
-            /**
-             * Creates a new CollectionConfigPackage instance using the specified properties.
-             * @function create
-             * @memberof common.CollectionConfigPackage
-             * @static
-             * @param {common.ICollectionConfigPackage=} [properties] Properties to set
-             * @returns {common.CollectionConfigPackage} CollectionConfigPackage instance
-             */
-            CollectionConfigPackage.create = function create(properties) {
-                return new CollectionConfigPackage(properties);
-            };
-    
-            /**
-             * Encodes the specified CollectionConfigPackage message. Does not implicitly {@link common.CollectionConfigPackage.verify|verify} messages.
-             * @function encode
-             * @memberof common.CollectionConfigPackage
-             * @static
-             * @param {common.ICollectionConfigPackage} message CollectionConfigPackage message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            CollectionConfigPackage.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.config != null && message.config.length)
-                    for (var i = 0; i < message.config.length; ++i)
-                        $root.common.CollectionConfig.encode(message.config[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified CollectionConfigPackage message, length delimited. Does not implicitly {@link common.CollectionConfigPackage.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof common.CollectionConfigPackage
-             * @static
-             * @param {common.ICollectionConfigPackage} message CollectionConfigPackage message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            CollectionConfigPackage.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a CollectionConfigPackage message from the specified reader or buffer.
-             * @function decode
-             * @memberof common.CollectionConfigPackage
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {common.CollectionConfigPackage} CollectionConfigPackage
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            CollectionConfigPackage.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.common.CollectionConfigPackage();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        if (!(message.config && message.config.length))
-                            message.config = [];
-                        message.config.push($root.common.CollectionConfig.decode(reader, reader.uint32()));
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a CollectionConfigPackage message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof common.CollectionConfigPackage
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {common.CollectionConfigPackage} CollectionConfigPackage
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            CollectionConfigPackage.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a CollectionConfigPackage message.
-             * @function verify
-             * @memberof common.CollectionConfigPackage
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            CollectionConfigPackage.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (message.config != null && message.hasOwnProperty("config")) {
-                    if (!Array.isArray(message.config))
-                        return "config: array expected";
-                    for (var i = 0; i < message.config.length; ++i) {
-                        var error = $root.common.CollectionConfig.verify(message.config[i]);
-                        if (error)
-                            return "config." + error;
-                    }
-                }
-                return null;
-            };
-    
-            /**
-             * Creates a CollectionConfigPackage message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof common.CollectionConfigPackage
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {common.CollectionConfigPackage} CollectionConfigPackage
-             */
-            CollectionConfigPackage.fromObject = function fromObject(object) {
-                if (object instanceof $root.common.CollectionConfigPackage)
-                    return object;
-                var message = new $root.common.CollectionConfigPackage();
-                if (object.config) {
-                    if (!Array.isArray(object.config))
-                        throw TypeError(".common.CollectionConfigPackage.config: array expected");
-                    message.config = [];
-                    for (var i = 0; i < object.config.length; ++i) {
-                        if (typeof object.config[i] !== "object")
-                            throw TypeError(".common.CollectionConfigPackage.config: object expected");
-                        message.config[i] = $root.common.CollectionConfig.fromObject(object.config[i]);
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a CollectionConfigPackage message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof common.CollectionConfigPackage
-             * @static
-             * @param {common.CollectionConfigPackage} message CollectionConfigPackage
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            CollectionConfigPackage.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (options.arrays || options.defaults)
-                    object.config = [];
-                if (message.config && message.config.length) {
-                    object.config = [];
-                    for (var j = 0; j < message.config.length; ++j)
-                        object.config[j] = $root.common.CollectionConfig.toObject(message.config[j], options);
-                }
-                return object;
-            };
-    
-            /**
-             * Converts this CollectionConfigPackage to JSON.
-             * @function toJSON
-             * @memberof common.CollectionConfigPackage
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            CollectionConfigPackage.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return CollectionConfigPackage;
-        })();
-    
-        common.CollectionConfig = (function() {
-    
-            /**
-             * Properties of a CollectionConfig.
-             * @memberof common
-             * @interface ICollectionConfig
-             * @property {common.IStaticCollectionConfig|null} [static_collection_config] CollectionConfig static_collection_config
-             */
-    
-            /**
-             * Constructs a new CollectionConfig.
-             * @memberof common
-             * @classdesc Represents a CollectionConfig.
-             * @implements ICollectionConfig
-             * @constructor
-             * @param {common.ICollectionConfig=} [properties] Properties to set
-             */
-            function CollectionConfig(properties) {
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * CollectionConfig static_collection_config.
-             * @member {common.IStaticCollectionConfig|null|undefined} static_collection_config
-             * @memberof common.CollectionConfig
-             * @instance
-             */
-            CollectionConfig.prototype.static_collection_config = null;
-    
-            // OneOf field names bound to virtual getters and setters
-            var $oneOfFields;
-    
-            /**
-             * CollectionConfig payload.
-             * @member {"static_collection_config"|undefined} payload
-             * @memberof common.CollectionConfig
-             * @instance
-             */
-            Object.defineProperty(CollectionConfig.prototype, "payload", {
-                get: $util.oneOfGetter($oneOfFields = ["static_collection_config"]),
-                set: $util.oneOfSetter($oneOfFields)
-            });
-    
-            /**
-             * Creates a new CollectionConfig instance using the specified properties.
-             * @function create
-             * @memberof common.CollectionConfig
-             * @static
-             * @param {common.ICollectionConfig=} [properties] Properties to set
-             * @returns {common.CollectionConfig} CollectionConfig instance
-             */
-            CollectionConfig.create = function create(properties) {
-                return new CollectionConfig(properties);
-            };
-    
-            /**
-             * Encodes the specified CollectionConfig message. Does not implicitly {@link common.CollectionConfig.verify|verify} messages.
-             * @function encode
-             * @memberof common.CollectionConfig
-             * @static
-             * @param {common.ICollectionConfig} message CollectionConfig message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            CollectionConfig.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.static_collection_config != null && Object.hasOwnProperty.call(message, "static_collection_config"))
-                    $root.common.StaticCollectionConfig.encode(message.static_collection_config, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified CollectionConfig message, length delimited. Does not implicitly {@link common.CollectionConfig.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof common.CollectionConfig
-             * @static
-             * @param {common.ICollectionConfig} message CollectionConfig message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            CollectionConfig.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a CollectionConfig message from the specified reader or buffer.
-             * @function decode
-             * @memberof common.CollectionConfig
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {common.CollectionConfig} CollectionConfig
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            CollectionConfig.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.common.CollectionConfig();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        message.static_collection_config = $root.common.StaticCollectionConfig.decode(reader, reader.uint32());
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a CollectionConfig message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof common.CollectionConfig
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {common.CollectionConfig} CollectionConfig
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            CollectionConfig.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a CollectionConfig message.
-             * @function verify
-             * @memberof common.CollectionConfig
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            CollectionConfig.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                var properties = {};
-                if (message.static_collection_config != null && message.hasOwnProperty("static_collection_config")) {
-                    properties.payload = 1;
-                    {
-                        var error = $root.common.StaticCollectionConfig.verify(message.static_collection_config);
-                        if (error)
-                            return "static_collection_config." + error;
-                    }
-                }
-                return null;
-            };
-    
-            /**
-             * Creates a CollectionConfig message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof common.CollectionConfig
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {common.CollectionConfig} CollectionConfig
-             */
-            CollectionConfig.fromObject = function fromObject(object) {
-                if (object instanceof $root.common.CollectionConfig)
-                    return object;
-                var message = new $root.common.CollectionConfig();
-                if (object.static_collection_config != null) {
-                    if (typeof object.static_collection_config !== "object")
-                        throw TypeError(".common.CollectionConfig.static_collection_config: object expected");
-                    message.static_collection_config = $root.common.StaticCollectionConfig.fromObject(object.static_collection_config);
-                }
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a CollectionConfig message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof common.CollectionConfig
-             * @static
-             * @param {common.CollectionConfig} message CollectionConfig
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            CollectionConfig.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (message.static_collection_config != null && message.hasOwnProperty("static_collection_config")) {
-                    object.static_collection_config = $root.common.StaticCollectionConfig.toObject(message.static_collection_config, options);
-                    if (options.oneofs)
-                        object.payload = "static_collection_config";
-                }
-                return object;
-            };
-    
-            /**
-             * Converts this CollectionConfig to JSON.
-             * @function toJSON
-             * @memberof common.CollectionConfig
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            CollectionConfig.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return CollectionConfig;
-        })();
-    
-        common.StaticCollectionConfig = (function() {
-    
-            /**
-             * Properties of a StaticCollectionConfig.
-             * @memberof common
-             * @interface IStaticCollectionConfig
-             * @property {string|null} [name] StaticCollectionConfig name
-             * @property {common.ICollectionPolicyConfig|null} [member_orgs_policy] StaticCollectionConfig member_orgs_policy
-             * @property {number|null} [required_peer_count] StaticCollectionConfig required_peer_count
-             * @property {number|null} [maximum_peer_count] StaticCollectionConfig maximum_peer_count
-             * @property {number|Long|null} [block_to_live] StaticCollectionConfig block_to_live
-             * @property {boolean|null} [member_only_read] StaticCollectionConfig member_only_read
-             * @property {boolean|null} [member_only_write] StaticCollectionConfig member_only_write
-             * @property {common.IApplicationPolicy|null} [endorsement_policy] StaticCollectionConfig endorsement_policy
-             */
-    
-            /**
-             * Constructs a new StaticCollectionConfig.
-             * @memberof common
-             * @classdesc Represents a StaticCollectionConfig.
-             * @implements IStaticCollectionConfig
-             * @constructor
-             * @param {common.IStaticCollectionConfig=} [properties] Properties to set
-             */
-            function StaticCollectionConfig(properties) {
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * StaticCollectionConfig name.
-             * @member {string} name
-             * @memberof common.StaticCollectionConfig
-             * @instance
-             */
-            StaticCollectionConfig.prototype.name = "";
-    
-            /**
-             * StaticCollectionConfig member_orgs_policy.
-             * @member {common.ICollectionPolicyConfig|null|undefined} member_orgs_policy
-             * @memberof common.StaticCollectionConfig
-             * @instance
-             */
-            StaticCollectionConfig.prototype.member_orgs_policy = null;
-    
-            /**
-             * StaticCollectionConfig required_peer_count.
-             * @member {number} required_peer_count
-             * @memberof common.StaticCollectionConfig
-             * @instance
-             */
-            StaticCollectionConfig.prototype.required_peer_count = 0;
-    
-            /**
-             * StaticCollectionConfig maximum_peer_count.
-             * @member {number} maximum_peer_count
-             * @memberof common.StaticCollectionConfig
-             * @instance
-             */
-            StaticCollectionConfig.prototype.maximum_peer_count = 0;
-    
-            /**
-             * StaticCollectionConfig block_to_live.
-             * @member {number|Long} block_to_live
-             * @memberof common.StaticCollectionConfig
-             * @instance
-             */
-            StaticCollectionConfig.prototype.block_to_live = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
-    
-            /**
-             * StaticCollectionConfig member_only_read.
-             * @member {boolean} member_only_read
-             * @memberof common.StaticCollectionConfig
-             * @instance
-             */
-            StaticCollectionConfig.prototype.member_only_read = false;
-    
-            /**
-             * StaticCollectionConfig member_only_write.
-             * @member {boolean} member_only_write
-             * @memberof common.StaticCollectionConfig
-             * @instance
-             */
-            StaticCollectionConfig.prototype.member_only_write = false;
-    
-            /**
-             * StaticCollectionConfig endorsement_policy.
-             * @member {common.IApplicationPolicy|null|undefined} endorsement_policy
-             * @memberof common.StaticCollectionConfig
-             * @instance
-             */
-            StaticCollectionConfig.prototype.endorsement_policy = null;
-    
-            /**
-             * Creates a new StaticCollectionConfig instance using the specified properties.
-             * @function create
-             * @memberof common.StaticCollectionConfig
-             * @static
-             * @param {common.IStaticCollectionConfig=} [properties] Properties to set
-             * @returns {common.StaticCollectionConfig} StaticCollectionConfig instance
-             */
-            StaticCollectionConfig.create = function create(properties) {
-                return new StaticCollectionConfig(properties);
-            };
-    
-            /**
-             * Encodes the specified StaticCollectionConfig message. Does not implicitly {@link common.StaticCollectionConfig.verify|verify} messages.
-             * @function encode
-             * @memberof common.StaticCollectionConfig
-             * @static
-             * @param {common.IStaticCollectionConfig} message StaticCollectionConfig message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            StaticCollectionConfig.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.name != null && Object.hasOwnProperty.call(message, "name"))
-                    writer.uint32(/* id 1, wireType 2 =*/10).string(message.name);
-                if (message.member_orgs_policy != null && Object.hasOwnProperty.call(message, "member_orgs_policy"))
-                    $root.common.CollectionPolicyConfig.encode(message.member_orgs_policy, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
-                if (message.required_peer_count != null && Object.hasOwnProperty.call(message, "required_peer_count"))
-                    writer.uint32(/* id 3, wireType 0 =*/24).int32(message.required_peer_count);
-                if (message.maximum_peer_count != null && Object.hasOwnProperty.call(message, "maximum_peer_count"))
-                    writer.uint32(/* id 4, wireType 0 =*/32).int32(message.maximum_peer_count);
-                if (message.block_to_live != null && Object.hasOwnProperty.call(message, "block_to_live"))
-                    writer.uint32(/* id 5, wireType 0 =*/40).uint64(message.block_to_live);
-                if (message.member_only_read != null && Object.hasOwnProperty.call(message, "member_only_read"))
-                    writer.uint32(/* id 6, wireType 0 =*/48).bool(message.member_only_read);
-                if (message.member_only_write != null && Object.hasOwnProperty.call(message, "member_only_write"))
-                    writer.uint32(/* id 7, wireType 0 =*/56).bool(message.member_only_write);
-                if (message.endorsement_policy != null && Object.hasOwnProperty.call(message, "endorsement_policy"))
-                    $root.common.ApplicationPolicy.encode(message.endorsement_policy, writer.uint32(/* id 8, wireType 2 =*/66).fork()).ldelim();
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified StaticCollectionConfig message, length delimited. Does not implicitly {@link common.StaticCollectionConfig.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof common.StaticCollectionConfig
-             * @static
-             * @param {common.IStaticCollectionConfig} message StaticCollectionConfig message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            StaticCollectionConfig.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a StaticCollectionConfig message from the specified reader or buffer.
-             * @function decode
-             * @memberof common.StaticCollectionConfig
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {common.StaticCollectionConfig} StaticCollectionConfig
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            StaticCollectionConfig.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.common.StaticCollectionConfig();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        message.name = reader.string();
-                        break;
-                    case 2:
-                        message.member_orgs_policy = $root.common.CollectionPolicyConfig.decode(reader, reader.uint32());
-                        break;
-                    case 3:
-                        message.required_peer_count = reader.int32();
-                        break;
-                    case 4:
-                        message.maximum_peer_count = reader.int32();
-                        break;
-                    case 5:
-                        message.block_to_live = reader.uint64();
-                        break;
-                    case 6:
-                        message.member_only_read = reader.bool();
-                        break;
-                    case 7:
-                        message.member_only_write = reader.bool();
-                        break;
-                    case 8:
-                        message.endorsement_policy = $root.common.ApplicationPolicy.decode(reader, reader.uint32());
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a StaticCollectionConfig message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof common.StaticCollectionConfig
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {common.StaticCollectionConfig} StaticCollectionConfig
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            StaticCollectionConfig.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a StaticCollectionConfig message.
-             * @function verify
-             * @memberof common.StaticCollectionConfig
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            StaticCollectionConfig.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (message.name != null && message.hasOwnProperty("name"))
-                    if (!$util.isString(message.name))
-                        return "name: string expected";
-                if (message.member_orgs_policy != null && message.hasOwnProperty("member_orgs_policy")) {
-                    var error = $root.common.CollectionPolicyConfig.verify(message.member_orgs_policy);
-                    if (error)
-                        return "member_orgs_policy." + error;
-                }
-                if (message.required_peer_count != null && message.hasOwnProperty("required_peer_count"))
-                    if (!$util.isInteger(message.required_peer_count))
-                        return "required_peer_count: integer expected";
-                if (message.maximum_peer_count != null && message.hasOwnProperty("maximum_peer_count"))
-                    if (!$util.isInteger(message.maximum_peer_count))
-                        return "maximum_peer_count: integer expected";
-                if (message.block_to_live != null && message.hasOwnProperty("block_to_live"))
-                    if (!$util.isInteger(message.block_to_live) && !(message.block_to_live && $util.isInteger(message.block_to_live.low) && $util.isInteger(message.block_to_live.high)))
-                        return "block_to_live: integer|Long expected";
-                if (message.member_only_read != null && message.hasOwnProperty("member_only_read"))
-                    if (typeof message.member_only_read !== "boolean")
-                        return "member_only_read: boolean expected";
-                if (message.member_only_write != null && message.hasOwnProperty("member_only_write"))
-                    if (typeof message.member_only_write !== "boolean")
-                        return "member_only_write: boolean expected";
-                if (message.endorsement_policy != null && message.hasOwnProperty("endorsement_policy")) {
-                    var error = $root.common.ApplicationPolicy.verify(message.endorsement_policy);
-                    if (error)
-                        return "endorsement_policy." + error;
-                }
-                return null;
-            };
-    
-            /**
-             * Creates a StaticCollectionConfig message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof common.StaticCollectionConfig
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {common.StaticCollectionConfig} StaticCollectionConfig
-             */
-            StaticCollectionConfig.fromObject = function fromObject(object) {
-                if (object instanceof $root.common.StaticCollectionConfig)
-                    return object;
-                var message = new $root.common.StaticCollectionConfig();
-                if (object.name != null)
-                    message.name = String(object.name);
-                if (object.member_orgs_policy != null) {
-                    if (typeof object.member_orgs_policy !== "object")
-                        throw TypeError(".common.StaticCollectionConfig.member_orgs_policy: object expected");
-                    message.member_orgs_policy = $root.common.CollectionPolicyConfig.fromObject(object.member_orgs_policy);
-                }
-                if (object.required_peer_count != null)
-                    message.required_peer_count = object.required_peer_count | 0;
-                if (object.maximum_peer_count != null)
-                    message.maximum_peer_count = object.maximum_peer_count | 0;
-                if (object.block_to_live != null)
-                    if ($util.Long)
-                        (message.block_to_live = $util.Long.fromValue(object.block_to_live)).unsigned = true;
-                    else if (typeof object.block_to_live === "string")
-                        message.block_to_live = parseInt(object.block_to_live, 10);
-                    else if (typeof object.block_to_live === "number")
-                        message.block_to_live = object.block_to_live;
-                    else if (typeof object.block_to_live === "object")
-                        message.block_to_live = new $util.LongBits(object.block_to_live.low >>> 0, object.block_to_live.high >>> 0).toNumber(true);
-                if (object.member_only_read != null)
-                    message.member_only_read = Boolean(object.member_only_read);
-                if (object.member_only_write != null)
-                    message.member_only_write = Boolean(object.member_only_write);
-                if (object.endorsement_policy != null) {
-                    if (typeof object.endorsement_policy !== "object")
-                        throw TypeError(".common.StaticCollectionConfig.endorsement_policy: object expected");
-                    message.endorsement_policy = $root.common.ApplicationPolicy.fromObject(object.endorsement_policy);
-                }
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a StaticCollectionConfig message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof common.StaticCollectionConfig
-             * @static
-             * @param {common.StaticCollectionConfig} message StaticCollectionConfig
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            StaticCollectionConfig.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (options.defaults) {
-                    object.name = "";
-                    object.member_orgs_policy = null;
-                    object.required_peer_count = 0;
-                    object.maximum_peer_count = 0;
-                    if ($util.Long) {
-                        var long = new $util.Long(0, 0, true);
-                        object.block_to_live = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                    } else
-                        object.block_to_live = options.longs === String ? "0" : 0;
-                    object.member_only_read = false;
-                    object.member_only_write = false;
-                    object.endorsement_policy = null;
-                }
-                if (message.name != null && message.hasOwnProperty("name"))
-                    object.name = message.name;
-                if (message.member_orgs_policy != null && message.hasOwnProperty("member_orgs_policy"))
-                    object.member_orgs_policy = $root.common.CollectionPolicyConfig.toObject(message.member_orgs_policy, options);
-                if (message.required_peer_count != null && message.hasOwnProperty("required_peer_count"))
-                    object.required_peer_count = message.required_peer_count;
-                if (message.maximum_peer_count != null && message.hasOwnProperty("maximum_peer_count"))
-                    object.maximum_peer_count = message.maximum_peer_count;
-                if (message.block_to_live != null && message.hasOwnProperty("block_to_live"))
-                    if (typeof message.block_to_live === "number")
-                        object.block_to_live = options.longs === String ? String(message.block_to_live) : message.block_to_live;
-                    else
-                        object.block_to_live = options.longs === String ? $util.Long.prototype.toString.call(message.block_to_live) : options.longs === Number ? new $util.LongBits(message.block_to_live.low >>> 0, message.block_to_live.high >>> 0).toNumber(true) : message.block_to_live;
-                if (message.member_only_read != null && message.hasOwnProperty("member_only_read"))
-                    object.member_only_read = message.member_only_read;
-                if (message.member_only_write != null && message.hasOwnProperty("member_only_write"))
-                    object.member_only_write = message.member_only_write;
-                if (message.endorsement_policy != null && message.hasOwnProperty("endorsement_policy"))
-                    object.endorsement_policy = $root.common.ApplicationPolicy.toObject(message.endorsement_policy, options);
-                return object;
-            };
-    
-            /**
-             * Converts this StaticCollectionConfig to JSON.
-             * @function toJSON
-             * @memberof common.StaticCollectionConfig
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            StaticCollectionConfig.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return StaticCollectionConfig;
-        })();
-    
-        common.CollectionPolicyConfig = (function() {
-    
-            /**
-             * Properties of a CollectionPolicyConfig.
-             * @memberof common
-             * @interface ICollectionPolicyConfig
-             * @property {common.ISignaturePolicyEnvelope|null} [signature_policy] CollectionPolicyConfig signature_policy
-             */
-    
-            /**
-             * Constructs a new CollectionPolicyConfig.
-             * @memberof common
-             * @classdesc Represents a CollectionPolicyConfig.
-             * @implements ICollectionPolicyConfig
-             * @constructor
-             * @param {common.ICollectionPolicyConfig=} [properties] Properties to set
-             */
-            function CollectionPolicyConfig(properties) {
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * CollectionPolicyConfig signature_policy.
-             * @member {common.ISignaturePolicyEnvelope|null|undefined} signature_policy
-             * @memberof common.CollectionPolicyConfig
-             * @instance
-             */
-            CollectionPolicyConfig.prototype.signature_policy = null;
-    
-            // OneOf field names bound to virtual getters and setters
-            var $oneOfFields;
-    
-            /**
-             * CollectionPolicyConfig payload.
-             * @member {"signature_policy"|undefined} payload
-             * @memberof common.CollectionPolicyConfig
-             * @instance
-             */
-            Object.defineProperty(CollectionPolicyConfig.prototype, "payload", {
-                get: $util.oneOfGetter($oneOfFields = ["signature_policy"]),
-                set: $util.oneOfSetter($oneOfFields)
-            });
-    
-            /**
-             * Creates a new CollectionPolicyConfig instance using the specified properties.
-             * @function create
-             * @memberof common.CollectionPolicyConfig
-             * @static
-             * @param {common.ICollectionPolicyConfig=} [properties] Properties to set
-             * @returns {common.CollectionPolicyConfig} CollectionPolicyConfig instance
-             */
-            CollectionPolicyConfig.create = function create(properties) {
-                return new CollectionPolicyConfig(properties);
-            };
-    
-            /**
-             * Encodes the specified CollectionPolicyConfig message. Does not implicitly {@link common.CollectionPolicyConfig.verify|verify} messages.
-             * @function encode
-             * @memberof common.CollectionPolicyConfig
-             * @static
-             * @param {common.ICollectionPolicyConfig} message CollectionPolicyConfig message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            CollectionPolicyConfig.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.signature_policy != null && Object.hasOwnProperty.call(message, "signature_policy"))
-                    $root.common.SignaturePolicyEnvelope.encode(message.signature_policy, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified CollectionPolicyConfig message, length delimited. Does not implicitly {@link common.CollectionPolicyConfig.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof common.CollectionPolicyConfig
-             * @static
-             * @param {common.ICollectionPolicyConfig} message CollectionPolicyConfig message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            CollectionPolicyConfig.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a CollectionPolicyConfig message from the specified reader or buffer.
-             * @function decode
-             * @memberof common.CollectionPolicyConfig
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {common.CollectionPolicyConfig} CollectionPolicyConfig
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            CollectionPolicyConfig.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.common.CollectionPolicyConfig();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        message.signature_policy = $root.common.SignaturePolicyEnvelope.decode(reader, reader.uint32());
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a CollectionPolicyConfig message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof common.CollectionPolicyConfig
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {common.CollectionPolicyConfig} CollectionPolicyConfig
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            CollectionPolicyConfig.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a CollectionPolicyConfig message.
-             * @function verify
-             * @memberof common.CollectionPolicyConfig
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            CollectionPolicyConfig.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                var properties = {};
-                if (message.signature_policy != null && message.hasOwnProperty("signature_policy")) {
-                    properties.payload = 1;
-                    {
-                        var error = $root.common.SignaturePolicyEnvelope.verify(message.signature_policy);
-                        if (error)
-                            return "signature_policy." + error;
-                    }
-                }
-                return null;
-            };
-    
-            /**
-             * Creates a CollectionPolicyConfig message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof common.CollectionPolicyConfig
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {common.CollectionPolicyConfig} CollectionPolicyConfig
-             */
-            CollectionPolicyConfig.fromObject = function fromObject(object) {
-                if (object instanceof $root.common.CollectionPolicyConfig)
-                    return object;
-                var message = new $root.common.CollectionPolicyConfig();
-                if (object.signature_policy != null) {
-                    if (typeof object.signature_policy !== "object")
-                        throw TypeError(".common.CollectionPolicyConfig.signature_policy: object expected");
-                    message.signature_policy = $root.common.SignaturePolicyEnvelope.fromObject(object.signature_policy);
-                }
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a CollectionPolicyConfig message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof common.CollectionPolicyConfig
-             * @static
-             * @param {common.CollectionPolicyConfig} message CollectionPolicyConfig
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            CollectionPolicyConfig.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (message.signature_policy != null && message.hasOwnProperty("signature_policy")) {
-                    object.signature_policy = $root.common.SignaturePolicyEnvelope.toObject(message.signature_policy, options);
-                    if (options.oneofs)
-                        object.payload = "signature_policy";
-                }
-                return object;
-            };
-    
-            /**
-             * Converts this CollectionPolicyConfig to JSON.
-             * @function toJSON
-             * @memberof common.CollectionPolicyConfig
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            CollectionPolicyConfig.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return CollectionPolicyConfig;
         })();
     
         /**
@@ -29677,7 +28751,7 @@
             ConfigUpdate.decode = function decode(reader, length) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.common.ConfigUpdate(), key;
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.common.ConfigUpdate(), key, value;
                 while (reader.pos < end) {
                     var tag = reader.uint32();
                     switch (tag >>> 3) {
@@ -29691,12 +28765,26 @@
                         message.write_set = $root.common.ConfigGroup.decode(reader, reader.uint32());
                         break;
                     case 5:
-                        reader.skip().pos++;
                         if (message.isolated_data === $util.emptyObject)
                             message.isolated_data = {};
-                        key = reader.string();
-                        reader.pos++;
-                        message.isolated_data[key] = reader.bytes();
+                        var end2 = reader.uint32() + reader.pos;
+                        key = "";
+                        value = [];
+                        while (reader.pos < end2) {
+                            var tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.string();
+                                break;
+                            case 2:
+                                value = reader.bytes();
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7);
+                                break;
+                            }
+                        }
+                        message.isolated_data[key] = value;
                         break;
                     default:
                         reader.skipType(tag & 7);
@@ -29987,7 +29075,7 @@
             ConfigGroup.decode = function decode(reader, length) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.common.ConfigGroup(), key;
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.common.ConfigGroup(), key, value;
                 while (reader.pos < end) {
                     var tag = reader.uint32();
                     switch (tag >>> 3) {
@@ -29995,28 +29083,70 @@
                         message.version = reader.uint64();
                         break;
                     case 2:
-                        reader.skip().pos++;
                         if (message.groups === $util.emptyObject)
                             message.groups = {};
-                        key = reader.string();
-                        reader.pos++;
-                        message.groups[key] = $root.common.ConfigGroup.decode(reader, reader.uint32());
+                        var end2 = reader.uint32() + reader.pos;
+                        key = "";
+                        value = null;
+                        while (reader.pos < end2) {
+                            var tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.string();
+                                break;
+                            case 2:
+                                value = $root.common.ConfigGroup.decode(reader, reader.uint32());
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7);
+                                break;
+                            }
+                        }
+                        message.groups[key] = value;
                         break;
                     case 3:
-                        reader.skip().pos++;
                         if (message.values === $util.emptyObject)
                             message.values = {};
-                        key = reader.string();
-                        reader.pos++;
-                        message.values[key] = $root.common.ConfigValue.decode(reader, reader.uint32());
+                        var end2 = reader.uint32() + reader.pos;
+                        key = "";
+                        value = null;
+                        while (reader.pos < end2) {
+                            var tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.string();
+                                break;
+                            case 2:
+                                value = $root.common.ConfigValue.decode(reader, reader.uint32());
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7);
+                                break;
+                            }
+                        }
+                        message.values[key] = value;
                         break;
                     case 4:
-                        reader.skip().pos++;
                         if (message.policies === $util.emptyObject)
                             message.policies = {};
-                        key = reader.string();
-                        reader.pos++;
-                        message.policies[key] = $root.common.ConfigPolicy.decode(reader, reader.uint32());
+                        var end2 = reader.uint32() + reader.pos;
+                        key = "";
+                        value = null;
+                        while (reader.pos < end2) {
+                            var tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.string();
+                                break;
+                            case 2:
+                                value = $root.common.ConfigPolicy.decode(reader, reader.uint32());
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7);
+                                break;
+                            }
+                        }
+                        message.policies[key] = value;
                         break;
                     case 5:
                         message.mod_policy = reader.string();
@@ -30951,6 +30081,270 @@
             return ConfigSignature;
         })();
     
+        common.BlockchainInfo = (function() {
+    
+            /**
+             * Properties of a BlockchainInfo.
+             * @memberof common
+             * @interface IBlockchainInfo
+             * @property {number|Long|null} [height] BlockchainInfo height
+             * @property {Uint8Array|null} [currentBlockHash] BlockchainInfo currentBlockHash
+             * @property {Uint8Array|null} [previousBlockHash] BlockchainInfo previousBlockHash
+             */
+    
+            /**
+             * Constructs a new BlockchainInfo.
+             * @memberof common
+             * @classdesc Represents a BlockchainInfo.
+             * @implements IBlockchainInfo
+             * @constructor
+             * @param {common.IBlockchainInfo=} [properties] Properties to set
+             */
+            function BlockchainInfo(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * BlockchainInfo height.
+             * @member {number|Long} height
+             * @memberof common.BlockchainInfo
+             * @instance
+             */
+            BlockchainInfo.prototype.height = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    
+            /**
+             * BlockchainInfo currentBlockHash.
+             * @member {Uint8Array} currentBlockHash
+             * @memberof common.BlockchainInfo
+             * @instance
+             */
+            BlockchainInfo.prototype.currentBlockHash = $util.newBuffer([]);
+    
+            /**
+             * BlockchainInfo previousBlockHash.
+             * @member {Uint8Array} previousBlockHash
+             * @memberof common.BlockchainInfo
+             * @instance
+             */
+            BlockchainInfo.prototype.previousBlockHash = $util.newBuffer([]);
+    
+            /**
+             * Creates a new BlockchainInfo instance using the specified properties.
+             * @function create
+             * @memberof common.BlockchainInfo
+             * @static
+             * @param {common.IBlockchainInfo=} [properties] Properties to set
+             * @returns {common.BlockchainInfo} BlockchainInfo instance
+             */
+            BlockchainInfo.create = function create(properties) {
+                return new BlockchainInfo(properties);
+            };
+    
+            /**
+             * Encodes the specified BlockchainInfo message. Does not implicitly {@link common.BlockchainInfo.verify|verify} messages.
+             * @function encode
+             * @memberof common.BlockchainInfo
+             * @static
+             * @param {common.IBlockchainInfo} message BlockchainInfo message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            BlockchainInfo.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.height != null && Object.hasOwnProperty.call(message, "height"))
+                    writer.uint32(/* id 1, wireType 0 =*/8).uint64(message.height);
+                if (message.currentBlockHash != null && Object.hasOwnProperty.call(message, "currentBlockHash"))
+                    writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.currentBlockHash);
+                if (message.previousBlockHash != null && Object.hasOwnProperty.call(message, "previousBlockHash"))
+                    writer.uint32(/* id 3, wireType 2 =*/26).bytes(message.previousBlockHash);
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified BlockchainInfo message, length delimited. Does not implicitly {@link common.BlockchainInfo.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof common.BlockchainInfo
+             * @static
+             * @param {common.IBlockchainInfo} message BlockchainInfo message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            BlockchainInfo.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a BlockchainInfo message from the specified reader or buffer.
+             * @function decode
+             * @memberof common.BlockchainInfo
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {common.BlockchainInfo} BlockchainInfo
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            BlockchainInfo.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.common.BlockchainInfo();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.height = reader.uint64();
+                        break;
+                    case 2:
+                        message.currentBlockHash = reader.bytes();
+                        break;
+                    case 3:
+                        message.previousBlockHash = reader.bytes();
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a BlockchainInfo message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof common.BlockchainInfo
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {common.BlockchainInfo} BlockchainInfo
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            BlockchainInfo.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a BlockchainInfo message.
+             * @function verify
+             * @memberof common.BlockchainInfo
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            BlockchainInfo.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.height != null && message.hasOwnProperty("height"))
+                    if (!$util.isInteger(message.height) && !(message.height && $util.isInteger(message.height.low) && $util.isInteger(message.height.high)))
+                        return "height: integer|Long expected";
+                if (message.currentBlockHash != null && message.hasOwnProperty("currentBlockHash"))
+                    if (!(message.currentBlockHash && typeof message.currentBlockHash.length === "number" || $util.isString(message.currentBlockHash)))
+                        return "currentBlockHash: buffer expected";
+                if (message.previousBlockHash != null && message.hasOwnProperty("previousBlockHash"))
+                    if (!(message.previousBlockHash && typeof message.previousBlockHash.length === "number" || $util.isString(message.previousBlockHash)))
+                        return "previousBlockHash: buffer expected";
+                return null;
+            };
+    
+            /**
+             * Creates a BlockchainInfo message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof common.BlockchainInfo
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {common.BlockchainInfo} BlockchainInfo
+             */
+            BlockchainInfo.fromObject = function fromObject(object) {
+                if (object instanceof $root.common.BlockchainInfo)
+                    return object;
+                var message = new $root.common.BlockchainInfo();
+                if (object.height != null)
+                    if ($util.Long)
+                        (message.height = $util.Long.fromValue(object.height)).unsigned = true;
+                    else if (typeof object.height === "string")
+                        message.height = parseInt(object.height, 10);
+                    else if (typeof object.height === "number")
+                        message.height = object.height;
+                    else if (typeof object.height === "object")
+                        message.height = new $util.LongBits(object.height.low >>> 0, object.height.high >>> 0).toNumber(true);
+                if (object.currentBlockHash != null)
+                    if (typeof object.currentBlockHash === "string")
+                        $util.base64.decode(object.currentBlockHash, message.currentBlockHash = $util.newBuffer($util.base64.length(object.currentBlockHash)), 0);
+                    else if (object.currentBlockHash.length)
+                        message.currentBlockHash = object.currentBlockHash;
+                if (object.previousBlockHash != null)
+                    if (typeof object.previousBlockHash === "string")
+                        $util.base64.decode(object.previousBlockHash, message.previousBlockHash = $util.newBuffer($util.base64.length(object.previousBlockHash)), 0);
+                    else if (object.previousBlockHash.length)
+                        message.previousBlockHash = object.previousBlockHash;
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a BlockchainInfo message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof common.BlockchainInfo
+             * @static
+             * @param {common.BlockchainInfo} message BlockchainInfo
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            BlockchainInfo.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.defaults) {
+                    if ($util.Long) {
+                        var long = new $util.Long(0, 0, true);
+                        object.height = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                    } else
+                        object.height = options.longs === String ? "0" : 0;
+                    if (options.bytes === String)
+                        object.currentBlockHash = "";
+                    else {
+                        object.currentBlockHash = [];
+                        if (options.bytes !== Array)
+                            object.currentBlockHash = $util.newBuffer(object.currentBlockHash);
+                    }
+                    if (options.bytes === String)
+                        object.previousBlockHash = "";
+                    else {
+                        object.previousBlockHash = [];
+                        if (options.bytes !== Array)
+                            object.previousBlockHash = $util.newBuffer(object.previousBlockHash);
+                    }
+                }
+                if (message.height != null && message.hasOwnProperty("height"))
+                    if (typeof message.height === "number")
+                        object.height = options.longs === String ? String(message.height) : message.height;
+                    else
+                        object.height = options.longs === String ? $util.Long.prototype.toString.call(message.height) : options.longs === Number ? new $util.LongBits(message.height.low >>> 0, message.height.high >>> 0).toNumber(true) : message.height;
+                if (message.currentBlockHash != null && message.hasOwnProperty("currentBlockHash"))
+                    object.currentBlockHash = options.bytes === String ? $util.base64.encode(message.currentBlockHash, 0, message.currentBlockHash.length) : options.bytes === Array ? Array.prototype.slice.call(message.currentBlockHash) : message.currentBlockHash;
+                if (message.previousBlockHash != null && message.hasOwnProperty("previousBlockHash"))
+                    object.previousBlockHash = options.bytes === String ? $util.base64.encode(message.previousBlockHash, 0, message.previousBlockHash.length) : options.bytes === Array ? Array.prototype.slice.call(message.previousBlockHash) : message.previousBlockHash;
+                return object;
+            };
+    
+            /**
+             * Converts this BlockchainInfo to JSON.
+             * @function toJSON
+             * @memberof common.BlockchainInfo
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            BlockchainInfo.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return BlockchainInfo;
+        })();
+    
         common.HashingAlgorithm = (function() {
     
             /**
@@ -31807,17 +31201,31 @@
             Capabilities.decode = function decode(reader, length) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.common.Capabilities(), key;
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.common.Capabilities(), key, value;
                 while (reader.pos < end) {
                     var tag = reader.uint32();
                     switch (tag >>> 3) {
                     case 1:
-                        reader.skip().pos++;
                         if (message.capabilities === $util.emptyObject)
                             message.capabilities = {};
-                        key = reader.string();
-                        reader.pos++;
-                        message.capabilities[key] = $root.common.Capability.decode(reader, reader.uint32());
+                        var end2 = reader.uint32() + reader.pos;
+                        key = "";
+                        value = null;
+                        while (reader.pos < end2) {
+                            var tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.string();
+                                break;
+                            case 2:
+                                value = $root.common.Capability.decode(reader, reader.uint32());
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7);
+                                break;
+                            }
+                        }
+                        message.capabilities[key] = value;
                         break;
                     default:
                         reader.skipType(tag & 7);
@@ -32090,26 +31498,25 @@
             return Capability;
         })();
     
-        common.BlockchainInfo = (function() {
+        common.CollectionConfigPackage = (function() {
     
             /**
-             * Properties of a BlockchainInfo.
+             * Properties of a CollectionConfigPackage.
              * @memberof common
-             * @interface IBlockchainInfo
-             * @property {number|Long|null} [height] BlockchainInfo height
-             * @property {Uint8Array|null} [currentBlockHash] BlockchainInfo currentBlockHash
-             * @property {Uint8Array|null} [previousBlockHash] BlockchainInfo previousBlockHash
+             * @interface ICollectionConfigPackage
+             * @property {Array.<common.ICollectionConfig>|null} [config] CollectionConfigPackage config
              */
     
             /**
-             * Constructs a new BlockchainInfo.
+             * Constructs a new CollectionConfigPackage.
              * @memberof common
-             * @classdesc Represents a BlockchainInfo.
-             * @implements IBlockchainInfo
+             * @classdesc Represents a CollectionConfigPackage.
+             * @implements ICollectionConfigPackage
              * @constructor
-             * @param {common.IBlockchainInfo=} [properties] Properties to set
+             * @param {common.ICollectionConfigPackage=} [properties] Properties to set
              */
-            function BlockchainInfo(properties) {
+            function CollectionConfigPackage(properties) {
+                this.config = [];
                 if (properties)
                     for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                         if (properties[keys[i]] != null)
@@ -32117,101 +31524,78 @@
             }
     
             /**
-             * BlockchainInfo height.
-             * @member {number|Long} height
-             * @memberof common.BlockchainInfo
+             * CollectionConfigPackage config.
+             * @member {Array.<common.ICollectionConfig>} config
+             * @memberof common.CollectionConfigPackage
              * @instance
              */
-            BlockchainInfo.prototype.height = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+            CollectionConfigPackage.prototype.config = $util.emptyArray;
     
             /**
-             * BlockchainInfo currentBlockHash.
-             * @member {Uint8Array} currentBlockHash
-             * @memberof common.BlockchainInfo
-             * @instance
-             */
-            BlockchainInfo.prototype.currentBlockHash = $util.newBuffer([]);
-    
-            /**
-             * BlockchainInfo previousBlockHash.
-             * @member {Uint8Array} previousBlockHash
-             * @memberof common.BlockchainInfo
-             * @instance
-             */
-            BlockchainInfo.prototype.previousBlockHash = $util.newBuffer([]);
-    
-            /**
-             * Creates a new BlockchainInfo instance using the specified properties.
+             * Creates a new CollectionConfigPackage instance using the specified properties.
              * @function create
-             * @memberof common.BlockchainInfo
+             * @memberof common.CollectionConfigPackage
              * @static
-             * @param {common.IBlockchainInfo=} [properties] Properties to set
-             * @returns {common.BlockchainInfo} BlockchainInfo instance
+             * @param {common.ICollectionConfigPackage=} [properties] Properties to set
+             * @returns {common.CollectionConfigPackage} CollectionConfigPackage instance
              */
-            BlockchainInfo.create = function create(properties) {
-                return new BlockchainInfo(properties);
+            CollectionConfigPackage.create = function create(properties) {
+                return new CollectionConfigPackage(properties);
             };
     
             /**
-             * Encodes the specified BlockchainInfo message. Does not implicitly {@link common.BlockchainInfo.verify|verify} messages.
+             * Encodes the specified CollectionConfigPackage message. Does not implicitly {@link common.CollectionConfigPackage.verify|verify} messages.
              * @function encode
-             * @memberof common.BlockchainInfo
+             * @memberof common.CollectionConfigPackage
              * @static
-             * @param {common.IBlockchainInfo} message BlockchainInfo message or plain object to encode
+             * @param {common.ICollectionConfigPackage} message CollectionConfigPackage message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            BlockchainInfo.encode = function encode(message, writer) {
+            CollectionConfigPackage.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
-                if (message.height != null && Object.hasOwnProperty.call(message, "height"))
-                    writer.uint32(/* id 1, wireType 0 =*/8).uint64(message.height);
-                if (message.currentBlockHash != null && Object.hasOwnProperty.call(message, "currentBlockHash"))
-                    writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.currentBlockHash);
-                if (message.previousBlockHash != null && Object.hasOwnProperty.call(message, "previousBlockHash"))
-                    writer.uint32(/* id 3, wireType 2 =*/26).bytes(message.previousBlockHash);
+                if (message.config != null && message.config.length)
+                    for (var i = 0; i < message.config.length; ++i)
+                        $root.common.CollectionConfig.encode(message.config[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
                 return writer;
             };
     
             /**
-             * Encodes the specified BlockchainInfo message, length delimited. Does not implicitly {@link common.BlockchainInfo.verify|verify} messages.
+             * Encodes the specified CollectionConfigPackage message, length delimited. Does not implicitly {@link common.CollectionConfigPackage.verify|verify} messages.
              * @function encodeDelimited
-             * @memberof common.BlockchainInfo
+             * @memberof common.CollectionConfigPackage
              * @static
-             * @param {common.IBlockchainInfo} message BlockchainInfo message or plain object to encode
+             * @param {common.ICollectionConfigPackage} message CollectionConfigPackage message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            BlockchainInfo.encodeDelimited = function encodeDelimited(message, writer) {
+            CollectionConfigPackage.encodeDelimited = function encodeDelimited(message, writer) {
                 return this.encode(message, writer).ldelim();
             };
     
             /**
-             * Decodes a BlockchainInfo message from the specified reader or buffer.
+             * Decodes a CollectionConfigPackage message from the specified reader or buffer.
              * @function decode
-             * @memberof common.BlockchainInfo
+             * @memberof common.CollectionConfigPackage
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @param {number} [length] Message length if known beforehand
-             * @returns {common.BlockchainInfo} BlockchainInfo
+             * @returns {common.CollectionConfigPackage} CollectionConfigPackage
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            BlockchainInfo.decode = function decode(reader, length) {
+            CollectionConfigPackage.decode = function decode(reader, length) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.common.BlockchainInfo();
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.common.CollectionConfigPackage();
                 while (reader.pos < end) {
                     var tag = reader.uint32();
                     switch (tag >>> 3) {
                     case 1:
-                        message.height = reader.uint64();
-                        break;
-                    case 2:
-                        message.currentBlockHash = reader.bytes();
-                        break;
-                    case 3:
-                        message.previousBlockHash = reader.bytes();
+                        if (!(message.config && message.config.length))
+                            message.config = [];
+                        message.config.push($root.common.CollectionConfig.decode(reader, reader.uint32()));
                         break;
                     default:
                         reader.skipType(tag & 7);
@@ -32222,136 +31606,892 @@
             };
     
             /**
-             * Decodes a BlockchainInfo message from the specified reader or buffer, length delimited.
+             * Decodes a CollectionConfigPackage message from the specified reader or buffer, length delimited.
              * @function decodeDelimited
-             * @memberof common.BlockchainInfo
+             * @memberof common.CollectionConfigPackage
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {common.BlockchainInfo} BlockchainInfo
+             * @returns {common.CollectionConfigPackage} CollectionConfigPackage
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            BlockchainInfo.decodeDelimited = function decodeDelimited(reader) {
+            CollectionConfigPackage.decodeDelimited = function decodeDelimited(reader) {
                 if (!(reader instanceof $Reader))
                     reader = new $Reader(reader);
                 return this.decode(reader, reader.uint32());
             };
     
             /**
-             * Verifies a BlockchainInfo message.
+             * Verifies a CollectionConfigPackage message.
              * @function verify
-             * @memberof common.BlockchainInfo
+             * @memberof common.CollectionConfigPackage
              * @static
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            BlockchainInfo.verify = function verify(message) {
+            CollectionConfigPackage.verify = function verify(message) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
-                if (message.height != null && message.hasOwnProperty("height"))
-                    if (!$util.isInteger(message.height) && !(message.height && $util.isInteger(message.height.low) && $util.isInteger(message.height.high)))
-                        return "height: integer|Long expected";
-                if (message.currentBlockHash != null && message.hasOwnProperty("currentBlockHash"))
-                    if (!(message.currentBlockHash && typeof message.currentBlockHash.length === "number" || $util.isString(message.currentBlockHash)))
-                        return "currentBlockHash: buffer expected";
-                if (message.previousBlockHash != null && message.hasOwnProperty("previousBlockHash"))
-                    if (!(message.previousBlockHash && typeof message.previousBlockHash.length === "number" || $util.isString(message.previousBlockHash)))
-                        return "previousBlockHash: buffer expected";
+                if (message.config != null && message.hasOwnProperty("config")) {
+                    if (!Array.isArray(message.config))
+                        return "config: array expected";
+                    for (var i = 0; i < message.config.length; ++i) {
+                        var error = $root.common.CollectionConfig.verify(message.config[i]);
+                        if (error)
+                            return "config." + error;
+                    }
+                }
                 return null;
             };
     
             /**
-             * Creates a BlockchainInfo message from a plain object. Also converts values to their respective internal types.
+             * Creates a CollectionConfigPackage message from a plain object. Also converts values to their respective internal types.
              * @function fromObject
-             * @memberof common.BlockchainInfo
+             * @memberof common.CollectionConfigPackage
              * @static
              * @param {Object.<string,*>} object Plain object
-             * @returns {common.BlockchainInfo} BlockchainInfo
+             * @returns {common.CollectionConfigPackage} CollectionConfigPackage
              */
-            BlockchainInfo.fromObject = function fromObject(object) {
-                if (object instanceof $root.common.BlockchainInfo)
+            CollectionConfigPackage.fromObject = function fromObject(object) {
+                if (object instanceof $root.common.CollectionConfigPackage)
                     return object;
-                var message = new $root.common.BlockchainInfo();
-                if (object.height != null)
-                    if ($util.Long)
-                        (message.height = $util.Long.fromValue(object.height)).unsigned = true;
-                    else if (typeof object.height === "string")
-                        message.height = parseInt(object.height, 10);
-                    else if (typeof object.height === "number")
-                        message.height = object.height;
-                    else if (typeof object.height === "object")
-                        message.height = new $util.LongBits(object.height.low >>> 0, object.height.high >>> 0).toNumber(true);
-                if (object.currentBlockHash != null)
-                    if (typeof object.currentBlockHash === "string")
-                        $util.base64.decode(object.currentBlockHash, message.currentBlockHash = $util.newBuffer($util.base64.length(object.currentBlockHash)), 0);
-                    else if (object.currentBlockHash.length)
-                        message.currentBlockHash = object.currentBlockHash;
-                if (object.previousBlockHash != null)
-                    if (typeof object.previousBlockHash === "string")
-                        $util.base64.decode(object.previousBlockHash, message.previousBlockHash = $util.newBuffer($util.base64.length(object.previousBlockHash)), 0);
-                    else if (object.previousBlockHash.length)
-                        message.previousBlockHash = object.previousBlockHash;
+                var message = new $root.common.CollectionConfigPackage();
+                if (object.config) {
+                    if (!Array.isArray(object.config))
+                        throw TypeError(".common.CollectionConfigPackage.config: array expected");
+                    message.config = [];
+                    for (var i = 0; i < object.config.length; ++i) {
+                        if (typeof object.config[i] !== "object")
+                            throw TypeError(".common.CollectionConfigPackage.config: object expected");
+                        message.config[i] = $root.common.CollectionConfig.fromObject(object.config[i]);
+                    }
+                }
                 return message;
             };
     
             /**
-             * Creates a plain object from a BlockchainInfo message. Also converts values to other types if specified.
+             * Creates a plain object from a CollectionConfigPackage message. Also converts values to other types if specified.
              * @function toObject
-             * @memberof common.BlockchainInfo
+             * @memberof common.CollectionConfigPackage
              * @static
-             * @param {common.BlockchainInfo} message BlockchainInfo
+             * @param {common.CollectionConfigPackage} message CollectionConfigPackage
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            BlockchainInfo.toObject = function toObject(message, options) {
+            CollectionConfigPackage.toObject = function toObject(message, options) {
                 if (!options)
                     options = {};
                 var object = {};
-                if (options.defaults) {
-                    if ($util.Long) {
-                        var long = new $util.Long(0, 0, true);
-                        object.height = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                    } else
-                        object.height = options.longs === String ? "0" : 0;
-                    if (options.bytes === String)
-                        object.currentBlockHash = "";
-                    else {
-                        object.currentBlockHash = [];
-                        if (options.bytes !== Array)
-                            object.currentBlockHash = $util.newBuffer(object.currentBlockHash);
-                    }
-                    if (options.bytes === String)
-                        object.previousBlockHash = "";
-                    else {
-                        object.previousBlockHash = [];
-                        if (options.bytes !== Array)
-                            object.previousBlockHash = $util.newBuffer(object.previousBlockHash);
-                    }
+                if (options.arrays || options.defaults)
+                    object.config = [];
+                if (message.config && message.config.length) {
+                    object.config = [];
+                    for (var j = 0; j < message.config.length; ++j)
+                        object.config[j] = $root.common.CollectionConfig.toObject(message.config[j], options);
                 }
-                if (message.height != null && message.hasOwnProperty("height"))
-                    if (typeof message.height === "number")
-                        object.height = options.longs === String ? String(message.height) : message.height;
-                    else
-                        object.height = options.longs === String ? $util.Long.prototype.toString.call(message.height) : options.longs === Number ? new $util.LongBits(message.height.low >>> 0, message.height.high >>> 0).toNumber(true) : message.height;
-                if (message.currentBlockHash != null && message.hasOwnProperty("currentBlockHash"))
-                    object.currentBlockHash = options.bytes === String ? $util.base64.encode(message.currentBlockHash, 0, message.currentBlockHash.length) : options.bytes === Array ? Array.prototype.slice.call(message.currentBlockHash) : message.currentBlockHash;
-                if (message.previousBlockHash != null && message.hasOwnProperty("previousBlockHash"))
-                    object.previousBlockHash = options.bytes === String ? $util.base64.encode(message.previousBlockHash, 0, message.previousBlockHash.length) : options.bytes === Array ? Array.prototype.slice.call(message.previousBlockHash) : message.previousBlockHash;
                 return object;
             };
     
             /**
-             * Converts this BlockchainInfo to JSON.
+             * Converts this CollectionConfigPackage to JSON.
              * @function toJSON
-             * @memberof common.BlockchainInfo
+             * @memberof common.CollectionConfigPackage
              * @instance
              * @returns {Object.<string,*>} JSON object
              */
-            BlockchainInfo.prototype.toJSON = function toJSON() {
+            CollectionConfigPackage.prototype.toJSON = function toJSON() {
                 return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
             };
     
-            return BlockchainInfo;
+            return CollectionConfigPackage;
+        })();
+    
+        common.CollectionConfig = (function() {
+    
+            /**
+             * Properties of a CollectionConfig.
+             * @memberof common
+             * @interface ICollectionConfig
+             * @property {common.IStaticCollectionConfig|null} [static_collection_config] CollectionConfig static_collection_config
+             */
+    
+            /**
+             * Constructs a new CollectionConfig.
+             * @memberof common
+             * @classdesc Represents a CollectionConfig.
+             * @implements ICollectionConfig
+             * @constructor
+             * @param {common.ICollectionConfig=} [properties] Properties to set
+             */
+            function CollectionConfig(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * CollectionConfig static_collection_config.
+             * @member {common.IStaticCollectionConfig|null|undefined} static_collection_config
+             * @memberof common.CollectionConfig
+             * @instance
+             */
+            CollectionConfig.prototype.static_collection_config = null;
+    
+            // OneOf field names bound to virtual getters and setters
+            var $oneOfFields;
+    
+            /**
+             * CollectionConfig payload.
+             * @member {"static_collection_config"|undefined} payload
+             * @memberof common.CollectionConfig
+             * @instance
+             */
+            Object.defineProperty(CollectionConfig.prototype, "payload", {
+                get: $util.oneOfGetter($oneOfFields = ["static_collection_config"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+    
+            /**
+             * Creates a new CollectionConfig instance using the specified properties.
+             * @function create
+             * @memberof common.CollectionConfig
+             * @static
+             * @param {common.ICollectionConfig=} [properties] Properties to set
+             * @returns {common.CollectionConfig} CollectionConfig instance
+             */
+            CollectionConfig.create = function create(properties) {
+                return new CollectionConfig(properties);
+            };
+    
+            /**
+             * Encodes the specified CollectionConfig message. Does not implicitly {@link common.CollectionConfig.verify|verify} messages.
+             * @function encode
+             * @memberof common.CollectionConfig
+             * @static
+             * @param {common.ICollectionConfig} message CollectionConfig message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            CollectionConfig.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.static_collection_config != null && Object.hasOwnProperty.call(message, "static_collection_config"))
+                    $root.common.StaticCollectionConfig.encode(message.static_collection_config, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified CollectionConfig message, length delimited. Does not implicitly {@link common.CollectionConfig.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof common.CollectionConfig
+             * @static
+             * @param {common.ICollectionConfig} message CollectionConfig message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            CollectionConfig.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a CollectionConfig message from the specified reader or buffer.
+             * @function decode
+             * @memberof common.CollectionConfig
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {common.CollectionConfig} CollectionConfig
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            CollectionConfig.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.common.CollectionConfig();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.static_collection_config = $root.common.StaticCollectionConfig.decode(reader, reader.uint32());
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a CollectionConfig message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof common.CollectionConfig
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {common.CollectionConfig} CollectionConfig
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            CollectionConfig.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a CollectionConfig message.
+             * @function verify
+             * @memberof common.CollectionConfig
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            CollectionConfig.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                var properties = {};
+                if (message.static_collection_config != null && message.hasOwnProperty("static_collection_config")) {
+                    properties.payload = 1;
+                    {
+                        var error = $root.common.StaticCollectionConfig.verify(message.static_collection_config);
+                        if (error)
+                            return "static_collection_config." + error;
+                    }
+                }
+                return null;
+            };
+    
+            /**
+             * Creates a CollectionConfig message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof common.CollectionConfig
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {common.CollectionConfig} CollectionConfig
+             */
+            CollectionConfig.fromObject = function fromObject(object) {
+                if (object instanceof $root.common.CollectionConfig)
+                    return object;
+                var message = new $root.common.CollectionConfig();
+                if (object.static_collection_config != null) {
+                    if (typeof object.static_collection_config !== "object")
+                        throw TypeError(".common.CollectionConfig.static_collection_config: object expected");
+                    message.static_collection_config = $root.common.StaticCollectionConfig.fromObject(object.static_collection_config);
+                }
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a CollectionConfig message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof common.CollectionConfig
+             * @static
+             * @param {common.CollectionConfig} message CollectionConfig
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            CollectionConfig.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (message.static_collection_config != null && message.hasOwnProperty("static_collection_config")) {
+                    object.static_collection_config = $root.common.StaticCollectionConfig.toObject(message.static_collection_config, options);
+                    if (options.oneofs)
+                        object.payload = "static_collection_config";
+                }
+                return object;
+            };
+    
+            /**
+             * Converts this CollectionConfig to JSON.
+             * @function toJSON
+             * @memberof common.CollectionConfig
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            CollectionConfig.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return CollectionConfig;
+        })();
+    
+        common.StaticCollectionConfig = (function() {
+    
+            /**
+             * Properties of a StaticCollectionConfig.
+             * @memberof common
+             * @interface IStaticCollectionConfig
+             * @property {string|null} [name] StaticCollectionConfig name
+             * @property {common.ICollectionPolicyConfig|null} [member_orgs_policy] StaticCollectionConfig member_orgs_policy
+             * @property {number|null} [required_peer_count] StaticCollectionConfig required_peer_count
+             * @property {number|null} [maximum_peer_count] StaticCollectionConfig maximum_peer_count
+             * @property {number|Long|null} [block_to_live] StaticCollectionConfig block_to_live
+             * @property {boolean|null} [member_only_read] StaticCollectionConfig member_only_read
+             * @property {boolean|null} [member_only_write] StaticCollectionConfig member_only_write
+             * @property {common.IApplicationPolicy|null} [endorsement_policy] StaticCollectionConfig endorsement_policy
+             */
+    
+            /**
+             * Constructs a new StaticCollectionConfig.
+             * @memberof common
+             * @classdesc Represents a StaticCollectionConfig.
+             * @implements IStaticCollectionConfig
+             * @constructor
+             * @param {common.IStaticCollectionConfig=} [properties] Properties to set
+             */
+            function StaticCollectionConfig(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * StaticCollectionConfig name.
+             * @member {string} name
+             * @memberof common.StaticCollectionConfig
+             * @instance
+             */
+            StaticCollectionConfig.prototype.name = "";
+    
+            /**
+             * StaticCollectionConfig member_orgs_policy.
+             * @member {common.ICollectionPolicyConfig|null|undefined} member_orgs_policy
+             * @memberof common.StaticCollectionConfig
+             * @instance
+             */
+            StaticCollectionConfig.prototype.member_orgs_policy = null;
+    
+            /**
+             * StaticCollectionConfig required_peer_count.
+             * @member {number} required_peer_count
+             * @memberof common.StaticCollectionConfig
+             * @instance
+             */
+            StaticCollectionConfig.prototype.required_peer_count = 0;
+    
+            /**
+             * StaticCollectionConfig maximum_peer_count.
+             * @member {number} maximum_peer_count
+             * @memberof common.StaticCollectionConfig
+             * @instance
+             */
+            StaticCollectionConfig.prototype.maximum_peer_count = 0;
+    
+            /**
+             * StaticCollectionConfig block_to_live.
+             * @member {number|Long} block_to_live
+             * @memberof common.StaticCollectionConfig
+             * @instance
+             */
+            StaticCollectionConfig.prototype.block_to_live = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    
+            /**
+             * StaticCollectionConfig member_only_read.
+             * @member {boolean} member_only_read
+             * @memberof common.StaticCollectionConfig
+             * @instance
+             */
+            StaticCollectionConfig.prototype.member_only_read = false;
+    
+            /**
+             * StaticCollectionConfig member_only_write.
+             * @member {boolean} member_only_write
+             * @memberof common.StaticCollectionConfig
+             * @instance
+             */
+            StaticCollectionConfig.prototype.member_only_write = false;
+    
+            /**
+             * StaticCollectionConfig endorsement_policy.
+             * @member {common.IApplicationPolicy|null|undefined} endorsement_policy
+             * @memberof common.StaticCollectionConfig
+             * @instance
+             */
+            StaticCollectionConfig.prototype.endorsement_policy = null;
+    
+            /**
+             * Creates a new StaticCollectionConfig instance using the specified properties.
+             * @function create
+             * @memberof common.StaticCollectionConfig
+             * @static
+             * @param {common.IStaticCollectionConfig=} [properties] Properties to set
+             * @returns {common.StaticCollectionConfig} StaticCollectionConfig instance
+             */
+            StaticCollectionConfig.create = function create(properties) {
+                return new StaticCollectionConfig(properties);
+            };
+    
+            /**
+             * Encodes the specified StaticCollectionConfig message. Does not implicitly {@link common.StaticCollectionConfig.verify|verify} messages.
+             * @function encode
+             * @memberof common.StaticCollectionConfig
+             * @static
+             * @param {common.IStaticCollectionConfig} message StaticCollectionConfig message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            StaticCollectionConfig.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.name != null && Object.hasOwnProperty.call(message, "name"))
+                    writer.uint32(/* id 1, wireType 2 =*/10).string(message.name);
+                if (message.member_orgs_policy != null && Object.hasOwnProperty.call(message, "member_orgs_policy"))
+                    $root.common.CollectionPolicyConfig.encode(message.member_orgs_policy, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+                if (message.required_peer_count != null && Object.hasOwnProperty.call(message, "required_peer_count"))
+                    writer.uint32(/* id 3, wireType 0 =*/24).int32(message.required_peer_count);
+                if (message.maximum_peer_count != null && Object.hasOwnProperty.call(message, "maximum_peer_count"))
+                    writer.uint32(/* id 4, wireType 0 =*/32).int32(message.maximum_peer_count);
+                if (message.block_to_live != null && Object.hasOwnProperty.call(message, "block_to_live"))
+                    writer.uint32(/* id 5, wireType 0 =*/40).uint64(message.block_to_live);
+                if (message.member_only_read != null && Object.hasOwnProperty.call(message, "member_only_read"))
+                    writer.uint32(/* id 6, wireType 0 =*/48).bool(message.member_only_read);
+                if (message.member_only_write != null && Object.hasOwnProperty.call(message, "member_only_write"))
+                    writer.uint32(/* id 7, wireType 0 =*/56).bool(message.member_only_write);
+                if (message.endorsement_policy != null && Object.hasOwnProperty.call(message, "endorsement_policy"))
+                    $root.common.ApplicationPolicy.encode(message.endorsement_policy, writer.uint32(/* id 8, wireType 2 =*/66).fork()).ldelim();
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified StaticCollectionConfig message, length delimited. Does not implicitly {@link common.StaticCollectionConfig.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof common.StaticCollectionConfig
+             * @static
+             * @param {common.IStaticCollectionConfig} message StaticCollectionConfig message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            StaticCollectionConfig.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a StaticCollectionConfig message from the specified reader or buffer.
+             * @function decode
+             * @memberof common.StaticCollectionConfig
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {common.StaticCollectionConfig} StaticCollectionConfig
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            StaticCollectionConfig.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.common.StaticCollectionConfig();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.name = reader.string();
+                        break;
+                    case 2:
+                        message.member_orgs_policy = $root.common.CollectionPolicyConfig.decode(reader, reader.uint32());
+                        break;
+                    case 3:
+                        message.required_peer_count = reader.int32();
+                        break;
+                    case 4:
+                        message.maximum_peer_count = reader.int32();
+                        break;
+                    case 5:
+                        message.block_to_live = reader.uint64();
+                        break;
+                    case 6:
+                        message.member_only_read = reader.bool();
+                        break;
+                    case 7:
+                        message.member_only_write = reader.bool();
+                        break;
+                    case 8:
+                        message.endorsement_policy = $root.common.ApplicationPolicy.decode(reader, reader.uint32());
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a StaticCollectionConfig message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof common.StaticCollectionConfig
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {common.StaticCollectionConfig} StaticCollectionConfig
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            StaticCollectionConfig.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a StaticCollectionConfig message.
+             * @function verify
+             * @memberof common.StaticCollectionConfig
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            StaticCollectionConfig.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.name != null && message.hasOwnProperty("name"))
+                    if (!$util.isString(message.name))
+                        return "name: string expected";
+                if (message.member_orgs_policy != null && message.hasOwnProperty("member_orgs_policy")) {
+                    var error = $root.common.CollectionPolicyConfig.verify(message.member_orgs_policy);
+                    if (error)
+                        return "member_orgs_policy." + error;
+                }
+                if (message.required_peer_count != null && message.hasOwnProperty("required_peer_count"))
+                    if (!$util.isInteger(message.required_peer_count))
+                        return "required_peer_count: integer expected";
+                if (message.maximum_peer_count != null && message.hasOwnProperty("maximum_peer_count"))
+                    if (!$util.isInteger(message.maximum_peer_count))
+                        return "maximum_peer_count: integer expected";
+                if (message.block_to_live != null && message.hasOwnProperty("block_to_live"))
+                    if (!$util.isInteger(message.block_to_live) && !(message.block_to_live && $util.isInteger(message.block_to_live.low) && $util.isInteger(message.block_to_live.high)))
+                        return "block_to_live: integer|Long expected";
+                if (message.member_only_read != null && message.hasOwnProperty("member_only_read"))
+                    if (typeof message.member_only_read !== "boolean")
+                        return "member_only_read: boolean expected";
+                if (message.member_only_write != null && message.hasOwnProperty("member_only_write"))
+                    if (typeof message.member_only_write !== "boolean")
+                        return "member_only_write: boolean expected";
+                if (message.endorsement_policy != null && message.hasOwnProperty("endorsement_policy")) {
+                    var error = $root.common.ApplicationPolicy.verify(message.endorsement_policy);
+                    if (error)
+                        return "endorsement_policy." + error;
+                }
+                return null;
+            };
+    
+            /**
+             * Creates a StaticCollectionConfig message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof common.StaticCollectionConfig
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {common.StaticCollectionConfig} StaticCollectionConfig
+             */
+            StaticCollectionConfig.fromObject = function fromObject(object) {
+                if (object instanceof $root.common.StaticCollectionConfig)
+                    return object;
+                var message = new $root.common.StaticCollectionConfig();
+                if (object.name != null)
+                    message.name = String(object.name);
+                if (object.member_orgs_policy != null) {
+                    if (typeof object.member_orgs_policy !== "object")
+                        throw TypeError(".common.StaticCollectionConfig.member_orgs_policy: object expected");
+                    message.member_orgs_policy = $root.common.CollectionPolicyConfig.fromObject(object.member_orgs_policy);
+                }
+                if (object.required_peer_count != null)
+                    message.required_peer_count = object.required_peer_count | 0;
+                if (object.maximum_peer_count != null)
+                    message.maximum_peer_count = object.maximum_peer_count | 0;
+                if (object.block_to_live != null)
+                    if ($util.Long)
+                        (message.block_to_live = $util.Long.fromValue(object.block_to_live)).unsigned = true;
+                    else if (typeof object.block_to_live === "string")
+                        message.block_to_live = parseInt(object.block_to_live, 10);
+                    else if (typeof object.block_to_live === "number")
+                        message.block_to_live = object.block_to_live;
+                    else if (typeof object.block_to_live === "object")
+                        message.block_to_live = new $util.LongBits(object.block_to_live.low >>> 0, object.block_to_live.high >>> 0).toNumber(true);
+                if (object.member_only_read != null)
+                    message.member_only_read = Boolean(object.member_only_read);
+                if (object.member_only_write != null)
+                    message.member_only_write = Boolean(object.member_only_write);
+                if (object.endorsement_policy != null) {
+                    if (typeof object.endorsement_policy !== "object")
+                        throw TypeError(".common.StaticCollectionConfig.endorsement_policy: object expected");
+                    message.endorsement_policy = $root.common.ApplicationPolicy.fromObject(object.endorsement_policy);
+                }
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a StaticCollectionConfig message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof common.StaticCollectionConfig
+             * @static
+             * @param {common.StaticCollectionConfig} message StaticCollectionConfig
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            StaticCollectionConfig.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.defaults) {
+                    object.name = "";
+                    object.member_orgs_policy = null;
+                    object.required_peer_count = 0;
+                    object.maximum_peer_count = 0;
+                    if ($util.Long) {
+                        var long = new $util.Long(0, 0, true);
+                        object.block_to_live = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                    } else
+                        object.block_to_live = options.longs === String ? "0" : 0;
+                    object.member_only_read = false;
+                    object.member_only_write = false;
+                    object.endorsement_policy = null;
+                }
+                if (message.name != null && message.hasOwnProperty("name"))
+                    object.name = message.name;
+                if (message.member_orgs_policy != null && message.hasOwnProperty("member_orgs_policy"))
+                    object.member_orgs_policy = $root.common.CollectionPolicyConfig.toObject(message.member_orgs_policy, options);
+                if (message.required_peer_count != null && message.hasOwnProperty("required_peer_count"))
+                    object.required_peer_count = message.required_peer_count;
+                if (message.maximum_peer_count != null && message.hasOwnProperty("maximum_peer_count"))
+                    object.maximum_peer_count = message.maximum_peer_count;
+                if (message.block_to_live != null && message.hasOwnProperty("block_to_live"))
+                    if (typeof message.block_to_live === "number")
+                        object.block_to_live = options.longs === String ? String(message.block_to_live) : message.block_to_live;
+                    else
+                        object.block_to_live = options.longs === String ? $util.Long.prototype.toString.call(message.block_to_live) : options.longs === Number ? new $util.LongBits(message.block_to_live.low >>> 0, message.block_to_live.high >>> 0).toNumber(true) : message.block_to_live;
+                if (message.member_only_read != null && message.hasOwnProperty("member_only_read"))
+                    object.member_only_read = message.member_only_read;
+                if (message.member_only_write != null && message.hasOwnProperty("member_only_write"))
+                    object.member_only_write = message.member_only_write;
+                if (message.endorsement_policy != null && message.hasOwnProperty("endorsement_policy"))
+                    object.endorsement_policy = $root.common.ApplicationPolicy.toObject(message.endorsement_policy, options);
+                return object;
+            };
+    
+            /**
+             * Converts this StaticCollectionConfig to JSON.
+             * @function toJSON
+             * @memberof common.StaticCollectionConfig
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            StaticCollectionConfig.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return StaticCollectionConfig;
+        })();
+    
+        common.CollectionPolicyConfig = (function() {
+    
+            /**
+             * Properties of a CollectionPolicyConfig.
+             * @memberof common
+             * @interface ICollectionPolicyConfig
+             * @property {common.ISignaturePolicyEnvelope|null} [signature_policy] CollectionPolicyConfig signature_policy
+             */
+    
+            /**
+             * Constructs a new CollectionPolicyConfig.
+             * @memberof common
+             * @classdesc Represents a CollectionPolicyConfig.
+             * @implements ICollectionPolicyConfig
+             * @constructor
+             * @param {common.ICollectionPolicyConfig=} [properties] Properties to set
+             */
+            function CollectionPolicyConfig(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * CollectionPolicyConfig signature_policy.
+             * @member {common.ISignaturePolicyEnvelope|null|undefined} signature_policy
+             * @memberof common.CollectionPolicyConfig
+             * @instance
+             */
+            CollectionPolicyConfig.prototype.signature_policy = null;
+    
+            // OneOf field names bound to virtual getters and setters
+            var $oneOfFields;
+    
+            /**
+             * CollectionPolicyConfig payload.
+             * @member {"signature_policy"|undefined} payload
+             * @memberof common.CollectionPolicyConfig
+             * @instance
+             */
+            Object.defineProperty(CollectionPolicyConfig.prototype, "payload", {
+                get: $util.oneOfGetter($oneOfFields = ["signature_policy"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+    
+            /**
+             * Creates a new CollectionPolicyConfig instance using the specified properties.
+             * @function create
+             * @memberof common.CollectionPolicyConfig
+             * @static
+             * @param {common.ICollectionPolicyConfig=} [properties] Properties to set
+             * @returns {common.CollectionPolicyConfig} CollectionPolicyConfig instance
+             */
+            CollectionPolicyConfig.create = function create(properties) {
+                return new CollectionPolicyConfig(properties);
+            };
+    
+            /**
+             * Encodes the specified CollectionPolicyConfig message. Does not implicitly {@link common.CollectionPolicyConfig.verify|verify} messages.
+             * @function encode
+             * @memberof common.CollectionPolicyConfig
+             * @static
+             * @param {common.ICollectionPolicyConfig} message CollectionPolicyConfig message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            CollectionPolicyConfig.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.signature_policy != null && Object.hasOwnProperty.call(message, "signature_policy"))
+                    $root.common.SignaturePolicyEnvelope.encode(message.signature_policy, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified CollectionPolicyConfig message, length delimited. Does not implicitly {@link common.CollectionPolicyConfig.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof common.CollectionPolicyConfig
+             * @static
+             * @param {common.ICollectionPolicyConfig} message CollectionPolicyConfig message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            CollectionPolicyConfig.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a CollectionPolicyConfig message from the specified reader or buffer.
+             * @function decode
+             * @memberof common.CollectionPolicyConfig
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {common.CollectionPolicyConfig} CollectionPolicyConfig
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            CollectionPolicyConfig.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.common.CollectionPolicyConfig();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.signature_policy = $root.common.SignaturePolicyEnvelope.decode(reader, reader.uint32());
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a CollectionPolicyConfig message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof common.CollectionPolicyConfig
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {common.CollectionPolicyConfig} CollectionPolicyConfig
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            CollectionPolicyConfig.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a CollectionPolicyConfig message.
+             * @function verify
+             * @memberof common.CollectionPolicyConfig
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            CollectionPolicyConfig.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                var properties = {};
+                if (message.signature_policy != null && message.hasOwnProperty("signature_policy")) {
+                    properties.payload = 1;
+                    {
+                        var error = $root.common.SignaturePolicyEnvelope.verify(message.signature_policy);
+                        if (error)
+                            return "signature_policy." + error;
+                    }
+                }
+                return null;
+            };
+    
+            /**
+             * Creates a CollectionPolicyConfig message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof common.CollectionPolicyConfig
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {common.CollectionPolicyConfig} CollectionPolicyConfig
+             */
+            CollectionPolicyConfig.fromObject = function fromObject(object) {
+                if (object instanceof $root.common.CollectionPolicyConfig)
+                    return object;
+                var message = new $root.common.CollectionPolicyConfig();
+                if (object.signature_policy != null) {
+                    if (typeof object.signature_policy !== "object")
+                        throw TypeError(".common.CollectionPolicyConfig.signature_policy: object expected");
+                    message.signature_policy = $root.common.SignaturePolicyEnvelope.fromObject(object.signature_policy);
+                }
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a CollectionPolicyConfig message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof common.CollectionPolicyConfig
+             * @static
+             * @param {common.CollectionPolicyConfig} message CollectionPolicyConfig
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            CollectionPolicyConfig.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (message.signature_policy != null && message.hasOwnProperty("signature_policy")) {
+                    object.signature_policy = $root.common.SignaturePolicyEnvelope.toObject(message.signature_policy, options);
+                    if (options.oneofs)
+                        object.payload = "signature_policy";
+                }
+                return object;
+            };
+    
+            /**
+             * Converts this CollectionPolicyConfig to JSON.
+             * @function toJSON
+             * @memberof common.CollectionPolicyConfig
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            CollectionPolicyConfig.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return CollectionPolicyConfig;
         })();
     
         return common;
@@ -34250,25 +34390,53 @@
             ConfigResult.decode = function decode(reader, length) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.discovery.ConfigResult(), key;
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.discovery.ConfigResult(), key, value;
                 while (reader.pos < end) {
                     var tag = reader.uint32();
                     switch (tag >>> 3) {
                     case 1:
-                        reader.skip().pos++;
                         if (message.msps === $util.emptyObject)
                             message.msps = {};
-                        key = reader.string();
-                        reader.pos++;
-                        message.msps[key] = $root.msp.FabricMSPConfig.decode(reader, reader.uint32());
+                        var end2 = reader.uint32() + reader.pos;
+                        key = "";
+                        value = null;
+                        while (reader.pos < end2) {
+                            var tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.string();
+                                break;
+                            case 2:
+                                value = $root.msp.FabricMSPConfig.decode(reader, reader.uint32());
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7);
+                                break;
+                            }
+                        }
+                        message.msps[key] = value;
                         break;
                     case 2:
-                        reader.skip().pos++;
                         if (message.orderers === $util.emptyObject)
                             message.orderers = {};
-                        key = reader.string();
-                        reader.pos++;
-                        message.orderers[key] = $root.discovery.Endpoints.decode(reader, reader.uint32());
+                        var end2 = reader.uint32() + reader.pos;
+                        key = "";
+                        value = null;
+                        while (reader.pos < end2) {
+                            var tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.string();
+                                break;
+                            case 2:
+                                value = $root.discovery.Endpoints.decode(reader, reader.uint32());
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7);
+                                break;
+                            }
+                        }
+                        message.orderers[key] = value;
                         break;
                     default:
                         reader.skipType(tag & 7);
@@ -34692,17 +34860,31 @@
             PeerMembershipResult.decode = function decode(reader, length) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.discovery.PeerMembershipResult(), key;
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.discovery.PeerMembershipResult(), key, value;
                 while (reader.pos < end) {
                     var tag = reader.uint32();
                     switch (tag >>> 3) {
                     case 1:
-                        reader.skip().pos++;
                         if (message.peers_by_org === $util.emptyObject)
                             message.peers_by_org = {};
-                        key = reader.string();
-                        reader.pos++;
-                        message.peers_by_org[key] = $root.discovery.Peers.decode(reader, reader.uint32());
+                        var end2 = reader.uint32() + reader.pos;
+                        key = "";
+                        value = null;
+                        while (reader.pos < end2) {
+                            var tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.string();
+                                break;
+                            case 2:
+                                value = $root.discovery.Peers.decode(reader, reader.uint32());
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7);
+                                break;
+                            }
+                        }
+                        message.peers_by_org[key] = value;
                         break;
                     default:
                         reader.skipType(tag & 7);
@@ -35986,7 +36168,7 @@
             EndorsementDescriptor.decode = function decode(reader, length) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.discovery.EndorsementDescriptor(), key;
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.discovery.EndorsementDescriptor(), key, value;
                 while (reader.pos < end) {
                     var tag = reader.uint32();
                     switch (tag >>> 3) {
@@ -35994,12 +36176,26 @@
                         message.chaincode = reader.string();
                         break;
                     case 2:
-                        reader.skip().pos++;
                         if (message.endorsers_by_groups === $util.emptyObject)
                             message.endorsers_by_groups = {};
-                        key = reader.string();
-                        reader.pos++;
-                        message.endorsers_by_groups[key] = $root.discovery.Peers.decode(reader, reader.uint32());
+                        var end2 = reader.uint32() + reader.pos;
+                        key = "";
+                        value = null;
+                        while (reader.pos < end2) {
+                            var tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.string();
+                                break;
+                            case 2:
+                                value = $root.discovery.Peers.decode(reader, reader.uint32());
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7);
+                                break;
+                            }
+                        }
+                        message.endorsers_by_groups[key] = value;
                         break;
                     case 3:
                         if (!(message.layouts && message.layouts.length))
@@ -36242,17 +36438,31 @@
             Layout.decode = function decode(reader, length) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.discovery.Layout(), key;
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.discovery.Layout(), key, value;
                 while (reader.pos < end) {
                     var tag = reader.uint32();
                     switch (tag >>> 3) {
                     case 1:
-                        reader.skip().pos++;
                         if (message.quantities_by_group === $util.emptyObject)
                             message.quantities_by_group = {};
-                        key = reader.string();
-                        reader.pos++;
-                        message.quantities_by_group[key] = reader.uint32();
+                        var end2 = reader.uint32() + reader.pos;
+                        key = "";
+                        value = 0;
+                        while (reader.pos < end2) {
+                            var tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.string();
+                                break;
+                            case 2:
+                                value = reader.uint32();
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7);
+                                break;
+                            }
+                        }
+                        message.quantities_by_group[key] = value;
                         break;
                     default:
                         reader.skipType(tag & 7);
@@ -38046,11 +38256,11 @@
     
             /**
              * Secret internalEndpoint.
-             * @member {string} internalEndpoint
+             * @member {string|null|undefined} internalEndpoint
              * @memberof gossip.Secret
              * @instance
              */
-            Secret.prototype.internalEndpoint = "";
+            Secret.prototype.internalEndpoint = null;
     
             // OneOf field names bound to virtual getters and setters
             var $oneOfFields;
@@ -49694,18 +49904,6 @@
         return msp;
     })();
     
-    $root.fabric = (function() {
-    
-        /**
-         * Namespace fabric.
-         * @exports fabric
-         * @namespace
-         */
-        var fabric = {};
-    
-        return fabric;
-    })();
-    
     $root.orderer = (function() {
     
         /**
@@ -49714,1770 +49912,6 @@
          * @namespace
          */
         var orderer = {};
-    
-        orderer.BroadcastResponse = (function() {
-    
-            /**
-             * Properties of a BroadcastResponse.
-             * @memberof orderer
-             * @interface IBroadcastResponse
-             * @property {common.Status|null} [status] BroadcastResponse status
-             * @property {string|null} [info] BroadcastResponse info
-             */
-    
-            /**
-             * Constructs a new BroadcastResponse.
-             * @memberof orderer
-             * @classdesc Represents a BroadcastResponse.
-             * @implements IBroadcastResponse
-             * @constructor
-             * @param {orderer.IBroadcastResponse=} [properties] Properties to set
-             */
-            function BroadcastResponse(properties) {
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * BroadcastResponse status.
-             * @member {common.Status} status
-             * @memberof orderer.BroadcastResponse
-             * @instance
-             */
-            BroadcastResponse.prototype.status = 0;
-    
-            /**
-             * BroadcastResponse info.
-             * @member {string} info
-             * @memberof orderer.BroadcastResponse
-             * @instance
-             */
-            BroadcastResponse.prototype.info = "";
-    
-            /**
-             * Creates a new BroadcastResponse instance using the specified properties.
-             * @function create
-             * @memberof orderer.BroadcastResponse
-             * @static
-             * @param {orderer.IBroadcastResponse=} [properties] Properties to set
-             * @returns {orderer.BroadcastResponse} BroadcastResponse instance
-             */
-            BroadcastResponse.create = function create(properties) {
-                return new BroadcastResponse(properties);
-            };
-    
-            /**
-             * Encodes the specified BroadcastResponse message. Does not implicitly {@link orderer.BroadcastResponse.verify|verify} messages.
-             * @function encode
-             * @memberof orderer.BroadcastResponse
-             * @static
-             * @param {orderer.IBroadcastResponse} message BroadcastResponse message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            BroadcastResponse.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.status != null && Object.hasOwnProperty.call(message, "status"))
-                    writer.uint32(/* id 1, wireType 0 =*/8).int32(message.status);
-                if (message.info != null && Object.hasOwnProperty.call(message, "info"))
-                    writer.uint32(/* id 2, wireType 2 =*/18).string(message.info);
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified BroadcastResponse message, length delimited. Does not implicitly {@link orderer.BroadcastResponse.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof orderer.BroadcastResponse
-             * @static
-             * @param {orderer.IBroadcastResponse} message BroadcastResponse message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            BroadcastResponse.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a BroadcastResponse message from the specified reader or buffer.
-             * @function decode
-             * @memberof orderer.BroadcastResponse
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {orderer.BroadcastResponse} BroadcastResponse
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            BroadcastResponse.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.orderer.BroadcastResponse();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        message.status = reader.int32();
-                        break;
-                    case 2:
-                        message.info = reader.string();
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a BroadcastResponse message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof orderer.BroadcastResponse
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {orderer.BroadcastResponse} BroadcastResponse
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            BroadcastResponse.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a BroadcastResponse message.
-             * @function verify
-             * @memberof orderer.BroadcastResponse
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            BroadcastResponse.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (message.status != null && message.hasOwnProperty("status"))
-                    switch (message.status) {
-                    default:
-                        return "status: enum value expected";
-                    case 0:
-                    case 200:
-                    case 400:
-                    case 403:
-                    case 404:
-                    case 413:
-                    case 500:
-                    case 501:
-                    case 503:
-                        break;
-                    }
-                if (message.info != null && message.hasOwnProperty("info"))
-                    if (!$util.isString(message.info))
-                        return "info: string expected";
-                return null;
-            };
-    
-            /**
-             * Creates a BroadcastResponse message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof orderer.BroadcastResponse
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {orderer.BroadcastResponse} BroadcastResponse
-             */
-            BroadcastResponse.fromObject = function fromObject(object) {
-                if (object instanceof $root.orderer.BroadcastResponse)
-                    return object;
-                var message = new $root.orderer.BroadcastResponse();
-                switch (object.status) {
-                case "UNKNOWN":
-                case 0:
-                    message.status = 0;
-                    break;
-                case "SUCCESS":
-                case 200:
-                    message.status = 200;
-                    break;
-                case "BAD_REQUEST":
-                case 400:
-                    message.status = 400;
-                    break;
-                case "FORBIDDEN":
-                case 403:
-                    message.status = 403;
-                    break;
-                case "NOT_FOUND":
-                case 404:
-                    message.status = 404;
-                    break;
-                case "REQUEST_ENTITY_TOO_LARGE":
-                case 413:
-                    message.status = 413;
-                    break;
-                case "INTERNAL_SERVER_ERROR":
-                case 500:
-                    message.status = 500;
-                    break;
-                case "NOT_IMPLEMENTED":
-                case 501:
-                    message.status = 501;
-                    break;
-                case "SERVICE_UNAVAILABLE":
-                case 503:
-                    message.status = 503;
-                    break;
-                }
-                if (object.info != null)
-                    message.info = String(object.info);
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a BroadcastResponse message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof orderer.BroadcastResponse
-             * @static
-             * @param {orderer.BroadcastResponse} message BroadcastResponse
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            BroadcastResponse.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (options.defaults) {
-                    object.status = options.enums === String ? "UNKNOWN" : 0;
-                    object.info = "";
-                }
-                if (message.status != null && message.hasOwnProperty("status"))
-                    object.status = options.enums === String ? $root.common.Status[message.status] : message.status;
-                if (message.info != null && message.hasOwnProperty("info"))
-                    object.info = message.info;
-                return object;
-            };
-    
-            /**
-             * Converts this BroadcastResponse to JSON.
-             * @function toJSON
-             * @memberof orderer.BroadcastResponse
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            BroadcastResponse.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return BroadcastResponse;
-        })();
-    
-        orderer.SeekNewest = (function() {
-    
-            /**
-             * Properties of a SeekNewest.
-             * @memberof orderer
-             * @interface ISeekNewest
-             */
-    
-            /**
-             * Constructs a new SeekNewest.
-             * @memberof orderer
-             * @classdesc Represents a SeekNewest.
-             * @implements ISeekNewest
-             * @constructor
-             * @param {orderer.ISeekNewest=} [properties] Properties to set
-             */
-            function SeekNewest(properties) {
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * Creates a new SeekNewest instance using the specified properties.
-             * @function create
-             * @memberof orderer.SeekNewest
-             * @static
-             * @param {orderer.ISeekNewest=} [properties] Properties to set
-             * @returns {orderer.SeekNewest} SeekNewest instance
-             */
-            SeekNewest.create = function create(properties) {
-                return new SeekNewest(properties);
-            };
-    
-            /**
-             * Encodes the specified SeekNewest message. Does not implicitly {@link orderer.SeekNewest.verify|verify} messages.
-             * @function encode
-             * @memberof orderer.SeekNewest
-             * @static
-             * @param {orderer.ISeekNewest} message SeekNewest message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            SeekNewest.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified SeekNewest message, length delimited. Does not implicitly {@link orderer.SeekNewest.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof orderer.SeekNewest
-             * @static
-             * @param {orderer.ISeekNewest} message SeekNewest message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            SeekNewest.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a SeekNewest message from the specified reader or buffer.
-             * @function decode
-             * @memberof orderer.SeekNewest
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {orderer.SeekNewest} SeekNewest
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            SeekNewest.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.orderer.SeekNewest();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a SeekNewest message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof orderer.SeekNewest
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {orderer.SeekNewest} SeekNewest
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            SeekNewest.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a SeekNewest message.
-             * @function verify
-             * @memberof orderer.SeekNewest
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            SeekNewest.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                return null;
-            };
-    
-            /**
-             * Creates a SeekNewest message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof orderer.SeekNewest
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {orderer.SeekNewest} SeekNewest
-             */
-            SeekNewest.fromObject = function fromObject(object) {
-                if (object instanceof $root.orderer.SeekNewest)
-                    return object;
-                return new $root.orderer.SeekNewest();
-            };
-    
-            /**
-             * Creates a plain object from a SeekNewest message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof orderer.SeekNewest
-             * @static
-             * @param {orderer.SeekNewest} message SeekNewest
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            SeekNewest.toObject = function toObject() {
-                return {};
-            };
-    
-            /**
-             * Converts this SeekNewest to JSON.
-             * @function toJSON
-             * @memberof orderer.SeekNewest
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            SeekNewest.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return SeekNewest;
-        })();
-    
-        orderer.SeekOldest = (function() {
-    
-            /**
-             * Properties of a SeekOldest.
-             * @memberof orderer
-             * @interface ISeekOldest
-             */
-    
-            /**
-             * Constructs a new SeekOldest.
-             * @memberof orderer
-             * @classdesc Represents a SeekOldest.
-             * @implements ISeekOldest
-             * @constructor
-             * @param {orderer.ISeekOldest=} [properties] Properties to set
-             */
-            function SeekOldest(properties) {
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * Creates a new SeekOldest instance using the specified properties.
-             * @function create
-             * @memberof orderer.SeekOldest
-             * @static
-             * @param {orderer.ISeekOldest=} [properties] Properties to set
-             * @returns {orderer.SeekOldest} SeekOldest instance
-             */
-            SeekOldest.create = function create(properties) {
-                return new SeekOldest(properties);
-            };
-    
-            /**
-             * Encodes the specified SeekOldest message. Does not implicitly {@link orderer.SeekOldest.verify|verify} messages.
-             * @function encode
-             * @memberof orderer.SeekOldest
-             * @static
-             * @param {orderer.ISeekOldest} message SeekOldest message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            SeekOldest.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified SeekOldest message, length delimited. Does not implicitly {@link orderer.SeekOldest.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof orderer.SeekOldest
-             * @static
-             * @param {orderer.ISeekOldest} message SeekOldest message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            SeekOldest.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a SeekOldest message from the specified reader or buffer.
-             * @function decode
-             * @memberof orderer.SeekOldest
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {orderer.SeekOldest} SeekOldest
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            SeekOldest.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.orderer.SeekOldest();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a SeekOldest message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof orderer.SeekOldest
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {orderer.SeekOldest} SeekOldest
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            SeekOldest.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a SeekOldest message.
-             * @function verify
-             * @memberof orderer.SeekOldest
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            SeekOldest.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                return null;
-            };
-    
-            /**
-             * Creates a SeekOldest message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof orderer.SeekOldest
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {orderer.SeekOldest} SeekOldest
-             */
-            SeekOldest.fromObject = function fromObject(object) {
-                if (object instanceof $root.orderer.SeekOldest)
-                    return object;
-                return new $root.orderer.SeekOldest();
-            };
-    
-            /**
-             * Creates a plain object from a SeekOldest message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof orderer.SeekOldest
-             * @static
-             * @param {orderer.SeekOldest} message SeekOldest
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            SeekOldest.toObject = function toObject() {
-                return {};
-            };
-    
-            /**
-             * Converts this SeekOldest to JSON.
-             * @function toJSON
-             * @memberof orderer.SeekOldest
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            SeekOldest.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return SeekOldest;
-        })();
-    
-        orderer.SeekSpecified = (function() {
-    
-            /**
-             * Properties of a SeekSpecified.
-             * @memberof orderer
-             * @interface ISeekSpecified
-             * @property {number|Long|null} [number] SeekSpecified number
-             */
-    
-            /**
-             * Constructs a new SeekSpecified.
-             * @memberof orderer
-             * @classdesc Represents a SeekSpecified.
-             * @implements ISeekSpecified
-             * @constructor
-             * @param {orderer.ISeekSpecified=} [properties] Properties to set
-             */
-            function SeekSpecified(properties) {
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * SeekSpecified number.
-             * @member {number|Long} number
-             * @memberof orderer.SeekSpecified
-             * @instance
-             */
-            SeekSpecified.prototype.number = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
-    
-            /**
-             * Creates a new SeekSpecified instance using the specified properties.
-             * @function create
-             * @memberof orderer.SeekSpecified
-             * @static
-             * @param {orderer.ISeekSpecified=} [properties] Properties to set
-             * @returns {orderer.SeekSpecified} SeekSpecified instance
-             */
-            SeekSpecified.create = function create(properties) {
-                return new SeekSpecified(properties);
-            };
-    
-            /**
-             * Encodes the specified SeekSpecified message. Does not implicitly {@link orderer.SeekSpecified.verify|verify} messages.
-             * @function encode
-             * @memberof orderer.SeekSpecified
-             * @static
-             * @param {orderer.ISeekSpecified} message SeekSpecified message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            SeekSpecified.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.number != null && Object.hasOwnProperty.call(message, "number"))
-                    writer.uint32(/* id 1, wireType 0 =*/8).uint64(message.number);
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified SeekSpecified message, length delimited. Does not implicitly {@link orderer.SeekSpecified.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof orderer.SeekSpecified
-             * @static
-             * @param {orderer.ISeekSpecified} message SeekSpecified message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            SeekSpecified.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a SeekSpecified message from the specified reader or buffer.
-             * @function decode
-             * @memberof orderer.SeekSpecified
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {orderer.SeekSpecified} SeekSpecified
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            SeekSpecified.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.orderer.SeekSpecified();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        message.number = reader.uint64();
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a SeekSpecified message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof orderer.SeekSpecified
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {orderer.SeekSpecified} SeekSpecified
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            SeekSpecified.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a SeekSpecified message.
-             * @function verify
-             * @memberof orderer.SeekSpecified
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            SeekSpecified.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (message.number != null && message.hasOwnProperty("number"))
-                    if (!$util.isInteger(message.number) && !(message.number && $util.isInteger(message.number.low) && $util.isInteger(message.number.high)))
-                        return "number: integer|Long expected";
-                return null;
-            };
-    
-            /**
-             * Creates a SeekSpecified message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof orderer.SeekSpecified
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {orderer.SeekSpecified} SeekSpecified
-             */
-            SeekSpecified.fromObject = function fromObject(object) {
-                if (object instanceof $root.orderer.SeekSpecified)
-                    return object;
-                var message = new $root.orderer.SeekSpecified();
-                if (object.number != null)
-                    if ($util.Long)
-                        (message.number = $util.Long.fromValue(object.number)).unsigned = true;
-                    else if (typeof object.number === "string")
-                        message.number = parseInt(object.number, 10);
-                    else if (typeof object.number === "number")
-                        message.number = object.number;
-                    else if (typeof object.number === "object")
-                        message.number = new $util.LongBits(object.number.low >>> 0, object.number.high >>> 0).toNumber(true);
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a SeekSpecified message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof orderer.SeekSpecified
-             * @static
-             * @param {orderer.SeekSpecified} message SeekSpecified
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            SeekSpecified.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (options.defaults)
-                    if ($util.Long) {
-                        var long = new $util.Long(0, 0, true);
-                        object.number = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                    } else
-                        object.number = options.longs === String ? "0" : 0;
-                if (message.number != null && message.hasOwnProperty("number"))
-                    if (typeof message.number === "number")
-                        object.number = options.longs === String ? String(message.number) : message.number;
-                    else
-                        object.number = options.longs === String ? $util.Long.prototype.toString.call(message.number) : options.longs === Number ? new $util.LongBits(message.number.low >>> 0, message.number.high >>> 0).toNumber(true) : message.number;
-                return object;
-            };
-    
-            /**
-             * Converts this SeekSpecified to JSON.
-             * @function toJSON
-             * @memberof orderer.SeekSpecified
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            SeekSpecified.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return SeekSpecified;
-        })();
-    
-        orderer.SeekPosition = (function() {
-    
-            /**
-             * Properties of a SeekPosition.
-             * @memberof orderer
-             * @interface ISeekPosition
-             * @property {orderer.ISeekNewest|null} [newest] SeekPosition newest
-             * @property {orderer.ISeekOldest|null} [oldest] SeekPosition oldest
-             * @property {orderer.ISeekSpecified|null} [specified] SeekPosition specified
-             */
-    
-            /**
-             * Constructs a new SeekPosition.
-             * @memberof orderer
-             * @classdesc Represents a SeekPosition.
-             * @implements ISeekPosition
-             * @constructor
-             * @param {orderer.ISeekPosition=} [properties] Properties to set
-             */
-            function SeekPosition(properties) {
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * SeekPosition newest.
-             * @member {orderer.ISeekNewest|null|undefined} newest
-             * @memberof orderer.SeekPosition
-             * @instance
-             */
-            SeekPosition.prototype.newest = null;
-    
-            /**
-             * SeekPosition oldest.
-             * @member {orderer.ISeekOldest|null|undefined} oldest
-             * @memberof orderer.SeekPosition
-             * @instance
-             */
-            SeekPosition.prototype.oldest = null;
-    
-            /**
-             * SeekPosition specified.
-             * @member {orderer.ISeekSpecified|null|undefined} specified
-             * @memberof orderer.SeekPosition
-             * @instance
-             */
-            SeekPosition.prototype.specified = null;
-    
-            // OneOf field names bound to virtual getters and setters
-            var $oneOfFields;
-    
-            /**
-             * SeekPosition Type.
-             * @member {"newest"|"oldest"|"specified"|undefined} Type
-             * @memberof orderer.SeekPosition
-             * @instance
-             */
-            Object.defineProperty(SeekPosition.prototype, "Type", {
-                get: $util.oneOfGetter($oneOfFields = ["newest", "oldest", "specified"]),
-                set: $util.oneOfSetter($oneOfFields)
-            });
-    
-            /**
-             * Creates a new SeekPosition instance using the specified properties.
-             * @function create
-             * @memberof orderer.SeekPosition
-             * @static
-             * @param {orderer.ISeekPosition=} [properties] Properties to set
-             * @returns {orderer.SeekPosition} SeekPosition instance
-             */
-            SeekPosition.create = function create(properties) {
-                return new SeekPosition(properties);
-            };
-    
-            /**
-             * Encodes the specified SeekPosition message. Does not implicitly {@link orderer.SeekPosition.verify|verify} messages.
-             * @function encode
-             * @memberof orderer.SeekPosition
-             * @static
-             * @param {orderer.ISeekPosition} message SeekPosition message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            SeekPosition.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.newest != null && Object.hasOwnProperty.call(message, "newest"))
-                    $root.orderer.SeekNewest.encode(message.newest, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
-                if (message.oldest != null && Object.hasOwnProperty.call(message, "oldest"))
-                    $root.orderer.SeekOldest.encode(message.oldest, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
-                if (message.specified != null && Object.hasOwnProperty.call(message, "specified"))
-                    $root.orderer.SeekSpecified.encode(message.specified, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified SeekPosition message, length delimited. Does not implicitly {@link orderer.SeekPosition.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof orderer.SeekPosition
-             * @static
-             * @param {orderer.ISeekPosition} message SeekPosition message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            SeekPosition.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a SeekPosition message from the specified reader or buffer.
-             * @function decode
-             * @memberof orderer.SeekPosition
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {orderer.SeekPosition} SeekPosition
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            SeekPosition.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.orderer.SeekPosition();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        message.newest = $root.orderer.SeekNewest.decode(reader, reader.uint32());
-                        break;
-                    case 2:
-                        message.oldest = $root.orderer.SeekOldest.decode(reader, reader.uint32());
-                        break;
-                    case 3:
-                        message.specified = $root.orderer.SeekSpecified.decode(reader, reader.uint32());
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a SeekPosition message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof orderer.SeekPosition
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {orderer.SeekPosition} SeekPosition
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            SeekPosition.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a SeekPosition message.
-             * @function verify
-             * @memberof orderer.SeekPosition
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            SeekPosition.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                var properties = {};
-                if (message.newest != null && message.hasOwnProperty("newest")) {
-                    properties.Type = 1;
-                    {
-                        var error = $root.orderer.SeekNewest.verify(message.newest);
-                        if (error)
-                            return "newest." + error;
-                    }
-                }
-                if (message.oldest != null && message.hasOwnProperty("oldest")) {
-                    if (properties.Type === 1)
-                        return "Type: multiple values";
-                    properties.Type = 1;
-                    {
-                        var error = $root.orderer.SeekOldest.verify(message.oldest);
-                        if (error)
-                            return "oldest." + error;
-                    }
-                }
-                if (message.specified != null && message.hasOwnProperty("specified")) {
-                    if (properties.Type === 1)
-                        return "Type: multiple values";
-                    properties.Type = 1;
-                    {
-                        var error = $root.orderer.SeekSpecified.verify(message.specified);
-                        if (error)
-                            return "specified." + error;
-                    }
-                }
-                return null;
-            };
-    
-            /**
-             * Creates a SeekPosition message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof orderer.SeekPosition
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {orderer.SeekPosition} SeekPosition
-             */
-            SeekPosition.fromObject = function fromObject(object) {
-                if (object instanceof $root.orderer.SeekPosition)
-                    return object;
-                var message = new $root.orderer.SeekPosition();
-                if (object.newest != null) {
-                    if (typeof object.newest !== "object")
-                        throw TypeError(".orderer.SeekPosition.newest: object expected");
-                    message.newest = $root.orderer.SeekNewest.fromObject(object.newest);
-                }
-                if (object.oldest != null) {
-                    if (typeof object.oldest !== "object")
-                        throw TypeError(".orderer.SeekPosition.oldest: object expected");
-                    message.oldest = $root.orderer.SeekOldest.fromObject(object.oldest);
-                }
-                if (object.specified != null) {
-                    if (typeof object.specified !== "object")
-                        throw TypeError(".orderer.SeekPosition.specified: object expected");
-                    message.specified = $root.orderer.SeekSpecified.fromObject(object.specified);
-                }
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a SeekPosition message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof orderer.SeekPosition
-             * @static
-             * @param {orderer.SeekPosition} message SeekPosition
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            SeekPosition.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (message.newest != null && message.hasOwnProperty("newest")) {
-                    object.newest = $root.orderer.SeekNewest.toObject(message.newest, options);
-                    if (options.oneofs)
-                        object.Type = "newest";
-                }
-                if (message.oldest != null && message.hasOwnProperty("oldest")) {
-                    object.oldest = $root.orderer.SeekOldest.toObject(message.oldest, options);
-                    if (options.oneofs)
-                        object.Type = "oldest";
-                }
-                if (message.specified != null && message.hasOwnProperty("specified")) {
-                    object.specified = $root.orderer.SeekSpecified.toObject(message.specified, options);
-                    if (options.oneofs)
-                        object.Type = "specified";
-                }
-                return object;
-            };
-    
-            /**
-             * Converts this SeekPosition to JSON.
-             * @function toJSON
-             * @memberof orderer.SeekPosition
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            SeekPosition.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return SeekPosition;
-        })();
-    
-        orderer.SeekInfo = (function() {
-    
-            /**
-             * Properties of a SeekInfo.
-             * @memberof orderer
-             * @interface ISeekInfo
-             * @property {orderer.ISeekPosition|null} [start] SeekInfo start
-             * @property {orderer.ISeekPosition|null} [stop] SeekInfo stop
-             * @property {orderer.SeekInfo.SeekBehavior|null} [behavior] SeekInfo behavior
-             * @property {orderer.SeekInfo.SeekErrorResponse|null} [error_response] SeekInfo error_response
-             */
-    
-            /**
-             * Constructs a new SeekInfo.
-             * @memberof orderer
-             * @classdesc Represents a SeekInfo.
-             * @implements ISeekInfo
-             * @constructor
-             * @param {orderer.ISeekInfo=} [properties] Properties to set
-             */
-            function SeekInfo(properties) {
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * SeekInfo start.
-             * @member {orderer.ISeekPosition|null|undefined} start
-             * @memberof orderer.SeekInfo
-             * @instance
-             */
-            SeekInfo.prototype.start = null;
-    
-            /**
-             * SeekInfo stop.
-             * @member {orderer.ISeekPosition|null|undefined} stop
-             * @memberof orderer.SeekInfo
-             * @instance
-             */
-            SeekInfo.prototype.stop = null;
-    
-            /**
-             * SeekInfo behavior.
-             * @member {orderer.SeekInfo.SeekBehavior} behavior
-             * @memberof orderer.SeekInfo
-             * @instance
-             */
-            SeekInfo.prototype.behavior = 0;
-    
-            /**
-             * SeekInfo error_response.
-             * @member {orderer.SeekInfo.SeekErrorResponse} error_response
-             * @memberof orderer.SeekInfo
-             * @instance
-             */
-            SeekInfo.prototype.error_response = 0;
-    
-            /**
-             * Creates a new SeekInfo instance using the specified properties.
-             * @function create
-             * @memberof orderer.SeekInfo
-             * @static
-             * @param {orderer.ISeekInfo=} [properties] Properties to set
-             * @returns {orderer.SeekInfo} SeekInfo instance
-             */
-            SeekInfo.create = function create(properties) {
-                return new SeekInfo(properties);
-            };
-    
-            /**
-             * Encodes the specified SeekInfo message. Does not implicitly {@link orderer.SeekInfo.verify|verify} messages.
-             * @function encode
-             * @memberof orderer.SeekInfo
-             * @static
-             * @param {orderer.ISeekInfo} message SeekInfo message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            SeekInfo.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.start != null && Object.hasOwnProperty.call(message, "start"))
-                    $root.orderer.SeekPosition.encode(message.start, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
-                if (message.stop != null && Object.hasOwnProperty.call(message, "stop"))
-                    $root.orderer.SeekPosition.encode(message.stop, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
-                if (message.behavior != null && Object.hasOwnProperty.call(message, "behavior"))
-                    writer.uint32(/* id 3, wireType 0 =*/24).int32(message.behavior);
-                if (message.error_response != null && Object.hasOwnProperty.call(message, "error_response"))
-                    writer.uint32(/* id 4, wireType 0 =*/32).int32(message.error_response);
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified SeekInfo message, length delimited. Does not implicitly {@link orderer.SeekInfo.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof orderer.SeekInfo
-             * @static
-             * @param {orderer.ISeekInfo} message SeekInfo message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            SeekInfo.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a SeekInfo message from the specified reader or buffer.
-             * @function decode
-             * @memberof orderer.SeekInfo
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {orderer.SeekInfo} SeekInfo
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            SeekInfo.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.orderer.SeekInfo();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        message.start = $root.orderer.SeekPosition.decode(reader, reader.uint32());
-                        break;
-                    case 2:
-                        message.stop = $root.orderer.SeekPosition.decode(reader, reader.uint32());
-                        break;
-                    case 3:
-                        message.behavior = reader.int32();
-                        break;
-                    case 4:
-                        message.error_response = reader.int32();
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a SeekInfo message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof orderer.SeekInfo
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {orderer.SeekInfo} SeekInfo
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            SeekInfo.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a SeekInfo message.
-             * @function verify
-             * @memberof orderer.SeekInfo
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            SeekInfo.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (message.start != null && message.hasOwnProperty("start")) {
-                    var error = $root.orderer.SeekPosition.verify(message.start);
-                    if (error)
-                        return "start." + error;
-                }
-                if (message.stop != null && message.hasOwnProperty("stop")) {
-                    var error = $root.orderer.SeekPosition.verify(message.stop);
-                    if (error)
-                        return "stop." + error;
-                }
-                if (message.behavior != null && message.hasOwnProperty("behavior"))
-                    switch (message.behavior) {
-                    default:
-                        return "behavior: enum value expected";
-                    case 0:
-                    case 1:
-                        break;
-                    }
-                if (message.error_response != null && message.hasOwnProperty("error_response"))
-                    switch (message.error_response) {
-                    default:
-                        return "error_response: enum value expected";
-                    case 0:
-                    case 1:
-                        break;
-                    }
-                return null;
-            };
-    
-            /**
-             * Creates a SeekInfo message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof orderer.SeekInfo
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {orderer.SeekInfo} SeekInfo
-             */
-            SeekInfo.fromObject = function fromObject(object) {
-                if (object instanceof $root.orderer.SeekInfo)
-                    return object;
-                var message = new $root.orderer.SeekInfo();
-                if (object.start != null) {
-                    if (typeof object.start !== "object")
-                        throw TypeError(".orderer.SeekInfo.start: object expected");
-                    message.start = $root.orderer.SeekPosition.fromObject(object.start);
-                }
-                if (object.stop != null) {
-                    if (typeof object.stop !== "object")
-                        throw TypeError(".orderer.SeekInfo.stop: object expected");
-                    message.stop = $root.orderer.SeekPosition.fromObject(object.stop);
-                }
-                switch (object.behavior) {
-                case "BLOCK_UNTIL_READY":
-                case 0:
-                    message.behavior = 0;
-                    break;
-                case "FAIL_IF_NOT_READY":
-                case 1:
-                    message.behavior = 1;
-                    break;
-                }
-                switch (object.error_response) {
-                case "STRICT":
-                case 0:
-                    message.error_response = 0;
-                    break;
-                case "BEST_EFFORT":
-                case 1:
-                    message.error_response = 1;
-                    break;
-                }
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a SeekInfo message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof orderer.SeekInfo
-             * @static
-             * @param {orderer.SeekInfo} message SeekInfo
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            SeekInfo.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (options.defaults) {
-                    object.start = null;
-                    object.stop = null;
-                    object.behavior = options.enums === String ? "BLOCK_UNTIL_READY" : 0;
-                    object.error_response = options.enums === String ? "STRICT" : 0;
-                }
-                if (message.start != null && message.hasOwnProperty("start"))
-                    object.start = $root.orderer.SeekPosition.toObject(message.start, options);
-                if (message.stop != null && message.hasOwnProperty("stop"))
-                    object.stop = $root.orderer.SeekPosition.toObject(message.stop, options);
-                if (message.behavior != null && message.hasOwnProperty("behavior"))
-                    object.behavior = options.enums === String ? $root.orderer.SeekInfo.SeekBehavior[message.behavior] : message.behavior;
-                if (message.error_response != null && message.hasOwnProperty("error_response"))
-                    object.error_response = options.enums === String ? $root.orderer.SeekInfo.SeekErrorResponse[message.error_response] : message.error_response;
-                return object;
-            };
-    
-            /**
-             * Converts this SeekInfo to JSON.
-             * @function toJSON
-             * @memberof orderer.SeekInfo
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            SeekInfo.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            /**
-             * SeekBehavior enum.
-             * @name orderer.SeekInfo.SeekBehavior
-             * @enum {number}
-             * @property {number} BLOCK_UNTIL_READY=0 BLOCK_UNTIL_READY value
-             * @property {number} FAIL_IF_NOT_READY=1 FAIL_IF_NOT_READY value
-             */
-            SeekInfo.SeekBehavior = (function() {
-                var valuesById = {}, values = Object.create(valuesById);
-                values[valuesById[0] = "BLOCK_UNTIL_READY"] = 0;
-                values[valuesById[1] = "FAIL_IF_NOT_READY"] = 1;
-                return values;
-            })();
-    
-            /**
-             * SeekErrorResponse enum.
-             * @name orderer.SeekInfo.SeekErrorResponse
-             * @enum {number}
-             * @property {number} STRICT=0 STRICT value
-             * @property {number} BEST_EFFORT=1 BEST_EFFORT value
-             */
-            SeekInfo.SeekErrorResponse = (function() {
-                var valuesById = {}, values = Object.create(valuesById);
-                values[valuesById[0] = "STRICT"] = 0;
-                values[valuesById[1] = "BEST_EFFORT"] = 1;
-                return values;
-            })();
-    
-            return SeekInfo;
-        })();
-    
-        orderer.DeliverResponse = (function() {
-    
-            /**
-             * Properties of a DeliverResponse.
-             * @memberof orderer
-             * @interface IDeliverResponse
-             * @property {common.Status|null} [status] DeliverResponse status
-             * @property {common.IBlock|null} [block] DeliverResponse block
-             */
-    
-            /**
-             * Constructs a new DeliverResponse.
-             * @memberof orderer
-             * @classdesc Represents a DeliverResponse.
-             * @implements IDeliverResponse
-             * @constructor
-             * @param {orderer.IDeliverResponse=} [properties] Properties to set
-             */
-            function DeliverResponse(properties) {
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-    
-            /**
-             * DeliverResponse status.
-             * @member {common.Status} status
-             * @memberof orderer.DeliverResponse
-             * @instance
-             */
-            DeliverResponse.prototype.status = 0;
-    
-            /**
-             * DeliverResponse block.
-             * @member {common.IBlock|null|undefined} block
-             * @memberof orderer.DeliverResponse
-             * @instance
-             */
-            DeliverResponse.prototype.block = null;
-    
-            // OneOf field names bound to virtual getters and setters
-            var $oneOfFields;
-    
-            /**
-             * DeliverResponse Type.
-             * @member {"status"|"block"|undefined} Type
-             * @memberof orderer.DeliverResponse
-             * @instance
-             */
-            Object.defineProperty(DeliverResponse.prototype, "Type", {
-                get: $util.oneOfGetter($oneOfFields = ["status", "block"]),
-                set: $util.oneOfSetter($oneOfFields)
-            });
-    
-            /**
-             * Creates a new DeliverResponse instance using the specified properties.
-             * @function create
-             * @memberof orderer.DeliverResponse
-             * @static
-             * @param {orderer.IDeliverResponse=} [properties] Properties to set
-             * @returns {orderer.DeliverResponse} DeliverResponse instance
-             */
-            DeliverResponse.create = function create(properties) {
-                return new DeliverResponse(properties);
-            };
-    
-            /**
-             * Encodes the specified DeliverResponse message. Does not implicitly {@link orderer.DeliverResponse.verify|verify} messages.
-             * @function encode
-             * @memberof orderer.DeliverResponse
-             * @static
-             * @param {orderer.IDeliverResponse} message DeliverResponse message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            DeliverResponse.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.status != null && Object.hasOwnProperty.call(message, "status"))
-                    writer.uint32(/* id 1, wireType 0 =*/8).int32(message.status);
-                if (message.block != null && Object.hasOwnProperty.call(message, "block"))
-                    $root.common.Block.encode(message.block, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
-                return writer;
-            };
-    
-            /**
-             * Encodes the specified DeliverResponse message, length delimited. Does not implicitly {@link orderer.DeliverResponse.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof orderer.DeliverResponse
-             * @static
-             * @param {orderer.IDeliverResponse} message DeliverResponse message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            DeliverResponse.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-    
-            /**
-             * Decodes a DeliverResponse message from the specified reader or buffer.
-             * @function decode
-             * @memberof orderer.DeliverResponse
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {orderer.DeliverResponse} DeliverResponse
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            DeliverResponse.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.orderer.DeliverResponse();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        message.status = reader.int32();
-                        break;
-                    case 2:
-                        message.block = $root.common.Block.decode(reader, reader.uint32());
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-    
-            /**
-             * Decodes a DeliverResponse message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof orderer.DeliverResponse
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {orderer.DeliverResponse} DeliverResponse
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            DeliverResponse.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-    
-            /**
-             * Verifies a DeliverResponse message.
-             * @function verify
-             * @memberof orderer.DeliverResponse
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            DeliverResponse.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                var properties = {};
-                if (message.status != null && message.hasOwnProperty("status")) {
-                    properties.Type = 1;
-                    switch (message.status) {
-                    default:
-                        return "status: enum value expected";
-                    case 0:
-                    case 200:
-                    case 400:
-                    case 403:
-                    case 404:
-                    case 413:
-                    case 500:
-                    case 501:
-                    case 503:
-                        break;
-                    }
-                }
-                if (message.block != null && message.hasOwnProperty("block")) {
-                    if (properties.Type === 1)
-                        return "Type: multiple values";
-                    properties.Type = 1;
-                    {
-                        var error = $root.common.Block.verify(message.block);
-                        if (error)
-                            return "block." + error;
-                    }
-                }
-                return null;
-            };
-    
-            /**
-             * Creates a DeliverResponse message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof orderer.DeliverResponse
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {orderer.DeliverResponse} DeliverResponse
-             */
-            DeliverResponse.fromObject = function fromObject(object) {
-                if (object instanceof $root.orderer.DeliverResponse)
-                    return object;
-                var message = new $root.orderer.DeliverResponse();
-                switch (object.status) {
-                case "UNKNOWN":
-                case 0:
-                    message.status = 0;
-                    break;
-                case "SUCCESS":
-                case 200:
-                    message.status = 200;
-                    break;
-                case "BAD_REQUEST":
-                case 400:
-                    message.status = 400;
-                    break;
-                case "FORBIDDEN":
-                case 403:
-                    message.status = 403;
-                    break;
-                case "NOT_FOUND":
-                case 404:
-                    message.status = 404;
-                    break;
-                case "REQUEST_ENTITY_TOO_LARGE":
-                case 413:
-                    message.status = 413;
-                    break;
-                case "INTERNAL_SERVER_ERROR":
-                case 500:
-                    message.status = 500;
-                    break;
-                case "NOT_IMPLEMENTED":
-                case 501:
-                    message.status = 501;
-                    break;
-                case "SERVICE_UNAVAILABLE":
-                case 503:
-                    message.status = 503;
-                    break;
-                }
-                if (object.block != null) {
-                    if (typeof object.block !== "object")
-                        throw TypeError(".orderer.DeliverResponse.block: object expected");
-                    message.block = $root.common.Block.fromObject(object.block);
-                }
-                return message;
-            };
-    
-            /**
-             * Creates a plain object from a DeliverResponse message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof orderer.DeliverResponse
-             * @static
-             * @param {orderer.DeliverResponse} message DeliverResponse
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            DeliverResponse.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (message.status != null && message.hasOwnProperty("status")) {
-                    object.status = options.enums === String ? $root.common.Status[message.status] : message.status;
-                    if (options.oneofs)
-                        object.Type = "status";
-                }
-                if (message.block != null && message.hasOwnProperty("block")) {
-                    object.block = $root.common.Block.toObject(message.block, options);
-                    if (options.oneofs)
-                        object.Type = "block";
-                }
-                return object;
-            };
-    
-            /**
-             * Converts this DeliverResponse to JSON.
-             * @function toJSON
-             * @memberof orderer.DeliverResponse
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            DeliverResponse.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-    
-            return DeliverResponse;
-        })();
-    
-        orderer.AtomicBroadcast = (function() {
-    
-            /**
-             * Constructs a new AtomicBroadcast service.
-             * @memberof orderer
-             * @classdesc Represents an AtomicBroadcast
-             * @extends $protobuf.rpc.Service
-             * @constructor
-             * @param {$protobuf.RPCImpl} rpcImpl RPC implementation
-             * @param {boolean} [requestDelimited=false] Whether requests are length-delimited
-             * @param {boolean} [responseDelimited=false] Whether responses are length-delimited
-             */
-            function AtomicBroadcast(rpcImpl, requestDelimited, responseDelimited) {
-                $protobuf.rpc.Service.call(this, rpcImpl, requestDelimited, responseDelimited);
-            }
-    
-            (AtomicBroadcast.prototype = Object.create($protobuf.rpc.Service.prototype)).constructor = AtomicBroadcast;
-    
-            /**
-             * Creates new AtomicBroadcast service using the specified rpc implementation.
-             * @function create
-             * @memberof orderer.AtomicBroadcast
-             * @static
-             * @param {$protobuf.RPCImpl} rpcImpl RPC implementation
-             * @param {boolean} [requestDelimited=false] Whether requests are length-delimited
-             * @param {boolean} [responseDelimited=false] Whether responses are length-delimited
-             * @returns {AtomicBroadcast} RPC service. Useful where requests and/or responses are streamed.
-             */
-            AtomicBroadcast.create = function create(rpcImpl, requestDelimited, responseDelimited) {
-                return new this(rpcImpl, requestDelimited, responseDelimited);
-            };
-    
-            /**
-             * Callback as used by {@link orderer.AtomicBroadcast#broadcast}.
-             * @memberof orderer.AtomicBroadcast
-             * @typedef BroadcastCallback
-             * @type {function}
-             * @param {Error|null} error Error, if any
-             * @param {orderer.BroadcastResponse} [response] BroadcastResponse
-             */
-    
-            /**
-             * Calls Broadcast.
-             * @function broadcast
-             * @memberof orderer.AtomicBroadcast
-             * @instance
-             * @param {common.IEnvelope} request Envelope message or plain object
-             * @param {orderer.AtomicBroadcast.BroadcastCallback} callback Node-style callback called with the error, if any, and BroadcastResponse
-             * @returns {undefined}
-             * @variation 1
-             */
-            Object.defineProperty(AtomicBroadcast.prototype.broadcast = function broadcast(request, callback) {
-                return this.rpcCall(broadcast, $root.common.Envelope, $root.orderer.BroadcastResponse, request, callback);
-            }, "name", { value: "Broadcast" });
-    
-            /**
-             * Calls Broadcast.
-             * @function broadcast
-             * @memberof orderer.AtomicBroadcast
-             * @instance
-             * @param {common.IEnvelope} request Envelope message or plain object
-             * @returns {Promise<orderer.BroadcastResponse>} Promise
-             * @variation 2
-             */
-    
-            /**
-             * Callback as used by {@link orderer.AtomicBroadcast#deliver}.
-             * @memberof orderer.AtomicBroadcast
-             * @typedef DeliverCallback
-             * @type {function}
-             * @param {Error|null} error Error, if any
-             * @param {orderer.DeliverResponse} [response] DeliverResponse
-             */
-    
-            /**
-             * Calls Deliver.
-             * @function deliver
-             * @memberof orderer.AtomicBroadcast
-             * @instance
-             * @param {common.IEnvelope} request Envelope message or plain object
-             * @param {orderer.AtomicBroadcast.DeliverCallback} callback Node-style callback called with the error, if any, and DeliverResponse
-             * @returns {undefined}
-             * @variation 1
-             */
-            Object.defineProperty(AtomicBroadcast.prototype.deliver = function deliver(request, callback) {
-                return this.rpcCall(deliver, $root.common.Envelope, $root.orderer.DeliverResponse, request, callback);
-            }, "name", { value: "Deliver" });
-    
-            /**
-             * Calls Deliver.
-             * @function deliver
-             * @memberof orderer.AtomicBroadcast
-             * @instance
-             * @param {common.IEnvelope} request Envelope message or plain object
-             * @returns {Promise<orderer.DeliverResponse>} Promise
-             * @variation 2
-             */
-    
-            return AtomicBroadcast;
-        })();
     
         orderer.Cluster = (function() {
     
@@ -55150,6 +53584,1770 @@
             return KafkaMetadata;
         })();
     
+        orderer.BroadcastResponse = (function() {
+    
+            /**
+             * Properties of a BroadcastResponse.
+             * @memberof orderer
+             * @interface IBroadcastResponse
+             * @property {common.Status|null} [status] BroadcastResponse status
+             * @property {string|null} [info] BroadcastResponse info
+             */
+    
+            /**
+             * Constructs a new BroadcastResponse.
+             * @memberof orderer
+             * @classdesc Represents a BroadcastResponse.
+             * @implements IBroadcastResponse
+             * @constructor
+             * @param {orderer.IBroadcastResponse=} [properties] Properties to set
+             */
+            function BroadcastResponse(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * BroadcastResponse status.
+             * @member {common.Status} status
+             * @memberof orderer.BroadcastResponse
+             * @instance
+             */
+            BroadcastResponse.prototype.status = 0;
+    
+            /**
+             * BroadcastResponse info.
+             * @member {string} info
+             * @memberof orderer.BroadcastResponse
+             * @instance
+             */
+            BroadcastResponse.prototype.info = "";
+    
+            /**
+             * Creates a new BroadcastResponse instance using the specified properties.
+             * @function create
+             * @memberof orderer.BroadcastResponse
+             * @static
+             * @param {orderer.IBroadcastResponse=} [properties] Properties to set
+             * @returns {orderer.BroadcastResponse} BroadcastResponse instance
+             */
+            BroadcastResponse.create = function create(properties) {
+                return new BroadcastResponse(properties);
+            };
+    
+            /**
+             * Encodes the specified BroadcastResponse message. Does not implicitly {@link orderer.BroadcastResponse.verify|verify} messages.
+             * @function encode
+             * @memberof orderer.BroadcastResponse
+             * @static
+             * @param {orderer.IBroadcastResponse} message BroadcastResponse message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            BroadcastResponse.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.status != null && Object.hasOwnProperty.call(message, "status"))
+                    writer.uint32(/* id 1, wireType 0 =*/8).int32(message.status);
+                if (message.info != null && Object.hasOwnProperty.call(message, "info"))
+                    writer.uint32(/* id 2, wireType 2 =*/18).string(message.info);
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified BroadcastResponse message, length delimited. Does not implicitly {@link orderer.BroadcastResponse.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof orderer.BroadcastResponse
+             * @static
+             * @param {orderer.IBroadcastResponse} message BroadcastResponse message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            BroadcastResponse.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a BroadcastResponse message from the specified reader or buffer.
+             * @function decode
+             * @memberof orderer.BroadcastResponse
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {orderer.BroadcastResponse} BroadcastResponse
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            BroadcastResponse.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.orderer.BroadcastResponse();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.status = reader.int32();
+                        break;
+                    case 2:
+                        message.info = reader.string();
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a BroadcastResponse message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof orderer.BroadcastResponse
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {orderer.BroadcastResponse} BroadcastResponse
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            BroadcastResponse.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a BroadcastResponse message.
+             * @function verify
+             * @memberof orderer.BroadcastResponse
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            BroadcastResponse.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.status != null && message.hasOwnProperty("status"))
+                    switch (message.status) {
+                    default:
+                        return "status: enum value expected";
+                    case 0:
+                    case 200:
+                    case 400:
+                    case 403:
+                    case 404:
+                    case 413:
+                    case 500:
+                    case 501:
+                    case 503:
+                        break;
+                    }
+                if (message.info != null && message.hasOwnProperty("info"))
+                    if (!$util.isString(message.info))
+                        return "info: string expected";
+                return null;
+            };
+    
+            /**
+             * Creates a BroadcastResponse message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof orderer.BroadcastResponse
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {orderer.BroadcastResponse} BroadcastResponse
+             */
+            BroadcastResponse.fromObject = function fromObject(object) {
+                if (object instanceof $root.orderer.BroadcastResponse)
+                    return object;
+                var message = new $root.orderer.BroadcastResponse();
+                switch (object.status) {
+                case "UNKNOWN":
+                case 0:
+                    message.status = 0;
+                    break;
+                case "SUCCESS":
+                case 200:
+                    message.status = 200;
+                    break;
+                case "BAD_REQUEST":
+                case 400:
+                    message.status = 400;
+                    break;
+                case "FORBIDDEN":
+                case 403:
+                    message.status = 403;
+                    break;
+                case "NOT_FOUND":
+                case 404:
+                    message.status = 404;
+                    break;
+                case "REQUEST_ENTITY_TOO_LARGE":
+                case 413:
+                    message.status = 413;
+                    break;
+                case "INTERNAL_SERVER_ERROR":
+                case 500:
+                    message.status = 500;
+                    break;
+                case "NOT_IMPLEMENTED":
+                case 501:
+                    message.status = 501;
+                    break;
+                case "SERVICE_UNAVAILABLE":
+                case 503:
+                    message.status = 503;
+                    break;
+                }
+                if (object.info != null)
+                    message.info = String(object.info);
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a BroadcastResponse message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof orderer.BroadcastResponse
+             * @static
+             * @param {orderer.BroadcastResponse} message BroadcastResponse
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            BroadcastResponse.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.defaults) {
+                    object.status = options.enums === String ? "UNKNOWN" : 0;
+                    object.info = "";
+                }
+                if (message.status != null && message.hasOwnProperty("status"))
+                    object.status = options.enums === String ? $root.common.Status[message.status] : message.status;
+                if (message.info != null && message.hasOwnProperty("info"))
+                    object.info = message.info;
+                return object;
+            };
+    
+            /**
+             * Converts this BroadcastResponse to JSON.
+             * @function toJSON
+             * @memberof orderer.BroadcastResponse
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            BroadcastResponse.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return BroadcastResponse;
+        })();
+    
+        orderer.SeekNewest = (function() {
+    
+            /**
+             * Properties of a SeekNewest.
+             * @memberof orderer
+             * @interface ISeekNewest
+             */
+    
+            /**
+             * Constructs a new SeekNewest.
+             * @memberof orderer
+             * @classdesc Represents a SeekNewest.
+             * @implements ISeekNewest
+             * @constructor
+             * @param {orderer.ISeekNewest=} [properties] Properties to set
+             */
+            function SeekNewest(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * Creates a new SeekNewest instance using the specified properties.
+             * @function create
+             * @memberof orderer.SeekNewest
+             * @static
+             * @param {orderer.ISeekNewest=} [properties] Properties to set
+             * @returns {orderer.SeekNewest} SeekNewest instance
+             */
+            SeekNewest.create = function create(properties) {
+                return new SeekNewest(properties);
+            };
+    
+            /**
+             * Encodes the specified SeekNewest message. Does not implicitly {@link orderer.SeekNewest.verify|verify} messages.
+             * @function encode
+             * @memberof orderer.SeekNewest
+             * @static
+             * @param {orderer.ISeekNewest} message SeekNewest message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            SeekNewest.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified SeekNewest message, length delimited. Does not implicitly {@link orderer.SeekNewest.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof orderer.SeekNewest
+             * @static
+             * @param {orderer.ISeekNewest} message SeekNewest message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            SeekNewest.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a SeekNewest message from the specified reader or buffer.
+             * @function decode
+             * @memberof orderer.SeekNewest
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {orderer.SeekNewest} SeekNewest
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            SeekNewest.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.orderer.SeekNewest();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a SeekNewest message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof orderer.SeekNewest
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {orderer.SeekNewest} SeekNewest
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            SeekNewest.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a SeekNewest message.
+             * @function verify
+             * @memberof orderer.SeekNewest
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            SeekNewest.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                return null;
+            };
+    
+            /**
+             * Creates a SeekNewest message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof orderer.SeekNewest
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {orderer.SeekNewest} SeekNewest
+             */
+            SeekNewest.fromObject = function fromObject(object) {
+                if (object instanceof $root.orderer.SeekNewest)
+                    return object;
+                return new $root.orderer.SeekNewest();
+            };
+    
+            /**
+             * Creates a plain object from a SeekNewest message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof orderer.SeekNewest
+             * @static
+             * @param {orderer.SeekNewest} message SeekNewest
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            SeekNewest.toObject = function toObject() {
+                return {};
+            };
+    
+            /**
+             * Converts this SeekNewest to JSON.
+             * @function toJSON
+             * @memberof orderer.SeekNewest
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            SeekNewest.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return SeekNewest;
+        })();
+    
+        orderer.SeekOldest = (function() {
+    
+            /**
+             * Properties of a SeekOldest.
+             * @memberof orderer
+             * @interface ISeekOldest
+             */
+    
+            /**
+             * Constructs a new SeekOldest.
+             * @memberof orderer
+             * @classdesc Represents a SeekOldest.
+             * @implements ISeekOldest
+             * @constructor
+             * @param {orderer.ISeekOldest=} [properties] Properties to set
+             */
+            function SeekOldest(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * Creates a new SeekOldest instance using the specified properties.
+             * @function create
+             * @memberof orderer.SeekOldest
+             * @static
+             * @param {orderer.ISeekOldest=} [properties] Properties to set
+             * @returns {orderer.SeekOldest} SeekOldest instance
+             */
+            SeekOldest.create = function create(properties) {
+                return new SeekOldest(properties);
+            };
+    
+            /**
+             * Encodes the specified SeekOldest message. Does not implicitly {@link orderer.SeekOldest.verify|verify} messages.
+             * @function encode
+             * @memberof orderer.SeekOldest
+             * @static
+             * @param {orderer.ISeekOldest} message SeekOldest message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            SeekOldest.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified SeekOldest message, length delimited. Does not implicitly {@link orderer.SeekOldest.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof orderer.SeekOldest
+             * @static
+             * @param {orderer.ISeekOldest} message SeekOldest message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            SeekOldest.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a SeekOldest message from the specified reader or buffer.
+             * @function decode
+             * @memberof orderer.SeekOldest
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {orderer.SeekOldest} SeekOldest
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            SeekOldest.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.orderer.SeekOldest();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a SeekOldest message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof orderer.SeekOldest
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {orderer.SeekOldest} SeekOldest
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            SeekOldest.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a SeekOldest message.
+             * @function verify
+             * @memberof orderer.SeekOldest
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            SeekOldest.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                return null;
+            };
+    
+            /**
+             * Creates a SeekOldest message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof orderer.SeekOldest
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {orderer.SeekOldest} SeekOldest
+             */
+            SeekOldest.fromObject = function fromObject(object) {
+                if (object instanceof $root.orderer.SeekOldest)
+                    return object;
+                return new $root.orderer.SeekOldest();
+            };
+    
+            /**
+             * Creates a plain object from a SeekOldest message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof orderer.SeekOldest
+             * @static
+             * @param {orderer.SeekOldest} message SeekOldest
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            SeekOldest.toObject = function toObject() {
+                return {};
+            };
+    
+            /**
+             * Converts this SeekOldest to JSON.
+             * @function toJSON
+             * @memberof orderer.SeekOldest
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            SeekOldest.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return SeekOldest;
+        })();
+    
+        orderer.SeekSpecified = (function() {
+    
+            /**
+             * Properties of a SeekSpecified.
+             * @memberof orderer
+             * @interface ISeekSpecified
+             * @property {number|Long|null} [number] SeekSpecified number
+             */
+    
+            /**
+             * Constructs a new SeekSpecified.
+             * @memberof orderer
+             * @classdesc Represents a SeekSpecified.
+             * @implements ISeekSpecified
+             * @constructor
+             * @param {orderer.ISeekSpecified=} [properties] Properties to set
+             */
+            function SeekSpecified(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * SeekSpecified number.
+             * @member {number|Long} number
+             * @memberof orderer.SeekSpecified
+             * @instance
+             */
+            SeekSpecified.prototype.number = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    
+            /**
+             * Creates a new SeekSpecified instance using the specified properties.
+             * @function create
+             * @memberof orderer.SeekSpecified
+             * @static
+             * @param {orderer.ISeekSpecified=} [properties] Properties to set
+             * @returns {orderer.SeekSpecified} SeekSpecified instance
+             */
+            SeekSpecified.create = function create(properties) {
+                return new SeekSpecified(properties);
+            };
+    
+            /**
+             * Encodes the specified SeekSpecified message. Does not implicitly {@link orderer.SeekSpecified.verify|verify} messages.
+             * @function encode
+             * @memberof orderer.SeekSpecified
+             * @static
+             * @param {orderer.ISeekSpecified} message SeekSpecified message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            SeekSpecified.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.number != null && Object.hasOwnProperty.call(message, "number"))
+                    writer.uint32(/* id 1, wireType 0 =*/8).uint64(message.number);
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified SeekSpecified message, length delimited. Does not implicitly {@link orderer.SeekSpecified.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof orderer.SeekSpecified
+             * @static
+             * @param {orderer.ISeekSpecified} message SeekSpecified message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            SeekSpecified.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a SeekSpecified message from the specified reader or buffer.
+             * @function decode
+             * @memberof orderer.SeekSpecified
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {orderer.SeekSpecified} SeekSpecified
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            SeekSpecified.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.orderer.SeekSpecified();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.number = reader.uint64();
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a SeekSpecified message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof orderer.SeekSpecified
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {orderer.SeekSpecified} SeekSpecified
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            SeekSpecified.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a SeekSpecified message.
+             * @function verify
+             * @memberof orderer.SeekSpecified
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            SeekSpecified.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.number != null && message.hasOwnProperty("number"))
+                    if (!$util.isInteger(message.number) && !(message.number && $util.isInteger(message.number.low) && $util.isInteger(message.number.high)))
+                        return "number: integer|Long expected";
+                return null;
+            };
+    
+            /**
+             * Creates a SeekSpecified message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof orderer.SeekSpecified
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {orderer.SeekSpecified} SeekSpecified
+             */
+            SeekSpecified.fromObject = function fromObject(object) {
+                if (object instanceof $root.orderer.SeekSpecified)
+                    return object;
+                var message = new $root.orderer.SeekSpecified();
+                if (object.number != null)
+                    if ($util.Long)
+                        (message.number = $util.Long.fromValue(object.number)).unsigned = true;
+                    else if (typeof object.number === "string")
+                        message.number = parseInt(object.number, 10);
+                    else if (typeof object.number === "number")
+                        message.number = object.number;
+                    else if (typeof object.number === "object")
+                        message.number = new $util.LongBits(object.number.low >>> 0, object.number.high >>> 0).toNumber(true);
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a SeekSpecified message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof orderer.SeekSpecified
+             * @static
+             * @param {orderer.SeekSpecified} message SeekSpecified
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            SeekSpecified.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.defaults)
+                    if ($util.Long) {
+                        var long = new $util.Long(0, 0, true);
+                        object.number = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                    } else
+                        object.number = options.longs === String ? "0" : 0;
+                if (message.number != null && message.hasOwnProperty("number"))
+                    if (typeof message.number === "number")
+                        object.number = options.longs === String ? String(message.number) : message.number;
+                    else
+                        object.number = options.longs === String ? $util.Long.prototype.toString.call(message.number) : options.longs === Number ? new $util.LongBits(message.number.low >>> 0, message.number.high >>> 0).toNumber(true) : message.number;
+                return object;
+            };
+    
+            /**
+             * Converts this SeekSpecified to JSON.
+             * @function toJSON
+             * @memberof orderer.SeekSpecified
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            SeekSpecified.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return SeekSpecified;
+        })();
+    
+        orderer.SeekPosition = (function() {
+    
+            /**
+             * Properties of a SeekPosition.
+             * @memberof orderer
+             * @interface ISeekPosition
+             * @property {orderer.ISeekNewest|null} [newest] SeekPosition newest
+             * @property {orderer.ISeekOldest|null} [oldest] SeekPosition oldest
+             * @property {orderer.ISeekSpecified|null} [specified] SeekPosition specified
+             */
+    
+            /**
+             * Constructs a new SeekPosition.
+             * @memberof orderer
+             * @classdesc Represents a SeekPosition.
+             * @implements ISeekPosition
+             * @constructor
+             * @param {orderer.ISeekPosition=} [properties] Properties to set
+             */
+            function SeekPosition(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * SeekPosition newest.
+             * @member {orderer.ISeekNewest|null|undefined} newest
+             * @memberof orderer.SeekPosition
+             * @instance
+             */
+            SeekPosition.prototype.newest = null;
+    
+            /**
+             * SeekPosition oldest.
+             * @member {orderer.ISeekOldest|null|undefined} oldest
+             * @memberof orderer.SeekPosition
+             * @instance
+             */
+            SeekPosition.prototype.oldest = null;
+    
+            /**
+             * SeekPosition specified.
+             * @member {orderer.ISeekSpecified|null|undefined} specified
+             * @memberof orderer.SeekPosition
+             * @instance
+             */
+            SeekPosition.prototype.specified = null;
+    
+            // OneOf field names bound to virtual getters and setters
+            var $oneOfFields;
+    
+            /**
+             * SeekPosition Type.
+             * @member {"newest"|"oldest"|"specified"|undefined} Type
+             * @memberof orderer.SeekPosition
+             * @instance
+             */
+            Object.defineProperty(SeekPosition.prototype, "Type", {
+                get: $util.oneOfGetter($oneOfFields = ["newest", "oldest", "specified"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+    
+            /**
+             * Creates a new SeekPosition instance using the specified properties.
+             * @function create
+             * @memberof orderer.SeekPosition
+             * @static
+             * @param {orderer.ISeekPosition=} [properties] Properties to set
+             * @returns {orderer.SeekPosition} SeekPosition instance
+             */
+            SeekPosition.create = function create(properties) {
+                return new SeekPosition(properties);
+            };
+    
+            /**
+             * Encodes the specified SeekPosition message. Does not implicitly {@link orderer.SeekPosition.verify|verify} messages.
+             * @function encode
+             * @memberof orderer.SeekPosition
+             * @static
+             * @param {orderer.ISeekPosition} message SeekPosition message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            SeekPosition.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.newest != null && Object.hasOwnProperty.call(message, "newest"))
+                    $root.orderer.SeekNewest.encode(message.newest, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+                if (message.oldest != null && Object.hasOwnProperty.call(message, "oldest"))
+                    $root.orderer.SeekOldest.encode(message.oldest, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+                if (message.specified != null && Object.hasOwnProperty.call(message, "specified"))
+                    $root.orderer.SeekSpecified.encode(message.specified, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified SeekPosition message, length delimited. Does not implicitly {@link orderer.SeekPosition.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof orderer.SeekPosition
+             * @static
+             * @param {orderer.ISeekPosition} message SeekPosition message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            SeekPosition.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a SeekPosition message from the specified reader or buffer.
+             * @function decode
+             * @memberof orderer.SeekPosition
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {orderer.SeekPosition} SeekPosition
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            SeekPosition.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.orderer.SeekPosition();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.newest = $root.orderer.SeekNewest.decode(reader, reader.uint32());
+                        break;
+                    case 2:
+                        message.oldest = $root.orderer.SeekOldest.decode(reader, reader.uint32());
+                        break;
+                    case 3:
+                        message.specified = $root.orderer.SeekSpecified.decode(reader, reader.uint32());
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a SeekPosition message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof orderer.SeekPosition
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {orderer.SeekPosition} SeekPosition
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            SeekPosition.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a SeekPosition message.
+             * @function verify
+             * @memberof orderer.SeekPosition
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            SeekPosition.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                var properties = {};
+                if (message.newest != null && message.hasOwnProperty("newest")) {
+                    properties.Type = 1;
+                    {
+                        var error = $root.orderer.SeekNewest.verify(message.newest);
+                        if (error)
+                            return "newest." + error;
+                    }
+                }
+                if (message.oldest != null && message.hasOwnProperty("oldest")) {
+                    if (properties.Type === 1)
+                        return "Type: multiple values";
+                    properties.Type = 1;
+                    {
+                        var error = $root.orderer.SeekOldest.verify(message.oldest);
+                        if (error)
+                            return "oldest." + error;
+                    }
+                }
+                if (message.specified != null && message.hasOwnProperty("specified")) {
+                    if (properties.Type === 1)
+                        return "Type: multiple values";
+                    properties.Type = 1;
+                    {
+                        var error = $root.orderer.SeekSpecified.verify(message.specified);
+                        if (error)
+                            return "specified." + error;
+                    }
+                }
+                return null;
+            };
+    
+            /**
+             * Creates a SeekPosition message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof orderer.SeekPosition
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {orderer.SeekPosition} SeekPosition
+             */
+            SeekPosition.fromObject = function fromObject(object) {
+                if (object instanceof $root.orderer.SeekPosition)
+                    return object;
+                var message = new $root.orderer.SeekPosition();
+                if (object.newest != null) {
+                    if (typeof object.newest !== "object")
+                        throw TypeError(".orderer.SeekPosition.newest: object expected");
+                    message.newest = $root.orderer.SeekNewest.fromObject(object.newest);
+                }
+                if (object.oldest != null) {
+                    if (typeof object.oldest !== "object")
+                        throw TypeError(".orderer.SeekPosition.oldest: object expected");
+                    message.oldest = $root.orderer.SeekOldest.fromObject(object.oldest);
+                }
+                if (object.specified != null) {
+                    if (typeof object.specified !== "object")
+                        throw TypeError(".orderer.SeekPosition.specified: object expected");
+                    message.specified = $root.orderer.SeekSpecified.fromObject(object.specified);
+                }
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a SeekPosition message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof orderer.SeekPosition
+             * @static
+             * @param {orderer.SeekPosition} message SeekPosition
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            SeekPosition.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (message.newest != null && message.hasOwnProperty("newest")) {
+                    object.newest = $root.orderer.SeekNewest.toObject(message.newest, options);
+                    if (options.oneofs)
+                        object.Type = "newest";
+                }
+                if (message.oldest != null && message.hasOwnProperty("oldest")) {
+                    object.oldest = $root.orderer.SeekOldest.toObject(message.oldest, options);
+                    if (options.oneofs)
+                        object.Type = "oldest";
+                }
+                if (message.specified != null && message.hasOwnProperty("specified")) {
+                    object.specified = $root.orderer.SeekSpecified.toObject(message.specified, options);
+                    if (options.oneofs)
+                        object.Type = "specified";
+                }
+                return object;
+            };
+    
+            /**
+             * Converts this SeekPosition to JSON.
+             * @function toJSON
+             * @memberof orderer.SeekPosition
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            SeekPosition.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return SeekPosition;
+        })();
+    
+        orderer.SeekInfo = (function() {
+    
+            /**
+             * Properties of a SeekInfo.
+             * @memberof orderer
+             * @interface ISeekInfo
+             * @property {orderer.ISeekPosition|null} [start] SeekInfo start
+             * @property {orderer.ISeekPosition|null} [stop] SeekInfo stop
+             * @property {orderer.SeekInfo.SeekBehavior|null} [behavior] SeekInfo behavior
+             * @property {orderer.SeekInfo.SeekErrorResponse|null} [error_response] SeekInfo error_response
+             */
+    
+            /**
+             * Constructs a new SeekInfo.
+             * @memberof orderer
+             * @classdesc Represents a SeekInfo.
+             * @implements ISeekInfo
+             * @constructor
+             * @param {orderer.ISeekInfo=} [properties] Properties to set
+             */
+            function SeekInfo(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * SeekInfo start.
+             * @member {orderer.ISeekPosition|null|undefined} start
+             * @memberof orderer.SeekInfo
+             * @instance
+             */
+            SeekInfo.prototype.start = null;
+    
+            /**
+             * SeekInfo stop.
+             * @member {orderer.ISeekPosition|null|undefined} stop
+             * @memberof orderer.SeekInfo
+             * @instance
+             */
+            SeekInfo.prototype.stop = null;
+    
+            /**
+             * SeekInfo behavior.
+             * @member {orderer.SeekInfo.SeekBehavior} behavior
+             * @memberof orderer.SeekInfo
+             * @instance
+             */
+            SeekInfo.prototype.behavior = 0;
+    
+            /**
+             * SeekInfo error_response.
+             * @member {orderer.SeekInfo.SeekErrorResponse} error_response
+             * @memberof orderer.SeekInfo
+             * @instance
+             */
+            SeekInfo.prototype.error_response = 0;
+    
+            /**
+             * Creates a new SeekInfo instance using the specified properties.
+             * @function create
+             * @memberof orderer.SeekInfo
+             * @static
+             * @param {orderer.ISeekInfo=} [properties] Properties to set
+             * @returns {orderer.SeekInfo} SeekInfo instance
+             */
+            SeekInfo.create = function create(properties) {
+                return new SeekInfo(properties);
+            };
+    
+            /**
+             * Encodes the specified SeekInfo message. Does not implicitly {@link orderer.SeekInfo.verify|verify} messages.
+             * @function encode
+             * @memberof orderer.SeekInfo
+             * @static
+             * @param {orderer.ISeekInfo} message SeekInfo message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            SeekInfo.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.start != null && Object.hasOwnProperty.call(message, "start"))
+                    $root.orderer.SeekPosition.encode(message.start, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+                if (message.stop != null && Object.hasOwnProperty.call(message, "stop"))
+                    $root.orderer.SeekPosition.encode(message.stop, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+                if (message.behavior != null && Object.hasOwnProperty.call(message, "behavior"))
+                    writer.uint32(/* id 3, wireType 0 =*/24).int32(message.behavior);
+                if (message.error_response != null && Object.hasOwnProperty.call(message, "error_response"))
+                    writer.uint32(/* id 4, wireType 0 =*/32).int32(message.error_response);
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified SeekInfo message, length delimited. Does not implicitly {@link orderer.SeekInfo.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof orderer.SeekInfo
+             * @static
+             * @param {orderer.ISeekInfo} message SeekInfo message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            SeekInfo.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a SeekInfo message from the specified reader or buffer.
+             * @function decode
+             * @memberof orderer.SeekInfo
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {orderer.SeekInfo} SeekInfo
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            SeekInfo.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.orderer.SeekInfo();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.start = $root.orderer.SeekPosition.decode(reader, reader.uint32());
+                        break;
+                    case 2:
+                        message.stop = $root.orderer.SeekPosition.decode(reader, reader.uint32());
+                        break;
+                    case 3:
+                        message.behavior = reader.int32();
+                        break;
+                    case 4:
+                        message.error_response = reader.int32();
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a SeekInfo message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof orderer.SeekInfo
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {orderer.SeekInfo} SeekInfo
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            SeekInfo.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a SeekInfo message.
+             * @function verify
+             * @memberof orderer.SeekInfo
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            SeekInfo.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.start != null && message.hasOwnProperty("start")) {
+                    var error = $root.orderer.SeekPosition.verify(message.start);
+                    if (error)
+                        return "start." + error;
+                }
+                if (message.stop != null && message.hasOwnProperty("stop")) {
+                    var error = $root.orderer.SeekPosition.verify(message.stop);
+                    if (error)
+                        return "stop." + error;
+                }
+                if (message.behavior != null && message.hasOwnProperty("behavior"))
+                    switch (message.behavior) {
+                    default:
+                        return "behavior: enum value expected";
+                    case 0:
+                    case 1:
+                        break;
+                    }
+                if (message.error_response != null && message.hasOwnProperty("error_response"))
+                    switch (message.error_response) {
+                    default:
+                        return "error_response: enum value expected";
+                    case 0:
+                    case 1:
+                        break;
+                    }
+                return null;
+            };
+    
+            /**
+             * Creates a SeekInfo message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof orderer.SeekInfo
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {orderer.SeekInfo} SeekInfo
+             */
+            SeekInfo.fromObject = function fromObject(object) {
+                if (object instanceof $root.orderer.SeekInfo)
+                    return object;
+                var message = new $root.orderer.SeekInfo();
+                if (object.start != null) {
+                    if (typeof object.start !== "object")
+                        throw TypeError(".orderer.SeekInfo.start: object expected");
+                    message.start = $root.orderer.SeekPosition.fromObject(object.start);
+                }
+                if (object.stop != null) {
+                    if (typeof object.stop !== "object")
+                        throw TypeError(".orderer.SeekInfo.stop: object expected");
+                    message.stop = $root.orderer.SeekPosition.fromObject(object.stop);
+                }
+                switch (object.behavior) {
+                case "BLOCK_UNTIL_READY":
+                case 0:
+                    message.behavior = 0;
+                    break;
+                case "FAIL_IF_NOT_READY":
+                case 1:
+                    message.behavior = 1;
+                    break;
+                }
+                switch (object.error_response) {
+                case "STRICT":
+                case 0:
+                    message.error_response = 0;
+                    break;
+                case "BEST_EFFORT":
+                case 1:
+                    message.error_response = 1;
+                    break;
+                }
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a SeekInfo message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof orderer.SeekInfo
+             * @static
+             * @param {orderer.SeekInfo} message SeekInfo
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            SeekInfo.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.defaults) {
+                    object.start = null;
+                    object.stop = null;
+                    object.behavior = options.enums === String ? "BLOCK_UNTIL_READY" : 0;
+                    object.error_response = options.enums === String ? "STRICT" : 0;
+                }
+                if (message.start != null && message.hasOwnProperty("start"))
+                    object.start = $root.orderer.SeekPosition.toObject(message.start, options);
+                if (message.stop != null && message.hasOwnProperty("stop"))
+                    object.stop = $root.orderer.SeekPosition.toObject(message.stop, options);
+                if (message.behavior != null && message.hasOwnProperty("behavior"))
+                    object.behavior = options.enums === String ? $root.orderer.SeekInfo.SeekBehavior[message.behavior] : message.behavior;
+                if (message.error_response != null && message.hasOwnProperty("error_response"))
+                    object.error_response = options.enums === String ? $root.orderer.SeekInfo.SeekErrorResponse[message.error_response] : message.error_response;
+                return object;
+            };
+    
+            /**
+             * Converts this SeekInfo to JSON.
+             * @function toJSON
+             * @memberof orderer.SeekInfo
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            SeekInfo.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            /**
+             * SeekBehavior enum.
+             * @name orderer.SeekInfo.SeekBehavior
+             * @enum {number}
+             * @property {number} BLOCK_UNTIL_READY=0 BLOCK_UNTIL_READY value
+             * @property {number} FAIL_IF_NOT_READY=1 FAIL_IF_NOT_READY value
+             */
+            SeekInfo.SeekBehavior = (function() {
+                var valuesById = {}, values = Object.create(valuesById);
+                values[valuesById[0] = "BLOCK_UNTIL_READY"] = 0;
+                values[valuesById[1] = "FAIL_IF_NOT_READY"] = 1;
+                return values;
+            })();
+    
+            /**
+             * SeekErrorResponse enum.
+             * @name orderer.SeekInfo.SeekErrorResponse
+             * @enum {number}
+             * @property {number} STRICT=0 STRICT value
+             * @property {number} BEST_EFFORT=1 BEST_EFFORT value
+             */
+            SeekInfo.SeekErrorResponse = (function() {
+                var valuesById = {}, values = Object.create(valuesById);
+                values[valuesById[0] = "STRICT"] = 0;
+                values[valuesById[1] = "BEST_EFFORT"] = 1;
+                return values;
+            })();
+    
+            return SeekInfo;
+        })();
+    
+        orderer.DeliverResponse = (function() {
+    
+            /**
+             * Properties of a DeliverResponse.
+             * @memberof orderer
+             * @interface IDeliverResponse
+             * @property {common.Status|null} [status] DeliverResponse status
+             * @property {common.IBlock|null} [block] DeliverResponse block
+             */
+    
+            /**
+             * Constructs a new DeliverResponse.
+             * @memberof orderer
+             * @classdesc Represents a DeliverResponse.
+             * @implements IDeliverResponse
+             * @constructor
+             * @param {orderer.IDeliverResponse=} [properties] Properties to set
+             */
+            function DeliverResponse(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * DeliverResponse status.
+             * @member {common.Status|null|undefined} status
+             * @memberof orderer.DeliverResponse
+             * @instance
+             */
+            DeliverResponse.prototype.status = null;
+    
+            /**
+             * DeliverResponse block.
+             * @member {common.IBlock|null|undefined} block
+             * @memberof orderer.DeliverResponse
+             * @instance
+             */
+            DeliverResponse.prototype.block = null;
+    
+            // OneOf field names bound to virtual getters and setters
+            var $oneOfFields;
+    
+            /**
+             * DeliverResponse Type.
+             * @member {"status"|"block"|undefined} Type
+             * @memberof orderer.DeliverResponse
+             * @instance
+             */
+            Object.defineProperty(DeliverResponse.prototype, "Type", {
+                get: $util.oneOfGetter($oneOfFields = ["status", "block"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+    
+            /**
+             * Creates a new DeliverResponse instance using the specified properties.
+             * @function create
+             * @memberof orderer.DeliverResponse
+             * @static
+             * @param {orderer.IDeliverResponse=} [properties] Properties to set
+             * @returns {orderer.DeliverResponse} DeliverResponse instance
+             */
+            DeliverResponse.create = function create(properties) {
+                return new DeliverResponse(properties);
+            };
+    
+            /**
+             * Encodes the specified DeliverResponse message. Does not implicitly {@link orderer.DeliverResponse.verify|verify} messages.
+             * @function encode
+             * @memberof orderer.DeliverResponse
+             * @static
+             * @param {orderer.IDeliverResponse} message DeliverResponse message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            DeliverResponse.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.status != null && Object.hasOwnProperty.call(message, "status"))
+                    writer.uint32(/* id 1, wireType 0 =*/8).int32(message.status);
+                if (message.block != null && Object.hasOwnProperty.call(message, "block"))
+                    $root.common.Block.encode(message.block, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified DeliverResponse message, length delimited. Does not implicitly {@link orderer.DeliverResponse.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof orderer.DeliverResponse
+             * @static
+             * @param {orderer.IDeliverResponse} message DeliverResponse message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            DeliverResponse.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a DeliverResponse message from the specified reader or buffer.
+             * @function decode
+             * @memberof orderer.DeliverResponse
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {orderer.DeliverResponse} DeliverResponse
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            DeliverResponse.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.orderer.DeliverResponse();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.status = reader.int32();
+                        break;
+                    case 2:
+                        message.block = $root.common.Block.decode(reader, reader.uint32());
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a DeliverResponse message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof orderer.DeliverResponse
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {orderer.DeliverResponse} DeliverResponse
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            DeliverResponse.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a DeliverResponse message.
+             * @function verify
+             * @memberof orderer.DeliverResponse
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            DeliverResponse.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                var properties = {};
+                if (message.status != null && message.hasOwnProperty("status")) {
+                    properties.Type = 1;
+                    switch (message.status) {
+                    default:
+                        return "status: enum value expected";
+                    case 0:
+                    case 200:
+                    case 400:
+                    case 403:
+                    case 404:
+                    case 413:
+                    case 500:
+                    case 501:
+                    case 503:
+                        break;
+                    }
+                }
+                if (message.block != null && message.hasOwnProperty("block")) {
+                    if (properties.Type === 1)
+                        return "Type: multiple values";
+                    properties.Type = 1;
+                    {
+                        var error = $root.common.Block.verify(message.block);
+                        if (error)
+                            return "block." + error;
+                    }
+                }
+                return null;
+            };
+    
+            /**
+             * Creates a DeliverResponse message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof orderer.DeliverResponse
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {orderer.DeliverResponse} DeliverResponse
+             */
+            DeliverResponse.fromObject = function fromObject(object) {
+                if (object instanceof $root.orderer.DeliverResponse)
+                    return object;
+                var message = new $root.orderer.DeliverResponse();
+                switch (object.status) {
+                case "UNKNOWN":
+                case 0:
+                    message.status = 0;
+                    break;
+                case "SUCCESS":
+                case 200:
+                    message.status = 200;
+                    break;
+                case "BAD_REQUEST":
+                case 400:
+                    message.status = 400;
+                    break;
+                case "FORBIDDEN":
+                case 403:
+                    message.status = 403;
+                    break;
+                case "NOT_FOUND":
+                case 404:
+                    message.status = 404;
+                    break;
+                case "REQUEST_ENTITY_TOO_LARGE":
+                case 413:
+                    message.status = 413;
+                    break;
+                case "INTERNAL_SERVER_ERROR":
+                case 500:
+                    message.status = 500;
+                    break;
+                case "NOT_IMPLEMENTED":
+                case 501:
+                    message.status = 501;
+                    break;
+                case "SERVICE_UNAVAILABLE":
+                case 503:
+                    message.status = 503;
+                    break;
+                }
+                if (object.block != null) {
+                    if (typeof object.block !== "object")
+                        throw TypeError(".orderer.DeliverResponse.block: object expected");
+                    message.block = $root.common.Block.fromObject(object.block);
+                }
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a DeliverResponse message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof orderer.DeliverResponse
+             * @static
+             * @param {orderer.DeliverResponse} message DeliverResponse
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            DeliverResponse.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (message.status != null && message.hasOwnProperty("status")) {
+                    object.status = options.enums === String ? $root.common.Status[message.status] : message.status;
+                    if (options.oneofs)
+                        object.Type = "status";
+                }
+                if (message.block != null && message.hasOwnProperty("block")) {
+                    object.block = $root.common.Block.toObject(message.block, options);
+                    if (options.oneofs)
+                        object.Type = "block";
+                }
+                return object;
+            };
+    
+            /**
+             * Converts this DeliverResponse to JSON.
+             * @function toJSON
+             * @memberof orderer.DeliverResponse
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            DeliverResponse.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return DeliverResponse;
+        })();
+    
+        orderer.AtomicBroadcast = (function() {
+    
+            /**
+             * Constructs a new AtomicBroadcast service.
+             * @memberof orderer
+             * @classdesc Represents an AtomicBroadcast
+             * @extends $protobuf.rpc.Service
+             * @constructor
+             * @param {$protobuf.RPCImpl} rpcImpl RPC implementation
+             * @param {boolean} [requestDelimited=false] Whether requests are length-delimited
+             * @param {boolean} [responseDelimited=false] Whether responses are length-delimited
+             */
+            function AtomicBroadcast(rpcImpl, requestDelimited, responseDelimited) {
+                $protobuf.rpc.Service.call(this, rpcImpl, requestDelimited, responseDelimited);
+            }
+    
+            (AtomicBroadcast.prototype = Object.create($protobuf.rpc.Service.prototype)).constructor = AtomicBroadcast;
+    
+            /**
+             * Creates new AtomicBroadcast service using the specified rpc implementation.
+             * @function create
+             * @memberof orderer.AtomicBroadcast
+             * @static
+             * @param {$protobuf.RPCImpl} rpcImpl RPC implementation
+             * @param {boolean} [requestDelimited=false] Whether requests are length-delimited
+             * @param {boolean} [responseDelimited=false] Whether responses are length-delimited
+             * @returns {AtomicBroadcast} RPC service. Useful where requests and/or responses are streamed.
+             */
+            AtomicBroadcast.create = function create(rpcImpl, requestDelimited, responseDelimited) {
+                return new this(rpcImpl, requestDelimited, responseDelimited);
+            };
+    
+            /**
+             * Callback as used by {@link orderer.AtomicBroadcast#broadcast}.
+             * @memberof orderer.AtomicBroadcast
+             * @typedef BroadcastCallback
+             * @type {function}
+             * @param {Error|null} error Error, if any
+             * @param {orderer.BroadcastResponse} [response] BroadcastResponse
+             */
+    
+            /**
+             * Calls Broadcast.
+             * @function broadcast
+             * @memberof orderer.AtomicBroadcast
+             * @instance
+             * @param {common.IEnvelope} request Envelope message or plain object
+             * @param {orderer.AtomicBroadcast.BroadcastCallback} callback Node-style callback called with the error, if any, and BroadcastResponse
+             * @returns {undefined}
+             * @variation 1
+             */
+            Object.defineProperty(AtomicBroadcast.prototype.broadcast = function broadcast(request, callback) {
+                return this.rpcCall(broadcast, $root.common.Envelope, $root.orderer.BroadcastResponse, request, callback);
+            }, "name", { value: "Broadcast" });
+    
+            /**
+             * Calls Broadcast.
+             * @function broadcast
+             * @memberof orderer.AtomicBroadcast
+             * @instance
+             * @param {common.IEnvelope} request Envelope message or plain object
+             * @returns {Promise<orderer.BroadcastResponse>} Promise
+             * @variation 2
+             */
+    
+            /**
+             * Callback as used by {@link orderer.AtomicBroadcast#deliver}.
+             * @memberof orderer.AtomicBroadcast
+             * @typedef DeliverCallback
+             * @type {function}
+             * @param {Error|null} error Error, if any
+             * @param {orderer.DeliverResponse} [response] DeliverResponse
+             */
+    
+            /**
+             * Calls Deliver.
+             * @function deliver
+             * @memberof orderer.AtomicBroadcast
+             * @instance
+             * @param {common.IEnvelope} request Envelope message or plain object
+             * @param {orderer.AtomicBroadcast.DeliverCallback} callback Node-style callback called with the error, if any, and DeliverResponse
+             * @returns {undefined}
+             * @variation 1
+             */
+            Object.defineProperty(AtomicBroadcast.prototype.deliver = function deliver(request, callback) {
+                return this.rpcCall(deliver, $root.common.Envelope, $root.orderer.DeliverResponse, request, callback);
+            }, "name", { value: "Deliver" });
+    
+            /**
+             * Calls Deliver.
+             * @function deliver
+             * @memberof orderer.AtomicBroadcast
+             * @instance
+             * @param {common.IEnvelope} request Envelope message or plain object
+             * @returns {Promise<orderer.DeliverResponse>} Promise
+             * @variation 2
+             */
+    
+            return AtomicBroadcast;
+        })();
+    
         return orderer;
     })();
     
@@ -57181,7 +57379,7 @@
             QueryInstalledChaincodeResult.decode = function decode(reader, length) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.lifecycle.QueryInstalledChaincodeResult(), key;
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.lifecycle.QueryInstalledChaincodeResult(), key, value;
                 while (reader.pos < end) {
                     var tag = reader.uint32();
                     switch (tag >>> 3) {
@@ -57192,12 +57390,26 @@
                         message.label = reader.string();
                         break;
                     case 3:
-                        reader.skip().pos++;
                         if (message.references === $util.emptyObject)
                             message.references = {};
-                        key = reader.string();
-                        reader.pos++;
-                        message.references[key] = $root.lifecycle.QueryInstalledChaincodeResult.References.decode(reader, reader.uint32());
+                        var end2 = reader.uint32() + reader.pos;
+                        key = "";
+                        value = null;
+                        while (reader.pos < end2) {
+                            var tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.string();
+                                break;
+                            case 2:
+                                value = $root.lifecycle.QueryInstalledChaincodeResult.References.decode(reader, reader.uint32());
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7);
+                                break;
+                            }
+                        }
+                        message.references[key] = value;
                         break;
                     default:
                         reader.skipType(tag & 7);
@@ -58608,7 +58820,7 @@
                 InstalledChaincode.decode = function decode(reader, length) {
                     if (!(reader instanceof $Reader))
                         reader = $Reader.create(reader);
-                    var end = length === undefined ? reader.len : reader.pos + length, message = new $root.lifecycle.QueryInstalledChaincodesResult.InstalledChaincode(), key;
+                    var end = length === undefined ? reader.len : reader.pos + length, message = new $root.lifecycle.QueryInstalledChaincodesResult.InstalledChaincode(), key, value;
                     while (reader.pos < end) {
                         var tag = reader.uint32();
                         switch (tag >>> 3) {
@@ -58619,12 +58831,26 @@
                             message.label = reader.string();
                             break;
                         case 3:
-                            reader.skip().pos++;
                             if (message.references === $util.emptyObject)
                                 message.references = {};
-                            key = reader.string();
-                            reader.pos++;
-                            message.references[key] = $root.lifecycle.QueryInstalledChaincodesResult.References.decode(reader, reader.uint32());
+                            var end2 = reader.uint32() + reader.pos;
+                            key = "";
+                            value = null;
+                            while (reader.pos < end2) {
+                                var tag2 = reader.uint32();
+                                switch (tag2 >>> 3) {
+                                case 1:
+                                    key = reader.string();
+                                    break;
+                                case 2:
+                                    value = $root.lifecycle.QueryInstalledChaincodesResult.References.decode(reader, reader.uint32());
+                                    break;
+                                default:
+                                    reader.skipType(tag2 & 7);
+                                    break;
+                                }
+                            }
+                            message.references[key] = value;
                             break;
                         default:
                             reader.skipType(tag & 7);
@@ -61315,17 +61541,31 @@
             CheckCommitReadinessResult.decode = function decode(reader, length) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.lifecycle.CheckCommitReadinessResult(), key;
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.lifecycle.CheckCommitReadinessResult(), key, value;
                 while (reader.pos < end) {
                     var tag = reader.uint32();
                     switch (tag >>> 3) {
                     case 1:
-                        reader.skip().pos++;
                         if (message.approvals === $util.emptyObject)
                             message.approvals = {};
-                        key = reader.string();
-                        reader.pos++;
-                        message.approvals[key] = reader.bool();
+                        var end2 = reader.uint32() + reader.pos;
+                        key = "";
+                        value = false;
+                        while (reader.pos < end2) {
+                            var tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.string();
+                                break;
+                            case 2:
+                                value = reader.bool();
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7);
+                                break;
+                            }
+                        }
+                        message.approvals[key] = value;
                         break;
                     default:
                         reader.skipType(tag & 7);
@@ -61787,7 +62027,7 @@
             QueryChaincodeDefinitionResult.decode = function decode(reader, length) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.lifecycle.QueryChaincodeDefinitionResult(), key;
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.lifecycle.QueryChaincodeDefinitionResult(), key, value;
                 while (reader.pos < end) {
                     var tag = reader.uint32();
                     switch (tag >>> 3) {
@@ -61813,12 +62053,26 @@
                         message.init_required = reader.bool();
                         break;
                     case 8:
-                        reader.skip().pos++;
                         if (message.approvals === $util.emptyObject)
                             message.approvals = {};
-                        key = reader.string();
-                        reader.pos++;
-                        message.approvals[key] = reader.bool();
+                        var end2 = reader.uint32() + reader.pos;
+                        key = "";
+                        value = false;
+                        while (reader.pos < end2) {
+                            var tag2 = reader.uint32();
+                            switch (tag2 >>> 3) {
+                            case 1:
+                                key = reader.string();
+                                break;
+                            case 2:
+                                value = reader.bool();
+                                break;
+                            default:
+                                reader.skipType(tag2 & 7);
+                                break;
+                            }
+                        }
+                        message.approvals[key] = value;
                         break;
                     default:
                         reader.skipType(tag & 7);
@@ -63004,27 +63258,27 @@
     
             /**
              * StateData Int64.
-             * @member {number|Long} Int64
+             * @member {number|Long|null|undefined} Int64
              * @memberof lifecycle.StateData
              * @instance
              */
-            StateData.prototype.Int64 = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+            StateData.prototype.Int64 = null;
     
             /**
              * StateData Bytes.
-             * @member {Uint8Array} Bytes
+             * @member {Uint8Array|null|undefined} Bytes
              * @memberof lifecycle.StateData
              * @instance
              */
-            StateData.prototype.Bytes = $util.newBuffer([]);
+            StateData.prototype.Bytes = null;
     
             /**
              * StateData String.
-             * @member {string} String
+             * @member {string|null|undefined} String
              * @memberof lifecycle.StateData
              * @instance
              */
-            StateData.prototype.String = "";
+            StateData.prototype.String = null;
     
             // OneOf field names bound to virtual getters and setters
             var $oneOfFields;
