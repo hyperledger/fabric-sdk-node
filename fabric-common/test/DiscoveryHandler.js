@@ -799,7 +799,7 @@ describe('DiscoveryHandler', () => {
 				new Map(), // required_orgs
 				new Map(), // preferred_orgs
 				new Map(), // ignored_orgs
-				new Long(1), // preferred_height_gap
+				Long.ONE, // preferred_height_gap
 				'unknown', // sort
 				plan // endorsement_plan
 			);
@@ -814,7 +814,7 @@ describe('DiscoveryHandler', () => {
 				new Map(), // required_orgs
 				new Map(), // preferred_orgs
 				new Map(), // ignored_orgs
-				new Long(1), // preferred_height_gap
+				Long.ONE, // preferred_height_gap
 				'ledgerHeight', // sort
 				plan // endorsement_plan
 			);

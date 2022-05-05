@@ -16,7 +16,7 @@ import {FileSystemWalletStore} from '../../../src/impl/wallet/filesystemwalletst
 import {InMemoryWalletStore} from '../../../src/impl/wallet/inmemorywalletstore';
 import {WalletStore} from '../../../src/impl/wallet/walletstore';
 
-import chai = require('chai');
+import * as chai from 'chai';
 const expect = chai.expect;
 
 async function createTempDir(): Promise<string> {

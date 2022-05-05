@@ -8,8 +8,8 @@ import {AsyncNotifier} from '../../../src/impl/event/asyncnotifier';
 
 import * as testUtils from '../../testutils';
 
-import sinon = require('sinon');
-import chai = require('chai');
+import * as sinon from 'sinon';
+import * as chai from 'chai';
 const expect = chai.expect;
 
 describe('AsyncNotifier', () => {
