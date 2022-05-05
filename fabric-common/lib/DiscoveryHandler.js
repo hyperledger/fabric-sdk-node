@@ -509,7 +509,7 @@ class DiscoveryHandler extends ServiceHandler {
 		for (const group_name in endorsement_plan.groups) {
 			const group = endorsement_plan.groups[group_name];
 			for (const peer of group.peers) {
-				peer.ledgerHeight = new Long(peer.ledgerHeight.low, peer.ledgerHeight.high);
+				peer.ledgerHeight = Long.fromBits(peer.ledgerHeight.low, peer.ledgerHeight.high, true);
 			}
 
 			// remove ignored and non-required

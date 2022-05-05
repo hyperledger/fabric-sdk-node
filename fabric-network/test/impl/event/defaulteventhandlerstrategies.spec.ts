@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import sinon = require('sinon');
-import chai = require('chai');
+import * as sinon from 'sinon';
+import * as chai from 'chai';
 const expect = chai.expect;
 
 import {Channel, Endorser} from 'fabric-common';

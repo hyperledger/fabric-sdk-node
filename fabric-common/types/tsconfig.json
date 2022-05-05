@@ -1,32 +1,30 @@
 {
-  "compilerOptions": {
-    "removeComments": false,
-    "preserveConstEnums": true,
-    "sourceMap": true,
-    "declaration": true,
-    "noImplicitAny": true,
-    "noImplicitReturns": true,
-    "noImplicitThis": true,
-    "suppressImplicitAnyIndexErrors": true,
-    "moduleResolution": "node",
-    "module": "commonjs",
-    "target": "es2017",
-    "outDir": "dist",
-    "baseUrl": ".",
-    "paths": {
-      "*": [
-        "node_modules/*"
-      ]
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "extends": "@tsconfig/node10/tsconfig.json",
+    "compilerOptions": {
+        "removeComments": false,
+        "preserveConstEnums": true,
+        "sourceMap": true,
+        "declaration": true,
+        "noImplicitAny": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "suppressImplicitAnyIndexErrors": true,
+        "baseUrl": ".",
+        "paths": {
+            "*": [
+                "node_modules/*"
+            ]
+        }
+    },
+    "files": [
+        "index.d.ts"
+    ],
+    "exclude": [
+        "test/data/**"
+    ],
+    "formatCodeOptions": {
+        "indentSize": 4,
+        "tabSize": 4
     }
-  },
-  "files": [
-      "index.d.ts"
-  ],
-  "exclude": [
-    "test/data/**"
-  ],
-  "formatCodeOptions": {
-    "indentSize": 4,
-    "tabSize": 4
-  }
 }
