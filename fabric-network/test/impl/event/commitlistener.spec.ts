@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import sinon = require('sinon');
-import chai = require('chai');
+import * as sinon from 'sinon';
+import * as chai from 'chai';
 const expect = chai.expect;
 
 import {
@@ -16,7 +16,7 @@ import {
 	Client,
 	Eventer
 } from 'fabric-common';
-import Long = require('long');
+import Long from 'long';
 
 import {NetworkImpl} from '../../../src/network';
 import {EventServiceManager} from '../../../src/impl/event/eventservicemanager';
@@ -45,7 +45,7 @@ describe('commit listener', () => {
 
 		eventInfo = {
 			eventService,
-			blockNumber: new Long(1),
+			blockNumber: Long.ONE,
 			transactionId,
 			status: 'VALID'
 		};

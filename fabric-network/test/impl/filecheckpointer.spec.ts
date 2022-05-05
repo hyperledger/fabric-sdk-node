@@ -7,11 +7,11 @@
 import {Checkpointer} from '../../src/checkpointer';
 import {DefaultCheckpointers} from '../../src/defaultcheckpointers';
 import * as testUtils from '../testutils';
-import * as Long from 'long';
+import Long from 'long';
 import * as path  from 'path';
 import * as fs from 'fs';
-import chai = require('chai');
-import chaiAsPromised = require('chai-as-promised');
+import * as chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 chai.use(chaiAsPromised);
 const expect = chai.expect;
 

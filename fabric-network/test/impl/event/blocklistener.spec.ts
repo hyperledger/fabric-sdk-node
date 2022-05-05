@@ -8,8 +8,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import sinon = require('sinon');
-import chai = require('chai');
+import * as sinon from 'sinon';
+import * as chai from 'chai';
 const expect = chai.expect;
 
 import {Channel, Client, Endorser, Eventer, EventInfo, IdentityContext} from 'fabric-common';

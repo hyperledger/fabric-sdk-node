@@ -29,8 +29,7 @@
 		"fabric-protos": "file:../fabric-protos",
 		"js-sha3": "^0.8.0",
 		"jsrsasign": "^10.4.1",
-		"long": "^4.0.0",
-		"nconf": "^0.11.2",
+		"nconf": "^0.12.0",
 		"promise-settle": "^0.3.0",
 		"sjcl": "^1.0.8",
 		"winston": "^2.4.5",
@@ -62,5 +61,6 @@
 			"type": "Apache-2.0",
 			"url": "https://github.com/hyperledger/fabric/blob/main/LICENSE"
 		}
-	]
+	],
+	"devDependencies": {}
 }

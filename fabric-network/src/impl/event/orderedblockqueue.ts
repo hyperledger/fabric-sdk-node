@@ -5,7 +5,7 @@
  */
 
 import {BlockEvent} from '../../events';
-import * as Long from 'long';
+import Long from 'long';
 
 export class OrderedBlockQueue {
 	private readonly queue = new Map<string, BlockEvent>();
@@ -15,7 +15,7 @@ export class OrderedBlockQueue {
 		this.nextBlockNumber = startBlock;
 	}
 
-	addBlock(event: BlockEvent) :void {
+	addBlock(event: BlockEvent): void {
 		const blockNumber = event.blockNumber;
 		if (!this.isNewBlockNumber(blockNumber)) {
 			return;
@@ -43,11 +43,11 @@ export class OrderedBlockQueue {
 		return event;
 	}
 
-	getNextBlockNumber(): Long.Long | undefined {
+	getNextBlockNumber(): Long | undefined {
 		return this.nextBlockNumber;
 	}
 
-	size():number {
+	size(): number {
 		return this.queue.size;
 	}
 

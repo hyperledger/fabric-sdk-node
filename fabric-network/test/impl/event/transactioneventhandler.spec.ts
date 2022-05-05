@@ -7,9 +7,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
-import sinon = require('sinon');
-import chai = require('chai');
-import chaiAsPromised = require('chai-as-promised');
+import * as sinon from 'sinon';
+import * as chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 chai.use(chaiAsPromised);
 const expect = chai.expect;
 
@@ -19,7 +19,7 @@ import {
 	EventInfo,
 	IdentityContext
 } from 'fabric-common';
-import Long = require('long');
+import Long from 'long';
 
 import {Gateway, ConnectedGatewayOptions} from '../../../src/gateway';
 import {Network, NetworkImpl} from '../../../src/network';
@@ -53,13 +53,13 @@ describe('TransactionEventHandler', () => {
 
 		validEventInfo = {
 			eventService: null,
-			blockNumber: new Long(1),
+			blockNumber: Long.ONE,
 			transactionId,
 			status: 'VALID'
 		};
 		invalidEventInfo = {
 			eventService: null,
-			blockNumber: new Long(1),
+			blockNumber: Long.ONE,
 			transactionId,
 			status: 'INVALID'
 		};

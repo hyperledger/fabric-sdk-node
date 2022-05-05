@@ -10,7 +10,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 
-import sinon = require('sinon');
+import * as sinon from 'sinon';
 import {expect} from 'chai';
 import Long from 'long';
 
@@ -170,7 +170,7 @@ describe('contract event listener', () => {
 	function newFilteredEvent(blockNumber: number): EventInfo {
 		return {
 			eventService,
-			blockNumber: new Long(blockNumber),
+			blockNumber: Long.fromNumber(blockNumber),
 			filteredBlock: newFilteredBlock(blockNumber)
 		};
 	}
