@@ -27,7 +27,7 @@ const fakeCryptoSuite = {
 	}
 };
 ImportMock.mockFunction(Utils, 'newCryptoSuite', fakeCryptoSuite);
-import chai = require('chai');
+import * as chai from 'chai';
 const expect: Chai.ExpectStatic = chai.expect;
 
 interface ProviderData {

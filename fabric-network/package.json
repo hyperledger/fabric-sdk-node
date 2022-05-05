@@ -20,14 +20,17 @@
     "test": "nyc mocha --recursive  -t 10000"
   },
   "engines": {
+<<<<<<< HEAD
     "node": ">=10.13.0"
+=======
+    "node": ">=14.15.0"
+>>>>>>> 989ed5fa (Update dependencies (#574))
   },
   "types": "./types/index.d.ts",
   "dependencies": {
     "fabric-common": "file:../fabric-common",
     "fabric-protos": "file:../fabric-protos",
-    "long": "^4.0.0",
-    "nano": "^9.0.3"
+    "nano": "^10.0.0"
   },
   "nyc": {
     "exclude": [
@@ -55,5 +58,6 @@
       "type": "Apache-2.0",
       "url": "https://github.com/hyperledger/fabric/blob/master/LICENSE"
     }
-  ]
+  ],
+  "devDependencies": {}
 }

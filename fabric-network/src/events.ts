@@ -7,7 +7,7 @@
 import {BlockType, Endorser} from 'fabric-common';
 import * as fabproto6 from 'fabric-protos';
 import {Checkpointer} from './checkpointer';
-import * as Long from 'long';
+import Long from 'long';
 
 export type EventType = BlockType;
 
