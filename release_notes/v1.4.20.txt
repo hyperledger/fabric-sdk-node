@@ -1,0 +1,27 @@
+Release Notes
+-------------
+
+fabric-sdk-node 1.4.20 is a maintenance release containing the following enhancements:
+
+- Support for Node 14 and 16.
+- Loosened Node engines requirements to versions >=10.13.0.
+- Add configurable `eventHandlerOptions.endorseTimeout` property to the Gateway connect options.
+
+
+Known Vulnerabilities
+---------------------
+none
+
+
+Resolved Vulnerabilities
+------------------------
+CVE-2022-21803: https://nvd.nist.gov/vuln/detail/CVE-2022-21803
+
+
+Known Issues & Workarounds
+--------------------------
+
+
+Change Log
+----------
+https://github.com/hyperledger/fabric-sdk-node/blob/release-1.4/CHANGELOG.md#v1420
