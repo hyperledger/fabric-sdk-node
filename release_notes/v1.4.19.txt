@@ -19,4 +19,4 @@ Known Issues & Workarounds
 
 Change Log
 ----------
-https://github.com/hyperledger/fabric-sdk-node/blob/release-1.4/CHANGELOG.md#v1418
+https://github.com/hyperledger/fabric-sdk-node/blob/release-1.4/CHANGELOG.md#v1419

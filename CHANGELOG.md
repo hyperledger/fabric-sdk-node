@@ -1,3 +1,12 @@
+## v1.4.20
+Wed 11 May 2022 17:30:55 BST
+
+* [45aad194](https://github.com/hyperledger/fabric-sdk-node/commit/45aad194) Add support for Node 14 and 16 (#572)
+* [d52cb4f2](https://github.com/hyperledger/fabric-sdk-node/commit/d52cb4f2) Define endorseTimeout value in fabric-sdk-node v1.4(Issue #552) (#565)
+* [28fb45c0](https://github.com/hyperledger/fabric-sdk-node/commit/28fb45c0) Update nconf dependency to address CVE-2022-21803 (#566)
+* [a07a8fa0](https://github.com/hyperledger/fabric-sdk-node/commit/a07a8fa0) Fix license check (#563)
+* [b57dd6c0](https://github.com/hyperledger/fabric-sdk-node/commit/b57dd6c0) Ensure supported Node versions for all dependencies (#562)
+
 ## v1.4.19
 Tue 18 Jan 2022 17:54:17 GMT
 
