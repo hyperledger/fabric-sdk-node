@@ -9,8 +9,8 @@ import {Wallet} from '../../../src/impl/wallet/wallet';
 import {Wallets} from '../../../src/impl/wallet/wallets';
 import {X509Identity} from '../../../src/impl/wallet/x509identity';
 
-import chai = require('chai');
-import chaiAsPromised = require('chai-as-promised');
+import * as chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 chai.use(chaiAsPromised);
 const expect = chai.expect;
 

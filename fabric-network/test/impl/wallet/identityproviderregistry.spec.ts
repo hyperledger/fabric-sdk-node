@@ -7,7 +7,7 @@
 import {IdentityProvider} from '../../../src/impl/wallet/identityprovider';
 import {newDefaultProviderRegistry, IdentityProviderRegistry} from '../../../src/impl/wallet/identityproviderregistry';
 
-import chai = require('chai');
+import * as chai from 'chai';
 const expect: Chai.ExpectStatic = chai.expect;
 
 describe('IdentityProviderRegistry', () => {
