@@ -12,7 +12,7 @@ import * as Constants from '../constants';
 import * as GatewayHelper from './gateway';
 import * as BaseUtils from './utility/baseUtils';
 import {StateStore} from './utility/stateStore';
-import Long from 'long';
+import * as Long from 'long';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';

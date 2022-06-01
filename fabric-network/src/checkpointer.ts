@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import Long from 'long';
+import * as Long from 'long';
 
 export interface Checkpointer {
 	addTransactionId(transactionId: string): Promise<void>;
