@@ -19,7 +19,7 @@ import {
 	EventInfo,
 	IdentityContext
 } from 'fabric-common';
-import Long from 'long';
+import * as Long from 'long';
 
 import {Gateway, ConnectedGatewayOptions} from '../../../src/gateway';
 import {Network, NetworkImpl} from '../../../src/network';

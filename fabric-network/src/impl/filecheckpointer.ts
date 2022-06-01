@@ -5,7 +5,7 @@
  */
 
 import {Checkpointer} from '../checkpointer';
-import Long from 'long';
+import * as Long from 'long';
 import * as fs from 'fs';
 
 const encoding = 'utf8';
