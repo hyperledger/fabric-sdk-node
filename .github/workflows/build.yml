@@ -1,10 +1,14 @@
-name: NodeJS with Gulp
+name: Tests
 
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+
+env:
+  FABRIC_VERSION: 2.2
+  SOFTHSM2_CONF: ${{ github.workspace }}/test/ts-fixtures/hsm/softhsm2.conf
 
 jobs:
   build:
@@ -13,7 +17,7 @@ jobs:
     strategy:
       matrix:
         node-version: [14.x, 16.x]
-    
+
     steps:
     - uses: actions/checkout@v3
 

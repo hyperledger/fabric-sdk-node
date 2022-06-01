@@ -15,7 +15,7 @@ import {
 	StartRequestOptions, SendEventOptions, BuildProposalRequest, SendProposalRequest, EventRegistrationOptions, EventListener
 } from 'fabric-common';
 import * as fs from 'fs';
-import Long from 'long';
+import * as Long from 'long';
 import * as Constants from '../../constants';
 import * as BaseUtils from './baseUtils';
 import {CommonConnectionProfileHelper} from './commonConnectionProfileHelper';
