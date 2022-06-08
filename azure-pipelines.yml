@@ -5,19 +5,13 @@
 
 # Pipeline-level keywords belong here
 
-schedules:
-  - cron: "0 0 * * *" # https://crontab.guru/#0_0_*_*_*
-    displayName: "Daily midnight build"
-    branches:
-      include:
-        - main
-    always: true
-
 trigger:
 - main
 
 pr:
-  - main
+  branches:
+    exclude:
+      - '*'
 
 pool:
   vmImage: 'ubuntu-20.04'
