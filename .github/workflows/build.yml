@@ -1,10 +1,12 @@
-name: Tests
+name: Build
 
 on:
-  push:
-    branches: [ main ]
+  # push:
+  #   branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
+  schedule:
+    - cron: "30 23 * * *"
 
 env:
   FABRIC_VERSION: 2.2
@@ -12,29 +14,34 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     strategy:
+      fail-fast: false
       matrix:
         node-version: [14.x, 16.x]
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
 
-    - name: Install SoftHSM
-      run: |
-        sudo apt-get install softhsm2
-        softhsm2-util --init-token --slot 0 --label "ForFabric" --pin 98765432 --so-pin 1234
+      - name: Install SoftHSM
+        run: |
+          sudo apt-get install softhsm2
+          softhsm2-util --init-token --slot 0 --label "ForFabric" --pin 98765432 --so-pin 1234
 
-    - name: Build and run tests
-      run: |
-        npm install
-        npm run installAndGenerateCerts
-        npm run pullFabricImages
-        npm test
+      - name: npm install
+        run: npm install
 
+      - name: Generate credentials
+        run: npm run installAndGenerateCerts
+
+      - name: Pull Fabric images
+        run: npm run pullFabricImages
+
+      - name: Run tests
+        run: npm test
