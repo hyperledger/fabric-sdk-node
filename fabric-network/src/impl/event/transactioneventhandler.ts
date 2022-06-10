@@ -12,6 +12,8 @@ import {CommitError, CommitEvent, CommitListener} from '../../events';
 import {TransactionError} from '../../errors/transactionerror';
 import * as Logger from '../../logger';
 import {DefaultEventHandlerOptions} from '../../gateway';
+import {AsyncBarrier} from '../../asyncBarrier';
+
 const logger = Logger.getLogger('TransactionEventHandler');
 
 export interface TxEventHandler {
@@ -42,13 +44,11 @@ export class TransactionEventHandler implements TxEventHandler {
 
 	private readonly options: DefaultEventHandlerOptions;
 	private readonly peers: Endorser[];
-	private readonly notificationPromise: Promise<void>;
+	private readonly asyncBarrier: AsyncBarrier;
 	private readonly unrespondedPeers: Set<Endorser>;
 	private readonly listener: CommitListener = this.eventCallback.bind(this);
 	private readonly strategySuccessCallback = this.strategySuccess.bind(this);
 	private readonly strategyFailCallback = this.strategyFail.bind(this);
-	private resolveNotificationPromise!: () => void;
-	private rejectNotificationPromise!: (reason: Error) => void;
 	private timeoutHandler?: NodeJS.Timeout;
 
 	/**
@@ -75,10 +75,7 @@ export class TransactionEventHandler implements TxEventHandler {
 		this.peers = strategy.getPeers();
 		this.unrespondedPeers = new Set(this.peers);
 
-		this.notificationPromise = new Promise((resolve, reject) => {
-			this.resolveNotificationPromise = resolve;
-			this.rejectNotificationPromise = reject;
-		});
+		this.asyncBarrier = new AsyncBarrier();
 	}
 
 	/**
@@ -94,7 +91,7 @@ export class TransactionEventHandler implements TxEventHandler {
 		} else {
 			logger.error('%s - No event services', method);
 			// shutdown the monitoring
-			this.resolveNotificationPromise();
+			this.asyncBarrier.signal();
 		}
 	}
 
@@ -104,7 +101,7 @@ export class TransactionEventHandler implements TxEventHandler {
 	 */
 	async waitForEvents() :Promise<void> {
 		logger.debug('waitForEvents start');
-		await this.notificationPromise;
+		await this.asyncBarrier.wait();
 		logger.debug('waitForEvents end');
 	}
 
@@ -183,7 +180,7 @@ export class TransactionEventHandler implements TxEventHandler {
 		logger.debug('strategySuccess: commit success for transaction %j', this.transactionId);
 
 		this.cancelListening();
-		this.resolveNotificationPromise();
+		this.asyncBarrier.signal();
 	}
 
 	/**
@@ -195,6 +192,6 @@ export class TransactionEventHandler implements TxEventHandler {
 		logger.warn('strategyFail: commit failure for transaction %j: %s', this.transactionId, error);
 
 		this.cancelListening();
-		this.rejectNotificationPromise(error);
+		this.asyncBarrier.error(error);
 	}
 }
