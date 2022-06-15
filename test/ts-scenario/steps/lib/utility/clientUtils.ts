@@ -758,7 +758,7 @@ export async function startEventService(
 export function registerEventListener(
 	eventServiceName: string, clientName: string, listenerName: string, type: string,
 	startBlock: string, endBlock: string,
-	chaincodeEventName: string, chaincodeName: string, count?: number): void {
+	chaincodeEventName: string, chaincodeName: string, count?:number): void {
 
 	const clientObject: any = retrieveClientObject(clientName);
 	const eventServiceObject: any = clientObject.eventServices.get(eventServiceName);

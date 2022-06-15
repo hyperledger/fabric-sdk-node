@@ -87,7 +87,7 @@ Then(/^I regisister a chaincode listener named (.+?) with (.+?) for (.+?) event 
 	});
 
 Then(/^I regisister a chaincode listener named (.+?) with (.+?) with a maximum event count of ([0-9]+) as client (.+?) for (.+?) event on contract (.+?)$/, {timeout: Constants.INC_SHORT},
-	(listenerName: string, eventServiceName: string, eventCount: number, clientName: string, eventName: string, contractName: string) => {
+	(listenerName: string, eventServiceName: string, eventCount:number, clientName: string, eventName: string, contractName: string,) => {
 		ClientHelper.registerEventListener(eventServiceName, clientName, listenerName, 'chaincode', '', '', eventName, contractName, eventCount);
 	});
 
