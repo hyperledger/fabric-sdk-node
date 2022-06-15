@@ -50,7 +50,7 @@ Scenario: Using only fabric-common on V2 channel
 	And I regisister a transaction listener named myFilteredTransactionListener with myFilteredEventService for all transactions as client fred
 	When I create an event service myFullEventService as client fred on channel basev2channel
 	And I regisister a block listener named myFullBlockListener with myFullEventService for startBlock 1 and endBlock 4 as client fred
-	And I regisister a chaincode listener named myFullChaincodeListener with myFullEventService for createCar event on contract fabcar as client fred
+	And I regisister a chaincode listener named myFullChaincodeListener with myFullEventService with a maximum event count of 4 as client fred for createCar event on contract fabcar
 	And I regisister a transaction listener named myFullTransactionListener with myFullEventService for all transactions as client fred
 	And I start the event service myFilteredEventService as filtered blocks to start at block 0 and end at block 6 as client fred
 	And I start the event service myFullEventService as full blocks to start at block 0 and end at block END as client fred
@@ -60,6 +60,7 @@ Scenario: Using only fabric-common on V2 channel
 	Then the event listener myFilteredChaincodeListener of myFilteredEventService has results matching {"createCar":""} as client fred
 	Then the event listener myFilteredTransactionListener of myFilteredEventService has results matching {"transaction":"5"} as client fred
 	Then the event listener myFullBlockListener of myFullEventService has results matching {"block":"4"} as client fred
+	Then I wait for events from chaincode listener named myFullChaincodeListener with myFullEventService as client fred
 	Then the event listener myFullChaincodeListener of myFullEventService has results matching {"createCar":"Focus"} as client fred
 	Then the event listener myFullTransactionListener of myFullEventService has results matching {"transaction":"7"} as client fred
 
