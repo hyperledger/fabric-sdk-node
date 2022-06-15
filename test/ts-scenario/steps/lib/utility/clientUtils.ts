@@ -4,7 +4,7 @@
 
 'use strict';
 
-import * as FabricCAServices from 'fabric-ca-client';
+import FabricCAServices = require('fabric-ca-client');
 import {
 	Channel, Client, Commit, Committer, Endorsement, Endorser,
 	Endpoint, Eventer, EventService, Discoverer, DiscoveryService,
@@ -17,8 +17,59 @@ import {Constants} from '../../constants';
 import * as BaseUtils from './baseUtils';
 import {CommonConnectionProfileHelper} from './commonConnectionProfileHelper';
 import {StateStore} from './stateStore';
+import * as util from 'util';
+
 
 const stateStore: StateStore = StateStore.getInstance();
+
+interface ClientState {
+	client: Client;
+	user: User;
+	channels: Map<string, Channel>;
+	ccp: CommonConnectionProfileHelper;
+	requests?: Map<string, ChannelRequest>;
+	queries?: Map<string, QueryState>;
+	eventServices?: Map<string, EventServiceState>;
+}
+
+interface ChannelRequest {
+	handler?: DiscoveryHandler;
+	targets?: Endorser[];
+	idx: IdentityContext;
+	endorsement: Endorsement;
+	endpoints: Endpoint[];
+	discoveryResults: any;
+	results?: RequestResult,
+}
+
+interface QueryState {
+	results?: RequestResult & {
+		chaincodecheck?: string;
+	} & Record<string, unknown>;
+}
+
+interface RequestResult {
+	general?: string;
+	commit?: string;
+	event?: string;
+}
+
+interface EventServiceState {
+	eventService: EventService;
+	idx: IdentityContext;
+	channelName: string;
+	eventListeners?: Map<string, ListenerState>;
+}
+
+interface ListenerState {
+	error?: Error;
+	eventListener?: EventListener;
+	results?: {
+		block?: string;
+		transaction?: string;
+	},
+	completePromise?: Promise<void>;
+}
 
 function assertNoErrors(endorsementResults: ProposalResponse): void {
 	if (endorsementResults.errors && endorsementResults.errors.length > 0) {
@@ -209,7 +260,7 @@ export async function buildChannelRequest(requestName: string, contractName: str
 			map.set(requestName, request);
 			clientObject.requests = map;
 		}
-	} catch (error) {
+	} catch (error: any) {
 		BaseUtils.logMsg(`failure in buildChannelRequest: ${error.toString()}`, {});
 		for (const target of targets) {
 			target.disconnect();
@@ -254,7 +305,7 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 				} else {
 					BaseUtils.logAndThrow('Eventer checkConnection test failed');
 				}
-			} catch (error) {
+			} catch (error: any) {
 				BaseUtils.logError(`Failed to connect to channel event hub ${eventer.toString()}`);
 				BaseUtils.logError(`Failed to connect ${error.stack}`);
 				throw error;
@@ -344,12 +395,12 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 				requestObject.results = {
 					general: JSON.stringify({
 						result: 'FAILURE',
-						msg: error.toString(),
+						msg: (error as any).toString(),
 					})
 				};
 			}
 		} catch (error) {
-			BaseUtils.logError('sendChannelRequest failed with error', error.stack);
+			BaseUtils.logError('sendChannelRequest failed with error', (error as any).stack);
 			throw error;
 		} finally {
 			BaseUtils.logMsg(' - commitChannelRequest finally');
@@ -472,7 +523,7 @@ export async function queryChannelRequest(clientName: string, channelName: strin
 				} else {
 					BaseUtils.logMsg(`No Query success detected`);
 				}
-			} catch (error) {
+			} catch (error: any) {
 				// Swallow error as we might be testing a failure path, but modify request object with error msg and status
 				queryObject.results = {
 					general: JSON.stringify({
@@ -482,7 +533,7 @@ export async function queryChannelRequest(clientName: string, channelName: strin
 				};
 			}
 			clientObject.queries.set(queryName, queryObject);
-		} catch (error) {
+		} catch (error: any) {
 			BaseUtils.logError('query submission failed with error: ', error.stack);
 			throw error;
 		} finally {
@@ -621,7 +672,7 @@ export async function createEventService(eventServiceName: string, clientName: s
 			map.set(eventServiceName, {eventService, idx, channelName});
 			clientObject.eventServices = map;
 		}
-	} catch (error) {
+	} catch (error: any) {
 		BaseUtils.logMsg(`failure in buildEventService: ${error.toString()}`, {});
 		throw error;
 	}
@@ -655,7 +706,7 @@ export async function startEventService(
 			buildOptions.startBlock = Number.parseInt(startBlock, 10);
 		}
 		if (endBlock.localeCompare('END') === 0) {
-			// do not add start block
+			// do not add end block
 		} else {
 			buildOptions.endBlock = Number.parseInt(endBlock, 10);
 		}
@@ -695,7 +746,7 @@ export async function startEventService(
 		}
 
 		await eventService.send({targets: targets});
-	} catch (error) {
+	} catch (error: any) {
 		BaseUtils.logMsg(`failure in startEventService: ${error.toString()}`, {});
 		for (const target of targets) {
 			target.disconnect();
@@ -704,10 +755,10 @@ export async function startEventService(
 	}
 }
 
-export async function registerEventListener(
+export function registerEventListener(
 	eventServiceName: string, clientName: string, listenerName: string, type: string,
 	startBlock: string, endBlock: string,
-	chaincodeEventName: string, chaincodeName: string): Promise<void> {
+	chaincodeEventName: string, chaincodeName: string, count?: number): void {
 
 	const clientObject: any = retrieveClientObject(clientName);
 	const eventServiceObject: any = clientObject.eventServices.get(eventServiceName);
@@ -762,6 +813,10 @@ export async function registerEventListener(
 			);
 		} else if (type === 'chaincode') {
 			BaseUtils.logMsg(`Registering a chaincode event with chaincodeName ${chaincodeName} chaincodeEventName ${chaincodeEventName}`);
+
+			let resolve: () => void;
+			const completePromise = new Promise<void>((_resolve) => resolve = _resolve);
+
 			listenerObject.eventListener = eventService.registerChaincodeListener(
 				chaincodeName,
 				chaincodeEventName,
@@ -780,15 +835,24 @@ export async function registerEventListener(
 
 					if (event?.chaincodeEvents) {
 						for (const chaincodeEvent of event.chaincodeEvents) {
+							if (count !== undefined) {
+								count--;
+							}
 							const results: any = {};
 							results[chaincodeEvent.eventName] = chaincodeEvent.payload ? chaincodeEvent.payload.toString() : '';
 							listenerObject.results = results;
 							BaseUtils.logMsg(`Store chaincode event listener ${listenerName} results of ${JSON.stringify(results)}`);
+							if (count === 0) {
+								resolve();
+							}
 						}
 					}
 				},
 				listenerOptions
 			);
+
+			listenerObject.completePromise = completePromise;
+
 		} else if (type === 'transaction') {
 			BaseUtils.logMsg('Registering a transaction event for all transactions');
 
@@ -814,7 +878,7 @@ export async function registerEventListener(
 		} else {
 			BaseUtils.logAndThrow(`Event listener type is not known ${type}`);
 		}
-	} catch (error) {
+	} catch (error: any) {
 		BaseUtils.logMsg(`failure in registerEventListener: ${error.toString()}`, {});
 		throw error;
 	}
@@ -847,8 +911,25 @@ export async function checkEventListenerResults(
 	}
 }
 
-export async function disconnectEventService(
-	eventServiceName: string, clientName: string): Promise<void> {
+export async function waitForEvent(
+	eventServiceName: string, clientName: string, listenerName: string): Promise<void> {
+	const clientObject: any = retrieveClientObject(clientName);
+	const eventServiceObject: any = clientObject.eventServices.get(eventServiceName);
+	const listenerObject: any = eventServiceObject.eventListeners.get(listenerName);
+
+	if (listenerObject) {
+		if (listenerObject.error) {
+			BaseUtils.logMsg(`Received an error for ${listenerName} of ${util.inspect(listenerObject.error)}`);
+			throw listenerObject.error;
+		}
+		await listenerObject.completePromise;
+	} else {
+		BaseUtils.logAndThrow(`Listener object not found ${listenerName}`);
+	}
+}
+
+export function disconnectEventService(
+	eventServiceName: string, clientName: string): void {
 	const clientObject: any = retrieveClientObject(clientName);
 	const eventServiceObject: any = clientObject.eventServices.get(eventServiceName);
 

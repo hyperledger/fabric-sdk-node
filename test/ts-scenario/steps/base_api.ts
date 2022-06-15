@@ -74,28 +74,38 @@ When(/^I create an event service (.+?) as client (.+?) on channel (.+?)$/, { tim
 Then(/^I (.+?) the event service (.+?) as (.+?) blocks to start at block (.+?) and end at block (.+?) as client (.+?)$/, { timeout: Constants.INC_SHORT as number },
 	async (start: 'start' | 'restart', eventServiceName: string, blockType: 'filtered' | 'full' | 'private' | undefined, startBlock: string, endBlock: string, clientName: string) => {
 		await ClientHelper.startEventService(blockType, eventServiceName, clientName, startBlock, endBlock, start);
-});
+	});
 
-Then(/^I regisister a block listener named (.+?) with (.+?) for startBlock (.+?) and endBlock (.+?) as client (.+?)$/, { timeout: Constants.INC_SHORT as number },
-	async (listenerName: string, eventServiceName: string, startBlock: string, endBlock: string, clientName: string) => {
-	await ClientHelper.registerEventListener(eventServiceName, clientName, listenerName, 'block', startBlock, endBlock, '', '');
-});
+Then(/^I regisister a block listener named (.+?) with (.+?) for startBlock (.+?) and endBlock (.+?) as client (.+?)$/, {timeout: Constants.INC_SHORT},
+	(listenerName: string, eventServiceName: string, startBlock: string, endBlock: string, clientName: string) => {
+		ClientHelper.registerEventListener(eventServiceName, clientName, listenerName, 'block', startBlock, endBlock, '', '');
+	});
 
-Then(/^I regisister a chaincode listener named (.+?) with (.+?) for (.+?) event on contract (.+?) as client (.+?)$/, { timeout: Constants.INC_SHORT as number },
-	async (listenerName: string, eventServiceName: string, eventName: string, contractName: string, clientName: string) => {
-	await ClientHelper.registerEventListener(eventServiceName, clientName, listenerName, 'chaincode', '', '', eventName, contractName);
-});
+Then(/^I regisister a chaincode listener named (.+?) with (.+?) for (.+?) event on contract (.+?) as client (.+?)$/, {timeout: Constants.INC_SHORT},
+	(listenerName: string, eventServiceName: string, eventName: string, contractName: string, clientName: string) => {
+		ClientHelper.registerEventListener(eventServiceName, clientName, listenerName, 'chaincode', '', '', eventName, contractName);
+	});
 
-Then(/^I regisister a transaction listener named (.+?) with (.+?) for all transactions as client (.+?)$/, { timeout: Constants.INC_SHORT as number },
-	async (listenerName: string, eventServiceName: string, clientName: string) => {
-	await ClientHelper.registerEventListener(eventServiceName, clientName, listenerName, 'transaction', '', '', '', '');
-});
+Then(/^I regisister a chaincode listener named (.+?) with (.+?) with a maximum event count of ([0-9]+) as client (.+?) for (.+?) event on contract (.+?)$/, {timeout: Constants.INC_SHORT},
+	(listenerName: string, eventServiceName: string, eventCount: number, clientName: string, eventName: string, contractName: string) => {
+		ClientHelper.registerEventListener(eventServiceName, clientName, listenerName, 'chaincode', '', '', eventName, contractName, eventCount);
+	});
 
-Then(/^the event listener (.+?) of (.+?) has results matching (.+?) as client (.+?)$/, { timeout: Constants.INC_SHORT as number },
-	async (listenerName: string, eventServiceName: string, check: string, clientName: string) => {
-	await ClientHelper.checkEventListenerResults(eventServiceName, clientName, listenerName, check);
-});
+Then(/^I regisister a transaction listener named (.+?) with (.+?) for all transactions as client (.+?)$/, {timeout: Constants.INC_SHORT},
+	(listenerName: string, eventServiceName: string, clientName: string) => {
+		ClientHelper.registerEventListener(eventServiceName, clientName, listenerName, 'transaction', '', '', '', '');
+	});
 
-When(/^I disconnect Event Service (.+?) as client (.+?)$/, {timeout: Constants.HUGE_TIME as number }, async (eventServiceName: string, clientName: string) => {
-	await ClientHelper.disconnectEventService(eventServiceName, clientName);
+Then(/^I wait for events from chaincode listener named (.+?) with (.+?) as client (.+?)$/, {timeout: Constants.INC_SHORT},
+	async(listenerName: string, eventServiceName: string, clientName: string) => {
+		await ClientHelper.waitForEvent(eventServiceName, clientName, listenerName);
+	});
+
+Then(/^the event listener (.+?) of (.+?) has results matching (.+?) as client (.+?)$/, {timeout: Constants.INC_SHORT},
+	(listenerName: string, eventServiceName: string, check: string, clientName: string) => {
+		ClientHelper.checkEventListenerResults(eventServiceName, clientName, listenerName, check);
+	});
+
+When(/^I disconnect Event Service (.+?) as client (.+?)$/, {timeout: Constants.HUGE_TIME}, (eventServiceName: string, clientName: string) => {
+	ClientHelper.disconnectEventService(eventServiceName, clientName);
 });
