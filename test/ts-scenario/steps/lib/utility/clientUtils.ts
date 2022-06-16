@@ -265,7 +265,6 @@ export async function buildChannelRequest(requestName: string, contractName: str
 			map.set(requestName, request);
 			clientObject.requests = map;
 		}
-
 	} catch (error) {
 		BaseUtils.logMsg(`failure in buildChannelRequest: ${util.inspect(error)}`, {});
 		for (const target of targets) {
@@ -314,7 +313,7 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 				} else {
 					BaseUtils.logAndThrow('Eventer checkConnection test failed');
 				}
-			} catch (error: any) {
+			} catch (error) {
 				BaseUtils.logError(`Failed to connect to channel event hub ${eventer.toString()}`);
 				BaseUtils.logError(`Failed to connect ${util.inspect(error)}`);
 				throw error;
@@ -527,7 +526,7 @@ export async function queryChannelRequest(clientName: string, channelName: strin
 				} else {
 					BaseUtils.logMsg('No Query success detected');
 				}
-			} catch (error: any) {
+			} catch (error) {
 				// Swallow error as we might be testing a failure path, but modify request object with error msg and status
 				queryObject.results = {
 					general: JSON.stringify({
@@ -765,7 +764,7 @@ export function registerEventListener(
 	eventServiceName: string, clientName: string, listenerName: string, type: string,
 	startBlock: string, endBlock: string,
 	chaincodeEventName: string, chaincodeName: string, count?:number): void {
-  
+
 	const clientObject = retrieveClientObject(clientName);
 	const eventServiceObject = clientObject.eventServices?.get(eventServiceName);
 	if (!eventServiceObject) {
@@ -808,7 +807,6 @@ export function registerEventListener(
 							listenerObject.error = Error('invalid "Endblock" indication received');
 							BaseUtils.logMsg(`invalid Endblock indication received for ${listenerName} with block number ${event?.blockNumber.toString()}`);
 						}
-          
 						return;
 					}
 					if (event?.blockNumber.lessThan(Long.fromValue(listenerOptions.startBlock ?? Long.UZERO)) ||
