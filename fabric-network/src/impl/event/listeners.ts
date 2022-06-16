@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Checkpointer } from '../../checkpointer';
-import { BlockListener, TransactionEvent, ContractListener } from '../../events';
+import {Checkpointer} from '../../checkpointer';
+import {BlockListener, TransactionEvent, ContractListener} from '../../events';
 import * as GatewayUtils from '../gatewayutils';
 import * as Logger from '../../logger';
 
@@ -72,6 +72,6 @@ function logAndThrowErrors(results: GatewayUtils.SettledPromiseResult<void>[]): 
 		.map((result) => (result as GatewayUtils.RejectedPromiseResult).reason);
 	if (errors.length > 0) {
 		errors.forEach((error) => logger.warn('Error notifying transaction listener', error));
-		throw new Error('Error notifying listener: ' + errors[0].stack || errors[0].message);
+		throw new Error(`Error notifying listener: ${errors[0].stack || errors[0].message}`);
 	}
 }

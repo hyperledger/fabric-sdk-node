@@ -8,6 +8,7 @@
 'use strict';
 
 const Key = require('../../Key');
+const Utils = require('../../Utils');
 const jsrsa = require('jsrsasign');
 const asn1 = jsrsa.asn1;
 
@@ -78,16 +79,20 @@ const Pkcs11EcdsaKey = class extends Key {
 	}
 
 	signCSR(csr, sigAlgName) {
-
-		csr.asn1SignatureAlg =
-			new asn1.x509.AlgorithmIdentifier({'name': sigAlgName});
-
-		const digest = this._cryptoSuite.hash(Buffer.from(csr.asn1CSRInfo.getEncodedHex(), 'hex'));
+		csr.asn1SignatureAlg = new asn1.x509.AlgorithmIdentifier({
+			name: sigAlgName,
+		});
+		const csri = new asn1.csr.CertificationRequestInfo(csr.params);
+		const digest = this._cryptoSuite.hash(
+			Buffer.from(csri.getEncodedHex(), 'hex')
+		);
 		const sig = this._cryptoSuite.sign(this, Buffer.from(digest, 'hex'));
-		csr.hexSig = sig.toString('hex');
+		csr.params.sighex = sig.toString('hex');
 
-		csr.asn1Sig = new asn1.DERBitString({'hex': '00' + csr.hexSig});
-		const seq = new asn1.DERSequence({'array': [csr.asn1CSRInfo, csr.asn1SignatureAlg, csr.asn1Sig]});
+		csr.asn1Sig = new asn1.DERBitString({hex: '00' + csr.params.sighex});
+		const seq = new asn1.DERSequence({
+			array: [csri, csr.asn1SignatureAlg, csr.asn1Sig],
+		});
 		csr.hTLV = seq.getEncodedHex();
 		csr.isModified = false;
 	}
@@ -108,23 +113,18 @@ const Pkcs11EcdsaKey = class extends Key {
 		}
 		const ecdsa = new EC(this._cryptoSuite._ecdsaCurve);
 		const pubKey = ecdsa.keyFromPublic(this._pub._ecpt);
-		const csri = new _KJUR_asn1_csr.CertificationRequestInfo();
-		csri.setSubjectByParam(param.subject);
-		csri.setSubjectPublicKeyByGetKey({xy: pubKey.getPublic('hex'), curve: 'secp256r1'});
-		if (param.ext !== undefined && param.ext.length !== undefined) {
-			for (const ext of param.ext) {
-				for (const key in ext) {
-					csri.appendExtensionByName(key, ext[key]);
-				}
-			}
-		}
+		const extreq = Utils.mapCSRExtensions(param.ext);
+		const sigAlgName = param.sigalg;
+		const csr = new _KJUR_asn1_csr.CertificationRequest({
+			subject: param.subject,
+			sbjpubkey: {xy: pubKey.getPublic('hex'), curve: 'secp256r1'},
+			sigalg: sigAlgName,
+			extreq: extreq
+		});
+		this.signCSR(csr, sigAlgName);
 
-		const csr = new _KJUR_asn1_csr.CertificationRequest({'csrinfo': csri});
-		this.signCSR(csr, param.sigalg);
-
-		const pem = csr.getPEMString();
+		const pem = csr.getPEM();
 		return pem;
-
 	}
 
 	/* implementation must include 'opts' as a parameter to this method */

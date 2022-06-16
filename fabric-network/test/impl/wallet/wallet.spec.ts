@@ -4,17 +4,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Identity } from '../../../src/impl/wallet/identity';
-import { Wallet } from '../../../src/impl/wallet/wallet';
-import { Wallets } from '../../../src/impl/wallet/wallets';
-import { X509Identity } from '../../../src/impl/wallet/x509identity';
+import {Identity} from '../../../src/impl/wallet/identity';
+import {Wallet} from '../../../src/impl/wallet/wallet';
+import {Wallets} from '../../../src/impl/wallet/wallets';
+import {X509Identity} from '../../../src/impl/wallet/x509identity';
 
-import chai = require('chai');
-import chaiAsPromised = require('chai-as-promised');
+import * as chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 chai.use(chaiAsPromised);
 const expect = chai.expect;
 
-// tslint:disable: no-unused-expression
+
 
 describe('Wallet', () => {
 	const identity: X509Identity = {
@@ -93,6 +93,6 @@ describe('Wallet', () => {
 		const wallet = await newWallet();
 		const promise = wallet.put('label', badIdentity);
 
-		expect(promise).to.be.rejectedWith(badIdentity.type);
+		await expect(promise).to.be.rejectedWith(badIdentity.type);
 	});
 });

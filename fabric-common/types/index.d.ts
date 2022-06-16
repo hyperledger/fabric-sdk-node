@@ -2,11 +2,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/* tslint:disable:max-classes-per-file */
-/* tslint:disable:ordered-imports */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
 import * as Long from 'long';
 import * as fabproto6 from 'fabric-protos';
+import winston = require('winston');
 
 export interface IKeyValueStore {
 	getValue(name: string): Promise<string>;
@@ -14,7 +15,7 @@ export interface IKeyValueStore {
 }
 
 export class Utils {
-	public static getLogger(name: string): any;
+	public static getLogger(name: string): winston.LoggerInstance;
 	public static newCryptoSuite(options?: CryptoSetting): ICryptoSuite;
 	public static normalizeX509(pem: string): string;
 	public static newCryptoKeyStore(keyValueStore?: IKeyValueStore): ICryptoKeyStore;
@@ -64,12 +65,23 @@ export interface ICryptoSuite {
 	sign(key: ICryptoKey, digest: Buffer): Buffer;
 	verify(key: ICryptoKey, signature: Buffer, digest: Buffer): boolean;
 }
+export type CryptoSetting = SoftwareCryptoSetting | HSMCryptoSetting;
 
-export interface CryptoSetting {
-	algorithm: string;
-	hash: string;
-	keysize: number;
-	software: boolean;
+export interface SoftwareCryptoSetting {
+	algorithm?: string;
+	hash?: string;
+	keysize?: number;
+	software?: true;
+}
+
+export interface HSMCryptoSetting {
+	lib?: string;
+	pin?: string;
+	slot?: number;
+	label?: string;
+	usertype?: number;
+	readwrite?: boolean;
+	software?: false;
 }
 
 export interface UserConfig {
@@ -83,7 +95,7 @@ export interface ConnectionInfo {
 	type: string;
 	name: string;
 	url: string;
-	options: object;
+	options: Record<string, unknown>;
 }
 export interface ServiceError extends Error {
 	connection: ConnectionInfo;
@@ -103,7 +115,7 @@ export interface EndorsementResponse {
 		payload: Buffer;
 	};
 	payload: Buffer;
-	endorsement: {
+	endorsement?: {
 		endorser: Buffer;
 		signature: Buffer;
 	};
@@ -309,7 +321,8 @@ export class EventService extends ServiceAction {
 	public isListening(): boolean;
 	public unregisterEventListener(eventListener: EventListener): EventService;
 	public registerTransactionListener(txid: string, callback: EventCallback, options: EventRegistrationOptions): EventListener;
-	public registerChaincodeListener(chaincodeId: string, eventName: string, callback: EventCallback, options: EventRegistrationOptions): EventListener;
+	public registerChaincodeListener(chaincodeId: string, eventName: string,
+		callback: EventCallback, options: EventRegistrationOptions): EventListener;
 	public registerBlockListener(callback: EventCallback, options: EventRegistrationOptions): EventListener;
 	public setTargets(targets: Eventer[]): void;
 	public isStarted(): boolean;
@@ -339,7 +352,7 @@ export class Client {
 	public newIdentityContext(user: User): IdentityContext;
 
 	public getConnectionOptions(options?: ConnectOptions): ConnectOptions;
-	public setCentralizedConnectionOptions(options: object): Client;
+	public setCentralizedConnectionOptions(options: Record<string, unknown>): Client;
 	public newEndpoint(options: ConnectOptions): Endpoint;
 	public newEndorser(name: string, mspid?: string): Endorser;
 	public getEndorser(name: string, mspid?: string): Endorser;

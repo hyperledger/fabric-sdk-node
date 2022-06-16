@@ -4,16 +4,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Transaction, TransactionState } from './transaction';
-import { ContractListenerSession } from './impl/event/contractlistenersession';
-import { ListenerSession, addListener, removeListener } from './impl/event/listenersession';
+import {Transaction, TransactionState} from './transaction';
+import {ContractListenerSession} from './impl/event/contractlistenersession';
+import {ListenerSession, addListener, removeListener} from './impl/event/listenersession';
 import * as Logger from './logger';
 const logger = Logger.getLogger('Contract');
-import util = require('util');
-import { NetworkImpl } from './network';
-import { ContractListener, ListenerOptions } from './events';
-import { DiscoveryService, DiscoveryHandler, IdentityContext } from 'fabric-common';
-import { Gateway } from './gateway';
+import * as util from 'util';
+import {NetworkImpl} from './network';
+import {ContractListener, ListenerOptions} from './events';
+import {DiscoveryService, DiscoveryHandler} from 'fabric-common';
+import {Gateway} from './gateway';
 
 /**
  * Ensure transaction name is a non-empty string.
@@ -61,6 +61,9 @@ export interface Contract {
 	addDiscoveryInterest(interest: DiscoveryInterest): Contract;
 	resetDiscoveryInterests(): Contract;
 }
+
+
+type DiscoveryResultsCallback = (hasResults: boolean) => void;
 
 /**
  * <p>Represents a smart contract (chaincode) instance in a network.
@@ -175,7 +178,6 @@ export interface Contract {
  * @memberof module:fabric-network
  * @return {DiscoveryInterest[]} - An array of DiscoveryInterest
  */
-
 /**
  * A callback function that will be invoked when a block event is received.
  * @callback ContractListener
@@ -184,7 +186,6 @@ export interface Contract {
  * @param {module:fabric-network.ContractEvent} event Contract event.
  * @returns {Promise<void>}
  */
-
 export class ContractImpl {
 	readonly chaincodeId: string;
 	readonly namespace: string;
@@ -193,10 +194,11 @@ export class ContractImpl {
 	private discoveryService?: DiscoveryService;
 	private readonly contractListeners: Map<ContractListener, ListenerSession> = new Map();
 	private discoveryInterests: DiscoveryInterest[];
-	private discoveryResultsListners: any[] = new Array();
+	private discoveryResultsListeners: DiscoveryResultsCallback[] = new Array<DiscoveryResultsCallback>();
 
 	constructor(network: NetworkImpl, chaincodeId: string, namespace: string) {
 		const method = `constructor[${namespace}]`;
+
 		logger.debug('%s - start', method);
 
 		verifyNamespace(namespace);
@@ -218,7 +220,7 @@ export class ContractImpl {
 	}
 
 	deserializeTransaction(data: Buffer): Transaction {
-		const state: TransactionState = JSON.parse(data.toString());
+		const state = JSON.parse(data.toString()) as TransactionState ;
 		return new Transaction(this, state.name, state);
 	}
 
@@ -231,7 +233,7 @@ export class ContractImpl {
 	}
 
 	async addContractListener(listener: ContractListener, options?: ListenerOptions): Promise<ContractListener> {
-		const sessionSupplier = async () => new ContractListenerSession(listener, this.chaincodeId, this.network, options);
+		const sessionSupplier =  () => Promise.resolve(new ContractListenerSession(listener, this.chaincodeId, this.network, options));
 		const contractListener = await addListener(listener, this.contractListeners, sessionSupplier);
 		return contractListener;
 	}
@@ -279,6 +281,7 @@ export class ContractImpl {
 			this.discoveryService = this.network.getChannel().newDiscoveryService(this.chaincodeId);
 
 			const targets = this.network.discoveryService.targets;
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			const idx = this.gateway.identityContext!;
 			const asLocalhost = this.gateway.getOptions().discovery.asLocalhost;
 
@@ -314,17 +317,17 @@ export class ContractImpl {
 	 * Internal method to setup a Promise that will wait to be notified when
 	 * the discovery service has retreived the discovery results.
 	 */
-	waitDiscoveryResults() {
+	waitDiscoveryResults(): Promise<void> {
 		const method = `checkDiscoveryResults[${this.chaincodeId}]`;
 		logger.debug('%s - start', method);
 
-		return new Promise((resolve: any, reject: any): any => {
+		return new Promise<void>((resolve, reject) => {
 			const handle: NodeJS.Timeout = setTimeout(() => {
 				reject(new Error('Timed out waiting for discovery results'));
 			}, 30000);
 
 			this.registerDiscoveryResultsListener(
-				(hasDiscoveryResults: boolean): any => {
+				(hasDiscoveryResults: boolean): void => {
 					clearTimeout(handle);
 					if (hasDiscoveryResults) {
 						logger.debug('%s - discovery results have been retieved', method);
@@ -343,10 +346,10 @@ export class ContractImpl {
 	 * Internal method to register to be notified when
 	 * discovery results are ready to be used.
 	 */
-	registerDiscoveryResultsListener(callback: any) {
+	registerDiscoveryResultsListener(callback: DiscoveryResultsCallback): void {
 		const method = `registerDiscoveryResultsListener[${this.chaincodeId}]`;
 		logger.debug('%s - start', method);
-		this.discoveryResultsListners.push(callback);
+		this.discoveryResultsListeners.push(callback);
 	}
 
 	/*
@@ -354,11 +357,11 @@ export class ContractImpl {
 	 * results are now ready to be used. This will have the Promise
 	 * resolve and all the other submits to continue to process.
 	 */
-	notifyDiscoveryResultsListeners(hasDiscoveryResults: boolean) {
+	notifyDiscoveryResultsListeners(hasDiscoveryResults: boolean): void {
 		const method = `notifyDiscoveryResultsListeners[${this.chaincodeId}]`;
 		logger.debug('%s - start', method);
-		while (this.discoveryResultsListners.length) {
-			const listener = this.discoveryResultsListners.pop();
+		let listener: DiscoveryResultsCallback | undefined;
+		while ((listener = this.discoveryResultsListeners.pop()) !== undefined) {
 			listener(hasDiscoveryResults);
 		}
 	}

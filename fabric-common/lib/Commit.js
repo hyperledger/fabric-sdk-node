@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2019 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -182,6 +182,11 @@ class Commit extends Proposal {
 		} else if (targets) {
 			logger.debug('%s - sending to the targets', method);
 			const committers = this.channel.getTargetCommitters(targets);
+
+			if (committers.length === 0) {
+				throw new Error('Unable to find any target committers');
+			}
+
 			let result;
 			for (const committer of committers) {
 				const isConnected = await committer.checkConnection();

@@ -4,14 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const nconf = require('nconf');
 const rewire = require('rewire');
 const Config = require('../lib/Config');
 const ConfigRewire = rewire('../lib/Config');
 
 const sinon = require('sinon');
 const chai = require('chai');
-chai.should();
+const should = chai.should();
 
 describe('Config', () => {
 	let sandbox;
@@ -27,56 +26,6 @@ describe('Config', () => {
 			revert.forEach(Function.prototype.call, Function.prototype.call);
 		}
 		sandbox.restore();
-	});
-
-	describe('#constructor', () => {
-		let mapSettingsStub;
-
-		beforeEach(() => {
-			sandbox.stub(nconf, 'use');
-			sandbox.stub(nconf, 'argv');
-			sandbox.stub(nconf, 'env');
-			nconf.stores.mapenv = 'mapenv';
-			mapSettingsStub = sandbox.stub();
-			revert.push(ConfigRewire.__set__('Config.prototype.mapSettings', mapSettingsStub));
-			revert.push(ConfigRewire.__set__('nconf', nconf));
-			process.env.property = 'test-property';
-		});
-
-		it('should call nconf, Config.mapSettings and set the correct properties', () => {
-			const config = new ConfigRewire();
-			sinon.assert.calledWith(mapSettingsStub, nconf.stores.mapenv, sinon.match.hasOwn('property', 'test-property'));
-			sinon.assert.calledWith(nconf.use, 'memory');
-			sinon.assert.called(nconf.argv);
-			sinon.assert.called(nconf.env);
-			sinon.assert.calledWith(nconf.use, 'mapenv', {type: 'memory'});
-			config._fileStores.should.deep.equal([]);
-			config._config.should.deep.equal(nconf);
-		});
-
-		afterEach(() => {
-			// Unset process.env.property
-			process.env.property = undefined;
-		});
-	});
-
-	describe('#mapSettings', () => {
-		let storeStub;
-
-		beforeEach(() => {
-			storeStub = {set: () => {}};
-			sandbox.stub(storeStub, 'set');
-		});
-
-		it('should add the settings to the store', () => {
-			const config = new Config();
-			config.mapSettings(storeStub, {'setting1': 'value1', 'setting2': 'value2'});
-			sinon.assert.calledTwice(storeStub.set);
-			storeStub.set.getCall(0).args[0].should.equal('setting1');
-			storeStub.set.getCall(0).args[1].should.equal('value1');
-			storeStub.set.getCall(1).args[0].should.equal('setting2');
-			storeStub.set.getCall(1).args[1].should.equal('value2');
-		});
 	});
 
 	describe('#reorderFileStores', () => {
@@ -174,6 +123,34 @@ describe('Config', () => {
 			result.should.equal('default-value');
 			sinon.assert.calledWith(configStub.get, 'name');
 		});
+	});
+
+	describe('environment variables', () => {
+		let originalEnv;
+
+		beforeEach(() => {
+			originalEnv = Object.assign({}, process.env);
+		});
+
+		afterEach(() => {
+			Object.keys(process.env).forEach(key => delete process.env[key]);
+			Object.assign(process.env, originalEnv);
+		});
+
+		const tests = [
+			{name: 'should convert number-like strings to numbers',   envName: 'testnumber',      value: '101',  expected: 101},
+			{name: 'should convert underscores to hyphens',           envName: 'test_underscore', value: 'PASS', configName: 'test-underscore'},
+			{name: 'should convert to lowercase',                     envName: 'TESTUPPERCASE',   value: 'PASS', configName: 'testuppercase'},
+			{name: 'should convert boolean-like strings to booleans', envName: 'testboolean',     value: 'true', expected: true},
+		];
+
+		tests.forEach(test => it(`${test.name}`, () => {
+			process.env[test.envName] = test.value;
+			const config = new Config();
+			const result = config.get(test.configName || test.envName);
+			should.exist(result);
+			result.should.equal(test.expected || test.value);
+		}));
 	});
 
 	describe('#set', () => {

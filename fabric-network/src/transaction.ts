@@ -3,16 +3,22 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 
-import { BuildProposalRequest, CommitSendRequest, EndorsementResponse, Endorser, IdentityContext, ProposalResponse, SendProposalRequest } from 'fabric-common';
-import { ContractImpl } from './contract';
-import { TxEventHandlerFactory } from './impl/event/transactioneventhandler';
-import { QueryImpl } from './impl/query/query';
-import { QueryHandler } from './impl/query/queryhandler';
+import {BuildProposalRequest, CommitSendRequest, EndorsementResponse, Endorser, IdentityContext, ProposalResponse, SendProposalRequest} from 'fabric-common';
+import * as util from 'util';
+import {ContractImpl} from './contract';
+import {ConnectedGatewayOptions} from './gateway';
 import * as EventHandlers from './impl/event/defaulteventhandlerstrategies';
+import {TxEventHandlerFactory} from './impl/event/transactioneventhandler';
+import {asBuffer, getTransactionResponse} from './impl/gatewayutils';
+import {QueryImpl} from './impl/query/query';
+import {QueryHandler} from './impl/query/queryhandler';
 import * as Logger from './logger';
-import util = require('util');
-import { ConnectedGatewayOptions } from './gateway';
+
 const logger = Logger.getLogger('Transaction');
 
 function getResponsePayload(proposalResponse: ProposalResponse): Buffer {
@@ -20,11 +26,13 @@ function getResponsePayload(proposalResponse: ProposalResponse): Buffer {
 
 	if (!validEndorsementResponse) {
 		const error = newEndorsementError(proposalResponse);
-		logger.error(error);
+		logger.error('%s', error);
 		throw error;
 	}
 
-	return validEndorsementResponse.response.payload;
+	const payload = getTransactionResponse(validEndorsementResponse).payload;
+
+	return asBuffer(payload);
 }
 
 function getValidEndorsementResponse(endorsementResponses: EndorsementResponse[]): EndorsementResponse | undefined {
@@ -121,12 +129,14 @@ export class Transaction {
 		this.contract = contract;
 		this.gatewayOptions = contract.gateway.getOptions();
 		this.eventHandlerStrategyFactory = this.gatewayOptions.eventHandlerOptions.strategy || EventHandlers.NONE;
+
 		this.queryHandler = contract.network.queryHandler!;
 
 		if (!state) {
 			// Store the returned copy to prevent state being modified by other code before it is used to send proposals
 			this.identityContext = contract.gateway.identityContext!.calculateTransactionId();
 		} else {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 			this.identityContext = (contract.gateway.identityContext! as any).clone({
 				nonce: Buffer.from(state.nonce, 'base64'),
 				transactionId: state.transactionId,
@@ -236,6 +246,8 @@ export class Transaction {
 	 * @returns {Buffer} Payload response from the transaction function.
 	 * @throws {module:fabric-network.TimeoutError} If the transaction was successfully submitted to the orderer but
 	 * timed out before a commit event was received from peers.
+	 * @throws {module:fabric-network.TransactionError} If the transaction committed with an unsuccessful transaction
+	 * validation code, and so did not update the ledger.
 	 */
 	async submit(...args: string[]): Promise<Buffer> {
 		const method = `submit[${this.name}]`;
@@ -324,7 +336,7 @@ export class Transaction {
 			logger.debug('%s - commit response %j', method, commitResponse);
 
 			if (commitResponse.status !== 'SUCCESS') {
-				const msg = `Failed to commit transaction %${endorsement.getTransactionId()}, orderer response status: ${commitResponse.status}`;
+				const msg = `Failed to commit transaction %${endorsement.getTransactionId()}, orderer response status: ${commitResponse.status as string}`;
 				logger.error('%s - %s', method, msg);
 				eventHandler.cancelListening();
 				throw new Error(msg);
@@ -337,8 +349,8 @@ export class Transaction {
 
 			return result;
 		} catch (err) {
-			err.responses = proposalResponse.responses;
-			err.errors = proposalResponse.errors;
+			(err as any).responses = proposalResponse.responses;
+			(err as any).errors = proposalResponse.errors;
 			throw err;
 		}
 	}

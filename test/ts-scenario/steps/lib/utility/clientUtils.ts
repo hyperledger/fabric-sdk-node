@@ -2,23 +2,25 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 import FabricCAServices = require('fabric-ca-client');
 import {
-	Channel, Client, Commit, Committer, Endorsement, Endorser,
+	Channel, Client, Commit, Endorsement, Endorser,
 	Endpoint, Eventer, EventService, Discoverer, DiscoveryService,
 	IdentityContext, ProposalResponse, Query, User, DiscoveryHandler,
-	StartRequestOptions, SendEventOptions
+	StartRequestOptions, SendEventOptions, BuildProposalRequest, SendProposalRequest, EventRegistrationOptions, EventListener
 } from 'fabric-common';
 import * as fs from 'fs';
 import * as Long from 'long';
-import {Constants} from '../../constants';
+import * as Constants from '../../constants';
 import * as BaseUtils from './baseUtils';
 import {CommonConnectionProfileHelper} from './commonConnectionProfileHelper';
 import {StateStore} from './stateStore';
 import * as util from 'util';
-
 
 const stateStore: StateStore = StateStore.getInstance();
 
@@ -130,24 +132,27 @@ export function createChannelWithClient(clientName: string, channelName: string)
 	}
 }
 
-export function retrieveClientObject(clientName: string): any {
-	const clientMap: Map<string, any> | undefined = stateStore.get(Constants.CLIENTS);
-	if (clientMap && clientMap.has(clientName)) {
-		return clientMap.get(clientName);
+export function retrieveClientObject(clientName: string): ClientState {
+	const clientMap: Map<string, ClientState> | undefined = stateStore.get(Constants.CLIENTS);
+	const result = clientMap?.get(clientName);
+	if (result) {
+		return result;
 	} else {
-		const msg: string = `Required client named ${clientName} does not exist`;
+		const msg = `Required client named ${clientName} does not exist`;
 		BaseUtils.logMsg(msg);
 		throw new Error(msg);
 	}
 }
 
-export async function buildChannelRequest(requestName: string, contractName: string, requestArgs: any, clientName: string, channelName: string, useDiscovery: boolean): Promise<void> {
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export async function buildChannelRequest(requestName: string, contractName: string, requestArgs: any, clientName: string,
+	channelName: string, useDiscovery: boolean): Promise<void> {
 
 	// Best have a client object ready and waiting
-	const clientObject: any = retrieveClientObject(clientName);
-	const client: Client = clientObject.client;
-	const ccp: CommonConnectionProfileHelper = clientObject.ccp;
-	const channel: Channel = clientObject.channels.get(channelName);
+	const clientObject = retrieveClientObject(clientName);
+	const client = clientObject.client;
+	const ccp = clientObject.ccp;
+	const channel = getChannel(clientObject, channelName);
 
 	// New object for NodeSDK-Base, "IdentityContext", this object
 	// combines the old "TransactionID" and the Clients "UserContext"
@@ -161,7 +166,7 @@ export async function buildChannelRequest(requestName: string, contractName: str
 
 	// We have arguments
 	const argArray: string[] = requestArgs.slice(1, -1).split(',');
-	let initRequired: boolean = false;
+	let initRequired = false;
 	if (argArray[0].includes('init')) {
 		initRequired = true;
 	}
@@ -186,7 +191,7 @@ export async function buildChannelRequest(requestName: string, contractName: str
 		// ----- E N D O R S E -----
 		// endorsement will have the values needed by the chaincode
 		// to perform the endorsement (invoke)
-		const endorsementRequest: any = {
+		const endorsementRequest: BuildProposalRequest = {
 			args: [...argArray],
 			init: initRequired
 		};
@@ -199,11 +204,11 @@ export async function buildChannelRequest(requestName: string, contractName: str
 
 		// unique connection information will be used to build an endpoint
 		// used on connect()
-		const peerNames: any = ccp.getPeersForChannel(channelName);
+		const peerNames = ccp.getPeersForChannel(channelName);
 		const endpoints: Endpoint[] = [];
 
 		for (const peerName of peerNames) {
-			const peerObject: any = ccp.getPeer(peerName);
+			const peerObject = ccp.getPeer(peerName);
 			const endpoint: Endpoint = client.newEndpoint({
 				'url': peerObject.url,
 				'pem': fs.readFileSync(peerObject.tlsCACerts.path).toString(),
@@ -235,7 +240,7 @@ export async function buildChannelRequest(requestName: string, contractName: str
 		discoveryHandler = discovery.newHandler();
 
 		// We now have all we need, save to the clientObject
-		const request: any = {endorsement, endpoints, idx, discoveryResults};
+		const request: ChannelRequest = {endorsement, endpoints, idx, discoveryResults};
 
 		if (useDiscovery) {
 			request.handler = discoveryHandler;
@@ -260,8 +265,9 @@ export async function buildChannelRequest(requestName: string, contractName: str
 			map.set(requestName, request);
 			clientObject.requests = map;
 		}
-	} catch (error: any) {
-		BaseUtils.logMsg(`failure in buildChannelRequest: ${error.toString()}`, {});
+
+	} catch (error) {
+		BaseUtils.logMsg(`failure in buildChannelRequest: ${util.inspect(error)}`, {});
 		for (const target of targets) {
 			target.disconnect();
 		}
@@ -271,23 +277,26 @@ export async function buildChannelRequest(requestName: string, contractName: str
 
 export async function commitChannelRequest(requestName: string, clientName: string, channelName: string): Promise<void> {
 	// Requires that the endorsement is already built and signed (performed by buildChannelRequest())
-	const clientObject: any = retrieveClientObject(clientName);
+	const clientObject = retrieveClientObject(clientName);
 	const client: Client = clientObject.client;
 
 	if (clientObject.requests && clientObject.requests.has(requestName) && clientObject.channels.has(channelName)) {
-		const channel: Channel = clientObject.channels.get(channelName);
-		const requestObject: any = clientObject.requests.get(requestName);
-		const ccp: CommonConnectionProfileHelper = clientObject.ccp;
-		const endorsement: Endorsement = requestObject.endorsement;
+		const channel = getChannel(clientObject, channelName);
+		const requestObject = clientObject.requests.get(requestName);
+		if (!requestObject) {
+			BaseUtils.logAndThrow(`Request ${requestName} not found.`);
+		}
+		const ccp = clientObject.ccp;
+		const endorsement = requestObject.endorsement;
 		const discoveryHandler = requestObject.handler;
-		const targetPeers: Endorser[] = requestObject.targets;
-		const endpoints: Endpoint[] = requestObject.endpoints;
-		const eventer: Eventer = client.newEventer('peer1-events');
-		const orderer: Committer = client.newCommitter('orderer');
+		const targetPeers = requestObject.targets;
+		const endpoints = requestObject.endpoints || [];
+		const eventer = client.newEventer('peer1-events');
+		const orderer = client.newCommitter('orderer');
 
 		try {
 			// Build an endorsement request
-			const endorsementRequest: any = {
+			const endorsementRequest: SendProposalRequest = {
 				targets: targetPeers,
 				handler: discoveryHandler,
 				requestTimeout: Constants.HUGE_TIME
@@ -307,7 +316,7 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 				}
 			} catch (error: any) {
 				BaseUtils.logError(`Failed to connect to channel event hub ${eventer.toString()}`);
-				BaseUtils.logError(`Failed to connect ${error.stack}`);
+				BaseUtils.logError(`Failed to connect ${util.inspect(error)}`);
 				throw error;
 			}
 
@@ -336,7 +345,7 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 							BaseUtils.logError(`Failed to receive transaction event for ${endorsement.getTransactionId()}`, {});
 							reject(error);
 						}
-						BaseUtils.logMsg(`Successfully received the transaction event for ${event.transactionId} with status of ${event.status} in block number ${event.blockNumber}`, {});
+						BaseUtils.logMsg(`Successfully received the transaction event for ${String(event.transactionId)} with status of ${String(event.status)} in block number ${String(event.blockNumber)}`, {});
 						resolve('Commit success');
 					},
 					{}
@@ -345,9 +354,9 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 
 			// ----- C O M M I T  S T A G E -----
 			// create an endpoint with all the connection information
-			const ordererName: string = ccp.getOrderersForChannel(channelName)[0];
-			const ordererObject: any = ccp.getOrderer(ordererName);
-			const orderEndpoint: Endpoint = client.newEndpoint({
+			const ordererName = ccp.getOrderersForChannel(channelName)[0];
+			const ordererObject = ccp.getOrderer(ordererName);
+			const orderEndpoint = client.newEndpoint({
 				'url': ordererObject.url,
 				'pem': fs.readFileSync(ordererObject.tlsCACerts.path).toString(),
 				'ssl-target-name-override': ordererObject.grpcOptions['ssl-target-name-override'],
@@ -395,12 +404,12 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 				requestObject.results = {
 					general: JSON.stringify({
 						result: 'FAILURE',
-						msg: (error as any).toString(),
+						msg: util.inspect(error),
 					})
 				};
 			}
 		} catch (error) {
-			BaseUtils.logError('sendChannelRequest failed with error', (error as any).stack);
+			BaseUtils.logError('sendChannelRequest failed with error', (error as Error).stack);
 			throw error;
 		} finally {
 			BaseUtils.logMsg(' - commitChannelRequest finally');
@@ -419,13 +428,14 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 	}
 }
 
-export async function queryChannelRequest(clientName: string, channelName: string, contractName: string, contractArgs: string, queryName: string, checkSendingtoContract: boolean): Promise<void> {
+export async function queryChannelRequest(clientName: string, channelName: string, contractName: string,
+	contractArgs: string, queryName: string, checkSendingtoContract: boolean): Promise<void> {
 	BaseUtils.logMsg(' -- starting clientUtils.queryChannelRequest');
 
 	// Requires that the endorsement is already built and signed (performed by buildChannelRequest())
-	const clientObject: any = retrieveClientObject(clientName);
-	const client: Client = clientObject.client;
-	const ccp: CommonConnectionProfileHelper = clientObject.ccp;
+	const clientObject = retrieveClientObject(clientName);
+	const client = clientObject.client;
+	const ccp = clientObject.ccp;
 
 	// need a queries object
 	if (!clientObject.queries) {
@@ -436,14 +446,14 @@ export async function queryChannelRequest(clientName: string, channelName: strin
 	const argArray: string[] = contractArgs.slice(1, -1).split(',');
 
 	if (clientObject.channels.has(channelName)) {
-		const channel: Channel = clientObject.channels.get(channelName);
+		const channel = getChannel(clientObject, channelName);
 		const idx: IdentityContext = client.newIdentityContext(clientObject.user);
 
 		const peerNames: string[] = ccp.getPeersForChannel(channelName);
 		const targets: Endorser[] = [];
 
 		for (const peerName of peerNames) {
-			const peerObject: any = ccp.getPeer(peerName);
+			const peerObject = ccp.getPeer(peerName);
 			const endpoint: Endpoint = client.newEndpoint({
 				'url': peerObject.url,
 				'pem': fs.readFileSync(peerObject.tlsCACerts.path).toString(),
@@ -466,20 +476,11 @@ export async function queryChannelRequest(clientName: string, channelName: strin
 			// New query with passed contract name
 			const query: Query = channel.newQuery(contractName);
 
-			// Build a query request
-			const buildQueryRequest: any = {
-				args: argArray
-			};
-
 			// Build and sign the query
-			query.build(idx, buildQueryRequest);
+			query.build(idx, {
+				args: argArray
+			});
 			query.sign(idx);
-
-			// Construct query request
-			const queryRequest: any = {
-				targets,
-				requestTimeout: Constants.INC_LONG
-			};
 
 			// if required, set up the peers with chaincode names to cause
 			// one error and one result
@@ -491,50 +492,53 @@ export async function queryChannelRequest(clientName: string, channelName: strin
 			}
 
 			// Send query to target peers
-			const queryObject: any = {};
+			const queryObject: QueryState = {};
 			try {
-				const queryResponse: ProposalResponse = await query.send(queryRequest);
+				const queryResponse: ProposalResponse = await query.send({
+					targets,
+					requestTimeout: Constants.INC_LONG
+				});
 				BaseUtils.logError('query submission checking results');
 				queryObject.results = {};
-				let inc: number = 0;
+				let inc = 0;
 				if (queryResponse.errors.length > 0) {
 					// failure
-					BaseUtils.logMsg(`Query failure detected`);
+					BaseUtils.logMsg('Query failure detected');
 					queryObject.results.general = JSON.stringify({result: 'FAILURE'});
 					if (checkSendingtoContract) {
-						BaseUtils.logMsg(`Query during chaincodecheck failure detected`);
-						queryObject.results['chaincodecheck'] = queryObject.results.general;
+						BaseUtils.logMsg('Query during chaincodecheck failure detected');
+						queryObject.results.chaincodecheck = queryObject.results.general;
 					}
 					for (const error of queryResponse.errors) {
 						queryObject.results[`peer${inc}`] = error.toString();
-						BaseUtils.logMsg(`Query failure ${queryObject.results[`peer${inc}`]}`);
+						BaseUtils.logMsg(`Query failure ${util.inspect(queryObject.results[`peer${inc}`])}`);
 						inc++;
 					}
 				}
 				if (queryResponse.queryResults.length > 0) {
 					// Success
-					BaseUtils.logMsg(`Query success detected`);
+					BaseUtils.logMsg('Query success detected');
 					queryObject.results.general = JSON.stringify({result: 'SUCCESS'});
 					for (const result of queryResponse.queryResults) {
 						queryObject.results[`peer${inc}`] = JSON.parse(result.toString());
-						BaseUtils.logMsg(`Query results ${queryObject.results[`peer${inc}`]}`);
+						BaseUtils.logMsg(`Query results ${util.inspect(queryObject.results[`peer${inc}`])}`);
 						inc++;
 					}
 				} else {
-					BaseUtils.logMsg(`No Query success detected`);
+					BaseUtils.logMsg('No Query success detected');
 				}
 			} catch (error: any) {
 				// Swallow error as we might be testing a failure path, but modify request object with error msg and status
 				queryObject.results = {
 					general: JSON.stringify({
 						result: 'FAILURE',
-						msg: error.toString(),
+						msg: util.inspect(error),
 					})
 				};
 			}
 			clientObject.queries.set(queryName, queryObject);
-		} catch (error: any) {
-			BaseUtils.logError('query submission failed with error: ', error.stack);
+		} catch (error) {
+			BaseUtils.logError('query submission failed with error: ', (error as Error).stack);
 			throw error;
 		} finally {
 			for (const target of targets) {
@@ -548,22 +552,23 @@ export async function queryChannelRequest(clientName: string, channelName: strin
 
 export function createAdminUserForOrg(ccp: CommonConnectionProfileHelper, orgName: string): User {
 
-	const org: any = ccp.getOrganization(orgName);
+	const org = ccp.getOrganization(orgName);
 	if (!org) {
 		throw new Error(`Could not find organization ${orgName} in configuration`);
 	}
 
-	const keyPEM: Buffer = fs.readFileSync(org.adminPrivateKeyPEM.path);
-	const certPEM: Buffer = fs.readFileSync(org.signedCertPEM.path);
+	const keyPEM = fs.readFileSync(org.adminPrivateKeyPEM.path);
+	const certPEM = fs.readFileSync(org.signedCertPEM.path);
 
 	// Create user and return
 	return User.createUser(Constants.ADMIN_NAME, Constants.ADMIN_PW, org.mspid, certPEM.toString(), keyPEM.toString());
 }
 
-async function getTlsEnrollmentResponseForOrgUser(user: User, orgName: string, ccp: CommonConnectionProfileHelper): Promise<FabricCAServices.IEnrollResponse> {
+async function getTlsEnrollmentResponseForOrgUser(user: User, orgName: string,
+	ccp: CommonConnectionProfileHelper): Promise<FabricCAServices.IEnrollResponse> {
 
-	const caName: string = ccp.getCertificateAuthoritiesForOrg(orgName)[0];
-	const ca: any = ccp.getCertificateAuthority(caName);
+	const caName = ccp.getCertificateAuthoritiesForOrg(orgName)[0];
+	const ca = ccp.getCertificateAuthority(caName);
 	const fabricCAPem: string = fs.readFileSync(ca.tlsCACerts.path).toString();
 	const fabricCAEndpoint: string = ca.url;
 
@@ -583,7 +588,8 @@ async function getTlsEnrollmentResponseForOrgUser(user: User, orgName: string, c
 	return await caService.enroll(request);
 }
 
-export function validateChannelRequestResponse(clientName: string, isRequest: boolean, requestName: string, fieldName: string, expectedResult: string): boolean | void {
+export function validateChannelRequestResponse(clientName: string, isRequest: boolean, requestName: string, fieldName: string,
+	expectedResult: string): boolean | void {
 	const clientObject: any = retrieveClientObject(clientName);
 
 	let results: any;
@@ -605,7 +611,7 @@ export function validateChannelRequestResponse(clientName: string, isRequest: bo
 
 	if (results) {
 		const savedResult: any = results[fieldName];
-		BaseUtils.logMsg(`clientUtils - fieldName: ${fieldName} - raw results of query = ${savedResult}`);
+		BaseUtils.logMsg(`clientUtils - fieldName: ${fieldName} - raw results of query = ${util.inspect(savedResult)}`);
 
 		let stringResult: string;
 		if (savedResult instanceof Buffer) {
@@ -655,12 +661,12 @@ export function validateDiscoveryResponse(clientName: string, requestName: strin
 	}
 }
 
-export async function createEventService(eventServiceName: string, clientName: string, channelName: string): Promise<void> {
+export function createEventService(eventServiceName: string, clientName: string, channelName: string): void {
 
 	// Best have a client object ready and waiting
-	const clientObject: any = retrieveClientObject(clientName);
-	const client: Client = clientObject.client;
-	const channel: Channel = clientObject.channels.get(channelName);
+	const clientObject = retrieveClientObject(clientName);
+	const client = clientObject.client;
+	const channel = getChannel(clientObject, channelName);
 	const idx: IdentityContext = client.newIdentityContext(clientObject.user);
 
 	try {
@@ -672,8 +678,8 @@ export async function createEventService(eventServiceName: string, clientName: s
 			map.set(eventServiceName, {eventService, idx, channelName});
 			clientObject.eventServices = map;
 		}
-	} catch (error: any) {
-		BaseUtils.logMsg(`failure in buildEventService: ${error.toString()}`, {});
+	} catch (error) {
+		BaseUtils.logMsg(`failure in buildEventService: ${util.inspect(error)}`, {});
 		throw error;
 	}
 }
@@ -714,7 +720,7 @@ export async function startEventService(
 		eventService.build(idx, buildOptions);
 		eventService.sign(idx);
 
-		const peerNames: any = ccp.getPeersForChannel(channelName);
+		const peerNames = ccp.getPeersForChannel(channelName);
 		const endpoints: Endpoint[] = [];
 
 		if (start === 'restart') {
@@ -724,7 +730,7 @@ export async function startEventService(
 		}
 
 		for (const peerName of peerNames) {
-			const peerObject: any = ccp.getPeer(peerName);
+			const peerObject = ccp.getPeer(peerName);
 			const endpoint: Endpoint = client.newEndpoint({
 				'url': peerObject.url,
 				'pem': fs.readFileSync(peerObject.tlsCACerts.path).toString(),
@@ -746,8 +752,8 @@ export async function startEventService(
 		}
 
 		await eventService.send({targets: targets});
-	} catch (error: any) {
-		BaseUtils.logMsg(`failure in startEventService: ${error.toString()}`, {});
+	} catch (error) {
+		BaseUtils.logMsg(`failure in startEventService: ${util.inspect(error)}`, {});
 		for (const target of targets) {
 			target.disconnect();
 		}
@@ -759,11 +765,14 @@ export function registerEventListener(
 	eventServiceName: string, clientName: string, listenerName: string, type: string,
 	startBlock: string, endBlock: string,
 	chaincodeEventName: string, chaincodeName: string, count?:number): void {
-
-	const clientObject: any = retrieveClientObject(clientName);
-	const eventServiceObject: any = clientObject.eventServices.get(eventServiceName);
+  
+	const clientObject = retrieveClientObject(clientName);
+	const eventServiceObject = clientObject.eventServices?.get(eventServiceName);
+	if (!eventServiceObject) {
+		BaseUtils.logAndThrow(`Event service ${eventServiceName} not found.`);
+	}
 	const eventService: EventService = eventServiceObject.eventService;
-	let eventListeners: Map<string, any> = eventServiceObject.eventListeners;
+	let eventListeners = eventServiceObject.eventListeners;
 	if (!eventListeners) {
 		eventListeners = new Map();
 		eventServiceObject.eventListeners = eventListeners;
@@ -771,17 +780,17 @@ export function registerEventListener(
 
 	BaseUtils.logMsg(`Register event listener ${listenerName}`);
 
-	const listenerOptions: any = {};
-	if (startBlock.length > 0) {
-		listenerOptions.startBlock = Number.parseInt(startBlock, 10);
+	const listenerOptions: EventRegistrationOptions = {};
+	if (startBlock) {
+		listenerOptions.startBlock = startBlock;
 	}
-	if (endBlock.length > 0) {
-		listenerOptions.endBlock = Number.parseInt(endBlock, 10);
+	if (endBlock) {
+		listenerOptions.endBlock = endBlock;
 	}
 
 	try {
-		const listenerObject: any = {};
-		eventServiceObject.eventListeners.set(listenerName, listenerObject);
+		const listenerObject: ListenerState = {};
+		eventListeners.set(listenerName, listenerObject);
 		if (type === 'block') {
 			BaseUtils.logMsg(`Registering a block event with startBlock ${startBlock} endBlock ${endBlock}`);
 
@@ -792,21 +801,22 @@ export function registerEventListener(
 						listenerObject.error = error;
 						return;
 					}
-					if (event?.endBlockReceived) {
+					if (event?.endBlockReceived && listenerOptions.endBlock !== undefined) {
 						if (event?.blockNumber.equals(Long.fromValue(listenerOptions.endBlock))) {
 							BaseUtils.logMsg(`Endblock indication received for ${listenerName}`);
 						} else {
 							listenerObject.error = Error('invalid "Endblock" indication received');
 							BaseUtils.logMsg(`invalid Endblock indication received for ${listenerName} with block number ${event?.blockNumber.toString()}`);
 						}
+          
 						return;
 					}
-					if (event?.blockNumber.lessThan(Long.fromValue(listenerOptions.startBlock)) ||
-						event?.blockNumber.greaterThan(Long.fromValue(listenerOptions.endBlock))) {
+					if (event?.blockNumber.lessThan(Long.fromValue(listenerOptions.startBlock ?? Long.UZERO)) ||
+						event?.blockNumber.greaterThan(Long.fromValue(listenerOptions.endBlock ?? Long.MAX_UNSIGNED_VALUE))) {
 						listenerObject.error = Error('Block received not in range');
 					}
 					const results = {block: event?.blockNumber.toString()};
-					listenerObject.results = {block: event?.blockNumber.toString()};
+					listenerObject.results = results;
 					BaseUtils.logMsg(`Store block event listener ${listenerName} results of ${JSON.stringify(results)}`);
 				},
 				listenerOptions
@@ -830,8 +840,7 @@ export function registerEventListener(
 						listenerObject.error = error;
 						return;
 					}
-
-					BaseUtils.logMsg(`Chaincode listener event received for ${listenerName} :: ${event}`);
+					BaseUtils.logMsg(`Chaincode listener event received for ${listenerName} :: ${util.inspect(event)}`);
 
 					if (event?.chaincodeEvents) {
 						for (const chaincodeEvent of event.chaincodeEvents) {
@@ -858,6 +867,7 @@ export function registerEventListener(
 
 			listenerObject.eventListener = eventService.registerTransactionListener(
 				'all',
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				(error, event) => {
 					if (error) {
 						if (error.toString().includes('Shutdown due to end block number has been seen')) {
@@ -867,8 +877,8 @@ export function registerEventListener(
 						listenerObject.error = error;
 						return;
 					}
-					const transactionResults = listenerObject.results;
-					transactionResults.transaction = (Number.parseInt(transactionResults.transaction, 10) + 1).toString();
+					const transactionResults = listenerObject.results || {};
+					transactionResults.transaction = (Number.parseInt(transactionResults.transaction || '0', 10) + 1).toString();
 					listenerObject.results = transactionResults;
 					BaseUtils.logMsg(`Store event listener ${listenerName} results of ${JSON.stringify(transactionResults)}`);
 				},
@@ -878,15 +888,15 @@ export function registerEventListener(
 		} else {
 			BaseUtils.logAndThrow(`Event listener type is not known ${type}`);
 		}
-	} catch (error: any) {
-		BaseUtils.logMsg(`failure in registerEventListener: ${error.toString()}`, {});
+	} catch (error) {
+		BaseUtils.logMsg(`failure in registerEventListener: ${util.inspect(error)}`, {});
 		throw error;
 	}
 }
 
-export async function checkEventListenerResults(
+export function checkEventListenerResults(
 	eventServiceName: string, clientName: string, listenerName: string,
-	check: string): Promise<void> {
+	check: string): void {
 
 	const clientObject: any = retrieveClientObject(clientName);
 	const eventServiceObject: any = clientObject.eventServices.get(eventServiceName);
@@ -894,7 +904,7 @@ export async function checkEventListenerResults(
 
 	if (listenerObject) {
 		if (listenerObject.error) {
-			BaseUtils.logMsg(`Received an error for ${listenerName} of ${listenerObject.error}`);
+			BaseUtils.logMsg(`Received an error for ${listenerName} of ${util.inspect(listenerObject.error)}`);
 			throw listenerObject.error;
 		}
 		if (listenerObject.results) {
@@ -934,4 +944,12 @@ export function disconnectEventService(
 	const eventServiceObject: any = clientObject.eventServices.get(eventServiceName);
 
 	eventServiceObject.eventService.close();
+}
+
+function getChannel(state: ClientState, name: string): Channel {
+	const result = state.channels.get(name);
+	if (!result) {
+		BaseUtils.logAndThrow(`Channel ${name} not found.`);
+	}
+	return result;
 }

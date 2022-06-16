@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Checkpointer } from '../checkpointer';
-import Long = require('long');
-import fs = require('fs');
+import {Checkpointer} from '../checkpointer';
+import * as Long from 'long';
+import * as fs from 'fs';
 
 const encoding = 'utf8';
 
@@ -34,12 +34,12 @@ export class FileCheckpointer implements Checkpointer {
 		await this.save();
 	}
 
-	async getBlockNumber(): Promise<Long | undefined> {
-		return this.blockNumber;
+	getBlockNumber(): Promise<Long | undefined> {
+		return Promise.resolve(this.blockNumber);
 	}
 
-	async getTransactionIds(): Promise<Set<string>> {
-		return this.transactionIds;
+	getTransactionIds(): Promise<Set<string>> {
+		return Promise.resolve(this.transactionIds);
 	}
 
 	async setBlockNumber(blockNumber: Long): Promise<void> {
@@ -52,7 +52,8 @@ export class FileCheckpointer implements Checkpointer {
 		const data = await this.readFile();
 		if (data) {
 			const json = data.toString(encoding);
-			const state = JSON.parse(json);
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+			const state = JSON.parse(json) as PersistentState;
 			this.setState(state);
 		}
 	}

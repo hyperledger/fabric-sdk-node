@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2019 IBM All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -554,24 +554,15 @@ module.exports.checkIntegerConfig = (opts, configName) => {
 };
 
 module.exports.convertBytetoString = (buffer_array, encoding) => {
-	let result;
-	let decode_as = 'utf8';
-	if (!encoding) {
-		decode_as = encoding;
-	}
-	if (Array.isArray(buffer_array)) {
-		const a_strings = [];
-		for (const index in buffer_array) {
-			const buffer = buffer_array[index];
-			const hex_string = buffer.toString(decode_as);
-			a_strings.push(hex_string);
-		}
-		result = a_strings.join('');
-	} else {
-		result = buffer_array.toString(decode_as);
+	const decode_as = encoding || 'utf8';
+
+	if (!Array.isArray(buffer_array)) {
+		return buffer_array.toString(decode_as);
 	}
 
-	return result;
+	return buffer_array
+		.map(buffer => buffer.toString(decode_as))
+		.join('');
 };
 
 module.exports.byteToNormalizedPEM = (buffer_array, encoding) => {
@@ -630,4 +621,44 @@ module.exports.randomize = (items) => {
  */
 module.exports.checkParameter = (name) => {
 	throw Error(`Missing ${name} parameter`);
+};
+
+/**
+ * Map CSRUtil.newCSRPEM style extensions:
+ * ```
+ * {
+ *     subjectAltName: {
+ *         array: [...],
+ *     },
+ * }
+ * ```
+ *
+ * to CertificationRequest style extensions:
+ * ```
+ * {
+ *     extname: 'subjectAltName',
+ *     array: [...],
+ * }
+ * ```
+ * @private
+ */
+module.exports.mapCSRExtensions = (extensions) => {
+	if (!Array.isArray(extensions)) {
+		return extensions;
+	}
+
+	const results = [];
+	extensions.forEach(extension => {
+		const isCertificationRequestExtension = typeof extension.extname === 'string';
+		if (isCertificationRequestExtension) {
+			results.push(extension);
+		} else {
+			Object.entries(extension).forEach(([extname, props]) => {
+				const extensionRequest = Object.assign({}, props, {extname});
+				results.push(extensionRequest);
+			});
+		}
+	});
+
+	return results;
 };

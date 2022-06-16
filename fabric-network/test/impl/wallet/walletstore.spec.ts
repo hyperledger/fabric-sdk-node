@@ -4,19 +4,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import fs = require('fs');
-import os = require('os');
-import path = require('path');
-import util = require('util');
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+import * as util from 'util';
 
 import rawRimraf = require('rimraf');
 const rimraf = util.promisify(rawRimraf);
 
-import { FileSystemWalletStore } from '../../../src/impl/wallet/filesystemwalletstore';
-import { InMemoryWalletStore } from '../../../src/impl/wallet/inmemorywalletstore';
-import { WalletStore } from '../../../src/impl/wallet/walletstore';
+import {FileSystemWalletStore} from '../../../src/impl/wallet/filesystemwalletstore';
+import {InMemoryWalletStore} from '../../../src/impl/wallet/inmemorywalletstore';
+import {WalletStore} from '../../../src/impl/wallet/walletstore';
 
-import chai = require('chai');
+import * as chai from 'chai';
 const expect = chai.expect;
 
 async function createTempDir(): Promise<string> {
@@ -24,7 +24,7 @@ async function createTempDir(): Promise<string> {
 	return await fs.promises.mkdtemp(prefix);
 }
 
-// tslint:disable: no-unused-expression
+
 
 describe('WalletStore', () => {
 	let tmpDir: string|undefined;
@@ -33,7 +33,7 @@ describe('WalletStore', () => {
 			tmpDir = await createTempDir();
 			return await FileSystemWalletStore.newInstance(tmpDir);
 		},
-		InMemoryWalletStore: async () => new InMemoryWalletStore(),
+		InMemoryWalletStore:  () => Promise.resolve(new InMemoryWalletStore()),
 	};
 
 	async function deleteTmpDir(): Promise<void> {

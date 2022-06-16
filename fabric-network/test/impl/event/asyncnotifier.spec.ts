@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { AsyncNotifier } from '../../../src/impl/event/asyncnotifier';
+import {AsyncNotifier} from '../../../src/impl/event/asyncnotifier';
 
 import * as testUtils from '../../testutils';
 
-import sinon = require('sinon');
-import chai = require('chai');
+import * as sinon from 'sinon';
+import * as chai from 'chai';
 const expect = chai.expect;
 
 describe('AsyncNotifier', () => {
@@ -81,13 +81,13 @@ describe('AsyncNotifier', () => {
 	it('interleaved send and receive delivers all events in order', async () => {
 		const numEvents = 10;
 		const maxSleep = 10;
-		const events = [];
+		const events: number[] = [];
 		const supplier = newSupplier(events);
 		const listener = testUtils.newAsyncListener<number>(numEvents, maxSleep);
 		const notifier = new AsyncNotifier<number>(supplier, listener);
 
 		async function run() {
-			for (let i = 0; i < numEvents; ) {
+			for (let i = 0; i < numEvents;) {
 				events.push(++i);
 				notifier.notify();
 				const random = testUtils.getRandomInt(maxSleep);

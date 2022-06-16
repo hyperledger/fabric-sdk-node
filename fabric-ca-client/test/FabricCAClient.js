@@ -1305,7 +1305,7 @@ describe('FabricCAClient', () => {
 			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
 
 			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
-			await client.generateCRL('revokedBefore', 'revokedAfter', 'expireBefore', 'expireAfter', 'signingIdentity').should.be.rejectedWith('Cannot read property \'CRL\' of undefined');
+			await client.generateCRL('revokedBefore', 'revokedAfter', 'expireBefore', 'expireAfter', 'signingIdentity').should.be.rejected;
 		});
 
 		it('should reject if POST throws an error', async () => {

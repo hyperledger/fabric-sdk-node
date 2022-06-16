@@ -2,20 +2,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
-
-import { Constants } from '../steps/constants';
+import * as Constants from '../steps/constants';
 import * as Gateway from '../steps/lib/gateway';
 import * as BaseUtils from '../steps/lib/utility/baseUtils';
-import { CommandRunner } from '../steps/lib/utility/commandRunner';
-import { StateStore } from '../steps/lib/utility/stateStore';
+import {CommandRunner} from '../steps/lib/utility/commandRunner';
+import {StateStore} from '../steps/lib/utility/stateStore';
 
-import { AfterAll } from 'cucumber';
+import {AfterAll} from '@cucumber/cucumber';
 
 const commandRunner: CommandRunner = CommandRunner.getInstance();
 const stateStore: StateStore = StateStore.getInstance();
 
-AfterAll({ timeout: Constants.HUGE_TIME as number }, async () => {
+// eslint-disable-next-line @typescript-eslint/no-misused-promises
+AfterAll({timeout: Constants.HUGE_TIME}, async () => {
 	// Clean off Docker step
 	BaseUtils.logMsg('Tearing down network ...', null);
 	await commandRunner.runShellCommand(undefined, 'docker kill $(docker ps -aq); docker rm $(docker ps -aq)');
@@ -25,7 +24,8 @@ AfterAll({ timeout: Constants.HUGE_TIME as number }, async () => {
 	await commandRunner.runShellCommand(undefined, 'docker rmi $(docker images dev-* -q)');
 });
 
-AfterAll({timeout: Constants.HUGE_TIME as number}, async () => {
+
+AfterAll({timeout: Constants.HUGE_TIME}, () => {
 	// If a test fails without disconnecting gateways, then the tests will hang
 	BaseUtils.logMsg('Disconnecting from all gateways ...',  null);
 	Gateway.disconnectAllGateways();

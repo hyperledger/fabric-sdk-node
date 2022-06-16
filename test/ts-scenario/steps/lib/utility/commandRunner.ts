@@ -2,13 +2,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
-import { logMsg } from './baseUtils';
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 
-import { ChildProcess, exec } from 'child_process';
+import {logMsg} from './baseUtils';
+
+import {exec} from 'child_process';
 import stripAnsi from 'strip-ansi';
 import * as BaseUtils from '../utility/baseUtils';
 
+export interface CommandResult {
+	stdout: string;
+	stderr: string;
+	error?: Error;
+	code?: number;
+}
 export class CommandRunner {
 
 	public static getInstance(): CommandRunner {
@@ -17,7 +27,7 @@ export class CommandRunner {
 	}
 
 	private static instance: CommandRunner;
-	protected lastResp: any;
+	protected lastResp?: CommandResult;
 
 	private constructor() {
 		// Prevent external instantiation
@@ -29,27 +39,25 @@ export class CommandRunner {
 	 * @param {String} cmd -  CLI command with parameters to be run
 	 * @return {Promise} - Promise that will be resolved or rejected with an error
 	 */
-	public runShellCommand(pass: any, cmd: string, verbose: boolean = true): Promise<any> {
+	public runShellCommand(pass: any, cmd: string, verbose = true): Promise<CommandResult> {
 		BaseUtils.logMsg(` -- runShellCommand ==>${cmd}<==`);
 
 		if (typeof cmd !== 'string') {
 			return Promise.reject('Command passed to function was not a string');
 		} else {
 			const command: string = cmd.replace(/\s*[\n\r]+\s*/g, ' ');
-			let stdout: string = '';
-			let stderr: string = '';
+			let stdout = '';
+			let stderr = '';
 			const env: any = Object.create(process.env);
 
 			return new Promise((resolve: any, reject: any): any => {
 
 				logMsg('SCENARIO CMD:', cmd);
 
-				const options: any = {
+				const childCliProcess = exec(command, {
 					env,
 					maxBuffer: 100000000,
-				};
-
-				const childCliProcess: ChildProcess = exec(command, options);
+				});
 
 				if (!childCliProcess || !childCliProcess.stdout || !childCliProcess.stderr) {
 					reject('ChildProcess object failed to create');
@@ -67,7 +75,7 @@ export class CommandRunner {
 						stderr += data;
 					});
 
-					childCliProcess.on('error', (error: any) => {
+					childCliProcess.on('error', error => {
 						logMsg('SCENARIO CMD - STDOUT:\n', stdout);
 						logMsg('SCENARIO CMD - STDERR:\n', stderr);
 						this.lastResp = {
@@ -80,7 +88,7 @@ export class CommandRunner {
 						}
 					});
 
-					childCliProcess.on('close', (code: any) => {
+					childCliProcess.on('close', (code: number) => {
 						if (verbose) {
 							logMsg('SCENARIO CMD - STDOUT:\n', stdout);
 							logMsg('SCENARIO CMD - STDERR:\n', stderr);

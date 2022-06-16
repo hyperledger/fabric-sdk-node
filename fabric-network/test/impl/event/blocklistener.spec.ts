@@ -4,21 +4,25 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import sinon = require('sinon');
-import chai = require('chai');
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+import * as sinon from 'sinon';
+import * as chai from 'chai';
 const expect = chai.expect;
 
-import { Channel, Client, Endorser, Eventer, EventInfo, IdentityContext } from 'fabric-common';
-import { BlockEvent, BlockListener, ListenerOptions } from '../../../src/events';
-import { EventServiceManager } from '../../../src/impl/event/eventservicemanager';
-import { Network, NetworkImpl } from '../../../src/network';
-import * as testUtils from '../../testutils';
-import { StubEventService } from './stubeventservice';
+import {Channel, Client, Endorser, Eventer, EventInfo, IdentityContext} from 'fabric-common';
+import {BlockEvent, BlockListener, ListenerOptions} from '../../../src/events';
+import {EventServiceManager} from '../../../src/impl/event/eventservicemanager';
+import {NetworkImpl} from '../../../src/network';
+import {newAsyncListener, Mutable} from '../../testutils';
+import {StubEventService} from './stubeventservice';
 
 import Long = require('long');
 
-import { Gateway } from '../../../src/gateway';
-import { StubCheckpointer } from './stubcheckpointer';
+import {Gateway} from '../../../src/gateway';
+import {StubCheckpointer} from './stubcheckpointer';
 
 interface StubBlockListener extends BlockListener {
 	completePromise: Promise<BlockEvent[]>;
@@ -33,7 +37,7 @@ describe('block listener', () => {
 	let listener: StubBlockListener;
 	let listenerOptions: ListenerOptions;
 
-	beforeEach(async () => {
+	beforeEach(() => {
 		eventService = new StubEventService('stub');
 
 		gateway = sinon.createStubInstance(Gateway);
@@ -47,6 +51,7 @@ describe('block listener', () => {
 		channel.newEventService.returns(eventService);
 
 		const endorser = sinon.createStubInstance(Endorser);
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		(endorser as any).name = 'endorser';
 		channel.getEndorsers.returns([endorser]);
 
@@ -57,9 +62,9 @@ describe('block listener', () => {
 
 		network = new NetworkImpl(gateway as unknown as Gateway, channel);
 
-		eventServiceManager = (network as any).eventServiceManager;
+		eventServiceManager = (network as any).eventServiceManager; // eslint-disable-line @typescript-eslint/no-unsafe-assignment
 
-		listener = testUtils.newAsyncListener<BlockEvent>();
+		listener = newAsyncListener<BlockEvent>();
 		listenerOptions = {
 			type: 'filtered'
 		};
@@ -121,7 +126,7 @@ describe('block listener', () => {
 		});
 
 		it('removed listener does not receive events', async () => {
-			const removedListener = sinon.spy(testUtils.newAsyncListener<BlockEvent>());
+			const removedListener = sinon.spy(newAsyncListener<BlockEvent>());
 
 			await network.addBlockListener(listener, listenerOptions);
 			await network.addBlockListener(removedListener, listenerOptions);
@@ -144,7 +149,7 @@ describe('block listener', () => {
 		});
 
 		it('remove listener multiple times has no effect', async () => {
-			const removedListener = sinon.spy(testUtils.newAsyncListener<BlockEvent>());
+			const removedListener = sinon.spy(newAsyncListener<BlockEvent>());
 
 			await network.addBlockListener(listener, listenerOptions);
 			await network.addBlockListener(removedListener, listenerOptions);
@@ -157,9 +162,10 @@ describe('block listener', () => {
 		});
 
 		it('listener can remove itself when receiving event', async () => {
-			listener = testUtils.newAsyncListener<BlockEvent>(2);
-			const fake = sinon.fake(async (event: BlockEvent) => {
+			listener = newAsyncListener<BlockEvent>(2);
+			const fake = sinon.fake(() => {
 				network.removeBlockListener(fake);
+				return Promise.resolve();
 			});
 
 			await network.addBlockListener(listener, listenerOptions);
@@ -173,7 +179,7 @@ describe('block listener', () => {
 		});
 
 		it('listener does not auto-unregister when receiving events', async () => {
-			listener = testUtils.newAsyncListener<BlockEvent>(2);
+			listener = newAsyncListener<BlockEvent>(2);
 			const event1 = newFilteredBlockEventInfo(1);
 			const event2 = newFilteredBlockEventInfo(2);
 
@@ -189,8 +195,8 @@ describe('block listener', () => {
 		});
 
 		it('error thrown by listener does not stop subsequent events being delivered', async () => {
-			listener = testUtils.newAsyncListener<BlockEvent>(2);
-			const errorListener = sinon.fake(async (event) => {
+			listener = newAsyncListener<BlockEvent>(2);
+			const errorListener = sinon.fake(async (event: BlockEvent) => {
 				await listener(event);
 				throw new Error('LISTENER_ERROR');
 			});
@@ -207,7 +213,7 @@ describe('block listener', () => {
 		});
 
 		it('error thrown by listener does not stop other listeners being notified', async () => {
-			const listener2 = testUtils.newAsyncListener<BlockEvent>();
+			const listener2 = newAsyncListener<BlockEvent>();
 			const errorListener = sinon.fake.rejects(new Error('LISTENER_ERROR'));
 			const event = newFilteredBlockEventInfo(1);
 
@@ -223,7 +229,7 @@ describe('block listener', () => {
 		});
 
 		it('listener receives blocks in order', async () => {
-			listener = testUtils.newAsyncListener<BlockEvent>(3);
+			listener = newAsyncListener<BlockEvent>(3);
 			const event1 = newFilteredBlockEventInfo(1);
 			const event2 = newFilteredBlockEventInfo(2);
 			const event3 = newFilteredBlockEventInfo(3);
@@ -239,7 +245,7 @@ describe('block listener', () => {
 		});
 
 		it('listener does not receive old blocks', async () => {
-			listener = testUtils.newAsyncListener<BlockEvent>(2);
+			listener = newAsyncListener<BlockEvent>(2);
 			const event1 = newFilteredBlockEventInfo(1);
 			const event2 = newFilteredBlockEventInfo(2);
 			const event3 = newFilteredBlockEventInfo(3);
@@ -256,7 +262,7 @@ describe('block listener', () => {
 
 		it('errors trigger reconnect of event service with no start block if no events received', async () => {
 			await network.addBlockListener(listener, listenerOptions);
-			const startListener = testUtils.newAsyncListener<void>();
+			const startListener = newAsyncListener<void>();
 			const stub = sinon.stub(eventServiceManager, 'startEventService').callsFake(() => startListener());
 
 			eventService.sendError(new Error('DISCONNECT'));
@@ -268,7 +274,7 @@ describe('block listener', () => {
 
 		it('errors trigger reconnect of event service with last received block as start block if events received', async () => {
 			await network.addBlockListener(listener, listenerOptions);
-			const startListener = testUtils.newAsyncListener<void>();
+			const startListener = newAsyncListener<void>();
 			const stub = sinon.stub(eventServiceManager, 'startEventService').callsFake(() => startListener());
 
 			eventService.sendEvent(newFilteredBlockEventInfo(1));
@@ -278,51 +284,49 @@ describe('block listener', () => {
 			sinon.assert.calledWith(stub, eventService, sinon.match.has('startBlock', Long.ONE));
 		});
 		it('retry initial connect of event service', async () => {
-			const startListener = testUtils.newAsyncListener<void>();
-			const stub = sinon.stub(eventServiceManager, "startEventService");
+			const startListener = newAsyncListener<void>();
+			const stub = sinon.stub(eventServiceManager, 'startEventService');
 			stub.onFirstCall().rejects();
 			stub.onSecondCall().callsFake(() => startListener());
 
 			await network.addBlockListener(listener, listenerOptions);
-			await startListener.completePromise
+			await startListener.completePromise;
 
 			sinon.assert.callCount(stub, 2);
 		});
 
 		it('retry reconnect of event service after disconnection', async () => {
 			await network.addBlockListener(listener, listenerOptions);
-			const restartListener = testUtils.newAsyncListener<void>();
-			const stub = sinon.stub(eventServiceManager, "startEventService");
+			const restartListener = newAsyncListener<void>();
+			const stub = sinon.stub(eventServiceManager, 'startEventService');
 			stub.onFirstCall().rejects();
 			stub.onSecondCall().callsFake(() => restartListener());
 
 			eventService.sendError(new Error('DISCONNECT'));
-			await restartListener.completePromise
+			await restartListener.completePromise;
 
 			sinon.assert.callCount(stub, 2);
 		});
 
 		it('end infinite event loop condition on peer disconnect', async () => {
 			await network.addBlockListener(listener, listenerOptions);
-			const startEventService = testUtils.newAsyncListener<void>(1);
-			sinon.stub(eventServiceManager, "startEventService").rejects();
+			sinon.stub(eventServiceManager, 'startEventService').rejects();
 			eventService.sendError(new Error('DISCONNECT'));
 			network._dispose();
 		});
 
 		it('end infinite event loop condition on peer initial connect', async () => {
-			const startEventService = testUtils.newAsyncListener<void>(1);
-			sinon.stub(eventServiceManager, "startEventService").rejects();
+			sinon.stub(eventServiceManager, 'startEventService').rejects();
 			await network.addBlockListener(listener, listenerOptions);
 			network._dispose();
 		});
 
 		it('listener does not receive old blocks on reconnect', async () => {
-			listener = testUtils.newAsyncListener<BlockEvent>(2);
+			listener = newAsyncListener<BlockEvent>(2);
 			const event1 = newFilteredBlockEventInfo(1);
 			const event2 = newFilteredBlockEventInfo(2);
-			const startListener = testUtils.newAsyncListener<void>(2);
-			const stub = sinon.stub(eventServiceManager, 'startEventService').callsFake(() => startListener());
+			const startListener = newAsyncListener<void>(2);
+			sinon.stub(eventServiceManager, 'startEventService').callsFake(() => startListener());
 
 			await network.addBlockListener(listener, listenerOptions);
 			eventService.sendEvent(event1);
@@ -339,12 +343,12 @@ describe('block listener', () => {
 		});
 
 		it('listener changing event data does not affect other listeners', async () => {
-			const fake1 = sinon.fake(async (e) => {
+			const fake1 = sinon.fake(async (e: Mutable<BlockEvent>) => {
 				await listener(e);
 				e.blockNumber = Long.ONE;
 			});
-			const listener2 = testUtils.newAsyncListener<BlockEvent>();
-			const fake2 = sinon.fake(async (e) => {
+			const listener2 = newAsyncListener<BlockEvent>();
+			const fake2 = sinon.fake(async (e: Mutable<BlockEvent>) => {
 				await listener2(e);
 				e.blockNumber = Long.fromNumber(2);
 			});
@@ -542,7 +546,7 @@ describe('block listener', () => {
 		});
 
 		it('checkpoint listener receives events from checkpoint block number', async () => {
-			listener = testUtils.newAsyncListener<BlockEvent>(2);
+			listener = newAsyncListener<BlockEvent>(2);
 			const event1 = newFilteredBlockEventInfo(1);
 			const event2 = newFilteredBlockEventInfo(2);
 			const event3 = newFilteredBlockEventInfo(3);
@@ -561,7 +565,7 @@ describe('block listener', () => {
 		});
 
 		it('new checkpoint listener receives events from startBlock', async () => {
-			listener = testUtils.newAsyncListener<BlockEvent>(2);
+			listener = newAsyncListener<BlockEvent>(2);
 			const event1 = newFilteredBlockEventInfo(1);
 			const event2 = newFilteredBlockEventInfo(2);
 			const event3 = newFilteredBlockEventInfo(3);

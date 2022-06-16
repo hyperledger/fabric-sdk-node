@@ -4,16 +4,43 @@
  SPDX-License-Identifier: Apache-2.0
 */
 
-import fs = require('fs');
-import { Utils, Client, ConnectOptions } from 'fabric-common';
+import * as fs from 'fs';
+import {Utils, Client, ConnectOptions} from 'fabric-common';
 
 const logger = Utils.getLogger('NetworkConfig');
+
+interface Certificates {
+	pem: string;
+	path: string;
+}
+
+interface Endpoint {
+	url: string;
+	tlsCACerts: Certificates;
+	grpcOptions: ConnectOptions;
+	mspid: string;
+}
+
+interface Configuration {
+	peers?: Record<string, Endpoint>;
+	orderers?: Record<string, Endpoint>;
+	channels?: Record<string, Channel>;
+}
+
+interface Channel {
+	peers: string[] | Record<string, unknown>;
+	orderers: string[];
+}
+
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
 /**
  * Configures a client object using a supplied connection profile JSON object.
  * @private
  */
-export async function loadFromConfig(client: Client, config: any = {}): Promise<void> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function loadFromConfig(client: Client, config: Configuration = {}): Promise<void> {
 	const method = 'loadFromConfig';
 	logger.debug('%s - start', method);
 
@@ -39,7 +66,9 @@ export async function loadFromConfig(client: Client, config: any = {}): Promise<
 	logger.debug('%s - end', method);
 }
 
-async function buildChannel(client: Client, channelName: string, channelConfig: any): Promise<void> {
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function buildChannel(client: Client, channelName: string, channelConfig: Channel): Promise<void> {
 	const method = 'buildChannel';
 	logger.debug('%s - start - %s', method, channelName);
 
@@ -49,29 +78,29 @@ async function buildChannel(client: Client, channelName: string, channelConfig: 
 	const peers = channelConfig.peers;
 	if (peers) {
 		const peerNames: string[] = Array.isArray(peers) ? peers : Object.keys(peers);
-		for (const peerName of peerNames) {
+		peerNames.forEach(peerName => {
 			const peer = client.getEndorser(peerName);
 			channel.addEndorser(peer);
 			logger.debug('%s - added endorsing peer :: %s', method, peer.name);
-		}
+		});
 	} else {
 		logger.debug('%s - no peers in config', method);
 	}
 
 	if (channelConfig.orderers) {
-		// using 'of' as orderers is an array
-		for (const ordererName of channelConfig.orderers as string[]) {
+		channelConfig.orderers.forEach(ordererName => {
 			const orderer = client.getCommitter(ordererName);
 			channel.addCommitter(orderer);
 			logger.debug('%s - added orderer :: %s', method, orderer.name);
-		}
+		});
 	} else {
 		logger.debug('%s - no orderers in config', method);
 	}
-
+	return Promise.resolve();
 }
 
-async function buildOrderer(client: Client, ordererName: string, ordererConfig: any): Promise<void> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function buildOrderer(client: Client, ordererName: string, ordererConfig: Endpoint): Promise<void> {
 	const method = 'buildOrderer';
 	logger.debug('%s - start - %s', method, ordererName);
 
@@ -89,7 +118,8 @@ async function buildOrderer(client: Client, ordererName: string, ordererConfig: 
 	}
 }
 
-async function buildPeer(client: Client, peerName: string, peerConfig: any, config: any): Promise<void> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function buildPeer(client: Client, peerName: string, peerConfig: Endpoint, config: any): Promise<void> {
 	const method = 'buildPeer';
 	logger.debug('%s - start - %s', method, peerName);
 
@@ -107,6 +137,7 @@ async function buildPeer(client: Client, peerName: string, peerConfig: any, conf
 	}
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function findPeerMspid(name: string, config: any): string | undefined {
 	const method = 'findPeerMspid';
 	logger.debug('%s - start for %s', method, name);
@@ -127,7 +158,8 @@ function findPeerMspid(name: string, config: any): string | undefined {
 	return mspid;
 }
 
-async function buildOptions(endpointConfig: any): Promise<ConnectOptions> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function buildOptions(endpointConfig: Endpoint): Promise<ConnectOptions> {
 	const method = 'buildOptions';
 	logger.debug(`${method} - start`);
 	const options: ConnectOptions = {
@@ -146,7 +178,7 @@ async function buildOptions(endpointConfig: any): Promise<ConnectOptions> {
 	return options;
 }
 
-async function getPEMfromConfig(config: ConnectOptions): Promise<string | undefined> {
+async function getPEMfromConfig(config: Certificates): Promise<string | undefined> {
 	let result: string | undefined;
 	if (config) {
 		if (config.pem) {

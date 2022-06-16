@@ -5,11 +5,11 @@
  */
 
 import * as Listeners from '../../../src/impl/event/listeners';
-import { StubCheckpointer } from './stubcheckpointer';
-import { BlockEvent, BlockListener, TransactionEvent, ContractEvent } from '../../../src/events';
-import Long = require('long');
-import chai = require('chai');
-import sinon = require('sinon');
+import {StubCheckpointer} from './stubcheckpointer';
+import {BlockEvent, BlockListener, TransactionEvent, ContractEvent} from '../../../src/events';
+import * as Long from 'long';
+import * as chai from 'chai';
+import * as sinon from 'sinon';
 
 const expect = chai.expect;
 
@@ -40,7 +40,7 @@ describe('listeners', () => {
 
 	const noOpListener = () => undefined;
 
-	let checkpointer;
+	let checkpointer:StubCheckpointer;
 
 	beforeEach(() => {
 		checkpointer = new StubCheckpointer();
@@ -71,9 +71,7 @@ describe('listeners', () => {
 		});
 
 		it('checkpoint block number not incremented on listener failure', async () => {
-			const listener: BlockListener = async () => {
-				throw new Error('LISTENER_FAIL');
-			};
+			const listener: BlockListener = () => Promise.reject(new Error('LISTENER_FAIL'));
 			await checkpointer.setBlockNumber(currentBlockNumber);
 			const checkpointListener = Listeners.checkpointBlockListener(listener, checkpointer);
 

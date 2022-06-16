@@ -15,27 +15,20 @@ const nconf = require('nconf');
 class Config {
 
 	constructor() {
-		nconf.use('memory');
 		nconf.argv();
-		nconf.env({parseValues: true});
+		nconf.env({
+			parseValues: true,
+			lowerCase: true,
+			transform: function(obj) {
+				obj.key = obj.key.replace(/_/g, '-');
+				return obj;
+			}
+		});
 		nconf.use('mapenv', {type:'memory'});
-		this.mapSettings(nconf.stores.mapenv, process.env);
+		nconf.stores.mapenv.store = nconf.stores.env.store;
 		this._fileStores = [];
 		// reference to configuration settings
 		this._config = nconf;
-	}
-
-	//
-	//	 utility method to map (convert) the environment(upper case and underscores) style
-	//	 names to configuration (lower case and dashes) style names
-	//
-	mapSettings(store, settings) {
-		for (let key in settings) {
-			const value = settings[key];
-			key = key.toLowerCase();
-			key = key.replace(/_/g, '-');
-			store.set(key, value);
-		}
 	}
 
 	//

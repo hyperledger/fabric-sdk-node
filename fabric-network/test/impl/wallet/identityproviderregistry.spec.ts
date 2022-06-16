@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { IdentityProvider } from '../../../src/impl/wallet/identityprovider';
-import { newDefaultProviderRegistry, IdentityProviderRegistry } from '../../../src/impl/wallet/identityproviderregistry';
+import {IdentityProvider} from '../../../src/impl/wallet/identityprovider';
+import {newDefaultProviderRegistry, IdentityProviderRegistry} from '../../../src/impl/wallet/identityproviderregistry';
 
-import chai = require('chai');
+import * as chai from 'chai';
 const expect: Chai.ExpectStatic = chai.expect;
 
 describe('IdentityProviderRegistry', () => {
@@ -24,7 +24,7 @@ describe('IdentityProviderRegistry', () => {
 	});
 
 	it('Throws for unknown provider', () => {
-		const type: string = 'INVALID_PROVIDER_NAME';
+		const type = 'INVALID_PROVIDER_NAME';
 		const provider: IdentityProviderRegistry = new IdentityProviderRegistry();
 		expect(() => provider.getProvider(type))
 			.to.throw(type);

@@ -2,14 +2,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
-import { Constants } from '../constants';
+import * as Constants from '../constants';
 import * as AdminUtils from './utility/adminUtils';
 import * as BaseUtils from './utility/baseUtils';
-import { CommonConnectionProfileHelper } from './utility/commonConnectionProfileHelper';
+import {CommonConnectionProfileHelper} from './utility/commonConnectionProfileHelper';
 
-import * as Client from 'fabric-client';
+import Client = require('fabric-client');
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -29,7 +32,7 @@ export async function sdk_chaincode_install_for_org(ccType: 'golang' | 'car' | '
 	if (tls) {
 		const caName: string = ccp.getCertificateAuthoritiesForOrg(orgName)[0];
 		const fabricCAEndpoint: string = ccp.getCertificateAuthority(caName).url;
-		const tlsInfo: any = await AdminUtils.tlsEnroll(fabricCAEndpoint, caName);
+		const tlsInfo = await AdminUtils.tlsEnroll(fabricCAEndpoint, caName);
 		client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 	}
 
@@ -41,9 +44,13 @@ export async function sdk_chaincode_install_for_org(ccType: 'golang' | 'car' | '
 	let data: Buffer = fs.readFileSync(caRootsPath);
 	const pem: string = Buffer.from(data).toString();
 
+	const orderer = ccp.getOrderer(ordererName);
+	if (!orderer) {
+		BaseUtils.logAndThrow(`Orderer ${ordererName} not found.`);
+	}
 	channel.addOrderer(
 		client.newOrderer(
-			ccp.getOrderer(ordererName).url,
+			orderer.url,
 			{
 				pem,
 				'ssl-target-name-override': ccp.getOrderer(ordererName).grpcOptions['ssl-target-name-override'],
@@ -54,7 +61,7 @@ export async function sdk_chaincode_install_for_org(ccType: 'golang' | 'car' | '
 	const targets: Client.Peer[] = [];
 	const peers: string[] = ccp.getPeersForOrganization(orgName);
 	peers.forEach((peerName: string) => {
-		const peer: any = ccp.getPeer(peerName);
+		const peer = ccp.getPeer(peerName);
 		data = fs.readFileSync(peer.tlsCACerts.path);
 		targets.push(
 			client.newPeer(
@@ -87,17 +94,17 @@ export async function sdk_chaincode_install_for_org(ccType: 'golang' | 'car' | '
 
 		BaseUtils.logMsg(`Using deprecated API to install chaincode with ID ${chaincodeId}@${ccVersion} on organization ${orgName} peers [${ccp.getPeersForOrganization(orgName).toString()}] ...`);
 
-		const results: Client.ProposalResponseObject = await client.installChaincode(request as any);
+		const results: Client.ProposalResponseObject = await client.installChaincode(request);
 
 		const proposalResponses: Array<Client.ProposalResponse | Client.ProposalErrorResponse> = results[0];
 		if (!proposalResponses) {
 			throw new Error('No response returned from client.installChaincode() request when using deprecated API');
 		}
 
-		let proposalResponsesValid: boolean = true;
+		let proposalResponsesValid = true;
 		const errors: Client.ProposalErrorResponse[] = [];
 		for (const proposalResponse of proposalResponses) {
-			let valid: boolean = false;
+			let valid = false;
 			if ((proposalResponse as Client.ProposalResponse).response && (proposalResponse as Client.ProposalResponse).response.status === 200) {
 				valid = true;
 			} else {
@@ -132,7 +139,8 @@ export async function sdk_chaincode_install_for_org(ccType: 'golang' | 'car' | '
  * @param {Object} policy The endorsement policy object from the configuration file.
  * @return {Promise} The return promise.
  */
-export async function sdk_chaincode_instantiate(ccName: string, ccType: 'golang' | 'car' | 'java' | 'node', ccVersion: string, chaincodeId: string, args: string, upgrade: boolean, tls: boolean, ccp: CommonConnectionProfileHelper, orgName: string, channelName: string, policy: any): Promise<void> {
+
+export async function sdk_chaincode_instantiate(ccName: string, ccType: 'golang' | 'car' | 'java' | 'node', ccVersion: string, chaincodeId: string, args: string, upgrade: boolean, tls: boolean, ccp: CommonConnectionProfileHelper, orgName: string, channelName: string, policy: Client.EndorsementPolicy): Promise<void> {
 	if (!supportedLanguageTypes.includes(ccType)) {
 		throw new Error(`Unsupported test ccType: ${ccType}`);
 	}
@@ -153,7 +161,7 @@ export async function sdk_chaincode_instantiate(ccName: string, ccType: 'golang'
 	if (tls) {
 		const caName: string = ccp.getCertificateAuthoritiesForOrg(orgName)[0];
 		const fabricCAEndpoint: string = ccp.getCertificateAuthority(caName).url;
-		const tlsInfo: any = await AdminUtils.tlsEnroll(fabricCAEndpoint, caName);
+		const tlsInfo = await AdminUtils.tlsEnroll(fabricCAEndpoint, caName);
 		client.setTlsClientCertAndKey(tlsInfo.certificate, tlsInfo.key);
 	}
 
@@ -179,7 +187,7 @@ export async function sdk_chaincode_instantiate(ccName: string, ccType: 'golang'
 
 		const peers: string[] = ccp.getPeersForOrganization(orgName);
 		peers.forEach((peerName: string) => {
-			const thisPeer: any = ccp.getPeer(peerName);
+			const thisPeer = ccp.getPeer(peerName);
 			data = fs.readFileSync(thisPeer.tlsCACerts.path);
 			const peer: Client.Peer = client.newPeer(
 				thisPeer.url,
@@ -197,13 +205,14 @@ export async function sdk_chaincode_instantiate(ccName: string, ccType: 'golang'
 		await channel.initialize();
 
 		const transientMap: any = {test: 'transientValue'};
-		const proposalRequest: Client.ChaincodeInstantiateUpgradeRequest = buildChaincodeProposal(client, chaincodeId, ccVersion, ccType, args, upgrade, transientMap, policy);
+		const proposalRequest: Client.ChaincodeInstantiateUpgradeRequest = buildChaincodeProposal(client, chaincodeId,
+			ccVersion, ccType, args, upgrade, transientMap, policy);
 
 		let results: Client.ProposalResponseObject;
 		if (upgrade) {
-			results = await channel.sendUpgradeProposal(proposalRequest as any);
+			results = await channel.sendUpgradeProposal(proposalRequest);
 		} else {
-			results = await channel.sendInstantiateProposal(proposalRequest as any);
+			results = await channel.sendInstantiateProposal(proposalRequest);
 		}
 
 		const proposalResponses: Array<Client.ProposalResponse> = results[0] as Array<Client.ProposalResponse>;
@@ -212,7 +221,7 @@ export async function sdk_chaincode_instantiate(ccName: string, ccType: 'golang'
 		}
 		const proposal: Client.Proposal = results[1];
 		for (const proposalResponse of proposalResponses) {
-			if (!((proposalResponse as Client.ProposalResponse).response && (proposalResponse as Client.ProposalResponse).response.status === 200)) {
+			if (!((proposalResponse).response && (proposalResponse).response.status === 200)) {
 				throw new Error(`The proposal of type ${type} was bad: ${JSON.stringify(proposalResponse)}`);
 			}
 		}
@@ -225,15 +234,15 @@ export async function sdk_chaincode_instantiate(ccName: string, ccType: 'golang'
 		const deployId: string = proposalRequest.txId.getTransactionID();
 
 		const eventPromises: Promise<any>[] = [];
-		eventPromises.push(channel.sendTransaction(request as Client.TransactionRequest));
+		eventPromises.push(channel.sendTransaction(request));
 		eventHubs.forEach((eh: Client.ChannelEventHub) => {
-			const txPromise: Promise<any> = new Promise((resolve: any, reject: any): any => {
-				const handle: NodeJS.Timeout = setTimeout(reject, 300000);
+			const txPromise: Promise<void> = new Promise<void>((resolve, reject) => {
+				const handle: NodeJS.Timeout = setTimeout(() => reject(), 300000);
 
 				eh.registerTxEvent(deployId.toString(), (tx: any, code: string) => {
 					clearTimeout(handle);
 					if (code !== 'VALID') {
-						const msg: string = `The chaincode ${type} transaction was invalid, code = ${code}`;
+						const msg = `The chaincode ${type} transaction was invalid, code = ${code}`;
 						BaseUtils.logError(msg);
 						reject(msg);
 					} else {
@@ -241,7 +250,7 @@ export async function sdk_chaincode_instantiate(ccName: string, ccType: 'golang'
 					}
 				}, (err: Error) => {
 					clearTimeout(handle);
-					const msg: string = `There was a problem with the ${type} transaction event: ${JSON.stringify(err)}`;
+					const msg = `There was a problem with the ${type} transaction event: ${JSON.stringify(err)}`;
 					BaseUtils.logError(msg);
 					reject(msg);
 				}, {
@@ -257,14 +266,14 @@ export async function sdk_chaincode_instantiate(ccName: string, ccType: 'golang'
 			BaseUtils.logMsg(`Successfully performed ${type} transaction on chaincode with ID ${chaincodeId}@${ccVersion} using deprecated API`);
 			return await BaseUtils.sleep(Constants.INC_SHORT);
 		} else {
-			const msg: string = `Failed to order the ${type} transaction using deprecated API. Error code: ${eventResults[0].status}`;
+			const msg = `Failed to order the ${type} transaction using deprecated API. Error code: ${String(eventResults[0].status)}`;
 			BaseUtils.logError(msg);
 			throw new Error(msg);
 		}
 	} catch (err) {
-		const msg: string = `Failed to perform ${type} instantiation on chaincode with ID ${chaincodeId}@${ccVersion} using deprecated API`;
+		const msg = `Failed to perform ${type} instantiation on chaincode with ID ${chaincodeId}@${ccVersion} using deprecated API`;
 		BaseUtils.logError(msg, err);
-		throw new Error(`${msg} due to error: ${err.stack ? err.stack : err}`);
+		throw new Error(`${msg} due to error: ${String((err as Error).stack ? (err as Error).stack : err)}`);
 	}
 }
 

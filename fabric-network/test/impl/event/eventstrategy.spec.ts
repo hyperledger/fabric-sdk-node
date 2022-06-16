@@ -4,25 +4,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import chai = require('chai');
-import chaiAsPromised = require('chai-as-promised');
+import * as chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 chai.use(chaiAsPromised);
 const expect = chai.expect;
-import sinon = require('sinon');
+import * as sinon from 'sinon';
 
-import { Endorser } from 'fabric-common';
+import {Endorser} from 'fabric-common';
 
-import { TransactionEventStrategy } from '../../../src/impl/event/transactioneventstrategy';
-import { AllForTxStrategy } from '../../../src/impl/event/allfortxstrategy';
-import { AnyForTxStrategy } from '../../../src/impl/event/anyfortxstrategy';
-
-// tslint:disable: no-unused-expression
+import {AllForTxStrategy} from '../../../src/impl/event/allfortxstrategy';
+import {AnyForTxStrategy} from '../../../src/impl/event/anyfortxstrategy';
+import {Mutable} from '../../testutils';
 
 describe('Event Strategy Implementations', () => {
-	let peer1;
-	let peer2;
-	let stubSuccessFn;
-	let stubFailFn;
+	let peer1: Mutable<Endorser>;
+	let peer2: Mutable<Endorser>;
+	let stubSuccessFn:sinon.SinonStub;
+	let stubFailFn:sinon.SinonStub;
 
 	beforeEach(() => {
 		peer1 = sinon.createStubInstance(Endorser);
@@ -58,10 +56,10 @@ describe('Event Strategy Implementations', () => {
 	}));
 
 	describe('AllForTxStrategy event handling', () => {
-		let strategy;
+		let strategy:AllForTxStrategy;
 
 		beforeEach(() => {
-			strategy = new AllForTxStrategy([peer1, peer2]);
+			strategy  = new AllForTxStrategy([peer1, peer2]);
 		});
 
 		it('does not call callbacks on first event of two expected events', () => {
@@ -107,7 +105,7 @@ describe('Event Strategy Implementations', () => {
 	});
 
 	describe('AnyForTxStrategy event handling', () => {
-		let strategy;
+		let strategy:AnyForTxStrategy;
 
 		beforeEach(() => {
 			strategy = new AnyForTxStrategy([peer1, peer2]);

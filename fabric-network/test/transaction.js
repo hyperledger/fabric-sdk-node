@@ -21,14 +21,15 @@ const QueryProposal = require('fabric-common/lib/Query');
 const Commit = require('fabric-common/lib/Commit');
 const DiscoveryHandler = require('fabric-common/lib/DiscoveryHandler');
 const Committer = require('fabric-common/lib/Committer');
+const DiscoveryService = require('fabric-common/lib/DiscoveryService');
+const Discoverer = require('fabric-common/lib/Discoverer');
 
 const {Gateway} = require('fabric-network/lib/gateway');
 const {Transaction} = require('fabric-network/lib/transaction');
 const {TransactionEventHandler} = require('fabric-network/lib/impl/event/transactioneventhandler');
 const {QueryImpl: Query} = require('fabric-network/lib/impl/query/query');
 const {Wallets} = require('../lib/impl/wallet/wallets');
-const DiscoveryService = require('fabric-common/lib/DiscoveryService');
-const Discoverer = require('fabric-common/lib/Discoverer');
+const {newEndorsementResponse} = require('./testutils');
 
 describe('Transaction', () => {
 	const networkName = 'NETWORK_NAME';
@@ -37,36 +38,42 @@ describe('Transaction', () => {
 	const expectedResult = Buffer.from('42');
 
 	const peerInfo = {name: 'peer1', url: 'grpc://fakehost:9999'};
-	const validEnsorsementResponse = {
-		endorsement: {},
-		response: {
+	const validEnsorsementResponse = newEndorsementResponse(
+		{
+			payload: expectedResult,
 			status: 200,
-			payload: expectedResult
 		},
-		connection: peerInfo
-	};
-	const invalidEndorsementResponse = {
-		response: {
+		{
+			connection: peerInfo,
+		}
+	);
+	const invalidEndorsementResponse = newEndorsementResponse(
+		{
 			status: 500,
 			message: 'ERROR_RESPONSE_MESSAGE'
 		},
-		connection: peerInfo
-	};
-	const emptyStringEndorsementResponse = {
-		endorsement: {},
-		response: {
-			status: 200,
-			payload: Buffer.from('')
+		{
+			connection: peerInfo,
+			endorsement: undefined,
 		},
-		connection: peerInfo
-	};
-	const noPayloadEndorsementResponse = {
-		endorsement: {},
-		response: {
+	);
+	const emptyStringEndorsementResponse = newEndorsementResponse(
+		{
+			payload: Buffer.alloc(0),
 			status: 200,
 		},
-		connection: peerInfo
-	};
+		{
+			connection: peerInfo,
+		},
+	);
+	const noPayloadEndorsementResponse = newEndorsementResponse(
+		{
+			status: 200,
+		},
+		{
+			connection: peerInfo,
+		},
+	);
 
 	const endorsementError = Object.assign(new Error('GRPC_ERROR_MESSAGE'), {
 		connection: peerInfo
@@ -218,15 +225,15 @@ describe('Transaction', () => {
 			sinon.assert.calledWith(endorsement.build, sinon.match.any, sinon.match({args}));
 		});
 
-		it('returns null or undefined for no proposal response payload', async () => {
+		it('returns empty buffer for no proposal response payload', async () => {
 			endorsement.send.resolves(newProposalResponse([noPayloadEndorsementResponse]));
 			const result = await transaction.submit();
-			expect(result).to.not.exist;
+			expect(result).to.exist.and.to.have.length(0);
 		});
 
 		it('returns proposal response payload', async () => {
 			const result = await transaction.submit();
-			expect(result).to.equal(expectedResult);
+			expect(result.toString()).to.equal(expectedResult.toString());
 		});
 
 		it('throws if no peer responses are returned', () => {

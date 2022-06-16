@@ -2,29 +2,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
-
-import { Constants } from './constants';
+import * as Constants from './constants';
 import * as BaseUtils from './lib/utility/baseUtils';
-import { CommandRunner } from './lib/utility/commandRunner';
-import { StateStore } from './lib/utility/stateStore';
-// const os = require('os');
-import * as os from 'os';
-
-import { Given } from 'cucumber';
+import {CommandRunner} from './lib/utility/commandRunner';
+import {StateStore} from './lib/utility/stateStore';
+import {Given} from '@cucumber/cucumber';
 import * as path from 'path';
 
 const commandRunner: CommandRunner = CommandRunner.getInstance();
 const stateStore: StateStore = StateStore.getInstance();
 
-const nonTlsNetwork: string = '../../ts-fixtures/docker-compose/docker-compose.yaml';
-const tlsNetwork: string = '../../ts-fixtures/docker-compose/docker-compose-tls.yaml';
+const nonTlsNetwork = '../../ts-fixtures/docker-compose/docker-compose.yaml';
+const tlsNetwork = '../../ts-fixtures/docker-compose/docker-compose-tls.yaml';
 
-Given(/^I deploy a (.+?) Fabric network at (.+?) version/, { timeout: Constants.STEP_LONG as number }, async (type: string, version: string) => {
+Given(/^I deploy a (.+?) Fabric network at (.+?) version/, {timeout: Constants.STEP_LONG}, async (type: string, version: string) => {
 
 	BaseUtils.logMsg(` **** checking for a deployed fabric network of type ${type} version ${version}`);
 
-	const fabricState: any = stateStore.get(Constants.FABRIC_STATE);
+	const fabricState = stateStore.get(Constants.FABRIC_STATE) as {deployed:boolean, type:string, version:string};
 
 	if (fabricState) {
 		if (fabricState.deployed) {
@@ -72,14 +67,14 @@ Given(/^I deploy a (.+?) Fabric network at (.+?) version/, { timeout: Constants.
 	BaseUtils.logMsg(` **** Using the deployed fabric network of type ${type} version ${version}`);
 });
 
-Given(/^I forcibly take down all docker containers/, { timeout: Constants.STEP_LONG as number } , async () => {
+Given(/^I forcibly take down all docker containers/, {timeout: Constants.STEP_LONG}, async () => {
 	await commandRunner.runShellCommand(undefined, 'rm -rf ~/.hlf-checkpoint');
 	await commandRunner.runShellCommand(undefined, 'docker kill $(docker ps -aq); docker rm $(docker ps -aq)');
 	stateStore.set(Constants.FABRIC_STATE, {deployed: false, type: null});
 	return await BaseUtils.sleep(Constants.INC_MED);
 });
 
-Given(/^I delete all dev images/, { timeout: Constants.STEP_LONG as number }, async () => {
+Given(/^I delete all dev images/, {timeout: Constants.STEP_LONG}, async () => {
 	await commandRunner.runShellCommand(undefined, 'docker rmi $(docker images dev-* -q)');
 	return await BaseUtils.sleep(Constants.INC_SHORT);
 });

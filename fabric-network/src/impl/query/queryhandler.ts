@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Network } from '../../network';
-import { Query } from './query';
+import {Network} from '../../network';
+import {Query} from './query';
 
 export type QueryHandlerFactory = (network: Network) => QueryHandler;
 

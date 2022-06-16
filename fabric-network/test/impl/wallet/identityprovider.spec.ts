@@ -4,27 +4,30 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ImportMock } from 'ts-mock-imports';
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
+import {Utils} from 'fabric-common';
+import {ImportMock} from 'ts-mock-imports';
 import {
 	HsmX509Identity,
 	HsmX509Provider
 } from '../../../src/impl/wallet/hsmx509identity';
-import { Identity } from '../../../src/impl/wallet/identity';
-import { IdentityData } from '../../../src/impl/wallet/identitydata';
-import { IdentityProvider } from '../../../src/impl/wallet/identityprovider';
+import {Identity} from '../../../src/impl/wallet/identity';
+import {IdentityData} from '../../../src/impl/wallet/identitydata';
+import {IdentityProvider} from '../../../src/impl/wallet/identityprovider';
 import {
 	X509Identity,
-	X509Provider,
+	X509Provider
 } from '../../../src/impl/wallet/x509identity';
+import {Mutable} from '../../testutils';
 
-import { Utils } from 'fabric-common';
 const fakeCryptoSuite = {
 	getKeySize: () => {
 		return 256;
 	}
-}
+};
 ImportMock.mockFunction(Utils, 'newCryptoSuite', fakeCryptoSuite);
-import chai = require('chai');
+import * as chai from 'chai';
 const expect: Chai.ExpectStatic = chai.expect;
 
 interface ProviderData {
@@ -103,7 +106,7 @@ describe('IdentityProvider', () => {
 		const identity: Identity = providerData.identity;
 
 		Object.keys(providerData.dataVersions).forEach((dataVersion: string) => describe(dataVersion, () => {
-			let identityData: any;
+			let identityData: Mutable<IdentityData>;
 
 			beforeEach(() => {
 				identityData = providerData.dataVersions[dataVersion];
@@ -123,7 +126,7 @@ describe('IdentityProvider', () => {
 			it('Throws for JSON with unsupported version', () => {
 				identityData.version = Number.MAX_SAFE_INTEGER;
 				expect(() => provider.fromJson(identityData))
-					.to.throw('Unsupported identity version: ' + Number.MAX_SAFE_INTEGER);
+					.to.throw(`Unsupported identity version: ${Number.MAX_SAFE_INTEGER}`);
 			});
 
 			it('Throws for JSON with incorrect type', () => {
@@ -149,7 +152,7 @@ describe('IdentityProvider', () => {
 
 			it('getUserContext fails with message containing missing identity credentials', async () => {
 				try {
-					await provider.getUserContext({} as any, 'dummy');
+					await provider.getUserContext({} as unknown as Identity, 'dummy');
 				} catch (error) {
 					expect(error.message).to.contain('X.509 identity is missing the credential data');
 				}

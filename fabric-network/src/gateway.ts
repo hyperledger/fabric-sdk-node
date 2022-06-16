@@ -4,20 +4,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Network, NetworkImpl } from './network';
+import {Network, NetworkImpl} from './network';
 import * as NetworkConfig from './impl/ccp/networkconfig';
-import { Identity } from './impl/wallet/identity';
-import { Wallet } from './impl/wallet/wallet';
-import { IdentityProvider } from './impl/wallet/identityprovider';
-import { TxEventHandlerFactory } from './impl/event/transactioneventhandler';
-import { QueryHandlerFactory } from './impl/query/queryhandler';
-import { Client, IdentityContext } from 'fabric-common';
+import {Identity} from './impl/wallet/identity';
+import {Wallet} from './impl/wallet/wallet';
+import {IdentityProvider} from './impl/wallet/identityprovider';
+import {TxEventHandlerFactory} from './impl/event/transactioneventhandler';
+import {QueryHandlerFactory} from './impl/query/queryhandler';
+import {Client, IdentityContext} from 'fabric-common';
 import * as EventStrategies from './impl/event/defaulteventhandlerstrategies';
 import * as QueryStrategies from './impl/query/defaultqueryhandlerstrategies';
 import * as IdentityProviderRegistry from './impl/wallet/identityproviderregistry';
 
 import * as Logger from './logger';
-import { X509Identity } from './impl/wallet/x509identity';
+import {X509Identity} from './impl/wallet/x509identity';
 const logger = Logger.getLogger('Gateway');
 
 export interface GatewayOptions {
@@ -32,7 +32,8 @@ export interface GatewayOptions {
 	discovery?: DiscoveryOptions;
 	eventHandlerOptions?: DefaultEventHandlerOptions;
 	queryHandlerOptions?: DefaultQueryHandlerOptions;
-	'connection-options'?: any;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	'connection-options'?: Record<string, unknown>;
 }
 
 export interface ConnectedGatewayOptions extends GatewayOptions {
@@ -253,7 +254,7 @@ export class Gateway {
 	 *     wallet: wallet
 	 * });
 	 */
-	async connect(config: Client | object, options: GatewayOptions) {
+	async connect(config: Client | Record<string, unknown>, options: GatewayOptions): Promise<void> {
 		const method = 'connect';
 		logger.debug('%s - start', method);
 
@@ -292,6 +293,7 @@ export class Gateway {
 		if (typeof options.identity === 'string') {
 			logger.debug('%s - setting identity from wallet', method);
 			this.identity = await this._getWalletIdentity(options.identity);
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			const provider = options.wallet!.getProviderRegistry().getProvider(this.identity.type);
 			const user = await provider.getUserContext(this.identity, options.identity);
 			this.identityContext = this.client.newIdentityContext(user);
@@ -334,7 +336,7 @@ export class Gateway {
 		// Load connection profile after client configuration has been completed
 		if (loadCcp) {
 			logger.debug('%s - NetworkConfig loading client from ccp', method);
-			await NetworkConfig.loadFromConfig(this.client, config);
+			await NetworkConfig.loadFromConfig(this.client, config as Record<string, unknown>);
 		}
 
 		logger.debug('%s - end', method);

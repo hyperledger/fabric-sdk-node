@@ -15,13 +15,12 @@
     "url": "https://github.com/hyperledger/fabric-sdk-node"
   },
   "engines": {
-    "node": "^10.15.3 || ^12.13.1 || ^14.13.1",
-    "npm": "^6.4.1"
+    "node": ">=10.13.0"
   },
   "types": "./types/index.d.ts",
   "dependencies": {
     "fabric-common": "file:../fabric-common",
-    "jsrsasign": "^8.0.24",
+    "jsrsasign": "^10.4.1",
     "url": "^0.11.0",
     "winston": "^2.4.5"
   },
