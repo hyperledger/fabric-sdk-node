@@ -21,8 +21,8 @@ This project publishes the following npm packages:
 
 ## Build and Test
 To build and test, the following pre-requisites must be installed first:
-* Node.js, version 10 is supported from 10.15.3 and higher
-* Node.js, version 12 is supported from 12.13.1 and higher
+* Node.js, version 14 is supported from 14.15.0 and higher
+* Node.js, version 16 is supported
 * npm tool version 6 or higher
 * docker (only required for running integration tests, see below)
 
