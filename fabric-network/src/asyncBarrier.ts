@@ -5,8 +5,9 @@
  */
 
 import {EventEmitter} from 'events';
+import {v4 as uuid} from 'uuid';
 
-const eventName = 'event';
+const eventName: string = uuid();
 
 export class AsyncBarrier {
 	readonly #emitter = new EventEmitter();

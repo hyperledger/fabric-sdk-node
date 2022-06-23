@@ -52,6 +52,7 @@
     "@types/rimraf": "^3.0.0",
     "@types/sinon": "^10.0.0",
     "@types/tape": "^4.2.33",
+    "@types/uuid": "^8.3.4",
     "@typescript-eslint/eslint-plugin": "~5.22.0",
     "@typescript-eslint/parser": "^5.3.0",
     "bn.js": "^5.2.0",
@@ -83,6 +84,7 @@
     "ts-mock-imports": "^1.3.4",
     "ts-node": "^10.5.0",
     "typescript": "~4.6.4",
+    "uuid": "^8.3.2",
     "winston": "^2.4.5"
   },
   "licenses": [
