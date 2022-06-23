@@ -12,21 +12,23 @@ export class AsyncBarrier {
 	readonly #emitter = new EventEmitter();
 	#result: Error | null | undefined; // undefined before completion, then null for success and Error for failure
 
-	async wait(): Promise<void> {
-		if (this.#result === null) {
-			return;
-		}
-		if (this.#result !== undefined) {
-			throw this.#result;
-		}
+	wait(): Promise<void> {
+		return new Promise<void>((resolve, reject) => {
+			this.#emitter.on(eventName, (value: Error | null) => {
+				if (value instanceof Error) {
+					reject(value);
+				} else {
+					resolve();
+				}
+			});
 
-		await new Promise<void>((resolve, reject) => this.#emitter.on(eventName, () => {
-			if (this.#result instanceof Error) {
-				reject(this.#result);
-			} else {
-				resolve();
+			if (this.#result === null) {
+				return resolve();
 			}
-		}));
+			if (this.#result !== undefined) {
+				return reject(this.#result);
+			}
+		});
 	}
 
 	signal(): void {
@@ -34,7 +36,7 @@ export class AsyncBarrier {
 			return;
 		}
 		this.#result = null;
-		this.#emitter.emit(eventName);
+		this.#emitter.emit(eventName, this.#result);
 	}
 
 	error(error: Error): void {
@@ -42,7 +44,7 @@ export class AsyncBarrier {
 			return;
 		}
 		this.#result = error;
-		this.#emitter.emit(eventName);
+		this.#emitter.emit(eventName, this.#result);
 	}
 
 }
