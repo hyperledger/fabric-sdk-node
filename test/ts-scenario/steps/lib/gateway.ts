@@ -444,6 +444,7 @@ export async function performGatewayTransaction(gatewayName: string, contractNam
 				}
 			}
 			const multiResults: any[] = await Promise.all(promises);
+			console.log('Promises--->', promises);
 			if (multiResults && multiResults.length > 0) {
 				for (const multiResult of multiResults) {
 					resultBuffer = multiResult;
