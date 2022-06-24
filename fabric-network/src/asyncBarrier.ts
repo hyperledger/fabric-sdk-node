@@ -8,16 +8,16 @@ import {EventEmitter} from 'events';
 import {v4 as uuid} from 'uuid';
 import * as Logger from './logger';
 const logger = Logger.getLogger('Async Barrier');
-const eventName: string = uuid();
+// EventEmitter.defaultMaxListeners = 100
 
 export class AsyncBarrier {
 	readonly #emitter = new EventEmitter();
 	#result: Error | null | undefined; // undefined before completion, then null for success and Error for failure
-
+	eventName: string = uuid();
 	wait(): Promise<void> {
 		logger.debug('wait called ************');
 		return new Promise<void>((resolve, reject) => {
-			this.#emitter.once(eventName, (value: Error | null) => {
+			this.#emitter.once(this.eventName, (value: Error | null) => {
 				logger.debug('event received-----------');
 				if (value instanceof Error) {
 					reject(value);
@@ -47,7 +47,7 @@ export class AsyncBarrier {
 		this.#result = null;
 		logger.debug('To emit **************');
 
-		this.#emitter.emit(eventName, this.#result);
+		this.#emitter.emit(this.eventName, this.#result);
 	}
 
 	error(error: Error): void {
@@ -58,7 +58,7 @@ export class AsyncBarrier {
 		this.#result = error;
 		logger.debug('To emit error **************');
 
-		this.#emitter.emit(eventName, this.#result);
+		this.#emitter.emit(this.eventName, this.#result);
 	}
 
 }
