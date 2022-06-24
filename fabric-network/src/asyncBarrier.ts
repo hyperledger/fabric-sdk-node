@@ -8,7 +8,7 @@ import {EventEmitter} from 'events';
 import {v4 as uuid} from 'uuid';
 import * as Logger from './logger';
 const logger = Logger.getLogger('Async Barrier');
-// EventEmitter.defaultMaxListeners = 100
+EventEmitter.defaultMaxListeners = 100;
 
 export class AsyncBarrier {
 	readonly #emitter = new EventEmitter();
@@ -45,7 +45,7 @@ export class AsyncBarrier {
 			return;
 		}
 		this.#result = null;
-		logger.debug('To emit **************');
+		logger.debug('To emit **************', this.#result);
 
 		this.#emitter.emit(this.eventName, this.#result);
 	}
