@@ -443,8 +443,10 @@ export async function performGatewayTransaction(gatewayName: string, contractNam
 					promises.push(contract.evaluateTransaction(func, ...funcArgs));
 				}
 			}
+			BaseUtils.logMsg('promises--->', promises);
 			const multiResults: any[] = await Promise.all(promises);
 			if (multiResults && multiResults.length > 0) {
+				BaseUtils.logMsg('started processing promises--->');
 				for (const multiResult of multiResults) {
 					resultBuffer = multiResult;
 				}
