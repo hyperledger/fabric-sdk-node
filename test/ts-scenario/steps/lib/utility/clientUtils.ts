@@ -70,6 +70,7 @@ interface ListenerState {
 		block?: string;
 		transaction?: string;
 	},
+	completePromise?: Promise<void>;
 }
 
 function assertNoErrors(endorsementResults: ProposalResponse): void {
@@ -710,7 +711,7 @@ export async function startEventService(
 			buildOptions.startBlock = Number.parseInt(startBlock, 10);
 		}
 		if (endBlock.localeCompare('END') === 0) {
-			// do not add start block
+			// do not add end block
 		} else {
 			buildOptions.endBlock = Number.parseInt(endBlock, 10);
 		}
@@ -762,7 +763,7 @@ export async function startEventService(
 export function registerEventListener(
 	eventServiceName: string, clientName: string, listenerName: string, type: string,
 	startBlock: string, endBlock: string,
-	chaincodeEventName: string, chaincodeName: string): void {
+	chaincodeEventName: string, chaincodeName: string, count?:number): void {
 
 	const clientObject = retrieveClientObject(clientName);
 	const eventServiceObject = clientObject.eventServices?.get(eventServiceName);
@@ -820,6 +821,10 @@ export function registerEventListener(
 			);
 		} else if (type === 'chaincode') {
 			BaseUtils.logMsg(`Registering a chaincode event with chaincodeName ${chaincodeName} chaincodeEventName ${chaincodeEventName}`);
+
+			let resolve: () => void;
+			const completePromise = new Promise<void>((_resolve) => resolve = _resolve);
+
 			listenerObject.eventListener = eventService.registerChaincodeListener(
 				chaincodeName,
 				chaincodeEventName,
@@ -837,15 +842,24 @@ export function registerEventListener(
 
 					if (event?.chaincodeEvents) {
 						for (const chaincodeEvent of event.chaincodeEvents) {
+							if (count !== undefined) {
+								count--;
+							}
 							const results: any = {};
 							results[chaincodeEvent.eventName] = chaincodeEvent.payload ? chaincodeEvent.payload.toString() : '';
 							listenerObject.results = results;
 							BaseUtils.logMsg(`Store chaincode event listener ${listenerName} results of ${JSON.stringify(results)}`);
+							if (count === 0) {
+								resolve();
+							}
 						}
 					}
 				},
 				listenerOptions
 			);
+
+			listenerObject.completePromise = completePromise;
+
 		} else if (type === 'transaction') {
 			BaseUtils.logMsg('Registering a transaction event for all transactions');
 
@@ -900,6 +914,23 @@ export function checkEventListenerResults(
 		} else {
 			BaseUtils.logAndThrow(`No results for eventListener ${listenerName}`);
 		}
+	} else {
+		BaseUtils.logAndThrow(`Listener object not found ${listenerName}`);
+	}
+}
+
+export async function waitForEvent(
+	eventServiceName: string, clientName: string, listenerName: string): Promise<void> {
+	const clientObject: any = retrieveClientObject(clientName);
+	const eventServiceObject: any = clientObject.eventServices.get(eventServiceName);
+	const listenerObject: any = eventServiceObject.eventListeners.get(listenerName);
+
+	if (listenerObject) {
+		if (listenerObject.error) {
+			BaseUtils.logMsg(`Received an error for ${listenerName} of ${util.inspect(listenerObject.error)}`);
+			throw listenerObject.error;
+		}
+		await listenerObject.completePromise;
 	} else {
 		BaseUtils.logAndThrow(`Listener object not found ${listenerName}`);
 	}

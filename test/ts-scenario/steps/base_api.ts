@@ -84,9 +84,19 @@ Then(/^I regisister a chaincode listener named (.+?) with (.+?) for (.+?) event 
 		ClientHelper.registerEventListener(eventServiceName, clientName, listenerName, 'chaincode', '', '', eventName, contractName);
 	});
 
+Then(/^I regisister a chaincode listener named (.+?) with (.+?) with a maximum event count of ([0-9]+) as client (.+?) for (.+?) event on contract (.+?)$/, {timeout: Constants.INC_SHORT},
+	(listenerName: string, eventServiceName: string, eventCount:number, clientName: string, eventName: string, contractName: string,) => {
+		ClientHelper.registerEventListener(eventServiceName, clientName, listenerName, 'chaincode', '', '', eventName, contractName, eventCount);
+	});
+
 Then(/^I regisister a transaction listener named (.+?) with (.+?) for all transactions as client (.+?)$/, {timeout: Constants.INC_SHORT},
 	(listenerName: string, eventServiceName: string, clientName: string) => {
 		ClientHelper.registerEventListener(eventServiceName, clientName, listenerName, 'transaction', '', '', '', '');
+	});
+
+Then(/^I wait for events from chaincode listener named (.+?) with (.+?) as client (.+?)$/, {timeout: Constants.INC_SHORT},
+	async(listenerName: string, eventServiceName: string, clientName: string) => {
+		await ClientHelper.waitForEvent(eventServiceName, clientName, listenerName);
 	});
 
 Then(/^the event listener (.+?) of (.+?) has results matching (.+?) as client (.+?)$/, {timeout: Constants.INC_SHORT},
