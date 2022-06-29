@@ -12,6 +12,7 @@ import {CommitError, CommitEvent, CommitListener} from '../../events';
 import {TransactionError} from '../../errors/transactionerror';
 import * as Logger from '../../logger';
 import {DefaultEventHandlerOptions} from '../../gateway';
+
 const logger = Logger.getLogger('TransactionEventHandler');
 
 export interface TxEventHandler {
@@ -42,13 +43,12 @@ export class TransactionEventHandler implements TxEventHandler {
 
 	private readonly options: DefaultEventHandlerOptions;
 	private readonly peers: Endorser[];
-	private readonly notificationPromise: Promise<void>;
+	private readonly notificationPromise: Promise<Error|undefined>;
 	private readonly unrespondedPeers: Set<Endorser>;
 	private readonly listener: CommitListener = this.eventCallback.bind(this);
 	private readonly strategySuccessCallback = this.strategySuccess.bind(this);
 	private readonly strategyFailCallback = this.strategyFail.bind(this);
-	private resolveNotificationPromise!: () => void;
-	private rejectNotificationPromise!: (reason: Error) => void;
+	private resolveNotificationPromise!: (err?: Error) => void;
 	private timeoutHandler?: NodeJS.Timeout;
 
 	/**
@@ -75,9 +75,8 @@ export class TransactionEventHandler implements TxEventHandler {
 		this.peers = strategy.getPeers();
 		this.unrespondedPeers = new Set(this.peers);
 
-		this.notificationPromise = new Promise((resolve, reject) => {
+		this.notificationPromise = new Promise((resolve) => {
 			this.resolveNotificationPromise = resolve;
-			this.rejectNotificationPromise = reject;
 		});
 	}
 
@@ -104,7 +103,10 @@ export class TransactionEventHandler implements TxEventHandler {
 	 */
 	async waitForEvents() :Promise<void> {
 		logger.debug('waitForEvents start');
-		await this.notificationPromise;
+		const err = await this.notificationPromise;
+		if (err) {
+			throw err;
+		}
 		logger.debug('waitForEvents end');
 	}
 
@@ -195,6 +197,6 @@ export class TransactionEventHandler implements TxEventHandler {
 		logger.warn('strategyFail: commit failure for transaction %j: %s', this.transactionId, error);
 
 		this.cancelListening();
-		this.rejectNotificationPromise(error);
+		this.resolveNotificationPromise(error);
 	}
 }
