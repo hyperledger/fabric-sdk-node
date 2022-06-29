@@ -13,9 +13,6 @@ import {
 	TxEventHandlerFactory
 } from 'fabric-network';
 import {Endorser} from 'fabric-common';
-import {EventEmitter} from 'events';
-
-const eventName = 'event';
 
 // --- Plug-in event handler sample where the user takes full responsibility for event handling
 
@@ -29,7 +26,8 @@ const eventName = 'event';
 class SampleTransactionEventHandler implements TxEventHandler {
 	private readonly network: Network;
 	private readonly transactionId: string;
-	private readonly asyncBarrier: AsyncBarrier;
+	private readonly notificationPromise: Promise<Error|undefined>;
+	private resolveNotificationPromise!: (err?: Error) => void;
 	private timeoutHandler?: NodeJS.Timeout;
 	private readonly listener: CommitListener = this.eventCallback.bind(this);
 	private readonly peers: Endorser[];
@@ -49,7 +47,9 @@ class SampleTransactionEventHandler implements TxEventHandler {
 		this.peers = peers;
 		this.unrespondedPeers = new Set(peers);
 
-		this.asyncBarrier = new AsyncBarrier();
+		this.notificationPromise = new Promise((resolve, reject) => {
+			this.resolveNotificationPromise = resolve;
+		});
 	}
 
 	/**
@@ -65,7 +65,10 @@ class SampleTransactionEventHandler implements TxEventHandler {
 	 * @throws {Error} if the transaction commit fails or is not successful within the timeout period.
 	 */
 	async waitForEvents() {
-		await this.asyncBarrier.wait();
+		const err = await this.notificationPromise;
+		if (err) {
+			throw err;
+		}
 	}
 
 	/**
@@ -101,12 +104,12 @@ class SampleTransactionEventHandler implements TxEventHandler {
 
 	private fail(error: Error) {
 		this.cancelListening();
-		this.asyncBarrier.error(error);
+		this.resolveNotificationPromise(error);
 	}
 
 	private success() {
 		this.cancelListening();
-		this.asyncBarrier.signal();
+		this.resolveNotificationPromise();
 	}
 }
 
@@ -121,41 +124,3 @@ export const createTransactionEventHandler: TxEventHandlerFactory = (transaction
 	const peers = network.getChannel().getEndorsers(mspId);
 	return new SampleTransactionEventHandler(transactionId, network, peers);
 };
-
-export class AsyncBarrier {
-	readonly #emitter = new EventEmitter();
-	#result: Error | null | undefined; // undefined before completion, then null for success and Error for failure
-
-	async wait(): Promise<void> {
-		if (this.#result === null) {
-			return;
-		}
-		if (this.#result !== undefined) {
-			throw this.#result;
-		}
-
-		await new Promise<void>((resolve, reject) => this.#emitter.on(eventName, () => {
-			if (this.#result instanceof Error) {
-				reject(this.#result);
-			} else {
-				resolve();
-			}
-		}));
-	}
-
-	signal(): void {
-		if (this.#result !== undefined) {
-			return;
-		}
-		this.#emitter.emit(eventName);
-	}
-
-	error(error: Error): void {
-		if (this.#result !== undefined) {
-			return;
-		}
-		this.#result = error;
-		this.#emitter.emit(eventName);
-	}
-
-}

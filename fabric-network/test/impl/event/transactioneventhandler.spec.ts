@@ -277,21 +277,21 @@ describe('TransactionEventHandler', () => {
 			await expect(promise).to.be.rejectedWith(/timeout/i);
 		});
 
-		it('fails on short timeout if timeout set', async () => {
-			let unhandledRejectionErr:unknown;
-			process.on('unhandledRejection', (err) => {
-				unhandledRejectionErr = err;
-			});
-
-			options.eventHandlerOptions = {commitTimeout: 0.01};
-			handler = new TransactionEventHandler(transactionId, network, strategy);
-
-			await handler.startListening();
-			await clock.runAllAsync();
-			const promise = handler.waitForEvents();
-
-			await expect(promise).to.be.rejectedWith(/timeout/i);
-			expect(unhandledRejectionErr).to.be.undefined;
+		it('no unhandled rejection if timeout before waitForEvents() called', async () => {
+			let unhandledRejectionErr: unknown;
+			const listener = (err:unknown) => unhandledRejectionErr = err;
+			process.on('unhandledRejection', listener);
+			try {
+				options.eventHandlerOptions = {commitTimeout: 0.01};
+				handler = new TransactionEventHandler(transactionId, network, strategy);
+				await handler.startListening();
+				await clock.runAllAsync();
+				const promise = handler.waitForEvents();
+				await expect(promise).to.be.rejectedWith(/timeout/i);
+				expect(unhandledRejectionErr).to.be.undefined;
+			} finally {
+				process.removeListener('unhandledRejection', listener);
+			}
 		});
 
 		it('does not timeout if timeout set to zero', async () => {
