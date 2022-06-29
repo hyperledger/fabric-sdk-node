@@ -52,7 +52,7 @@ When(/^I use the discovery gateway named (.+?) to (.+?) a transaction with args 
 	return await Gateway.performGatewayTransaction(gatewayName, ccName, channelName, collectionName, txnArgs, txnType);
 });
 
-When(/^I use the discovery gateway named (.+?) to (.+?) a transaction a (.+?) times with args (.+?) for contract (.+?) instantiated on channel (.+?)$/, {timeout: Constants.STEP_LONG}, async (gatewayName: string, txnType: string, txnCount: number, txnArgs: string, ccName: string, channelName: string) => {
+When(/^I use the discovery gateway named (.+?) to (.+?) a transaction a (.+?) times with args (.+?) for contract (.+?) instantiated on channel (.+?)$/, {timeout: Constants.STEP_MED}, async (gatewayName: string, txnType: string, txnCount: number, txnArgs: string, ccName: string, channelName: string) => {
 	return await Gateway.performGatewayTransaction(gatewayName, ccName, channelName, '', txnArgs, txnType, undefined, undefined, txnCount);
 });
 

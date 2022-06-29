@@ -26,7 +26,7 @@ import {Endorser} from 'fabric-common';
 class SampleTransactionEventHandler implements TxEventHandler {
 	private readonly network: Network;
 	private readonly transactionId: string;
-	private readonly notificationPromise: Promise<Error|undefined>;
+	private readonly notificationPromise: Promise<Error | undefined>;
 	private resolveNotificationPromise!: (err?: Error) => void;
 	private timeoutHandler?: NodeJS.Timeout;
 	private readonly listener: CommitListener = this.eventCallback.bind(this);
@@ -47,7 +47,7 @@ class SampleTransactionEventHandler implements TxEventHandler {
 		this.peers = peers;
 		this.unrespondedPeers = new Set(peers);
 
-		this.notificationPromise = new Promise((resolve, reject) => {
+		this.notificationPromise = new Promise((resolve) => {
 			this.resolveNotificationPromise = resolve;
 		});
 	}

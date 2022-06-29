@@ -93,7 +93,6 @@ export class TransactionEventHandler implements TxEventHandler {
 		} else {
 			logger.error('%s - No event services', method);
 			// shutdown the monitoring
-			logger.debug('async to signal ------------>');
 			this.resolveNotificationPromise();
 		}
 	}
@@ -103,7 +102,7 @@ export class TransactionEventHandler implements TxEventHandler {
 	 * @throws {Error} if the transaction commit is not successful within the timeout period.
 	 */
 	async waitForEvents() :Promise<void> {
-		logger.debug('waitForEvents start---------->');
+		logger.debug('waitForEvents start');
 		const err = await this.notificationPromise;
 		if (err) {
 			throw err;
@@ -186,7 +185,6 @@ export class TransactionEventHandler implements TxEventHandler {
 		logger.debug('strategySuccess: commit success for transaction %j', this.transactionId);
 
 		this.cancelListening();
-		logger.debug('async barrier signal success-------->');
 		this.resolveNotificationPromise();
 	}
 
