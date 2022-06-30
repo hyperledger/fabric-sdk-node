@@ -12,9 +12,9 @@ const testUtils = require('./TestUtils');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const sinonChai = require('sinon-chai');
-const tmp = require('tmp');
 const fs = require('fs-extra');
 const winston = require('winston');
+const os = require('os');
 
 const should = chai.should();
 chai.use(chaiAsPromised);
@@ -210,13 +210,15 @@ describe('Utils', () => {
 		describe('log to a file', async () => {
 			let debugFilePath;
 			let errorFilePath;
-			let dir;
+			let tmpDir;
 
 			before(async () => {
 				// create a temp file
-				dir = tmp.dirSync();
-				debugFilePath  = path.join(dir.name, 'debug.log');
-				errorFilePath = path.join(dir.name, 'error.log');
+				const prefix = `${os.tmpdir()}${path.sep}`;
+				tmpDir = await fs.promises.mkdtemp(prefix);
+
+				debugFilePath  = path.join(tmpDir, 'debug.log');
+				errorFilePath = path.join(tmpDir, 'error.log');
 				await fs.ensureFile(debugFilePath);
 				await fs.ensureFile(errorFilePath);
 			});
@@ -228,9 +230,9 @@ describe('Utils', () => {
 				const logger = Utils.getLogger(loggerName);
 				logger.transports.should.be.an.instanceOf(Object);
 				logger.transports.debugfile.should.be.an.instanceOf(winston.transports.File);
-				logger.transports.debugfile.dirname.should.equal(dir.name);
+				logger.transports.debugfile.dirname.should.equal(tmpDir);
 				logger.transports.errorfile.should.be.an.instanceOf(winston.transports.File);
-				logger.transports.errorfile.dirname.should.equal(dir.name);
+				logger.transports.errorfile.dirname.should.equal(tmpDir);
 
 				// Log to the file
 				logger.error('Test logger - error');
@@ -261,7 +263,7 @@ describe('Utils', () => {
 
 			after(async () => {
 				// Remove tmp dir
-				await fs.remove(dir.name);
+				await fs.remove(tmpDir);
 			});
 
 		});
