@@ -11,7 +11,7 @@ import * as os from 'os';
 import * as path from 'path';
 import * as util from 'util';
 
-import _rimraf = require('rimraf');
+import _rimraf from 'rimraf';
 const rimraf = util.promisify(_rimraf);
 
 /**
@@ -89,7 +89,7 @@ export function newEndorsementResponse(response: protos.IResponse, properties: P
 		},
 		payload: Buffer.from(payload),
 		response: {
-			message: response.message,
+			message: response.message ?? '',
 			payload: Buffer.alloc(0),
 			status: response.status ?? 200,
 		},
