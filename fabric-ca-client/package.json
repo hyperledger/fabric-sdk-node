@@ -19,7 +19,7 @@
   },
   "types": "./types/index.d.ts",
   "dependencies": {
-    "jsrsasign": "^10.4.1",
+    "jsrsasign": "^10.5.25",
     "grpc": "1.24.11",
     "lodash.clone": "4.5.0",
     "url": "^0.11.0",
