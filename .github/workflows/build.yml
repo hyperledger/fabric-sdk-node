@@ -1,0 +1,38 @@
+name: Build
+
+on:
+  # push:
+  #   branches: ["release-1.4"]
+  pull_request:
+    branches: ["release-1.4"]
+
+env:
+  SOFTHSM2_CONF: ${{ github.workspace }}/test/fixtures/hsm/softhsm2.conf
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [10.x, 12.x, 14.x, 16.x]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install SoftHSM
+        run: |
+          sudo apt-get install softhsm2
+          softhsm2-util --init-token --slot 0 --label "My token 1" --pin 98765432 --so-pin 98765432
+
+      - name: npm install
+        run: npm install
+
+      - name: Run tests
+        run: npm test
