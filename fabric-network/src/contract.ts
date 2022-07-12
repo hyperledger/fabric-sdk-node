@@ -12,8 +12,9 @@ const logger = Logger.getLogger('Contract');
 import * as util from 'util';
 import {NetworkImpl} from './network';
 import {ContractListener, ListenerOptions} from './events';
-import {DiscoveryService, DiscoveryHandler} from 'fabric-common';
+import {DiscoveryService, DiscoveryHandler, Discoverer} from 'fabric-common';
 import {Gateway} from './gateway';
+import {withTimeout} from './impl/gatewayutils';
 
 /**
  * Ensure transaction name is a non-empty string.
@@ -61,9 +62,6 @@ export interface Contract {
 	addDiscoveryInterest(interest: DiscoveryInterest): Contract;
 	resetDiscoveryInterests(): Contract;
 }
-
-
-type DiscoveryResultsCallback = (hasResults: boolean) => void;
 
 /**
  * <p>Represents a smart contract (chaincode) instance in a network.
@@ -191,10 +189,9 @@ export class ContractImpl {
 	readonly namespace: string;
 	readonly network: NetworkImpl;
 	readonly gateway: Gateway;
-	private discoveryService?: DiscoveryService;
+	private discoveryService?: Promise<DiscoveryService>;
 	private readonly contractListeners: Map<ContractListener, ListenerSession> = new Map();
 	private discoveryInterests: DiscoveryInterest[];
-	private discoveryResultsListeners: DiscoveryResultsCallback[] = new Array<DiscoveryResultsCallback>();
 
 	constructor(network: NetworkImpl, chaincodeId: string, namespace: string) {
 		const method = `constructor[${namespace}]`;
@@ -277,93 +274,43 @@ export class ContractImpl {
 		// check if we have initialized this contract's discovery
 		if (!this.discoveryService) {
 			logger.debug('%s - setting up contract discovery', method);
+			this.discoveryService = this.newDiscoveryService(this.network.discoveryService.targets);
+		}
 
-			this.discoveryService = this.network.getChannel().newDiscoveryService(this.chaincodeId);
-
-			const targets = this.network.discoveryService.targets;
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			const idx = this.gateway.identityContext!;
-			const asLocalhost = this.gateway.getOptions().discovery.asLocalhost;
-
-			logger.debug('%s - using discovery interest %j', method, this.discoveryInterests);
-			this.discoveryService.build(idx, {interest: this.discoveryInterests});
-			await this.discoveryService.sign(idx);
-
-			// go get the endorsement plan from the peer's discovery service
-			// to be ready to be used by the transaction's submit
-			await this.discoveryService.send({asLocalhost, targets});
-			logger.debug('%s - endorsement plan retrieved', method);
-
-			const hasDiscoveryResults = this.discoveryService.hasDiscoveryResults();
-			this.notifyDiscoveryResultsListeners(hasDiscoveryResults);
-			logger.debug('%s - completed discovery results as first one', method);
-		} else {
-			if (!this.discoveryService.hasDiscoveryResults()) {
-				// maybe the discovery service was created by another submit of
-				// this same contract, make sure it has completed getting the
-				// discovery results, we do not want this submission to also
-				// get the discovery results, just wait for first one to complete.
-				await this.waitDiscoveryResults();
-			}
+		const service = await withTimeout(this.discoveryService, 30000, 'Timed out waiting for discovery results');
+		if (!service.hasDiscoveryResults()) {
+			const error = new Error('Failed to retrieve discovery results');
+			logger.error('%s - %s', method, error);
+			throw error;
 		}
 
 		// The handler will have access to the endorsement plan fetched
 		// by the parent DiscoveryService instance.
 		logger.debug('%s - returning a new discovery service handler', method);
-		return this.discoveryService.newHandler();
+		return service.newHandler();
 	}
 
-	/*
-	 * Internal method to setup a Promise that will wait to be notified when
-	 * the discovery service has retreived the discovery results.
-	 */
-	waitDiscoveryResults(): Promise<void> {
-		const method = `checkDiscoveryResults[${this.chaincodeId}]`;
+	private async newDiscoveryService(targets: Discoverer[]): Promise<DiscoveryService> {
+		const method = `newDiscoveryService[${this.chaincodeId}]`;
 		logger.debug('%s - start', method);
 
-		return new Promise<void>((resolve, reject) => {
-			const handle: NodeJS.Timeout = setTimeout(() => {
-				reject(new Error('Timed out waiting for discovery results'));
-			}, 30000);
+		const result = this.network.getChannel().newDiscoveryService(this.chaincodeId);
 
-			this.registerDiscoveryResultsListener(
-				(hasDiscoveryResults: boolean): void => {
-					clearTimeout(handle);
-					if (hasDiscoveryResults) {
-						logger.debug('%s - discovery results have been retieved', method);
-						resolve();
-					} else {
-						const error = new Error('Failed to retrieve discovery results');
-						logger.error('%s - %s', method, error);
-						reject(error);
-					}
-				}
-			);
-		});
-	}
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+		const identityContext = this.gateway.identityContext!;
+		const asLocalhost = this.gateway.getOptions().discovery.asLocalhost;
 
-	/*
-	 * Internal method to register to be notified when
-	 * discovery results are ready to be used.
-	 */
-	registerDiscoveryResultsListener(callback: DiscoveryResultsCallback): void {
-		const method = `registerDiscoveryResultsListener[${this.chaincodeId}]`;
-		logger.debug('%s - start', method);
-		this.discoveryResultsListeners.push(callback);
-	}
+		logger.debug('%s - using discovery interest %j', method, this.discoveryInterests);
+		result.build(identityContext, {interest: this.discoveryInterests});
+		await result.sign(identityContext);
 
-	/*
-	 * Interal method to notify all other submits that the discovery
-	 * results are now ready to be used. This will have the Promise
-	 * resolve and all the other submits to continue to process.
-	 */
-	notifyDiscoveryResultsListeners(hasDiscoveryResults: boolean): void {
-		const method = `notifyDiscoveryResultsListeners[${this.chaincodeId}]`;
-		logger.debug('%s - start', method);
-		let listener: DiscoveryResultsCallback | undefined;
-		while ((listener = this.discoveryResultsListeners.pop()) !== undefined) {
-			listener(hasDiscoveryResults);
-		}
+		// go get the endorsement plan from the peer's discovery service
+		// to be ready to be used by the transaction's submit
+		await result.send({asLocalhost, targets});
+		logger.debug('%s - endorsement plan retrieved', method);
+
+		logger.debug('%s - exit', method);
+		return result;
 	}
 
 	addDiscoveryInterest(interest: DiscoveryInterest): Contract {

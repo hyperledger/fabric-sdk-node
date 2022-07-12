@@ -76,8 +76,12 @@ interface ListenerState {
 function assertNoErrors(endorsementResults: ProposalResponse): void {
 	if (endorsementResults.errors && endorsementResults.errors.length > 0) {
 		for (const error of endorsementResults.errors) {
-			BaseUtils.logMsg(`Failed to get endorsement with error: ${error.message} and proposal response:`, endorsementResults);
+			BaseUtils.logMsg('Failed to get endorsement with error:', error);
 		}
+		BaseUtils.logMsg('Endorsement results:', {
+			responses: endorsementResults.responses,
+			queryResults: endorsementResults.queryResults,
+		});
 		throw Error('failed endorsement');
 	}
 }
