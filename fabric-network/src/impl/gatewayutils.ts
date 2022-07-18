@@ -100,3 +100,12 @@ export function getTransactionResponse(proposalResponse: EndorsementResponse): p
 	const chaincodeAction = protos.ChaincodeAction.decode(responsePayload.extension);
 	return assertDefined(chaincodeAction.response, 'Missing chaincode action response');
 }
+
+export function withTimeout<T>(promise: Promise<T>, timeoutMillis: number, timeoutMessage: string): Promise<T> {
+	return new Promise((resolve, reject) => {
+		const timeout = setTimeout(() => reject(new Error(timeoutMessage)), timeoutMillis);
+		promise.then(resolve)
+			.catch(reject)
+			.finally(() => clearTimeout(timeout));
+	});
+}

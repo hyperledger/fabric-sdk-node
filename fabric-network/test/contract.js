@@ -132,7 +132,7 @@ describe('Contract', () => {
 		});
 		it('should run when discover is assigned to network and contract', async () => {
 			network.discoveryService = discoveryService;
-			contract.discoveryService = discoveryService;
+			contract.discoveryService = Promise.resolve(discoveryService);
 			const handler = await contract.getDiscoveryHandler(endorsement);
 			expect(handler).to.equal('handler');
 		});
@@ -202,44 +202,6 @@ describe('Contract', () => {
 				{name: chaincodeId},
 				other
 			]);
-		});
-	});
-
-	describe('#registerDiscoveryResultsListener', () => {
-		it('add', () => {
-			contract.registerDiscoveryResultsListener(() => {});
-			expect(contract.discoveryResultsListeners.length).to.be.equal(1);
-		});
-	});
-
-	describe('#notifyDiscoveryResultsListeners', () => {
-		it('run with none added', () => {
-			contract.notifyDiscoveryResultsListeners();
-			expect(contract.discoveryResultsListeners.length).to.be.equal(0);
-		});
-		it('run with one added', () => {
-			contract.registerDiscoveryResultsListener(() => {});
-			contract.notifyDiscoveryResultsListeners();
-			expect(contract.discoveryResultsListeners.length).to.be.equal(0);
-		});
-	});
-
-	describe('#waitDiscoveryResults', () => {
-		it('runs', async () => {
-			const wait = contract.waitDiscoveryResults();
-			const notify = new Promise((resolve, reject,) => {
-				contract.notifyDiscoveryResultsListeners(false);
-				resolve();
-			});
-			await Promise.all([wait, notify]).should.be.rejectedWith(/Failed to retrieve discovery results/);
-		});
-		it('runs', async () => {
-			const wait = contract.waitDiscoveryResults();
-			const notify = new Promise((resolve, reject,) => {
-				contract.notifyDiscoveryResultsListeners(true);
-				resolve();
-			});
-			await Promise.all([wait, notify]);
 		});
 	});
 });
