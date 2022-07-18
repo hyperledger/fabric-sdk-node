@@ -82,10 +82,6 @@ describe('DiscoveryService', () => {
 		}
 	};
 
-	const orderers = {
-		OrdererMSP: {endpoints: [{host: 'orderer.example.com', port: 7150, name: 'orderer.example.com'}]}
-	};
-
 	TestUtils.setCryptoConfigSettings();
 
 	const client = new Client('myclient');
@@ -98,24 +94,13 @@ describe('DiscoveryService', () => {
 	let discoverer;
 	let discovery;
 	let endpoint;
-	let sandbox;
 	let revert;
-
-	const endorser = sinon.createStubInstance(Endorser);
-	endorser.type = 'Endorser';
-	endorser.connected = true;
-	endorser.isConnectable = sinon.stub().returns(true);
-
-	const committer = sinon.createStubInstance(Committer);
-	committer.type = 'Committer';
-	committer.connected = true;
-	committer.isConnectable = sinon.stub().returns(true);
+	let endorser;
 
 	let FakeLogger;
 
 	beforeEach(async () => {
 		revert = [];
-		sandbox = sinon.createSandbox();
 		FakeLogger = {
 			debug: () => {
 			},
@@ -124,25 +109,31 @@ describe('DiscoveryService', () => {
 			warn: () => {
 			}
 		};
-		sandbox.stub(FakeLogger);
+		sinon.stub(FakeLogger);
 		revert.push(DiscoveryService.__set__('logger', FakeLogger));
 
 		discoverer = new Discoverer('mydiscoverer', client);
 		endpoint = client.newEndpoint({url: 'grpc://somehost.com'});
 		discoverer.endpoint = endpoint;
-		discoverer.waitForReady = sinon.stub().resolves(true);
-		discoverer.checkConnection = sinon.stub().resolves(true);
-		discovery = new DiscoveryService('mydiscovery', channel);
-		client.getEndorser = sinon.stub().returns(endorser);
-		client.newEndorser = sinon.stub().returns(endorser);
-		endorser.connect.resolves(true);
+		sinon.stub(discoverer, 'waitForReady').resolves(true);
+		sinon.stub(discoverer, 'checkConnection').resolves(true);
+
+		endorser = sinon.createStubInstance(Endorser);
+		endorser.type = 'Endorser';
 		endorser.connected = true;
-		endorser.addChaincode = sinon.stub();
-		client.newCommitter = sinon.stub().returns(committer);
-		committer.connect.resolves(true);
-		committer.name = 'mycommitter';
-		committer.connect.resolves(true);
+		endorser.isConnectable.returns(true);
+		endorser.connect.resolves(true);
+
+		discovery = new DiscoveryService('mydiscovery', channel);
+		sinon.stub(client, 'getEndorser').returns(endorser);
+		sinon.stub(client, 'newEndorser').returns(endorser);
+
+		const committer = sinon.createStubInstance(Committer);
+		committer.type = 'Committer';
 		committer.connected = true;
+		committer.isConnectable.returns(true);
+		sinon.stub(client, 'newCommitter').returns(committer);
+
 		channel.committers = new Map();
 
 		sinon.addBehavior('setDiscoveryResults', async (fake, n) => {
@@ -155,7 +146,7 @@ describe('DiscoveryService', () => {
 		if (revert.length) {
 			revert.forEach(Function.prototype.call, Function.prototype.call);
 		}
-		sandbox.restore();
+		sinon.restore();
 	});
 
 	describe('#constructor', () => {
@@ -558,202 +549,6 @@ describe('DiscoveryService', () => {
 			endorser.endpoint = endpoint;
 			const results = discovery._buildUrl('hostname', 1000);
 			should.equal(results, 'grpcs://hostname:1000');
-		});
-	});
-
-	describe('#_buildTlsRootCerts', () => {
-		it('should handle no parms', () => {
-			(() => {
-				discovery._buildTlsRootCerts();
-			}).should.throw('Missing msp_id parameter');
-		});
-		it('should handle missing mspid when no msps', () => {
-			const results = discovery._buildTlsRootCerts('msp1');
-			should.equal(results, '');
-		});
-		it('should handle missing mspid when not in msps', () => {
-			discovery.discoveryResults = {};
-			discovery.discoveryResults.msps = {msp1: {
-				id: 'msp1',
-				name: 'msp1',
-				tlsRootCerts: 'root certs',
-				tlsIntermediateCerts: 'intermediate certs'
-			}};
-			const results = discovery._buildTlsRootCerts('bad');
-			should.equal(results, '');
-		});
-		it('should handle mspid when in msps', () => {
-			discovery.discoveryResults = {};
-			discovery.discoveryResults.msps = {msp1: {
-				id: 'msp1',
-				name: 'msp1',
-				tlsRootCerts: 'rootcerts',
-				tlsIntermediateCerts: 'intermediatecerts'
-			}};
-			const results = discovery._buildTlsRootCerts('msp1');
-			should.equal(results, 'rootcertsintermediatecerts');
-		});
-		it('should handle mspid when in msps and no certs', () => {
-			discovery.discoveryResults = {};
-			discovery.discoveryResults.msps = {msp1: {
-				id: 'msp1',
-				name: 'msp1'
-			}};
-			const results = discovery._buildTlsRootCerts('msp1');
-			should.equal(results, '');
-		});
-	});
-	describe('#_buildOrderers', () => {
-		it('should handle no parms', async () => {
-			await discovery._buildOrderers();
-			sinon.assert.calledWith(FakeLogger.debug, '%s - no orderers to build');
-		});
-		it('should run', async () => {
-			await discovery._buildOrderers(orderers);
-			sinon.assert.calledWith(FakeLogger.debug, '_buildOrderers[mydiscovery] - orderer msp:OrdererMSP');
-		});
-		it('should remove old orderers from channel', async () => {
-			should.equal(channel.getCommitters().length, 0);
-			await discovery._buildOrderers(orderers); // add one orderer
-			sinon.assert.calledWith(FakeLogger.debug, '_buildOrderers[mydiscovery] - orderer msp:OrdererMSP');
-			should.equal(channel.getCommitters().length, 1);
-		});
-	});
-
-	describe('#_buildOrderer', () => {
-		it('should run', async () => {
-			committer.name = 'mycommitter:80';
-			channel.getCommitter = sinon.stub().returns(committer);
-			const results = await discovery._buildOrderer('mycommitter', '80', 'mspid');
-			should.equal(results, 'mycommitter:80');
-		});
-		it('should throw connect error', async () => {
-			channel.getCommitter = sinon.stub().returns();
-			committer.connect.throws(new Error('failed to connect'));
-			const results = await discovery._buildOrderer('mycommitter', '80', 'mspid');
-			should.equal(results, 'mycommitter:80');
-			sinon.assert.calledWith(FakeLogger.error, '_buildOrderer[mydiscovery] - Unable to connect to the discovered orderer mycommitter:80 due to Error: failed to connect');
-		});
-		it('should handle found same name committer on the channel', async () => {
-			channel.addCommitter(committer);
-			committer.endpoint = endpoint;
-			discovery._buildUrl = sinon.stub().returns('grpc://somehost.com:7000');
-			await discovery._buildOrderer('somehost.com', 7000, 'mspid');
-			should.equal(channel.getCommitters().length, 1);
-		});
-	});
-
-	describe('#_buildPeer', () => {
-		it('should handle no parms', async () => {
-			await discovery._buildPeer().should.be.rejectedWith('Missing discovery_peer parameter');
-		});
-		it('should handle found same name endorser on the channel', async () => {
-			endorser.name = 'mypeer';
-			channel.endorsers = new Map();
-			channel.addEndorser(endorser);
-			const results = await discovery._buildPeer({endpoint: 'mypeer:2000', mspid: 'msp1'});
-			should.equal(results, endorser);
-			should.equal(channel.getEndorsers().length, 1);
-		});
-		it('should run', async () => {
-			discovery.discoveryResults = {};
-			discovery.discoveryResults.msps = {msp1: {
-				id: 'msp1',
-				name: 'msp1',
-				tlsRootCerts: 'rootcerts',
-				tlsIntermediateCerts: 'intermediatecerts'
-			}};
-			endorser.name = 'host2.com:1000';
-			const results = await discovery._buildPeer({endpoint: 'host2.com:1000', name: 'host2.com:1000', mspid: 'msp1'});
-			should.equal(results.name, 'host2.com:1000');
-		});
-		it('should handle endorser not connect', async () => {
-			discovery.discoveryResults = {};
-			discovery.discoveryResults.msps = {msp1: {
-				id: 'msp1',
-				name: 'msp1',
-				tlsRootCerts: 'rootcerts',
-				tlsIntermediateCerts: 'intermediatecerts'
-			}};
-			endorser.name = 'host3.com:1000';
-			endorser.connect.throws(new Error('failed to connect'));
-			const results = await discovery._buildPeer({endpoint: 'host3.com:1000', name: 'host3.com:1000', mspid: 'msp1'});
-			should.equal(results.name, 'host3.com:1000');
-		});
-		it('should handle found same name endorser on the channel', async () => {
-			endorser.name = 'mypeer';
-			channel.endorsers = new Map();
-			channel.addEndorser(endorser);
-			endorser.endpoint = endpoint;
-			discovery._buildUrl = sinon.stub().returns('grpc://somehost.com');
-			const results = await discovery._buildPeer({endpoint: 'somehost.com', mspid: 'mspid'});
-			should.equal(results, endorser);
-			should.equal(channel.getEndorsers().length, 1);
-			sinon.assert.calledWith(FakeLogger.debug, '%s - url: %s - already added to this channel');
-		});
-		it('should handle found same name endorser on the channel and add chaincodes', async () => {
-			endorser.name = 'mypeer';
-			channel.endorsers = new Map();
-			channel.addEndorser(endorser);
-			endorser.endpoint = endpoint;
-			discovery._buildUrl = sinon.stub().returns('grpc://somehost.com');
-			const results = await discovery._buildPeer({endpoint: 'somehost.com', mspid: 'mspid', chaincodes: [{name: 'chaincode'}]});
-			should.equal(results, endorser);
-			should.equal(channel.getEndorsers().length, 1);
-			sinon.assert.calledWith(endorser.addChaincode, 'chaincode');
-			sinon.assert.calledWith(FakeLogger.debug, '%s - url: %s - already added to this channel');
-		});
-	});
-
-	describe('#_processConfig', () => {
-		it('should handle no parms', async () => {
-			const results = await discovery._processConfig();
-			should.exist(results);
-		});
-		it('should handle no msps', async () => {
-			const config = {
-				orderers: {
-					msp1: TestUtils.createEndpoints('hosta', 2),
-					msp2: TestUtils.createEndpoints('hostb', 2)
-				}
-			};
-			const results = await discovery._processConfig(config);
-			should.exist(results.orderers);
-		});
-		it('should handle no msps', async () => {
-			const config = {
-				msps: {
-					msp1: TestUtils.createMsp('msp3'),
-					msp2: TestUtils.createMsp('msp4')
-				}
-			};
-			const results = await discovery._processConfig(config);
-			should.exist(results.msps);
-		});
-	});
-
-	describe('#_processChaincode', () => {
-		it('should throw error if plans are bad', async () => {
-			await discovery._processChaincode().should.be.rejectedWith('Plan layouts are invalid');
-		});
-	});
-
-	describe('#_processPeers', () => {
-		it('should handle missing endorser state info', async () => {
-			channel.endorsers = new Map();
-			const q_peers = [
-				{
-					identity: TestUtils.createSerializedIdentity(),
-					membership_info: {payload: TestUtils.createMembership()}
-				}
-			];
-			await discovery._processPeers(q_peers);
-		});
-	});
-
-	describe('#_processMembership', () => {
-		it('should handle missing endorser by org', async () => {
-			await discovery._processMembership({});
 		});
 	});
 });
