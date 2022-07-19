@@ -1,0 +1,16 @@
+Release Notes
+-------------
+This v2.2.14 version is the latest of the v2.2 long-term support (LTS) release
+of the fabric-node-sdk packages that support Fabric 2.x, and supersedes previous
+v2.x releases. Please see the Fabric LTS release strategy document for more
+information on LTS releases:
+
+https://github.com/hyperledger/fabric-rfcs/blob/main/text/0005-lts-release-strategy.md
+
+This is a maintenance release containing the following changes:
+
+- Dependency updates to address security vulnerability CVE-2022-25898.
+- Resolve an issue that could cause partial discovery results to be obtained
+  under high load, and subsequent transaction failures.
+- Resolve an issue that could cause an unhandled promise rejection with
+  exceptionally short commit timeouts.
