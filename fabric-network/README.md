@@ -2,6 +2,8 @@
 
 SDK for writing node.js applications to interact with [Hyperledger Fabric](http://hyperledger-fabric.readthedocs.io/en/latest/).
 
+> **Note:** When developing applications for Hyperledger Fabric v2.4 and later, you are strongly encouraged to use the [Fabric Gateway client API](https://hyperledger.github.io/fabric-gateway/).
+
 This package encapsulates the APIs to connect to a Fabric network, submit transactions and perform queries against the ledger, and listen for or replay events.
 
 Additional packages are also provided:
