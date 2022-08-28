@@ -206,7 +206,7 @@ func openUnicode(path string) io.ReadCloser {
 // TODO: automatically periodically update non-versioned files.
 
 func open(file, urlRoot, path string) io.ReadCloser {
-	if f, err := os.Open(file); err == nil {
+	if f, err := os.Open(*file); err == nil {
 		return f
 	}
 	r := get(urlRoot, path)
