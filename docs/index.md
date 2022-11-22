@@ -35,8 +35,8 @@ The following tables show versions of Fabric, Node and other dependencies that a
 |     | Tested | Supported |
 | --- | ------ | --------- |
 | **Fabric** | 2.2 | 2.2 |
-| **Node** | 14, 16 | 14 LTS, 16 LTS |
-| **Platform** | Ubuntu 20.04 | |
+| **Node** | 14, 16, 18 | 14 LTS, 16 LTS, 18 LTS |
+| **Platform** | Ubuntu 22.04 | |
 
 
 ### API reference
