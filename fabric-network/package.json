@@ -26,7 +26,7 @@
   "dependencies": {
     "fabric-common": "file:../fabric-common",
     "fabric-protos": "file:../fabric-protos",
-    "nano": "^10.0.0"
+    "nano": "^9.0.5"
   },
   "nyc": {
     "exclude": [
