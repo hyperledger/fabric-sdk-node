@@ -14,7 +14,7 @@ pr:
       - '*'
 
 pool:
-  vmImage: 'ubuntu-20.04'
+  vmImage: 'ubuntu-22.04'
 
 variables:
 - group: credentials
@@ -40,6 +40,8 @@ stages:
             versionSpec: '14.x'
           Node16:
             versionSpec: '16.x'
+          Node18:
+            versionSpec: '18.x'
       steps:
         - task: NodeTool@0
           inputs:
