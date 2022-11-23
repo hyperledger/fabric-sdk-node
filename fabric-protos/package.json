@@ -31,7 +31,7 @@
   ],
   "types": "./types/index.d.ts",
   "dependencies": {
-    "@grpc/grpc-js": "~1.6.9",
+    "@grpc/grpc-js": "~1.7.3",
     "@grpc/proto-loader": "^0.7.0",
     "protobufjs": "^7.0.0"
   },

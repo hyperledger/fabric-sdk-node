@@ -42,7 +42,6 @@
     "tapeAndCucumber": "run-s tapeIntegration dockerClean cucumberScenario"
   },
   "devDependencies": {
-    "@ampretia/x509": "^0.4.8",
     "@cucumber/cucumber": "^7.3.2",
     "@cucumber/pretty-formatter": "^1.0.0-alpha.1",
     "@tsconfig/node10": "^1.0.8",
