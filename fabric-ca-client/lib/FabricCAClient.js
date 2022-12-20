@@ -69,7 +69,7 @@ const FabricCAClient = class {
 		this._baseAPI = '/api/v1/';
 
 		this._cryptoPrimitives = cryptoPrimitives;
-		
+
 		this.default_headers = {};
 
 		logger.debug(`Successfully constructed Fabric CA client from options - ${util.inspect(connect_opts)}`);
@@ -271,11 +271,11 @@ const FabricCAClient = class {
 				Authorization: await this.generateAuthToken(requestObj, signingIdentity, path, http_method)
 			};
 		}
-		
-		for (let key in self.default_headers) {
-			requestOptions.headers[key] = self.default_headers[key];
-		};
-		
+
+		for (const key in this.default_headers) {
+			requestOptions.headers[key] = this.default_headers[key];
+		}
+
 		Object.assign(requestOptions, extraRequestOptions);
 		return new Promise(((resolve, reject) => {
 
@@ -437,10 +437,10 @@ const FabricCAClient = class {
 			auth: `${enrollmentID}:${enrollmentSecret}`,
 			headers: {}
 		};
-		
-		for (let key in self.default_headers) {
-			requestOptions.headers[key] = self.default_headers[key];
-		};
+
+		for (const key in this.default_headers) {
+			requestOptions.headers[key] = this.default_headers[key];
+		}
 
 		const enrollRequest = {
 			certificate_request: csr
@@ -504,14 +504,14 @@ const FabricCAClient = class {
 		}
 
 	}
-	
+
 	/**
 	 * Add default custom header in request
 	 * @param {string} key The key of default custom header value
 	 * @param {string} value The value of default custom header
 	 */
 	async addDefaultHeader(key, value) {
-		this.default_headers[key] = value
+		this.default_headers[key] = value;
 	}
 };
 
