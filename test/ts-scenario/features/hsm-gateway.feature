@@ -23,13 +23,13 @@ Feature: Configure Fabric using CLI and submit/evaluate using a network Gateway 
 
 	Scenario: Using a Gateway I recieve useful error messages when I submit or evaulate invalid transactions
 		When I use the gateway named myhsmgateway to submit a transaction with args [noSuchSubmitTransaction,1001,Trabant,601 Estate,brown,Simon] for contract fabcar instantiated on channel gatewaychannel
-		Then The gateway named myhsmgateway has a error type response containing Error: You've asked to invoke a function that does not exist: noSuchSubmitTransaction
+		Then The gateway named myhsmgateway has a error type response containing noSuchSubmitTransaction
 		When I use the gateway named myhsmgateway to submit a transaction with args [createCar,9,Ford] for contract fabcar instantiated on channel gatewaychannel
-		Then The gateway named myhsmgateway has a error type response containing Error: Expected 5 parameters, but 2 have been supplied
+		Then The gateway named myhsmgateway has a error type response containing Expected 5 parameters, but 2 have been supplied
 		When I use the gateway named myhsmgateway to evaluate a transaction with args [noSuchEvaluateTransaction,1001] for contract fabcar instantiated on channel gatewaychannel
-		Then The gateway named myhsmgateway has a error type response containing Error: You've asked to invoke a function that does not exist: noSuchEvaluateTransaction
+		Then The gateway named myhsmgateway has a error type response containing noSuchEvaluateTransaction
 		When I use the gateway named myhsmgateway to evaluate a transaction with args [queryCar,because,I,said,so] for contract fabcar instantiated on channel gatewaychannel
-		Then The gateway named myhsmgateway has a error type response containing Error: Expected 1 parameters, but 4 have been supplied
+		Then The gateway named myhsmgateway has a error type response containing Expected 1 parameters, but 4 have been supplied
 
 	Scenario: Using a Gateway to submit transactions I can use different event handler strategies
 		When I modify myhsmgateway to submit a transaction with args [createCar,1002,Ford,Mustang,Silver,Andy] for contract fabcar instantiated on channel gatewaychannel using handler option MSPID_SCOPE_ALLFORTX
