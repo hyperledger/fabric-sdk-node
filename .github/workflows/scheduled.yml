@@ -1,0 +1,13 @@
+name: Scheduled
+
+on:
+  schedule:
+    - cron: '30 23 * * *'
+
+jobs:
+  main:
+    uses: ./.github/workflows/test.yml
+  release-2.2:
+    uses: hyperledger/fabric-sdk-node/.github/workflows/test.yml@release-2.2
+    with:
+      checkout-ref: release-2.2
