@@ -8,57 +8,7 @@ on:
   pull_request:
     branches:
       - main
-  schedule:
-    - cron: "30 23 * * *"
-
-env:
-  FABRIC_VERSION: 2.2
-  SOFTHSM2_CONF: ${{ github.workspace }}/test/ts-fixtures/hsm/softhsm2.conf
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
-
-    strategy:
-      fail-fast: false
-      matrix:
-        node-version: [ 14, 16, 18 ]
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-
-      - name: Install SoftHSM
-        run: |
-          sudo apt-get install softhsm2
-          softhsm2-util --init-token --slot 0 --label "ForFabric" --pin 98765432 --so-pin 1234
-
-      - name: npm install
-        run: npm install
-
-      - name: Generate credentials
-        run: npm run installAndGenerateCerts
-
-      - name: Pull Fabric images
-        run: npm run pullFabricImages
-
-      - name: Run tests
-        run: npm test
-
-      - name: "Archive unit test debug log"
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ matrix.node-version }}-unit-test-debug.log
-          path: test/temp/debug.log
-
-      - name: "Archive scenario test debug log"
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ matrix.node-version }}-cucumber-debug.log
-          path: test/temp/debugc.log
+    uses: ./.github/workflows/test.yml
