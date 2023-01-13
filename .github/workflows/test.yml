@@ -1,25 +1,33 @@
-name: Build
+name: Test
 
 on:
-  # push:
-  #   branches: ["release-1.4"]
-  pull_request:
-    branches: ["release-1.4"]
+  workflow_call:
+    inputs:
+      checkout-ref:
+        default: ''
+        required: false
+        type: string
 
 env:
   SOFTHSM2_CONF: ${{ github.workspace }}/test/fixtures/hsm/softhsm2.conf
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-20.04
 
     strategy:
       fail-fast: false
       matrix:
-        node-version: [10.x, 12.x, 14.x, 16.x]
+        node-version:
+          - 10
+          - 12
+          - 14
+          - 16
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.checkout-ref }}
 
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3

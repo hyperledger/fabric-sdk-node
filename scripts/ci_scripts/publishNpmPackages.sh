@@ -8,7 +8,6 @@
 set -e -o pipefail
 
 # Input environment variables:
-: "${NPM_TOKEN:?}" # The npm publishing auth token
 : "${PROJECT_DIR:?}" # The project root directory
 
 readonly NODE_PACKAGES=(fabric-client fabric-common fabric-ca-client fabric-network)
@@ -92,12 +91,9 @@ readCurrentPackageVersion() {
 
 readNextUnstablePackageVersion() {
     local nextVersion
-    nextVersion=$(npm view "$1" versions --json | awk -F . "/\"${RELEASE_VERSION}/"'{
-        ver=$NF
-        sub(/\".*/, "", ver)
-        print ver+1
-    }' | tail -1)
-    echo "${RELEASE_VERSION}.${nextVersion:-1}"
+    nextVersion=$(npm view "$1" versions --json | awk -F . "/\"${RELEASE_VERSION}/"'{ lastVersion=$NF }
+        END { sub(/".*/, "", lastVersion); print (lastVersion=="" ? "0" : lastVersion+1) }')
+    echo "${RELEASE_VERSION}.${nextVersion}"
 }
 
 updatePackageVersion() {
@@ -129,7 +125,6 @@ publishPackage() {
 }
 
 npmPublish() {
-    echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' > '.npmrc'
     npm publish --tag "${RELEASE_TAG}"
 }
 
