@@ -88,12 +88,9 @@ readCurrentPackageVersion() {
 
 readNextUnstablePackageVersion() {
     local nextVersion
-    nextVersion=$(npm view "$1" versions --json | awk -F . "/\"${RELEASE_VERSION}/"'{
-        ver=$NF
-        sub(/\".*/, "", ver)
-        print ver+1
-    }' | tail -1)
-    echo "${RELEASE_VERSION}.${nextVersion:-1}"
+    nextVersion=$(npm view "$1" versions --json | awk -F . "/\"${RELEASE_VERSION}/"'{ lastVersion=$NF }
+        END { sub(/".*/, "", lastVersion); print (lastVersion=="" ? "0" : lastVersion+1) }')
+    echo "${RELEASE_VERSION}.${nextVersion}"
 }
 
 updatePackageVersion() {
@@ -125,8 +122,7 @@ publishPackage() {
 }
 
 npmPublish() {
-    echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' > '.npmrc'
-    npm publish --tag "${RELEASE_TAG}"
+    echo npm publish --tag "${RELEASE_TAG}"
 }
 
 (cd "${PROJECT_DIR}" && publishAllPackages)
