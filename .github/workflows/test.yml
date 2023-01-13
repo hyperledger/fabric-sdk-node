@@ -40,8 +40,7 @@ jobs:
           sudo apt-get install softhsm2
           softhsm2-util --init-token --slot 0 --label "ForFabric" --pin 98765432 --so-pin 1234
 
-      - name: npm install
-        run: npm install
+      - run: npm install
 
       - name: Generate credentials
         run: npm run installAndGenerateCerts
@@ -49,8 +48,7 @@ jobs:
       - name: Pull Fabric images
         run: npm run pullFabricImages
 
-      - name: Run tests
-        run: npm test
+      - run: npm test
 
       - name: "Archive unit test debug log"
         if: ${{ failure() }}

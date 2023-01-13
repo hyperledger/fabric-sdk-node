@@ -1,0 +1,59 @@
+name: Push
+
+on:
+  push:
+    branches:
+      - release-2.2
+
+jobs:
+  build:
+    uses: ./.github/workflows/test.yml
+
+  publish-npm:
+    name: Publish NPM packages
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          registry-url: 'https://registry.npmjs.org'
+      - uses: actions/checkout@v3
+      - run: npm install
+      - run: npm run compile
+      - name: Publish
+        run: ./scripts/ci_scripts/publishNpmPackages.sh
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          PROJECT_DIR: ${{ github.workspace }}
+
+  publish-docs:
+    name: Publish API documentation
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Checkout source
+        uses: actions/checkout@v3
+        with:
+          path: source
+      - name: Checkout publish
+        uses: actions/checkout@v3
+        with:
+          path: publish
+          ref: gh-pages
+      - run: npm install
+        working-directory: source
+      - run: npm run compile
+        working-directory: source
+      - name: Publish
+        run: ./scripts/ci_scripts/publishApiDocs.sh
+        working-directory: source
+        env:
+          GITHUB_USER: 'Hyperledger Bot'
+          GITHUB_EMAIL: 'hyperledger-bot@hyperledger.org'
+          PROJECT_DIR: ${{ github.workspace }}/source
+          PUBLISH_DIR: ${{ github.workspace }}/publish
+          SOURCE_BRANCH: ${{ github.ref_name }}
