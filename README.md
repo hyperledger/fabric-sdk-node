@@ -1,13 +1,4 @@
-## Hyperledger Fabric Client SDK for Node.js
-
-<div style="float: right">
-<table align="right">
-  <tr><th>Branch</th><th>Build status</th></tr>
-  <tr><td>main</td><td><a href="https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_build/latest?definitionId=47&branchName=main"><img src="https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_apis/build/status/Fabric-SDK-Node?branchName=main"></a></td></tr>
-  <tr><td>release-2.2</td><td><a href="https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_build/latest?definitionId=47&branchName=release-2.2"><img src="https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_apis/build/status/Fabric-SDK-Node?branchName=release-2.2"></a></td></tr>
-  <tr><td>release-1.4</td><td><a href="https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_build/latest?definitionId=47&branchName=release-1.4"><img src="https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_apis/build/status/Fabric-SDK-Node?branchName=release-1.4"></a></td></tr>
-</table>
-</div>
+## Hyperledger Fabric Client SDK for Node.js <a href="https://github.com/hyperledger/fabric-sdk-node/actions/workflows/scheduled.yml"><img src="https://github.com/hyperledger/fabric-sdk-node/actions/workflows/scheduled.yml/badge.svg" alt="Build status" style="float: right"></a>
 
 The Hyperledger Fabric Client SDK makes it possible to use APIs to interact with a Hyperledger Fabric blockchain. This readme is directed towards a current or future contributor to this project, and gives an overview of setting up the project locally and running tests. For more information on the SDK, including features and an API reference, please visit the [SDK documentation](https://hyperledger.github.io/fabric-sdk-node/).
 
