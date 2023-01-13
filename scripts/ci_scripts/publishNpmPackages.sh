@@ -8,7 +8,6 @@
 set -e -o pipefail
 
 # Input environment variables:
-: "${NPM_TOKEN:?}" # The npm publishing auth token
 : "${PROJECT_DIR:?}" # The project root directory
 
 readonly NODE_PACKAGES=(fabric-protos fabric-common fabric-ca-client fabric-network)
@@ -122,7 +121,7 @@ publishPackage() {
 }
 
 npmPublish() {
-    echo npm publish --tag "${RELEASE_TAG}"
+    npm publish --tag "${RELEASE_TAG}"
 }
 
 (cd "${PROJECT_DIR}" && publishAllPackages)
