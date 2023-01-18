@@ -44,6 +44,7 @@ jobs:
         with:
           path: publish
           ref: gh-pages
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
       - run: npm install
         working-directory: source
       - run: npm run copyFabricClient
