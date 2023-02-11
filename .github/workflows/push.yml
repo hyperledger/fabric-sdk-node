@@ -18,6 +18,10 @@ jobs:
         with:
           node-version: 18
           registry-url: 'https://registry.npmjs.org'
+      - name: Update npm
+        run: |
+          npm update --global npm
+          npm --version
       - uses: actions/checkout@v3
       - run: npm install
       - run: npm run compile
@@ -35,6 +39,10 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
+      - name: Update npm
+        run: |
+          npm update --global npm
+          npm --version
       - name: Checkout source
         uses: actions/checkout@v3
         with:
