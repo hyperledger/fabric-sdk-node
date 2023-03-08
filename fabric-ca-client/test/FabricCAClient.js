@@ -1235,6 +1235,107 @@ describe('FabricCAClient', () => {
 		});
 	});
 
+	describe('#getCaInfo', () => {
+
+		let revert;
+
+		beforeEach(() => {
+			revert = null;
+		});
+
+		afterEach(() => {
+			if (revert) {
+				revert();
+			}
+		});
+
+		it('should throw if not provided the required number of arguments', async () => {
+			const connect_opts = {
+				caname: 'test-ca-name',
+				protocol: 'http',
+				hostname: 'testHost'
+			};
+
+			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
+			await client.getCaInfo().should.be.rejectedWith(/Missing required parameters/);
+		});
+
+		it('should call POST with the correct method, request, and signing identity', () => {
+			const connect_opts = {
+				caname: 'test-ca-name',
+				protocol: 'https',
+				hostname: 'testHost'
+			};
+
+			const postStub = sinon.stub();
+			postStub.resolves({
+				result: {
+					'CAName' : 'test-ca-name',
+					'CAChain': 'test_chain',
+					'IssuerPublicKey': 'test_iss_pub_key',
+					'IssuerRevocationPublicKey': 'test_iss_rev_pub_key',
+					'Version': '1.4.9'
+				}});
+			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
+
+			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
+			client.getCaInfo('signingIdentity');
+
+			// should call post
+			sinon.assert.calledOnce(postStub);
+
+			// should call with known
+			const callArgs = postStub.getCall(0).args;
+			callArgs[0].should.equal('cainfo');
+			callArgs[1].should.deep.equal({
+				caname: 'test-ca-name',
+			});
+			callArgs[2].should.equal('signingIdentity');
+		});
+
+		it('should return the caInfo on success', async () => {
+			const connect_opts = {
+				caname: 'test-ca-name',
+				protocol: 'http',
+				hostname: 'testHost'
+			};
+
+			const postStub = sinon.stub();
+			postStub.resolves({
+				result: {
+					'CAName' : 'test_ca_name',
+					'CAChain': 'dGVzdF9jaGFpbg==',
+					'IssuerPublicKey': 'dGVzdF9pc3NfcHViX2tleQ==',
+					'IssuerRevocationPublicKey': 'dGVzdF9pc3NfcmV2X3B1Yl9rZXk=',
+					'Version': '1.4.9'
+				}});
+			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
+
+			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
+			const result = await client.getCaInfo('signingIdentity');
+			result.caName.should.equal('test_ca_name');
+			result.caChain.toString('utf8').should.equal('test_chain');
+			result.issuerPublicKey.toString('utf8').should.equal('test_iss_pub_key');
+			result.issuerRevocationPublicKey.toString('utf8').should.equal('test_iss_rev_pub_key');
+			result.version.should.equal('1.4.9');
+		});
+
+		it('should reject on POST failure', async () => {
+			const connect_opts = {
+				caname: 'test-ca-name',
+				protocol: 'https',
+				hostname: 'testHost'
+			};
+
+			const postStub = sinon.stub();
+			postStub.rejects(new Error('forced error'));
+			revert = FabricCAClientRewire.__set__('FabricCAClient.prototype.post', postStub);
+
+			const client = new FabricCAClientRewire(connect_opts, cryptoPrimitives);
+			await client.getCaInfo('signingIdentity').should.be.rejectedWith('forced error');
+		});
+	});
+
 	describe('#generateCRL', () => {
 
 		let revert;

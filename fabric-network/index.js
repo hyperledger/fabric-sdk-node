@@ -240,6 +240,8 @@
  * @memberof module:fabric-network
  * @property {string} transactionId The ID of the transaction this event represents.
  * @property {string} status The status of this transaction.
+ * @property {Date} [timestamp] The transaction timestamp. Note that
+ * timestamp does not exist for <strong>filtered</strong> event.
  * @property {boolean} isValid Whether this transaction was successfully committed to the ledger. <code>true</code> if
  * the transaction was commited; otherwise <code>false</code>. The status will provide a more specific reason why an
  * invalid transaction was not committed.

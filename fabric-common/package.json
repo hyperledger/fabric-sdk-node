@@ -36,7 +36,7 @@
 		"yn": "^4.0.0"
 	},
 	"optionalDependencies": {
-		"pkcs11js": "^1.0.6"
+		"pkcs11js": "^1.3.0"
 	},
 	"nyc": {
 		"exclude": [
@@ -59,7 +59,7 @@
 	"licenses": [
 		{
 			"type": "Apache-2.0",
-			"url": "https://github.com/hyperledger/fabric/blob/master/LICENSE"
+			"url": "https://github.com/hyperledger/fabric/blob/main/LICENSE"
 		}
 	],
 	"devDependencies": {}

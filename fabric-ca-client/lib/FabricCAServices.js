@@ -12,7 +12,7 @@ const FabricCAClient = require('./FabricCAClient');
 
 const {normalizeX509} = BaseClient;
 const path = require('path');
-const {parseURL, checkRegistrar, getSubjectCommonName} = require('./helper');
+const {parseURL, checkRegistrar, getSubject} = require('./helper');
 const logger = utils.getLogger('FabricCAClientService.js');
 
 // setup the location of the default config shipped with code
@@ -30,7 +30,7 @@ utils.getConfig().reorderFileStores(default_config, true);
  * @class
  * @extends BaseClient
  */
-const FabricCAServices = class extends BaseClient {
+class FabricCAServices extends BaseClient {
 
 	/**
 	 * constructor
@@ -95,6 +95,17 @@ const FabricCAServices = class extends BaseClient {
 	}
 
 	/**
+	* Returns info on the certificate authority.
+	*
+	* @returns {Promise} CA info
+	*/
+	async getCaInfo(registrar) {
+		checkRegistrar(registrar);
+
+		return this._fabricCAClient.getCaInfo(registrar.getSigningIdentity());
+	}
+
+	/**
 	 * @typedef {Object} RegisterRequest
 	 * @property {string} enrollmentID - ID which will be used for enrollment
 	 * @property {string} enrollmentSecret - Optional enrollment secret to set for the registered user.
@@ -136,16 +147,18 @@ const FabricCAServices = class extends BaseClient {
 	 * @typedef {Object} EnrollmentRequest
 	 * @property {string} enrollmentID - The registered ID to use for enrollment
 	 * @property {string} enrollmentSecret - The secret associated with the enrollment ID
-	 * @property {string} profile - The profile name.  Specify the 'tls' profile for a TLS certificate;
+	 * @property {string} [profile] - The profile name.  Specify the 'tls' profile for a TLS certificate;
 	 *                   otherwise, an enrollment certificate is issued.
-	 * @property {string} csr - Optional. PEM-encoded PKCS#10 Certificate Signing Request. The message sent from client side to
+	 * @property {string} [csr] - Optional. PEM-encoded PKCS#10 Certificate Signing Request. The message sent from client side to
 	 *                   Fabric-ca for the digital identity certificate.
-	 * @property {AttributeRequest[]} attr_reqs - An array of {@link AttributeRequest}
+	 * @property {AttributeRequest[]} [attr_reqs] - An array of {@link AttributeRequest}
+	 * @property {string} [subject] - Optional. The X509 Subject to use in generating CSR inline
+	 *      (when <code>csr</code> is not specified). If not specified, the default subject is built on <code>enrollmentID</code>
 	 */
 
 	/**
 	 * @typedef {Object} Enrollment
-	 * @property {Object} key - the private key
+	 * @property {Object} [key] - the private key when CSR is created inline.
 	 * @property {string} certificate - The enrollment certificate in base 64 encoded PEM format
 	 * @property {string} rootCertificate - Base 64 encoded PEM-encoded certificate chain of the CA's signing certificate
 	 */
@@ -191,46 +204,38 @@ const FabricCAServices = class extends BaseClient {
 
 		const storeKey = !!this.getCryptoSuite()._cryptoKeyStore;
 
-		try {
-			let csr;
+		let csr = req.csr;
+
+		const enrollment = {};
+		if (!csr) {
 			let privateKey;
-			if (req.csr) {
-				logger.debug('try to enroll with a csr');
-				csr = req.csr;
-			} else {
-				try {
-					if (storeKey) {
-						privateKey = await this.getCryptoSuite().generateKey();
-					} else {
-						privateKey = this.getCryptoSuite().generateEphemeralKey({persist: true});
-					}
-					logger.debug('successfully generated key pairs');
-				} catch (err) {
-					throw new Error(`Failed to generate key for enrollment due to error [${err}]: ${err.stack}`);
+			try {
+				if (storeKey) {
+					privateKey = await this.getCryptoSuite().generateKey();
+				} else {
+					privateKey = this.getCryptoSuite().generateEphemeralKey({persist: true});
 				}
-				try {
-					csr = privateKey.generateCSR('CN=' + req.enrollmentID);
-					logger.debug('successfully generated csr');
-				} catch (err) {
-					throw new Error(`Failed to generate CSR for enrollment due to error [${err}]: ${err.stack}`);
-				}
-			}
-
-			const enrollResponse = await this._fabricCAClient.enroll(req.enrollmentID, req.enrollmentSecret, csr, req.profile, req.attr_reqs);
-			logger.debug('successfully enrolled %s', req.enrollmentID);
-
-			const enrollment = {
-				certificate: enrollResponse.enrollmentCert,
-				rootCertificate: enrollResponse.caCertChain
-			};
-			if (!req.csr) {
+				logger.debug('successfully generated key pairs');
 				enrollment.key = privateKey;
+			} catch (err) {
+				throw new Error(`Failed to generate key for enrollment due to error [${err}]: ${err.stack}`);
 			}
-			return enrollment;
-		} catch (error) {
-			logger.error('Failed to enroll %s, error:%o', req.enrollmentID, error);
-			throw error;
+			try {
+				csr = privateKey.generateCSR(req.subject || 'CN=' + req.enrollmentID);
+				logger.debug('successfully generated csr');
+			} catch (err) {
+				throw new Error(`Failed to generate CSR for enrollment due to error [${err}]: ${err.stack}`);
+			}
 		}
+
+		const enrollResponse = await this._fabricCAClient.enroll(req.enrollmentID, req.enrollmentSecret, csr, req.profile, req.attr_reqs);
+		logger.debug('successfully enrolled %s', req.enrollmentID);
+
+		Object.assign(enrollment, {
+			certificate: enrollResponse.enrollmentCert,
+			rootCertificate: enrollResponse.caCertChain
+		});
+		return enrollment;
 	}
 
 	/**
@@ -266,14 +271,11 @@ const FabricCAServices = class extends BaseClient {
 		}
 
 		const cert = currentUser.getIdentity()._certificate;
-		let subject = null;
+		let subject;
 		try {
-			subject = getSubjectCommonName(normalizeX509(cert));
+			subject = getSubject(normalizeX509(cert));
 		} catch (err) {
 			logger.error(`Failed to parse enrollment certificate ${cert} for Subject. \nError: ${err}`);
-		}
-
-		if (!subject) {
 			throw new Error('Failed to parse the enrollment certificate of the current user for its subject');
 		}
 
@@ -289,7 +291,7 @@ const FabricCAServices = class extends BaseClient {
 		// generate CSR using the subject of the current user's certificate
 		let csr;
 		try {
-			csr = privateKey.generateCSR('CN=' + subject);
+			csr = privateKey.generateCSR(subject);
 		} catch (e) {
 			throw Error(`Failed to generate CSR for enrollment due to error [${e}]`);
 		}
@@ -423,6 +425,6 @@ const FabricCAServices = class extends BaseClient {
 	static _parseURL(url) {
 		return parseURL(url);
 	}
-};
+}
 
 module.exports = FabricCAServices;

@@ -60,15 +60,17 @@ describe('Signer', () => {
 
 	describe('#sign', () => {
 
-		it('should handle a successful sign by the crypto suite', async () => {
-			mockCryptoSuite.sign.withArgs(mockPrivateKey, digest, opts).resolves();
-			await signer.sign(digest, opts);
+		it('should handle a successful sign by the crypto suite', () => {
+			mockCryptoSuite.sign.withArgs(mockPrivateKey, digest, opts).returns();
+			signer.sign(digest, opts);
 			mockCryptoSuite.sign.should.have.been.calledOnceWithExactly(mockPrivateKey, digest, opts);
 		});
 
-		it('should handle an unsuccessful sign by the crypto suite', async () => {
-			mockCryptoSuite.sign.withArgs(mockPrivateKey, digest, opts).rejects(new Error('such error'));
-			await signer.sign(digest, opts).should.be.rejectedWith(/such error/);
+		it('should handle an unsuccessful sign by the crypto suite', () => {
+			mockCryptoSuite.sign.withArgs(mockPrivateKey, digest, opts).throws(new Error('such error'));
+			(() => {
+				signer.sign(digest, opts);
+			}).should.throw(/such error/);
 		});
 
 	});

@@ -11,8 +11,7 @@ const jsrsasign = require('jsrsasign');
 const {X509, ASN1HEX} = jsrsasign;
 const urlParser = require('url');
 
-function checkRegistrar(registrar) {
-
+const checkRegistrar = (registrar) => {
 	if (!registrar) {
 		throw new Error('Missing required argument "registrar"');
 	}
@@ -28,23 +27,17 @@ function checkRegistrar(registrar) {
 	if (!registrar.getSigningIdentity()) {
 		throw new Error('Can not get signingIdentity from registrar');
 	}
-}
+};
 
 // This utility is based on jsrsasign.X509.getSubjectString() implementation
 // we can not use that method directly because it requires calling readCertPEM()
 // first which as of jsrsasign@6.2.3 always assumes RSA based certificates and
 // fails to parse certs that includes ECDSA keys.
-function getSubjectCommonName(pem) {
+const getSubject = (pem) => {
 	const hex = jsrsasign.pemtohex(pem);
 	const d = ASN1HEX.getTLVbyList(hex, 0, [0, 5]);
-	const subject = X509.hex2dn(d); // format: '/C=US/ST=California/L=San Francisco/CN=Admin@org1.example.com/emailAddress=admin@org1.example.com'
-	const m = subject.match(/CN=.+[^/]/);
-	if (!m) {
-		throw new Error('Certificate PEM does not seem to contain a valid subject with common name "CN"');
-	} else {
-		return m[0].substring(3);
-	}
-}
+	return X509.hex2dn(d); // format: '/C=US/ST=California/L=San Francisco/CN=Admin@org1.example.com/emailAddress=admin@org1.example.com'
+};
 
 /**
  * Utility function which parses an HTTP URL into its component parts
@@ -53,7 +46,7 @@ function getSubjectCommonName(pem) {
  * @throws InvalidURL for malformed URLs
  * @ignore
  */
-function parseURL(url) {
+const parseURL = (url) => {
 
 	const endpoint = {};
 
@@ -77,8 +70,10 @@ function parseURL(url) {
 	}
 
 	return endpoint;
-}
+};
 
-module.exports.checkRegistrar = checkRegistrar;
-module.exports.getSubjectCommonName = getSubjectCommonName;
-module.exports.parseURL = parseURL;
+module.exports = {
+	checkRegistrar,
+	getSubject,
+	parseURL
+};

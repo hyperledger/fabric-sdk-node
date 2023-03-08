@@ -18,6 +18,7 @@ import * as IdentityProviderRegistry from './impl/wallet/identityproviderregistr
 
 import * as Logger from './logger';
 import {X509Identity} from './impl/wallet/x509identity';
+
 const logger = Logger.getLogger('Gateway');
 
 export interface GatewayOptions {
@@ -371,6 +372,7 @@ export class Gateway {
 		logger.debug('in disconnect');
 		this.networks.forEach((network) => network._dispose());
 		this.networks.clear();
+		this.client?.close();
 	}
 
 	/**

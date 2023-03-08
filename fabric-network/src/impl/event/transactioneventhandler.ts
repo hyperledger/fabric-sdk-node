@@ -10,7 +10,6 @@ import {Network} from '../../network';
 import {Endorser} from 'fabric-common';
 import {CommitError, CommitEvent, CommitListener} from '../../events';
 import {TransactionError} from '../../errors/transactionerror';
-
 import * as Logger from '../../logger';
 import {DefaultEventHandlerOptions} from '../../gateway';
 
@@ -171,7 +170,7 @@ export class TransactionEventHandler implements TxEventHandler {
 			.map((peer) => peer.name)
 			.join(', ');
 		const errorInfo = {
-			message: 'Event strategy not satisfied within the timeout period. No response received from peers: ' + unrespondedPeerNames,
+			message: `Event strategy not satisfied within the timeout period of ${String(this.options.commitTimeout)} seconds. No response received from peers:  ${unrespondedPeerNames}`,
 			transactionId: this.transactionId
 		};
 		const error = new TimeoutError(errorInfo);

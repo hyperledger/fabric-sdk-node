@@ -336,12 +336,46 @@ const FabricCAClient = class {
 		}));
 	}
 
+	/**
+	 * @typedef {Object} CAInfoResponse
+	 * @property {string} caName The name of the CA.
+	 * @property {string} caChain PEM-encoded certificate chain of the server's signing certificate
+	 * @property {string} issuerPublicKey Proto bytes of the CA's Idemix issuer public key
+	 * @property {string} issuerRevocationPublicKey PEM-encoded bytes of the CA's Idemix issuer
+	 * revocation public key
+	 * @property {string} version Version of the server
+	 */
+
+	/**
+	 * Get info on the CA
+	 * @param {SigningIdentity} signingIdentity The instance of a SigningIdentity encapsulating the
+	 * signing certificate, hash algorithm and signature algorithm
+	 * @returns {Promise<CAInfoResponse>}
+	 */
+	async getCaInfo(signingIdentity) {
+
+		if (arguments.length !== 1) {
+			return Promise.reject(new Error('Missing required parameters. \'signingIdentity\' is required.'));
+		}
+		const request = {
+			caname: this._caName
+		};
+		const response = await this.post('cainfo', request, signingIdentity);
+		return {
+			caName: response.result.CAName,
+			caChain: Buffer.from(response.result.CAChain, 'base64').toString(),
+			issuerPublicKey: Buffer.from(response.result.IssuerPublicKey, 'base64').toString(),
+			issuerRevocationPublicKey: Buffer.from(response.result.IssuerRevocationPublicKey, 'base64').toString(),
+			version: response.result.Version,
+		};
+	}
+
 	/*
 	 * Generate authorization token required for accessing fabric-ca APIs
 	 */
 	generateAuthToken(reqBody, signingIdentity, path, method) {
 		// specific signing procedure is according to:
-		// https://github.com/hyperledger/fabric-ca/blob/master/util/util.go#L168
+		// https://github.com/hyperledger/fabric-ca/blob/main/util/util.go#L168
 		const cert = Buffer.from(signingIdentity._certificate).toString('base64');
 		let signString;
 		if (reqBody) {

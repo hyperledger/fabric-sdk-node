@@ -21,4 +21,4 @@ none
 
 Change Log
 ----------
-https://github.com/hyperledger/fabric-sdk-node/blob/master/CHANGELOG.md#v102
+https://github.com/hyperledger/fabric-sdk-node/blob/main/CHANGELOG.md#v102

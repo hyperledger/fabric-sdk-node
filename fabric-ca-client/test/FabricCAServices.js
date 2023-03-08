@@ -29,7 +29,7 @@ describe('FabricCAServices', () => {
 	});
 
 	const checkRegistrarStub = sinon.stub();
-	const getSubjectCommonNameStub = sinon.stub();
+	const getSubjectStub = sinon.stub();
 	const normalizeX509Stub = sinon.stub();
 	const cryptoPrimitives = sinon.createStubInstance(CryptoSuite);
 	cryptoPrimitives.name = 'testCrypto';
@@ -38,7 +38,7 @@ describe('FabricCAServices', () => {
 		revert = [];
 		revert.push(FabricCAServicesRewire.__set__('parseURL', parseURLStub));
 		revert.push(FabricCAServicesRewire.__set__('checkRegistrar', checkRegistrarStub));
-		revert.push(FabricCAServicesRewire.__set__('getSubjectCommonName', getSubjectCommonNameStub));
+		revert.push(FabricCAServicesRewire.__set__('getSubject', getSubjectStub));
 		revert.push(FabricCAServicesRewire.__set__('normalizeX509', normalizeX509Stub));
 	});
 
@@ -131,6 +131,46 @@ describe('FabricCAServices', () => {
 		it('should return the caName', () => {
 			const service = new FabricCAServicesRewire('http://penguin.com', null, 'ca_name', cryptoPrimitives);
 			service.getCaName().should.equal('ca_name');
+		});
+	});
+
+	describe('#getCaInfo', () => {
+
+		let service;
+		let clientMock;
+
+		beforeEach(() => {
+			service = new FabricCAServicesRewire('http://penguin.com', null, 'ca_name', cryptoPrimitives);
+			clientMock = sinon.createStubInstance(FabricCAClient);
+			service._fabricCAClient = clientMock;
+		});
+
+		it('should call "checkRegistrar"', async () => {
+			await service.getCaInfo(new User('bob'));
+			sinon.assert.calledOnce(checkRegistrarStub);
+		});
+
+		it('should return a known object on success', async () => {
+			// Take control of the enroll
+			clientMock.getCaInfo.resolves({
+				caName: 'test_ca_name',
+				caChain: 'test_ca_chain',
+				issuerPublicKey: 'test_iss_pub_key',
+				issuerRevocationPublicKey: 'test_iss_rev_pub_key',
+				version: '1.4.9'
+			});
+
+			const registrar = new User('bob');
+
+			const result = await service.getCaInfo(registrar);
+
+			result.should.deep.equal({
+				caName: 'test_ca_name',
+				caChain: 'test_ca_chain',
+				issuerPublicKey: 'test_iss_pub_key',
+				issuerRevocationPublicKey: 'test_iss_rev_pub_key',
+				version: '1.4.9'
+			});
 		});
 	});
 
@@ -249,7 +289,7 @@ describe('FabricCAServices', () => {
 
 		it('should reject on enroll failure', async () => {
 
-			getSubjectCommonNameStub.returns('mr_penguin');
+			getSubjectStub.returns('/CN=mr_penguin');
 			normalizeX509Stub.returns('normal');
 
 			const keyStub = sinon.createStubInstance(ECDSAKey);
@@ -272,7 +312,7 @@ describe('FabricCAServices', () => {
 
 		it('should reject in generate CSR failure', async () => {
 
-			getSubjectCommonNameStub.returns('mr_penguin');
+			getSubjectStub.returns('/CN=mr_penguin');
 			normalizeX509Stub.returns('normal');
 
 			const keyStub = sinon.createStubInstance(ECDSAKey);
@@ -293,7 +333,7 @@ describe('FabricCAServices', () => {
 
 		it('should reject in generate key failure', async () => {
 
-			getSubjectCommonNameStub.returns('mr_penguin');
+			getSubjectStub.returns('/CN=mr_penguin');
 			normalizeX509Stub.returns('normal');
 
 			cryptoPrimitives.generateEphemeralKey.throws(new Error('Key error'));
@@ -321,7 +361,7 @@ describe('FabricCAServices', () => {
 
 			service._fabricCAClient = clientMock;
 
-			getSubjectCommonNameStub.returns('mr_penguin');
+			getSubjectStub.returns('/CN=mr_penguin');
 			normalizeX509Stub.returns('normal');
 
 			const keyStub = sinon.createStubInstance(ECDSAKey);
@@ -349,7 +389,7 @@ describe('FabricCAServices', () => {
 
 		it('should call the enroll function on the FabricCAClient object ', async () => {
 
-			getSubjectCommonNameStub.returns('mr_penguin');
+			getSubjectStub.returns('/CN=mr_penguin');
 			normalizeX509Stub.returns('normal');
 
 			const keyStub = sinon.createStubInstance(ECDSAKey);
@@ -388,7 +428,7 @@ describe('FabricCAServices', () => {
 
 		it('should return a known object on success', async () => {
 
-			getSubjectCommonNameStub.returns('mr_penguin');
+			getSubjectStub.returns('/CN=mr_penguin');
 			normalizeX509Stub.returns('normal');
 
 			const keyStub = sinon.createStubInstance(ECDSAKey);
@@ -445,7 +485,7 @@ describe('FabricCAServices', () => {
 		it('should throw if unable to parse enrollment certificate', async () => {
 			const user = sinon.createStubInstance(User);
 			user.getIdentity.resolves({_certificate: null});
-			getSubjectCommonNameStub.throws(new Error('forced error'));
+			getSubjectStub.throws(new Error('forced error'));
 			await service.reenroll(user, [{name: 'penguin'}, {name: 'power'}]).should.be.rejectedWith(/Failed to parse the enrollment certificate of the current user for its subject/);
 		});
 
@@ -453,7 +493,7 @@ describe('FabricCAServices', () => {
 			const user = sinon.createStubInstance(User);
 			user.getSigningIdentity.returns('myID');
 			user.getIdentity.returns({_certificate: 'my_cert'});
-			getSubjectCommonNameStub.returns('mr_penguin');
+			getSubjectStub.returns('/CN=mr_penguin');
 			normalizeX509Stub.returns('normal');
 
 			cryptoPrimitives.generateKey.rejects(new Error('Key Error'));
@@ -466,7 +506,7 @@ describe('FabricCAServices', () => {
 			const user = sinon.createStubInstance(User);
 			user.getSigningIdentity.returns('myID');
 			user.getIdentity.returns({_certificate: 'my_cert'});
-			getSubjectCommonNameStub.returns('mr_penguin');
+			getSubjectStub.returns('/CN=mr_penguin');
 			normalizeX509Stub.returns('normal');
 
 			const keyStub = sinon.createStubInstance(ECDSAKey);
@@ -481,7 +521,7 @@ describe('FabricCAServices', () => {
 			const user = sinon.createStubInstance(User);
 			user.getSigningIdentity.returns('myID');
 			user.getIdentity.returns({_certificate: 'my_cert'});
-			getSubjectCommonNameStub.returns('mr_penguin');
+			getSubjectStub.returns('/CN=mr_penguin');
 			normalizeX509Stub.returns('normal');
 
 			const keyStub = sinon.createStubInstance(ECDSAKey);
@@ -499,7 +539,7 @@ describe('FabricCAServices', () => {
 			const user = sinon.createStubInstance(User);
 			user.getSigningIdentity.returns('myID');
 			user.getIdentity.returns({_certificate: 'my_cert'});
-			getSubjectCommonNameStub.returns('mr_penguin');
+			getSubjectStub.returns('/CN=mr_penguin');
 			normalizeX509Stub.returns('normal');
 
 			const keyStub = sinon.createStubInstance(ECDSAKey);
@@ -528,7 +568,7 @@ describe('FabricCAServices', () => {
 			const user = sinon.createStubInstance(User);
 			user.getSigningIdentity.returns('myID');
 			user.getIdentity.returns({_certificate: 'test_cert'});
-			getSubjectCommonNameStub.returns('mr_penguin');
+			getSubjectStub.returns('/CN=mr_penguin');
 			normalizeX509Stub.returns('normal');
 
 			const keyStub = sinon.createStubInstance(ECDSAKey);

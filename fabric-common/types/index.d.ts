@@ -368,6 +368,7 @@ export class Client {
 	public setTlsClientCertAndKey(clientCert: string, clientKey: string): Client;
 	public setTlsClientCertAndKey(): Client;
 	public addTlsClientCertAndKey(options: ConnectOptions): Client;
+	public close(): void;
 }
 
 export interface ConnectOptions {

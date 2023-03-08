@@ -13,7 +13,7 @@ The scenario tests are written in typescript and use [Cucumber](https://github.c
 Test certificates are set to expire a year after generation. Due to this the test suite generates new certificates as part of the build process, and is a manual requirement prior to running the tests locally. This process is orchestrated using test scripts that:
  - Generate the crypto-material, matching channel blocks and fabric-ca certificates required by the docker-compose files and test suites
 
-Use the npm task `npm run installAndGenerateCerts` to perform the above on a linux x64 machine, or `npm run installAndGenerateCertsMac` for a mac. This is only required to be performed upon initial project clone, and then yearly afterwards.
+Use the npm task `npm run installAndGenerateCerts`. This is only required to be performed upon initial project clone, and then yearly afterwards.
 
 ## Structure
 

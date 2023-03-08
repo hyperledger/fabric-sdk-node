@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-'use strict';
-
 /**
  * Abstract class for a suite of crypto algorithms used by the SDK to perform digital signing,
  * encryption/decryption and secure hashing. A complete suite includes support for asymmetric
@@ -23,11 +21,10 @@ class CryptoSuite {
 	/**
 	 * Generate a key using the options in <code>opts</code> and persist it in the key store as PEM files that can be
 	 * retrieved using the <code>getKey()</code> method
-	 *
+	 * @abstract
 	 * @async
 	 * @param {KeyOpts} opts Optional
 	 * @returns {Promise<module:api.Key>} Promise for an instance of the Key class
-	 * @throws Will throw an error if not implemented
 	 */
 	generateKey(opts) {
 		throw new Error('Unimplemented abstract method');
@@ -35,9 +32,8 @@ class CryptoSuite {
 
 	/**
 	 * Generate an ephemeral key.
-	 *
+	 * @abstract
 	 * @returns {module:api.Key} An instance of the Key class
-	 * @throws Will throw an error if not implemented
 	 */
 	generateEphemeralKey() {
 		throw new Error('Unimplemented abstract method');
@@ -46,7 +42,7 @@ class CryptoSuite {
 	/**
 	 * Derives the new private key from the source public key using the parameters passed in the <code>opts</code>.
 	 * This operation is needed for deriving private keys corresponding to the Transaction Certificates.
-	 *
+	 * @abstract
 	 * @param {module:api.Key} key The source key
 	 * @param {KeyOpts} opts Optional
 	 * @returns {module:api.Key} Derived key
@@ -56,6 +52,7 @@ class CryptoSuite {
 
 	/**
 	 * Creates a {@link Key} from its raw representation
+	 * @abstract
 	 * @param {*} pem PEM string of the key to create
 	 * @param {KeyOpts} opts Options for the concrete implementation
 	 * @returns {module:api.Key} The created key
@@ -67,7 +64,7 @@ class CryptoSuite {
 	/**
 	 * Imports a {@link Key} from its raw representation using <code>opts</code> to the key store as PEM files that can be
 	 * retrieved using the 'getKey()' method
-	 *
+	 * @abstract
 	 * @async
 	 * @param {string} pem PEM string of the key to import
 	 * @param {KeyOpts} opts Options for the concrete implementation
@@ -79,7 +76,7 @@ class CryptoSuite {
 
 	/**
 	 * Returns the {@link Key} this implementation associates to the Subject Key Identifier ski.
-	 *
+	 * @abstract
 	 * @param {string} ski Subject Key Identifier specific to a Crypto Suite implementation, as the
 	 *    unique index to represent the key
 	 * @returns {module:api.Key} Promise of an instance of the Key class corresponding to the ski
@@ -98,7 +95,7 @@ class CryptoSuite {
 
 	/**
 	 * Produce a hash of the message <code>msg</code> using options <code>opts</code>
-	 *
+	 * @abstract
 	 * @param {string} msg Source message to be hashed
 	 * @param {Object} opts
 	 *      algorithm: an identifier for the algorithm to be used, such as "SHA3"
@@ -109,7 +106,7 @@ class CryptoSuite {
 
 	/**
 	 * Signs digest using key. The opts argument should be appropriate for the algorithm used.
-	 *
+	 * @abstract
 	 * @param {module:api.Key} key Signing key (private key)
 	 * @param {byte[]} digest The message digest to be signed. Note that when a
 	 * signature of a larger message is needed, the caller is responsible
@@ -121,7 +118,7 @@ class CryptoSuite {
 
 	/**
 	 * Verifies signature against key and digest
-	 *
+	 * @abstract
 	 * @param {module:api.Key} key Signing verification key (public key)
 	 * @param {byte[]} signature The signature to verify
 	 * @param {byte[]} digest The digest that the signature was created for
@@ -133,7 +130,7 @@ class CryptoSuite {
 	/**
 	 * Encrypts plaintext using key.
 	 * The opts argument should be appropriate for the algorithm used.
-	 *
+	 * @abstract
 	 * @param {module:api.Key} key Encryption key (public key)
 	 * @param {byte[]} plainText Plain text to encrypt
 	 * @param {Object} opts Encryption options
@@ -145,7 +142,7 @@ class CryptoSuite {
 	/**
 	 * Decrypts ciphertext using key.
 	 * The opts argument should be appropriate for the algorithm used.
-	 *
+	 * @abstract
 	 * @param {module:api.Key} key Decryption key (private key)
 	 * @param {byte[]} cipherText Cipher text to decrypt
 	 * @param {Object} opts Decrypt options
@@ -160,14 +157,11 @@ class CryptoSuite {
 	 * When the application needs to use a key store other than the default,
 	 * it should use the {@link Client} newCryptoKeyStore to create an instance and
 	 * use this function to set the instance on the CryptoSuite.
-	 *
+	 * @abstract
 	 * @param {CryptoKeyStore} cryptoKeyStore The cryptoKeyStore.
 	 * @abstract
 	 */
 	setCryptoKeyStore(cryptoKeyStore) {
-		if (cryptoKeyStore) {
-			throw new Error('Can\'t call abstract method, must be implemented by sub-class!');
-		}
 		throw new Error('Can\'t call abstract method, must be implemented by sub-class!');
 	}
 }

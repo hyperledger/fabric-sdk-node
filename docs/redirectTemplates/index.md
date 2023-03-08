@@ -8,7 +8,7 @@ The SDK implements the Fabric programming model as described in the [Developing 
 ## Documentation
 
 Full documentation is published for each of the following versions:
-- [2.1](https://hyperledger.github.io/fabric-sdk-node/master/module-fabric-network.html)
+- [2.2](https://hyperledger.github.io/fabric-sdk-node/main/module-fabric-network.html)
 - [1.4](https://hyperledger.github.io/fabric-sdk-node/release-1.4/module-fabric-network.html)
 
 
@@ -22,4 +22,4 @@ npm install fabric-network
 
 ## Samples
 
-Sample Node.js client applications can be found in the _Fabcar_ and _Commercial Paper_ samples within the [fabric-samples repository](https://github.com/hyperledger/fabric-samples).
+Sample Node.js client applications can be found in the _Asset Transfer_ samples within the [fabric-samples repository](https://github.com/hyperledger/fabric-samples).

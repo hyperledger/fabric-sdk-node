@@ -40,7 +40,7 @@ const IdentityContext = class {
 			throw Error('Missing valid user parameter');
 		}
 		this.name = user.getName();
-		this.mspid =  user.getMspid();
+		this.mspid = user.getMspid();
 		this.transactionId = null;
 		this.nonce = null;
 	}
@@ -49,7 +49,7 @@ const IdentityContext = class {
 	 * Create a new transaction ID value. The new transaction ID will be set both on this object and on the return
 	 * value, which is a copy of this identity context. Calls to this function will not affect the transaction ID value
 	 * on copies returned from previous calls.
-	 * @returns A copy of this identity context.
+	 * @returns IdentityContext A copy of this identity context.
 	 */
 	calculateTransactionId() {
 		const method = 'calculateTransactionId';
@@ -82,7 +82,7 @@ const IdentityContext = class {
 	/**
 	 * Sign the bytes provided
 	 * @param {Buffer} payload - The payload bytes that require a signature
-	 * @return {Buffer} - The signature in bytes
+	 * @return {Buffer} - The signature as promise bytes
 	 */
 	sign(payload = checkParameter('payload')) {
 		const method = 'sign';

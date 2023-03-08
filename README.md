@@ -1,6 +1,6 @@
-## Hyperledger Fabric Client SDK for Node.js
+## Hyperledger Fabric Client SDK for Node.js <a href="https://github.com/hyperledger/fabric-sdk-node/actions/workflows/scheduled.yml"><img src="https://github.com/hyperledger/fabric-sdk-node/actions/workflows/scheduled.yml/badge.svg" alt="Build status" style="float: right"></a>
 
-[![Build Status](https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_apis/build/status/hyperledger.fabric-sdk-node?branchName=master)](https://dev.azure.com/Hyperledger/Fabric-SDK-Node/_build/latest?definitionId=47&branchName=master)
+> **Note:** When developing applications for Hyperledger Fabric v2.4 and later, you should use the [Fabric Gateway client API](https://hyperledger.github.io/fabric-gateway/).
 
 The Hyperledger Fabric Client SDK makes it possible to use APIs to interact with a Hyperledger Fabric blockchain. This readme is directed towards a current or future contributor to this project, and gives an overview of setting up the project locally and running tests. For more information on the SDK, including features and an API reference, please visit the [SDK documentation](https://hyperledger.github.io/fabric-sdk-node/).
 
@@ -12,10 +12,8 @@ This project publishes the following npm packages:
 
 ## Build and Test
 To build and test, the following pre-requisites must be installed first:
-* Node.js, version 10 is supported from 10.15.3 and higher
-* Node.js, version 12 is supported from 12.13.1 and higher
-* npm tool version 6 or higher
-* docker (only required for running integration tests, see below)
+* Node.js
+* Docker (only required for running integration tests, see below)
 
 ### Run unit tests
 Clone the project and launch the following commands to install the dependencies and perform various tasks.
@@ -23,13 +21,11 @@ Clone the project and launch the following commands to install the dependencies 
 In the project root folder:
 * Install all dependencies via `npm install`
 * Optionally, to generate API docs via `npm run docs`
-* To generate the required crypto material used by the tests, use one of the following patform specific commands:
-  * For Linux `npm run installAndGenerateCerts`
-  * For mac `npm run installAndGenerateCertsMac`
+* To generate the required crypto material used by the tests, use the npm task `npm run installAndGenerateCerts`
 * To run the unit tests that do not require any additional set up, use `npm run testHeadless`
 
 ### Run Integration Tests
-Integration tests run on the master branch require the most recent stable Fabric images, which are hosted on Artifactory. A utility script is provided to retrieve non-published docker images, which may be run using the command `npm run pullFabricImages`
+Integration tests run on the main branch require the most recent stable Fabric images, which are hosted on Artifactory. A utility script is provided to retrieve non-published docker images, which may be run using the command `npm run pullFabricImages`
 
 Now you are ready to run the integration tests. It is advisable to clear out any previous key value stores that may have cached user enrollment certificates using the command (`rm -rf /tmp/hfc-*`, `rm -rf ~/.hfc-key-store`) prior to testing in isolation.
 
@@ -65,4 +61,3 @@ Check the `./release_notes` directory for the release notes of the specified rel
 Check [the documentation](./CONTRIBUTING.md) on how to contribute to this project for the full details.
 
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
-s

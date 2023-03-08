@@ -76,7 +76,11 @@ class Proposal extends ServiceAction {
 	 * chaincodes and collections that this chaincode code will call.
 	 * @example
 	 *    [
-	 *      { name: "mychaincode", collectionNames: ["mycollection"] }
+	 *      { name: 'mychaincode', collectionNames: ['mycollection'] }
+	 *    ]
+	 * @example
+	 *    [
+	 *      { name: 'mychaincode', collectionNames: ['mycollection'], noPrivateReads: true }
 	 *    ]
 	 * @example
 	 *    [
@@ -162,6 +166,7 @@ class Proposal extends ServiceAction {
 
 		return this;
 	}
+
 	/**
 	 * Use this method to add a chaincode name and collection names
 	 * that this proposal's chaincode will call. These will be used
@@ -210,7 +215,7 @@ class Proposal extends ServiceAction {
 		const method = `build[${this.chaincodeId}][${this.type}]`;
 		logger.debug('%s - start', method);
 
-		const {fcn,  args = [], transientMap, init} = request;
+		const {fcn, args = [], transientMap, init} = request;
 
 		if (!Array.isArray(args)) {
 			throw Error('Proposal parameter "args" must be an array.');
@@ -254,7 +259,9 @@ class Proposal extends ServiceAction {
 
 		// build the proposal payload
 		const chaincodeID = fabproto6.protos.ChaincodeID.create({
-			name: this.chaincodeId
+			name: this.chaincodeId,
+			version: this.chaincodeVersion || '',
+			path: this.chaincodePath || '',
 		});
 
 		const chaincodeInput = fabproto6.protos.ChaincodeInput.create({
@@ -271,9 +278,7 @@ class Proposal extends ServiceAction {
 		const chaincodeInvocationSpec = fabproto6.protos.ChaincodeInvocationSpec.create({
 			chaincode_spec: chaincodeSpec
 		});
-		const chaincodeInvocationSpecBuf = fabproto6.protos.ChaincodeInvocationSpec.encode(
-			chaincodeInvocationSpec
-		).finish();
+		const chaincodeInvocationSpecBuf = fabproto6.protos.ChaincodeInvocationSpec.encode(chaincodeInvocationSpec).finish();
 
 		const fields = {
 			input: chaincodeInvocationSpecBuf
@@ -281,16 +286,16 @@ class Proposal extends ServiceAction {
 		if (this._action.transientMap) {
 			fields.TransientMap = this._action.transientMap;
 		}
-		const chaincodeProposalPayload = fabproto6.protos.ChaincodeProposalPayload.create(
-			fields
-		);
-		const chaincodeProposalPayloadBuf = fabproto6.protos.ChaincodeProposalPayload.encode(
-			chaincodeProposalPayload
-		).finish();
+		const chaincodeProposalPayload = fabproto6.protos.ChaincodeProposalPayload.create(fields);
+		const chaincodeProposalPayloadBuf = fabproto6.protos.ChaincodeProposalPayload.encode(chaincodeProposalPayload).finish();
 
 		const channelHeaderBuf = this.channel.buildChannelHeader(
 			fabproto6.common.HeaderType.ENDORSER_TRANSACTION,
-			this.chaincodeId,
+			{
+				name: this.chaincodeId,
+				version: this.chaincodeVersion || '',
+				path: this.chaincodePath || '',
+			},
 			this._action.transactionId
 		);
 
@@ -398,12 +403,13 @@ message Endorsement {
 
 		this._proposalResponses = [];
 		this._proposalErrors = [];
-		this._queryResults = [];
+
 
 		if (handler) {
 			logger.debug('%s - endorsing with a handler', method);
 			let results;
 			if (this.type === 'Query') {
+				// TODO should we move it to Query.js
 				results = await handler.query(signedEnvelope, request);
 			} else {
 				results = await handler.endorse(signedEnvelope, request);
@@ -458,24 +464,10 @@ message Endorsement {
 			throw Error('Missing targets parameter');
 		}
 
-		const return_results =  {
+		return {
 			errors: this._proposalErrors,
 			responses: this._proposalResponses
 		};
-
-		if (this.type === 'Query') {
-			this._proposalResponses.forEach((response) => {
-				if (response.endorsement && response.response && response.response.payload) {
-					logger.debug('%s - have payload', method);
-					this._queryResults.push(response.response.payload);
-				} else {
-					logger.debug('%s - no payload in query', method);
-				}
-			});
-			return_results.queryResults = this._queryResults;
-		}
-
-		return return_results;
 	}
 
 	/**

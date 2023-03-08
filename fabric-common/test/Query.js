@@ -12,8 +12,9 @@ chai.use(chaiAsPromised);
 
 const Query = rewire('../lib/Query');
 const Client = require('../lib/Client');
-
+const User = rewire('../lib/User');
 const TestUtils = require('./TestUtils');
+const sinon = require('sinon');
 
 describe('Query', () => {
 
@@ -22,10 +23,15 @@ describe('Query', () => {
 	const client = new Client('myclient');
 	const channel = client.newChannel('mychannel');
 
-	let endorsement;
+	const user = User.createUser('user', 'password', 'mspid', TestUtils.certificateAsPEM, TestUtils.keyAsPEM);
+	const idx = client.newIdentityContext(user);
+
+	let query;
+	let endorser;
 
 	beforeEach(async () => {
-		endorsement = channel.newQuery('chaincode');
+		query = channel.newQuery('chaincode');
+		endorser = client.newEndorser('mypeer');
 	});
 
 	describe('#constructor', () => {
@@ -45,9 +51,38 @@ describe('Query', () => {
 		});
 	});
 
+	describe('overwrite send', () => {
+		it('should have queryResults when this is a query', async () => {
+			query.build(idx);
+			query.sign(idx);
+
+			sinon.stub(endorser, 'sendProposal').resolves({response: {status: 400, payload: 'query payload'}});
+			const results = await query.send({targets: [endorser]});
+			should.exist(results.queryResults);
+			if (results.queryResults && results.queryResults[0]) {
+				should.equal(results.queryResults[0], 'query payload');
+			}
+		});
+		it('should have empty queryResults when this is a query and no good responses', async () => {
+			query.build(idx);
+			query.sign(idx);
+
+			sinon.stub(endorser, 'sendProposal').resolves({response: {status: 200}});
+			const results = await query.send({targets: [endorser]});
+			results.queryResults.should.be.an('array').that.is.empty;
+		});
+		it('should have empty queryResults when this is a query and unknown responses', async () => {
+			query.build(idx);
+			query.sign(idx);
+			sinon.stub(endorser, 'sendProposal').resolves({response: {payload: 'query payload'}});
+			const results = await query.send({targets: [endorser]});
+			results.queryResults.should.be.an('array').that.is.empty;
+		});
+	});
+
 	describe('#toString', () => {
 		it('should return string', () => {
-			const string = endorsement.toString();
+			const string = query.toString();
 			should.equal(string, 'Query: {chaincodeId: chaincode, channel: mychannel}');
 		});
 	});

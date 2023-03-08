@@ -14,7 +14,8 @@ set -e -o pipefail
 : "${PUBLISH_DIR:?}" # Directory used to store content to publish to GitHub Pages
 : "${SOURCE_BRANCH:?}" # Source code branch name
 
-readonly COMMIT_HASH="$(git rev-parse HEAD)"
+COMMIT_HASH="$(git rev-parse HEAD)"
+readonly COMMIT_HASH
 readonly BUILD_DIR="${PROJECT_DIR}/docs/gen"
 readonly TEMPLATE_DIR="${PROJECT_DIR}/docs/redirectTemplates"
 readonly PUBLISH_RELEASE_DIR="${PUBLISH_DIR}/${SOURCE_BRANCH}"
@@ -55,7 +56,7 @@ publishDocs() {
 }
 
 _publishPushDocs() {
-    if [ -z "$(git status --porcelain=v1)" 2>/dev/null ]; then
+    if [ -z "$(git status --porcelain=v1 2>/dev/null)" ]; then
         echo 'No changes to publish'
         return
     fi
