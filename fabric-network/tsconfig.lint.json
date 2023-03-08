@@ -7,7 +7,7 @@
 		"alwaysStrict": true,
 		"outDir": "./lib",
 		"rootDir": "./src",
-		"sourceMap": true
+		"sourceMap": true,
 	},
 	"include": [
 		"src/","test/"

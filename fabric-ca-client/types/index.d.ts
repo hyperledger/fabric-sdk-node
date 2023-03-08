@@ -10,6 +10,8 @@ declare class FabricCAServices {
 
 	getCaName(): string;
 
+	getCaInfo(registrar: User): Promise<FabricCAServices.ICAInfoResponse>;
+
 	register(req: FabricCAServices.IRegisterRequest, registrar: User): Promise<string>;
 
 	enroll(req: FabricCAServices.IEnrollmentRequest): Promise<FabricCAServices.IEnrollResponse>;
@@ -50,6 +52,14 @@ declare namespace FabricCAServices {
 		ecert?: boolean;
 	}
 
+	export interface ICAInfoResponse {
+		caName: string;
+		caChain: string;
+		issuerPublicKey: string;
+		issuerRevocationPublicKey: string;
+		version: string;
+	}
+
 	export interface IRegisterRequest {
 		enrollmentID: string;
 		enrollmentSecret?: string;
@@ -70,6 +80,7 @@ declare namespace FabricCAServices {
 		profile?: string;
 		attr_reqs?: IAttributeRequest[];
 		csr?: string;
+		subject?: string;
 	}
 
 	export interface IEnrollResponse {

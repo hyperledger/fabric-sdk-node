@@ -78,35 +78,37 @@ describe('SigningIdentity', () => {
 			}).should.throw(/The "hashFunction" field must be a function/);
 		});
 
-		it('should handle a successful sign by the signer using the default hash function', async () => {
+		it('should handle a successful sign by the signer using the default hash function', () => {
 			const digest = HashPrimitives.SHA2_256(message);
 			const hashFunction = sinon.stub();
 			hashFunction.withArgs(message).returns(digest);
 			mockCryptoSuite.hash = hashFunction;
-			mockSigner.sign.withArgs(digest, null).resolves();
-			await signingIdentity.sign(message);
+			mockSigner.sign.withArgs(digest, null).returns();
+			signingIdentity.sign(message);
 			mockSigner.sign.should.have.been.calledOnceWithExactly(sinon.match((buffer) => {
 				return buffer.toString('hex') === digest;
 			}), null);
 		});
 
-		it('should handle a successful sign by the signer using the specified hash function', async () => {
+		it('should handle a successful sign by the signer using the specified hash function', () => {
 			const digest = HashPrimitives.SHA2_256(message);
 			const hashFunction = sinon.stub();
 			hashFunction.withArgs(message).returns(digest);
-			mockSigner.sign.resolves();
-			await signingIdentity.sign(message, {hashFunction});
+			mockSigner.sign.returns();
+			signingIdentity.sign(message, {hashFunction});
 			mockSigner.sign.should.have.been.calledOnceWithExactly(sinon.match((buffer) => {
 				return buffer.toString('hex') === digest;
 			}), null);
 		});
 
-		it('should handle an unsuccessful sign by the signer', async () => {
+		it('should handle an unsuccessful sign by the signer', () => {
 			const digest = HashPrimitives.SHA2_256(message);
 			const hashFunction = sinon.stub();
 			hashFunction.withArgs(message).returns(digest);
-			mockSigner.sign.rejects(new Error('such error'));
-			await signingIdentity.sign(message, {hashFunction}).should.have.been.rejectedWith(/such error/);
+			mockSigner.sign.throws(new Error('such error'));
+			(() => {
+				signingIdentity.sign(message, {hashFunction});
+			}).should.throw(/such error/);
 		});
 
 	});

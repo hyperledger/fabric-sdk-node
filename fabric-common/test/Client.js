@@ -441,6 +441,28 @@ describe('Client', () => {
 		});
 	});
 
+	describe('#close', () => {
+		it('should be able close with no endpoints', () => {
+			client.close();
+		});
+		it('should allow multiple close attempt', () => {
+			client.close();
+			client.close();
+		});
+		it('should be able close with endpoints', () => {
+			client.getEndorser('endoser1');
+			client.getCommitter('committer1');
+			client.getChannel('mychannel');
+			should.equal(client.endorsers.size, 1);
+			should.equal(client.committers.size, 1);
+			should.equal(client.channels.size, 1);
+			client.close();
+			should.equal(client.endorsers.size, 0);
+			should.equal(client.committers.size, 0);
+			should.equal(client.channels.size, 0);
+		});
+	});
+
 	describe('#toString', () => {
 		it('should return string', () => {
 			const string = client.toString();

@@ -6,19 +6,6 @@
 
 'use strict';
 
-/*
-		it('should handle a successful sign by the crypto suite', async () => {
-			mockCryptoSuite.sign.withArgs(mockPrivateKey, digest, opts).resolves();
-			await signer.sign(digest, opts);
-			mockCryptoSuite.sign.should.have.been.calledOnceWithExactly(mockPrivateKey, digest, opts);
-		});
-
-		it('should handle an unsuccessful sign by the crypto suite', async () => {
-			mockCryptoSuite.sign.withArgs(mockPrivateKey, digest, opts).rejects(new Error('such error'));
-			await signer.sign(digest, opts).should.be.rejectedWith(/such error/);
-		});
-		*/
-
 const {Endorser} = require('fabric-common');
 const {QueryImpl: Query} = require('fabric-network/lib/impl/query/query');
 const {SingleQueryHandler} = require('fabric-network/lib/impl/query/singlequeryhandler');

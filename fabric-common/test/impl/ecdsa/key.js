@@ -325,7 +325,7 @@ describe('ECDSA_KEY', () => {
 			const myKey = new ECDSA_KEY_REWIRE(fakeKey);
 			myKey._key.should.deep.equal(fakeKey);
 			myKey.isPrivate = sinon.stub().returns(true);
-			const csr = myKey.generateX509Certificate('penguin');
+			const csr = myKey.generateX509Certificate('/CN=penguin');
 
 			csr.should.equal('your PEM sir');
 			sinon.assert.calledOnce(pemStub);

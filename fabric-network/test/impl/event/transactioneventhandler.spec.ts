@@ -343,5 +343,14 @@ describe('TransactionEventHandler', () => {
 				expect(error.transactionId).to.equal(transactionId);
 			}
 		});
+		it('timeout failure error message has timeout information', async () => {
+			options.eventHandlerOptions = {commitTimeout: 418};
+			handler = new TransactionEventHandler(transactionId, network, strategy);
+
+			await handler.startListening();
+			const promise = handler.waitForEvents();
+			await clock.runAllAsync();
+			await expect(promise).to.be.rejectedWith('418');
+		});
 	});
 });

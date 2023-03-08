@@ -29,7 +29,6 @@ jobs:
       - uses: actions/checkout@v3
         with:
           ref: ${{ inputs.checkout-ref }}
-
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
@@ -54,7 +53,6 @@ jobs:
         with:
           name: ${{ matrix.node-version }}-unit-test-debug.log
           path: test/temp/debug.log
-
       - name: "Archive scenario test debug log"
         if: ${{ failure() }}
         uses: actions/upload-artifact@v3

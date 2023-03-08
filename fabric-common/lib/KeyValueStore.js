@@ -15,7 +15,7 @@ class KeyValueStore {
 
 	/**
 	 * Initialize the store
-	 *
+	 * @abstract
 	 * @async
 	 */
 	initialize() {
@@ -23,7 +23,7 @@ class KeyValueStore {
 
 	/**
 	 * Get the value associated with <code>name</code>.
-	 *
+	 * @abstract
 	 * @param {string} name Name of the key
 	 * @returns {Promise} Promise for the value corresponding to the key. If the value does not exist in the
 	 * store, returns null without rejecting the promise
@@ -33,6 +33,7 @@ class KeyValueStore {
 
 	/**
 	 * Set the value associated with <code>name</code>.
+	 * @abstract
 	 * @param {string} name Name of the key to save
 	 * @param {string} value The Value to save
 	 * @returns {Promise} Promise for the 'value' object upon successful write operation

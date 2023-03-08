@@ -111,7 +111,7 @@ describe('Commit', () => {
 			const request = {
 				targets: []
 			};
-			await commit.sign(idx);
+			commit.sign(idx);
 			await commit.send(request).should.be.rejectedWith('Unable to find any target committers');
 		});
 		it('throws if targets is missing', async () => {

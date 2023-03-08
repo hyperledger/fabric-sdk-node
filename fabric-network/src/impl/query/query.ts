@@ -95,7 +95,6 @@ export class QueryImpl implements Query {
 		} catch (error) {
 			// if we get an error, return this error for each peer
 			for (const peer of peers) {
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 				results[peer.name] = error as Error;
 				logger.error('%s - problem with query to peer %s error:%s', method, peer.name, error);
 			}

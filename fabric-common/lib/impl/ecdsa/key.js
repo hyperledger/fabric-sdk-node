@@ -137,17 +137,13 @@ class ECDSA_KEY extends Key {
 
 	/**
 	 * Generates a self-signed X.509 certificate
-	 * @param {string} [commonName] The common name to use as the subject for the X509 certificate
+	 * @param {string} [subjectDN] The subject to use for the X509 certificate
 	 * @returns {string} PEM-encoded X.509 certificate
 	 * @throws Will throw an error if this is not a private key
 	 * @throws Will throw an error if X.509 certificate generation fails for any other reason
 	 */
-	generateX509Certificate(commonName) {
+	generateX509Certificate(subjectDN = '/CN=self') {
 
-		let subjectDN = '/CN=self';
-		if (commonName) {
-			subjectDN = '/CN=' + commonName;
-		}
 		// check to see if this is a private key
 		if (!this.isPrivate()) {
 			throw new Error('An X509 certificate cannot be generated from a public key');

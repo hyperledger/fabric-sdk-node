@@ -12,6 +12,7 @@ const Endorsement = require('./Endorsement.js');
 const Commit = require('./Commit.js');
 const Query = require('./Query.js');
 const fabproto6 = require('fabric-protos');
+const util = require('util');
 const {checkParameter, getLogger} = require('./Utils.js');
 
 const logger = getLogger(TYPE);
@@ -66,8 +67,7 @@ const Channel = class {
 	}
 
 	/**
-	 * Close the service connections of all assigned endorsers, committers,
-	 * channel event hubs, and channel discovery.
+	 * Close the service connections of all assigned endorsers and committers
 	 */
 	close() {
 		const method = `close[${this.name}]`;
@@ -474,11 +474,11 @@ const Channel = class {
 	 */
 	buildChannelHeader(type = checkParameter('type'), chaincode_id = checkParameter('chaincode_id'), tx_id = checkParameter('tx_id')) {
 		const method = `buildChannelHeader[${this.name}]`;
-		logger.debug(`${method} - start - type ${type} chaincode_id ${chaincode_id} tx_id ${tx_id}`);
+		logger.debug(`${method} - start - type ${type} chaincode_id ${util.inspect(chaincode_id)} tx_id ${tx_id}`);
 
-		const chaincodeID = fabproto6.protos.ChaincodeID.create({
+		const chaincodeID = fabproto6.protos.ChaincodeID.create(typeof chaincode_id === 'string' ? {
 			name: chaincode_id
-		});
+		} : chaincode_id);
 
 		logger.debug('%s - chaincodeID %j', method, chaincodeID);
 
@@ -514,9 +514,7 @@ const Channel = class {
 		}
 
 		const channelHeader = fabproto6.common.ChannelHeader.create(fields);
-		const channelHeaderBuf = fabproto6.common.ChannelHeader.encode(channelHeader).finish();
-
-		return channelHeaderBuf;
+		return fabproto6.common.ChannelHeader.encode(channelHeader).finish();
 	}
 
 	/**

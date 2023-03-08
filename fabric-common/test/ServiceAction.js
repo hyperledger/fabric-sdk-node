@@ -72,8 +72,8 @@ describe('ServiceAction', () => {
 			}).should.throw('The send payload has not been built');
 		});
 		it('should require a signature or identityContext', () => {
+			serviceAction._payload = Buffer.from('payload');
 			(() => {
-				serviceAction._payload = Buffer.from('payload');
 				serviceAction.sign({});
 			}).should.throw('param is an unknown signer or signature type');
 		});

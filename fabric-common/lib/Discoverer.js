@@ -45,7 +45,7 @@ class Discoverer extends ServiceEndpoint {
 	 *  response before rejecting the promise with a timeout error. This
 	 *  overrides the default timeout of the Peer instance and the global
 	 *  timeout in the config settings.
-	 * @returns {Promise} A Promise for a {@link DiscoveryResponse}
+	 * @returns {Promise<discovery.Response>}
 	 */
 	sendDiscovery(signedEnvelope, timeout) {
 		const method = `sendDiscovery[${this.name}]`;
