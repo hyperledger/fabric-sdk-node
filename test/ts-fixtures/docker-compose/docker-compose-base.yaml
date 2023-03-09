@@ -150,7 +150,7 @@ services:
 
   couchdb:
     container_name: couchdb
-    image: couchdb:3.1
+    image: couchdb
     environment:
       - COUCHDB_USER=admin
       - COUCHDB_PASSWORD=adminpw
