@@ -1,8 +1,8 @@
 ## Hyperledger Fabric-CA Client for Node.js
 
-[![NPM](https://nodei.co/npm/fabric-ca-client.svg?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.com/package/fabric-ca-client/)
-
 SDK for writing node.js applications to interact with [Hyperledger Fabric CA](http://hyperledger-fabric-ca.readthedocs.io/en/latest/users-guide.html).
+
+> **Note:** This API is deprecated as of Fabric v2.5. When developing applications for Hyperledger Fabric v2.4 and later, you should use the [Fabric Gateway client API](https://hyperledger.github.io/fabric-gateway/).
 
 This package encapsulates the APIs to interact with the Fabric CA to manage user certificates lifecycle such as register, enroll, renew and revoke.
 

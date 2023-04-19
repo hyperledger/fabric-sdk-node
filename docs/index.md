@@ -1,6 +1,8 @@
 
 The Hyperledger Fabric SDK for Node.js provides a powerful API to interact with a Hyperledger Fabric blockchain. The SDK is designed to be used in the Node.js JavaScript runtime.
 
+> **Note:** This API is deprecated as of Fabric v2.5, replaced by the [Fabric Gateway client API](https://hyperledger.github.io/fabric-gateway/).
+
 
 ### Overview
 

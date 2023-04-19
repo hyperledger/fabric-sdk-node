@@ -5,6 +5,10 @@
  */
 
 /**
+ * <blockquote>
+ * <p><strong>Note:</strong> This API is deprecated as of Fabric v2.5, replaced by the <a href="https://hyperledger.github.io/fabric-gateway/">Fabric Gateway client API</a>.</p>
+ * </blockquote>
+ *
  * <h3>Overview</h3>
  *
  * <p>This module provides a higher level API for interacting with smart contracts, and is the recommended API for
@@ -73,6 +77,7 @@
  * }
  *
  * @module fabric-network
+ * @deprecated As of Fabric v2.5, replaced by the <a href="https://hyperledger.github.io/fabric-gateway/">Fabric Gateway client API</a>.
  */
 
 /**
