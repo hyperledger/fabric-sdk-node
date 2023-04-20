@@ -2,6 +2,8 @@
 
 SDK for writing node.js applications to interact with [Hyperledger Fabric](http://hyperledger-fabric.readthedocs.io/en/latest/).
 
+> **Note:** This API is deprecated as of Fabric v2.5. When developing applications for Hyperledger Fabric v2.4 and later, you should use the [Fabric Gateway client API](https://hyperledger.github.io/fabric-gateway/).
+
 This package encapsulates the Protocol Buffer files and generated JavaScript classes for Hyperledger Fabric.
 
 Additional packages are also provided:

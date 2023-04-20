@@ -1,6 +1,6 @@
 ## Hyperledger Fabric Client SDK for Node.js <a href="https://github.com/hyperledger/fabric-sdk-node/actions/workflows/scheduled.yml"><img src="https://github.com/hyperledger/fabric-sdk-node/actions/workflows/scheduled.yml/badge.svg" alt="Build status" style="float: right"></a>
 
-> **Note:** When developing applications for Hyperledger Fabric v2.4 and later, you should use the [Fabric Gateway client API](https://hyperledger.github.io/fabric-gateway/).
+> **Note:** This API is deprecated as of Fabric v2.5. When developing applications for Hyperledger Fabric v2.4 and later, you should use the [Fabric Gateway client API](https://hyperledger.github.io/fabric-gateway/).
 
 The Hyperledger Fabric Client SDK makes it possible to use APIs to interact with a Hyperledger Fabric blockchain. This readme is directed towards a current or future contributor to this project, and gives an overview of setting up the project locally and running tests. For more information on the SDK, including features and an API reference, please visit the [SDK documentation](https://hyperledger.github.io/fabric-sdk-node/).
 
