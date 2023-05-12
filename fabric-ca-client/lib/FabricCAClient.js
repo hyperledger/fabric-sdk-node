@@ -311,7 +311,7 @@ const FabricCAClient = class {
 			request.on('socket', (socket) => {
 				socket.setTimeout(CONNECTION_TIMEOUT);
 				socket.on('timeout', () => {
-					request.abort();
+					request.destroy();
 					reject(new Error(`Calling ${api_method} endpoint failed, CONNECTION Timeout`));
 				});
 			});
