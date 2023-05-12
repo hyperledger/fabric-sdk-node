@@ -140,4 +140,4 @@ The following sample code is in TypeScript to show the object types involved.
 	}
 ```
 
-For a complete sample plug-in query handler implementation, see [sample-query-handler.ts](https://github.com/hyperledger/fabric-sdk-node/blob/main/test/ts-scenario/config/handlers/sample-query-handler.ts).
+For a complete sample plug-in query handler implementation, see [sample-query-handler.ts](https://github.com/hyperledger/fabric-sdk-node/blob/main/test/ts-scenario/src/handlers/sample-query-handler.ts).

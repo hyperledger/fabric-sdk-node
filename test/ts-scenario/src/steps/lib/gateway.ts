@@ -11,8 +11,8 @@ import FabricCAClient = require('fabric-ca-client');
 import {Contract, DefaultEventHandlerStrategies, DefaultQueryHandlerStrategies, Gateway, GatewayOptions, HsmOptions, HsmX509Provider, Identity, IdentityProvider, Network, QueryHandlerFactory, Transaction, TransientMap, TxEventHandlerFactory, Wallet, Wallets, HsmX509Identity, X509Identity} from 'fabric-network';
 import * as fs from 'fs';
 import * as path from 'path';
-import {createQueryHandler as sampleQueryStrategy} from '../../config/handlers/sample-query-handler';
-import {createTransactionEventHandler as sampleTxnEventStrategy} from '../../config/handlers/sample-transaction-event-handler';
+import {createQueryHandler as sampleQueryStrategy} from '../../handlers/sample-query-handler';
+import {createTransactionEventHandler as sampleTxnEventStrategy} from '../../handlers/sample-transaction-event-handler';
 import * as Constants from '../constants';
 import * as AdminUtils from './utility/adminUtils';
 import * as BaseUtils from './utility/baseUtils';
@@ -97,7 +97,7 @@ export async function createGateway(ccp: CommonConnectionProfileHelper, tls: boo
 				break;
 			case Constants.FILE_WALLET:
 				{
-					const tempDir: string = path.join(__dirname, Constants.LIB_TO_TEMP, Constants.FILE_WALLET);
+					const tempDir: string = path.join(Constants.TEMP_PATH, Constants.FILE_WALLET);
 					if (fs.existsSync(tempDir)) {
 						BaseUtils.recursiveDirDelete(tempDir);
 					}

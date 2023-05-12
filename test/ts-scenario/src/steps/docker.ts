@@ -12,8 +12,8 @@ import * as path from 'path';
 const commandRunner: CommandRunner = CommandRunner.getInstance();
 const stateStore: StateStore = StateStore.getInstance();
 
-const nonTlsNetwork = '../../ts-fixtures/docker-compose/docker-compose.yaml';
-const tlsNetwork = '../../ts-fixtures/docker-compose/docker-compose-tls.yaml';
+const nonTlsNetwork = path.join(Constants.DOCKER_COMPOSE_PATH, 'docker-compose.yaml');
+const tlsNetwork = path.join(Constants.DOCKER_COMPOSE_PATH, '/docker-compose-tls.yaml');
 
 Given(/^I deploy a (.+?) Fabric network at (.+?) version/, {timeout: Constants.STEP_LONG}, async (type: string, version: string) => {
 
@@ -35,9 +35,9 @@ Given(/^I deploy a (.+?) Fabric network at (.+?) version/, {timeout: Constants.S
 	if (!fabricState || !fabricState.deployed) {
 		BaseUtils.logMsg(` **** deploying a new fabric network of type ${type} version ${version}`);
 		if (type.localeCompare('non-tls') === 0) {
-			await commandRunner.runShellCommand(true, 'docker-compose -f ' + path.join(__dirname, nonTlsNetwork) + ' -p node up -d');
+			await commandRunner.runShellCommand(true, 'docker-compose -f ' + nonTlsNetwork + ' -p node up -d');
 		} else {
-			await commandRunner.runShellCommand(true, 'docker-compose -f ' + path.join(__dirname, tlsNetwork) + ' -p node up -d');
+			await commandRunner.runShellCommand(true, 'docker-compose -f ' + tlsNetwork + ' -p node up -d');
 		}
 		stateStore.set(Constants.FABRIC_STATE, {deployed: true, type, version});
 		await BaseUtils.sleep(Constants.INC_SHORT);
@@ -54,9 +54,9 @@ Given(/^I deploy a (.+?) Fabric network at (.+?) version/, {timeout: Constants.S
 		await BaseUtils.sleep(Constants.INC_MED);
 
 		if (type.localeCompare('non-tls') === 0) {
-			await commandRunner.runShellCommand(true, 'docker-compose -f ' + path.join(__dirname, nonTlsNetwork) + ' -p node up -d');
+			await commandRunner.runShellCommand(true, 'docker-compose -f ' + nonTlsNetwork + ' -p node up -d');
 		} else {
-			await commandRunner.runShellCommand(true, 'docker-compose -f ' + path.join(__dirname, tlsNetwork) + ' -p node up -d');
+			await commandRunner.runShellCommand(true, 'docker-compose -f ' + tlsNetwork + ' -p node up -d');
 		}
 		stateStore.set(Constants.FABRIC_STATE, {deployed: true, type, version});
 		await BaseUtils.sleep(Constants.INC_SHORT);

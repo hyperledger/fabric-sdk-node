@@ -12,8 +12,8 @@ import * as path from 'path';
 
 const stateStore: StateStore = StateStore.getInstance();
 
-const lifecycleCcp: CommonConnectionProfileHelper = new CommonConnectionProfileHelper(path.join(__dirname, '../config', 'ccp-lifecycle.json'), true);
-const lifecycleCcpTls: CommonConnectionProfileHelper = new CommonConnectionProfileHelper(path.join(__dirname, '../config', 'ccp-lifecycle-tls.json'), true);
+const lifecycleCcp: CommonConnectionProfileHelper = new CommonConnectionProfileHelper(path.join(Constants.CONFIG_PATH, 'ccp-lifecycle.json'), true);
+const lifecycleCcpTls: CommonConnectionProfileHelper = new CommonConnectionProfileHelper(path.join(Constants.CONFIG_PATH, 'ccp-lifecycle-tls.json'), true);
 
 
 Then(/^I can (submit|query) invalid function (.+?) on contract named (.+?) as organization (.+?) on channel (.+?) with args (.+?) I receive an error with status (.+?) and message containing (.+?)$/, {timeout: Constants.STEP_LONG}, async (submit: string, contractFunction: string, contractName: string, orgName: string, channelName: string, contractAgs: string, status: string, message: string) => {

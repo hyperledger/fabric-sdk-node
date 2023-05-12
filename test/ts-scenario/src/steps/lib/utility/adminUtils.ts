@@ -205,7 +205,7 @@ export async function assignOrgAdmin(client: Client, orgName: string, ccp: Commo
 export async function isOrgChaincodeInstalled(orgName: string, ccp: CommonConnectionProfileHelper, chaincodeName: string,
 	chaincodeVersion: string): Promise<boolean> {
 	BaseUtils.logMsg(`Checking if smart contract ${chaincodeName} at version ${chaincodeVersion} has been installed`);
-	const clientPath: string = path.join(__dirname, Constants.UTIL_TO_CONFIG, orgName + '.json');
+	const clientPath: string = path.join(Constants.CONFIG_PATH, orgName + '.json');
 	const orgClient: Client = Client.loadFromConfig(clientPath);
 
 	// Augment it with full CCP
@@ -239,7 +239,7 @@ export async function isOrgChaincodeInstalled(orgName: string, ccp: CommonConnec
 export async function isChaincodeInstantiatedOnChannel(orgName: string, ccp: CommonConnectionProfileHelper, channelName: string,
 	chaincodeName: string, chaincodeVersion: string): Promise<boolean> {
 	BaseUtils.logMsg(`Checking if smart contract ${chaincodeName} has been instantiated on channel ${channelName}`);
-	const clientPath: string = path.join(__dirname, Constants.UTIL_TO_CONFIG, orgName + '.json');
+	const clientPath: string = path.join(Constants.CONFIG_PATH, orgName + '.json');
 	const orgClient: Client = Client.loadFromConfig(clientPath);
 
 	// Augment it with full CCP
@@ -280,7 +280,7 @@ export function isChannelCreated(channelName: string): boolean {
  * @param channelName the name of the channel to check
  */
 export async function isOrgChannelJoined(orgName: string, ccp: CommonConnectionProfileHelper, channelName: string): Promise<boolean> {
-	const clientPath: string = path.join(__dirname, Constants.UTIL_TO_CONFIG, orgName + '.json');
+	const clientPath: string = path.join(Constants.CONFIG_PATH, orgName + '.json');
 	const orgClient: Client = Client.loadFromConfig(clientPath);
 
 	// Augment it with full CCP

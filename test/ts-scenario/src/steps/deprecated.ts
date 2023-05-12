@@ -24,13 +24,13 @@ Given(/^I use the deprecated sdk to (.+?) a (.+?) smart contract named (.+?) at 
 
 	const tls: boolean = (fabricState.type.localeCompare('tls') === 0);
 	// Create and persist the new gateway
-	const profilePath: string = path.join(__dirname, '../config', ccpName);
+	const profilePath: string = path.join(Constants.CONFIG_PATH, ccpName);
 	const ccp: CommonConnectionProfileHelper = new CommonConnectionProfileHelper(profilePath, true);
 
 	const isUpgrade: boolean = (deployType.localeCompare('upgrade') === 0);
 	// eslint-disable-next-line max-len
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-var-requires,@typescript-eslint/no-explicit-any
-	const policy: EndorsementPolicy = require(path.join(__dirname, Constants.STEPS_TO_POLICIES))[policyType];
+	const policy: EndorsementPolicy = require(Constants.POLICIES)[policyType];
 	for (const orgName of Object.keys(ccp.getOrganizations())) {
 		const isInstalled: boolean = await AdminUtils.isOrgChaincodeInstalled(orgName, ccp, ccName, ccVersion);
 		if (isInstalled) {

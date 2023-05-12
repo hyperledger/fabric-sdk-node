@@ -14,7 +14,7 @@ Given(/^I have created a client named (.+?) based on information in profile (.+?
 	async (clientName: string, ccpName: string, userOrg: string) => {
 
 		// Get a CCP Helper
-		const profilePath: string = path.join(__dirname, '../config', ccpName);
+		const profilePath: string = path.join(Constants.CONFIG_PATH, ccpName);
 		BaseUtils.logMsg(`loading profile ${profilePath}`);
 
 		const ccp: CommonConnectionProfileHelper = new CommonConnectionProfileHelper(profilePath, true);
