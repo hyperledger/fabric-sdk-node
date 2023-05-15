@@ -2,6 +2,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import * as path from 'path';
+
 // State store items (just in case you don't want to look at the code)
 // - Users Map<userName: string, user: User>
 
@@ -19,14 +21,19 @@ export const INSTALL_TIMEOUT = 120000;
 export const INSTANTIATE_TIMEOUT = 300000;
 
 // Paths
-export const LIB_TO_CONFIG = '../../config';
-export const LIB_TO_CHAINCODE = '../../../ts-fixtures/chaincode';
-export const LIB_TO_POLICIES = '../../config/policies.json';
-export const LIB_TO_TEMP = '../../../temp';
-export const STEPS_TO_POLICIES = '../config/policies.json';
-export const UTIL_TO_CONFIG = '../../../config';
 
-export const GO_PATH = '../../../ts-fixtures/chaincode/goLang/';
+const TEST_PATH = path.resolve(__dirname, '..', '..', '..');
+const FIXTURES_PATH = path.join(TEST_PATH, 'ts-fixtures');
+const SCENARIO_PATH = path.join(TEST_PATH, 'ts-scenario');
+
+export const CHAINCODE_PATH = path.join(FIXTURES_PATH, 'chaincode');
+export const CONFIG_PATH = path.join(SCENARIO_PATH, 'config');
+export const TEMP_PATH = path.join(TEST_PATH, 'temp');
+export const DOCKER_COMPOSE_PATH = path.join(FIXTURES_PATH, 'docker-compose');
+
+export const POLICIES = path.join(CONFIG_PATH, 'policies.json');
+
+export const GO_PATH = path.join(FIXTURES_PATH, 'chaincode', 'goLang/');
 export const GO_PRE_PEND = 'github.com';
 
 // Features run

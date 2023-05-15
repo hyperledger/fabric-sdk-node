@@ -7,4 +7,4 @@
 docs/**
 fabric-network/lib/**
 fabric-protos/**
-test/typescript/**
+test/ts-scenario/lib/**

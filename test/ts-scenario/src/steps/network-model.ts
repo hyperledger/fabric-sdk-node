@@ -35,7 +35,7 @@ Given(/^I have a (.+?) backed gateway named (.+?) with discovery set to (.+?) fo
 	try {
 		// Create and persist the new gateway
 		BaseUtils.logMsg(`Creating new Gateway named ${gatewayName}`);
-		const profilePath: string = path.join(__dirname, '../config', ccpName);
+		const profilePath: string = path.join(Constants.CONFIG_PATH, ccpName);
 		const ccp: CommonConnectionProfileHelper = new CommonConnectionProfileHelper(profilePath, true);
 		return await Gateway.createGateway(ccp, tls, userName, orgName || Constants.DEFAULT_ORG, gatewayName, useDiscovery.toLowerCase() === 'true', walletType);
 	} catch (err) {

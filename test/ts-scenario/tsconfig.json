@@ -4,9 +4,8 @@
 	"compilerOptions": {
 		"sourceMap": true,
 		"strict": true,
-		"experimentalDecorators": true
-	},
-	"exclude": [
-		"node_modules"
-	],
+		"experimentalDecorators": true,
+        "outDir": "lib",
+        "rootDir": "src"
+	}
 }

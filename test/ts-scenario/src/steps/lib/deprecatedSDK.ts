@@ -79,7 +79,7 @@ export async function sdk_chaincode_install_for_org(ccType: 'golang' | 'car' | '
 		await AdminUtils.getSubmitter(client, true /* get peer org admin */, orgName, ccp);
 
 		// chaincode and metadata paths
-		const chaincodePath: string = path.join(__dirname, Constants.LIB_TO_CHAINCODE, ccType, ccName);
+		const chaincodePath: string = path.join(Constants.CHAINCODE_PATH, ccType, ccName);
 		const metadataPath: string = path.join(chaincodePath, 'metadata');
 
 		// send proposal to endorser
