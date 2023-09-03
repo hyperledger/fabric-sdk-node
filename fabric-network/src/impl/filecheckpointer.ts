@@ -5,7 +5,7 @@
  */
 
 import {Checkpointer} from '../checkpointer';
-import * as Long from 'long';
+import Long from 'long';
 import * as fs from 'fs';
 
 const encoding = 'utf8';
@@ -58,7 +58,7 @@ export class FileCheckpointer implements Checkpointer {
 		}
 	}
 
-	private async readFile(): Promise<Buffer | undefined> {
+	private async readFile(): Promise<Buffer | void> {
 		try {
 			return await fs.promises.readFile(this.path);
 		} catch (err) {

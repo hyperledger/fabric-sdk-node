@@ -12,7 +12,7 @@ import * as Constants from '../constants';
 import * as GatewayHelper from './gateway';
 import * as BaseUtils from './utility/baseUtils';
 import {StateStore} from './utility/stateStore';
-import * as Long from 'long';
+import Long from 'long';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
@@ -263,10 +263,8 @@ export function checkContractListenerPayloads(listenerName: string, checkData: s
 	const contractEvents: ContractEvent[] = listenerObject.payloads;
 
 	const found = contractEvents.some((contractEvent) => {
-		if (contractEvent.payload) {
-			// Check a contract event payload is what we expect
-			return contractEvent.payload.toString() === checkData;
-		}
+		// Check a contract event payload is what we expect
+		return contractEvent.payload?.toString() === checkData;
 	});
 
 	if (found) {

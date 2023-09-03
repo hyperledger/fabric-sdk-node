@@ -26,6 +26,7 @@
   "dependencies": {
     "fabric-common": "file:../fabric-common",
     "fabric-protos": "file:../fabric-protos",
+    "long": "^5.2.3",
     "nano": "^9.0.5"
   },
   "nyc": {
@@ -54,6 +55,5 @@
       "type": "Apache-2.0",
       "url": "https://github.com/hyperledger/fabric/blob/master/LICENSE"
     }
-  ],
-  "devDependencies": {}
+  ]
 }
