@@ -12,7 +12,7 @@
 
 import * as sinon from 'sinon';
 import {expect} from 'chai';
-import * as Long from 'long';
+import Long from 'long';
 
 import {Channel, Client, Endorser, Eventer, EventInfo, IdentityContext} from 'fabric-common';
 import * as fabproto6 from 'fabric-protos';

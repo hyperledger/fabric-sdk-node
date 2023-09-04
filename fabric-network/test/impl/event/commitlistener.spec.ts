@@ -16,7 +16,7 @@ import {
 	Client,
 	Eventer
 } from 'fabric-common';
-import * as Long from 'long';
+import Long from 'long';
 
 import {NetworkImpl} from '../../../src/network';
 import {EventServiceManager} from '../../../src/impl/event/eventservicemanager';

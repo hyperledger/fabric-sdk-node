@@ -3,9 +3,14 @@
     "extends": "@tsconfig/node10/tsconfig.json",
 	"compilerOptions": {
 		"declaration": true,
+        "declarationMap": true,
 		"outDir": "./lib",
 		"rootDir": "./src",
-		"sourceMap": true
+		"sourceMap": true,
+		"strict": true,
+        "noUnusedLocals": true,
+        "noImplicitReturns": true,
+        "forceConsistentCasingInFileNames": true
 	},
 	"include": [
 		"src/"

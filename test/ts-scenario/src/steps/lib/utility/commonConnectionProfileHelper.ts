@@ -193,10 +193,10 @@ export class CommonConnectionProfileHelper {
 
 	/**
 	 * Retrieve all the peers named in the profile
-	 * @return {Object[]} the peers named in the profile
+	 * @return {Record<string, any>} the peers named in the profile
 	 */
-	public getPeers(): any[] {
-		return this.profile.peers;
+	public getPeers(): Record<string, any> {
+		return this.profile.peers ?? {};
 	}
 
 	/**
@@ -205,7 +205,7 @@ export class CommonConnectionProfileHelper {
 	 * @return {Object} the peer object
 	 */
 	public getPeer(peerName: string): Endpoint {
-		return this.profile.peers[peerName];
+		return this.getPeers()[peerName];
 	}
 
 	/**
@@ -229,16 +229,13 @@ export class CommonConnectionProfileHelper {
 	/**
 	 * check if the CCP is for a TLS network
 	 */
-	public isTls(): boolean | undefined {
-		const peers: any = this.getPeers();
-		if (peers) {
-			for (const key of Object.keys(peers as Record<string, unknown>)) {
-				const peer: any = peers[key];
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-				return (peer.url).includes('grpcs');
-			}
-		} else {
-			throw new Error('No peers listed in the CCP');
+	public isTls(): boolean {
+		const peers = this.getPeers();
+		for (const peer of Object.values(peers)) {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+			return peer.url.includes('grpcs');
 		}
+
+		throw new Error('No peers listed in the CCP');
 	}
 }

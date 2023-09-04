@@ -72,7 +72,7 @@ export class CommitListenerSession implements ListenerSession {
 		return startErrors;
 	}
 
-	private async startEventService(eventService: EventService): Promise<CommitError|undefined> {
+	private async startEventService(eventService: EventService): Promise<CommitError|void> {
 		try {
 			await this.eventServiceManager.startEventService(eventService);
 		} catch (error) {
