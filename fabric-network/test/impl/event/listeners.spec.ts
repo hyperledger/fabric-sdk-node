@@ -7,7 +7,7 @@
 import * as Listeners from '../../../src/impl/event/listeners';
 import {StubCheckpointer} from './stubcheckpointer';
 import {BlockEvent, BlockListener, TransactionEvent, ContractEvent} from '../../../src/events';
-import Long from 'long';
+import Long = require('long');
 import * as chai from 'chai';
 import * as sinon from 'sinon';
 

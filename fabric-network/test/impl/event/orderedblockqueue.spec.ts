@@ -6,7 +6,7 @@
 
 import {BlockEvent} from '../../../src/events';
 import {OrderedBlockQueue} from '../../../src/impl/event/orderedblockqueue';
-import Long from 'long';
+import Long = require('long');
 
 import * as chai from 'chai';
 const expect = chai.expect;

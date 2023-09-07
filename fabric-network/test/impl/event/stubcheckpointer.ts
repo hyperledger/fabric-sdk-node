@@ -5,7 +5,7 @@
  */
 
 import {Checkpointer} from '../../../src/checkpointer';
-import Long from 'long';
+import Long = require('long');
 
 export class StubCheckpointer implements Checkpointer {
 	private blockNumber: Long;
