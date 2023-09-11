@@ -7,7 +7,7 @@
 import {Checkpointer} from '../../src/checkpointer';
 import {DefaultCheckpointers} from '../../src/defaultcheckpointers';
 import * as testUtils from '../testutils';
-import Long from 'long';
+import Long = require('long');
 import * as path  from 'path';
 import * as fs from 'fs';
 import * as chai from 'chai';

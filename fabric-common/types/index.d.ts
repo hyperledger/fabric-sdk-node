@@ -5,7 +5,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
-import Long from 'long';
+import Long = require('long');
 import * as fabproto6 from 'fabric-protos';
 import winston = require('winston');
 
