@@ -1,4 +1,5 @@
 import * as $protobuf from "protobufjs";
+import Long = require("long");
 /** Namespace google. */
 export namespace google {
 
@@ -99,6 +100,13 @@ export namespace google {
              * @returns JSON object
              */
             public toJSON(): { [k: string]: any };
+
+            /**
+             * Gets the default type url for Timestamp
+             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns The default type url
+             */
+            public static getTypeUrl(typeUrlPrefix?: string): string;
         }
 
         /** Properties of an Empty. */
@@ -183,1310 +191,127 @@ export namespace google {
              * @returns JSON object
              */
             public toJSON(): { [k: string]: any };
+
+            /**
+             * Gets the default type url for Empty
+             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns The default type url
+             */
+            public static getTypeUrl(typeUrlPrefix?: string): string;
         }
     }
 }
 
-/** Namespace kvrwset. */
-export namespace kvrwset {
+/** Namespace transientstore. */
+export namespace transientstore {
 
-    /** Properties of a KVRWSet. */
-    interface IKVRWSet {
+    /** Properties of a TxPvtReadWriteSetWithConfigInfo. */
+    interface ITxPvtReadWriteSetWithConfigInfo {
 
-        /** KVRWSet reads */
-        reads?: (kvrwset.IKVRead[]|null);
+        /** TxPvtReadWriteSetWithConfigInfo endorsed_at */
+        endorsed_at?: (number|Long|null);
 
-        /** KVRWSet range_queries_info */
-        range_queries_info?: (kvrwset.IRangeQueryInfo[]|null);
+        /** TxPvtReadWriteSetWithConfigInfo pvt_rwset */
+        pvt_rwset?: (rwset.ITxPvtReadWriteSet|null);
 
-        /** KVRWSet writes */
-        writes?: (kvrwset.IKVWrite[]|null);
-
-        /** KVRWSet metadata_writes */
-        metadata_writes?: (kvrwset.IKVMetadataWrite[]|null);
+        /** TxPvtReadWriteSetWithConfigInfo collection_configs */
+        collection_configs?: ({ [k: string]: protos.ICollectionConfigPackage }|null);
     }
 
-    /** Represents a KVRWSet. */
-    class KVRWSet implements IKVRWSet {
+    /** Represents a TxPvtReadWriteSetWithConfigInfo. */
+    class TxPvtReadWriteSetWithConfigInfo implements ITxPvtReadWriteSetWithConfigInfo {
 
         /**
-         * Constructs a new KVRWSet.
+         * Constructs a new TxPvtReadWriteSetWithConfigInfo.
          * @param [properties] Properties to set
          */
-        constructor(properties?: kvrwset.IKVRWSet);
+        constructor(properties?: transientstore.ITxPvtReadWriteSetWithConfigInfo);
 
-        /** KVRWSet reads. */
-        public reads: kvrwset.IKVRead[];
+        /** TxPvtReadWriteSetWithConfigInfo endorsed_at. */
+        public endorsed_at: (number|Long);
 
-        /** KVRWSet range_queries_info. */
-        public range_queries_info: kvrwset.IRangeQueryInfo[];
+        /** TxPvtReadWriteSetWithConfigInfo pvt_rwset. */
+        public pvt_rwset?: (rwset.ITxPvtReadWriteSet|null);
 
-        /** KVRWSet writes. */
-        public writes: kvrwset.IKVWrite[];
-
-        /** KVRWSet metadata_writes. */
-        public metadata_writes: kvrwset.IKVMetadataWrite[];
+        /** TxPvtReadWriteSetWithConfigInfo collection_configs. */
+        public collection_configs: { [k: string]: protos.ICollectionConfigPackage };
 
         /**
-         * Creates a new KVRWSet instance using the specified properties.
+         * Creates a new TxPvtReadWriteSetWithConfigInfo instance using the specified properties.
          * @param [properties] Properties to set
-         * @returns KVRWSet instance
+         * @returns TxPvtReadWriteSetWithConfigInfo instance
          */
-        public static create(properties?: kvrwset.IKVRWSet): kvrwset.KVRWSet;
+        public static create(properties?: transientstore.ITxPvtReadWriteSetWithConfigInfo): transientstore.TxPvtReadWriteSetWithConfigInfo;
 
         /**
-         * Encodes the specified KVRWSet message. Does not implicitly {@link kvrwset.KVRWSet.verify|verify} messages.
-         * @param message KVRWSet message or plain object to encode
+         * Encodes the specified TxPvtReadWriteSetWithConfigInfo message. Does not implicitly {@link transientstore.TxPvtReadWriteSetWithConfigInfo.verify|verify} messages.
+         * @param message TxPvtReadWriteSetWithConfigInfo message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encode(message: kvrwset.IKVRWSet, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: transientstore.ITxPvtReadWriteSetWithConfigInfo, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Encodes the specified KVRWSet message, length delimited. Does not implicitly {@link kvrwset.KVRWSet.verify|verify} messages.
-         * @param message KVRWSet message or plain object to encode
+         * Encodes the specified TxPvtReadWriteSetWithConfigInfo message, length delimited. Does not implicitly {@link transientstore.TxPvtReadWriteSetWithConfigInfo.verify|verify} messages.
+         * @param message TxPvtReadWriteSetWithConfigInfo message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encodeDelimited(message: kvrwset.IKVRWSet, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: transientstore.ITxPvtReadWriteSetWithConfigInfo, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Decodes a KVRWSet message from the specified reader or buffer.
+         * Decodes a TxPvtReadWriteSetWithConfigInfo message from the specified reader or buffer.
          * @param reader Reader or buffer to decode from
          * @param [length] Message length if known beforehand
-         * @returns KVRWSet
+         * @returns TxPvtReadWriteSetWithConfigInfo
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): kvrwset.KVRWSet;
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): transientstore.TxPvtReadWriteSetWithConfigInfo;
 
         /**
-         * Decodes a KVRWSet message from the specified reader or buffer, length delimited.
+         * Decodes a TxPvtReadWriteSetWithConfigInfo message from the specified reader or buffer, length delimited.
          * @param reader Reader or buffer to decode from
-         * @returns KVRWSet
+         * @returns TxPvtReadWriteSetWithConfigInfo
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): kvrwset.KVRWSet;
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): transientstore.TxPvtReadWriteSetWithConfigInfo;
 
         /**
-         * Verifies a KVRWSet message.
+         * Verifies a TxPvtReadWriteSetWithConfigInfo message.
          * @param message Plain object to verify
          * @returns `null` if valid, otherwise the reason why it is not
          */
         public static verify(message: { [k: string]: any }): (string|null);
 
         /**
-         * Creates a KVRWSet message from a plain object. Also converts values to their respective internal types.
+         * Creates a TxPvtReadWriteSetWithConfigInfo message from a plain object. Also converts values to their respective internal types.
          * @param object Plain object
-         * @returns KVRWSet
+         * @returns TxPvtReadWriteSetWithConfigInfo
          */
-        public static fromObject(object: { [k: string]: any }): kvrwset.KVRWSet;
+        public static fromObject(object: { [k: string]: any }): transientstore.TxPvtReadWriteSetWithConfigInfo;
 
         /**
-         * Creates a plain object from a KVRWSet message. Also converts values to other types if specified.
-         * @param message KVRWSet
+         * Creates a plain object from a TxPvtReadWriteSetWithConfigInfo message. Also converts values to other types if specified.
+         * @param message TxPvtReadWriteSetWithConfigInfo
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: kvrwset.KVRWSet, options?: $protobuf.IConversionOptions): { [k: string]: any };
+        public static toObject(message: transientstore.TxPvtReadWriteSetWithConfigInfo, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
-         * Converts this KVRWSet to JSON.
+         * Converts this TxPvtReadWriteSetWithConfigInfo to JSON.
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
-    }
 
-    /** Properties of a HashedRWSet. */
-    interface IHashedRWSet {
-
-        /** HashedRWSet hashed_reads */
-        hashed_reads?: (kvrwset.IKVReadHash[]|null);
-
-        /** HashedRWSet hashed_writes */
-        hashed_writes?: (kvrwset.IKVWriteHash[]|null);
-
-        /** HashedRWSet metadata_writes */
-        metadata_writes?: (kvrwset.IKVMetadataWriteHash[]|null);
-    }
-
-    /** Represents a HashedRWSet. */
-    class HashedRWSet implements IHashedRWSet {
-
-        /**
-         * Constructs a new HashedRWSet.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: kvrwset.IHashedRWSet);
-
-        /** HashedRWSet hashed_reads. */
-        public hashed_reads: kvrwset.IKVReadHash[];
-
-        /** HashedRWSet hashed_writes. */
-        public hashed_writes: kvrwset.IKVWriteHash[];
-
-        /** HashedRWSet metadata_writes. */
-        public metadata_writes: kvrwset.IKVMetadataWriteHash[];
-
-        /**
-         * Creates a new HashedRWSet instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns HashedRWSet instance
-         */
-        public static create(properties?: kvrwset.IHashedRWSet): kvrwset.HashedRWSet;
-
-        /**
-         * Encodes the specified HashedRWSet message. Does not implicitly {@link kvrwset.HashedRWSet.verify|verify} messages.
-         * @param message HashedRWSet message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: kvrwset.IHashedRWSet, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified HashedRWSet message, length delimited. Does not implicitly {@link kvrwset.HashedRWSet.verify|verify} messages.
-         * @param message HashedRWSet message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: kvrwset.IHashedRWSet, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a HashedRWSet message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns HashedRWSet
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): kvrwset.HashedRWSet;
-
-        /**
-         * Decodes a HashedRWSet message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns HashedRWSet
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): kvrwset.HashedRWSet;
-
-        /**
-         * Verifies a HashedRWSet message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a HashedRWSet message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns HashedRWSet
-         */
-        public static fromObject(object: { [k: string]: any }): kvrwset.HashedRWSet;
-
-        /**
-         * Creates a plain object from a HashedRWSet message. Also converts values to other types if specified.
-         * @param message HashedRWSet
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: kvrwset.HashedRWSet, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this HashedRWSet to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a KVRead. */
-    interface IKVRead {
-
-        /** KVRead key */
-        key?: (string|null);
-
-        /** KVRead version */
-        version?: (kvrwset.IVersion|null);
-    }
-
-    /** Represents a KVRead. */
-    class KVRead implements IKVRead {
-
-        /**
-         * Constructs a new KVRead.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: kvrwset.IKVRead);
-
-        /** KVRead key. */
-        public key: string;
-
-        /** KVRead version. */
-        public version?: (kvrwset.IVersion|null);
-
-        /**
-         * Creates a new KVRead instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns KVRead instance
-         */
-        public static create(properties?: kvrwset.IKVRead): kvrwset.KVRead;
-
-        /**
-         * Encodes the specified KVRead message. Does not implicitly {@link kvrwset.KVRead.verify|verify} messages.
-         * @param message KVRead message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: kvrwset.IKVRead, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified KVRead message, length delimited. Does not implicitly {@link kvrwset.KVRead.verify|verify} messages.
-         * @param message KVRead message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: kvrwset.IKVRead, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a KVRead message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns KVRead
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): kvrwset.KVRead;
-
-        /**
-         * Decodes a KVRead message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns KVRead
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): kvrwset.KVRead;
-
-        /**
-         * Verifies a KVRead message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a KVRead message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns KVRead
-         */
-        public static fromObject(object: { [k: string]: any }): kvrwset.KVRead;
-
-        /**
-         * Creates a plain object from a KVRead message. Also converts values to other types if specified.
-         * @param message KVRead
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: kvrwset.KVRead, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this KVRead to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a KVWrite. */
-    interface IKVWrite {
-
-        /** KVWrite key */
-        key?: (string|null);
-
-        /** KVWrite is_delete */
-        is_delete?: (boolean|null);
-
-        /** KVWrite value */
-        value?: (Uint8Array|null);
-    }
-
-    /** Represents a KVWrite. */
-    class KVWrite implements IKVWrite {
-
-        /**
-         * Constructs a new KVWrite.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: kvrwset.IKVWrite);
-
-        /** KVWrite key. */
-        public key: string;
-
-        /** KVWrite is_delete. */
-        public is_delete: boolean;
-
-        /** KVWrite value. */
-        public value: Uint8Array;
-
-        /**
-         * Creates a new KVWrite instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns KVWrite instance
-         */
-        public static create(properties?: kvrwset.IKVWrite): kvrwset.KVWrite;
-
-        /**
-         * Encodes the specified KVWrite message. Does not implicitly {@link kvrwset.KVWrite.verify|verify} messages.
-         * @param message KVWrite message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: kvrwset.IKVWrite, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified KVWrite message, length delimited. Does not implicitly {@link kvrwset.KVWrite.verify|verify} messages.
-         * @param message KVWrite message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: kvrwset.IKVWrite, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a KVWrite message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns KVWrite
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): kvrwset.KVWrite;
-
-        /**
-         * Decodes a KVWrite message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns KVWrite
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): kvrwset.KVWrite;
-
-        /**
-         * Verifies a KVWrite message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a KVWrite message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns KVWrite
-         */
-        public static fromObject(object: { [k: string]: any }): kvrwset.KVWrite;
-
-        /**
-         * Creates a plain object from a KVWrite message. Also converts values to other types if specified.
-         * @param message KVWrite
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: kvrwset.KVWrite, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this KVWrite to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a KVMetadataWrite. */
-    interface IKVMetadataWrite {
-
-        /** KVMetadataWrite key */
-        key?: (string|null);
-
-        /** KVMetadataWrite entries */
-        entries?: (kvrwset.IKVMetadataEntry[]|null);
-    }
-
-    /** Represents a KVMetadataWrite. */
-    class KVMetadataWrite implements IKVMetadataWrite {
-
-        /**
-         * Constructs a new KVMetadataWrite.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: kvrwset.IKVMetadataWrite);
-
-        /** KVMetadataWrite key. */
-        public key: string;
-
-        /** KVMetadataWrite entries. */
-        public entries: kvrwset.IKVMetadataEntry[];
-
-        /**
-         * Creates a new KVMetadataWrite instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns KVMetadataWrite instance
-         */
-        public static create(properties?: kvrwset.IKVMetadataWrite): kvrwset.KVMetadataWrite;
-
-        /**
-         * Encodes the specified KVMetadataWrite message. Does not implicitly {@link kvrwset.KVMetadataWrite.verify|verify} messages.
-         * @param message KVMetadataWrite message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: kvrwset.IKVMetadataWrite, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified KVMetadataWrite message, length delimited. Does not implicitly {@link kvrwset.KVMetadataWrite.verify|verify} messages.
-         * @param message KVMetadataWrite message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: kvrwset.IKVMetadataWrite, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a KVMetadataWrite message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns KVMetadataWrite
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): kvrwset.KVMetadataWrite;
-
-        /**
-         * Decodes a KVMetadataWrite message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns KVMetadataWrite
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): kvrwset.KVMetadataWrite;
-
-        /**
-         * Verifies a KVMetadataWrite message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a KVMetadataWrite message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns KVMetadataWrite
-         */
-        public static fromObject(object: { [k: string]: any }): kvrwset.KVMetadataWrite;
-
-        /**
-         * Creates a plain object from a KVMetadataWrite message. Also converts values to other types if specified.
-         * @param message KVMetadataWrite
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: kvrwset.KVMetadataWrite, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this KVMetadataWrite to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a KVReadHash. */
-    interface IKVReadHash {
-
-        /** KVReadHash key_hash */
-        key_hash?: (Uint8Array|null);
-
-        /** KVReadHash version */
-        version?: (kvrwset.IVersion|null);
-    }
-
-    /** Represents a KVReadHash. */
-    class KVReadHash implements IKVReadHash {
-
-        /**
-         * Constructs a new KVReadHash.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: kvrwset.IKVReadHash);
-
-        /** KVReadHash key_hash. */
-        public key_hash: Uint8Array;
-
-        /** KVReadHash version. */
-        public version?: (kvrwset.IVersion|null);
-
-        /**
-         * Creates a new KVReadHash instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns KVReadHash instance
-         */
-        public static create(properties?: kvrwset.IKVReadHash): kvrwset.KVReadHash;
-
-        /**
-         * Encodes the specified KVReadHash message. Does not implicitly {@link kvrwset.KVReadHash.verify|verify} messages.
-         * @param message KVReadHash message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: kvrwset.IKVReadHash, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified KVReadHash message, length delimited. Does not implicitly {@link kvrwset.KVReadHash.verify|verify} messages.
-         * @param message KVReadHash message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: kvrwset.IKVReadHash, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a KVReadHash message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns KVReadHash
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): kvrwset.KVReadHash;
-
-        /**
-         * Decodes a KVReadHash message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns KVReadHash
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): kvrwset.KVReadHash;
-
-        /**
-         * Verifies a KVReadHash message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a KVReadHash message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns KVReadHash
-         */
-        public static fromObject(object: { [k: string]: any }): kvrwset.KVReadHash;
-
-        /**
-         * Creates a plain object from a KVReadHash message. Also converts values to other types if specified.
-         * @param message KVReadHash
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: kvrwset.KVReadHash, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this KVReadHash to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a KVWriteHash. */
-    interface IKVWriteHash {
-
-        /** KVWriteHash key_hash */
-        key_hash?: (Uint8Array|null);
-
-        /** KVWriteHash is_delete */
-        is_delete?: (boolean|null);
-
-        /** KVWriteHash value_hash */
-        value_hash?: (Uint8Array|null);
-    }
-
-    /** Represents a KVWriteHash. */
-    class KVWriteHash implements IKVWriteHash {
-
-        /**
-         * Constructs a new KVWriteHash.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: kvrwset.IKVWriteHash);
-
-        /** KVWriteHash key_hash. */
-        public key_hash: Uint8Array;
-
-        /** KVWriteHash is_delete. */
-        public is_delete: boolean;
-
-        /** KVWriteHash value_hash. */
-        public value_hash: Uint8Array;
-
-        /**
-         * Creates a new KVWriteHash instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns KVWriteHash instance
-         */
-        public static create(properties?: kvrwset.IKVWriteHash): kvrwset.KVWriteHash;
-
-        /**
-         * Encodes the specified KVWriteHash message. Does not implicitly {@link kvrwset.KVWriteHash.verify|verify} messages.
-         * @param message KVWriteHash message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: kvrwset.IKVWriteHash, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified KVWriteHash message, length delimited. Does not implicitly {@link kvrwset.KVWriteHash.verify|verify} messages.
-         * @param message KVWriteHash message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: kvrwset.IKVWriteHash, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a KVWriteHash message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns KVWriteHash
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): kvrwset.KVWriteHash;
-
-        /**
-         * Decodes a KVWriteHash message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns KVWriteHash
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): kvrwset.KVWriteHash;
-
-        /**
-         * Verifies a KVWriteHash message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a KVWriteHash message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns KVWriteHash
-         */
-        public static fromObject(object: { [k: string]: any }): kvrwset.KVWriteHash;
-
-        /**
-         * Creates a plain object from a KVWriteHash message. Also converts values to other types if specified.
-         * @param message KVWriteHash
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: kvrwset.KVWriteHash, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this KVWriteHash to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a KVMetadataWriteHash. */
-    interface IKVMetadataWriteHash {
-
-        /** KVMetadataWriteHash key_hash */
-        key_hash?: (Uint8Array|null);
-
-        /** KVMetadataWriteHash entries */
-        entries?: (kvrwset.IKVMetadataEntry[]|null);
-    }
-
-    /** Represents a KVMetadataWriteHash. */
-    class KVMetadataWriteHash implements IKVMetadataWriteHash {
-
-        /**
-         * Constructs a new KVMetadataWriteHash.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: kvrwset.IKVMetadataWriteHash);
-
-        /** KVMetadataWriteHash key_hash. */
-        public key_hash: Uint8Array;
-
-        /** KVMetadataWriteHash entries. */
-        public entries: kvrwset.IKVMetadataEntry[];
-
-        /**
-         * Creates a new KVMetadataWriteHash instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns KVMetadataWriteHash instance
-         */
-        public static create(properties?: kvrwset.IKVMetadataWriteHash): kvrwset.KVMetadataWriteHash;
-
-        /**
-         * Encodes the specified KVMetadataWriteHash message. Does not implicitly {@link kvrwset.KVMetadataWriteHash.verify|verify} messages.
-         * @param message KVMetadataWriteHash message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: kvrwset.IKVMetadataWriteHash, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified KVMetadataWriteHash message, length delimited. Does not implicitly {@link kvrwset.KVMetadataWriteHash.verify|verify} messages.
-         * @param message KVMetadataWriteHash message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: kvrwset.IKVMetadataWriteHash, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a KVMetadataWriteHash message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns KVMetadataWriteHash
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): kvrwset.KVMetadataWriteHash;
-
-        /**
-         * Decodes a KVMetadataWriteHash message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns KVMetadataWriteHash
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): kvrwset.KVMetadataWriteHash;
-
-        /**
-         * Verifies a KVMetadataWriteHash message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a KVMetadataWriteHash message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns KVMetadataWriteHash
-         */
-        public static fromObject(object: { [k: string]: any }): kvrwset.KVMetadataWriteHash;
-
-        /**
-         * Creates a plain object from a KVMetadataWriteHash message. Also converts values to other types if specified.
-         * @param message KVMetadataWriteHash
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: kvrwset.KVMetadataWriteHash, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this KVMetadataWriteHash to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a KVMetadataEntry. */
-    interface IKVMetadataEntry {
-
-        /** KVMetadataEntry name */
-        name?: (string|null);
-
-        /** KVMetadataEntry value */
-        value?: (Uint8Array|null);
-    }
-
-    /** Represents a KVMetadataEntry. */
-    class KVMetadataEntry implements IKVMetadataEntry {
-
-        /**
-         * Constructs a new KVMetadataEntry.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: kvrwset.IKVMetadataEntry);
-
-        /** KVMetadataEntry name. */
-        public name: string;
-
-        /** KVMetadataEntry value. */
-        public value: Uint8Array;
-
-        /**
-         * Creates a new KVMetadataEntry instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns KVMetadataEntry instance
-         */
-        public static create(properties?: kvrwset.IKVMetadataEntry): kvrwset.KVMetadataEntry;
-
-        /**
-         * Encodes the specified KVMetadataEntry message. Does not implicitly {@link kvrwset.KVMetadataEntry.verify|verify} messages.
-         * @param message KVMetadataEntry message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: kvrwset.IKVMetadataEntry, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified KVMetadataEntry message, length delimited. Does not implicitly {@link kvrwset.KVMetadataEntry.verify|verify} messages.
-         * @param message KVMetadataEntry message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: kvrwset.IKVMetadataEntry, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a KVMetadataEntry message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns KVMetadataEntry
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): kvrwset.KVMetadataEntry;
-
-        /**
-         * Decodes a KVMetadataEntry message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns KVMetadataEntry
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): kvrwset.KVMetadataEntry;
-
-        /**
-         * Verifies a KVMetadataEntry message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a KVMetadataEntry message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns KVMetadataEntry
-         */
-        public static fromObject(object: { [k: string]: any }): kvrwset.KVMetadataEntry;
-
-        /**
-         * Creates a plain object from a KVMetadataEntry message. Also converts values to other types if specified.
-         * @param message KVMetadataEntry
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: kvrwset.KVMetadataEntry, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this KVMetadataEntry to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a Version. */
-    interface IVersion {
-
-        /** Version block_num */
-        block_num?: (number|Long|null);
-
-        /** Version tx_num */
-        tx_num?: (number|Long|null);
-    }
-
-    /** Represents a Version. */
-    class Version implements IVersion {
-
-        /**
-         * Constructs a new Version.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: kvrwset.IVersion);
-
-        /** Version block_num. */
-        public block_num: (number|Long);
-
-        /** Version tx_num. */
-        public tx_num: (number|Long);
-
-        /**
-         * Creates a new Version instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns Version instance
-         */
-        public static create(properties?: kvrwset.IVersion): kvrwset.Version;
-
-        /**
-         * Encodes the specified Version message. Does not implicitly {@link kvrwset.Version.verify|verify} messages.
-         * @param message Version message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: kvrwset.IVersion, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified Version message, length delimited. Does not implicitly {@link kvrwset.Version.verify|verify} messages.
-         * @param message Version message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: kvrwset.IVersion, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a Version message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns Version
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): kvrwset.Version;
-
-        /**
-         * Decodes a Version message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns Version
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): kvrwset.Version;
-
-        /**
-         * Verifies a Version message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a Version message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns Version
-         */
-        public static fromObject(object: { [k: string]: any }): kvrwset.Version;
-
-        /**
-         * Creates a plain object from a Version message. Also converts values to other types if specified.
-         * @param message Version
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: kvrwset.Version, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this Version to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a RangeQueryInfo. */
-    interface IRangeQueryInfo {
-
-        /** RangeQueryInfo start_key */
-        start_key?: (string|null);
-
-        /** RangeQueryInfo end_key */
-        end_key?: (string|null);
-
-        /** RangeQueryInfo itr_exhausted */
-        itr_exhausted?: (boolean|null);
-
-        /** RangeQueryInfo raw_reads */
-        raw_reads?: (kvrwset.IQueryReads|null);
-
-        /** RangeQueryInfo reads_merkle_hashes */
-        reads_merkle_hashes?: (kvrwset.IQueryReadsMerkleSummary|null);
-    }
-
-    /** Represents a RangeQueryInfo. */
-    class RangeQueryInfo implements IRangeQueryInfo {
-
-        /**
-         * Constructs a new RangeQueryInfo.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: kvrwset.IRangeQueryInfo);
-
-        /** RangeQueryInfo start_key. */
-        public start_key: string;
-
-        /** RangeQueryInfo end_key. */
-        public end_key: string;
-
-        /** RangeQueryInfo itr_exhausted. */
-        public itr_exhausted: boolean;
-
-        /** RangeQueryInfo raw_reads. */
-        public raw_reads?: (kvrwset.IQueryReads|null);
-
-        /** RangeQueryInfo reads_merkle_hashes. */
-        public reads_merkle_hashes?: (kvrwset.IQueryReadsMerkleSummary|null);
-
-        /** RangeQueryInfo reads_info. */
-        public reads_info?: ("raw_reads"|"reads_merkle_hashes");
-
-        /**
-         * Creates a new RangeQueryInfo instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns RangeQueryInfo instance
-         */
-        public static create(properties?: kvrwset.IRangeQueryInfo): kvrwset.RangeQueryInfo;
-
-        /**
-         * Encodes the specified RangeQueryInfo message. Does not implicitly {@link kvrwset.RangeQueryInfo.verify|verify} messages.
-         * @param message RangeQueryInfo message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: kvrwset.IRangeQueryInfo, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified RangeQueryInfo message, length delimited. Does not implicitly {@link kvrwset.RangeQueryInfo.verify|verify} messages.
-         * @param message RangeQueryInfo message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: kvrwset.IRangeQueryInfo, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a RangeQueryInfo message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns RangeQueryInfo
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): kvrwset.RangeQueryInfo;
-
-        /**
-         * Decodes a RangeQueryInfo message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns RangeQueryInfo
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): kvrwset.RangeQueryInfo;
-
-        /**
-         * Verifies a RangeQueryInfo message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a RangeQueryInfo message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns RangeQueryInfo
-         */
-        public static fromObject(object: { [k: string]: any }): kvrwset.RangeQueryInfo;
-
-        /**
-         * Creates a plain object from a RangeQueryInfo message. Also converts values to other types if specified.
-         * @param message RangeQueryInfo
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: kvrwset.RangeQueryInfo, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this RangeQueryInfo to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a QueryReads. */
-    interface IQueryReads {
-
-        /** QueryReads kv_reads */
-        kv_reads?: (kvrwset.IKVRead[]|null);
-    }
-
-    /** Represents a QueryReads. */
-    class QueryReads implements IQueryReads {
-
-        /**
-         * Constructs a new QueryReads.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: kvrwset.IQueryReads);
-
-        /** QueryReads kv_reads. */
-        public kv_reads: kvrwset.IKVRead[];
-
-        /**
-         * Creates a new QueryReads instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns QueryReads instance
-         */
-        public static create(properties?: kvrwset.IQueryReads): kvrwset.QueryReads;
-
-        /**
-         * Encodes the specified QueryReads message. Does not implicitly {@link kvrwset.QueryReads.verify|verify} messages.
-         * @param message QueryReads message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: kvrwset.IQueryReads, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified QueryReads message, length delimited. Does not implicitly {@link kvrwset.QueryReads.verify|verify} messages.
-         * @param message QueryReads message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: kvrwset.IQueryReads, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a QueryReads message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns QueryReads
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): kvrwset.QueryReads;
-
-        /**
-         * Decodes a QueryReads message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns QueryReads
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): kvrwset.QueryReads;
-
-        /**
-         * Verifies a QueryReads message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a QueryReads message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns QueryReads
-         */
-        public static fromObject(object: { [k: string]: any }): kvrwset.QueryReads;
-
-        /**
-         * Creates a plain object from a QueryReads message. Also converts values to other types if specified.
-         * @param message QueryReads
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: kvrwset.QueryReads, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this QueryReads to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a QueryReadsMerkleSummary. */
-    interface IQueryReadsMerkleSummary {
-
-        /** QueryReadsMerkleSummary max_degree */
-        max_degree?: (number|null);
-
-        /** QueryReadsMerkleSummary max_level */
-        max_level?: (number|null);
-
-        /** QueryReadsMerkleSummary max_level_hashes */
-        max_level_hashes?: (Uint8Array[]|null);
-    }
-
-    /** Represents a QueryReadsMerkleSummary. */
-    class QueryReadsMerkleSummary implements IQueryReadsMerkleSummary {
-
-        /**
-         * Constructs a new QueryReadsMerkleSummary.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: kvrwset.IQueryReadsMerkleSummary);
-
-        /** QueryReadsMerkleSummary max_degree. */
-        public max_degree: number;
-
-        /** QueryReadsMerkleSummary max_level. */
-        public max_level: number;
-
-        /** QueryReadsMerkleSummary max_level_hashes. */
-        public max_level_hashes: Uint8Array[];
-
-        /**
-         * Creates a new QueryReadsMerkleSummary instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns QueryReadsMerkleSummary instance
-         */
-        public static create(properties?: kvrwset.IQueryReadsMerkleSummary): kvrwset.QueryReadsMerkleSummary;
-
-        /**
-         * Encodes the specified QueryReadsMerkleSummary message. Does not implicitly {@link kvrwset.QueryReadsMerkleSummary.verify|verify} messages.
-         * @param message QueryReadsMerkleSummary message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: kvrwset.IQueryReadsMerkleSummary, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified QueryReadsMerkleSummary message, length delimited. Does not implicitly {@link kvrwset.QueryReadsMerkleSummary.verify|verify} messages.
-         * @param message QueryReadsMerkleSummary message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: kvrwset.IQueryReadsMerkleSummary, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a QueryReadsMerkleSummary message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns QueryReadsMerkleSummary
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): kvrwset.QueryReadsMerkleSummary;
-
-        /**
-         * Decodes a QueryReadsMerkleSummary message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns QueryReadsMerkleSummary
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): kvrwset.QueryReadsMerkleSummary;
-
-        /**
-         * Verifies a QueryReadsMerkleSummary message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a QueryReadsMerkleSummary message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns QueryReadsMerkleSummary
-         */
-        public static fromObject(object: { [k: string]: any }): kvrwset.QueryReadsMerkleSummary;
-
-        /**
-         * Creates a plain object from a QueryReadsMerkleSummary message. Also converts values to other types if specified.
-         * @param message QueryReadsMerkleSummary
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: kvrwset.QueryReadsMerkleSummary, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
         /**
-         * Converts this QueryReadsMerkleSummary to JSON.
-         * @returns JSON object
+         * Gets the default type url for TxPvtReadWriteSetWithConfigInfo
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
          */
-        public toJSON(): { [k: string]: any };
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 }
 
@@ -1587,6 +412,13 @@ export namespace rwset {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for TxReadWriteSet
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     namespace TxReadWriteSet {
@@ -1697,6 +529,13 @@ export namespace rwset {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for NsReadWriteSet
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a CollectionHashedReadWriteSet. */
@@ -1799,6 +638,13 @@ export namespace rwset {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for CollectionHashedReadWriteSet
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a TxPvtReadWriteSet. */
@@ -1895,6 +741,13 @@ export namespace rwset {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for TxPvtReadWriteSet
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a NsPvtReadWriteSet. */
@@ -1991,6 +844,13 @@ export namespace rwset {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for NsPvtReadWriteSet
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a CollectionPvtReadWriteSet. */
@@ -2087,326 +947,13 @@ export namespace rwset {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
-    }
-}
-
-/** Namespace queryresult. */
-export namespace queryresult {
-
-    /** Properties of a KV. */
-    interface IKV {
-
-        /** KV namespace */
-        namespace?: (string|null);
-
-        /** KV key */
-        key?: (string|null);
-
-        /** KV value */
-        value?: (Uint8Array|null);
-    }
-
-    /** Represents a KV. */
-    class KV implements IKV {
 
         /**
-         * Constructs a new KV.
-         * @param [properties] Properties to set
+         * Gets the default type url for CollectionPvtReadWriteSet
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
          */
-        constructor(properties?: queryresult.IKV);
-
-        /** KV namespace. */
-        public namespace: string;
-
-        /** KV key. */
-        public key: string;
-
-        /** KV value. */
-        public value: Uint8Array;
-
-        /**
-         * Creates a new KV instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns KV instance
-         */
-        public static create(properties?: queryresult.IKV): queryresult.KV;
-
-        /**
-         * Encodes the specified KV message. Does not implicitly {@link queryresult.KV.verify|verify} messages.
-         * @param message KV message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: queryresult.IKV, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified KV message, length delimited. Does not implicitly {@link queryresult.KV.verify|verify} messages.
-         * @param message KV message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: queryresult.IKV, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a KV message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns KV
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): queryresult.KV;
-
-        /**
-         * Decodes a KV message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns KV
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): queryresult.KV;
-
-        /**
-         * Verifies a KV message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a KV message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns KV
-         */
-        public static fromObject(object: { [k: string]: any }): queryresult.KV;
-
-        /**
-         * Creates a plain object from a KV message. Also converts values to other types if specified.
-         * @param message KV
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: queryresult.KV, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this KV to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a KeyModification. */
-    interface IKeyModification {
-
-        /** KeyModification tx_id */
-        tx_id?: (string|null);
-
-        /** KeyModification value */
-        value?: (Uint8Array|null);
-
-        /** KeyModification timestamp */
-        timestamp?: (google.protobuf.ITimestamp|null);
-
-        /** KeyModification is_delete */
-        is_delete?: (boolean|null);
-    }
-
-    /** Represents a KeyModification. */
-    class KeyModification implements IKeyModification {
-
-        /**
-         * Constructs a new KeyModification.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: queryresult.IKeyModification);
-
-        /** KeyModification tx_id. */
-        public tx_id: string;
-
-        /** KeyModification value. */
-        public value: Uint8Array;
-
-        /** KeyModification timestamp. */
-        public timestamp?: (google.protobuf.ITimestamp|null);
-
-        /** KeyModification is_delete. */
-        public is_delete: boolean;
-
-        /**
-         * Creates a new KeyModification instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns KeyModification instance
-         */
-        public static create(properties?: queryresult.IKeyModification): queryresult.KeyModification;
-
-        /**
-         * Encodes the specified KeyModification message. Does not implicitly {@link queryresult.KeyModification.verify|verify} messages.
-         * @param message KeyModification message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: queryresult.IKeyModification, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified KeyModification message, length delimited. Does not implicitly {@link queryresult.KeyModification.verify|verify} messages.
-         * @param message KeyModification message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: queryresult.IKeyModification, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a KeyModification message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns KeyModification
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): queryresult.KeyModification;
-
-        /**
-         * Decodes a KeyModification message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns KeyModification
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): queryresult.KeyModification;
-
-        /**
-         * Verifies a KeyModification message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a KeyModification message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns KeyModification
-         */
-        public static fromObject(object: { [k: string]: any }): queryresult.KeyModification;
-
-        /**
-         * Creates a plain object from a KeyModification message. Also converts values to other types if specified.
-         * @param message KeyModification
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: queryresult.KeyModification, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this KeyModification to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-}
-
-/** Namespace transientstore. */
-export namespace transientstore {
-
-    /** Properties of a TxPvtReadWriteSetWithConfigInfo. */
-    interface ITxPvtReadWriteSetWithConfigInfo {
-
-        /** TxPvtReadWriteSetWithConfigInfo endorsed_at */
-        endorsed_at?: (number|Long|null);
-
-        /** TxPvtReadWriteSetWithConfigInfo pvt_rwset */
-        pvt_rwset?: (rwset.ITxPvtReadWriteSet|null);
-
-        /** TxPvtReadWriteSetWithConfigInfo collection_configs */
-        collection_configs?: ({ [k: string]: protos.ICollectionConfigPackage }|null);
-    }
-
-    /** Represents a TxPvtReadWriteSetWithConfigInfo. */
-    class TxPvtReadWriteSetWithConfigInfo implements ITxPvtReadWriteSetWithConfigInfo {
-
-        /**
-         * Constructs a new TxPvtReadWriteSetWithConfigInfo.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: transientstore.ITxPvtReadWriteSetWithConfigInfo);
-
-        /** TxPvtReadWriteSetWithConfigInfo endorsed_at. */
-        public endorsed_at: (number|Long);
-
-        /** TxPvtReadWriteSetWithConfigInfo pvt_rwset. */
-        public pvt_rwset?: (rwset.ITxPvtReadWriteSet|null);
-
-        /** TxPvtReadWriteSetWithConfigInfo collection_configs. */
-        public collection_configs: { [k: string]: protos.ICollectionConfigPackage };
-
-        /**
-         * Creates a new TxPvtReadWriteSetWithConfigInfo instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns TxPvtReadWriteSetWithConfigInfo instance
-         */
-        public static create(properties?: transientstore.ITxPvtReadWriteSetWithConfigInfo): transientstore.TxPvtReadWriteSetWithConfigInfo;
-
-        /**
-         * Encodes the specified TxPvtReadWriteSetWithConfigInfo message. Does not implicitly {@link transientstore.TxPvtReadWriteSetWithConfigInfo.verify|verify} messages.
-         * @param message TxPvtReadWriteSetWithConfigInfo message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: transientstore.ITxPvtReadWriteSetWithConfigInfo, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified TxPvtReadWriteSetWithConfigInfo message, length delimited. Does not implicitly {@link transientstore.TxPvtReadWriteSetWithConfigInfo.verify|verify} messages.
-         * @param message TxPvtReadWriteSetWithConfigInfo message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: transientstore.ITxPvtReadWriteSetWithConfigInfo, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a TxPvtReadWriteSetWithConfigInfo message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns TxPvtReadWriteSetWithConfigInfo
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): transientstore.TxPvtReadWriteSetWithConfigInfo;
-
-        /**
-         * Decodes a TxPvtReadWriteSetWithConfigInfo message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns TxPvtReadWriteSetWithConfigInfo
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): transientstore.TxPvtReadWriteSetWithConfigInfo;
-
-        /**
-         * Verifies a TxPvtReadWriteSetWithConfigInfo message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a TxPvtReadWriteSetWithConfigInfo message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns TxPvtReadWriteSetWithConfigInfo
-         */
-        public static fromObject(object: { [k: string]: any }): transientstore.TxPvtReadWriteSetWithConfigInfo;
-
-        /**
-         * Creates a plain object from a TxPvtReadWriteSetWithConfigInfo message. Also converts values to other types if specified.
-         * @param message TxPvtReadWriteSetWithConfigInfo
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: transientstore.TxPvtReadWriteSetWithConfigInfo, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this TxPvtReadWriteSetWithConfigInfo to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 }
 
@@ -2501,6 +1048,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for CollectionConfigPackage
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a CollectionConfig. */
@@ -2594,6 +1148,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for CollectionConfig
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a StaticCollectionConfig. */
@@ -2726,6 +1287,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for StaticCollectionConfig
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a CollectionPolicyConfig. */
@@ -2819,6 +1387,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for CollectionPolicyConfig
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of an ApplicationPolicy. */
@@ -2918,6 +1493,407 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ApplicationPolicy
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of an AnchorPeers. */
+    interface IAnchorPeers {
+
+        /** AnchorPeers anchor_peers */
+        anchor_peers?: (protos.IAnchorPeer[]|null);
+    }
+
+    /** Represents an AnchorPeers. */
+    class AnchorPeers implements IAnchorPeers {
+
+        /**
+         * Constructs a new AnchorPeers.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: protos.IAnchorPeers);
+
+        /** AnchorPeers anchor_peers. */
+        public anchor_peers: protos.IAnchorPeer[];
+
+        /**
+         * Creates a new AnchorPeers instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns AnchorPeers instance
+         */
+        public static create(properties?: protos.IAnchorPeers): protos.AnchorPeers;
+
+        /**
+         * Encodes the specified AnchorPeers message. Does not implicitly {@link protos.AnchorPeers.verify|verify} messages.
+         * @param message AnchorPeers message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: protos.IAnchorPeers, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified AnchorPeers message, length delimited. Does not implicitly {@link protos.AnchorPeers.verify|verify} messages.
+         * @param message AnchorPeers message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: protos.IAnchorPeers, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes an AnchorPeers message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns AnchorPeers
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.AnchorPeers;
+
+        /**
+         * Decodes an AnchorPeers message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns AnchorPeers
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.AnchorPeers;
+
+        /**
+         * Verifies an AnchorPeers message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates an AnchorPeers message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns AnchorPeers
+         */
+        public static fromObject(object: { [k: string]: any }): protos.AnchorPeers;
+
+        /**
+         * Creates a plain object from an AnchorPeers message. Also converts values to other types if specified.
+         * @param message AnchorPeers
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: protos.AnchorPeers, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this AnchorPeers to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for AnchorPeers
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of an AnchorPeer. */
+    interface IAnchorPeer {
+
+        /** AnchorPeer host */
+        host?: (string|null);
+
+        /** AnchorPeer port */
+        port?: (number|null);
+    }
+
+    /** Represents an AnchorPeer. */
+    class AnchorPeer implements IAnchorPeer {
+
+        /**
+         * Constructs a new AnchorPeer.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: protos.IAnchorPeer);
+
+        /** AnchorPeer host. */
+        public host: string;
+
+        /** AnchorPeer port. */
+        public port: number;
+
+        /**
+         * Creates a new AnchorPeer instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns AnchorPeer instance
+         */
+        public static create(properties?: protos.IAnchorPeer): protos.AnchorPeer;
+
+        /**
+         * Encodes the specified AnchorPeer message. Does not implicitly {@link protos.AnchorPeer.verify|verify} messages.
+         * @param message AnchorPeer message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: protos.IAnchorPeer, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified AnchorPeer message, length delimited. Does not implicitly {@link protos.AnchorPeer.verify|verify} messages.
+         * @param message AnchorPeer message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: protos.IAnchorPeer, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes an AnchorPeer message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns AnchorPeer
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.AnchorPeer;
+
+        /**
+         * Decodes an AnchorPeer message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns AnchorPeer
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.AnchorPeer;
+
+        /**
+         * Verifies an AnchorPeer message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates an AnchorPeer message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns AnchorPeer
+         */
+        public static fromObject(object: { [k: string]: any }): protos.AnchorPeer;
+
+        /**
+         * Creates a plain object from an AnchorPeer message. Also converts values to other types if specified.
+         * @param message AnchorPeer
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: protos.AnchorPeer, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this AnchorPeer to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for AnchorPeer
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a APIResource. */
+    interface IAPIResource {
+
+        /** APIResource policy_ref */
+        policy_ref?: (string|null);
+    }
+
+    /** Represents a APIResource. */
+    class APIResource implements IAPIResource {
+
+        /**
+         * Constructs a new APIResource.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: protos.IAPIResource);
+
+        /** APIResource policy_ref. */
+        public policy_ref: string;
+
+        /**
+         * Creates a new APIResource instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns APIResource instance
+         */
+        public static create(properties?: protos.IAPIResource): protos.APIResource;
+
+        /**
+         * Encodes the specified APIResource message. Does not implicitly {@link protos.APIResource.verify|verify} messages.
+         * @param message APIResource message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: protos.IAPIResource, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified APIResource message, length delimited. Does not implicitly {@link protos.APIResource.verify|verify} messages.
+         * @param message APIResource message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: protos.IAPIResource, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a APIResource message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns APIResource
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.APIResource;
+
+        /**
+         * Decodes a APIResource message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns APIResource
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.APIResource;
+
+        /**
+         * Verifies a APIResource message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a APIResource message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns APIResource
+         */
+        public static fromObject(object: { [k: string]: any }): protos.APIResource;
+
+        /**
+         * Creates a plain object from a APIResource message. Also converts values to other types if specified.
+         * @param message APIResource
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: protos.APIResource, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this APIResource to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for APIResource
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a ACLs. */
+    interface IACLs {
+
+        /** ACLs acls */
+        acls?: ({ [k: string]: protos.IAPIResource }|null);
+    }
+
+    /** Represents a ACLs. */
+    class ACLs implements IACLs {
+
+        /**
+         * Constructs a new ACLs.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: protos.IACLs);
+
+        /** ACLs acls. */
+        public acls: { [k: string]: protos.IAPIResource };
+
+        /**
+         * Creates a new ACLs instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns ACLs instance
+         */
+        public static create(properties?: protos.IACLs): protos.ACLs;
+
+        /**
+         * Encodes the specified ACLs message. Does not implicitly {@link protos.ACLs.verify|verify} messages.
+         * @param message ACLs message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: protos.IACLs, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified ACLs message, length delimited. Does not implicitly {@link protos.ACLs.verify|verify} messages.
+         * @param message ACLs message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: protos.IACLs, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a ACLs message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns ACLs
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.ACLs;
+
+        /**
+         * Decodes a ACLs message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns ACLs
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.ACLs;
+
+        /**
+         * Verifies a ACLs message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a ACLs message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns ACLs
+         */
+        public static fromObject(object: { [k: string]: any }): protos.ACLs;
+
+        /**
+         * Creates a plain object from a ACLs message. Also converts values to other types if specified.
+         * @param message ACLs
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: protos.ACLs, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this ACLs to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ACLs
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a FilteredBlock. */
@@ -3020,6 +1996,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for FilteredBlock
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a FilteredTransaction. */
@@ -3131,6 +2114,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for FilteredTransaction
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a FilteredTransactionActions. */
@@ -3221,6 +2211,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for FilteredTransactionActions
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a FilteredChaincodeAction. */
@@ -3311,6 +2308,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for FilteredChaincodeAction
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a BlockAndPrivateData. */
@@ -3407,6 +2411,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for BlockAndPrivateData
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a DeliverResponse. */
@@ -3518,6 +2529,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for DeliverResponse
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Represents a Deliver */
@@ -3713,6 +2731,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ChaincodeEvent
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ProcessedTransaction. */
@@ -3809,6 +2834,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ProcessedTransaction
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a Transaction. */
@@ -3899,6 +2931,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Transaction
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a TransactionAction. */
@@ -3995,6 +3034,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for TransactionAction
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ChaincodeActionPayload. */
@@ -4091,6 +3137,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ChaincodeActionPayload
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ChaincodeEndorsedAction. */
@@ -4187,6 +3240,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ChaincodeEndorsedAction
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** TxValidationCode enum. */
@@ -4339,6 +3399,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ProposalResponse
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a Response. */
@@ -4441,6 +3508,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Response
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ProposalResponsePayload. */
@@ -4537,6 +3611,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ProposalResponsePayload
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of an Endorsement. */
@@ -4633,1716 +3714,523 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Endorsement
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
-    /** Properties of a ChaincodeMessage. */
-    interface IChaincodeMessage {
+    /** Properties of a ChaincodeIdentifier. */
+    interface IChaincodeIdentifier {
 
-        /** ChaincodeMessage type */
-        type?: (protos.ChaincodeMessage.Type|null);
+        /** ChaincodeIdentifier hash */
+        hash?: (Uint8Array|null);
 
-        /** ChaincodeMessage timestamp */
-        timestamp?: (google.protobuf.ITimestamp|null);
-
-        /** ChaincodeMessage payload */
-        payload?: (Uint8Array|null);
-
-        /** ChaincodeMessage txid */
-        txid?: (string|null);
-
-        /** ChaincodeMessage proposal */
-        proposal?: (protos.ISignedProposal|null);
-
-        /** ChaincodeMessage chaincode_event */
-        chaincode_event?: (protos.IChaincodeEvent|null);
-
-        /** ChaincodeMessage channel_id */
-        channel_id?: (string|null);
+        /** ChaincodeIdentifier version */
+        version?: (string|null);
     }
 
-    /** Represents a ChaincodeMessage. */
-    class ChaincodeMessage implements IChaincodeMessage {
+    /** Represents a ChaincodeIdentifier. */
+    class ChaincodeIdentifier implements IChaincodeIdentifier {
 
         /**
-         * Constructs a new ChaincodeMessage.
+         * Constructs a new ChaincodeIdentifier.
          * @param [properties] Properties to set
          */
-        constructor(properties?: protos.IChaincodeMessage);
+        constructor(properties?: protos.IChaincodeIdentifier);
 
-        /** ChaincodeMessage type. */
-        public type: protos.ChaincodeMessage.Type;
+        /** ChaincodeIdentifier hash. */
+        public hash: Uint8Array;
 
-        /** ChaincodeMessage timestamp. */
-        public timestamp?: (google.protobuf.ITimestamp|null);
-
-        /** ChaincodeMessage payload. */
-        public payload: Uint8Array;
-
-        /** ChaincodeMessage txid. */
-        public txid: string;
-
-        /** ChaincodeMessage proposal. */
-        public proposal?: (protos.ISignedProposal|null);
-
-        /** ChaincodeMessage chaincode_event. */
-        public chaincode_event?: (protos.IChaincodeEvent|null);
-
-        /** ChaincodeMessage channel_id. */
-        public channel_id: string;
+        /** ChaincodeIdentifier version. */
+        public version: string;
 
         /**
-         * Creates a new ChaincodeMessage instance using the specified properties.
+         * Creates a new ChaincodeIdentifier instance using the specified properties.
          * @param [properties] Properties to set
-         * @returns ChaincodeMessage instance
+         * @returns ChaincodeIdentifier instance
          */
-        public static create(properties?: protos.IChaincodeMessage): protos.ChaincodeMessage;
+        public static create(properties?: protos.IChaincodeIdentifier): protos.ChaincodeIdentifier;
 
         /**
-         * Encodes the specified ChaincodeMessage message. Does not implicitly {@link protos.ChaincodeMessage.verify|verify} messages.
-         * @param message ChaincodeMessage message or plain object to encode
+         * Encodes the specified ChaincodeIdentifier message. Does not implicitly {@link protos.ChaincodeIdentifier.verify|verify} messages.
+         * @param message ChaincodeIdentifier message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encode(message: protos.IChaincodeMessage, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: protos.IChaincodeIdentifier, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Encodes the specified ChaincodeMessage message, length delimited. Does not implicitly {@link protos.ChaincodeMessage.verify|verify} messages.
-         * @param message ChaincodeMessage message or plain object to encode
+         * Encodes the specified ChaincodeIdentifier message, length delimited. Does not implicitly {@link protos.ChaincodeIdentifier.verify|verify} messages.
+         * @param message ChaincodeIdentifier message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encodeDelimited(message: protos.IChaincodeMessage, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: protos.IChaincodeIdentifier, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Decodes a ChaincodeMessage message from the specified reader or buffer.
+         * Decodes a ChaincodeIdentifier message from the specified reader or buffer.
          * @param reader Reader or buffer to decode from
          * @param [length] Message length if known beforehand
-         * @returns ChaincodeMessage
+         * @returns ChaincodeIdentifier
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.ChaincodeMessage;
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.ChaincodeIdentifier;
 
         /**
-         * Decodes a ChaincodeMessage message from the specified reader or buffer, length delimited.
+         * Decodes a ChaincodeIdentifier message from the specified reader or buffer, length delimited.
          * @param reader Reader or buffer to decode from
-         * @returns ChaincodeMessage
+         * @returns ChaincodeIdentifier
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.ChaincodeMessage;
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.ChaincodeIdentifier;
 
         /**
-         * Verifies a ChaincodeMessage message.
+         * Verifies a ChaincodeIdentifier message.
          * @param message Plain object to verify
          * @returns `null` if valid, otherwise the reason why it is not
          */
         public static verify(message: { [k: string]: any }): (string|null);
 
         /**
-         * Creates a ChaincodeMessage message from a plain object. Also converts values to their respective internal types.
+         * Creates a ChaincodeIdentifier message from a plain object. Also converts values to their respective internal types.
          * @param object Plain object
-         * @returns ChaincodeMessage
+         * @returns ChaincodeIdentifier
          */
-        public static fromObject(object: { [k: string]: any }): protos.ChaincodeMessage;
+        public static fromObject(object: { [k: string]: any }): protos.ChaincodeIdentifier;
 
         /**
-         * Creates a plain object from a ChaincodeMessage message. Also converts values to other types if specified.
-         * @param message ChaincodeMessage
+         * Creates a plain object from a ChaincodeIdentifier message. Also converts values to other types if specified.
+         * @param message ChaincodeIdentifier
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: protos.ChaincodeMessage, options?: $protobuf.IConversionOptions): { [k: string]: any };
+        public static toObject(message: protos.ChaincodeIdentifier, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
-         * Converts this ChaincodeMessage to JSON.
+         * Converts this ChaincodeIdentifier to JSON.
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
-    }
-
-    namespace ChaincodeMessage {
-
-        /** Type enum. */
-        enum Type {
-            UNDEFINED = 0,
-            REGISTER = 1,
-            REGISTERED = 2,
-            INIT = 3,
-            READY = 4,
-            TRANSACTION = 5,
-            COMPLETED = 6,
-            ERROR = 7,
-            GET_STATE = 8,
-            PUT_STATE = 9,
-            DEL_STATE = 10,
-            INVOKE_CHAINCODE = 11,
-            RESPONSE = 13,
-            GET_STATE_BY_RANGE = 14,
-            GET_QUERY_RESULT = 15,
-            QUERY_STATE_NEXT = 16,
-            QUERY_STATE_CLOSE = 17,
-            KEEPALIVE = 18,
-            GET_HISTORY_FOR_KEY = 19,
-            GET_STATE_METADATA = 20,
-            PUT_STATE_METADATA = 21,
-            GET_PRIVATE_DATA_HASH = 22
-        }
-    }
-
-    /** Properties of a GetState. */
-    interface IGetState {
-
-        /** GetState key */
-        key?: (string|null);
-
-        /** GetState collection */
-        collection?: (string|null);
-    }
-
-    /** Represents a GetState. */
-    class GetState implements IGetState {
 
         /**
-         * Constructs a new GetState.
+         * Gets the default type url for ChaincodeIdentifier
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a ChaincodeValidation. */
+    interface IChaincodeValidation {
+
+        /** ChaincodeValidation name */
+        name?: (string|null);
+
+        /** ChaincodeValidation argument */
+        argument?: (Uint8Array|null);
+    }
+
+    /** Represents a ChaincodeValidation. */
+    class ChaincodeValidation implements IChaincodeValidation {
+
+        /**
+         * Constructs a new ChaincodeValidation.
          * @param [properties] Properties to set
          */
-        constructor(properties?: protos.IGetState);
+        constructor(properties?: protos.IChaincodeValidation);
 
-        /** GetState key. */
-        public key: string;
+        /** ChaincodeValidation name. */
+        public name: string;
 
-        /** GetState collection. */
-        public collection: string;
+        /** ChaincodeValidation argument. */
+        public argument: Uint8Array;
 
         /**
-         * Creates a new GetState instance using the specified properties.
+         * Creates a new ChaincodeValidation instance using the specified properties.
          * @param [properties] Properties to set
-         * @returns GetState instance
+         * @returns ChaincodeValidation instance
          */
-        public static create(properties?: protos.IGetState): protos.GetState;
+        public static create(properties?: protos.IChaincodeValidation): protos.ChaincodeValidation;
 
         /**
-         * Encodes the specified GetState message. Does not implicitly {@link protos.GetState.verify|verify} messages.
-         * @param message GetState message or plain object to encode
+         * Encodes the specified ChaincodeValidation message. Does not implicitly {@link protos.ChaincodeValidation.verify|verify} messages.
+         * @param message ChaincodeValidation message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encode(message: protos.IGetState, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: protos.IChaincodeValidation, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Encodes the specified GetState message, length delimited. Does not implicitly {@link protos.GetState.verify|verify} messages.
-         * @param message GetState message or plain object to encode
+         * Encodes the specified ChaincodeValidation message, length delimited. Does not implicitly {@link protos.ChaincodeValidation.verify|verify} messages.
+         * @param message ChaincodeValidation message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encodeDelimited(message: protos.IGetState, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: protos.IChaincodeValidation, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Decodes a GetState message from the specified reader or buffer.
+         * Decodes a ChaincodeValidation message from the specified reader or buffer.
          * @param reader Reader or buffer to decode from
          * @param [length] Message length if known beforehand
-         * @returns GetState
+         * @returns ChaincodeValidation
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.GetState;
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.ChaincodeValidation;
 
         /**
-         * Decodes a GetState message from the specified reader or buffer, length delimited.
+         * Decodes a ChaincodeValidation message from the specified reader or buffer, length delimited.
          * @param reader Reader or buffer to decode from
-         * @returns GetState
+         * @returns ChaincodeValidation
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.GetState;
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.ChaincodeValidation;
 
         /**
-         * Verifies a GetState message.
+         * Verifies a ChaincodeValidation message.
          * @param message Plain object to verify
          * @returns `null` if valid, otherwise the reason why it is not
          */
         public static verify(message: { [k: string]: any }): (string|null);
 
         /**
-         * Creates a GetState message from a plain object. Also converts values to their respective internal types.
+         * Creates a ChaincodeValidation message from a plain object. Also converts values to their respective internal types.
          * @param object Plain object
-         * @returns GetState
+         * @returns ChaincodeValidation
          */
-        public static fromObject(object: { [k: string]: any }): protos.GetState;
+        public static fromObject(object: { [k: string]: any }): protos.ChaincodeValidation;
 
         /**
-         * Creates a plain object from a GetState message. Also converts values to other types if specified.
-         * @param message GetState
+         * Creates a plain object from a ChaincodeValidation message. Also converts values to other types if specified.
+         * @param message ChaincodeValidation
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: protos.GetState, options?: $protobuf.IConversionOptions): { [k: string]: any };
+        public static toObject(message: protos.ChaincodeValidation, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
-         * Converts this GetState to JSON.
+         * Converts this ChaincodeValidation to JSON.
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ChaincodeValidation
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
-    /** Properties of a GetStateMetadata. */
-    interface IGetStateMetadata {
+    /** Properties of a VSCCArgs. */
+    interface IVSCCArgs {
 
-        /** GetStateMetadata key */
-        key?: (string|null);
-
-        /** GetStateMetadata collection */
-        collection?: (string|null);
+        /** VSCCArgs endorsement_policy_ref */
+        endorsement_policy_ref?: (string|null);
     }
 
-    /** Represents a GetStateMetadata. */
-    class GetStateMetadata implements IGetStateMetadata {
+    /** Represents a VSCCArgs. */
+    class VSCCArgs implements IVSCCArgs {
 
         /**
-         * Constructs a new GetStateMetadata.
+         * Constructs a new VSCCArgs.
          * @param [properties] Properties to set
          */
-        constructor(properties?: protos.IGetStateMetadata);
+        constructor(properties?: protos.IVSCCArgs);
 
-        /** GetStateMetadata key. */
-        public key: string;
-
-        /** GetStateMetadata collection. */
-        public collection: string;
+        /** VSCCArgs endorsement_policy_ref. */
+        public endorsement_policy_ref: string;
 
         /**
-         * Creates a new GetStateMetadata instance using the specified properties.
+         * Creates a new VSCCArgs instance using the specified properties.
          * @param [properties] Properties to set
-         * @returns GetStateMetadata instance
+         * @returns VSCCArgs instance
          */
-        public static create(properties?: protos.IGetStateMetadata): protos.GetStateMetadata;
+        public static create(properties?: protos.IVSCCArgs): protos.VSCCArgs;
 
         /**
-         * Encodes the specified GetStateMetadata message. Does not implicitly {@link protos.GetStateMetadata.verify|verify} messages.
-         * @param message GetStateMetadata message or plain object to encode
+         * Encodes the specified VSCCArgs message. Does not implicitly {@link protos.VSCCArgs.verify|verify} messages.
+         * @param message VSCCArgs message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encode(message: protos.IGetStateMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: protos.IVSCCArgs, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Encodes the specified GetStateMetadata message, length delimited. Does not implicitly {@link protos.GetStateMetadata.verify|verify} messages.
-         * @param message GetStateMetadata message or plain object to encode
+         * Encodes the specified VSCCArgs message, length delimited. Does not implicitly {@link protos.VSCCArgs.verify|verify} messages.
+         * @param message VSCCArgs message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encodeDelimited(message: protos.IGetStateMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: protos.IVSCCArgs, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Decodes a GetStateMetadata message from the specified reader or buffer.
+         * Decodes a VSCCArgs message from the specified reader or buffer.
          * @param reader Reader or buffer to decode from
          * @param [length] Message length if known beforehand
-         * @returns GetStateMetadata
+         * @returns VSCCArgs
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.GetStateMetadata;
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.VSCCArgs;
 
         /**
-         * Decodes a GetStateMetadata message from the specified reader or buffer, length delimited.
+         * Decodes a VSCCArgs message from the specified reader or buffer, length delimited.
          * @param reader Reader or buffer to decode from
-         * @returns GetStateMetadata
+         * @returns VSCCArgs
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.GetStateMetadata;
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.VSCCArgs;
 
         /**
-         * Verifies a GetStateMetadata message.
+         * Verifies a VSCCArgs message.
          * @param message Plain object to verify
          * @returns `null` if valid, otherwise the reason why it is not
          */
         public static verify(message: { [k: string]: any }): (string|null);
 
         /**
-         * Creates a GetStateMetadata message from a plain object. Also converts values to their respective internal types.
+         * Creates a VSCCArgs message from a plain object. Also converts values to their respective internal types.
          * @param object Plain object
-         * @returns GetStateMetadata
+         * @returns VSCCArgs
          */
-        public static fromObject(object: { [k: string]: any }): protos.GetStateMetadata;
+        public static fromObject(object: { [k: string]: any }): protos.VSCCArgs;
 
         /**
-         * Creates a plain object from a GetStateMetadata message. Also converts values to other types if specified.
-         * @param message GetStateMetadata
+         * Creates a plain object from a VSCCArgs message. Also converts values to other types if specified.
+         * @param message VSCCArgs
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: protos.GetStateMetadata, options?: $protobuf.IConversionOptions): { [k: string]: any };
+        public static toObject(message: protos.VSCCArgs, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
-         * Converts this GetStateMetadata to JSON.
+         * Converts this VSCCArgs to JSON.
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for VSCCArgs
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
-    /** Properties of a PutState. */
-    interface IPutState {
+    /** Properties of a ChaincodeEndorsement. */
+    interface IChaincodeEndorsement {
 
-        /** PutState key */
-        key?: (string|null);
-
-        /** PutState value */
-        value?: (Uint8Array|null);
-
-        /** PutState collection */
-        collection?: (string|null);
+        /** ChaincodeEndorsement name */
+        name?: (string|null);
     }
 
-    /** Represents a PutState. */
-    class PutState implements IPutState {
+    /** Represents a ChaincodeEndorsement. */
+    class ChaincodeEndorsement implements IChaincodeEndorsement {
 
         /**
-         * Constructs a new PutState.
+         * Constructs a new ChaincodeEndorsement.
          * @param [properties] Properties to set
          */
-        constructor(properties?: protos.IPutState);
+        constructor(properties?: protos.IChaincodeEndorsement);
 
-        /** PutState key. */
-        public key: string;
-
-        /** PutState value. */
-        public value: Uint8Array;
-
-        /** PutState collection. */
-        public collection: string;
+        /** ChaincodeEndorsement name. */
+        public name: string;
 
         /**
-         * Creates a new PutState instance using the specified properties.
+         * Creates a new ChaincodeEndorsement instance using the specified properties.
          * @param [properties] Properties to set
-         * @returns PutState instance
+         * @returns ChaincodeEndorsement instance
          */
-        public static create(properties?: protos.IPutState): protos.PutState;
+        public static create(properties?: protos.IChaincodeEndorsement): protos.ChaincodeEndorsement;
 
         /**
-         * Encodes the specified PutState message. Does not implicitly {@link protos.PutState.verify|verify} messages.
-         * @param message PutState message or plain object to encode
+         * Encodes the specified ChaincodeEndorsement message. Does not implicitly {@link protos.ChaincodeEndorsement.verify|verify} messages.
+         * @param message ChaincodeEndorsement message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encode(message: protos.IPutState, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: protos.IChaincodeEndorsement, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Encodes the specified PutState message, length delimited. Does not implicitly {@link protos.PutState.verify|verify} messages.
-         * @param message PutState message or plain object to encode
+         * Encodes the specified ChaincodeEndorsement message, length delimited. Does not implicitly {@link protos.ChaincodeEndorsement.verify|verify} messages.
+         * @param message ChaincodeEndorsement message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encodeDelimited(message: protos.IPutState, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: protos.IChaincodeEndorsement, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Decodes a PutState message from the specified reader or buffer.
+         * Decodes a ChaincodeEndorsement message from the specified reader or buffer.
          * @param reader Reader or buffer to decode from
          * @param [length] Message length if known beforehand
-         * @returns PutState
+         * @returns ChaincodeEndorsement
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.PutState;
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.ChaincodeEndorsement;
 
         /**
-         * Decodes a PutState message from the specified reader or buffer, length delimited.
+         * Decodes a ChaincodeEndorsement message from the specified reader or buffer, length delimited.
          * @param reader Reader or buffer to decode from
-         * @returns PutState
+         * @returns ChaincodeEndorsement
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.PutState;
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.ChaincodeEndorsement;
 
         /**
-         * Verifies a PutState message.
+         * Verifies a ChaincodeEndorsement message.
          * @param message Plain object to verify
          * @returns `null` if valid, otherwise the reason why it is not
          */
         public static verify(message: { [k: string]: any }): (string|null);
 
         /**
-         * Creates a PutState message from a plain object. Also converts values to their respective internal types.
+         * Creates a ChaincodeEndorsement message from a plain object. Also converts values to their respective internal types.
          * @param object Plain object
-         * @returns PutState
+         * @returns ChaincodeEndorsement
          */
-        public static fromObject(object: { [k: string]: any }): protos.PutState;
+        public static fromObject(object: { [k: string]: any }): protos.ChaincodeEndorsement;
 
         /**
-         * Creates a plain object from a PutState message. Also converts values to other types if specified.
-         * @param message PutState
+         * Creates a plain object from a ChaincodeEndorsement message. Also converts values to other types if specified.
+         * @param message ChaincodeEndorsement
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: protos.PutState, options?: $protobuf.IConversionOptions): { [k: string]: any };
+        public static toObject(message: protos.ChaincodeEndorsement, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
-         * Converts this PutState to JSON.
+         * Converts this ChaincodeEndorsement to JSON.
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ChaincodeEndorsement
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
-    /** Properties of a PutStateMetadata. */
-    interface IPutStateMetadata {
+    /** Properties of a ConfigTree. */
+    interface IConfigTree {
 
-        /** PutStateMetadata key */
-        key?: (string|null);
+        /** ConfigTree channel_config */
+        channel_config?: (common.IConfig|null);
 
-        /** PutStateMetadata collection */
-        collection?: (string|null);
-
-        /** PutStateMetadata metadata */
-        metadata?: (protos.IStateMetadata|null);
+        /** ConfigTree resources_config */
+        resources_config?: (common.IConfig|null);
     }
 
-    /** Represents a PutStateMetadata. */
-    class PutStateMetadata implements IPutStateMetadata {
+    /** Represents a ConfigTree. */
+    class ConfigTree implements IConfigTree {
 
         /**
-         * Constructs a new PutStateMetadata.
+         * Constructs a new ConfigTree.
          * @param [properties] Properties to set
          */
-        constructor(properties?: protos.IPutStateMetadata);
+        constructor(properties?: protos.IConfigTree);
 
-        /** PutStateMetadata key. */
-        public key: string;
+        /** ConfigTree channel_config. */
+        public channel_config?: (common.IConfig|null);
 
-        /** PutStateMetadata collection. */
-        public collection: string;
-
-        /** PutStateMetadata metadata. */
-        public metadata?: (protos.IStateMetadata|null);
+        /** ConfigTree resources_config. */
+        public resources_config?: (common.IConfig|null);
 
         /**
-         * Creates a new PutStateMetadata instance using the specified properties.
+         * Creates a new ConfigTree instance using the specified properties.
          * @param [properties] Properties to set
-         * @returns PutStateMetadata instance
+         * @returns ConfigTree instance
          */
-        public static create(properties?: protos.IPutStateMetadata): protos.PutStateMetadata;
+        public static create(properties?: protos.IConfigTree): protos.ConfigTree;
 
         /**
-         * Encodes the specified PutStateMetadata message. Does not implicitly {@link protos.PutStateMetadata.verify|verify} messages.
-         * @param message PutStateMetadata message or plain object to encode
+         * Encodes the specified ConfigTree message. Does not implicitly {@link protos.ConfigTree.verify|verify} messages.
+         * @param message ConfigTree message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encode(message: protos.IPutStateMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: protos.IConfigTree, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Encodes the specified PutStateMetadata message, length delimited. Does not implicitly {@link protos.PutStateMetadata.verify|verify} messages.
-         * @param message PutStateMetadata message or plain object to encode
+         * Encodes the specified ConfigTree message, length delimited. Does not implicitly {@link protos.ConfigTree.verify|verify} messages.
+         * @param message ConfigTree message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encodeDelimited(message: protos.IPutStateMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: protos.IConfigTree, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Decodes a PutStateMetadata message from the specified reader or buffer.
+         * Decodes a ConfigTree message from the specified reader or buffer.
          * @param reader Reader or buffer to decode from
          * @param [length] Message length if known beforehand
-         * @returns PutStateMetadata
+         * @returns ConfigTree
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.PutStateMetadata;
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.ConfigTree;
 
         /**
-         * Decodes a PutStateMetadata message from the specified reader or buffer, length delimited.
+         * Decodes a ConfigTree message from the specified reader or buffer, length delimited.
          * @param reader Reader or buffer to decode from
-         * @returns PutStateMetadata
+         * @returns ConfigTree
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.PutStateMetadata;
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.ConfigTree;
 
         /**
-         * Verifies a PutStateMetadata message.
+         * Verifies a ConfigTree message.
          * @param message Plain object to verify
          * @returns `null` if valid, otherwise the reason why it is not
          */
         public static verify(message: { [k: string]: any }): (string|null);
 
         /**
-         * Creates a PutStateMetadata message from a plain object. Also converts values to their respective internal types.
+         * Creates a ConfigTree message from a plain object. Also converts values to their respective internal types.
          * @param object Plain object
-         * @returns PutStateMetadata
+         * @returns ConfigTree
          */
-        public static fromObject(object: { [k: string]: any }): protos.PutStateMetadata;
+        public static fromObject(object: { [k: string]: any }): protos.ConfigTree;
 
         /**
-         * Creates a plain object from a PutStateMetadata message. Also converts values to other types if specified.
-         * @param message PutStateMetadata
+         * Creates a plain object from a ConfigTree message. Also converts values to other types if specified.
+         * @param message ConfigTree
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: protos.PutStateMetadata, options?: $protobuf.IConversionOptions): { [k: string]: any };
+        public static toObject(message: protos.ConfigTree, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
-         * Converts this PutStateMetadata to JSON.
+         * Converts this ConfigTree to JSON.
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ConfigTree
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
-    /** Properties of a DelState. */
-    interface IDelState {
+    /** Represents an Endorser */
+    class Endorser extends $protobuf.rpc.Service {
 
-        /** DelState key */
-        key?: (string|null);
-
-        /** DelState collection */
-        collection?: (string|null);
-    }
-
-    /** Represents a DelState. */
-    class DelState implements IDelState {
-
-        /**
-         * Constructs a new DelState.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: protos.IDelState);
-
-        /** DelState key. */
-        public key: string;
-
-        /** DelState collection. */
-        public collection: string;
-
-        /**
-         * Creates a new DelState instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns DelState instance
-         */
-        public static create(properties?: protos.IDelState): protos.DelState;
-
-        /**
-         * Encodes the specified DelState message. Does not implicitly {@link protos.DelState.verify|verify} messages.
-         * @param message DelState message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: protos.IDelState, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified DelState message, length delimited. Does not implicitly {@link protos.DelState.verify|verify} messages.
-         * @param message DelState message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: protos.IDelState, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a DelState message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns DelState
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.DelState;
-
-        /**
-         * Decodes a DelState message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns DelState
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.DelState;
-
-        /**
-         * Verifies a DelState message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a DelState message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns DelState
-         */
-        public static fromObject(object: { [k: string]: any }): protos.DelState;
-
-        /**
-         * Creates a plain object from a DelState message. Also converts values to other types if specified.
-         * @param message DelState
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: protos.DelState, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this DelState to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a GetStateByRange. */
-    interface IGetStateByRange {
-
-        /** GetStateByRange startKey */
-        startKey?: (string|null);
-
-        /** GetStateByRange endKey */
-        endKey?: (string|null);
-
-        /** GetStateByRange collection */
-        collection?: (string|null);
-
-        /** GetStateByRange metadata */
-        metadata?: (Uint8Array|null);
-    }
-
-    /** Represents a GetStateByRange. */
-    class GetStateByRange implements IGetStateByRange {
-
-        /**
-         * Constructs a new GetStateByRange.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: protos.IGetStateByRange);
-
-        /** GetStateByRange startKey. */
-        public startKey: string;
-
-        /** GetStateByRange endKey. */
-        public endKey: string;
-
-        /** GetStateByRange collection. */
-        public collection: string;
-
-        /** GetStateByRange metadata. */
-        public metadata: Uint8Array;
-
-        /**
-         * Creates a new GetStateByRange instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns GetStateByRange instance
-         */
-        public static create(properties?: protos.IGetStateByRange): protos.GetStateByRange;
-
-        /**
-         * Encodes the specified GetStateByRange message. Does not implicitly {@link protos.GetStateByRange.verify|verify} messages.
-         * @param message GetStateByRange message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: protos.IGetStateByRange, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified GetStateByRange message, length delimited. Does not implicitly {@link protos.GetStateByRange.verify|verify} messages.
-         * @param message GetStateByRange message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: protos.IGetStateByRange, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a GetStateByRange message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns GetStateByRange
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.GetStateByRange;
-
-        /**
-         * Decodes a GetStateByRange message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns GetStateByRange
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.GetStateByRange;
-
-        /**
-         * Verifies a GetStateByRange message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a GetStateByRange message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns GetStateByRange
-         */
-        public static fromObject(object: { [k: string]: any }): protos.GetStateByRange;
-
-        /**
-         * Creates a plain object from a GetStateByRange message. Also converts values to other types if specified.
-         * @param message GetStateByRange
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: protos.GetStateByRange, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this GetStateByRange to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a GetQueryResult. */
-    interface IGetQueryResult {
-
-        /** GetQueryResult query */
-        query?: (string|null);
-
-        /** GetQueryResult collection */
-        collection?: (string|null);
-
-        /** GetQueryResult metadata */
-        metadata?: (Uint8Array|null);
-    }
-
-    /** Represents a GetQueryResult. */
-    class GetQueryResult implements IGetQueryResult {
-
-        /**
-         * Constructs a new GetQueryResult.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: protos.IGetQueryResult);
-
-        /** GetQueryResult query. */
-        public query: string;
-
-        /** GetQueryResult collection. */
-        public collection: string;
-
-        /** GetQueryResult metadata. */
-        public metadata: Uint8Array;
-
-        /**
-         * Creates a new GetQueryResult instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns GetQueryResult instance
-         */
-        public static create(properties?: protos.IGetQueryResult): protos.GetQueryResult;
-
-        /**
-         * Encodes the specified GetQueryResult message. Does not implicitly {@link protos.GetQueryResult.verify|verify} messages.
-         * @param message GetQueryResult message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: protos.IGetQueryResult, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified GetQueryResult message, length delimited. Does not implicitly {@link protos.GetQueryResult.verify|verify} messages.
-         * @param message GetQueryResult message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: protos.IGetQueryResult, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a GetQueryResult message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns GetQueryResult
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.GetQueryResult;
-
-        /**
-         * Decodes a GetQueryResult message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns GetQueryResult
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.GetQueryResult;
-
-        /**
-         * Verifies a GetQueryResult message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a GetQueryResult message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns GetQueryResult
-         */
-        public static fromObject(object: { [k: string]: any }): protos.GetQueryResult;
-
-        /**
-         * Creates a plain object from a GetQueryResult message. Also converts values to other types if specified.
-         * @param message GetQueryResult
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: protos.GetQueryResult, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this GetQueryResult to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a QueryMetadata. */
-    interface IQueryMetadata {
-
-        /** QueryMetadata pageSize */
-        pageSize?: (number|null);
-
-        /** QueryMetadata bookmark */
-        bookmark?: (string|null);
-    }
-
-    /** Represents a QueryMetadata. */
-    class QueryMetadata implements IQueryMetadata {
-
-        /**
-         * Constructs a new QueryMetadata.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: protos.IQueryMetadata);
-
-        /** QueryMetadata pageSize. */
-        public pageSize: number;
-
-        /** QueryMetadata bookmark. */
-        public bookmark: string;
-
-        /**
-         * Creates a new QueryMetadata instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns QueryMetadata instance
-         */
-        public static create(properties?: protos.IQueryMetadata): protos.QueryMetadata;
-
-        /**
-         * Encodes the specified QueryMetadata message. Does not implicitly {@link protos.QueryMetadata.verify|verify} messages.
-         * @param message QueryMetadata message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: protos.IQueryMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified QueryMetadata message, length delimited. Does not implicitly {@link protos.QueryMetadata.verify|verify} messages.
-         * @param message QueryMetadata message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: protos.IQueryMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a QueryMetadata message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns QueryMetadata
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.QueryMetadata;
-
-        /**
-         * Decodes a QueryMetadata message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns QueryMetadata
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.QueryMetadata;
-
-        /**
-         * Verifies a QueryMetadata message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a QueryMetadata message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns QueryMetadata
-         */
-        public static fromObject(object: { [k: string]: any }): protos.QueryMetadata;
-
-        /**
-         * Creates a plain object from a QueryMetadata message. Also converts values to other types if specified.
-         * @param message QueryMetadata
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: protos.QueryMetadata, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this QueryMetadata to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a GetHistoryForKey. */
-    interface IGetHistoryForKey {
-
-        /** GetHistoryForKey key */
-        key?: (string|null);
-    }
-
-    /** Represents a GetHistoryForKey. */
-    class GetHistoryForKey implements IGetHistoryForKey {
-
-        /**
-         * Constructs a new GetHistoryForKey.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: protos.IGetHistoryForKey);
-
-        /** GetHistoryForKey key. */
-        public key: string;
-
-        /**
-         * Creates a new GetHistoryForKey instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns GetHistoryForKey instance
-         */
-        public static create(properties?: protos.IGetHistoryForKey): protos.GetHistoryForKey;
-
-        /**
-         * Encodes the specified GetHistoryForKey message. Does not implicitly {@link protos.GetHistoryForKey.verify|verify} messages.
-         * @param message GetHistoryForKey message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: protos.IGetHistoryForKey, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified GetHistoryForKey message, length delimited. Does not implicitly {@link protos.GetHistoryForKey.verify|verify} messages.
-         * @param message GetHistoryForKey message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: protos.IGetHistoryForKey, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a GetHistoryForKey message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns GetHistoryForKey
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.GetHistoryForKey;
-
-        /**
-         * Decodes a GetHistoryForKey message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns GetHistoryForKey
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.GetHistoryForKey;
-
-        /**
-         * Verifies a GetHistoryForKey message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a GetHistoryForKey message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns GetHistoryForKey
-         */
-        public static fromObject(object: { [k: string]: any }): protos.GetHistoryForKey;
-
-        /**
-         * Creates a plain object from a GetHistoryForKey message. Also converts values to other types if specified.
-         * @param message GetHistoryForKey
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: protos.GetHistoryForKey, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this GetHistoryForKey to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a QueryStateNext. */
-    interface IQueryStateNext {
-
-        /** QueryStateNext id */
-        id?: (string|null);
-    }
-
-    /** Represents a QueryStateNext. */
-    class QueryStateNext implements IQueryStateNext {
-
-        /**
-         * Constructs a new QueryStateNext.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: protos.IQueryStateNext);
-
-        /** QueryStateNext id. */
-        public id: string;
-
-        /**
-         * Creates a new QueryStateNext instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns QueryStateNext instance
-         */
-        public static create(properties?: protos.IQueryStateNext): protos.QueryStateNext;
-
-        /**
-         * Encodes the specified QueryStateNext message. Does not implicitly {@link protos.QueryStateNext.verify|verify} messages.
-         * @param message QueryStateNext message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: protos.IQueryStateNext, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified QueryStateNext message, length delimited. Does not implicitly {@link protos.QueryStateNext.verify|verify} messages.
-         * @param message QueryStateNext message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: protos.IQueryStateNext, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a QueryStateNext message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns QueryStateNext
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.QueryStateNext;
-
-        /**
-         * Decodes a QueryStateNext message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns QueryStateNext
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.QueryStateNext;
-
-        /**
-         * Verifies a QueryStateNext message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a QueryStateNext message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns QueryStateNext
-         */
-        public static fromObject(object: { [k: string]: any }): protos.QueryStateNext;
-
-        /**
-         * Creates a plain object from a QueryStateNext message. Also converts values to other types if specified.
-         * @param message QueryStateNext
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: protos.QueryStateNext, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this QueryStateNext to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a QueryStateClose. */
-    interface IQueryStateClose {
-
-        /** QueryStateClose id */
-        id?: (string|null);
-    }
-
-    /** Represents a QueryStateClose. */
-    class QueryStateClose implements IQueryStateClose {
-
-        /**
-         * Constructs a new QueryStateClose.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: protos.IQueryStateClose);
-
-        /** QueryStateClose id. */
-        public id: string;
-
-        /**
-         * Creates a new QueryStateClose instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns QueryStateClose instance
-         */
-        public static create(properties?: protos.IQueryStateClose): protos.QueryStateClose;
-
-        /**
-         * Encodes the specified QueryStateClose message. Does not implicitly {@link protos.QueryStateClose.verify|verify} messages.
-         * @param message QueryStateClose message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: protos.IQueryStateClose, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified QueryStateClose message, length delimited. Does not implicitly {@link protos.QueryStateClose.verify|verify} messages.
-         * @param message QueryStateClose message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: protos.IQueryStateClose, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a QueryStateClose message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns QueryStateClose
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.QueryStateClose;
-
-        /**
-         * Decodes a QueryStateClose message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns QueryStateClose
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.QueryStateClose;
-
-        /**
-         * Verifies a QueryStateClose message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a QueryStateClose message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns QueryStateClose
-         */
-        public static fromObject(object: { [k: string]: any }): protos.QueryStateClose;
-
-        /**
-         * Creates a plain object from a QueryStateClose message. Also converts values to other types if specified.
-         * @param message QueryStateClose
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: protos.QueryStateClose, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this QueryStateClose to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a QueryResultBytes. */
-    interface IQueryResultBytes {
-
-        /** QueryResultBytes resultBytes */
-        resultBytes?: (Uint8Array|null);
-    }
-
-    /** Represents a QueryResultBytes. */
-    class QueryResultBytes implements IQueryResultBytes {
-
-        /**
-         * Constructs a new QueryResultBytes.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: protos.IQueryResultBytes);
-
-        /** QueryResultBytes resultBytes. */
-        public resultBytes: Uint8Array;
-
-        /**
-         * Creates a new QueryResultBytes instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns QueryResultBytes instance
-         */
-        public static create(properties?: protos.IQueryResultBytes): protos.QueryResultBytes;
-
-        /**
-         * Encodes the specified QueryResultBytes message. Does not implicitly {@link protos.QueryResultBytes.verify|verify} messages.
-         * @param message QueryResultBytes message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: protos.IQueryResultBytes, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified QueryResultBytes message, length delimited. Does not implicitly {@link protos.QueryResultBytes.verify|verify} messages.
-         * @param message QueryResultBytes message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: protos.IQueryResultBytes, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a QueryResultBytes message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns QueryResultBytes
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.QueryResultBytes;
-
-        /**
-         * Decodes a QueryResultBytes message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns QueryResultBytes
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.QueryResultBytes;
-
-        /**
-         * Verifies a QueryResultBytes message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a QueryResultBytes message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns QueryResultBytes
-         */
-        public static fromObject(object: { [k: string]: any }): protos.QueryResultBytes;
-
-        /**
-         * Creates a plain object from a QueryResultBytes message. Also converts values to other types if specified.
-         * @param message QueryResultBytes
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: protos.QueryResultBytes, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this QueryResultBytes to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a QueryResponse. */
-    interface IQueryResponse {
-
-        /** QueryResponse results */
-        results?: (protos.IQueryResultBytes[]|null);
-
-        /** QueryResponse has_more */
-        has_more?: (boolean|null);
-
-        /** QueryResponse id */
-        id?: (string|null);
-
-        /** QueryResponse metadata */
-        metadata?: (Uint8Array|null);
-    }
-
-    /** Represents a QueryResponse. */
-    class QueryResponse implements IQueryResponse {
-
-        /**
-         * Constructs a new QueryResponse.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: protos.IQueryResponse);
-
-        /** QueryResponse results. */
-        public results: protos.IQueryResultBytes[];
-
-        /** QueryResponse has_more. */
-        public has_more: boolean;
-
-        /** QueryResponse id. */
-        public id: string;
-
-        /** QueryResponse metadata. */
-        public metadata: Uint8Array;
-
-        /**
-         * Creates a new QueryResponse instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns QueryResponse instance
-         */
-        public static create(properties?: protos.IQueryResponse): protos.QueryResponse;
-
-        /**
-         * Encodes the specified QueryResponse message. Does not implicitly {@link protos.QueryResponse.verify|verify} messages.
-         * @param message QueryResponse message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: protos.IQueryResponse, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified QueryResponse message, length delimited. Does not implicitly {@link protos.QueryResponse.verify|verify} messages.
-         * @param message QueryResponse message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: protos.IQueryResponse, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a QueryResponse message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns QueryResponse
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.QueryResponse;
-
-        /**
-         * Decodes a QueryResponse message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns QueryResponse
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.QueryResponse;
-
-        /**
-         * Verifies a QueryResponse message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a QueryResponse message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns QueryResponse
-         */
-        public static fromObject(object: { [k: string]: any }): protos.QueryResponse;
-
-        /**
-         * Creates a plain object from a QueryResponse message. Also converts values to other types if specified.
-         * @param message QueryResponse
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: protos.QueryResponse, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this QueryResponse to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a QueryResponseMetadata. */
-    interface IQueryResponseMetadata {
-
-        /** QueryResponseMetadata fetched_records_count */
-        fetched_records_count?: (number|null);
-
-        /** QueryResponseMetadata bookmark */
-        bookmark?: (string|null);
-    }
-
-    /** Represents a QueryResponseMetadata. */
-    class QueryResponseMetadata implements IQueryResponseMetadata {
-
-        /**
-         * Constructs a new QueryResponseMetadata.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: protos.IQueryResponseMetadata);
-
-        /** QueryResponseMetadata fetched_records_count. */
-        public fetched_records_count: number;
-
-        /** QueryResponseMetadata bookmark. */
-        public bookmark: string;
-
-        /**
-         * Creates a new QueryResponseMetadata instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns QueryResponseMetadata instance
-         */
-        public static create(properties?: protos.IQueryResponseMetadata): protos.QueryResponseMetadata;
-
-        /**
-         * Encodes the specified QueryResponseMetadata message. Does not implicitly {@link protos.QueryResponseMetadata.verify|verify} messages.
-         * @param message QueryResponseMetadata message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: protos.IQueryResponseMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified QueryResponseMetadata message, length delimited. Does not implicitly {@link protos.QueryResponseMetadata.verify|verify} messages.
-         * @param message QueryResponseMetadata message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: protos.IQueryResponseMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a QueryResponseMetadata message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns QueryResponseMetadata
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.QueryResponseMetadata;
-
-        /**
-         * Decodes a QueryResponseMetadata message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns QueryResponseMetadata
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.QueryResponseMetadata;
-
-        /**
-         * Verifies a QueryResponseMetadata message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a QueryResponseMetadata message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns QueryResponseMetadata
-         */
-        public static fromObject(object: { [k: string]: any }): protos.QueryResponseMetadata;
-
-        /**
-         * Creates a plain object from a QueryResponseMetadata message. Also converts values to other types if specified.
-         * @param message QueryResponseMetadata
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: protos.QueryResponseMetadata, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this QueryResponseMetadata to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a StateMetadata. */
-    interface IStateMetadata {
-
-        /** StateMetadata metakey */
-        metakey?: (string|null);
-
-        /** StateMetadata value */
-        value?: (Uint8Array|null);
-    }
-
-    /** Represents a StateMetadata. */
-    class StateMetadata implements IStateMetadata {
-
-        /**
-         * Constructs a new StateMetadata.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: protos.IStateMetadata);
-
-        /** StateMetadata metakey. */
-        public metakey: string;
-
-        /** StateMetadata value. */
-        public value: Uint8Array;
-
-        /**
-         * Creates a new StateMetadata instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns StateMetadata instance
-         */
-        public static create(properties?: protos.IStateMetadata): protos.StateMetadata;
-
-        /**
-         * Encodes the specified StateMetadata message. Does not implicitly {@link protos.StateMetadata.verify|verify} messages.
-         * @param message StateMetadata message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: protos.IStateMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified StateMetadata message, length delimited. Does not implicitly {@link protos.StateMetadata.verify|verify} messages.
-         * @param message StateMetadata message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: protos.IStateMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a StateMetadata message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns StateMetadata
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.StateMetadata;
-
-        /**
-         * Decodes a StateMetadata message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns StateMetadata
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.StateMetadata;
-
-        /**
-         * Verifies a StateMetadata message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a StateMetadata message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns StateMetadata
-         */
-        public static fromObject(object: { [k: string]: any }): protos.StateMetadata;
-
-        /**
-         * Creates a plain object from a StateMetadata message. Also converts values to other types if specified.
-         * @param message StateMetadata
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: protos.StateMetadata, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this StateMetadata to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a StateMetadataResult. */
-    interface IStateMetadataResult {
-
-        /** StateMetadataResult entries */
-        entries?: (protos.IStateMetadata[]|null);
-    }
-
-    /** Represents a StateMetadataResult. */
-    class StateMetadataResult implements IStateMetadataResult {
-
-        /**
-         * Constructs a new StateMetadataResult.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: protos.IStateMetadataResult);
-
-        /** StateMetadataResult entries. */
-        public entries: protos.IStateMetadata[];
-
-        /**
-         * Creates a new StateMetadataResult instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns StateMetadataResult instance
-         */
-        public static create(properties?: protos.IStateMetadataResult): protos.StateMetadataResult;
-
-        /**
-         * Encodes the specified StateMetadataResult message. Does not implicitly {@link protos.StateMetadataResult.verify|verify} messages.
-         * @param message StateMetadataResult message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: protos.IStateMetadataResult, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified StateMetadataResult message, length delimited. Does not implicitly {@link protos.StateMetadataResult.verify|verify} messages.
-         * @param message StateMetadataResult message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: protos.IStateMetadataResult, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a StateMetadataResult message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns StateMetadataResult
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.StateMetadataResult;
-
-        /**
-         * Decodes a StateMetadataResult message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns StateMetadataResult
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.StateMetadataResult;
-
-        /**
-         * Verifies a StateMetadataResult message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a StateMetadataResult message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns StateMetadataResult
-         */
-        public static fromObject(object: { [k: string]: any }): protos.StateMetadataResult;
-
-        /**
-         * Creates a plain object from a StateMetadataResult message. Also converts values to other types if specified.
-         * @param message StateMetadataResult
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: protos.StateMetadataResult, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this StateMetadataResult to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Represents a ChaincodeSupport */
-    class ChaincodeSupport extends $protobuf.rpc.Service {
-
         /**
-         * Constructs a new ChaincodeSupport service.
+         * Constructs a new Endorser service.
          * @param rpcImpl RPC implementation
          * @param [requestDelimited=false] Whether requests are length-delimited
          * @param [responseDelimited=false] Whether responses are length-delimited
@@ -6350,82 +4238,37 @@ export namespace protos {
         constructor(rpcImpl: $protobuf.RPCImpl, requestDelimited?: boolean, responseDelimited?: boolean);
 
         /**
-         * Creates new ChaincodeSupport service using the specified rpc implementation.
+         * Creates new Endorser service using the specified rpc implementation.
          * @param rpcImpl RPC implementation
          * @param [requestDelimited=false] Whether requests are length-delimited
          * @param [responseDelimited=false] Whether responses are length-delimited
          * @returns RPC service. Useful where requests and/or responses are streamed.
          */
-        public static create(rpcImpl: $protobuf.RPCImpl, requestDelimited?: boolean, responseDelimited?: boolean): ChaincodeSupport;
+        public static create(rpcImpl: $protobuf.RPCImpl, requestDelimited?: boolean, responseDelimited?: boolean): Endorser;
 
         /**
-         * Calls Register.
-         * @param request ChaincodeMessage message or plain object
-         * @param callback Node-style callback called with the error, if any, and ChaincodeMessage
+         * Calls ProcessProposal.
+         * @param request SignedProposal message or plain object
+         * @param callback Node-style callback called with the error, if any, and ProposalResponse
          */
-        public register(request: protos.IChaincodeMessage, callback: protos.ChaincodeSupport.RegisterCallback): void;
+        public processProposal(request: protos.ISignedProposal, callback: protos.Endorser.ProcessProposalCallback): void;
 
         /**
-         * Calls Register.
-         * @param request ChaincodeMessage message or plain object
+         * Calls ProcessProposal.
+         * @param request SignedProposal message or plain object
          * @returns Promise
          */
-        public register(request: protos.IChaincodeMessage): Promise<protos.ChaincodeMessage>;
+        public processProposal(request: protos.ISignedProposal): Promise<protos.ProposalResponse>;
     }
 
-    namespace ChaincodeSupport {
+    namespace Endorser {
 
         /**
-         * Callback as used by {@link protos.ChaincodeSupport#register}.
+         * Callback as used by {@link protos.Endorser#processProposal}.
          * @param error Error, if any
-         * @param [response] ChaincodeMessage
+         * @param [response] ProposalResponse
          */
-        type RegisterCallback = (error: (Error|null), response?: protos.ChaincodeMessage) => void;
-    }
-
-    /** Represents a Chaincode */
-    class Chaincode extends $protobuf.rpc.Service {
-
-        /**
-         * Constructs a new Chaincode service.
-         * @param rpcImpl RPC implementation
-         * @param [requestDelimited=false] Whether requests are length-delimited
-         * @param [responseDelimited=false] Whether responses are length-delimited
-         */
-        constructor(rpcImpl: $protobuf.RPCImpl, requestDelimited?: boolean, responseDelimited?: boolean);
-
-        /**
-         * Creates new Chaincode service using the specified rpc implementation.
-         * @param rpcImpl RPC implementation
-         * @param [requestDelimited=false] Whether requests are length-delimited
-         * @param [responseDelimited=false] Whether responses are length-delimited
-         * @returns RPC service. Useful where requests and/or responses are streamed.
-         */
-        public static create(rpcImpl: $protobuf.RPCImpl, requestDelimited?: boolean, responseDelimited?: boolean): Chaincode;
-
-        /**
-         * Calls Connect.
-         * @param request ChaincodeMessage message or plain object
-         * @param callback Node-style callback called with the error, if any, and ChaincodeMessage
-         */
-        public connect(request: protos.IChaincodeMessage, callback: protos.Chaincode.ConnectCallback): void;
-
-        /**
-         * Calls Connect.
-         * @param request ChaincodeMessage message or plain object
-         * @returns Promise
-         */
-        public connect(request: protos.IChaincodeMessage): Promise<protos.ChaincodeMessage>;
-    }
-
-    namespace Chaincode {
-
-        /**
-         * Callback as used by {@link protos.Chaincode#connect}.
-         * @param error Error, if any
-         * @param [response] ChaincodeMessage
-         */
-        type ConnectCallback = (error: (Error|null), response?: protos.ChaincodeMessage) => void;
+        type ProcessProposalCallback = (error: (Error|null), response?: protos.ProposalResponse) => void;
     }
 
     /** Properties of a SignedProposal. */
@@ -6522,6 +4365,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for SignedProposal
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a Proposal. */
@@ -6624,6 +4474,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Proposal
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ChaincodeHeaderExtension. */
@@ -6714,6 +4571,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ChaincodeHeaderExtension
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ChaincodeProposalPayload. */
@@ -6810,6 +4674,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ChaincodeProposalPayload
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ChaincodeAction. */
@@ -6918,6 +4789,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ChaincodeAction
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ChaincodeID. */
@@ -7020,6 +4898,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ChaincodeID
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ChaincodeInput. */
@@ -7122,6 +5007,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ChaincodeInput
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ChaincodeSpec. */
@@ -7230,6 +5122,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ChaincodeSpec
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     namespace ChaincodeSpec {
@@ -7338,6 +5237,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ChaincodeDeploymentSpec
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ChaincodeInvocationSpec. */
@@ -7428,6 +5334,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ChaincodeInvocationSpec
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a LifecycleEvent. */
@@ -7518,6 +5431,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for LifecycleEvent
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a CDSData. */
@@ -7614,6 +5534,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for CDSData
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ChaincodeData. */
@@ -7746,885 +5673,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
-    }
 
-    /** Properties of a ChaincodeIdentifier. */
-    interface IChaincodeIdentifier {
-
-        /** ChaincodeIdentifier hash */
-        hash?: (Uint8Array|null);
-
-        /** ChaincodeIdentifier version */
-        version?: (string|null);
-    }
-
-    /** Represents a ChaincodeIdentifier. */
-    class ChaincodeIdentifier implements IChaincodeIdentifier {
-
-        /**
-         * Constructs a new ChaincodeIdentifier.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: protos.IChaincodeIdentifier);
-
-        /** ChaincodeIdentifier hash. */
-        public hash: Uint8Array;
-
-        /** ChaincodeIdentifier version. */
-        public version: string;
-
-        /**
-         * Creates a new ChaincodeIdentifier instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns ChaincodeIdentifier instance
-         */
-        public static create(properties?: protos.IChaincodeIdentifier): protos.ChaincodeIdentifier;
-
-        /**
-         * Encodes the specified ChaincodeIdentifier message. Does not implicitly {@link protos.ChaincodeIdentifier.verify|verify} messages.
-         * @param message ChaincodeIdentifier message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: protos.IChaincodeIdentifier, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified ChaincodeIdentifier message, length delimited. Does not implicitly {@link protos.ChaincodeIdentifier.verify|verify} messages.
-         * @param message ChaincodeIdentifier message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: protos.IChaincodeIdentifier, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a ChaincodeIdentifier message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns ChaincodeIdentifier
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.ChaincodeIdentifier;
-
-        /**
-         * Decodes a ChaincodeIdentifier message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns ChaincodeIdentifier
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.ChaincodeIdentifier;
-
-        /**
-         * Verifies a ChaincodeIdentifier message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a ChaincodeIdentifier message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns ChaincodeIdentifier
-         */
-        public static fromObject(object: { [k: string]: any }): protos.ChaincodeIdentifier;
-
-        /**
-         * Creates a plain object from a ChaincodeIdentifier message. Also converts values to other types if specified.
-         * @param message ChaincodeIdentifier
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: protos.ChaincodeIdentifier, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this ChaincodeIdentifier to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a ChaincodeValidation. */
-    interface IChaincodeValidation {
-
-        /** ChaincodeValidation name */
-        name?: (string|null);
-
-        /** ChaincodeValidation argument */
-        argument?: (Uint8Array|null);
-    }
-
-    /** Represents a ChaincodeValidation. */
-    class ChaincodeValidation implements IChaincodeValidation {
-
-        /**
-         * Constructs a new ChaincodeValidation.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: protos.IChaincodeValidation);
-
-        /** ChaincodeValidation name. */
-        public name: string;
-
-        /** ChaincodeValidation argument. */
-        public argument: Uint8Array;
-
-        /**
-         * Creates a new ChaincodeValidation instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns ChaincodeValidation instance
-         */
-        public static create(properties?: protos.IChaincodeValidation): protos.ChaincodeValidation;
-
-        /**
-         * Encodes the specified ChaincodeValidation message. Does not implicitly {@link protos.ChaincodeValidation.verify|verify} messages.
-         * @param message ChaincodeValidation message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: protos.IChaincodeValidation, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified ChaincodeValidation message, length delimited. Does not implicitly {@link protos.ChaincodeValidation.verify|verify} messages.
-         * @param message ChaincodeValidation message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: protos.IChaincodeValidation, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a ChaincodeValidation message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns ChaincodeValidation
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.ChaincodeValidation;
-
-        /**
-         * Decodes a ChaincodeValidation message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns ChaincodeValidation
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.ChaincodeValidation;
-
-        /**
-         * Verifies a ChaincodeValidation message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a ChaincodeValidation message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns ChaincodeValidation
-         */
-        public static fromObject(object: { [k: string]: any }): protos.ChaincodeValidation;
-
-        /**
-         * Creates a plain object from a ChaincodeValidation message. Also converts values to other types if specified.
-         * @param message ChaincodeValidation
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: protos.ChaincodeValidation, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this ChaincodeValidation to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a VSCCArgs. */
-    interface IVSCCArgs {
-
-        /** VSCCArgs endorsement_policy_ref */
-        endorsement_policy_ref?: (string|null);
-    }
-
-    /** Represents a VSCCArgs. */
-    class VSCCArgs implements IVSCCArgs {
-
-        /**
-         * Constructs a new VSCCArgs.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: protos.IVSCCArgs);
-
-        /** VSCCArgs endorsement_policy_ref. */
-        public endorsement_policy_ref: string;
-
-        /**
-         * Creates a new VSCCArgs instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns VSCCArgs instance
-         */
-        public static create(properties?: protos.IVSCCArgs): protos.VSCCArgs;
-
-        /**
-         * Encodes the specified VSCCArgs message. Does not implicitly {@link protos.VSCCArgs.verify|verify} messages.
-         * @param message VSCCArgs message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: protos.IVSCCArgs, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified VSCCArgs message, length delimited. Does not implicitly {@link protos.VSCCArgs.verify|verify} messages.
-         * @param message VSCCArgs message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: protos.IVSCCArgs, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a VSCCArgs message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns VSCCArgs
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.VSCCArgs;
-
-        /**
-         * Decodes a VSCCArgs message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns VSCCArgs
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.VSCCArgs;
-
-        /**
-         * Verifies a VSCCArgs message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a VSCCArgs message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns VSCCArgs
-         */
-        public static fromObject(object: { [k: string]: any }): protos.VSCCArgs;
-
-        /**
-         * Creates a plain object from a VSCCArgs message. Also converts values to other types if specified.
-         * @param message VSCCArgs
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: protos.VSCCArgs, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this VSCCArgs to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a ChaincodeEndorsement. */
-    interface IChaincodeEndorsement {
-
-        /** ChaincodeEndorsement name */
-        name?: (string|null);
-    }
-
-    /** Represents a ChaincodeEndorsement. */
-    class ChaincodeEndorsement implements IChaincodeEndorsement {
-
-        /**
-         * Constructs a new ChaincodeEndorsement.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: protos.IChaincodeEndorsement);
-
-        /** ChaincodeEndorsement name. */
-        public name: string;
-
-        /**
-         * Creates a new ChaincodeEndorsement instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns ChaincodeEndorsement instance
-         */
-        public static create(properties?: protos.IChaincodeEndorsement): protos.ChaincodeEndorsement;
-
-        /**
-         * Encodes the specified ChaincodeEndorsement message. Does not implicitly {@link protos.ChaincodeEndorsement.verify|verify} messages.
-         * @param message ChaincodeEndorsement message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: protos.IChaincodeEndorsement, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified ChaincodeEndorsement message, length delimited. Does not implicitly {@link protos.ChaincodeEndorsement.verify|verify} messages.
-         * @param message ChaincodeEndorsement message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: protos.IChaincodeEndorsement, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a ChaincodeEndorsement message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns ChaincodeEndorsement
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.ChaincodeEndorsement;
-
-        /**
-         * Decodes a ChaincodeEndorsement message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns ChaincodeEndorsement
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.ChaincodeEndorsement;
-
-        /**
-         * Verifies a ChaincodeEndorsement message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a ChaincodeEndorsement message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns ChaincodeEndorsement
-         */
-        public static fromObject(object: { [k: string]: any }): protos.ChaincodeEndorsement;
-
-        /**
-         * Creates a plain object from a ChaincodeEndorsement message. Also converts values to other types if specified.
-         * @param message ChaincodeEndorsement
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: protos.ChaincodeEndorsement, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this ChaincodeEndorsement to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a ConfigTree. */
-    interface IConfigTree {
-
-        /** ConfigTree channel_config */
-        channel_config?: (common.IConfig|null);
-
-        /** ConfigTree resources_config */
-        resources_config?: (common.IConfig|null);
-    }
-
-    /** Represents a ConfigTree. */
-    class ConfigTree implements IConfigTree {
-
-        /**
-         * Constructs a new ConfigTree.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: protos.IConfigTree);
-
-        /** ConfigTree channel_config. */
-        public channel_config?: (common.IConfig|null);
-
-        /** ConfigTree resources_config. */
-        public resources_config?: (common.IConfig|null);
-
-        /**
-         * Creates a new ConfigTree instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns ConfigTree instance
-         */
-        public static create(properties?: protos.IConfigTree): protos.ConfigTree;
-
-        /**
-         * Encodes the specified ConfigTree message. Does not implicitly {@link protos.ConfigTree.verify|verify} messages.
-         * @param message ConfigTree message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: protos.IConfigTree, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified ConfigTree message, length delimited. Does not implicitly {@link protos.ConfigTree.verify|verify} messages.
-         * @param message ConfigTree message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: protos.IConfigTree, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a ConfigTree message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns ConfigTree
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.ConfigTree;
-
-        /**
-         * Decodes a ConfigTree message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns ConfigTree
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.ConfigTree;
-
-        /**
-         * Verifies a ConfigTree message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a ConfigTree message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns ConfigTree
-         */
-        public static fromObject(object: { [k: string]: any }): protos.ConfigTree;
-
-        /**
-         * Creates a plain object from a ConfigTree message. Also converts values to other types if specified.
-         * @param message ConfigTree
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: protos.ConfigTree, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this ConfigTree to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of an AnchorPeers. */
-    interface IAnchorPeers {
-
-        /** AnchorPeers anchor_peers */
-        anchor_peers?: (protos.IAnchorPeer[]|null);
-    }
-
-    /** Represents an AnchorPeers. */
-    class AnchorPeers implements IAnchorPeers {
-
-        /**
-         * Constructs a new AnchorPeers.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: protos.IAnchorPeers);
-
-        /** AnchorPeers anchor_peers. */
-        public anchor_peers: protos.IAnchorPeer[];
-
-        /**
-         * Creates a new AnchorPeers instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns AnchorPeers instance
-         */
-        public static create(properties?: protos.IAnchorPeers): protos.AnchorPeers;
-
-        /**
-         * Encodes the specified AnchorPeers message. Does not implicitly {@link protos.AnchorPeers.verify|verify} messages.
-         * @param message AnchorPeers message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: protos.IAnchorPeers, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified AnchorPeers message, length delimited. Does not implicitly {@link protos.AnchorPeers.verify|verify} messages.
-         * @param message AnchorPeers message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: protos.IAnchorPeers, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes an AnchorPeers message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns AnchorPeers
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.AnchorPeers;
-
-        /**
-         * Decodes an AnchorPeers message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns AnchorPeers
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.AnchorPeers;
-
-        /**
-         * Verifies an AnchorPeers message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates an AnchorPeers message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns AnchorPeers
-         */
-        public static fromObject(object: { [k: string]: any }): protos.AnchorPeers;
-
-        /**
-         * Creates a plain object from an AnchorPeers message. Also converts values to other types if specified.
-         * @param message AnchorPeers
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: protos.AnchorPeers, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this AnchorPeers to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of an AnchorPeer. */
-    interface IAnchorPeer {
-
-        /** AnchorPeer host */
-        host?: (string|null);
-
-        /** AnchorPeer port */
-        port?: (number|null);
-    }
-
-    /** Represents an AnchorPeer. */
-    class AnchorPeer implements IAnchorPeer {
-
-        /**
-         * Constructs a new AnchorPeer.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: protos.IAnchorPeer);
-
-        /** AnchorPeer host. */
-        public host: string;
-
-        /** AnchorPeer port. */
-        public port: number;
-
-        /**
-         * Creates a new AnchorPeer instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns AnchorPeer instance
-         */
-        public static create(properties?: protos.IAnchorPeer): protos.AnchorPeer;
-
-        /**
-         * Encodes the specified AnchorPeer message. Does not implicitly {@link protos.AnchorPeer.verify|verify} messages.
-         * @param message AnchorPeer message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: protos.IAnchorPeer, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified AnchorPeer message, length delimited. Does not implicitly {@link protos.AnchorPeer.verify|verify} messages.
-         * @param message AnchorPeer message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: protos.IAnchorPeer, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes an AnchorPeer message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns AnchorPeer
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.AnchorPeer;
-
-        /**
-         * Decodes an AnchorPeer message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns AnchorPeer
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.AnchorPeer;
-
-        /**
-         * Verifies an AnchorPeer message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates an AnchorPeer message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns AnchorPeer
-         */
-        public static fromObject(object: { [k: string]: any }): protos.AnchorPeer;
-
-        /**
-         * Creates a plain object from an AnchorPeer message. Also converts values to other types if specified.
-         * @param message AnchorPeer
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: protos.AnchorPeer, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this AnchorPeer to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a APIResource. */
-    interface IAPIResource {
-
-        /** APIResource policy_ref */
-        policy_ref?: (string|null);
-    }
-
-    /** Represents a APIResource. */
-    class APIResource implements IAPIResource {
-
-        /**
-         * Constructs a new APIResource.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: protos.IAPIResource);
-
-        /** APIResource policy_ref. */
-        public policy_ref: string;
-
-        /**
-         * Creates a new APIResource instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns APIResource instance
-         */
-        public static create(properties?: protos.IAPIResource): protos.APIResource;
-
-        /**
-         * Encodes the specified APIResource message. Does not implicitly {@link protos.APIResource.verify|verify} messages.
-         * @param message APIResource message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: protos.IAPIResource, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified APIResource message, length delimited. Does not implicitly {@link protos.APIResource.verify|verify} messages.
-         * @param message APIResource message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: protos.IAPIResource, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a APIResource message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns APIResource
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.APIResource;
-
-        /**
-         * Decodes a APIResource message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns APIResource
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.APIResource;
-
-        /**
-         * Verifies a APIResource message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a APIResource message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns APIResource
-         */
-        public static fromObject(object: { [k: string]: any }): protos.APIResource;
-
-        /**
-         * Creates a plain object from a APIResource message. Also converts values to other types if specified.
-         * @param message APIResource
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: protos.APIResource, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this APIResource to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a ACLs. */
-    interface IACLs {
-
-        /** ACLs acls */
-        acls?: ({ [k: string]: protos.IAPIResource }|null);
-    }
-
-    /** Represents a ACLs. */
-    class ACLs implements IACLs {
-
-        /**
-         * Constructs a new ACLs.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: protos.IACLs);
-
-        /** ACLs acls. */
-        public acls: { [k: string]: protos.IAPIResource };
-
-        /**
-         * Creates a new ACLs instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns ACLs instance
-         */
-        public static create(properties?: protos.IACLs): protos.ACLs;
-
-        /**
-         * Encodes the specified ACLs message. Does not implicitly {@link protos.ACLs.verify|verify} messages.
-         * @param message ACLs message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: protos.IACLs, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified ACLs message, length delimited. Does not implicitly {@link protos.ACLs.verify|verify} messages.
-         * @param message ACLs message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: protos.IACLs, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a ACLs message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns ACLs
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.ACLs;
-
-        /**
-         * Decodes a ACLs message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns ACLs
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.ACLs;
-
-        /**
-         * Verifies a ACLs message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a ACLs message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns ACLs
-         */
-        public static fromObject(object: { [k: string]: any }): protos.ACLs;
-
-        /**
-         * Creates a plain object from a ACLs message. Also converts values to other types if specified.
-         * @param message ACLs
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: protos.ACLs, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this ACLs to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Represents an Endorser */
-    class Endorser extends $protobuf.rpc.Service {
-
-        /**
-         * Constructs a new Endorser service.
-         * @param rpcImpl RPC implementation
-         * @param [requestDelimited=false] Whether requests are length-delimited
-         * @param [responseDelimited=false] Whether responses are length-delimited
-         */
-        constructor(rpcImpl: $protobuf.RPCImpl, requestDelimited?: boolean, responseDelimited?: boolean);
-
-        /**
-         * Creates new Endorser service using the specified rpc implementation.
-         * @param rpcImpl RPC implementation
-         * @param [requestDelimited=false] Whether requests are length-delimited
-         * @param [responseDelimited=false] Whether responses are length-delimited
-         * @returns RPC service. Useful where requests and/or responses are streamed.
-         */
-        public static create(rpcImpl: $protobuf.RPCImpl, requestDelimited?: boolean, responseDelimited?: boolean): Endorser;
-
-        /**
-         * Calls ProcessProposal.
-         * @param request SignedProposal message or plain object
-         * @param callback Node-style callback called with the error, if any, and ProposalResponse
-         */
-        public processProposal(request: protos.ISignedProposal, callback: protos.Endorser.ProcessProposalCallback): void;
-
-        /**
-         * Calls ProcessProposal.
-         * @param request SignedProposal message or plain object
-         * @returns Promise
-         */
-        public processProposal(request: protos.ISignedProposal): Promise<protos.ProposalResponse>;
-    }
-
-    namespace Endorser {
-
         /**
-         * Callback as used by {@link protos.Endorser#processProposal}.
-         * @param error Error, if any
-         * @param [response] ProposalResponse
+         * Gets the default type url for ChaincodeData
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
          */
-        type ProcessProposalCallback = (error: (Error|null), response?: protos.ProposalResponse) => void;
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ChaincodeQueryResponse. */
@@ -8715,6 +5770,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ChaincodeQueryResponse
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ChaincodeInfo. */
@@ -8841,6 +5903,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ChaincodeInfo
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ChannelQueryResponse. */
@@ -8931,6 +6000,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ChannelQueryResponse
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ChannelInfo. */
@@ -9021,6 +6097,13 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ChannelInfo
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a SignedChaincodeDeploymentSpec. */
@@ -9123,6 +6206,1925 @@ export namespace protos {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for SignedChaincodeDeploymentSpec
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a ChaincodeMessage. */
+    interface IChaincodeMessage {
+
+        /** ChaincodeMessage type */
+        type?: (protos.ChaincodeMessage.Type|null);
+
+        /** ChaincodeMessage timestamp */
+        timestamp?: (google.protobuf.ITimestamp|null);
+
+        /** ChaincodeMessage payload */
+        payload?: (Uint8Array|null);
+
+        /** ChaincodeMessage txid */
+        txid?: (string|null);
+
+        /** ChaincodeMessage proposal */
+        proposal?: (protos.ISignedProposal|null);
+
+        /** ChaincodeMessage chaincode_event */
+        chaincode_event?: (protos.IChaincodeEvent|null);
+
+        /** ChaincodeMessage channel_id */
+        channel_id?: (string|null);
+    }
+
+    /** Represents a ChaincodeMessage. */
+    class ChaincodeMessage implements IChaincodeMessage {
+
+        /**
+         * Constructs a new ChaincodeMessage.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: protos.IChaincodeMessage);
+
+        /** ChaincodeMessage type. */
+        public type: protos.ChaincodeMessage.Type;
+
+        /** ChaincodeMessage timestamp. */
+        public timestamp?: (google.protobuf.ITimestamp|null);
+
+        /** ChaincodeMessage payload. */
+        public payload: Uint8Array;
+
+        /** ChaincodeMessage txid. */
+        public txid: string;
+
+        /** ChaincodeMessage proposal. */
+        public proposal?: (protos.ISignedProposal|null);
+
+        /** ChaincodeMessage chaincode_event. */
+        public chaincode_event?: (protos.IChaincodeEvent|null);
+
+        /** ChaincodeMessage channel_id. */
+        public channel_id: string;
+
+        /**
+         * Creates a new ChaincodeMessage instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns ChaincodeMessage instance
+         */
+        public static create(properties?: protos.IChaincodeMessage): protos.ChaincodeMessage;
+
+        /**
+         * Encodes the specified ChaincodeMessage message. Does not implicitly {@link protos.ChaincodeMessage.verify|verify} messages.
+         * @param message ChaincodeMessage message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: protos.IChaincodeMessage, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified ChaincodeMessage message, length delimited. Does not implicitly {@link protos.ChaincodeMessage.verify|verify} messages.
+         * @param message ChaincodeMessage message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: protos.IChaincodeMessage, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a ChaincodeMessage message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns ChaincodeMessage
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.ChaincodeMessage;
+
+        /**
+         * Decodes a ChaincodeMessage message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns ChaincodeMessage
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.ChaincodeMessage;
+
+        /**
+         * Verifies a ChaincodeMessage message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a ChaincodeMessage message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns ChaincodeMessage
+         */
+        public static fromObject(object: { [k: string]: any }): protos.ChaincodeMessage;
+
+        /**
+         * Creates a plain object from a ChaincodeMessage message. Also converts values to other types if specified.
+         * @param message ChaincodeMessage
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: protos.ChaincodeMessage, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this ChaincodeMessage to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ChaincodeMessage
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    namespace ChaincodeMessage {
+
+        /** Type enum. */
+        enum Type {
+            UNDEFINED = 0,
+            REGISTER = 1,
+            REGISTERED = 2,
+            INIT = 3,
+            READY = 4,
+            TRANSACTION = 5,
+            COMPLETED = 6,
+            ERROR = 7,
+            GET_STATE = 8,
+            PUT_STATE = 9,
+            DEL_STATE = 10,
+            INVOKE_CHAINCODE = 11,
+            RESPONSE = 13,
+            GET_STATE_BY_RANGE = 14,
+            GET_QUERY_RESULT = 15,
+            QUERY_STATE_NEXT = 16,
+            QUERY_STATE_CLOSE = 17,
+            KEEPALIVE = 18,
+            GET_HISTORY_FOR_KEY = 19,
+            GET_STATE_METADATA = 20,
+            PUT_STATE_METADATA = 21,
+            GET_PRIVATE_DATA_HASH = 22
+        }
+    }
+
+    /** Properties of a GetState. */
+    interface IGetState {
+
+        /** GetState key */
+        key?: (string|null);
+
+        /** GetState collection */
+        collection?: (string|null);
+    }
+
+    /** Represents a GetState. */
+    class GetState implements IGetState {
+
+        /**
+         * Constructs a new GetState.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: protos.IGetState);
+
+        /** GetState key. */
+        public key: string;
+
+        /** GetState collection. */
+        public collection: string;
+
+        /**
+         * Creates a new GetState instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns GetState instance
+         */
+        public static create(properties?: protos.IGetState): protos.GetState;
+
+        /**
+         * Encodes the specified GetState message. Does not implicitly {@link protos.GetState.verify|verify} messages.
+         * @param message GetState message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: protos.IGetState, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified GetState message, length delimited. Does not implicitly {@link protos.GetState.verify|verify} messages.
+         * @param message GetState message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: protos.IGetState, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a GetState message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns GetState
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.GetState;
+
+        /**
+         * Decodes a GetState message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns GetState
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.GetState;
+
+        /**
+         * Verifies a GetState message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a GetState message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns GetState
+         */
+        public static fromObject(object: { [k: string]: any }): protos.GetState;
+
+        /**
+         * Creates a plain object from a GetState message. Also converts values to other types if specified.
+         * @param message GetState
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: protos.GetState, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this GetState to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for GetState
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a GetStateMetadata. */
+    interface IGetStateMetadata {
+
+        /** GetStateMetadata key */
+        key?: (string|null);
+
+        /** GetStateMetadata collection */
+        collection?: (string|null);
+    }
+
+    /** Represents a GetStateMetadata. */
+    class GetStateMetadata implements IGetStateMetadata {
+
+        /**
+         * Constructs a new GetStateMetadata.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: protos.IGetStateMetadata);
+
+        /** GetStateMetadata key. */
+        public key: string;
+
+        /** GetStateMetadata collection. */
+        public collection: string;
+
+        /**
+         * Creates a new GetStateMetadata instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns GetStateMetadata instance
+         */
+        public static create(properties?: protos.IGetStateMetadata): protos.GetStateMetadata;
+
+        /**
+         * Encodes the specified GetStateMetadata message. Does not implicitly {@link protos.GetStateMetadata.verify|verify} messages.
+         * @param message GetStateMetadata message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: protos.IGetStateMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified GetStateMetadata message, length delimited. Does not implicitly {@link protos.GetStateMetadata.verify|verify} messages.
+         * @param message GetStateMetadata message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: protos.IGetStateMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a GetStateMetadata message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns GetStateMetadata
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.GetStateMetadata;
+
+        /**
+         * Decodes a GetStateMetadata message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns GetStateMetadata
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.GetStateMetadata;
+
+        /**
+         * Verifies a GetStateMetadata message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a GetStateMetadata message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns GetStateMetadata
+         */
+        public static fromObject(object: { [k: string]: any }): protos.GetStateMetadata;
+
+        /**
+         * Creates a plain object from a GetStateMetadata message. Also converts values to other types if specified.
+         * @param message GetStateMetadata
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: protos.GetStateMetadata, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this GetStateMetadata to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for GetStateMetadata
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a PutState. */
+    interface IPutState {
+
+        /** PutState key */
+        key?: (string|null);
+
+        /** PutState value */
+        value?: (Uint8Array|null);
+
+        /** PutState collection */
+        collection?: (string|null);
+    }
+
+    /** Represents a PutState. */
+    class PutState implements IPutState {
+
+        /**
+         * Constructs a new PutState.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: protos.IPutState);
+
+        /** PutState key. */
+        public key: string;
+
+        /** PutState value. */
+        public value: Uint8Array;
+
+        /** PutState collection. */
+        public collection: string;
+
+        /**
+         * Creates a new PutState instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns PutState instance
+         */
+        public static create(properties?: protos.IPutState): protos.PutState;
+
+        /**
+         * Encodes the specified PutState message. Does not implicitly {@link protos.PutState.verify|verify} messages.
+         * @param message PutState message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: protos.IPutState, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified PutState message, length delimited. Does not implicitly {@link protos.PutState.verify|verify} messages.
+         * @param message PutState message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: protos.IPutState, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a PutState message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns PutState
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.PutState;
+
+        /**
+         * Decodes a PutState message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns PutState
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.PutState;
+
+        /**
+         * Verifies a PutState message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a PutState message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns PutState
+         */
+        public static fromObject(object: { [k: string]: any }): protos.PutState;
+
+        /**
+         * Creates a plain object from a PutState message. Also converts values to other types if specified.
+         * @param message PutState
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: protos.PutState, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this PutState to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for PutState
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a PutStateMetadata. */
+    interface IPutStateMetadata {
+
+        /** PutStateMetadata key */
+        key?: (string|null);
+
+        /** PutStateMetadata collection */
+        collection?: (string|null);
+
+        /** PutStateMetadata metadata */
+        metadata?: (protos.IStateMetadata|null);
+    }
+
+    /** Represents a PutStateMetadata. */
+    class PutStateMetadata implements IPutStateMetadata {
+
+        /**
+         * Constructs a new PutStateMetadata.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: protos.IPutStateMetadata);
+
+        /** PutStateMetadata key. */
+        public key: string;
+
+        /** PutStateMetadata collection. */
+        public collection: string;
+
+        /** PutStateMetadata metadata. */
+        public metadata?: (protos.IStateMetadata|null);
+
+        /**
+         * Creates a new PutStateMetadata instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns PutStateMetadata instance
+         */
+        public static create(properties?: protos.IPutStateMetadata): protos.PutStateMetadata;
+
+        /**
+         * Encodes the specified PutStateMetadata message. Does not implicitly {@link protos.PutStateMetadata.verify|verify} messages.
+         * @param message PutStateMetadata message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: protos.IPutStateMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified PutStateMetadata message, length delimited. Does not implicitly {@link protos.PutStateMetadata.verify|verify} messages.
+         * @param message PutStateMetadata message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: protos.IPutStateMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a PutStateMetadata message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns PutStateMetadata
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.PutStateMetadata;
+
+        /**
+         * Decodes a PutStateMetadata message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns PutStateMetadata
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.PutStateMetadata;
+
+        /**
+         * Verifies a PutStateMetadata message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a PutStateMetadata message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns PutStateMetadata
+         */
+        public static fromObject(object: { [k: string]: any }): protos.PutStateMetadata;
+
+        /**
+         * Creates a plain object from a PutStateMetadata message. Also converts values to other types if specified.
+         * @param message PutStateMetadata
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: protos.PutStateMetadata, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this PutStateMetadata to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for PutStateMetadata
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a DelState. */
+    interface IDelState {
+
+        /** DelState key */
+        key?: (string|null);
+
+        /** DelState collection */
+        collection?: (string|null);
+    }
+
+    /** Represents a DelState. */
+    class DelState implements IDelState {
+
+        /**
+         * Constructs a new DelState.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: protos.IDelState);
+
+        /** DelState key. */
+        public key: string;
+
+        /** DelState collection. */
+        public collection: string;
+
+        /**
+         * Creates a new DelState instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns DelState instance
+         */
+        public static create(properties?: protos.IDelState): protos.DelState;
+
+        /**
+         * Encodes the specified DelState message. Does not implicitly {@link protos.DelState.verify|verify} messages.
+         * @param message DelState message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: protos.IDelState, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified DelState message, length delimited. Does not implicitly {@link protos.DelState.verify|verify} messages.
+         * @param message DelState message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: protos.IDelState, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a DelState message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns DelState
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.DelState;
+
+        /**
+         * Decodes a DelState message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns DelState
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.DelState;
+
+        /**
+         * Verifies a DelState message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a DelState message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns DelState
+         */
+        public static fromObject(object: { [k: string]: any }): protos.DelState;
+
+        /**
+         * Creates a plain object from a DelState message. Also converts values to other types if specified.
+         * @param message DelState
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: protos.DelState, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this DelState to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for DelState
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a GetStateByRange. */
+    interface IGetStateByRange {
+
+        /** GetStateByRange startKey */
+        startKey?: (string|null);
+
+        /** GetStateByRange endKey */
+        endKey?: (string|null);
+
+        /** GetStateByRange collection */
+        collection?: (string|null);
+
+        /** GetStateByRange metadata */
+        metadata?: (Uint8Array|null);
+    }
+
+    /** Represents a GetStateByRange. */
+    class GetStateByRange implements IGetStateByRange {
+
+        /**
+         * Constructs a new GetStateByRange.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: protos.IGetStateByRange);
+
+        /** GetStateByRange startKey. */
+        public startKey: string;
+
+        /** GetStateByRange endKey. */
+        public endKey: string;
+
+        /** GetStateByRange collection. */
+        public collection: string;
+
+        /** GetStateByRange metadata. */
+        public metadata: Uint8Array;
+
+        /**
+         * Creates a new GetStateByRange instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns GetStateByRange instance
+         */
+        public static create(properties?: protos.IGetStateByRange): protos.GetStateByRange;
+
+        /**
+         * Encodes the specified GetStateByRange message. Does not implicitly {@link protos.GetStateByRange.verify|verify} messages.
+         * @param message GetStateByRange message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: protos.IGetStateByRange, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified GetStateByRange message, length delimited. Does not implicitly {@link protos.GetStateByRange.verify|verify} messages.
+         * @param message GetStateByRange message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: protos.IGetStateByRange, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a GetStateByRange message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns GetStateByRange
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.GetStateByRange;
+
+        /**
+         * Decodes a GetStateByRange message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns GetStateByRange
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.GetStateByRange;
+
+        /**
+         * Verifies a GetStateByRange message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a GetStateByRange message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns GetStateByRange
+         */
+        public static fromObject(object: { [k: string]: any }): protos.GetStateByRange;
+
+        /**
+         * Creates a plain object from a GetStateByRange message. Also converts values to other types if specified.
+         * @param message GetStateByRange
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: protos.GetStateByRange, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this GetStateByRange to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for GetStateByRange
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a GetQueryResult. */
+    interface IGetQueryResult {
+
+        /** GetQueryResult query */
+        query?: (string|null);
+
+        /** GetQueryResult collection */
+        collection?: (string|null);
+
+        /** GetQueryResult metadata */
+        metadata?: (Uint8Array|null);
+    }
+
+    /** Represents a GetQueryResult. */
+    class GetQueryResult implements IGetQueryResult {
+
+        /**
+         * Constructs a new GetQueryResult.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: protos.IGetQueryResult);
+
+        /** GetQueryResult query. */
+        public query: string;
+
+        /** GetQueryResult collection. */
+        public collection: string;
+
+        /** GetQueryResult metadata. */
+        public metadata: Uint8Array;
+
+        /**
+         * Creates a new GetQueryResult instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns GetQueryResult instance
+         */
+        public static create(properties?: protos.IGetQueryResult): protos.GetQueryResult;
+
+        /**
+         * Encodes the specified GetQueryResult message. Does not implicitly {@link protos.GetQueryResult.verify|verify} messages.
+         * @param message GetQueryResult message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: protos.IGetQueryResult, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified GetQueryResult message, length delimited. Does not implicitly {@link protos.GetQueryResult.verify|verify} messages.
+         * @param message GetQueryResult message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: protos.IGetQueryResult, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a GetQueryResult message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns GetQueryResult
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.GetQueryResult;
+
+        /**
+         * Decodes a GetQueryResult message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns GetQueryResult
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.GetQueryResult;
+
+        /**
+         * Verifies a GetQueryResult message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a GetQueryResult message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns GetQueryResult
+         */
+        public static fromObject(object: { [k: string]: any }): protos.GetQueryResult;
+
+        /**
+         * Creates a plain object from a GetQueryResult message. Also converts values to other types if specified.
+         * @param message GetQueryResult
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: protos.GetQueryResult, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this GetQueryResult to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for GetQueryResult
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a QueryMetadata. */
+    interface IQueryMetadata {
+
+        /** QueryMetadata pageSize */
+        pageSize?: (number|null);
+
+        /** QueryMetadata bookmark */
+        bookmark?: (string|null);
+    }
+
+    /** Represents a QueryMetadata. */
+    class QueryMetadata implements IQueryMetadata {
+
+        /**
+         * Constructs a new QueryMetadata.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: protos.IQueryMetadata);
+
+        /** QueryMetadata pageSize. */
+        public pageSize: number;
+
+        /** QueryMetadata bookmark. */
+        public bookmark: string;
+
+        /**
+         * Creates a new QueryMetadata instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns QueryMetadata instance
+         */
+        public static create(properties?: protos.IQueryMetadata): protos.QueryMetadata;
+
+        /**
+         * Encodes the specified QueryMetadata message. Does not implicitly {@link protos.QueryMetadata.verify|verify} messages.
+         * @param message QueryMetadata message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: protos.IQueryMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified QueryMetadata message, length delimited. Does not implicitly {@link protos.QueryMetadata.verify|verify} messages.
+         * @param message QueryMetadata message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: protos.IQueryMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a QueryMetadata message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns QueryMetadata
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.QueryMetadata;
+
+        /**
+         * Decodes a QueryMetadata message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns QueryMetadata
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.QueryMetadata;
+
+        /**
+         * Verifies a QueryMetadata message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a QueryMetadata message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns QueryMetadata
+         */
+        public static fromObject(object: { [k: string]: any }): protos.QueryMetadata;
+
+        /**
+         * Creates a plain object from a QueryMetadata message. Also converts values to other types if specified.
+         * @param message QueryMetadata
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: protos.QueryMetadata, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this QueryMetadata to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for QueryMetadata
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a GetHistoryForKey. */
+    interface IGetHistoryForKey {
+
+        /** GetHistoryForKey key */
+        key?: (string|null);
+    }
+
+    /** Represents a GetHistoryForKey. */
+    class GetHistoryForKey implements IGetHistoryForKey {
+
+        /**
+         * Constructs a new GetHistoryForKey.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: protos.IGetHistoryForKey);
+
+        /** GetHistoryForKey key. */
+        public key: string;
+
+        /**
+         * Creates a new GetHistoryForKey instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns GetHistoryForKey instance
+         */
+        public static create(properties?: protos.IGetHistoryForKey): protos.GetHistoryForKey;
+
+        /**
+         * Encodes the specified GetHistoryForKey message. Does not implicitly {@link protos.GetHistoryForKey.verify|verify} messages.
+         * @param message GetHistoryForKey message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: protos.IGetHistoryForKey, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified GetHistoryForKey message, length delimited. Does not implicitly {@link protos.GetHistoryForKey.verify|verify} messages.
+         * @param message GetHistoryForKey message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: protos.IGetHistoryForKey, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a GetHistoryForKey message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns GetHistoryForKey
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.GetHistoryForKey;
+
+        /**
+         * Decodes a GetHistoryForKey message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns GetHistoryForKey
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.GetHistoryForKey;
+
+        /**
+         * Verifies a GetHistoryForKey message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a GetHistoryForKey message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns GetHistoryForKey
+         */
+        public static fromObject(object: { [k: string]: any }): protos.GetHistoryForKey;
+
+        /**
+         * Creates a plain object from a GetHistoryForKey message. Also converts values to other types if specified.
+         * @param message GetHistoryForKey
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: protos.GetHistoryForKey, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this GetHistoryForKey to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for GetHistoryForKey
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a QueryStateNext. */
+    interface IQueryStateNext {
+
+        /** QueryStateNext id */
+        id?: (string|null);
+    }
+
+    /** Represents a QueryStateNext. */
+    class QueryStateNext implements IQueryStateNext {
+
+        /**
+         * Constructs a new QueryStateNext.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: protos.IQueryStateNext);
+
+        /** QueryStateNext id. */
+        public id: string;
+
+        /**
+         * Creates a new QueryStateNext instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns QueryStateNext instance
+         */
+        public static create(properties?: protos.IQueryStateNext): protos.QueryStateNext;
+
+        /**
+         * Encodes the specified QueryStateNext message. Does not implicitly {@link protos.QueryStateNext.verify|verify} messages.
+         * @param message QueryStateNext message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: protos.IQueryStateNext, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified QueryStateNext message, length delimited. Does not implicitly {@link protos.QueryStateNext.verify|verify} messages.
+         * @param message QueryStateNext message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: protos.IQueryStateNext, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a QueryStateNext message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns QueryStateNext
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.QueryStateNext;
+
+        /**
+         * Decodes a QueryStateNext message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns QueryStateNext
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.QueryStateNext;
+
+        /**
+         * Verifies a QueryStateNext message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a QueryStateNext message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns QueryStateNext
+         */
+        public static fromObject(object: { [k: string]: any }): protos.QueryStateNext;
+
+        /**
+         * Creates a plain object from a QueryStateNext message. Also converts values to other types if specified.
+         * @param message QueryStateNext
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: protos.QueryStateNext, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this QueryStateNext to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for QueryStateNext
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a QueryStateClose. */
+    interface IQueryStateClose {
+
+        /** QueryStateClose id */
+        id?: (string|null);
+    }
+
+    /** Represents a QueryStateClose. */
+    class QueryStateClose implements IQueryStateClose {
+
+        /**
+         * Constructs a new QueryStateClose.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: protos.IQueryStateClose);
+
+        /** QueryStateClose id. */
+        public id: string;
+
+        /**
+         * Creates a new QueryStateClose instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns QueryStateClose instance
+         */
+        public static create(properties?: protos.IQueryStateClose): protos.QueryStateClose;
+
+        /**
+         * Encodes the specified QueryStateClose message. Does not implicitly {@link protos.QueryStateClose.verify|verify} messages.
+         * @param message QueryStateClose message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: protos.IQueryStateClose, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified QueryStateClose message, length delimited. Does not implicitly {@link protos.QueryStateClose.verify|verify} messages.
+         * @param message QueryStateClose message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: protos.IQueryStateClose, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a QueryStateClose message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns QueryStateClose
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.QueryStateClose;
+
+        /**
+         * Decodes a QueryStateClose message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns QueryStateClose
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.QueryStateClose;
+
+        /**
+         * Verifies a QueryStateClose message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a QueryStateClose message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns QueryStateClose
+         */
+        public static fromObject(object: { [k: string]: any }): protos.QueryStateClose;
+
+        /**
+         * Creates a plain object from a QueryStateClose message. Also converts values to other types if specified.
+         * @param message QueryStateClose
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: protos.QueryStateClose, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this QueryStateClose to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for QueryStateClose
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a QueryResultBytes. */
+    interface IQueryResultBytes {
+
+        /** QueryResultBytes resultBytes */
+        resultBytes?: (Uint8Array|null);
+    }
+
+    /** Represents a QueryResultBytes. */
+    class QueryResultBytes implements IQueryResultBytes {
+
+        /**
+         * Constructs a new QueryResultBytes.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: protos.IQueryResultBytes);
+
+        /** QueryResultBytes resultBytes. */
+        public resultBytes: Uint8Array;
+
+        /**
+         * Creates a new QueryResultBytes instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns QueryResultBytes instance
+         */
+        public static create(properties?: protos.IQueryResultBytes): protos.QueryResultBytes;
+
+        /**
+         * Encodes the specified QueryResultBytes message. Does not implicitly {@link protos.QueryResultBytes.verify|verify} messages.
+         * @param message QueryResultBytes message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: protos.IQueryResultBytes, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified QueryResultBytes message, length delimited. Does not implicitly {@link protos.QueryResultBytes.verify|verify} messages.
+         * @param message QueryResultBytes message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: protos.IQueryResultBytes, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a QueryResultBytes message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns QueryResultBytes
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.QueryResultBytes;
+
+        /**
+         * Decodes a QueryResultBytes message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns QueryResultBytes
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.QueryResultBytes;
+
+        /**
+         * Verifies a QueryResultBytes message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a QueryResultBytes message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns QueryResultBytes
+         */
+        public static fromObject(object: { [k: string]: any }): protos.QueryResultBytes;
+
+        /**
+         * Creates a plain object from a QueryResultBytes message. Also converts values to other types if specified.
+         * @param message QueryResultBytes
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: protos.QueryResultBytes, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this QueryResultBytes to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for QueryResultBytes
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a QueryResponse. */
+    interface IQueryResponse {
+
+        /** QueryResponse results */
+        results?: (protos.IQueryResultBytes[]|null);
+
+        /** QueryResponse has_more */
+        has_more?: (boolean|null);
+
+        /** QueryResponse id */
+        id?: (string|null);
+
+        /** QueryResponse metadata */
+        metadata?: (Uint8Array|null);
+    }
+
+    /** Represents a QueryResponse. */
+    class QueryResponse implements IQueryResponse {
+
+        /**
+         * Constructs a new QueryResponse.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: protos.IQueryResponse);
+
+        /** QueryResponse results. */
+        public results: protos.IQueryResultBytes[];
+
+        /** QueryResponse has_more. */
+        public has_more: boolean;
+
+        /** QueryResponse id. */
+        public id: string;
+
+        /** QueryResponse metadata. */
+        public metadata: Uint8Array;
+
+        /**
+         * Creates a new QueryResponse instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns QueryResponse instance
+         */
+        public static create(properties?: protos.IQueryResponse): protos.QueryResponse;
+
+        /**
+         * Encodes the specified QueryResponse message. Does not implicitly {@link protos.QueryResponse.verify|verify} messages.
+         * @param message QueryResponse message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: protos.IQueryResponse, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified QueryResponse message, length delimited. Does not implicitly {@link protos.QueryResponse.verify|verify} messages.
+         * @param message QueryResponse message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: protos.IQueryResponse, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a QueryResponse message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns QueryResponse
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.QueryResponse;
+
+        /**
+         * Decodes a QueryResponse message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns QueryResponse
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.QueryResponse;
+
+        /**
+         * Verifies a QueryResponse message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a QueryResponse message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns QueryResponse
+         */
+        public static fromObject(object: { [k: string]: any }): protos.QueryResponse;
+
+        /**
+         * Creates a plain object from a QueryResponse message. Also converts values to other types if specified.
+         * @param message QueryResponse
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: protos.QueryResponse, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this QueryResponse to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for QueryResponse
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a QueryResponseMetadata. */
+    interface IQueryResponseMetadata {
+
+        /** QueryResponseMetadata fetched_records_count */
+        fetched_records_count?: (number|null);
+
+        /** QueryResponseMetadata bookmark */
+        bookmark?: (string|null);
+    }
+
+    /** Represents a QueryResponseMetadata. */
+    class QueryResponseMetadata implements IQueryResponseMetadata {
+
+        /**
+         * Constructs a new QueryResponseMetadata.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: protos.IQueryResponseMetadata);
+
+        /** QueryResponseMetadata fetched_records_count. */
+        public fetched_records_count: number;
+
+        /** QueryResponseMetadata bookmark. */
+        public bookmark: string;
+
+        /**
+         * Creates a new QueryResponseMetadata instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns QueryResponseMetadata instance
+         */
+        public static create(properties?: protos.IQueryResponseMetadata): protos.QueryResponseMetadata;
+
+        /**
+         * Encodes the specified QueryResponseMetadata message. Does not implicitly {@link protos.QueryResponseMetadata.verify|verify} messages.
+         * @param message QueryResponseMetadata message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: protos.IQueryResponseMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified QueryResponseMetadata message, length delimited. Does not implicitly {@link protos.QueryResponseMetadata.verify|verify} messages.
+         * @param message QueryResponseMetadata message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: protos.IQueryResponseMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a QueryResponseMetadata message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns QueryResponseMetadata
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.QueryResponseMetadata;
+
+        /**
+         * Decodes a QueryResponseMetadata message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns QueryResponseMetadata
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.QueryResponseMetadata;
+
+        /**
+         * Verifies a QueryResponseMetadata message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a QueryResponseMetadata message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns QueryResponseMetadata
+         */
+        public static fromObject(object: { [k: string]: any }): protos.QueryResponseMetadata;
+
+        /**
+         * Creates a plain object from a QueryResponseMetadata message. Also converts values to other types if specified.
+         * @param message QueryResponseMetadata
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: protos.QueryResponseMetadata, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this QueryResponseMetadata to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for QueryResponseMetadata
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a StateMetadata. */
+    interface IStateMetadata {
+
+        /** StateMetadata metakey */
+        metakey?: (string|null);
+
+        /** StateMetadata value */
+        value?: (Uint8Array|null);
+    }
+
+    /** Represents a StateMetadata. */
+    class StateMetadata implements IStateMetadata {
+
+        /**
+         * Constructs a new StateMetadata.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: protos.IStateMetadata);
+
+        /** StateMetadata metakey. */
+        public metakey: string;
+
+        /** StateMetadata value. */
+        public value: Uint8Array;
+
+        /**
+         * Creates a new StateMetadata instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns StateMetadata instance
+         */
+        public static create(properties?: protos.IStateMetadata): protos.StateMetadata;
+
+        /**
+         * Encodes the specified StateMetadata message. Does not implicitly {@link protos.StateMetadata.verify|verify} messages.
+         * @param message StateMetadata message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: protos.IStateMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified StateMetadata message, length delimited. Does not implicitly {@link protos.StateMetadata.verify|verify} messages.
+         * @param message StateMetadata message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: protos.IStateMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a StateMetadata message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns StateMetadata
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.StateMetadata;
+
+        /**
+         * Decodes a StateMetadata message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns StateMetadata
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.StateMetadata;
+
+        /**
+         * Verifies a StateMetadata message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a StateMetadata message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns StateMetadata
+         */
+        public static fromObject(object: { [k: string]: any }): protos.StateMetadata;
+
+        /**
+         * Creates a plain object from a StateMetadata message. Also converts values to other types if specified.
+         * @param message StateMetadata
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: protos.StateMetadata, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this StateMetadata to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for StateMetadata
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a StateMetadataResult. */
+    interface IStateMetadataResult {
+
+        /** StateMetadataResult entries */
+        entries?: (protos.IStateMetadata[]|null);
+    }
+
+    /** Represents a StateMetadataResult. */
+    class StateMetadataResult implements IStateMetadataResult {
+
+        /**
+         * Constructs a new StateMetadataResult.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: protos.IStateMetadataResult);
+
+        /** StateMetadataResult entries. */
+        public entries: protos.IStateMetadata[];
+
+        /**
+         * Creates a new StateMetadataResult instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns StateMetadataResult instance
+         */
+        public static create(properties?: protos.IStateMetadataResult): protos.StateMetadataResult;
+
+        /**
+         * Encodes the specified StateMetadataResult message. Does not implicitly {@link protos.StateMetadataResult.verify|verify} messages.
+         * @param message StateMetadataResult message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: protos.IStateMetadataResult, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified StateMetadataResult message, length delimited. Does not implicitly {@link protos.StateMetadataResult.verify|verify} messages.
+         * @param message StateMetadataResult message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: protos.IStateMetadataResult, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a StateMetadataResult message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns StateMetadataResult
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): protos.StateMetadataResult;
+
+        /**
+         * Decodes a StateMetadataResult message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns StateMetadataResult
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): protos.StateMetadataResult;
+
+        /**
+         * Verifies a StateMetadataResult message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a StateMetadataResult message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns StateMetadataResult
+         */
+        public static fromObject(object: { [k: string]: any }): protos.StateMetadataResult;
+
+        /**
+         * Creates a plain object from a StateMetadataResult message. Also converts values to other types if specified.
+         * @param message StateMetadataResult
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: protos.StateMetadataResult, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this StateMetadataResult to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for StateMetadataResult
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Represents a ChaincodeSupport */
+    class ChaincodeSupport extends $protobuf.rpc.Service {
+
+        /**
+         * Constructs a new ChaincodeSupport service.
+         * @param rpcImpl RPC implementation
+         * @param [requestDelimited=false] Whether requests are length-delimited
+         * @param [responseDelimited=false] Whether responses are length-delimited
+         */
+        constructor(rpcImpl: $protobuf.RPCImpl, requestDelimited?: boolean, responseDelimited?: boolean);
+
+        /**
+         * Creates new ChaincodeSupport service using the specified rpc implementation.
+         * @param rpcImpl RPC implementation
+         * @param [requestDelimited=false] Whether requests are length-delimited
+         * @param [responseDelimited=false] Whether responses are length-delimited
+         * @returns RPC service. Useful where requests and/or responses are streamed.
+         */
+        public static create(rpcImpl: $protobuf.RPCImpl, requestDelimited?: boolean, responseDelimited?: boolean): ChaincodeSupport;
+
+        /**
+         * Calls Register.
+         * @param request ChaincodeMessage message or plain object
+         * @param callback Node-style callback called with the error, if any, and ChaincodeMessage
+         */
+        public register(request: protos.IChaincodeMessage, callback: protos.ChaincodeSupport.RegisterCallback): void;
+
+        /**
+         * Calls Register.
+         * @param request ChaincodeMessage message or plain object
+         * @returns Promise
+         */
+        public register(request: protos.IChaincodeMessage): Promise<protos.ChaincodeMessage>;
+    }
+
+    namespace ChaincodeSupport {
+
+        /**
+         * Callback as used by {@link protos.ChaincodeSupport#register}.
+         * @param error Error, if any
+         * @param [response] ChaincodeMessage
+         */
+        type RegisterCallback = (error: (Error|null), response?: protos.ChaincodeMessage) => void;
+    }
+
+    /** Represents a Chaincode */
+    class Chaincode extends $protobuf.rpc.Service {
+
+        /**
+         * Constructs a new Chaincode service.
+         * @param rpcImpl RPC implementation
+         * @param [requestDelimited=false] Whether requests are length-delimited
+         * @param [responseDelimited=false] Whether responses are length-delimited
+         */
+        constructor(rpcImpl: $protobuf.RPCImpl, requestDelimited?: boolean, responseDelimited?: boolean);
+
+        /**
+         * Creates new Chaincode service using the specified rpc implementation.
+         * @param rpcImpl RPC implementation
+         * @param [requestDelimited=false] Whether requests are length-delimited
+         * @param [responseDelimited=false] Whether responses are length-delimited
+         * @returns RPC service. Useful where requests and/or responses are streamed.
+         */
+        public static create(rpcImpl: $protobuf.RPCImpl, requestDelimited?: boolean, responseDelimited?: boolean): Chaincode;
+
+        /**
+         * Calls Connect.
+         * @param request ChaincodeMessage message or plain object
+         * @param callback Node-style callback called with the error, if any, and ChaincodeMessage
+         */
+        public connect(request: protos.IChaincodeMessage, callback: protos.Chaincode.ConnectCallback): void;
+
+        /**
+         * Calls Connect.
+         * @param request ChaincodeMessage message or plain object
+         * @returns Promise
+         */
+        public connect(request: protos.IChaincodeMessage): Promise<protos.ChaincodeMessage>;
+    }
+
+    namespace Chaincode {
+
+        /**
+         * Callback as used by {@link protos.Chaincode#connect}.
+         * @param error Error, if any
+         * @param [response] ChaincodeMessage
+         */
+        type ConnectCallback = (error: (Error|null), response?: protos.ChaincodeMessage) => void;
     }
 }
 
@@ -9223,6 +8225,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Policy
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     namespace Policy {
@@ -9336,6 +8345,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for SignaturePolicyEnvelope
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a SignaturePolicy. */
@@ -9435,6 +8451,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for SignaturePolicy
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     namespace SignaturePolicy {
@@ -9533,6 +8556,13 @@ export namespace common {
              * @returns JSON object
              */
             public toJSON(): { [k: string]: any };
+
+            /**
+             * Gets the default type url for NOutOf
+             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns The default type url
+             */
+            public static getTypeUrl(typeUrlPrefix?: string): string;
         }
     }
 
@@ -9630,6 +8660,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ImplicitMetaPolicy
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     namespace ImplicitMetaPolicy {
@@ -9739,6 +8776,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ApplicationPolicy
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a MSPPrincipal. */
@@ -9835,6 +8879,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for MSPPrincipal
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     namespace MSPPrincipal {
@@ -9949,6 +9000,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for OrganizationUnit
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a MSPRole. */
@@ -10045,6 +9103,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for MSPRole
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     namespace MSPRole {
@@ -10147,6 +9212,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for MSPIdentityAnonymity
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     namespace MSPIdentityAnonymity {
@@ -10246,6 +9318,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for CombinedPrincipal
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Status enum. */
@@ -10370,6 +9449,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for LastConfig
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a Metadata. */
@@ -10466,6 +9552,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Metadata
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a MetadataSignature. */
@@ -10562,6 +9655,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for MetadataSignature
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a Header. */
@@ -10658,6 +9758,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Header
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ChannelHeader. */
@@ -10790,6 +9897,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ChannelHeader
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a SignatureHeader. */
@@ -10886,6 +10000,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for SignatureHeader
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a Payload. */
@@ -10982,6 +10103,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Payload
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of an Envelope. */
@@ -11078,6 +10206,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Envelope
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a Block. */
@@ -11180,6 +10315,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Block
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a BlockHeader. */
@@ -11282,6 +10424,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for BlockHeader
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a BlockData. */
@@ -11372,6 +10521,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for BlockData
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a BlockMetadata. */
@@ -11462,6 +10618,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for BlockMetadata
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of an OrdererBlockMetadata. */
@@ -11558,6 +10721,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for OrdererBlockMetadata
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ConfigEnvelope. */
@@ -11654,6 +10824,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ConfigEnvelope
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a Config. */
@@ -11750,6 +10927,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Config
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ConfigUpdateEnvelope. */
@@ -11846,6 +11030,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ConfigUpdateEnvelope
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ConfigUpdate. */
@@ -11954,6 +11145,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ConfigUpdate
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ConfigGroup. */
@@ -12068,6 +11266,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ConfigGroup
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ConfigValue. */
@@ -12170,6 +11375,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ConfigValue
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ConfigPolicy. */
@@ -12272,6 +11484,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ConfigPolicy
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ConfigSignature. */
@@ -12368,642 +11587,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
-    }
 
-    /** Properties of a BlockchainInfo. */
-    interface IBlockchainInfo {
-
-        /** BlockchainInfo height */
-        height?: (number|Long|null);
-
-        /** BlockchainInfo currentBlockHash */
-        currentBlockHash?: (Uint8Array|null);
-
-        /** BlockchainInfo previousBlockHash */
-        previousBlockHash?: (Uint8Array|null);
-    }
-
-    /** Represents a BlockchainInfo. */
-    class BlockchainInfo implements IBlockchainInfo {
-
-        /**
-         * Constructs a new BlockchainInfo.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: common.IBlockchainInfo);
-
-        /** BlockchainInfo height. */
-        public height: (number|Long);
-
-        /** BlockchainInfo currentBlockHash. */
-        public currentBlockHash: Uint8Array;
-
-        /** BlockchainInfo previousBlockHash. */
-        public previousBlockHash: Uint8Array;
-
-        /**
-         * Creates a new BlockchainInfo instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns BlockchainInfo instance
-         */
-        public static create(properties?: common.IBlockchainInfo): common.BlockchainInfo;
-
-        /**
-         * Encodes the specified BlockchainInfo message. Does not implicitly {@link common.BlockchainInfo.verify|verify} messages.
-         * @param message BlockchainInfo message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: common.IBlockchainInfo, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified BlockchainInfo message, length delimited. Does not implicitly {@link common.BlockchainInfo.verify|verify} messages.
-         * @param message BlockchainInfo message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: common.IBlockchainInfo, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a BlockchainInfo message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns BlockchainInfo
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): common.BlockchainInfo;
-
-        /**
-         * Decodes a BlockchainInfo message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns BlockchainInfo
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): common.BlockchainInfo;
-
-        /**
-         * Verifies a BlockchainInfo message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a BlockchainInfo message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns BlockchainInfo
-         */
-        public static fromObject(object: { [k: string]: any }): common.BlockchainInfo;
-
-        /**
-         * Creates a plain object from a BlockchainInfo message. Also converts values to other types if specified.
-         * @param message BlockchainInfo
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: common.BlockchainInfo, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this BlockchainInfo to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a HashingAlgorithm. */
-    interface IHashingAlgorithm {
-
-        /** HashingAlgorithm name */
-        name?: (string|null);
-    }
-
-    /** Represents a HashingAlgorithm. */
-    class HashingAlgorithm implements IHashingAlgorithm {
-
-        /**
-         * Constructs a new HashingAlgorithm.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: common.IHashingAlgorithm);
-
-        /** HashingAlgorithm name. */
-        public name: string;
-
-        /**
-         * Creates a new HashingAlgorithm instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns HashingAlgorithm instance
-         */
-        public static create(properties?: common.IHashingAlgorithm): common.HashingAlgorithm;
-
-        /**
-         * Encodes the specified HashingAlgorithm message. Does not implicitly {@link common.HashingAlgorithm.verify|verify} messages.
-         * @param message HashingAlgorithm message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: common.IHashingAlgorithm, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified HashingAlgorithm message, length delimited. Does not implicitly {@link common.HashingAlgorithm.verify|verify} messages.
-         * @param message HashingAlgorithm message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: common.IHashingAlgorithm, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a HashingAlgorithm message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns HashingAlgorithm
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): common.HashingAlgorithm;
-
-        /**
-         * Decodes a HashingAlgorithm message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns HashingAlgorithm
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): common.HashingAlgorithm;
-
-        /**
-         * Verifies a HashingAlgorithm message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a HashingAlgorithm message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns HashingAlgorithm
-         */
-        public static fromObject(object: { [k: string]: any }): common.HashingAlgorithm;
-
-        /**
-         * Creates a plain object from a HashingAlgorithm message. Also converts values to other types if specified.
-         * @param message HashingAlgorithm
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: common.HashingAlgorithm, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this HashingAlgorithm to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a BlockDataHashingStructure. */
-    interface IBlockDataHashingStructure {
-
-        /** BlockDataHashingStructure width */
-        width?: (number|null);
-    }
-
-    /** Represents a BlockDataHashingStructure. */
-    class BlockDataHashingStructure implements IBlockDataHashingStructure {
-
-        /**
-         * Constructs a new BlockDataHashingStructure.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: common.IBlockDataHashingStructure);
-
-        /** BlockDataHashingStructure width. */
-        public width: number;
-
-        /**
-         * Creates a new BlockDataHashingStructure instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns BlockDataHashingStructure instance
-         */
-        public static create(properties?: common.IBlockDataHashingStructure): common.BlockDataHashingStructure;
-
-        /**
-         * Encodes the specified BlockDataHashingStructure message. Does not implicitly {@link common.BlockDataHashingStructure.verify|verify} messages.
-         * @param message BlockDataHashingStructure message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: common.IBlockDataHashingStructure, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified BlockDataHashingStructure message, length delimited. Does not implicitly {@link common.BlockDataHashingStructure.verify|verify} messages.
-         * @param message BlockDataHashingStructure message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: common.IBlockDataHashingStructure, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a BlockDataHashingStructure message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns BlockDataHashingStructure
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): common.BlockDataHashingStructure;
-
-        /**
-         * Decodes a BlockDataHashingStructure message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns BlockDataHashingStructure
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): common.BlockDataHashingStructure;
-
-        /**
-         * Verifies a BlockDataHashingStructure message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a BlockDataHashingStructure message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns BlockDataHashingStructure
-         */
-        public static fromObject(object: { [k: string]: any }): common.BlockDataHashingStructure;
-
-        /**
-         * Creates a plain object from a BlockDataHashingStructure message. Also converts values to other types if specified.
-         * @param message BlockDataHashingStructure
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: common.BlockDataHashingStructure, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this BlockDataHashingStructure to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of an OrdererAddresses. */
-    interface IOrdererAddresses {
-
-        /** OrdererAddresses addresses */
-        addresses?: (string[]|null);
-    }
-
-    /** Represents an OrdererAddresses. */
-    class OrdererAddresses implements IOrdererAddresses {
-
-        /**
-         * Constructs a new OrdererAddresses.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: common.IOrdererAddresses);
-
-        /** OrdererAddresses addresses. */
-        public addresses: string[];
-
-        /**
-         * Creates a new OrdererAddresses instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns OrdererAddresses instance
-         */
-        public static create(properties?: common.IOrdererAddresses): common.OrdererAddresses;
-
-        /**
-         * Encodes the specified OrdererAddresses message. Does not implicitly {@link common.OrdererAddresses.verify|verify} messages.
-         * @param message OrdererAddresses message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: common.IOrdererAddresses, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified OrdererAddresses message, length delimited. Does not implicitly {@link common.OrdererAddresses.verify|verify} messages.
-         * @param message OrdererAddresses message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: common.IOrdererAddresses, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes an OrdererAddresses message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns OrdererAddresses
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): common.OrdererAddresses;
-
-        /**
-         * Decodes an OrdererAddresses message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns OrdererAddresses
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): common.OrdererAddresses;
-
-        /**
-         * Verifies an OrdererAddresses message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates an OrdererAddresses message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns OrdererAddresses
-         */
-        public static fromObject(object: { [k: string]: any }): common.OrdererAddresses;
-
-        /**
-         * Creates a plain object from an OrdererAddresses message. Also converts values to other types if specified.
-         * @param message OrdererAddresses
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: common.OrdererAddresses, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this OrdererAddresses to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a Consortium. */
-    interface IConsortium {
-
-        /** Consortium name */
-        name?: (string|null);
-    }
-
-    /** Represents a Consortium. */
-    class Consortium implements IConsortium {
-
-        /**
-         * Constructs a new Consortium.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: common.IConsortium);
-
-        /** Consortium name. */
-        public name: string;
-
-        /**
-         * Creates a new Consortium instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns Consortium instance
-         */
-        public static create(properties?: common.IConsortium): common.Consortium;
-
-        /**
-         * Encodes the specified Consortium message. Does not implicitly {@link common.Consortium.verify|verify} messages.
-         * @param message Consortium message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: common.IConsortium, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified Consortium message, length delimited. Does not implicitly {@link common.Consortium.verify|verify} messages.
-         * @param message Consortium message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: common.IConsortium, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a Consortium message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns Consortium
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): common.Consortium;
-
-        /**
-         * Decodes a Consortium message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns Consortium
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): common.Consortium;
-
-        /**
-         * Verifies a Consortium message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a Consortium message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns Consortium
-         */
-        public static fromObject(object: { [k: string]: any }): common.Consortium;
-
-        /**
-         * Creates a plain object from a Consortium message. Also converts values to other types if specified.
-         * @param message Consortium
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: common.Consortium, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this Consortium to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a Capabilities. */
-    interface ICapabilities {
-
-        /** Capabilities capabilities */
-        capabilities?: ({ [k: string]: common.ICapability }|null);
-    }
-
-    /** Represents a Capabilities. */
-    class Capabilities implements ICapabilities {
-
-        /**
-         * Constructs a new Capabilities.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: common.ICapabilities);
-
-        /** Capabilities capabilities. */
-        public capabilities: { [k: string]: common.ICapability };
-
-        /**
-         * Creates a new Capabilities instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns Capabilities instance
-         */
-        public static create(properties?: common.ICapabilities): common.Capabilities;
-
-        /**
-         * Encodes the specified Capabilities message. Does not implicitly {@link common.Capabilities.verify|verify} messages.
-         * @param message Capabilities message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: common.ICapabilities, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified Capabilities message, length delimited. Does not implicitly {@link common.Capabilities.verify|verify} messages.
-         * @param message Capabilities message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: common.ICapabilities, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a Capabilities message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns Capabilities
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): common.Capabilities;
-
-        /**
-         * Decodes a Capabilities message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns Capabilities
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): common.Capabilities;
-
-        /**
-         * Verifies a Capabilities message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a Capabilities message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns Capabilities
-         */
-        public static fromObject(object: { [k: string]: any }): common.Capabilities;
-
-        /**
-         * Creates a plain object from a Capabilities message. Also converts values to other types if specified.
-         * @param message Capabilities
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: common.Capabilities, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this Capabilities to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a Capability. */
-    interface ICapability {
-    }
-
-    /** Represents a Capability. */
-    class Capability implements ICapability {
-
-        /**
-         * Constructs a new Capability.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: common.ICapability);
-
-        /**
-         * Creates a new Capability instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns Capability instance
-         */
-        public static create(properties?: common.ICapability): common.Capability;
-
-        /**
-         * Encodes the specified Capability message. Does not implicitly {@link common.Capability.verify|verify} messages.
-         * @param message Capability message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: common.ICapability, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified Capability message, length delimited. Does not implicitly {@link common.Capability.verify|verify} messages.
-         * @param message Capability message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: common.ICapability, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a Capability message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns Capability
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): common.Capability;
-
-        /**
-         * Decodes a Capability message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns Capability
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): common.Capability;
-
-        /**
-         * Verifies a Capability message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a Capability message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns Capability
-         */
-        public static fromObject(object: { [k: string]: any }): common.Capability;
-
-        /**
-         * Creates a plain object from a Capability message. Also converts values to other types if specified.
-         * @param message Capability
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: common.Capability, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
         /**
-         * Converts this Capability to JSON.
-         * @returns JSON object
+         * Gets the default type url for ConfigSignature
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
          */
-        public toJSON(): { [k: string]: any };
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a CollectionConfigPackage. */
@@ -13094,6 +11684,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for CollectionConfigPackage
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a CollectionConfig. */
@@ -13187,6 +11784,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for CollectionConfig
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a StaticCollectionConfig. */
@@ -13319,6 +11923,13 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for StaticCollectionConfig
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a CollectionPolicyConfig. */
@@ -13412,6 +12023,3683 @@ export namespace common {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for CollectionPolicyConfig
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a HashingAlgorithm. */
+    interface IHashingAlgorithm {
+
+        /** HashingAlgorithm name */
+        name?: (string|null);
+    }
+
+    /** Represents a HashingAlgorithm. */
+    class HashingAlgorithm implements IHashingAlgorithm {
+
+        /**
+         * Constructs a new HashingAlgorithm.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: common.IHashingAlgorithm);
+
+        /** HashingAlgorithm name. */
+        public name: string;
+
+        /**
+         * Creates a new HashingAlgorithm instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns HashingAlgorithm instance
+         */
+        public static create(properties?: common.IHashingAlgorithm): common.HashingAlgorithm;
+
+        /**
+         * Encodes the specified HashingAlgorithm message. Does not implicitly {@link common.HashingAlgorithm.verify|verify} messages.
+         * @param message HashingAlgorithm message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: common.IHashingAlgorithm, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified HashingAlgorithm message, length delimited. Does not implicitly {@link common.HashingAlgorithm.verify|verify} messages.
+         * @param message HashingAlgorithm message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: common.IHashingAlgorithm, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a HashingAlgorithm message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns HashingAlgorithm
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): common.HashingAlgorithm;
+
+        /**
+         * Decodes a HashingAlgorithm message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns HashingAlgorithm
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): common.HashingAlgorithm;
+
+        /**
+         * Verifies a HashingAlgorithm message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a HashingAlgorithm message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns HashingAlgorithm
+         */
+        public static fromObject(object: { [k: string]: any }): common.HashingAlgorithm;
+
+        /**
+         * Creates a plain object from a HashingAlgorithm message. Also converts values to other types if specified.
+         * @param message HashingAlgorithm
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: common.HashingAlgorithm, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this HashingAlgorithm to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for HashingAlgorithm
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a BlockDataHashingStructure. */
+    interface IBlockDataHashingStructure {
+
+        /** BlockDataHashingStructure width */
+        width?: (number|null);
+    }
+
+    /** Represents a BlockDataHashingStructure. */
+    class BlockDataHashingStructure implements IBlockDataHashingStructure {
+
+        /**
+         * Constructs a new BlockDataHashingStructure.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: common.IBlockDataHashingStructure);
+
+        /** BlockDataHashingStructure width. */
+        public width: number;
+
+        /**
+         * Creates a new BlockDataHashingStructure instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns BlockDataHashingStructure instance
+         */
+        public static create(properties?: common.IBlockDataHashingStructure): common.BlockDataHashingStructure;
+
+        /**
+         * Encodes the specified BlockDataHashingStructure message. Does not implicitly {@link common.BlockDataHashingStructure.verify|verify} messages.
+         * @param message BlockDataHashingStructure message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: common.IBlockDataHashingStructure, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified BlockDataHashingStructure message, length delimited. Does not implicitly {@link common.BlockDataHashingStructure.verify|verify} messages.
+         * @param message BlockDataHashingStructure message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: common.IBlockDataHashingStructure, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a BlockDataHashingStructure message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns BlockDataHashingStructure
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): common.BlockDataHashingStructure;
+
+        /**
+         * Decodes a BlockDataHashingStructure message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns BlockDataHashingStructure
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): common.BlockDataHashingStructure;
+
+        /**
+         * Verifies a BlockDataHashingStructure message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a BlockDataHashingStructure message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns BlockDataHashingStructure
+         */
+        public static fromObject(object: { [k: string]: any }): common.BlockDataHashingStructure;
+
+        /**
+         * Creates a plain object from a BlockDataHashingStructure message. Also converts values to other types if specified.
+         * @param message BlockDataHashingStructure
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: common.BlockDataHashingStructure, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this BlockDataHashingStructure to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for BlockDataHashingStructure
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of an OrdererAddresses. */
+    interface IOrdererAddresses {
+
+        /** OrdererAddresses addresses */
+        addresses?: (string[]|null);
+    }
+
+    /** Represents an OrdererAddresses. */
+    class OrdererAddresses implements IOrdererAddresses {
+
+        /**
+         * Constructs a new OrdererAddresses.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: common.IOrdererAddresses);
+
+        /** OrdererAddresses addresses. */
+        public addresses: string[];
+
+        /**
+         * Creates a new OrdererAddresses instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns OrdererAddresses instance
+         */
+        public static create(properties?: common.IOrdererAddresses): common.OrdererAddresses;
+
+        /**
+         * Encodes the specified OrdererAddresses message. Does not implicitly {@link common.OrdererAddresses.verify|verify} messages.
+         * @param message OrdererAddresses message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: common.IOrdererAddresses, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified OrdererAddresses message, length delimited. Does not implicitly {@link common.OrdererAddresses.verify|verify} messages.
+         * @param message OrdererAddresses message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: common.IOrdererAddresses, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes an OrdererAddresses message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns OrdererAddresses
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): common.OrdererAddresses;
+
+        /**
+         * Decodes an OrdererAddresses message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns OrdererAddresses
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): common.OrdererAddresses;
+
+        /**
+         * Verifies an OrdererAddresses message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates an OrdererAddresses message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns OrdererAddresses
+         */
+        public static fromObject(object: { [k: string]: any }): common.OrdererAddresses;
+
+        /**
+         * Creates a plain object from an OrdererAddresses message. Also converts values to other types if specified.
+         * @param message OrdererAddresses
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: common.OrdererAddresses, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this OrdererAddresses to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for OrdererAddresses
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a Consortium. */
+    interface IConsortium {
+
+        /** Consortium name */
+        name?: (string|null);
+    }
+
+    /** Represents a Consortium. */
+    class Consortium implements IConsortium {
+
+        /**
+         * Constructs a new Consortium.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: common.IConsortium);
+
+        /** Consortium name. */
+        public name: string;
+
+        /**
+         * Creates a new Consortium instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns Consortium instance
+         */
+        public static create(properties?: common.IConsortium): common.Consortium;
+
+        /**
+         * Encodes the specified Consortium message. Does not implicitly {@link common.Consortium.verify|verify} messages.
+         * @param message Consortium message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: common.IConsortium, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified Consortium message, length delimited. Does not implicitly {@link common.Consortium.verify|verify} messages.
+         * @param message Consortium message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: common.IConsortium, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a Consortium message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns Consortium
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): common.Consortium;
+
+        /**
+         * Decodes a Consortium message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns Consortium
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): common.Consortium;
+
+        /**
+         * Verifies a Consortium message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a Consortium message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns Consortium
+         */
+        public static fromObject(object: { [k: string]: any }): common.Consortium;
+
+        /**
+         * Creates a plain object from a Consortium message. Also converts values to other types if specified.
+         * @param message Consortium
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: common.Consortium, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this Consortium to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Consortium
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a Capabilities. */
+    interface ICapabilities {
+
+        /** Capabilities capabilities */
+        capabilities?: ({ [k: string]: common.ICapability }|null);
+    }
+
+    /** Represents a Capabilities. */
+    class Capabilities implements ICapabilities {
+
+        /**
+         * Constructs a new Capabilities.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: common.ICapabilities);
+
+        /** Capabilities capabilities. */
+        public capabilities: { [k: string]: common.ICapability };
+
+        /**
+         * Creates a new Capabilities instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns Capabilities instance
+         */
+        public static create(properties?: common.ICapabilities): common.Capabilities;
+
+        /**
+         * Encodes the specified Capabilities message. Does not implicitly {@link common.Capabilities.verify|verify} messages.
+         * @param message Capabilities message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: common.ICapabilities, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified Capabilities message, length delimited. Does not implicitly {@link common.Capabilities.verify|verify} messages.
+         * @param message Capabilities message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: common.ICapabilities, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a Capabilities message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns Capabilities
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): common.Capabilities;
+
+        /**
+         * Decodes a Capabilities message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns Capabilities
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): common.Capabilities;
+
+        /**
+         * Verifies a Capabilities message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a Capabilities message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns Capabilities
+         */
+        public static fromObject(object: { [k: string]: any }): common.Capabilities;
+
+        /**
+         * Creates a plain object from a Capabilities message. Also converts values to other types if specified.
+         * @param message Capabilities
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: common.Capabilities, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this Capabilities to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Capabilities
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a Capability. */
+    interface ICapability {
+    }
+
+    /** Represents a Capability. */
+    class Capability implements ICapability {
+
+        /**
+         * Constructs a new Capability.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: common.ICapability);
+
+        /**
+         * Creates a new Capability instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns Capability instance
+         */
+        public static create(properties?: common.ICapability): common.Capability;
+
+        /**
+         * Encodes the specified Capability message. Does not implicitly {@link common.Capability.verify|verify} messages.
+         * @param message Capability message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: common.ICapability, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified Capability message, length delimited. Does not implicitly {@link common.Capability.verify|verify} messages.
+         * @param message Capability message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: common.ICapability, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a Capability message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns Capability
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): common.Capability;
+
+        /**
+         * Decodes a Capability message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns Capability
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): common.Capability;
+
+        /**
+         * Verifies a Capability message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a Capability message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns Capability
+         */
+        public static fromObject(object: { [k: string]: any }): common.Capability;
+
+        /**
+         * Creates a plain object from a Capability message. Also converts values to other types if specified.
+         * @param message Capability
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: common.Capability, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this Capability to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Capability
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a BlockchainInfo. */
+    interface IBlockchainInfo {
+
+        /** BlockchainInfo height */
+        height?: (number|Long|null);
+
+        /** BlockchainInfo currentBlockHash */
+        currentBlockHash?: (Uint8Array|null);
+
+        /** BlockchainInfo previousBlockHash */
+        previousBlockHash?: (Uint8Array|null);
+    }
+
+    /** Represents a BlockchainInfo. */
+    class BlockchainInfo implements IBlockchainInfo {
+
+        /**
+         * Constructs a new BlockchainInfo.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: common.IBlockchainInfo);
+
+        /** BlockchainInfo height. */
+        public height: (number|Long);
+
+        /** BlockchainInfo currentBlockHash. */
+        public currentBlockHash: Uint8Array;
+
+        /** BlockchainInfo previousBlockHash. */
+        public previousBlockHash: Uint8Array;
+
+        /**
+         * Creates a new BlockchainInfo instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns BlockchainInfo instance
+         */
+        public static create(properties?: common.IBlockchainInfo): common.BlockchainInfo;
+
+        /**
+         * Encodes the specified BlockchainInfo message. Does not implicitly {@link common.BlockchainInfo.verify|verify} messages.
+         * @param message BlockchainInfo message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: common.IBlockchainInfo, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified BlockchainInfo message, length delimited. Does not implicitly {@link common.BlockchainInfo.verify|verify} messages.
+         * @param message BlockchainInfo message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: common.IBlockchainInfo, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a BlockchainInfo message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns BlockchainInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): common.BlockchainInfo;
+
+        /**
+         * Decodes a BlockchainInfo message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns BlockchainInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): common.BlockchainInfo;
+
+        /**
+         * Verifies a BlockchainInfo message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a BlockchainInfo message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns BlockchainInfo
+         */
+        public static fromObject(object: { [k: string]: any }): common.BlockchainInfo;
+
+        /**
+         * Creates a plain object from a BlockchainInfo message. Also converts values to other types if specified.
+         * @param message BlockchainInfo
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: common.BlockchainInfo, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this BlockchainInfo to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for BlockchainInfo
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+}
+
+/** Namespace orderer. */
+export namespace orderer {
+
+    /** Properties of a BroadcastResponse. */
+    interface IBroadcastResponse {
+
+        /** BroadcastResponse status */
+        status?: (common.Status|null);
+
+        /** BroadcastResponse info */
+        info?: (string|null);
+    }
+
+    /** Represents a BroadcastResponse. */
+    class BroadcastResponse implements IBroadcastResponse {
+
+        /**
+         * Constructs a new BroadcastResponse.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: orderer.IBroadcastResponse);
+
+        /** BroadcastResponse status. */
+        public status: common.Status;
+
+        /** BroadcastResponse info. */
+        public info: string;
+
+        /**
+         * Creates a new BroadcastResponse instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns BroadcastResponse instance
+         */
+        public static create(properties?: orderer.IBroadcastResponse): orderer.BroadcastResponse;
+
+        /**
+         * Encodes the specified BroadcastResponse message. Does not implicitly {@link orderer.BroadcastResponse.verify|verify} messages.
+         * @param message BroadcastResponse message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: orderer.IBroadcastResponse, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified BroadcastResponse message, length delimited. Does not implicitly {@link orderer.BroadcastResponse.verify|verify} messages.
+         * @param message BroadcastResponse message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: orderer.IBroadcastResponse, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a BroadcastResponse message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns BroadcastResponse
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.BroadcastResponse;
+
+        /**
+         * Decodes a BroadcastResponse message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns BroadcastResponse
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.BroadcastResponse;
+
+        /**
+         * Verifies a BroadcastResponse message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a BroadcastResponse message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns BroadcastResponse
+         */
+        public static fromObject(object: { [k: string]: any }): orderer.BroadcastResponse;
+
+        /**
+         * Creates a plain object from a BroadcastResponse message. Also converts values to other types if specified.
+         * @param message BroadcastResponse
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: orderer.BroadcastResponse, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this BroadcastResponse to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for BroadcastResponse
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a SeekNewest. */
+    interface ISeekNewest {
+    }
+
+    /** Represents a SeekNewest. */
+    class SeekNewest implements ISeekNewest {
+
+        /**
+         * Constructs a new SeekNewest.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: orderer.ISeekNewest);
+
+        /**
+         * Creates a new SeekNewest instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns SeekNewest instance
+         */
+        public static create(properties?: orderer.ISeekNewest): orderer.SeekNewest;
+
+        /**
+         * Encodes the specified SeekNewest message. Does not implicitly {@link orderer.SeekNewest.verify|verify} messages.
+         * @param message SeekNewest message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: orderer.ISeekNewest, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified SeekNewest message, length delimited. Does not implicitly {@link orderer.SeekNewest.verify|verify} messages.
+         * @param message SeekNewest message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: orderer.ISeekNewest, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a SeekNewest message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns SeekNewest
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.SeekNewest;
+
+        /**
+         * Decodes a SeekNewest message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns SeekNewest
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.SeekNewest;
+
+        /**
+         * Verifies a SeekNewest message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a SeekNewest message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns SeekNewest
+         */
+        public static fromObject(object: { [k: string]: any }): orderer.SeekNewest;
+
+        /**
+         * Creates a plain object from a SeekNewest message. Also converts values to other types if specified.
+         * @param message SeekNewest
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: orderer.SeekNewest, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this SeekNewest to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for SeekNewest
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a SeekOldest. */
+    interface ISeekOldest {
+    }
+
+    /** Represents a SeekOldest. */
+    class SeekOldest implements ISeekOldest {
+
+        /**
+         * Constructs a new SeekOldest.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: orderer.ISeekOldest);
+
+        /**
+         * Creates a new SeekOldest instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns SeekOldest instance
+         */
+        public static create(properties?: orderer.ISeekOldest): orderer.SeekOldest;
+
+        /**
+         * Encodes the specified SeekOldest message. Does not implicitly {@link orderer.SeekOldest.verify|verify} messages.
+         * @param message SeekOldest message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: orderer.ISeekOldest, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified SeekOldest message, length delimited. Does not implicitly {@link orderer.SeekOldest.verify|verify} messages.
+         * @param message SeekOldest message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: orderer.ISeekOldest, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a SeekOldest message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns SeekOldest
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.SeekOldest;
+
+        /**
+         * Decodes a SeekOldest message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns SeekOldest
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.SeekOldest;
+
+        /**
+         * Verifies a SeekOldest message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a SeekOldest message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns SeekOldest
+         */
+        public static fromObject(object: { [k: string]: any }): orderer.SeekOldest;
+
+        /**
+         * Creates a plain object from a SeekOldest message. Also converts values to other types if specified.
+         * @param message SeekOldest
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: orderer.SeekOldest, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this SeekOldest to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for SeekOldest
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a SeekSpecified. */
+    interface ISeekSpecified {
+
+        /** SeekSpecified number */
+        number?: (number|Long|null);
+    }
+
+    /** Represents a SeekSpecified. */
+    class SeekSpecified implements ISeekSpecified {
+
+        /**
+         * Constructs a new SeekSpecified.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: orderer.ISeekSpecified);
+
+        /** SeekSpecified number. */
+        public number: (number|Long);
+
+        /**
+         * Creates a new SeekSpecified instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns SeekSpecified instance
+         */
+        public static create(properties?: orderer.ISeekSpecified): orderer.SeekSpecified;
+
+        /**
+         * Encodes the specified SeekSpecified message. Does not implicitly {@link orderer.SeekSpecified.verify|verify} messages.
+         * @param message SeekSpecified message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: orderer.ISeekSpecified, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified SeekSpecified message, length delimited. Does not implicitly {@link orderer.SeekSpecified.verify|verify} messages.
+         * @param message SeekSpecified message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: orderer.ISeekSpecified, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a SeekSpecified message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns SeekSpecified
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.SeekSpecified;
+
+        /**
+         * Decodes a SeekSpecified message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns SeekSpecified
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.SeekSpecified;
+
+        /**
+         * Verifies a SeekSpecified message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a SeekSpecified message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns SeekSpecified
+         */
+        public static fromObject(object: { [k: string]: any }): orderer.SeekSpecified;
+
+        /**
+         * Creates a plain object from a SeekSpecified message. Also converts values to other types if specified.
+         * @param message SeekSpecified
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: orderer.SeekSpecified, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this SeekSpecified to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for SeekSpecified
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a SeekPosition. */
+    interface ISeekPosition {
+
+        /** SeekPosition newest */
+        newest?: (orderer.ISeekNewest|null);
+
+        /** SeekPosition oldest */
+        oldest?: (orderer.ISeekOldest|null);
+
+        /** SeekPosition specified */
+        specified?: (orderer.ISeekSpecified|null);
+    }
+
+    /** Represents a SeekPosition. */
+    class SeekPosition implements ISeekPosition {
+
+        /**
+         * Constructs a new SeekPosition.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: orderer.ISeekPosition);
+
+        /** SeekPosition newest. */
+        public newest?: (orderer.ISeekNewest|null);
+
+        /** SeekPosition oldest. */
+        public oldest?: (orderer.ISeekOldest|null);
+
+        /** SeekPosition specified. */
+        public specified?: (orderer.ISeekSpecified|null);
+
+        /** SeekPosition Type. */
+        public Type?: ("newest"|"oldest"|"specified");
+
+        /**
+         * Creates a new SeekPosition instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns SeekPosition instance
+         */
+        public static create(properties?: orderer.ISeekPosition): orderer.SeekPosition;
+
+        /**
+         * Encodes the specified SeekPosition message. Does not implicitly {@link orderer.SeekPosition.verify|verify} messages.
+         * @param message SeekPosition message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: orderer.ISeekPosition, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified SeekPosition message, length delimited. Does not implicitly {@link orderer.SeekPosition.verify|verify} messages.
+         * @param message SeekPosition message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: orderer.ISeekPosition, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a SeekPosition message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns SeekPosition
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.SeekPosition;
+
+        /**
+         * Decodes a SeekPosition message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns SeekPosition
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.SeekPosition;
+
+        /**
+         * Verifies a SeekPosition message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a SeekPosition message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns SeekPosition
+         */
+        public static fromObject(object: { [k: string]: any }): orderer.SeekPosition;
+
+        /**
+         * Creates a plain object from a SeekPosition message. Also converts values to other types if specified.
+         * @param message SeekPosition
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: orderer.SeekPosition, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this SeekPosition to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for SeekPosition
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a SeekInfo. */
+    interface ISeekInfo {
+
+        /** SeekInfo start */
+        start?: (orderer.ISeekPosition|null);
+
+        /** SeekInfo stop */
+        stop?: (orderer.ISeekPosition|null);
+
+        /** SeekInfo behavior */
+        behavior?: (orderer.SeekInfo.SeekBehavior|null);
+
+        /** SeekInfo error_response */
+        error_response?: (orderer.SeekInfo.SeekErrorResponse|null);
+    }
+
+    /** Represents a SeekInfo. */
+    class SeekInfo implements ISeekInfo {
+
+        /**
+         * Constructs a new SeekInfo.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: orderer.ISeekInfo);
+
+        /** SeekInfo start. */
+        public start?: (orderer.ISeekPosition|null);
+
+        /** SeekInfo stop. */
+        public stop?: (orderer.ISeekPosition|null);
+
+        /** SeekInfo behavior. */
+        public behavior: orderer.SeekInfo.SeekBehavior;
+
+        /** SeekInfo error_response. */
+        public error_response: orderer.SeekInfo.SeekErrorResponse;
+
+        /**
+         * Creates a new SeekInfo instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns SeekInfo instance
+         */
+        public static create(properties?: orderer.ISeekInfo): orderer.SeekInfo;
+
+        /**
+         * Encodes the specified SeekInfo message. Does not implicitly {@link orderer.SeekInfo.verify|verify} messages.
+         * @param message SeekInfo message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: orderer.ISeekInfo, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified SeekInfo message, length delimited. Does not implicitly {@link orderer.SeekInfo.verify|verify} messages.
+         * @param message SeekInfo message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: orderer.ISeekInfo, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a SeekInfo message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns SeekInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.SeekInfo;
+
+        /**
+         * Decodes a SeekInfo message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns SeekInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.SeekInfo;
+
+        /**
+         * Verifies a SeekInfo message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a SeekInfo message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns SeekInfo
+         */
+        public static fromObject(object: { [k: string]: any }): orderer.SeekInfo;
+
+        /**
+         * Creates a plain object from a SeekInfo message. Also converts values to other types if specified.
+         * @param message SeekInfo
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: orderer.SeekInfo, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this SeekInfo to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for SeekInfo
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    namespace SeekInfo {
+
+        /** SeekBehavior enum. */
+        enum SeekBehavior {
+            BLOCK_UNTIL_READY = 0,
+            FAIL_IF_NOT_READY = 1
+        }
+
+        /** SeekErrorResponse enum. */
+        enum SeekErrorResponse {
+            STRICT = 0,
+            BEST_EFFORT = 1
+        }
+    }
+
+    /** Properties of a DeliverResponse. */
+    interface IDeliverResponse {
+
+        /** DeliverResponse status */
+        status?: (common.Status|null);
+
+        /** DeliverResponse block */
+        block?: (common.IBlock|null);
+    }
+
+    /** Represents a DeliverResponse. */
+    class DeliverResponse implements IDeliverResponse {
+
+        /**
+         * Constructs a new DeliverResponse.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: orderer.IDeliverResponse);
+
+        /** DeliverResponse status. */
+        public status?: (common.Status|null);
+
+        /** DeliverResponse block. */
+        public block?: (common.IBlock|null);
+
+        /** DeliverResponse Type. */
+        public Type?: ("status"|"block");
+
+        /**
+         * Creates a new DeliverResponse instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns DeliverResponse instance
+         */
+        public static create(properties?: orderer.IDeliverResponse): orderer.DeliverResponse;
+
+        /**
+         * Encodes the specified DeliverResponse message. Does not implicitly {@link orderer.DeliverResponse.verify|verify} messages.
+         * @param message DeliverResponse message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: orderer.IDeliverResponse, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified DeliverResponse message, length delimited. Does not implicitly {@link orderer.DeliverResponse.verify|verify} messages.
+         * @param message DeliverResponse message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: orderer.IDeliverResponse, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a DeliverResponse message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns DeliverResponse
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.DeliverResponse;
+
+        /**
+         * Decodes a DeliverResponse message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns DeliverResponse
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.DeliverResponse;
+
+        /**
+         * Verifies a DeliverResponse message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a DeliverResponse message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns DeliverResponse
+         */
+        public static fromObject(object: { [k: string]: any }): orderer.DeliverResponse;
+
+        /**
+         * Creates a plain object from a DeliverResponse message. Also converts values to other types if specified.
+         * @param message DeliverResponse
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: orderer.DeliverResponse, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this DeliverResponse to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for DeliverResponse
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Represents an AtomicBroadcast */
+    class AtomicBroadcast extends $protobuf.rpc.Service {
+
+        /**
+         * Constructs a new AtomicBroadcast service.
+         * @param rpcImpl RPC implementation
+         * @param [requestDelimited=false] Whether requests are length-delimited
+         * @param [responseDelimited=false] Whether responses are length-delimited
+         */
+        constructor(rpcImpl: $protobuf.RPCImpl, requestDelimited?: boolean, responseDelimited?: boolean);
+
+        /**
+         * Creates new AtomicBroadcast service using the specified rpc implementation.
+         * @param rpcImpl RPC implementation
+         * @param [requestDelimited=false] Whether requests are length-delimited
+         * @param [responseDelimited=false] Whether responses are length-delimited
+         * @returns RPC service. Useful where requests and/or responses are streamed.
+         */
+        public static create(rpcImpl: $protobuf.RPCImpl, requestDelimited?: boolean, responseDelimited?: boolean): AtomicBroadcast;
+
+        /**
+         * Calls Broadcast.
+         * @param request Envelope message or plain object
+         * @param callback Node-style callback called with the error, if any, and BroadcastResponse
+         */
+        public broadcast(request: common.IEnvelope, callback: orderer.AtomicBroadcast.BroadcastCallback): void;
+
+        /**
+         * Calls Broadcast.
+         * @param request Envelope message or plain object
+         * @returns Promise
+         */
+        public broadcast(request: common.IEnvelope): Promise<orderer.BroadcastResponse>;
+
+        /**
+         * Calls Deliver.
+         * @param request Envelope message or plain object
+         * @param callback Node-style callback called with the error, if any, and DeliverResponse
+         */
+        public deliver(request: common.IEnvelope, callback: orderer.AtomicBroadcast.DeliverCallback): void;
+
+        /**
+         * Calls Deliver.
+         * @param request Envelope message or plain object
+         * @returns Promise
+         */
+        public deliver(request: common.IEnvelope): Promise<orderer.DeliverResponse>;
+    }
+
+    namespace AtomicBroadcast {
+
+        /**
+         * Callback as used by {@link orderer.AtomicBroadcast#broadcast}.
+         * @param error Error, if any
+         * @param [response] BroadcastResponse
+         */
+        type BroadcastCallback = (error: (Error|null), response?: orderer.BroadcastResponse) => void;
+
+        /**
+         * Callback as used by {@link orderer.AtomicBroadcast#deliver}.
+         * @param error Error, if any
+         * @param [response] DeliverResponse
+         */
+        type DeliverCallback = (error: (Error|null), response?: orderer.DeliverResponse) => void;
+    }
+
+    /** Properties of a ConsensusType. */
+    interface IConsensusType {
+
+        /** ConsensusType type */
+        type?: (string|null);
+
+        /** ConsensusType metadata */
+        metadata?: (Uint8Array|null);
+
+        /** ConsensusType state */
+        state?: (orderer.ConsensusType.State|null);
+    }
+
+    /** Represents a ConsensusType. */
+    class ConsensusType implements IConsensusType {
+
+        /**
+         * Constructs a new ConsensusType.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: orderer.IConsensusType);
+
+        /** ConsensusType type. */
+        public type: string;
+
+        /** ConsensusType metadata. */
+        public metadata: Uint8Array;
+
+        /** ConsensusType state. */
+        public state: orderer.ConsensusType.State;
+
+        /**
+         * Creates a new ConsensusType instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns ConsensusType instance
+         */
+        public static create(properties?: orderer.IConsensusType): orderer.ConsensusType;
+
+        /**
+         * Encodes the specified ConsensusType message. Does not implicitly {@link orderer.ConsensusType.verify|verify} messages.
+         * @param message ConsensusType message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: orderer.IConsensusType, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified ConsensusType message, length delimited. Does not implicitly {@link orderer.ConsensusType.verify|verify} messages.
+         * @param message ConsensusType message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: orderer.IConsensusType, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a ConsensusType message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns ConsensusType
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.ConsensusType;
+
+        /**
+         * Decodes a ConsensusType message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns ConsensusType
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.ConsensusType;
+
+        /**
+         * Verifies a ConsensusType message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a ConsensusType message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns ConsensusType
+         */
+        public static fromObject(object: { [k: string]: any }): orderer.ConsensusType;
+
+        /**
+         * Creates a plain object from a ConsensusType message. Also converts values to other types if specified.
+         * @param message ConsensusType
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: orderer.ConsensusType, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this ConsensusType to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ConsensusType
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    namespace ConsensusType {
+
+        /** State enum. */
+        enum State {
+            STATE_NORMAL = 0,
+            STATE_MAINTENANCE = 1
+        }
+    }
+
+    /** Properties of a BatchSize. */
+    interface IBatchSize {
+
+        /** BatchSize max_message_count */
+        max_message_count?: (number|null);
+
+        /** BatchSize absolute_max_bytes */
+        absolute_max_bytes?: (number|null);
+
+        /** BatchSize preferred_max_bytes */
+        preferred_max_bytes?: (number|null);
+    }
+
+    /** Represents a BatchSize. */
+    class BatchSize implements IBatchSize {
+
+        /**
+         * Constructs a new BatchSize.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: orderer.IBatchSize);
+
+        /** BatchSize max_message_count. */
+        public max_message_count: number;
+
+        /** BatchSize absolute_max_bytes. */
+        public absolute_max_bytes: number;
+
+        /** BatchSize preferred_max_bytes. */
+        public preferred_max_bytes: number;
+
+        /**
+         * Creates a new BatchSize instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns BatchSize instance
+         */
+        public static create(properties?: orderer.IBatchSize): orderer.BatchSize;
+
+        /**
+         * Encodes the specified BatchSize message. Does not implicitly {@link orderer.BatchSize.verify|verify} messages.
+         * @param message BatchSize message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: orderer.IBatchSize, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified BatchSize message, length delimited. Does not implicitly {@link orderer.BatchSize.verify|verify} messages.
+         * @param message BatchSize message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: orderer.IBatchSize, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a BatchSize message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns BatchSize
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.BatchSize;
+
+        /**
+         * Decodes a BatchSize message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns BatchSize
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.BatchSize;
+
+        /**
+         * Verifies a BatchSize message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a BatchSize message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns BatchSize
+         */
+        public static fromObject(object: { [k: string]: any }): orderer.BatchSize;
+
+        /**
+         * Creates a plain object from a BatchSize message. Also converts values to other types if specified.
+         * @param message BatchSize
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: orderer.BatchSize, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this BatchSize to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for BatchSize
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a BatchTimeout. */
+    interface IBatchTimeout {
+
+        /** BatchTimeout timeout */
+        timeout?: (string|null);
+    }
+
+    /** Represents a BatchTimeout. */
+    class BatchTimeout implements IBatchTimeout {
+
+        /**
+         * Constructs a new BatchTimeout.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: orderer.IBatchTimeout);
+
+        /** BatchTimeout timeout. */
+        public timeout: string;
+
+        /**
+         * Creates a new BatchTimeout instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns BatchTimeout instance
+         */
+        public static create(properties?: orderer.IBatchTimeout): orderer.BatchTimeout;
+
+        /**
+         * Encodes the specified BatchTimeout message. Does not implicitly {@link orderer.BatchTimeout.verify|verify} messages.
+         * @param message BatchTimeout message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: orderer.IBatchTimeout, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified BatchTimeout message, length delimited. Does not implicitly {@link orderer.BatchTimeout.verify|verify} messages.
+         * @param message BatchTimeout message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: orderer.IBatchTimeout, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a BatchTimeout message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns BatchTimeout
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.BatchTimeout;
+
+        /**
+         * Decodes a BatchTimeout message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns BatchTimeout
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.BatchTimeout;
+
+        /**
+         * Verifies a BatchTimeout message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a BatchTimeout message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns BatchTimeout
+         */
+        public static fromObject(object: { [k: string]: any }): orderer.BatchTimeout;
+
+        /**
+         * Creates a plain object from a BatchTimeout message. Also converts values to other types if specified.
+         * @param message BatchTimeout
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: orderer.BatchTimeout, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this BatchTimeout to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for BatchTimeout
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a KafkaBrokers. */
+    interface IKafkaBrokers {
+
+        /** KafkaBrokers brokers */
+        brokers?: (string[]|null);
+    }
+
+    /** Represents a KafkaBrokers. */
+    class KafkaBrokers implements IKafkaBrokers {
+
+        /**
+         * Constructs a new KafkaBrokers.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: orderer.IKafkaBrokers);
+
+        /** KafkaBrokers brokers. */
+        public brokers: string[];
+
+        /**
+         * Creates a new KafkaBrokers instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns KafkaBrokers instance
+         */
+        public static create(properties?: orderer.IKafkaBrokers): orderer.KafkaBrokers;
+
+        /**
+         * Encodes the specified KafkaBrokers message. Does not implicitly {@link orderer.KafkaBrokers.verify|verify} messages.
+         * @param message KafkaBrokers message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: orderer.IKafkaBrokers, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified KafkaBrokers message, length delimited. Does not implicitly {@link orderer.KafkaBrokers.verify|verify} messages.
+         * @param message KafkaBrokers message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: orderer.IKafkaBrokers, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a KafkaBrokers message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns KafkaBrokers
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.KafkaBrokers;
+
+        /**
+         * Decodes a KafkaBrokers message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns KafkaBrokers
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.KafkaBrokers;
+
+        /**
+         * Verifies a KafkaBrokers message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a KafkaBrokers message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns KafkaBrokers
+         */
+        public static fromObject(object: { [k: string]: any }): orderer.KafkaBrokers;
+
+        /**
+         * Creates a plain object from a KafkaBrokers message. Also converts values to other types if specified.
+         * @param message KafkaBrokers
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: orderer.KafkaBrokers, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this KafkaBrokers to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for KafkaBrokers
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a ChannelRestrictions. */
+    interface IChannelRestrictions {
+
+        /** ChannelRestrictions max_count */
+        max_count?: (number|Long|null);
+    }
+
+    /** Represents a ChannelRestrictions. */
+    class ChannelRestrictions implements IChannelRestrictions {
+
+        /**
+         * Constructs a new ChannelRestrictions.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: orderer.IChannelRestrictions);
+
+        /** ChannelRestrictions max_count. */
+        public max_count: (number|Long);
+
+        /**
+         * Creates a new ChannelRestrictions instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns ChannelRestrictions instance
+         */
+        public static create(properties?: orderer.IChannelRestrictions): orderer.ChannelRestrictions;
+
+        /**
+         * Encodes the specified ChannelRestrictions message. Does not implicitly {@link orderer.ChannelRestrictions.verify|verify} messages.
+         * @param message ChannelRestrictions message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: orderer.IChannelRestrictions, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified ChannelRestrictions message, length delimited. Does not implicitly {@link orderer.ChannelRestrictions.verify|verify} messages.
+         * @param message ChannelRestrictions message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: orderer.IChannelRestrictions, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a ChannelRestrictions message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns ChannelRestrictions
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.ChannelRestrictions;
+
+        /**
+         * Decodes a ChannelRestrictions message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns ChannelRestrictions
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.ChannelRestrictions;
+
+        /**
+         * Verifies a ChannelRestrictions message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a ChannelRestrictions message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns ChannelRestrictions
+         */
+        public static fromObject(object: { [k: string]: any }): orderer.ChannelRestrictions;
+
+        /**
+         * Creates a plain object from a ChannelRestrictions message. Also converts values to other types if specified.
+         * @param message ChannelRestrictions
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: orderer.ChannelRestrictions, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this ChannelRestrictions to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ChannelRestrictions
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Represents a Cluster */
+    class Cluster extends $protobuf.rpc.Service {
+
+        /**
+         * Constructs a new Cluster service.
+         * @param rpcImpl RPC implementation
+         * @param [requestDelimited=false] Whether requests are length-delimited
+         * @param [responseDelimited=false] Whether responses are length-delimited
+         */
+        constructor(rpcImpl: $protobuf.RPCImpl, requestDelimited?: boolean, responseDelimited?: boolean);
+
+        /**
+         * Creates new Cluster service using the specified rpc implementation.
+         * @param rpcImpl RPC implementation
+         * @param [requestDelimited=false] Whether requests are length-delimited
+         * @param [responseDelimited=false] Whether responses are length-delimited
+         * @returns RPC service. Useful where requests and/or responses are streamed.
+         */
+        public static create(rpcImpl: $protobuf.RPCImpl, requestDelimited?: boolean, responseDelimited?: boolean): Cluster;
+
+        /**
+         * Calls Step.
+         * @param request StepRequest message or plain object
+         * @param callback Node-style callback called with the error, if any, and StepResponse
+         */
+        public step(request: orderer.IStepRequest, callback: orderer.Cluster.StepCallback): void;
+
+        /**
+         * Calls Step.
+         * @param request StepRequest message or plain object
+         * @returns Promise
+         */
+        public step(request: orderer.IStepRequest): Promise<orderer.StepResponse>;
+    }
+
+    namespace Cluster {
+
+        /**
+         * Callback as used by {@link orderer.Cluster#step}.
+         * @param error Error, if any
+         * @param [response] StepResponse
+         */
+        type StepCallback = (error: (Error|null), response?: orderer.StepResponse) => void;
+    }
+
+    /** Properties of a StepRequest. */
+    interface IStepRequest {
+
+        /** StepRequest consensus_request */
+        consensus_request?: (orderer.IConsensusRequest|null);
+
+        /** StepRequest submit_request */
+        submit_request?: (orderer.ISubmitRequest|null);
+    }
+
+    /** Represents a StepRequest. */
+    class StepRequest implements IStepRequest {
+
+        /**
+         * Constructs a new StepRequest.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: orderer.IStepRequest);
+
+        /** StepRequest consensus_request. */
+        public consensus_request?: (orderer.IConsensusRequest|null);
+
+        /** StepRequest submit_request. */
+        public submit_request?: (orderer.ISubmitRequest|null);
+
+        /** StepRequest payload. */
+        public payload?: ("consensus_request"|"submit_request");
+
+        /**
+         * Creates a new StepRequest instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns StepRequest instance
+         */
+        public static create(properties?: orderer.IStepRequest): orderer.StepRequest;
+
+        /**
+         * Encodes the specified StepRequest message. Does not implicitly {@link orderer.StepRequest.verify|verify} messages.
+         * @param message StepRequest message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: orderer.IStepRequest, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified StepRequest message, length delimited. Does not implicitly {@link orderer.StepRequest.verify|verify} messages.
+         * @param message StepRequest message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: orderer.IStepRequest, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a StepRequest message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns StepRequest
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.StepRequest;
+
+        /**
+         * Decodes a StepRequest message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns StepRequest
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.StepRequest;
+
+        /**
+         * Verifies a StepRequest message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a StepRequest message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns StepRequest
+         */
+        public static fromObject(object: { [k: string]: any }): orderer.StepRequest;
+
+        /**
+         * Creates a plain object from a StepRequest message. Also converts values to other types if specified.
+         * @param message StepRequest
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: orderer.StepRequest, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this StepRequest to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for StepRequest
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a StepResponse. */
+    interface IStepResponse {
+
+        /** StepResponse submit_res */
+        submit_res?: (orderer.ISubmitResponse|null);
+    }
+
+    /** Represents a StepResponse. */
+    class StepResponse implements IStepResponse {
+
+        /**
+         * Constructs a new StepResponse.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: orderer.IStepResponse);
+
+        /** StepResponse submit_res. */
+        public submit_res?: (orderer.ISubmitResponse|null);
+
+        /** StepResponse payload. */
+        public payload?: "submit_res";
+
+        /**
+         * Creates a new StepResponse instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns StepResponse instance
+         */
+        public static create(properties?: orderer.IStepResponse): orderer.StepResponse;
+
+        /**
+         * Encodes the specified StepResponse message. Does not implicitly {@link orderer.StepResponse.verify|verify} messages.
+         * @param message StepResponse message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: orderer.IStepResponse, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified StepResponse message, length delimited. Does not implicitly {@link orderer.StepResponse.verify|verify} messages.
+         * @param message StepResponse message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: orderer.IStepResponse, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a StepResponse message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns StepResponse
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.StepResponse;
+
+        /**
+         * Decodes a StepResponse message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns StepResponse
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.StepResponse;
+
+        /**
+         * Verifies a StepResponse message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a StepResponse message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns StepResponse
+         */
+        public static fromObject(object: { [k: string]: any }): orderer.StepResponse;
+
+        /**
+         * Creates a plain object from a StepResponse message. Also converts values to other types if specified.
+         * @param message StepResponse
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: orderer.StepResponse, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this StepResponse to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for StepResponse
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a ConsensusRequest. */
+    interface IConsensusRequest {
+
+        /** ConsensusRequest channel */
+        channel?: (string|null);
+
+        /** ConsensusRequest payload */
+        payload?: (Uint8Array|null);
+
+        /** ConsensusRequest metadata */
+        metadata?: (Uint8Array|null);
+    }
+
+    /** Represents a ConsensusRequest. */
+    class ConsensusRequest implements IConsensusRequest {
+
+        /**
+         * Constructs a new ConsensusRequest.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: orderer.IConsensusRequest);
+
+        /** ConsensusRequest channel. */
+        public channel: string;
+
+        /** ConsensusRequest payload. */
+        public payload: Uint8Array;
+
+        /** ConsensusRequest metadata. */
+        public metadata: Uint8Array;
+
+        /**
+         * Creates a new ConsensusRequest instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns ConsensusRequest instance
+         */
+        public static create(properties?: orderer.IConsensusRequest): orderer.ConsensusRequest;
+
+        /**
+         * Encodes the specified ConsensusRequest message. Does not implicitly {@link orderer.ConsensusRequest.verify|verify} messages.
+         * @param message ConsensusRequest message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: orderer.IConsensusRequest, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified ConsensusRequest message, length delimited. Does not implicitly {@link orderer.ConsensusRequest.verify|verify} messages.
+         * @param message ConsensusRequest message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: orderer.IConsensusRequest, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a ConsensusRequest message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns ConsensusRequest
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.ConsensusRequest;
+
+        /**
+         * Decodes a ConsensusRequest message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns ConsensusRequest
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.ConsensusRequest;
+
+        /**
+         * Verifies a ConsensusRequest message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a ConsensusRequest message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns ConsensusRequest
+         */
+        public static fromObject(object: { [k: string]: any }): orderer.ConsensusRequest;
+
+        /**
+         * Creates a plain object from a ConsensusRequest message. Also converts values to other types if specified.
+         * @param message ConsensusRequest
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: orderer.ConsensusRequest, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this ConsensusRequest to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ConsensusRequest
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a SubmitRequest. */
+    interface ISubmitRequest {
+
+        /** SubmitRequest channel */
+        channel?: (string|null);
+
+        /** SubmitRequest last_validation_seq */
+        last_validation_seq?: (number|Long|null);
+
+        /** SubmitRequest payload */
+        payload?: (common.IEnvelope|null);
+    }
+
+    /** Represents a SubmitRequest. */
+    class SubmitRequest implements ISubmitRequest {
+
+        /**
+         * Constructs a new SubmitRequest.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: orderer.ISubmitRequest);
+
+        /** SubmitRequest channel. */
+        public channel: string;
+
+        /** SubmitRequest last_validation_seq. */
+        public last_validation_seq: (number|Long);
+
+        /** SubmitRequest payload. */
+        public payload?: (common.IEnvelope|null);
+
+        /**
+         * Creates a new SubmitRequest instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns SubmitRequest instance
+         */
+        public static create(properties?: orderer.ISubmitRequest): orderer.SubmitRequest;
+
+        /**
+         * Encodes the specified SubmitRequest message. Does not implicitly {@link orderer.SubmitRequest.verify|verify} messages.
+         * @param message SubmitRequest message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: orderer.ISubmitRequest, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified SubmitRequest message, length delimited. Does not implicitly {@link orderer.SubmitRequest.verify|verify} messages.
+         * @param message SubmitRequest message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: orderer.ISubmitRequest, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a SubmitRequest message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns SubmitRequest
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.SubmitRequest;
+
+        /**
+         * Decodes a SubmitRequest message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns SubmitRequest
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.SubmitRequest;
+
+        /**
+         * Verifies a SubmitRequest message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a SubmitRequest message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns SubmitRequest
+         */
+        public static fromObject(object: { [k: string]: any }): orderer.SubmitRequest;
+
+        /**
+         * Creates a plain object from a SubmitRequest message. Also converts values to other types if specified.
+         * @param message SubmitRequest
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: orderer.SubmitRequest, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this SubmitRequest to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for SubmitRequest
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a SubmitResponse. */
+    interface ISubmitResponse {
+
+        /** SubmitResponse channel */
+        channel?: (string|null);
+
+        /** SubmitResponse status */
+        status?: (common.Status|null);
+
+        /** SubmitResponse info */
+        info?: (string|null);
+    }
+
+    /** Represents a SubmitResponse. */
+    class SubmitResponse implements ISubmitResponse {
+
+        /**
+         * Constructs a new SubmitResponse.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: orderer.ISubmitResponse);
+
+        /** SubmitResponse channel. */
+        public channel: string;
+
+        /** SubmitResponse status. */
+        public status: common.Status;
+
+        /** SubmitResponse info. */
+        public info: string;
+
+        /**
+         * Creates a new SubmitResponse instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns SubmitResponse instance
+         */
+        public static create(properties?: orderer.ISubmitResponse): orderer.SubmitResponse;
+
+        /**
+         * Encodes the specified SubmitResponse message. Does not implicitly {@link orderer.SubmitResponse.verify|verify} messages.
+         * @param message SubmitResponse message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: orderer.ISubmitResponse, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified SubmitResponse message, length delimited. Does not implicitly {@link orderer.SubmitResponse.verify|verify} messages.
+         * @param message SubmitResponse message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: orderer.ISubmitResponse, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a SubmitResponse message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns SubmitResponse
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.SubmitResponse;
+
+        /**
+         * Decodes a SubmitResponse message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns SubmitResponse
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.SubmitResponse;
+
+        /**
+         * Verifies a SubmitResponse message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a SubmitResponse message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns SubmitResponse
+         */
+        public static fromObject(object: { [k: string]: any }): orderer.SubmitResponse;
+
+        /**
+         * Creates a plain object from a SubmitResponse message. Also converts values to other types if specified.
+         * @param message SubmitResponse
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: orderer.SubmitResponse, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this SubmitResponse to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for SubmitResponse
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a KafkaMessage. */
+    interface IKafkaMessage {
+
+        /** KafkaMessage regular */
+        regular?: (orderer.IKafkaMessageRegular|null);
+
+        /** KafkaMessage time_to_cut */
+        time_to_cut?: (orderer.IKafkaMessageTimeToCut|null);
+
+        /** KafkaMessage connect */
+        connect?: (orderer.IKafkaMessageConnect|null);
+    }
+
+    /** Represents a KafkaMessage. */
+    class KafkaMessage implements IKafkaMessage {
+
+        /**
+         * Constructs a new KafkaMessage.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: orderer.IKafkaMessage);
+
+        /** KafkaMessage regular. */
+        public regular?: (orderer.IKafkaMessageRegular|null);
+
+        /** KafkaMessage time_to_cut. */
+        public time_to_cut?: (orderer.IKafkaMessageTimeToCut|null);
+
+        /** KafkaMessage connect. */
+        public connect?: (orderer.IKafkaMessageConnect|null);
+
+        /** KafkaMessage Type. */
+        public Type?: ("regular"|"time_to_cut"|"connect");
+
+        /**
+         * Creates a new KafkaMessage instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns KafkaMessage instance
+         */
+        public static create(properties?: orderer.IKafkaMessage): orderer.KafkaMessage;
+
+        /**
+         * Encodes the specified KafkaMessage message. Does not implicitly {@link orderer.KafkaMessage.verify|verify} messages.
+         * @param message KafkaMessage message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: orderer.IKafkaMessage, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified KafkaMessage message, length delimited. Does not implicitly {@link orderer.KafkaMessage.verify|verify} messages.
+         * @param message KafkaMessage message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: orderer.IKafkaMessage, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a KafkaMessage message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns KafkaMessage
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.KafkaMessage;
+
+        /**
+         * Decodes a KafkaMessage message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns KafkaMessage
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.KafkaMessage;
+
+        /**
+         * Verifies a KafkaMessage message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a KafkaMessage message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns KafkaMessage
+         */
+        public static fromObject(object: { [k: string]: any }): orderer.KafkaMessage;
+
+        /**
+         * Creates a plain object from a KafkaMessage message. Also converts values to other types if specified.
+         * @param message KafkaMessage
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: orderer.KafkaMessage, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this KafkaMessage to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for KafkaMessage
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a KafkaMessageRegular. */
+    interface IKafkaMessageRegular {
+
+        /** KafkaMessageRegular payload */
+        payload?: (Uint8Array|null);
+
+        /** KafkaMessageRegular config_seq */
+        config_seq?: (number|Long|null);
+
+        /** KafkaMessageRegular class */
+        "class"?: (orderer.KafkaMessageRegular.Class|null);
+
+        /** KafkaMessageRegular original_offset */
+        original_offset?: (number|Long|null);
+    }
+
+    /** Represents a KafkaMessageRegular. */
+    class KafkaMessageRegular implements IKafkaMessageRegular {
+
+        /**
+         * Constructs a new KafkaMessageRegular.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: orderer.IKafkaMessageRegular);
+
+        /** KafkaMessageRegular payload. */
+        public payload: Uint8Array;
+
+        /** KafkaMessageRegular config_seq. */
+        public config_seq: (number|Long);
+
+        /** KafkaMessageRegular class. */
+        public class: orderer.KafkaMessageRegular.Class;
+
+        /** KafkaMessageRegular original_offset. */
+        public original_offset: (number|Long);
+
+        /**
+         * Creates a new KafkaMessageRegular instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns KafkaMessageRegular instance
+         */
+        public static create(properties?: orderer.IKafkaMessageRegular): orderer.KafkaMessageRegular;
+
+        /**
+         * Encodes the specified KafkaMessageRegular message. Does not implicitly {@link orderer.KafkaMessageRegular.verify|verify} messages.
+         * @param message KafkaMessageRegular message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: orderer.IKafkaMessageRegular, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified KafkaMessageRegular message, length delimited. Does not implicitly {@link orderer.KafkaMessageRegular.verify|verify} messages.
+         * @param message KafkaMessageRegular message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: orderer.IKafkaMessageRegular, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a KafkaMessageRegular message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns KafkaMessageRegular
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.KafkaMessageRegular;
+
+        /**
+         * Decodes a KafkaMessageRegular message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns KafkaMessageRegular
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.KafkaMessageRegular;
+
+        /**
+         * Verifies a KafkaMessageRegular message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a KafkaMessageRegular message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns KafkaMessageRegular
+         */
+        public static fromObject(object: { [k: string]: any }): orderer.KafkaMessageRegular;
+
+        /**
+         * Creates a plain object from a KafkaMessageRegular message. Also converts values to other types if specified.
+         * @param message KafkaMessageRegular
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: orderer.KafkaMessageRegular, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this KafkaMessageRegular to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for KafkaMessageRegular
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    namespace KafkaMessageRegular {
+
+        /** Class enum. */
+        enum Class {
+            UNKNOWN = 0,
+            NORMAL = 1,
+            CONFIG = 2
+        }
+    }
+
+    /** Properties of a KafkaMessageTimeToCut. */
+    interface IKafkaMessageTimeToCut {
+
+        /** KafkaMessageTimeToCut block_number */
+        block_number?: (number|Long|null);
+    }
+
+    /** Represents a KafkaMessageTimeToCut. */
+    class KafkaMessageTimeToCut implements IKafkaMessageTimeToCut {
+
+        /**
+         * Constructs a new KafkaMessageTimeToCut.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: orderer.IKafkaMessageTimeToCut);
+
+        /** KafkaMessageTimeToCut block_number. */
+        public block_number: (number|Long);
+
+        /**
+         * Creates a new KafkaMessageTimeToCut instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns KafkaMessageTimeToCut instance
+         */
+        public static create(properties?: orderer.IKafkaMessageTimeToCut): orderer.KafkaMessageTimeToCut;
+
+        /**
+         * Encodes the specified KafkaMessageTimeToCut message. Does not implicitly {@link orderer.KafkaMessageTimeToCut.verify|verify} messages.
+         * @param message KafkaMessageTimeToCut message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: orderer.IKafkaMessageTimeToCut, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified KafkaMessageTimeToCut message, length delimited. Does not implicitly {@link orderer.KafkaMessageTimeToCut.verify|verify} messages.
+         * @param message KafkaMessageTimeToCut message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: orderer.IKafkaMessageTimeToCut, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a KafkaMessageTimeToCut message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns KafkaMessageTimeToCut
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.KafkaMessageTimeToCut;
+
+        /**
+         * Decodes a KafkaMessageTimeToCut message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns KafkaMessageTimeToCut
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.KafkaMessageTimeToCut;
+
+        /**
+         * Verifies a KafkaMessageTimeToCut message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a KafkaMessageTimeToCut message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns KafkaMessageTimeToCut
+         */
+        public static fromObject(object: { [k: string]: any }): orderer.KafkaMessageTimeToCut;
+
+        /**
+         * Creates a plain object from a KafkaMessageTimeToCut message. Also converts values to other types if specified.
+         * @param message KafkaMessageTimeToCut
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: orderer.KafkaMessageTimeToCut, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this KafkaMessageTimeToCut to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for KafkaMessageTimeToCut
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a KafkaMessageConnect. */
+    interface IKafkaMessageConnect {
+
+        /** KafkaMessageConnect payload */
+        payload?: (Uint8Array|null);
+    }
+
+    /** Represents a KafkaMessageConnect. */
+    class KafkaMessageConnect implements IKafkaMessageConnect {
+
+        /**
+         * Constructs a new KafkaMessageConnect.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: orderer.IKafkaMessageConnect);
+
+        /** KafkaMessageConnect payload. */
+        public payload: Uint8Array;
+
+        /**
+         * Creates a new KafkaMessageConnect instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns KafkaMessageConnect instance
+         */
+        public static create(properties?: orderer.IKafkaMessageConnect): orderer.KafkaMessageConnect;
+
+        /**
+         * Encodes the specified KafkaMessageConnect message. Does not implicitly {@link orderer.KafkaMessageConnect.verify|verify} messages.
+         * @param message KafkaMessageConnect message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: orderer.IKafkaMessageConnect, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified KafkaMessageConnect message, length delimited. Does not implicitly {@link orderer.KafkaMessageConnect.verify|verify} messages.
+         * @param message KafkaMessageConnect message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: orderer.IKafkaMessageConnect, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a KafkaMessageConnect message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns KafkaMessageConnect
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.KafkaMessageConnect;
+
+        /**
+         * Decodes a KafkaMessageConnect message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns KafkaMessageConnect
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.KafkaMessageConnect;
+
+        /**
+         * Verifies a KafkaMessageConnect message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a KafkaMessageConnect message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns KafkaMessageConnect
+         */
+        public static fromObject(object: { [k: string]: any }): orderer.KafkaMessageConnect;
+
+        /**
+         * Creates a plain object from a KafkaMessageConnect message. Also converts values to other types if specified.
+         * @param message KafkaMessageConnect
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: orderer.KafkaMessageConnect, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this KafkaMessageConnect to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for KafkaMessageConnect
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a KafkaMetadata. */
+    interface IKafkaMetadata {
+
+        /** KafkaMetadata last_offset_persisted */
+        last_offset_persisted?: (number|Long|null);
+
+        /** KafkaMetadata last_original_offset_processed */
+        last_original_offset_processed?: (number|Long|null);
+
+        /** KafkaMetadata last_resubmitted_config_offset */
+        last_resubmitted_config_offset?: (number|Long|null);
+    }
+
+    /** Represents a KafkaMetadata. */
+    class KafkaMetadata implements IKafkaMetadata {
+
+        /**
+         * Constructs a new KafkaMetadata.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: orderer.IKafkaMetadata);
+
+        /** KafkaMetadata last_offset_persisted. */
+        public last_offset_persisted: (number|Long);
+
+        /** KafkaMetadata last_original_offset_processed. */
+        public last_original_offset_processed: (number|Long);
+
+        /** KafkaMetadata last_resubmitted_config_offset. */
+        public last_resubmitted_config_offset: (number|Long);
+
+        /**
+         * Creates a new KafkaMetadata instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns KafkaMetadata instance
+         */
+        public static create(properties?: orderer.IKafkaMetadata): orderer.KafkaMetadata;
+
+        /**
+         * Encodes the specified KafkaMetadata message. Does not implicitly {@link orderer.KafkaMetadata.verify|verify} messages.
+         * @param message KafkaMetadata message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: orderer.IKafkaMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified KafkaMetadata message, length delimited. Does not implicitly {@link orderer.KafkaMetadata.verify|verify} messages.
+         * @param message KafkaMetadata message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: orderer.IKafkaMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a KafkaMetadata message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns KafkaMetadata
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.KafkaMetadata;
+
+        /**
+         * Decodes a KafkaMetadata message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns KafkaMetadata
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.KafkaMetadata;
+
+        /**
+         * Verifies a KafkaMetadata message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a KafkaMetadata message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns KafkaMetadata
+         */
+        public static fromObject(object: { [k: string]: any }): orderer.KafkaMetadata;
+
+        /**
+         * Creates a plain object from a KafkaMetadata message. Also converts values to other types if specified.
+         * @param message KafkaMetadata
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: orderer.KafkaMetadata, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this KafkaMetadata to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for KafkaMetadata
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+}
+
+/** Namespace etcdraft. */
+export namespace etcdraft {
+
+    /** Properties of a ConfigMetadata. */
+    interface IConfigMetadata {
+
+        /** ConfigMetadata consenters */
+        consenters?: (etcdraft.IConsenter[]|null);
+
+        /** ConfigMetadata options */
+        options?: (etcdraft.IOptions|null);
+    }
+
+    /** Represents a ConfigMetadata. */
+    class ConfigMetadata implements IConfigMetadata {
+
+        /**
+         * Constructs a new ConfigMetadata.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: etcdraft.IConfigMetadata);
+
+        /** ConfigMetadata consenters. */
+        public consenters: etcdraft.IConsenter[];
+
+        /** ConfigMetadata options. */
+        public options?: (etcdraft.IOptions|null);
+
+        /**
+         * Creates a new ConfigMetadata instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns ConfigMetadata instance
+         */
+        public static create(properties?: etcdraft.IConfigMetadata): etcdraft.ConfigMetadata;
+
+        /**
+         * Encodes the specified ConfigMetadata message. Does not implicitly {@link etcdraft.ConfigMetadata.verify|verify} messages.
+         * @param message ConfigMetadata message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: etcdraft.IConfigMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified ConfigMetadata message, length delimited. Does not implicitly {@link etcdraft.ConfigMetadata.verify|verify} messages.
+         * @param message ConfigMetadata message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: etcdraft.IConfigMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a ConfigMetadata message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns ConfigMetadata
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): etcdraft.ConfigMetadata;
+
+        /**
+         * Decodes a ConfigMetadata message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns ConfigMetadata
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): etcdraft.ConfigMetadata;
+
+        /**
+         * Verifies a ConfigMetadata message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a ConfigMetadata message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns ConfigMetadata
+         */
+        public static fromObject(object: { [k: string]: any }): etcdraft.ConfigMetadata;
+
+        /**
+         * Creates a plain object from a ConfigMetadata message. Also converts values to other types if specified.
+         * @param message ConfigMetadata
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: etcdraft.ConfigMetadata, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this ConfigMetadata to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ConfigMetadata
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a Consenter. */
+    interface IConsenter {
+
+        /** Consenter host */
+        host?: (string|null);
+
+        /** Consenter port */
+        port?: (number|null);
+
+        /** Consenter client_tls_cert */
+        client_tls_cert?: (Uint8Array|null);
+
+        /** Consenter server_tls_cert */
+        server_tls_cert?: (Uint8Array|null);
+    }
+
+    /** Represents a Consenter. */
+    class Consenter implements IConsenter {
+
+        /**
+         * Constructs a new Consenter.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: etcdraft.IConsenter);
+
+        /** Consenter host. */
+        public host: string;
+
+        /** Consenter port. */
+        public port: number;
+
+        /** Consenter client_tls_cert. */
+        public client_tls_cert: Uint8Array;
+
+        /** Consenter server_tls_cert. */
+        public server_tls_cert: Uint8Array;
+
+        /**
+         * Creates a new Consenter instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns Consenter instance
+         */
+        public static create(properties?: etcdraft.IConsenter): etcdraft.Consenter;
+
+        /**
+         * Encodes the specified Consenter message. Does not implicitly {@link etcdraft.Consenter.verify|verify} messages.
+         * @param message Consenter message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: etcdraft.IConsenter, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified Consenter message, length delimited. Does not implicitly {@link etcdraft.Consenter.verify|verify} messages.
+         * @param message Consenter message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: etcdraft.IConsenter, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a Consenter message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns Consenter
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): etcdraft.Consenter;
+
+        /**
+         * Decodes a Consenter message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns Consenter
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): etcdraft.Consenter;
+
+        /**
+         * Verifies a Consenter message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a Consenter message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns Consenter
+         */
+        public static fromObject(object: { [k: string]: any }): etcdraft.Consenter;
+
+        /**
+         * Creates a plain object from a Consenter message. Also converts values to other types if specified.
+         * @param message Consenter
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: etcdraft.Consenter, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this Consenter to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Consenter
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of an Options. */
+    interface IOptions {
+
+        /** Options tick_interval */
+        tick_interval?: (string|null);
+
+        /** Options election_tick */
+        election_tick?: (number|null);
+
+        /** Options heartbeat_tick */
+        heartbeat_tick?: (number|null);
+
+        /** Options max_inflight_blocks */
+        max_inflight_blocks?: (number|null);
+
+        /** Options snapshot_interval_size */
+        snapshot_interval_size?: (number|null);
+    }
+
+    /** Represents an Options. */
+    class Options implements IOptions {
+
+        /**
+         * Constructs a new Options.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: etcdraft.IOptions);
+
+        /** Options tick_interval. */
+        public tick_interval: string;
+
+        /** Options election_tick. */
+        public election_tick: number;
+
+        /** Options heartbeat_tick. */
+        public heartbeat_tick: number;
+
+        /** Options max_inflight_blocks. */
+        public max_inflight_blocks: number;
+
+        /** Options snapshot_interval_size. */
+        public snapshot_interval_size: number;
+
+        /**
+         * Creates a new Options instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns Options instance
+         */
+        public static create(properties?: etcdraft.IOptions): etcdraft.Options;
+
+        /**
+         * Encodes the specified Options message. Does not implicitly {@link etcdraft.Options.verify|verify} messages.
+         * @param message Options message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: etcdraft.IOptions, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified Options message, length delimited. Does not implicitly {@link etcdraft.Options.verify|verify} messages.
+         * @param message Options message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: etcdraft.IOptions, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes an Options message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns Options
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): etcdraft.Options;
+
+        /**
+         * Decodes an Options message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns Options
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): etcdraft.Options;
+
+        /**
+         * Verifies an Options message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates an Options message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns Options
+         */
+        public static fromObject(object: { [k: string]: any }): etcdraft.Options;
+
+        /**
+         * Creates a plain object from an Options message. Also converts values to other types if specified.
+         * @param message Options
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: etcdraft.Options, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this Options to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Options
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a BlockMetadata. */
+    interface IBlockMetadata {
+
+        /** BlockMetadata consenter_ids */
+        consenter_ids?: ((number|Long)[]|null);
+
+        /** BlockMetadata next_consenter_id */
+        next_consenter_id?: (number|Long|null);
+
+        /** BlockMetadata raft_index */
+        raft_index?: (number|Long|null);
+    }
+
+    /** Represents a BlockMetadata. */
+    class BlockMetadata implements IBlockMetadata {
+
+        /**
+         * Constructs a new BlockMetadata.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: etcdraft.IBlockMetadata);
+
+        /** BlockMetadata consenter_ids. */
+        public consenter_ids: (number|Long)[];
+
+        /** BlockMetadata next_consenter_id. */
+        public next_consenter_id: (number|Long);
+
+        /** BlockMetadata raft_index. */
+        public raft_index: (number|Long);
+
+        /**
+         * Creates a new BlockMetadata instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns BlockMetadata instance
+         */
+        public static create(properties?: etcdraft.IBlockMetadata): etcdraft.BlockMetadata;
+
+        /**
+         * Encodes the specified BlockMetadata message. Does not implicitly {@link etcdraft.BlockMetadata.verify|verify} messages.
+         * @param message BlockMetadata message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: etcdraft.IBlockMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified BlockMetadata message, length delimited. Does not implicitly {@link etcdraft.BlockMetadata.verify|verify} messages.
+         * @param message BlockMetadata message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: etcdraft.IBlockMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a BlockMetadata message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns BlockMetadata
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): etcdraft.BlockMetadata;
+
+        /**
+         * Decodes a BlockMetadata message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns BlockMetadata
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): etcdraft.BlockMetadata;
+
+        /**
+         * Verifies a BlockMetadata message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a BlockMetadata message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns BlockMetadata
+         */
+        public static fromObject(object: { [k: string]: any }): etcdraft.BlockMetadata;
+
+        /**
+         * Creates a plain object from a BlockMetadata message. Also converts values to other types if specified.
+         * @param message BlockMetadata
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: etcdraft.BlockMetadata, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this BlockMetadata to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for BlockMetadata
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a ClusterMetadata. */
+    interface IClusterMetadata {
+
+        /** ClusterMetadata active_nodes */
+        active_nodes?: ((number|Long)[]|null);
+    }
+
+    /** Represents a ClusterMetadata. */
+    class ClusterMetadata implements IClusterMetadata {
+
+        /**
+         * Constructs a new ClusterMetadata.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: etcdraft.IClusterMetadata);
+
+        /** ClusterMetadata active_nodes. */
+        public active_nodes: (number|Long)[];
+
+        /**
+         * Creates a new ClusterMetadata instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns ClusterMetadata instance
+         */
+        public static create(properties?: etcdraft.IClusterMetadata): etcdraft.ClusterMetadata;
+
+        /**
+         * Encodes the specified ClusterMetadata message. Does not implicitly {@link etcdraft.ClusterMetadata.verify|verify} messages.
+         * @param message ClusterMetadata message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: etcdraft.IClusterMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified ClusterMetadata message, length delimited. Does not implicitly {@link etcdraft.ClusterMetadata.verify|verify} messages.
+         * @param message ClusterMetadata message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: etcdraft.IClusterMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a ClusterMetadata message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns ClusterMetadata
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): etcdraft.ClusterMetadata;
+
+        /**
+         * Decodes a ClusterMetadata message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns ClusterMetadata
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): etcdraft.ClusterMetadata;
+
+        /**
+         * Verifies a ClusterMetadata message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a ClusterMetadata message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns ClusterMetadata
+         */
+        public static fromObject(object: { [k: string]: any }): etcdraft.ClusterMetadata;
+
+        /**
+         * Creates a plain object from a ClusterMetadata message. Also converts values to other types if specified.
+         * @param message ClusterMetadata
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: etcdraft.ClusterMetadata, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this ClusterMetadata to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ClusterMetadata
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 }
 
@@ -13557,6 +15845,13 @@ export namespace discovery {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for SignedRequest
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a Request. */
@@ -13653,6 +15948,13 @@ export namespace discovery {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Request
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a Response. */
@@ -13743,6 +16045,13 @@ export namespace discovery {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Response
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of an AuthInfo. */
@@ -13839,6 +16148,13 @@ export namespace discovery {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for AuthInfo
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a Query. */
@@ -13956,6 +16272,13 @@ export namespace discovery {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Query
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a QueryResult. */
@@ -14067,6 +16390,13 @@ export namespace discovery {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for QueryResult
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ConfigQuery. */
@@ -14151,6 +16481,13 @@ export namespace discovery {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ConfigQuery
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ConfigResult. */
@@ -14247,6 +16584,13 @@ export namespace discovery {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ConfigResult
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a PeerMembershipQuery. */
@@ -14337,6 +16681,13 @@ export namespace discovery {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for PeerMembershipQuery
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a PeerMembershipResult. */
@@ -14427,6 +16778,13 @@ export namespace discovery {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for PeerMembershipResult
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ChaincodeQuery. */
@@ -14517,6 +16875,13 @@ export namespace discovery {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ChaincodeQuery
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ChaincodeInterest. */
@@ -14607,6 +16972,13 @@ export namespace discovery {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ChaincodeInterest
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ChaincodeCall. */
@@ -14715,6 +17087,13 @@ export namespace discovery {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ChaincodeCall
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ChaincodeQueryResult. */
@@ -14805,6 +17184,13 @@ export namespace discovery {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ChaincodeQueryResult
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a LocalPeerQuery. */
@@ -14889,6 +17275,13 @@ export namespace discovery {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for LocalPeerQuery
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of an EndorsementDescriptor. */
@@ -14991,6 +17384,13 @@ export namespace discovery {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for EndorsementDescriptor
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a Layout. */
@@ -15081,6 +17481,13 @@ export namespace discovery {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Layout
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a Peers. */
@@ -15171,6 +17578,13 @@ export namespace discovery {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Peers
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a Peer. */
@@ -15273,6 +17687,13 @@ export namespace discovery {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Peer
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of an Error. */
@@ -15363,6 +17784,13 @@ export namespace discovery {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Error
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of an Endpoints. */
@@ -15453,6 +17881,13 @@ export namespace discovery {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Endpoints
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of an Endpoint. */
@@ -15549,6 +17984,13 @@ export namespace discovery {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Endpoint
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 }
 
@@ -15721,6 +18163,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Envelope
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a SecretEnvelope. */
@@ -15817,6 +18266,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for SecretEnvelope
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a Secret. */
@@ -15910,6 +18366,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Secret
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a GossipMessage. */
@@ -16141,6 +18604,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for GossipMessage
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     namespace GossipMessage {
@@ -16262,6 +18732,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for StateInfo
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a Properties. */
@@ -16364,6 +18841,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Properties
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a StateInfoSnapshot. */
@@ -16454,6 +18938,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for StateInfoSnapshot
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a StateInfoPullRequest. */
@@ -16544,6 +19035,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for StateInfoPullRequest
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ConnEstablish. */
@@ -16646,6 +19144,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ConnEstablish
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a PeerIdentity. */
@@ -16748,6 +19253,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for PeerIdentity
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** PullMsgType enum. */
@@ -16857,6 +19369,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for DataRequest
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a GossipHello. */
@@ -16959,6 +19478,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for GossipHello
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a DataUpdate. */
@@ -17061,6 +19587,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for DataUpdate
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a DataDigest. */
@@ -17163,6 +19696,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for DataDigest
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a DataMessage. */
@@ -17253,6 +19793,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for DataMessage
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a PrivateDataMessage. */
@@ -17343,6 +19890,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for PrivateDataMessage
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a Payload. */
@@ -17445,6 +19999,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Payload
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a PrivatePayload. */
@@ -17565,6 +20126,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for PrivatePayload
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of an AliveMessage. */
@@ -17667,6 +20235,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for AliveMessage
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a LeadershipMessage. */
@@ -17769,6 +20344,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for LeadershipMessage
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a PeerTime. */
@@ -17865,6 +20447,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for PeerTime
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a MembershipRequest. */
@@ -17961,6 +20550,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for MembershipRequest
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a MembershipResponse. */
@@ -18057,6 +20653,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for MembershipResponse
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a Member. */
@@ -18159,6 +20762,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Member
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of an Empty. */
@@ -18243,6 +20853,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Empty
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a RemoteStateRequest. */
@@ -18339,6 +20956,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for RemoteStateRequest
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a RemoteStateResponse. */
@@ -18429,6 +21053,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for RemoteStateResponse
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a RemotePvtDataRequest. */
@@ -18519,6 +21150,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for RemotePvtDataRequest
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a PvtDataDigest. */
@@ -18633,6 +21271,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for PvtDataDigest
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a RemotePvtDataResponse. */
@@ -18723,6 +21368,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for RemotePvtDataResponse
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a PvtDataElement. */
@@ -18819,6 +21471,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for PvtDataElement
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a PvtDataPayload. */
@@ -18915,6 +21574,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for PvtDataPayload
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of an Acknowledgement. */
@@ -19005,6 +21671,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Acknowledgement
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a Chaincode. */
@@ -19107,6 +21780,13 @@ export namespace gossip {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Chaincode
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 }
 
@@ -19207,6 +21887,13 @@ export namespace msp {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for MSPConfig
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a FabricMSPConfig. */
@@ -19357,6 +22044,13 @@ export namespace msp {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for FabricMSPConfig
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a FabricCryptoConfig. */
@@ -19453,6 +22147,13 @@ export namespace msp {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for FabricCryptoConfig
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of an IdemixMSPConfig. */
@@ -19567,6 +22268,13 @@ export namespace msp {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for IdemixMSPConfig
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of an IdemixMSPSignerConfig. */
@@ -19687,6 +22395,13 @@ export namespace msp {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for IdemixMSPSignerConfig
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a SigningIdentityInfo. */
@@ -19783,6 +22498,13 @@ export namespace msp {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for SigningIdentityInfo
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a KeyInfo. */
@@ -19879,6 +22601,13 @@ export namespace msp {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for KeyInfo
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a FabricOUIdentifier. */
@@ -19975,6 +22704,13 @@ export namespace msp {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for FabricOUIdentifier
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a FabricNodeOUs. */
@@ -20089,6 +22825,13 @@ export namespace msp {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for FabricNodeOUs
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a SerializedIdentity. */
@@ -20185,6 +22928,13 @@ export namespace msp {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for SerializedIdentity
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a SerializedIdemixIdentity. */
@@ -20299,2807 +23049,1855 @@ export namespace msp {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for SerializedIdemixIdentity
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 }
 
-/** Namespace orderer. */
-export namespace orderer {
+/** Namespace queryresult. */
+export namespace queryresult {
 
-    /** Represents a Cluster */
-    class Cluster extends $protobuf.rpc.Service {
+    /** Properties of a KV. */
+    interface IKV {
 
-        /**
-         * Constructs a new Cluster service.
-         * @param rpcImpl RPC implementation
-         * @param [requestDelimited=false] Whether requests are length-delimited
-         * @param [responseDelimited=false] Whether responses are length-delimited
-         */
-        constructor(rpcImpl: $protobuf.RPCImpl, requestDelimited?: boolean, responseDelimited?: boolean);
+        /** KV namespace */
+        namespace?: (string|null);
 
-        /**
-         * Creates new Cluster service using the specified rpc implementation.
-         * @param rpcImpl RPC implementation
-         * @param [requestDelimited=false] Whether requests are length-delimited
-         * @param [responseDelimited=false] Whether responses are length-delimited
-         * @returns RPC service. Useful where requests and/or responses are streamed.
-         */
-        public static create(rpcImpl: $protobuf.RPCImpl, requestDelimited?: boolean, responseDelimited?: boolean): Cluster;
+        /** KV key */
+        key?: (string|null);
 
-        /**
-         * Calls Step.
-         * @param request StepRequest message or plain object
-         * @param callback Node-style callback called with the error, if any, and StepResponse
-         */
-        public step(request: orderer.IStepRequest, callback: orderer.Cluster.StepCallback): void;
-
-        /**
-         * Calls Step.
-         * @param request StepRequest message or plain object
-         * @returns Promise
-         */
-        public step(request: orderer.IStepRequest): Promise<orderer.StepResponse>;
+        /** KV value */
+        value?: (Uint8Array|null);
     }
 
-    namespace Cluster {
+    /** Represents a KV. */
+    class KV implements IKV {
 
         /**
-         * Callback as used by {@link orderer.Cluster#step}.
-         * @param error Error, if any
-         * @param [response] StepResponse
-         */
-        type StepCallback = (error: (Error|null), response?: orderer.StepResponse) => void;
-    }
-
-    /** Properties of a StepRequest. */
-    interface IStepRequest {
-
-        /** StepRequest consensus_request */
-        consensus_request?: (orderer.IConsensusRequest|null);
-
-        /** StepRequest submit_request */
-        submit_request?: (orderer.ISubmitRequest|null);
-    }
-
-    /** Represents a StepRequest. */
-    class StepRequest implements IStepRequest {
-
-        /**
-         * Constructs a new StepRequest.
+         * Constructs a new KV.
          * @param [properties] Properties to set
          */
-        constructor(properties?: orderer.IStepRequest);
+        constructor(properties?: queryresult.IKV);
 
-        /** StepRequest consensus_request. */
-        public consensus_request?: (orderer.IConsensusRequest|null);
+        /** KV namespace. */
+        public namespace: string;
 
-        /** StepRequest submit_request. */
-        public submit_request?: (orderer.ISubmitRequest|null);
+        /** KV key. */
+        public key: string;
 
-        /** StepRequest payload. */
-        public payload?: ("consensus_request"|"submit_request");
+        /** KV value. */
+        public value: Uint8Array;
 
         /**
-         * Creates a new StepRequest instance using the specified properties.
+         * Creates a new KV instance using the specified properties.
          * @param [properties] Properties to set
-         * @returns StepRequest instance
+         * @returns KV instance
          */
-        public static create(properties?: orderer.IStepRequest): orderer.StepRequest;
+        public static create(properties?: queryresult.IKV): queryresult.KV;
 
         /**
-         * Encodes the specified StepRequest message. Does not implicitly {@link orderer.StepRequest.verify|verify} messages.
-         * @param message StepRequest message or plain object to encode
+         * Encodes the specified KV message. Does not implicitly {@link queryresult.KV.verify|verify} messages.
+         * @param message KV message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encode(message: orderer.IStepRequest, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: queryresult.IKV, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Encodes the specified StepRequest message, length delimited. Does not implicitly {@link orderer.StepRequest.verify|verify} messages.
-         * @param message StepRequest message or plain object to encode
+         * Encodes the specified KV message, length delimited. Does not implicitly {@link queryresult.KV.verify|verify} messages.
+         * @param message KV message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encodeDelimited(message: orderer.IStepRequest, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: queryresult.IKV, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Decodes a StepRequest message from the specified reader or buffer.
+         * Decodes a KV message from the specified reader or buffer.
          * @param reader Reader or buffer to decode from
          * @param [length] Message length if known beforehand
-         * @returns StepRequest
+         * @returns KV
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.StepRequest;
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): queryresult.KV;
 
         /**
-         * Decodes a StepRequest message from the specified reader or buffer, length delimited.
+         * Decodes a KV message from the specified reader or buffer, length delimited.
          * @param reader Reader or buffer to decode from
-         * @returns StepRequest
+         * @returns KV
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.StepRequest;
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): queryresult.KV;
 
         /**
-         * Verifies a StepRequest message.
+         * Verifies a KV message.
          * @param message Plain object to verify
          * @returns `null` if valid, otherwise the reason why it is not
          */
         public static verify(message: { [k: string]: any }): (string|null);
 
         /**
-         * Creates a StepRequest message from a plain object. Also converts values to their respective internal types.
+         * Creates a KV message from a plain object. Also converts values to their respective internal types.
          * @param object Plain object
-         * @returns StepRequest
+         * @returns KV
          */
-        public static fromObject(object: { [k: string]: any }): orderer.StepRequest;
+        public static fromObject(object: { [k: string]: any }): queryresult.KV;
 
         /**
-         * Creates a plain object from a StepRequest message. Also converts values to other types if specified.
-         * @param message StepRequest
+         * Creates a plain object from a KV message. Also converts values to other types if specified.
+         * @param message KV
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: orderer.StepRequest, options?: $protobuf.IConversionOptions): { [k: string]: any };
+        public static toObject(message: queryresult.KV, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
-         * Converts this StepRequest to JSON.
+         * Converts this KV to JSON.
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for KV
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
-    /** Properties of a StepResponse. */
-    interface IStepResponse {
+    /** Properties of a KeyModification. */
+    interface IKeyModification {
 
-        /** StepResponse submit_res */
-        submit_res?: (orderer.ISubmitResponse|null);
+        /** KeyModification tx_id */
+        tx_id?: (string|null);
+
+        /** KeyModification value */
+        value?: (Uint8Array|null);
+
+        /** KeyModification timestamp */
+        timestamp?: (google.protobuf.ITimestamp|null);
+
+        /** KeyModification is_delete */
+        is_delete?: (boolean|null);
     }
 
-    /** Represents a StepResponse. */
-    class StepResponse implements IStepResponse {
+    /** Represents a KeyModification. */
+    class KeyModification implements IKeyModification {
 
         /**
-         * Constructs a new StepResponse.
+         * Constructs a new KeyModification.
          * @param [properties] Properties to set
          */
-        constructor(properties?: orderer.IStepResponse);
+        constructor(properties?: queryresult.IKeyModification);
 
-        /** StepResponse submit_res. */
-        public submit_res?: (orderer.ISubmitResponse|null);
+        /** KeyModification tx_id. */
+        public tx_id: string;
 
-        /** StepResponse payload. */
-        public payload?: "submit_res";
+        /** KeyModification value. */
+        public value: Uint8Array;
+
+        /** KeyModification timestamp. */
+        public timestamp?: (google.protobuf.ITimestamp|null);
+
+        /** KeyModification is_delete. */
+        public is_delete: boolean;
 
         /**
-         * Creates a new StepResponse instance using the specified properties.
+         * Creates a new KeyModification instance using the specified properties.
          * @param [properties] Properties to set
-         * @returns StepResponse instance
+         * @returns KeyModification instance
          */
-        public static create(properties?: orderer.IStepResponse): orderer.StepResponse;
+        public static create(properties?: queryresult.IKeyModification): queryresult.KeyModification;
 
         /**
-         * Encodes the specified StepResponse message. Does not implicitly {@link orderer.StepResponse.verify|verify} messages.
-         * @param message StepResponse message or plain object to encode
+         * Encodes the specified KeyModification message. Does not implicitly {@link queryresult.KeyModification.verify|verify} messages.
+         * @param message KeyModification message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encode(message: orderer.IStepResponse, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: queryresult.IKeyModification, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Encodes the specified StepResponse message, length delimited. Does not implicitly {@link orderer.StepResponse.verify|verify} messages.
-         * @param message StepResponse message or plain object to encode
+         * Encodes the specified KeyModification message, length delimited. Does not implicitly {@link queryresult.KeyModification.verify|verify} messages.
+         * @param message KeyModification message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encodeDelimited(message: orderer.IStepResponse, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: queryresult.IKeyModification, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Decodes a StepResponse message from the specified reader or buffer.
+         * Decodes a KeyModification message from the specified reader or buffer.
          * @param reader Reader or buffer to decode from
          * @param [length] Message length if known beforehand
-         * @returns StepResponse
+         * @returns KeyModification
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.StepResponse;
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): queryresult.KeyModification;
 
         /**
-         * Decodes a StepResponse message from the specified reader or buffer, length delimited.
+         * Decodes a KeyModification message from the specified reader or buffer, length delimited.
          * @param reader Reader or buffer to decode from
-         * @returns StepResponse
+         * @returns KeyModification
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.StepResponse;
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): queryresult.KeyModification;
 
         /**
-         * Verifies a StepResponse message.
+         * Verifies a KeyModification message.
          * @param message Plain object to verify
          * @returns `null` if valid, otherwise the reason why it is not
          */
         public static verify(message: { [k: string]: any }): (string|null);
 
         /**
-         * Creates a StepResponse message from a plain object. Also converts values to their respective internal types.
+         * Creates a KeyModification message from a plain object. Also converts values to their respective internal types.
          * @param object Plain object
-         * @returns StepResponse
+         * @returns KeyModification
          */
-        public static fromObject(object: { [k: string]: any }): orderer.StepResponse;
+        public static fromObject(object: { [k: string]: any }): queryresult.KeyModification;
 
         /**
-         * Creates a plain object from a StepResponse message. Also converts values to other types if specified.
-         * @param message StepResponse
+         * Creates a plain object from a KeyModification message. Also converts values to other types if specified.
+         * @param message KeyModification
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: orderer.StepResponse, options?: $protobuf.IConversionOptions): { [k: string]: any };
+        public static toObject(message: queryresult.KeyModification, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
-         * Converts this StepResponse to JSON.
+         * Converts this KeyModification to JSON.
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
-    }
 
-    /** Properties of a ConsensusRequest. */
-    interface IConsensusRequest {
-
-        /** ConsensusRequest channel */
-        channel?: (string|null);
-
-        /** ConsensusRequest payload */
-        payload?: (Uint8Array|null);
-
-        /** ConsensusRequest metadata */
-        metadata?: (Uint8Array|null);
-    }
-
-    /** Represents a ConsensusRequest. */
-    class ConsensusRequest implements IConsensusRequest {
-
-        /**
-         * Constructs a new ConsensusRequest.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: orderer.IConsensusRequest);
-
-        /** ConsensusRequest channel. */
-        public channel: string;
-
-        /** ConsensusRequest payload. */
-        public payload: Uint8Array;
-
-        /** ConsensusRequest metadata. */
-        public metadata: Uint8Array;
-
-        /**
-         * Creates a new ConsensusRequest instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns ConsensusRequest instance
-         */
-        public static create(properties?: orderer.IConsensusRequest): orderer.ConsensusRequest;
-
-        /**
-         * Encodes the specified ConsensusRequest message. Does not implicitly {@link orderer.ConsensusRequest.verify|verify} messages.
-         * @param message ConsensusRequest message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: orderer.IConsensusRequest, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified ConsensusRequest message, length delimited. Does not implicitly {@link orderer.ConsensusRequest.verify|verify} messages.
-         * @param message ConsensusRequest message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: orderer.IConsensusRequest, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a ConsensusRequest message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns ConsensusRequest
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.ConsensusRequest;
-
-        /**
-         * Decodes a ConsensusRequest message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns ConsensusRequest
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.ConsensusRequest;
-
-        /**
-         * Verifies a ConsensusRequest message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a ConsensusRequest message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns ConsensusRequest
-         */
-        public static fromObject(object: { [k: string]: any }): orderer.ConsensusRequest;
-
-        /**
-         * Creates a plain object from a ConsensusRequest message. Also converts values to other types if specified.
-         * @param message ConsensusRequest
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: orderer.ConsensusRequest, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this ConsensusRequest to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a SubmitRequest. */
-    interface ISubmitRequest {
-
-        /** SubmitRequest channel */
-        channel?: (string|null);
-
-        /** SubmitRequest last_validation_seq */
-        last_validation_seq?: (number|Long|null);
-
-        /** SubmitRequest payload */
-        payload?: (common.IEnvelope|null);
-    }
-
-    /** Represents a SubmitRequest. */
-    class SubmitRequest implements ISubmitRequest {
-
-        /**
-         * Constructs a new SubmitRequest.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: orderer.ISubmitRequest);
-
-        /** SubmitRequest channel. */
-        public channel: string;
-
-        /** SubmitRequest last_validation_seq. */
-        public last_validation_seq: (number|Long);
-
-        /** SubmitRequest payload. */
-        public payload?: (common.IEnvelope|null);
-
-        /**
-         * Creates a new SubmitRequest instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns SubmitRequest instance
-         */
-        public static create(properties?: orderer.ISubmitRequest): orderer.SubmitRequest;
-
-        /**
-         * Encodes the specified SubmitRequest message. Does not implicitly {@link orderer.SubmitRequest.verify|verify} messages.
-         * @param message SubmitRequest message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: orderer.ISubmitRequest, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified SubmitRequest message, length delimited. Does not implicitly {@link orderer.SubmitRequest.verify|verify} messages.
-         * @param message SubmitRequest message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: orderer.ISubmitRequest, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a SubmitRequest message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns SubmitRequest
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.SubmitRequest;
-
-        /**
-         * Decodes a SubmitRequest message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns SubmitRequest
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.SubmitRequest;
-
-        /**
-         * Verifies a SubmitRequest message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a SubmitRequest message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns SubmitRequest
-         */
-        public static fromObject(object: { [k: string]: any }): orderer.SubmitRequest;
-
-        /**
-         * Creates a plain object from a SubmitRequest message. Also converts values to other types if specified.
-         * @param message SubmitRequest
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: orderer.SubmitRequest, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this SubmitRequest to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a SubmitResponse. */
-    interface ISubmitResponse {
-
-        /** SubmitResponse channel */
-        channel?: (string|null);
-
-        /** SubmitResponse status */
-        status?: (common.Status|null);
-
-        /** SubmitResponse info */
-        info?: (string|null);
-    }
-
-    /** Represents a SubmitResponse. */
-    class SubmitResponse implements ISubmitResponse {
-
-        /**
-         * Constructs a new SubmitResponse.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: orderer.ISubmitResponse);
-
-        /** SubmitResponse channel. */
-        public channel: string;
-
-        /** SubmitResponse status. */
-        public status: common.Status;
-
-        /** SubmitResponse info. */
-        public info: string;
-
-        /**
-         * Creates a new SubmitResponse instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns SubmitResponse instance
-         */
-        public static create(properties?: orderer.ISubmitResponse): orderer.SubmitResponse;
-
-        /**
-         * Encodes the specified SubmitResponse message. Does not implicitly {@link orderer.SubmitResponse.verify|verify} messages.
-         * @param message SubmitResponse message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: orderer.ISubmitResponse, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified SubmitResponse message, length delimited. Does not implicitly {@link orderer.SubmitResponse.verify|verify} messages.
-         * @param message SubmitResponse message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: orderer.ISubmitResponse, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a SubmitResponse message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns SubmitResponse
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.SubmitResponse;
-
-        /**
-         * Decodes a SubmitResponse message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns SubmitResponse
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.SubmitResponse;
-
-        /**
-         * Verifies a SubmitResponse message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a SubmitResponse message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns SubmitResponse
-         */
-        public static fromObject(object: { [k: string]: any }): orderer.SubmitResponse;
-
-        /**
-         * Creates a plain object from a SubmitResponse message. Also converts values to other types if specified.
-         * @param message SubmitResponse
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: orderer.SubmitResponse, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this SubmitResponse to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a ConsensusType. */
-    interface IConsensusType {
-
-        /** ConsensusType type */
-        type?: (string|null);
-
-        /** ConsensusType metadata */
-        metadata?: (Uint8Array|null);
-
-        /** ConsensusType state */
-        state?: (orderer.ConsensusType.State|null);
-    }
-
-    /** Represents a ConsensusType. */
-    class ConsensusType implements IConsensusType {
-
-        /**
-         * Constructs a new ConsensusType.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: orderer.IConsensusType);
-
-        /** ConsensusType type. */
-        public type: string;
-
-        /** ConsensusType metadata. */
-        public metadata: Uint8Array;
-
-        /** ConsensusType state. */
-        public state: orderer.ConsensusType.State;
-
-        /**
-         * Creates a new ConsensusType instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns ConsensusType instance
-         */
-        public static create(properties?: orderer.IConsensusType): orderer.ConsensusType;
-
-        /**
-         * Encodes the specified ConsensusType message. Does not implicitly {@link orderer.ConsensusType.verify|verify} messages.
-         * @param message ConsensusType message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: orderer.IConsensusType, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified ConsensusType message, length delimited. Does not implicitly {@link orderer.ConsensusType.verify|verify} messages.
-         * @param message ConsensusType message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: orderer.IConsensusType, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a ConsensusType message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns ConsensusType
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.ConsensusType;
-
-        /**
-         * Decodes a ConsensusType message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns ConsensusType
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.ConsensusType;
-
-        /**
-         * Verifies a ConsensusType message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a ConsensusType message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns ConsensusType
-         */
-        public static fromObject(object: { [k: string]: any }): orderer.ConsensusType;
-
-        /**
-         * Creates a plain object from a ConsensusType message. Also converts values to other types if specified.
-         * @param message ConsensusType
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: orderer.ConsensusType, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this ConsensusType to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    namespace ConsensusType {
-
-        /** State enum. */
-        enum State {
-            STATE_NORMAL = 0,
-            STATE_MAINTENANCE = 1
-        }
-    }
-
-    /** Properties of a BatchSize. */
-    interface IBatchSize {
-
-        /** BatchSize max_message_count */
-        max_message_count?: (number|null);
-
-        /** BatchSize absolute_max_bytes */
-        absolute_max_bytes?: (number|null);
-
-        /** BatchSize preferred_max_bytes */
-        preferred_max_bytes?: (number|null);
-    }
-
-    /** Represents a BatchSize. */
-    class BatchSize implements IBatchSize {
-
-        /**
-         * Constructs a new BatchSize.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: orderer.IBatchSize);
-
-        /** BatchSize max_message_count. */
-        public max_message_count: number;
-
-        /** BatchSize absolute_max_bytes. */
-        public absolute_max_bytes: number;
-
-        /** BatchSize preferred_max_bytes. */
-        public preferred_max_bytes: number;
-
-        /**
-         * Creates a new BatchSize instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns BatchSize instance
-         */
-        public static create(properties?: orderer.IBatchSize): orderer.BatchSize;
-
-        /**
-         * Encodes the specified BatchSize message. Does not implicitly {@link orderer.BatchSize.verify|verify} messages.
-         * @param message BatchSize message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: orderer.IBatchSize, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified BatchSize message, length delimited. Does not implicitly {@link orderer.BatchSize.verify|verify} messages.
-         * @param message BatchSize message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: orderer.IBatchSize, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a BatchSize message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns BatchSize
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.BatchSize;
-
-        /**
-         * Decodes a BatchSize message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns BatchSize
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.BatchSize;
-
-        /**
-         * Verifies a BatchSize message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a BatchSize message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns BatchSize
-         */
-        public static fromObject(object: { [k: string]: any }): orderer.BatchSize;
-
-        /**
-         * Creates a plain object from a BatchSize message. Also converts values to other types if specified.
-         * @param message BatchSize
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: orderer.BatchSize, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this BatchSize to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a BatchTimeout. */
-    interface IBatchTimeout {
-
-        /** BatchTimeout timeout */
-        timeout?: (string|null);
-    }
-
-    /** Represents a BatchTimeout. */
-    class BatchTimeout implements IBatchTimeout {
-
-        /**
-         * Constructs a new BatchTimeout.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: orderer.IBatchTimeout);
-
-        /** BatchTimeout timeout. */
-        public timeout: string;
-
-        /**
-         * Creates a new BatchTimeout instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns BatchTimeout instance
-         */
-        public static create(properties?: orderer.IBatchTimeout): orderer.BatchTimeout;
-
-        /**
-         * Encodes the specified BatchTimeout message. Does not implicitly {@link orderer.BatchTimeout.verify|verify} messages.
-         * @param message BatchTimeout message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: orderer.IBatchTimeout, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified BatchTimeout message, length delimited. Does not implicitly {@link orderer.BatchTimeout.verify|verify} messages.
-         * @param message BatchTimeout message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: orderer.IBatchTimeout, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a BatchTimeout message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns BatchTimeout
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.BatchTimeout;
-
-        /**
-         * Decodes a BatchTimeout message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns BatchTimeout
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.BatchTimeout;
-
-        /**
-         * Verifies a BatchTimeout message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a BatchTimeout message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns BatchTimeout
-         */
-        public static fromObject(object: { [k: string]: any }): orderer.BatchTimeout;
-
-        /**
-         * Creates a plain object from a BatchTimeout message. Also converts values to other types if specified.
-         * @param message BatchTimeout
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: orderer.BatchTimeout, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this BatchTimeout to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a KafkaBrokers. */
-    interface IKafkaBrokers {
-
-        /** KafkaBrokers brokers */
-        brokers?: (string[]|null);
-    }
-
-    /** Represents a KafkaBrokers. */
-    class KafkaBrokers implements IKafkaBrokers {
-
-        /**
-         * Constructs a new KafkaBrokers.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: orderer.IKafkaBrokers);
-
-        /** KafkaBrokers brokers. */
-        public brokers: string[];
-
-        /**
-         * Creates a new KafkaBrokers instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns KafkaBrokers instance
-         */
-        public static create(properties?: orderer.IKafkaBrokers): orderer.KafkaBrokers;
-
-        /**
-         * Encodes the specified KafkaBrokers message. Does not implicitly {@link orderer.KafkaBrokers.verify|verify} messages.
-         * @param message KafkaBrokers message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: orderer.IKafkaBrokers, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified KafkaBrokers message, length delimited. Does not implicitly {@link orderer.KafkaBrokers.verify|verify} messages.
-         * @param message KafkaBrokers message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: orderer.IKafkaBrokers, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a KafkaBrokers message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns KafkaBrokers
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.KafkaBrokers;
-
-        /**
-         * Decodes a KafkaBrokers message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns KafkaBrokers
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.KafkaBrokers;
-
-        /**
-         * Verifies a KafkaBrokers message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a KafkaBrokers message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns KafkaBrokers
-         */
-        public static fromObject(object: { [k: string]: any }): orderer.KafkaBrokers;
-
-        /**
-         * Creates a plain object from a KafkaBrokers message. Also converts values to other types if specified.
-         * @param message KafkaBrokers
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: orderer.KafkaBrokers, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this KafkaBrokers to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a ChannelRestrictions. */
-    interface IChannelRestrictions {
-
-        /** ChannelRestrictions max_count */
-        max_count?: (number|Long|null);
-    }
-
-    /** Represents a ChannelRestrictions. */
-    class ChannelRestrictions implements IChannelRestrictions {
-
-        /**
-         * Constructs a new ChannelRestrictions.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: orderer.IChannelRestrictions);
-
-        /** ChannelRestrictions max_count. */
-        public max_count: (number|Long);
-
-        /**
-         * Creates a new ChannelRestrictions instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns ChannelRestrictions instance
-         */
-        public static create(properties?: orderer.IChannelRestrictions): orderer.ChannelRestrictions;
-
-        /**
-         * Encodes the specified ChannelRestrictions message. Does not implicitly {@link orderer.ChannelRestrictions.verify|verify} messages.
-         * @param message ChannelRestrictions message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: orderer.IChannelRestrictions, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified ChannelRestrictions message, length delimited. Does not implicitly {@link orderer.ChannelRestrictions.verify|verify} messages.
-         * @param message ChannelRestrictions message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: orderer.IChannelRestrictions, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a ChannelRestrictions message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns ChannelRestrictions
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.ChannelRestrictions;
-
-        /**
-         * Decodes a ChannelRestrictions message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns ChannelRestrictions
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.ChannelRestrictions;
-
-        /**
-         * Verifies a ChannelRestrictions message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a ChannelRestrictions message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns ChannelRestrictions
-         */
-        public static fromObject(object: { [k: string]: any }): orderer.ChannelRestrictions;
-
-        /**
-         * Creates a plain object from a ChannelRestrictions message. Also converts values to other types if specified.
-         * @param message ChannelRestrictions
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: orderer.ChannelRestrictions, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this ChannelRestrictions to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a KafkaMessage. */
-    interface IKafkaMessage {
-
-        /** KafkaMessage regular */
-        regular?: (orderer.IKafkaMessageRegular|null);
-
-        /** KafkaMessage time_to_cut */
-        time_to_cut?: (orderer.IKafkaMessageTimeToCut|null);
-
-        /** KafkaMessage connect */
-        connect?: (orderer.IKafkaMessageConnect|null);
-    }
-
-    /** Represents a KafkaMessage. */
-    class KafkaMessage implements IKafkaMessage {
-
-        /**
-         * Constructs a new KafkaMessage.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: orderer.IKafkaMessage);
-
-        /** KafkaMessage regular. */
-        public regular?: (orderer.IKafkaMessageRegular|null);
-
-        /** KafkaMessage time_to_cut. */
-        public time_to_cut?: (orderer.IKafkaMessageTimeToCut|null);
-
-        /** KafkaMessage connect. */
-        public connect?: (orderer.IKafkaMessageConnect|null);
-
-        /** KafkaMessage Type. */
-        public Type?: ("regular"|"time_to_cut"|"connect");
-
-        /**
-         * Creates a new KafkaMessage instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns KafkaMessage instance
-         */
-        public static create(properties?: orderer.IKafkaMessage): orderer.KafkaMessage;
-
-        /**
-         * Encodes the specified KafkaMessage message. Does not implicitly {@link orderer.KafkaMessage.verify|verify} messages.
-         * @param message KafkaMessage message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: orderer.IKafkaMessage, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified KafkaMessage message, length delimited. Does not implicitly {@link orderer.KafkaMessage.verify|verify} messages.
-         * @param message KafkaMessage message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: orderer.IKafkaMessage, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a KafkaMessage message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns KafkaMessage
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.KafkaMessage;
-
-        /**
-         * Decodes a KafkaMessage message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns KafkaMessage
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.KafkaMessage;
-
-        /**
-         * Verifies a KafkaMessage message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a KafkaMessage message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns KafkaMessage
-         */
-        public static fromObject(object: { [k: string]: any }): orderer.KafkaMessage;
-
-        /**
-         * Creates a plain object from a KafkaMessage message. Also converts values to other types if specified.
-         * @param message KafkaMessage
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: orderer.KafkaMessage, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this KafkaMessage to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a KafkaMessageRegular. */
-    interface IKafkaMessageRegular {
-
-        /** KafkaMessageRegular payload */
-        payload?: (Uint8Array|null);
-
-        /** KafkaMessageRegular config_seq */
-        config_seq?: (number|Long|null);
-
-        /** KafkaMessageRegular class */
-        "class"?: (orderer.KafkaMessageRegular.Class|null);
-
-        /** KafkaMessageRegular original_offset */
-        original_offset?: (number|Long|null);
-    }
-
-    /** Represents a KafkaMessageRegular. */
-    class KafkaMessageRegular implements IKafkaMessageRegular {
-
-        /**
-         * Constructs a new KafkaMessageRegular.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: orderer.IKafkaMessageRegular);
-
-        /** KafkaMessageRegular payload. */
-        public payload: Uint8Array;
-
-        /** KafkaMessageRegular config_seq. */
-        public config_seq: (number|Long);
-
-        /** KafkaMessageRegular class. */
-        public class: orderer.KafkaMessageRegular.Class;
-
-        /** KafkaMessageRegular original_offset. */
-        public original_offset: (number|Long);
-
-        /**
-         * Creates a new KafkaMessageRegular instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns KafkaMessageRegular instance
-         */
-        public static create(properties?: orderer.IKafkaMessageRegular): orderer.KafkaMessageRegular;
-
-        /**
-         * Encodes the specified KafkaMessageRegular message. Does not implicitly {@link orderer.KafkaMessageRegular.verify|verify} messages.
-         * @param message KafkaMessageRegular message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: orderer.IKafkaMessageRegular, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified KafkaMessageRegular message, length delimited. Does not implicitly {@link orderer.KafkaMessageRegular.verify|verify} messages.
-         * @param message KafkaMessageRegular message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: orderer.IKafkaMessageRegular, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a KafkaMessageRegular message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns KafkaMessageRegular
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.KafkaMessageRegular;
-
-        /**
-         * Decodes a KafkaMessageRegular message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns KafkaMessageRegular
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.KafkaMessageRegular;
-
-        /**
-         * Verifies a KafkaMessageRegular message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a KafkaMessageRegular message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns KafkaMessageRegular
-         */
-        public static fromObject(object: { [k: string]: any }): orderer.KafkaMessageRegular;
-
-        /**
-         * Creates a plain object from a KafkaMessageRegular message. Also converts values to other types if specified.
-         * @param message KafkaMessageRegular
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: orderer.KafkaMessageRegular, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this KafkaMessageRegular to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    namespace KafkaMessageRegular {
-
-        /** Class enum. */
-        enum Class {
-            UNKNOWN = 0,
-            NORMAL = 1,
-            CONFIG = 2
-        }
-    }
-
-    /** Properties of a KafkaMessageTimeToCut. */
-    interface IKafkaMessageTimeToCut {
-
-        /** KafkaMessageTimeToCut block_number */
-        block_number?: (number|Long|null);
-    }
-
-    /** Represents a KafkaMessageTimeToCut. */
-    class KafkaMessageTimeToCut implements IKafkaMessageTimeToCut {
-
-        /**
-         * Constructs a new KafkaMessageTimeToCut.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: orderer.IKafkaMessageTimeToCut);
-
-        /** KafkaMessageTimeToCut block_number. */
-        public block_number: (number|Long);
-
-        /**
-         * Creates a new KafkaMessageTimeToCut instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns KafkaMessageTimeToCut instance
-         */
-        public static create(properties?: orderer.IKafkaMessageTimeToCut): orderer.KafkaMessageTimeToCut;
-
-        /**
-         * Encodes the specified KafkaMessageTimeToCut message. Does not implicitly {@link orderer.KafkaMessageTimeToCut.verify|verify} messages.
-         * @param message KafkaMessageTimeToCut message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: orderer.IKafkaMessageTimeToCut, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified KafkaMessageTimeToCut message, length delimited. Does not implicitly {@link orderer.KafkaMessageTimeToCut.verify|verify} messages.
-         * @param message KafkaMessageTimeToCut message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: orderer.IKafkaMessageTimeToCut, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a KafkaMessageTimeToCut message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns KafkaMessageTimeToCut
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.KafkaMessageTimeToCut;
-
-        /**
-         * Decodes a KafkaMessageTimeToCut message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns KafkaMessageTimeToCut
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.KafkaMessageTimeToCut;
-
-        /**
-         * Verifies a KafkaMessageTimeToCut message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a KafkaMessageTimeToCut message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns KafkaMessageTimeToCut
-         */
-        public static fromObject(object: { [k: string]: any }): orderer.KafkaMessageTimeToCut;
-
-        /**
-         * Creates a plain object from a KafkaMessageTimeToCut message. Also converts values to other types if specified.
-         * @param message KafkaMessageTimeToCut
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: orderer.KafkaMessageTimeToCut, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this KafkaMessageTimeToCut to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a KafkaMessageConnect. */
-    interface IKafkaMessageConnect {
-
-        /** KafkaMessageConnect payload */
-        payload?: (Uint8Array|null);
-    }
-
-    /** Represents a KafkaMessageConnect. */
-    class KafkaMessageConnect implements IKafkaMessageConnect {
-
-        /**
-         * Constructs a new KafkaMessageConnect.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: orderer.IKafkaMessageConnect);
-
-        /** KafkaMessageConnect payload. */
-        public payload: Uint8Array;
-
-        /**
-         * Creates a new KafkaMessageConnect instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns KafkaMessageConnect instance
-         */
-        public static create(properties?: orderer.IKafkaMessageConnect): orderer.KafkaMessageConnect;
-
-        /**
-         * Encodes the specified KafkaMessageConnect message. Does not implicitly {@link orderer.KafkaMessageConnect.verify|verify} messages.
-         * @param message KafkaMessageConnect message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: orderer.IKafkaMessageConnect, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified KafkaMessageConnect message, length delimited. Does not implicitly {@link orderer.KafkaMessageConnect.verify|verify} messages.
-         * @param message KafkaMessageConnect message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: orderer.IKafkaMessageConnect, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a KafkaMessageConnect message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns KafkaMessageConnect
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.KafkaMessageConnect;
-
-        /**
-         * Decodes a KafkaMessageConnect message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns KafkaMessageConnect
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.KafkaMessageConnect;
-
-        /**
-         * Verifies a KafkaMessageConnect message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a KafkaMessageConnect message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns KafkaMessageConnect
-         */
-        public static fromObject(object: { [k: string]: any }): orderer.KafkaMessageConnect;
-
-        /**
-         * Creates a plain object from a KafkaMessageConnect message. Also converts values to other types if specified.
-         * @param message KafkaMessageConnect
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: orderer.KafkaMessageConnect, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this KafkaMessageConnect to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a KafkaMetadata. */
-    interface IKafkaMetadata {
-
-        /** KafkaMetadata last_offset_persisted */
-        last_offset_persisted?: (number|Long|null);
-
-        /** KafkaMetadata last_original_offset_processed */
-        last_original_offset_processed?: (number|Long|null);
-
-        /** KafkaMetadata last_resubmitted_config_offset */
-        last_resubmitted_config_offset?: (number|Long|null);
-    }
-
-    /** Represents a KafkaMetadata. */
-    class KafkaMetadata implements IKafkaMetadata {
-
-        /**
-         * Constructs a new KafkaMetadata.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: orderer.IKafkaMetadata);
-
-        /** KafkaMetadata last_offset_persisted. */
-        public last_offset_persisted: (number|Long);
-
-        /** KafkaMetadata last_original_offset_processed. */
-        public last_original_offset_processed: (number|Long);
-
-        /** KafkaMetadata last_resubmitted_config_offset. */
-        public last_resubmitted_config_offset: (number|Long);
-
-        /**
-         * Creates a new KafkaMetadata instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns KafkaMetadata instance
-         */
-        public static create(properties?: orderer.IKafkaMetadata): orderer.KafkaMetadata;
-
-        /**
-         * Encodes the specified KafkaMetadata message. Does not implicitly {@link orderer.KafkaMetadata.verify|verify} messages.
-         * @param message KafkaMetadata message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: orderer.IKafkaMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified KafkaMetadata message, length delimited. Does not implicitly {@link orderer.KafkaMetadata.verify|verify} messages.
-         * @param message KafkaMetadata message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: orderer.IKafkaMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a KafkaMetadata message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns KafkaMetadata
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.KafkaMetadata;
-
-        /**
-         * Decodes a KafkaMetadata message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns KafkaMetadata
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.KafkaMetadata;
-
-        /**
-         * Verifies a KafkaMetadata message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a KafkaMetadata message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns KafkaMetadata
-         */
-        public static fromObject(object: { [k: string]: any }): orderer.KafkaMetadata;
-
-        /**
-         * Creates a plain object from a KafkaMetadata message. Also converts values to other types if specified.
-         * @param message KafkaMetadata
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: orderer.KafkaMetadata, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this KafkaMetadata to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a BroadcastResponse. */
-    interface IBroadcastResponse {
-
-        /** BroadcastResponse status */
-        status?: (common.Status|null);
-
-        /** BroadcastResponse info */
-        info?: (string|null);
-    }
-
-    /** Represents a BroadcastResponse. */
-    class BroadcastResponse implements IBroadcastResponse {
-
-        /**
-         * Constructs a new BroadcastResponse.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: orderer.IBroadcastResponse);
-
-        /** BroadcastResponse status. */
-        public status: common.Status;
-
-        /** BroadcastResponse info. */
-        public info: string;
-
-        /**
-         * Creates a new BroadcastResponse instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns BroadcastResponse instance
-         */
-        public static create(properties?: orderer.IBroadcastResponse): orderer.BroadcastResponse;
-
-        /**
-         * Encodes the specified BroadcastResponse message. Does not implicitly {@link orderer.BroadcastResponse.verify|verify} messages.
-         * @param message BroadcastResponse message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: orderer.IBroadcastResponse, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified BroadcastResponse message, length delimited. Does not implicitly {@link orderer.BroadcastResponse.verify|verify} messages.
-         * @param message BroadcastResponse message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: orderer.IBroadcastResponse, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a BroadcastResponse message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns BroadcastResponse
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.BroadcastResponse;
-
-        /**
-         * Decodes a BroadcastResponse message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns BroadcastResponse
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.BroadcastResponse;
-
-        /**
-         * Verifies a BroadcastResponse message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a BroadcastResponse message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns BroadcastResponse
-         */
-        public static fromObject(object: { [k: string]: any }): orderer.BroadcastResponse;
-
-        /**
-         * Creates a plain object from a BroadcastResponse message. Also converts values to other types if specified.
-         * @param message BroadcastResponse
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: orderer.BroadcastResponse, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this BroadcastResponse to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a SeekNewest. */
-    interface ISeekNewest {
-    }
-
-    /** Represents a SeekNewest. */
-    class SeekNewest implements ISeekNewest {
-
-        /**
-         * Constructs a new SeekNewest.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: orderer.ISeekNewest);
-
-        /**
-         * Creates a new SeekNewest instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns SeekNewest instance
-         */
-        public static create(properties?: orderer.ISeekNewest): orderer.SeekNewest;
-
-        /**
-         * Encodes the specified SeekNewest message. Does not implicitly {@link orderer.SeekNewest.verify|verify} messages.
-         * @param message SeekNewest message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: orderer.ISeekNewest, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified SeekNewest message, length delimited. Does not implicitly {@link orderer.SeekNewest.verify|verify} messages.
-         * @param message SeekNewest message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: orderer.ISeekNewest, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a SeekNewest message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns SeekNewest
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.SeekNewest;
-
-        /**
-         * Decodes a SeekNewest message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns SeekNewest
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.SeekNewest;
-
-        /**
-         * Verifies a SeekNewest message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a SeekNewest message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns SeekNewest
-         */
-        public static fromObject(object: { [k: string]: any }): orderer.SeekNewest;
-
-        /**
-         * Creates a plain object from a SeekNewest message. Also converts values to other types if specified.
-         * @param message SeekNewest
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: orderer.SeekNewest, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this SeekNewest to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a SeekOldest. */
-    interface ISeekOldest {
-    }
-
-    /** Represents a SeekOldest. */
-    class SeekOldest implements ISeekOldest {
-
-        /**
-         * Constructs a new SeekOldest.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: orderer.ISeekOldest);
-
-        /**
-         * Creates a new SeekOldest instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns SeekOldest instance
-         */
-        public static create(properties?: orderer.ISeekOldest): orderer.SeekOldest;
-
-        /**
-         * Encodes the specified SeekOldest message. Does not implicitly {@link orderer.SeekOldest.verify|verify} messages.
-         * @param message SeekOldest message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: orderer.ISeekOldest, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified SeekOldest message, length delimited. Does not implicitly {@link orderer.SeekOldest.verify|verify} messages.
-         * @param message SeekOldest message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: orderer.ISeekOldest, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a SeekOldest message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns SeekOldest
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.SeekOldest;
-
-        /**
-         * Decodes a SeekOldest message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns SeekOldest
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.SeekOldest;
-
-        /**
-         * Verifies a SeekOldest message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a SeekOldest message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns SeekOldest
-         */
-        public static fromObject(object: { [k: string]: any }): orderer.SeekOldest;
-
-        /**
-         * Creates a plain object from a SeekOldest message. Also converts values to other types if specified.
-         * @param message SeekOldest
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: orderer.SeekOldest, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this SeekOldest to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a SeekSpecified. */
-    interface ISeekSpecified {
-
-        /** SeekSpecified number */
-        number?: (number|Long|null);
-    }
-
-    /** Represents a SeekSpecified. */
-    class SeekSpecified implements ISeekSpecified {
-
-        /**
-         * Constructs a new SeekSpecified.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: orderer.ISeekSpecified);
-
-        /** SeekSpecified number. */
-        public number: (number|Long);
-
-        /**
-         * Creates a new SeekSpecified instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns SeekSpecified instance
-         */
-        public static create(properties?: orderer.ISeekSpecified): orderer.SeekSpecified;
-
-        /**
-         * Encodes the specified SeekSpecified message. Does not implicitly {@link orderer.SeekSpecified.verify|verify} messages.
-         * @param message SeekSpecified message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: orderer.ISeekSpecified, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified SeekSpecified message, length delimited. Does not implicitly {@link orderer.SeekSpecified.verify|verify} messages.
-         * @param message SeekSpecified message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: orderer.ISeekSpecified, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a SeekSpecified message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns SeekSpecified
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.SeekSpecified;
-
-        /**
-         * Decodes a SeekSpecified message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns SeekSpecified
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.SeekSpecified;
-
-        /**
-         * Verifies a SeekSpecified message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a SeekSpecified message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns SeekSpecified
-         */
-        public static fromObject(object: { [k: string]: any }): orderer.SeekSpecified;
-
-        /**
-         * Creates a plain object from a SeekSpecified message. Also converts values to other types if specified.
-         * @param message SeekSpecified
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: orderer.SeekSpecified, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this SeekSpecified to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a SeekPosition. */
-    interface ISeekPosition {
-
-        /** SeekPosition newest */
-        newest?: (orderer.ISeekNewest|null);
-
-        /** SeekPosition oldest */
-        oldest?: (orderer.ISeekOldest|null);
-
-        /** SeekPosition specified */
-        specified?: (orderer.ISeekSpecified|null);
-    }
-
-    /** Represents a SeekPosition. */
-    class SeekPosition implements ISeekPosition {
-
-        /**
-         * Constructs a new SeekPosition.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: orderer.ISeekPosition);
-
-        /** SeekPosition newest. */
-        public newest?: (orderer.ISeekNewest|null);
-
-        /** SeekPosition oldest. */
-        public oldest?: (orderer.ISeekOldest|null);
-
-        /** SeekPosition specified. */
-        public specified?: (orderer.ISeekSpecified|null);
-
-        /** SeekPosition Type. */
-        public Type?: ("newest"|"oldest"|"specified");
-
-        /**
-         * Creates a new SeekPosition instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns SeekPosition instance
-         */
-        public static create(properties?: orderer.ISeekPosition): orderer.SeekPosition;
-
-        /**
-         * Encodes the specified SeekPosition message. Does not implicitly {@link orderer.SeekPosition.verify|verify} messages.
-         * @param message SeekPosition message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: orderer.ISeekPosition, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified SeekPosition message, length delimited. Does not implicitly {@link orderer.SeekPosition.verify|verify} messages.
-         * @param message SeekPosition message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: orderer.ISeekPosition, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a SeekPosition message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns SeekPosition
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.SeekPosition;
-
-        /**
-         * Decodes a SeekPosition message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns SeekPosition
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.SeekPosition;
-
-        /**
-         * Verifies a SeekPosition message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a SeekPosition message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns SeekPosition
-         */
-        public static fromObject(object: { [k: string]: any }): orderer.SeekPosition;
-
-        /**
-         * Creates a plain object from a SeekPosition message. Also converts values to other types if specified.
-         * @param message SeekPosition
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: orderer.SeekPosition, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this SeekPosition to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a SeekInfo. */
-    interface ISeekInfo {
-
-        /** SeekInfo start */
-        start?: (orderer.ISeekPosition|null);
-
-        /** SeekInfo stop */
-        stop?: (orderer.ISeekPosition|null);
-
-        /** SeekInfo behavior */
-        behavior?: (orderer.SeekInfo.SeekBehavior|null);
-
-        /** SeekInfo error_response */
-        error_response?: (orderer.SeekInfo.SeekErrorResponse|null);
-    }
-
-    /** Represents a SeekInfo. */
-    class SeekInfo implements ISeekInfo {
-
-        /**
-         * Constructs a new SeekInfo.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: orderer.ISeekInfo);
-
-        /** SeekInfo start. */
-        public start?: (orderer.ISeekPosition|null);
-
-        /** SeekInfo stop. */
-        public stop?: (orderer.ISeekPosition|null);
-
-        /** SeekInfo behavior. */
-        public behavior: orderer.SeekInfo.SeekBehavior;
-
-        /** SeekInfo error_response. */
-        public error_response: orderer.SeekInfo.SeekErrorResponse;
-
-        /**
-         * Creates a new SeekInfo instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns SeekInfo instance
-         */
-        public static create(properties?: orderer.ISeekInfo): orderer.SeekInfo;
-
-        /**
-         * Encodes the specified SeekInfo message. Does not implicitly {@link orderer.SeekInfo.verify|verify} messages.
-         * @param message SeekInfo message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: orderer.ISeekInfo, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified SeekInfo message, length delimited. Does not implicitly {@link orderer.SeekInfo.verify|verify} messages.
-         * @param message SeekInfo message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: orderer.ISeekInfo, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a SeekInfo message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns SeekInfo
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.SeekInfo;
-
-        /**
-         * Decodes a SeekInfo message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns SeekInfo
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.SeekInfo;
-
-        /**
-         * Verifies a SeekInfo message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a SeekInfo message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns SeekInfo
-         */
-        public static fromObject(object: { [k: string]: any }): orderer.SeekInfo;
-
-        /**
-         * Creates a plain object from a SeekInfo message. Also converts values to other types if specified.
-         * @param message SeekInfo
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: orderer.SeekInfo, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this SeekInfo to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    namespace SeekInfo {
-
-        /** SeekBehavior enum. */
-        enum SeekBehavior {
-            BLOCK_UNTIL_READY = 0,
-            FAIL_IF_NOT_READY = 1
-        }
-
-        /** SeekErrorResponse enum. */
-        enum SeekErrorResponse {
-            STRICT = 0,
-            BEST_EFFORT = 1
-        }
-    }
-
-    /** Properties of a DeliverResponse. */
-    interface IDeliverResponse {
-
-        /** DeliverResponse status */
-        status?: (common.Status|null);
-
-        /** DeliverResponse block */
-        block?: (common.IBlock|null);
-    }
-
-    /** Represents a DeliverResponse. */
-    class DeliverResponse implements IDeliverResponse {
-
-        /**
-         * Constructs a new DeliverResponse.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: orderer.IDeliverResponse);
-
-        /** DeliverResponse status. */
-        public status?: (common.Status|null);
-
-        /** DeliverResponse block. */
-        public block?: (common.IBlock|null);
-
-        /** DeliverResponse Type. */
-        public Type?: ("status"|"block");
-
-        /**
-         * Creates a new DeliverResponse instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns DeliverResponse instance
-         */
-        public static create(properties?: orderer.IDeliverResponse): orderer.DeliverResponse;
-
-        /**
-         * Encodes the specified DeliverResponse message. Does not implicitly {@link orderer.DeliverResponse.verify|verify} messages.
-         * @param message DeliverResponse message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: orderer.IDeliverResponse, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified DeliverResponse message, length delimited. Does not implicitly {@link orderer.DeliverResponse.verify|verify} messages.
-         * @param message DeliverResponse message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: orderer.IDeliverResponse, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a DeliverResponse message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns DeliverResponse
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): orderer.DeliverResponse;
-
-        /**
-         * Decodes a DeliverResponse message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns DeliverResponse
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): orderer.DeliverResponse;
-
-        /**
-         * Verifies a DeliverResponse message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a DeliverResponse message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns DeliverResponse
-         */
-        public static fromObject(object: { [k: string]: any }): orderer.DeliverResponse;
-
-        /**
-         * Creates a plain object from a DeliverResponse message. Also converts values to other types if specified.
-         * @param message DeliverResponse
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: orderer.DeliverResponse, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this DeliverResponse to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Represents an AtomicBroadcast */
-    class AtomicBroadcast extends $protobuf.rpc.Service {
-
-        /**
-         * Constructs a new AtomicBroadcast service.
-         * @param rpcImpl RPC implementation
-         * @param [requestDelimited=false] Whether requests are length-delimited
-         * @param [responseDelimited=false] Whether responses are length-delimited
-         */
-        constructor(rpcImpl: $protobuf.RPCImpl, requestDelimited?: boolean, responseDelimited?: boolean);
-
-        /**
-         * Creates new AtomicBroadcast service using the specified rpc implementation.
-         * @param rpcImpl RPC implementation
-         * @param [requestDelimited=false] Whether requests are length-delimited
-         * @param [responseDelimited=false] Whether responses are length-delimited
-         * @returns RPC service. Useful where requests and/or responses are streamed.
-         */
-        public static create(rpcImpl: $protobuf.RPCImpl, requestDelimited?: boolean, responseDelimited?: boolean): AtomicBroadcast;
-
-        /**
-         * Calls Broadcast.
-         * @param request Envelope message or plain object
-         * @param callback Node-style callback called with the error, if any, and BroadcastResponse
-         */
-        public broadcast(request: common.IEnvelope, callback: orderer.AtomicBroadcast.BroadcastCallback): void;
-
-        /**
-         * Calls Broadcast.
-         * @param request Envelope message or plain object
-         * @returns Promise
-         */
-        public broadcast(request: common.IEnvelope): Promise<orderer.BroadcastResponse>;
-
-        /**
-         * Calls Deliver.
-         * @param request Envelope message or plain object
-         * @param callback Node-style callback called with the error, if any, and DeliverResponse
-         */
-        public deliver(request: common.IEnvelope, callback: orderer.AtomicBroadcast.DeliverCallback): void;
-
-        /**
-         * Calls Deliver.
-         * @param request Envelope message or plain object
-         * @returns Promise
-         */
-        public deliver(request: common.IEnvelope): Promise<orderer.DeliverResponse>;
-    }
-
-    namespace AtomicBroadcast {
-
-        /**
-         * Callback as used by {@link orderer.AtomicBroadcast#broadcast}.
-         * @param error Error, if any
-         * @param [response] BroadcastResponse
-         */
-        type BroadcastCallback = (error: (Error|null), response?: orderer.BroadcastResponse) => void;
-
         /**
-         * Callback as used by {@link orderer.AtomicBroadcast#deliver}.
-         * @param error Error, if any
-         * @param [response] DeliverResponse
+         * Gets the default type url for KeyModification
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
          */
-        type DeliverCallback = (error: (Error|null), response?: orderer.DeliverResponse) => void;
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 }
 
-/** Namespace etcdraft. */
-export namespace etcdraft {
+/** Namespace kvrwset. */
+export namespace kvrwset {
 
-    /** Properties of a ConfigMetadata. */
-    interface IConfigMetadata {
+    /** Properties of a KVRWSet. */
+    interface IKVRWSet {
 
-        /** ConfigMetadata consenters */
-        consenters?: (etcdraft.IConsenter[]|null);
+        /** KVRWSet reads */
+        reads?: (kvrwset.IKVRead[]|null);
 
-        /** ConfigMetadata options */
-        options?: (etcdraft.IOptions|null);
+        /** KVRWSet range_queries_info */
+        range_queries_info?: (kvrwset.IRangeQueryInfo[]|null);
+
+        /** KVRWSet writes */
+        writes?: (kvrwset.IKVWrite[]|null);
+
+        /** KVRWSet metadata_writes */
+        metadata_writes?: (kvrwset.IKVMetadataWrite[]|null);
     }
 
-    /** Represents a ConfigMetadata. */
-    class ConfigMetadata implements IConfigMetadata {
+    /** Represents a KVRWSet. */
+    class KVRWSet implements IKVRWSet {
 
         /**
-         * Constructs a new ConfigMetadata.
+         * Constructs a new KVRWSet.
          * @param [properties] Properties to set
          */
-        constructor(properties?: etcdraft.IConfigMetadata);
+        constructor(properties?: kvrwset.IKVRWSet);
 
-        /** ConfigMetadata consenters. */
-        public consenters: etcdraft.IConsenter[];
+        /** KVRWSet reads. */
+        public reads: kvrwset.IKVRead[];
 
-        /** ConfigMetadata options. */
-        public options?: (etcdraft.IOptions|null);
+        /** KVRWSet range_queries_info. */
+        public range_queries_info: kvrwset.IRangeQueryInfo[];
+
+        /** KVRWSet writes. */
+        public writes: kvrwset.IKVWrite[];
+
+        /** KVRWSet metadata_writes. */
+        public metadata_writes: kvrwset.IKVMetadataWrite[];
 
         /**
-         * Creates a new ConfigMetadata instance using the specified properties.
+         * Creates a new KVRWSet instance using the specified properties.
          * @param [properties] Properties to set
-         * @returns ConfigMetadata instance
+         * @returns KVRWSet instance
          */
-        public static create(properties?: etcdraft.IConfigMetadata): etcdraft.ConfigMetadata;
+        public static create(properties?: kvrwset.IKVRWSet): kvrwset.KVRWSet;
 
         /**
-         * Encodes the specified ConfigMetadata message. Does not implicitly {@link etcdraft.ConfigMetadata.verify|verify} messages.
-         * @param message ConfigMetadata message or plain object to encode
+         * Encodes the specified KVRWSet message. Does not implicitly {@link kvrwset.KVRWSet.verify|verify} messages.
+         * @param message KVRWSet message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encode(message: etcdraft.IConfigMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: kvrwset.IKVRWSet, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Encodes the specified ConfigMetadata message, length delimited. Does not implicitly {@link etcdraft.ConfigMetadata.verify|verify} messages.
-         * @param message ConfigMetadata message or plain object to encode
+         * Encodes the specified KVRWSet message, length delimited. Does not implicitly {@link kvrwset.KVRWSet.verify|verify} messages.
+         * @param message KVRWSet message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encodeDelimited(message: etcdraft.IConfigMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: kvrwset.IKVRWSet, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Decodes a ConfigMetadata message from the specified reader or buffer.
+         * Decodes a KVRWSet message from the specified reader or buffer.
          * @param reader Reader or buffer to decode from
          * @param [length] Message length if known beforehand
-         * @returns ConfigMetadata
+         * @returns KVRWSet
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): etcdraft.ConfigMetadata;
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): kvrwset.KVRWSet;
 
         /**
-         * Decodes a ConfigMetadata message from the specified reader or buffer, length delimited.
+         * Decodes a KVRWSet message from the specified reader or buffer, length delimited.
          * @param reader Reader or buffer to decode from
-         * @returns ConfigMetadata
+         * @returns KVRWSet
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): etcdraft.ConfigMetadata;
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): kvrwset.KVRWSet;
 
         /**
-         * Verifies a ConfigMetadata message.
+         * Verifies a KVRWSet message.
          * @param message Plain object to verify
          * @returns `null` if valid, otherwise the reason why it is not
          */
         public static verify(message: { [k: string]: any }): (string|null);
 
         /**
-         * Creates a ConfigMetadata message from a plain object. Also converts values to their respective internal types.
+         * Creates a KVRWSet message from a plain object. Also converts values to their respective internal types.
          * @param object Plain object
-         * @returns ConfigMetadata
+         * @returns KVRWSet
          */
-        public static fromObject(object: { [k: string]: any }): etcdraft.ConfigMetadata;
+        public static fromObject(object: { [k: string]: any }): kvrwset.KVRWSet;
 
         /**
-         * Creates a plain object from a ConfigMetadata message. Also converts values to other types if specified.
-         * @param message ConfigMetadata
+         * Creates a plain object from a KVRWSet message. Also converts values to other types if specified.
+         * @param message KVRWSet
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: etcdraft.ConfigMetadata, options?: $protobuf.IConversionOptions): { [k: string]: any };
+        public static toObject(message: kvrwset.KVRWSet, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
-         * Converts this ConfigMetadata to JSON.
+         * Converts this KVRWSet to JSON.
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for KVRWSet
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
-    /** Properties of a Consenter. */
-    interface IConsenter {
+    /** Properties of a HashedRWSet. */
+    interface IHashedRWSet {
 
-        /** Consenter host */
-        host?: (string|null);
+        /** HashedRWSet hashed_reads */
+        hashed_reads?: (kvrwset.IKVReadHash[]|null);
 
-        /** Consenter port */
-        port?: (number|null);
+        /** HashedRWSet hashed_writes */
+        hashed_writes?: (kvrwset.IKVWriteHash[]|null);
 
-        /** Consenter client_tls_cert */
-        client_tls_cert?: (Uint8Array|null);
-
-        /** Consenter server_tls_cert */
-        server_tls_cert?: (Uint8Array|null);
+        /** HashedRWSet metadata_writes */
+        metadata_writes?: (kvrwset.IKVMetadataWriteHash[]|null);
     }
 
-    /** Represents a Consenter. */
-    class Consenter implements IConsenter {
+    /** Represents a HashedRWSet. */
+    class HashedRWSet implements IHashedRWSet {
 
         /**
-         * Constructs a new Consenter.
+         * Constructs a new HashedRWSet.
          * @param [properties] Properties to set
          */
-        constructor(properties?: etcdraft.IConsenter);
+        constructor(properties?: kvrwset.IHashedRWSet);
 
-        /** Consenter host. */
-        public host: string;
+        /** HashedRWSet hashed_reads. */
+        public hashed_reads: kvrwset.IKVReadHash[];
 
-        /** Consenter port. */
-        public port: number;
+        /** HashedRWSet hashed_writes. */
+        public hashed_writes: kvrwset.IKVWriteHash[];
 
-        /** Consenter client_tls_cert. */
-        public client_tls_cert: Uint8Array;
-
-        /** Consenter server_tls_cert. */
-        public server_tls_cert: Uint8Array;
+        /** HashedRWSet metadata_writes. */
+        public metadata_writes: kvrwset.IKVMetadataWriteHash[];
 
         /**
-         * Creates a new Consenter instance using the specified properties.
+         * Creates a new HashedRWSet instance using the specified properties.
          * @param [properties] Properties to set
-         * @returns Consenter instance
+         * @returns HashedRWSet instance
          */
-        public static create(properties?: etcdraft.IConsenter): etcdraft.Consenter;
+        public static create(properties?: kvrwset.IHashedRWSet): kvrwset.HashedRWSet;
 
         /**
-         * Encodes the specified Consenter message. Does not implicitly {@link etcdraft.Consenter.verify|verify} messages.
-         * @param message Consenter message or plain object to encode
+         * Encodes the specified HashedRWSet message. Does not implicitly {@link kvrwset.HashedRWSet.verify|verify} messages.
+         * @param message HashedRWSet message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encode(message: etcdraft.IConsenter, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: kvrwset.IHashedRWSet, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Encodes the specified Consenter message, length delimited. Does not implicitly {@link etcdraft.Consenter.verify|verify} messages.
-         * @param message Consenter message or plain object to encode
+         * Encodes the specified HashedRWSet message, length delimited. Does not implicitly {@link kvrwset.HashedRWSet.verify|verify} messages.
+         * @param message HashedRWSet message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encodeDelimited(message: etcdraft.IConsenter, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: kvrwset.IHashedRWSet, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Decodes a Consenter message from the specified reader or buffer.
+         * Decodes a HashedRWSet message from the specified reader or buffer.
          * @param reader Reader or buffer to decode from
          * @param [length] Message length if known beforehand
-         * @returns Consenter
+         * @returns HashedRWSet
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): etcdraft.Consenter;
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): kvrwset.HashedRWSet;
 
         /**
-         * Decodes a Consenter message from the specified reader or buffer, length delimited.
+         * Decodes a HashedRWSet message from the specified reader or buffer, length delimited.
          * @param reader Reader or buffer to decode from
-         * @returns Consenter
+         * @returns HashedRWSet
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): etcdraft.Consenter;
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): kvrwset.HashedRWSet;
 
         /**
-         * Verifies a Consenter message.
+         * Verifies a HashedRWSet message.
          * @param message Plain object to verify
          * @returns `null` if valid, otherwise the reason why it is not
          */
         public static verify(message: { [k: string]: any }): (string|null);
 
         /**
-         * Creates a Consenter message from a plain object. Also converts values to their respective internal types.
+         * Creates a HashedRWSet message from a plain object. Also converts values to their respective internal types.
          * @param object Plain object
-         * @returns Consenter
+         * @returns HashedRWSet
          */
-        public static fromObject(object: { [k: string]: any }): etcdraft.Consenter;
+        public static fromObject(object: { [k: string]: any }): kvrwset.HashedRWSet;
 
         /**
-         * Creates a plain object from a Consenter message. Also converts values to other types if specified.
-         * @param message Consenter
+         * Creates a plain object from a HashedRWSet message. Also converts values to other types if specified.
+         * @param message HashedRWSet
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: etcdraft.Consenter, options?: $protobuf.IConversionOptions): { [k: string]: any };
+        public static toObject(message: kvrwset.HashedRWSet, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
-         * Converts this Consenter to JSON.
+         * Converts this HashedRWSet to JSON.
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for HashedRWSet
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
-    /** Properties of an Options. */
-    interface IOptions {
+    /** Properties of a KVRead. */
+    interface IKVRead {
 
-        /** Options tick_interval */
-        tick_interval?: (string|null);
+        /** KVRead key */
+        key?: (string|null);
 
-        /** Options election_tick */
-        election_tick?: (number|null);
-
-        /** Options heartbeat_tick */
-        heartbeat_tick?: (number|null);
-
-        /** Options max_inflight_blocks */
-        max_inflight_blocks?: (number|null);
-
-        /** Options snapshot_interval_size */
-        snapshot_interval_size?: (number|null);
+        /** KVRead version */
+        version?: (kvrwset.IVersion|null);
     }
 
-    /** Represents an Options. */
-    class Options implements IOptions {
+    /** Represents a KVRead. */
+    class KVRead implements IKVRead {
 
         /**
-         * Constructs a new Options.
+         * Constructs a new KVRead.
          * @param [properties] Properties to set
          */
-        constructor(properties?: etcdraft.IOptions);
+        constructor(properties?: kvrwset.IKVRead);
 
-        /** Options tick_interval. */
-        public tick_interval: string;
+        /** KVRead key. */
+        public key: string;
 
-        /** Options election_tick. */
-        public election_tick: number;
-
-        /** Options heartbeat_tick. */
-        public heartbeat_tick: number;
-
-        /** Options max_inflight_blocks. */
-        public max_inflight_blocks: number;
-
-        /** Options snapshot_interval_size. */
-        public snapshot_interval_size: number;
+        /** KVRead version. */
+        public version?: (kvrwset.IVersion|null);
 
         /**
-         * Creates a new Options instance using the specified properties.
+         * Creates a new KVRead instance using the specified properties.
          * @param [properties] Properties to set
-         * @returns Options instance
+         * @returns KVRead instance
          */
-        public static create(properties?: etcdraft.IOptions): etcdraft.Options;
+        public static create(properties?: kvrwset.IKVRead): kvrwset.KVRead;
 
         /**
-         * Encodes the specified Options message. Does not implicitly {@link etcdraft.Options.verify|verify} messages.
-         * @param message Options message or plain object to encode
+         * Encodes the specified KVRead message. Does not implicitly {@link kvrwset.KVRead.verify|verify} messages.
+         * @param message KVRead message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encode(message: etcdraft.IOptions, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: kvrwset.IKVRead, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Encodes the specified Options message, length delimited. Does not implicitly {@link etcdraft.Options.verify|verify} messages.
-         * @param message Options message or plain object to encode
+         * Encodes the specified KVRead message, length delimited. Does not implicitly {@link kvrwset.KVRead.verify|verify} messages.
+         * @param message KVRead message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encodeDelimited(message: etcdraft.IOptions, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: kvrwset.IKVRead, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Decodes an Options message from the specified reader or buffer.
+         * Decodes a KVRead message from the specified reader or buffer.
          * @param reader Reader or buffer to decode from
          * @param [length] Message length if known beforehand
-         * @returns Options
+         * @returns KVRead
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): etcdraft.Options;
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): kvrwset.KVRead;
 
         /**
-         * Decodes an Options message from the specified reader or buffer, length delimited.
+         * Decodes a KVRead message from the specified reader or buffer, length delimited.
          * @param reader Reader or buffer to decode from
-         * @returns Options
+         * @returns KVRead
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): etcdraft.Options;
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): kvrwset.KVRead;
 
         /**
-         * Verifies an Options message.
+         * Verifies a KVRead message.
          * @param message Plain object to verify
          * @returns `null` if valid, otherwise the reason why it is not
          */
         public static verify(message: { [k: string]: any }): (string|null);
 
         /**
-         * Creates an Options message from a plain object. Also converts values to their respective internal types.
+         * Creates a KVRead message from a plain object. Also converts values to their respective internal types.
          * @param object Plain object
-         * @returns Options
+         * @returns KVRead
          */
-        public static fromObject(object: { [k: string]: any }): etcdraft.Options;
+        public static fromObject(object: { [k: string]: any }): kvrwset.KVRead;
 
         /**
-         * Creates a plain object from an Options message. Also converts values to other types if specified.
-         * @param message Options
+         * Creates a plain object from a KVRead message. Also converts values to other types if specified.
+         * @param message KVRead
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: etcdraft.Options, options?: $protobuf.IConversionOptions): { [k: string]: any };
+        public static toObject(message: kvrwset.KVRead, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
-         * Converts this Options to JSON.
+         * Converts this KVRead to JSON.
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for KVRead
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
-    /** Properties of a BlockMetadata. */
-    interface IBlockMetadata {
+    /** Properties of a KVWrite. */
+    interface IKVWrite {
 
-        /** BlockMetadata consenter_ids */
-        consenter_ids?: ((number|Long)[]|null);
+        /** KVWrite key */
+        key?: (string|null);
 
-        /** BlockMetadata next_consenter_id */
-        next_consenter_id?: (number|Long|null);
+        /** KVWrite is_delete */
+        is_delete?: (boolean|null);
 
-        /** BlockMetadata raft_index */
-        raft_index?: (number|Long|null);
+        /** KVWrite value */
+        value?: (Uint8Array|null);
     }
 
-    /** Represents a BlockMetadata. */
-    class BlockMetadata implements IBlockMetadata {
+    /** Represents a KVWrite. */
+    class KVWrite implements IKVWrite {
 
         /**
-         * Constructs a new BlockMetadata.
+         * Constructs a new KVWrite.
          * @param [properties] Properties to set
          */
-        constructor(properties?: etcdraft.IBlockMetadata);
+        constructor(properties?: kvrwset.IKVWrite);
 
-        /** BlockMetadata consenter_ids. */
-        public consenter_ids: (number|Long)[];
+        /** KVWrite key. */
+        public key: string;
 
-        /** BlockMetadata next_consenter_id. */
-        public next_consenter_id: (number|Long);
+        /** KVWrite is_delete. */
+        public is_delete: boolean;
 
-        /** BlockMetadata raft_index. */
-        public raft_index: (number|Long);
+        /** KVWrite value. */
+        public value: Uint8Array;
 
         /**
-         * Creates a new BlockMetadata instance using the specified properties.
+         * Creates a new KVWrite instance using the specified properties.
          * @param [properties] Properties to set
-         * @returns BlockMetadata instance
+         * @returns KVWrite instance
          */
-        public static create(properties?: etcdraft.IBlockMetadata): etcdraft.BlockMetadata;
+        public static create(properties?: kvrwset.IKVWrite): kvrwset.KVWrite;
 
         /**
-         * Encodes the specified BlockMetadata message. Does not implicitly {@link etcdraft.BlockMetadata.verify|verify} messages.
-         * @param message BlockMetadata message or plain object to encode
+         * Encodes the specified KVWrite message. Does not implicitly {@link kvrwset.KVWrite.verify|verify} messages.
+         * @param message KVWrite message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encode(message: etcdraft.IBlockMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: kvrwset.IKVWrite, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Encodes the specified BlockMetadata message, length delimited. Does not implicitly {@link etcdraft.BlockMetadata.verify|verify} messages.
-         * @param message BlockMetadata message or plain object to encode
+         * Encodes the specified KVWrite message, length delimited. Does not implicitly {@link kvrwset.KVWrite.verify|verify} messages.
+         * @param message KVWrite message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encodeDelimited(message: etcdraft.IBlockMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: kvrwset.IKVWrite, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Decodes a BlockMetadata message from the specified reader or buffer.
+         * Decodes a KVWrite message from the specified reader or buffer.
          * @param reader Reader or buffer to decode from
          * @param [length] Message length if known beforehand
-         * @returns BlockMetadata
+         * @returns KVWrite
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): etcdraft.BlockMetadata;
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): kvrwset.KVWrite;
 
         /**
-         * Decodes a BlockMetadata message from the specified reader or buffer, length delimited.
+         * Decodes a KVWrite message from the specified reader or buffer, length delimited.
          * @param reader Reader or buffer to decode from
-         * @returns BlockMetadata
+         * @returns KVWrite
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): etcdraft.BlockMetadata;
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): kvrwset.KVWrite;
 
         /**
-         * Verifies a BlockMetadata message.
+         * Verifies a KVWrite message.
          * @param message Plain object to verify
          * @returns `null` if valid, otherwise the reason why it is not
          */
         public static verify(message: { [k: string]: any }): (string|null);
 
         /**
-         * Creates a BlockMetadata message from a plain object. Also converts values to their respective internal types.
+         * Creates a KVWrite message from a plain object. Also converts values to their respective internal types.
          * @param object Plain object
-         * @returns BlockMetadata
+         * @returns KVWrite
          */
-        public static fromObject(object: { [k: string]: any }): etcdraft.BlockMetadata;
+        public static fromObject(object: { [k: string]: any }): kvrwset.KVWrite;
 
         /**
-         * Creates a plain object from a BlockMetadata message. Also converts values to other types if specified.
-         * @param message BlockMetadata
+         * Creates a plain object from a KVWrite message. Also converts values to other types if specified.
+         * @param message KVWrite
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: etcdraft.BlockMetadata, options?: $protobuf.IConversionOptions): { [k: string]: any };
+        public static toObject(message: kvrwset.KVWrite, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
-         * Converts this BlockMetadata to JSON.
+         * Converts this KVWrite to JSON.
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for KVWrite
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
-    /** Properties of a ClusterMetadata. */
-    interface IClusterMetadata {
+    /** Properties of a KVMetadataWrite. */
+    interface IKVMetadataWrite {
 
-        /** ClusterMetadata active_nodes */
-        active_nodes?: ((number|Long)[]|null);
+        /** KVMetadataWrite key */
+        key?: (string|null);
+
+        /** KVMetadataWrite entries */
+        entries?: (kvrwset.IKVMetadataEntry[]|null);
     }
 
-    /** Represents a ClusterMetadata. */
-    class ClusterMetadata implements IClusterMetadata {
+    /** Represents a KVMetadataWrite. */
+    class KVMetadataWrite implements IKVMetadataWrite {
 
         /**
-         * Constructs a new ClusterMetadata.
+         * Constructs a new KVMetadataWrite.
          * @param [properties] Properties to set
          */
-        constructor(properties?: etcdraft.IClusterMetadata);
+        constructor(properties?: kvrwset.IKVMetadataWrite);
 
-        /** ClusterMetadata active_nodes. */
-        public active_nodes: (number|Long)[];
+        /** KVMetadataWrite key. */
+        public key: string;
+
+        /** KVMetadataWrite entries. */
+        public entries: kvrwset.IKVMetadataEntry[];
 
         /**
-         * Creates a new ClusterMetadata instance using the specified properties.
+         * Creates a new KVMetadataWrite instance using the specified properties.
          * @param [properties] Properties to set
-         * @returns ClusterMetadata instance
+         * @returns KVMetadataWrite instance
          */
-        public static create(properties?: etcdraft.IClusterMetadata): etcdraft.ClusterMetadata;
+        public static create(properties?: kvrwset.IKVMetadataWrite): kvrwset.KVMetadataWrite;
 
         /**
-         * Encodes the specified ClusterMetadata message. Does not implicitly {@link etcdraft.ClusterMetadata.verify|verify} messages.
-         * @param message ClusterMetadata message or plain object to encode
+         * Encodes the specified KVMetadataWrite message. Does not implicitly {@link kvrwset.KVMetadataWrite.verify|verify} messages.
+         * @param message KVMetadataWrite message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encode(message: etcdraft.IClusterMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: kvrwset.IKVMetadataWrite, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Encodes the specified ClusterMetadata message, length delimited. Does not implicitly {@link etcdraft.ClusterMetadata.verify|verify} messages.
-         * @param message ClusterMetadata message or plain object to encode
+         * Encodes the specified KVMetadataWrite message, length delimited. Does not implicitly {@link kvrwset.KVMetadataWrite.verify|verify} messages.
+         * @param message KVMetadataWrite message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encodeDelimited(message: etcdraft.IClusterMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: kvrwset.IKVMetadataWrite, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Decodes a ClusterMetadata message from the specified reader or buffer.
+         * Decodes a KVMetadataWrite message from the specified reader or buffer.
          * @param reader Reader or buffer to decode from
          * @param [length] Message length if known beforehand
-         * @returns ClusterMetadata
+         * @returns KVMetadataWrite
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): etcdraft.ClusterMetadata;
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): kvrwset.KVMetadataWrite;
 
         /**
-         * Decodes a ClusterMetadata message from the specified reader or buffer, length delimited.
+         * Decodes a KVMetadataWrite message from the specified reader or buffer, length delimited.
          * @param reader Reader or buffer to decode from
-         * @returns ClusterMetadata
+         * @returns KVMetadataWrite
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): etcdraft.ClusterMetadata;
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): kvrwset.KVMetadataWrite;
 
         /**
-         * Verifies a ClusterMetadata message.
+         * Verifies a KVMetadataWrite message.
          * @param message Plain object to verify
          * @returns `null` if valid, otherwise the reason why it is not
          */
         public static verify(message: { [k: string]: any }): (string|null);
 
         /**
-         * Creates a ClusterMetadata message from a plain object. Also converts values to their respective internal types.
+         * Creates a KVMetadataWrite message from a plain object. Also converts values to their respective internal types.
          * @param object Plain object
-         * @returns ClusterMetadata
+         * @returns KVMetadataWrite
          */
-        public static fromObject(object: { [k: string]: any }): etcdraft.ClusterMetadata;
+        public static fromObject(object: { [k: string]: any }): kvrwset.KVMetadataWrite;
 
         /**
-         * Creates a plain object from a ClusterMetadata message. Also converts values to other types if specified.
-         * @param message ClusterMetadata
+         * Creates a plain object from a KVMetadataWrite message. Also converts values to other types if specified.
+         * @param message KVMetadataWrite
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: etcdraft.ClusterMetadata, options?: $protobuf.IConversionOptions): { [k: string]: any };
+        public static toObject(message: kvrwset.KVMetadataWrite, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
-         * Converts this ClusterMetadata to JSON.
+         * Converts this KVMetadataWrite to JSON.
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for KVMetadataWrite
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a KVReadHash. */
+    interface IKVReadHash {
+
+        /** KVReadHash key_hash */
+        key_hash?: (Uint8Array|null);
+
+        /** KVReadHash version */
+        version?: (kvrwset.IVersion|null);
+    }
+
+    /** Represents a KVReadHash. */
+    class KVReadHash implements IKVReadHash {
+
+        /**
+         * Constructs a new KVReadHash.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: kvrwset.IKVReadHash);
+
+        /** KVReadHash key_hash. */
+        public key_hash: Uint8Array;
+
+        /** KVReadHash version. */
+        public version?: (kvrwset.IVersion|null);
+
+        /**
+         * Creates a new KVReadHash instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns KVReadHash instance
+         */
+        public static create(properties?: kvrwset.IKVReadHash): kvrwset.KVReadHash;
+
+        /**
+         * Encodes the specified KVReadHash message. Does not implicitly {@link kvrwset.KVReadHash.verify|verify} messages.
+         * @param message KVReadHash message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: kvrwset.IKVReadHash, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified KVReadHash message, length delimited. Does not implicitly {@link kvrwset.KVReadHash.verify|verify} messages.
+         * @param message KVReadHash message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: kvrwset.IKVReadHash, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a KVReadHash message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns KVReadHash
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): kvrwset.KVReadHash;
+
+        /**
+         * Decodes a KVReadHash message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns KVReadHash
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): kvrwset.KVReadHash;
+
+        /**
+         * Verifies a KVReadHash message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a KVReadHash message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns KVReadHash
+         */
+        public static fromObject(object: { [k: string]: any }): kvrwset.KVReadHash;
+
+        /**
+         * Creates a plain object from a KVReadHash message. Also converts values to other types if specified.
+         * @param message KVReadHash
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: kvrwset.KVReadHash, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this KVReadHash to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for KVReadHash
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a KVWriteHash. */
+    interface IKVWriteHash {
+
+        /** KVWriteHash key_hash */
+        key_hash?: (Uint8Array|null);
+
+        /** KVWriteHash is_delete */
+        is_delete?: (boolean|null);
+
+        /** KVWriteHash value_hash */
+        value_hash?: (Uint8Array|null);
+    }
+
+    /** Represents a KVWriteHash. */
+    class KVWriteHash implements IKVWriteHash {
+
+        /**
+         * Constructs a new KVWriteHash.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: kvrwset.IKVWriteHash);
+
+        /** KVWriteHash key_hash. */
+        public key_hash: Uint8Array;
+
+        /** KVWriteHash is_delete. */
+        public is_delete: boolean;
+
+        /** KVWriteHash value_hash. */
+        public value_hash: Uint8Array;
+
+        /**
+         * Creates a new KVWriteHash instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns KVWriteHash instance
+         */
+        public static create(properties?: kvrwset.IKVWriteHash): kvrwset.KVWriteHash;
+
+        /**
+         * Encodes the specified KVWriteHash message. Does not implicitly {@link kvrwset.KVWriteHash.verify|verify} messages.
+         * @param message KVWriteHash message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: kvrwset.IKVWriteHash, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified KVWriteHash message, length delimited. Does not implicitly {@link kvrwset.KVWriteHash.verify|verify} messages.
+         * @param message KVWriteHash message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: kvrwset.IKVWriteHash, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a KVWriteHash message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns KVWriteHash
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): kvrwset.KVWriteHash;
+
+        /**
+         * Decodes a KVWriteHash message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns KVWriteHash
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): kvrwset.KVWriteHash;
+
+        /**
+         * Verifies a KVWriteHash message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a KVWriteHash message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns KVWriteHash
+         */
+        public static fromObject(object: { [k: string]: any }): kvrwset.KVWriteHash;
+
+        /**
+         * Creates a plain object from a KVWriteHash message. Also converts values to other types if specified.
+         * @param message KVWriteHash
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: kvrwset.KVWriteHash, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this KVWriteHash to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for KVWriteHash
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a KVMetadataWriteHash. */
+    interface IKVMetadataWriteHash {
+
+        /** KVMetadataWriteHash key_hash */
+        key_hash?: (Uint8Array|null);
+
+        /** KVMetadataWriteHash entries */
+        entries?: (kvrwset.IKVMetadataEntry[]|null);
+    }
+
+    /** Represents a KVMetadataWriteHash. */
+    class KVMetadataWriteHash implements IKVMetadataWriteHash {
+
+        /**
+         * Constructs a new KVMetadataWriteHash.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: kvrwset.IKVMetadataWriteHash);
+
+        /** KVMetadataWriteHash key_hash. */
+        public key_hash: Uint8Array;
+
+        /** KVMetadataWriteHash entries. */
+        public entries: kvrwset.IKVMetadataEntry[];
+
+        /**
+         * Creates a new KVMetadataWriteHash instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns KVMetadataWriteHash instance
+         */
+        public static create(properties?: kvrwset.IKVMetadataWriteHash): kvrwset.KVMetadataWriteHash;
+
+        /**
+         * Encodes the specified KVMetadataWriteHash message. Does not implicitly {@link kvrwset.KVMetadataWriteHash.verify|verify} messages.
+         * @param message KVMetadataWriteHash message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: kvrwset.IKVMetadataWriteHash, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified KVMetadataWriteHash message, length delimited. Does not implicitly {@link kvrwset.KVMetadataWriteHash.verify|verify} messages.
+         * @param message KVMetadataWriteHash message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: kvrwset.IKVMetadataWriteHash, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a KVMetadataWriteHash message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns KVMetadataWriteHash
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): kvrwset.KVMetadataWriteHash;
+
+        /**
+         * Decodes a KVMetadataWriteHash message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns KVMetadataWriteHash
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): kvrwset.KVMetadataWriteHash;
+
+        /**
+         * Verifies a KVMetadataWriteHash message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a KVMetadataWriteHash message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns KVMetadataWriteHash
+         */
+        public static fromObject(object: { [k: string]: any }): kvrwset.KVMetadataWriteHash;
+
+        /**
+         * Creates a plain object from a KVMetadataWriteHash message. Also converts values to other types if specified.
+         * @param message KVMetadataWriteHash
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: kvrwset.KVMetadataWriteHash, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this KVMetadataWriteHash to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for KVMetadataWriteHash
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a KVMetadataEntry. */
+    interface IKVMetadataEntry {
+
+        /** KVMetadataEntry name */
+        name?: (string|null);
+
+        /** KVMetadataEntry value */
+        value?: (Uint8Array|null);
+    }
+
+    /** Represents a KVMetadataEntry. */
+    class KVMetadataEntry implements IKVMetadataEntry {
+
+        /**
+         * Constructs a new KVMetadataEntry.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: kvrwset.IKVMetadataEntry);
+
+        /** KVMetadataEntry name. */
+        public name: string;
+
+        /** KVMetadataEntry value. */
+        public value: Uint8Array;
+
+        /**
+         * Creates a new KVMetadataEntry instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns KVMetadataEntry instance
+         */
+        public static create(properties?: kvrwset.IKVMetadataEntry): kvrwset.KVMetadataEntry;
+
+        /**
+         * Encodes the specified KVMetadataEntry message. Does not implicitly {@link kvrwset.KVMetadataEntry.verify|verify} messages.
+         * @param message KVMetadataEntry message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: kvrwset.IKVMetadataEntry, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified KVMetadataEntry message, length delimited. Does not implicitly {@link kvrwset.KVMetadataEntry.verify|verify} messages.
+         * @param message KVMetadataEntry message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: kvrwset.IKVMetadataEntry, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a KVMetadataEntry message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns KVMetadataEntry
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): kvrwset.KVMetadataEntry;
+
+        /**
+         * Decodes a KVMetadataEntry message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns KVMetadataEntry
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): kvrwset.KVMetadataEntry;
+
+        /**
+         * Verifies a KVMetadataEntry message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a KVMetadataEntry message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns KVMetadataEntry
+         */
+        public static fromObject(object: { [k: string]: any }): kvrwset.KVMetadataEntry;
+
+        /**
+         * Creates a plain object from a KVMetadataEntry message. Also converts values to other types if specified.
+         * @param message KVMetadataEntry
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: kvrwset.KVMetadataEntry, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this KVMetadataEntry to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for KVMetadataEntry
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a Version. */
+    interface IVersion {
+
+        /** Version block_num */
+        block_num?: (number|Long|null);
+
+        /** Version tx_num */
+        tx_num?: (number|Long|null);
+    }
+
+    /** Represents a Version. */
+    class Version implements IVersion {
+
+        /**
+         * Constructs a new Version.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: kvrwset.IVersion);
+
+        /** Version block_num. */
+        public block_num: (number|Long);
+
+        /** Version tx_num. */
+        public tx_num: (number|Long);
+
+        /**
+         * Creates a new Version instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns Version instance
+         */
+        public static create(properties?: kvrwset.IVersion): kvrwset.Version;
+
+        /**
+         * Encodes the specified Version message. Does not implicitly {@link kvrwset.Version.verify|verify} messages.
+         * @param message Version message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: kvrwset.IVersion, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified Version message, length delimited. Does not implicitly {@link kvrwset.Version.verify|verify} messages.
+         * @param message Version message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: kvrwset.IVersion, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a Version message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns Version
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): kvrwset.Version;
+
+        /**
+         * Decodes a Version message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns Version
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): kvrwset.Version;
+
+        /**
+         * Verifies a Version message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a Version message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns Version
+         */
+        public static fromObject(object: { [k: string]: any }): kvrwset.Version;
+
+        /**
+         * Creates a plain object from a Version message. Also converts values to other types if specified.
+         * @param message Version
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: kvrwset.Version, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this Version to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for Version
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a RangeQueryInfo. */
+    interface IRangeQueryInfo {
+
+        /** RangeQueryInfo start_key */
+        start_key?: (string|null);
+
+        /** RangeQueryInfo end_key */
+        end_key?: (string|null);
+
+        /** RangeQueryInfo itr_exhausted */
+        itr_exhausted?: (boolean|null);
+
+        /** RangeQueryInfo raw_reads */
+        raw_reads?: (kvrwset.IQueryReads|null);
+
+        /** RangeQueryInfo reads_merkle_hashes */
+        reads_merkle_hashes?: (kvrwset.IQueryReadsMerkleSummary|null);
+    }
+
+    /** Represents a RangeQueryInfo. */
+    class RangeQueryInfo implements IRangeQueryInfo {
+
+        /**
+         * Constructs a new RangeQueryInfo.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: kvrwset.IRangeQueryInfo);
+
+        /** RangeQueryInfo start_key. */
+        public start_key: string;
+
+        /** RangeQueryInfo end_key. */
+        public end_key: string;
+
+        /** RangeQueryInfo itr_exhausted. */
+        public itr_exhausted: boolean;
+
+        /** RangeQueryInfo raw_reads. */
+        public raw_reads?: (kvrwset.IQueryReads|null);
+
+        /** RangeQueryInfo reads_merkle_hashes. */
+        public reads_merkle_hashes?: (kvrwset.IQueryReadsMerkleSummary|null);
+
+        /** RangeQueryInfo reads_info. */
+        public reads_info?: ("raw_reads"|"reads_merkle_hashes");
+
+        /**
+         * Creates a new RangeQueryInfo instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns RangeQueryInfo instance
+         */
+        public static create(properties?: kvrwset.IRangeQueryInfo): kvrwset.RangeQueryInfo;
+
+        /**
+         * Encodes the specified RangeQueryInfo message. Does not implicitly {@link kvrwset.RangeQueryInfo.verify|verify} messages.
+         * @param message RangeQueryInfo message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: kvrwset.IRangeQueryInfo, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified RangeQueryInfo message, length delimited. Does not implicitly {@link kvrwset.RangeQueryInfo.verify|verify} messages.
+         * @param message RangeQueryInfo message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: kvrwset.IRangeQueryInfo, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a RangeQueryInfo message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns RangeQueryInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): kvrwset.RangeQueryInfo;
+
+        /**
+         * Decodes a RangeQueryInfo message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns RangeQueryInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): kvrwset.RangeQueryInfo;
+
+        /**
+         * Verifies a RangeQueryInfo message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a RangeQueryInfo message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns RangeQueryInfo
+         */
+        public static fromObject(object: { [k: string]: any }): kvrwset.RangeQueryInfo;
+
+        /**
+         * Creates a plain object from a RangeQueryInfo message. Also converts values to other types if specified.
+         * @param message RangeQueryInfo
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: kvrwset.RangeQueryInfo, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this RangeQueryInfo to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for RangeQueryInfo
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a QueryReads. */
+    interface IQueryReads {
+
+        /** QueryReads kv_reads */
+        kv_reads?: (kvrwset.IKVRead[]|null);
+    }
+
+    /** Represents a QueryReads. */
+    class QueryReads implements IQueryReads {
+
+        /**
+         * Constructs a new QueryReads.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: kvrwset.IQueryReads);
+
+        /** QueryReads kv_reads. */
+        public kv_reads: kvrwset.IKVRead[];
+
+        /**
+         * Creates a new QueryReads instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns QueryReads instance
+         */
+        public static create(properties?: kvrwset.IQueryReads): kvrwset.QueryReads;
+
+        /**
+         * Encodes the specified QueryReads message. Does not implicitly {@link kvrwset.QueryReads.verify|verify} messages.
+         * @param message QueryReads message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: kvrwset.IQueryReads, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified QueryReads message, length delimited. Does not implicitly {@link kvrwset.QueryReads.verify|verify} messages.
+         * @param message QueryReads message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: kvrwset.IQueryReads, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a QueryReads message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns QueryReads
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): kvrwset.QueryReads;
+
+        /**
+         * Decodes a QueryReads message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns QueryReads
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): kvrwset.QueryReads;
+
+        /**
+         * Verifies a QueryReads message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a QueryReads message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns QueryReads
+         */
+        public static fromObject(object: { [k: string]: any }): kvrwset.QueryReads;
+
+        /**
+         * Creates a plain object from a QueryReads message. Also converts values to other types if specified.
+         * @param message QueryReads
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: kvrwset.QueryReads, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this QueryReads to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for QueryReads
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a QueryReadsMerkleSummary. */
+    interface IQueryReadsMerkleSummary {
+
+        /** QueryReadsMerkleSummary max_degree */
+        max_degree?: (number|null);
+
+        /** QueryReadsMerkleSummary max_level */
+        max_level?: (number|null);
+
+        /** QueryReadsMerkleSummary max_level_hashes */
+        max_level_hashes?: (Uint8Array[]|null);
+    }
+
+    /** Represents a QueryReadsMerkleSummary. */
+    class QueryReadsMerkleSummary implements IQueryReadsMerkleSummary {
+
+        /**
+         * Constructs a new QueryReadsMerkleSummary.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: kvrwset.IQueryReadsMerkleSummary);
+
+        /** QueryReadsMerkleSummary max_degree. */
+        public max_degree: number;
+
+        /** QueryReadsMerkleSummary max_level. */
+        public max_level: number;
+
+        /** QueryReadsMerkleSummary max_level_hashes. */
+        public max_level_hashes: Uint8Array[];
+
+        /**
+         * Creates a new QueryReadsMerkleSummary instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns QueryReadsMerkleSummary instance
+         */
+        public static create(properties?: kvrwset.IQueryReadsMerkleSummary): kvrwset.QueryReadsMerkleSummary;
+
+        /**
+         * Encodes the specified QueryReadsMerkleSummary message. Does not implicitly {@link kvrwset.QueryReadsMerkleSummary.verify|verify} messages.
+         * @param message QueryReadsMerkleSummary message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: kvrwset.IQueryReadsMerkleSummary, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified QueryReadsMerkleSummary message, length delimited. Does not implicitly {@link kvrwset.QueryReadsMerkleSummary.verify|verify} messages.
+         * @param message QueryReadsMerkleSummary message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: kvrwset.IQueryReadsMerkleSummary, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a QueryReadsMerkleSummary message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns QueryReadsMerkleSummary
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): kvrwset.QueryReadsMerkleSummary;
+
+        /**
+         * Decodes a QueryReadsMerkleSummary message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns QueryReadsMerkleSummary
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): kvrwset.QueryReadsMerkleSummary;
+
+        /**
+         * Verifies a QueryReadsMerkleSummary message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a QueryReadsMerkleSummary message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns QueryReadsMerkleSummary
+         */
+        public static fromObject(object: { [k: string]: any }): kvrwset.QueryReadsMerkleSummary;
+
+        /**
+         * Creates a plain object from a QueryReadsMerkleSummary message. Also converts values to other types if specified.
+         * @param message QueryReadsMerkleSummary
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: kvrwset.QueryReadsMerkleSummary, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this QueryReadsMerkleSummary to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for QueryReadsMerkleSummary
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 }
 
 /** Namespace lifecycle. */
 export namespace lifecycle {
+
+    /** Properties of a StateMetadata. */
+    interface IStateMetadata {
+
+        /** StateMetadata datatype */
+        datatype?: (string|null);
+
+        /** StateMetadata fields */
+        fields?: (string[]|null);
+    }
+
+    /** Represents a StateMetadata. */
+    class StateMetadata implements IStateMetadata {
+
+        /**
+         * Constructs a new StateMetadata.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: lifecycle.IStateMetadata);
+
+        /** StateMetadata datatype. */
+        public datatype: string;
+
+        /** StateMetadata fields. */
+        public fields: string[];
+
+        /**
+         * Creates a new StateMetadata instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns StateMetadata instance
+         */
+        public static create(properties?: lifecycle.IStateMetadata): lifecycle.StateMetadata;
+
+        /**
+         * Encodes the specified StateMetadata message. Does not implicitly {@link lifecycle.StateMetadata.verify|verify} messages.
+         * @param message StateMetadata message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: lifecycle.IStateMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified StateMetadata message, length delimited. Does not implicitly {@link lifecycle.StateMetadata.verify|verify} messages.
+         * @param message StateMetadata message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: lifecycle.IStateMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a StateMetadata message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns StateMetadata
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): lifecycle.StateMetadata;
+
+        /**
+         * Decodes a StateMetadata message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns StateMetadata
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): lifecycle.StateMetadata;
+
+        /**
+         * Verifies a StateMetadata message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a StateMetadata message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns StateMetadata
+         */
+        public static fromObject(object: { [k: string]: any }): lifecycle.StateMetadata;
+
+        /**
+         * Creates a plain object from a StateMetadata message. Also converts values to other types if specified.
+         * @param message StateMetadata
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: lifecycle.StateMetadata, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this StateMetadata to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for StateMetadata
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a StateData. */
+    interface IStateData {
+
+        /** StateData Int64 */
+        Int64?: (number|Long|null);
+
+        /** StateData Bytes */
+        Bytes?: (Uint8Array|null);
+
+        /** StateData String */
+        String?: (string|null);
+    }
+
+    /** Represents a StateData. */
+    class StateData implements IStateData {
+
+        /**
+         * Constructs a new StateData.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: lifecycle.IStateData);
+
+        /** StateData Int64. */
+        public Int64?: (number|Long|null);
+
+        /** StateData Bytes. */
+        public Bytes?: (Uint8Array|null);
+
+        /** StateData String. */
+        public String?: (string|null);
+
+        /** StateData Type. */
+        public Type?: ("Int64"|"Bytes"|"String");
+
+        /**
+         * Creates a new StateData instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns StateData instance
+         */
+        public static create(properties?: lifecycle.IStateData): lifecycle.StateData;
+
+        /**
+         * Encodes the specified StateData message. Does not implicitly {@link lifecycle.StateData.verify|verify} messages.
+         * @param message StateData message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: lifecycle.IStateData, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified StateData message, length delimited. Does not implicitly {@link lifecycle.StateData.verify|verify} messages.
+         * @param message StateData message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: lifecycle.IStateData, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a StateData message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns StateData
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): lifecycle.StateData;
+
+        /**
+         * Decodes a StateData message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns StateData
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): lifecycle.StateData;
+
+        /**
+         * Verifies a StateData message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a StateData message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns StateData
+         */
+        public static fromObject(object: { [k: string]: any }): lifecycle.StateData;
+
+        /**
+         * Creates a plain object from a StateData message. Also converts values to other types if specified.
+         * @param message StateData
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: lifecycle.StateData, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this StateData to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for StateData
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
 
     /** Properties of an InstallChaincodeArgs. */
     interface IInstallChaincodeArgs {
@@ -23189,6 +24987,13 @@ export namespace lifecycle {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for InstallChaincodeArgs
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of an InstallChaincodeResult. */
@@ -23285,6 +25090,13 @@ export namespace lifecycle {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for InstallChaincodeResult
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a QueryInstalledChaincodeArgs. */
@@ -23375,6 +25187,13 @@ export namespace lifecycle {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for QueryInstalledChaincodeArgs
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a QueryInstalledChaincodeResult. */
@@ -23477,6 +25296,13 @@ export namespace lifecycle {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for QueryInstalledChaincodeResult
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     namespace QueryInstalledChaincodeResult {
@@ -23569,6 +25395,13 @@ export namespace lifecycle {
              * @returns JSON object
              */
             public toJSON(): { [k: string]: any };
+
+            /**
+             * Gets the default type url for References
+             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns The default type url
+             */
+            public static getTypeUrl(typeUrlPrefix?: string): string;
         }
 
         /** Properties of a Chaincode. */
@@ -23665,6 +25498,13 @@ export namespace lifecycle {
              * @returns JSON object
              */
             public toJSON(): { [k: string]: any };
+
+            /**
+             * Gets the default type url for Chaincode
+             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns The default type url
+             */
+            public static getTypeUrl(typeUrlPrefix?: string): string;
         }
     }
 
@@ -23756,6 +25596,13 @@ export namespace lifecycle {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for GetInstalledChaincodePackageArgs
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a GetInstalledChaincodePackageResult. */
@@ -23846,6 +25693,13 @@ export namespace lifecycle {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for GetInstalledChaincodePackageResult
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a QueryInstalledChaincodesArgs. */
@@ -23930,6 +25784,13 @@ export namespace lifecycle {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for QueryInstalledChaincodesArgs
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a QueryInstalledChaincodesResult. */
@@ -24020,6 +25881,13 @@ export namespace lifecycle {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for QueryInstalledChaincodesResult
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     namespace QueryInstalledChaincodesResult {
@@ -24124,6 +25992,13 @@ export namespace lifecycle {
              * @returns JSON object
              */
             public toJSON(): { [k: string]: any };
+
+            /**
+             * Gets the default type url for InstalledChaincode
+             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns The default type url
+             */
+            public static getTypeUrl(typeUrlPrefix?: string): string;
         }
 
         /** Properties of a References. */
@@ -24214,6 +26089,13 @@ export namespace lifecycle {
              * @returns JSON object
              */
             public toJSON(): { [k: string]: any };
+
+            /**
+             * Gets the default type url for References
+             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns The default type url
+             */
+            public static getTypeUrl(typeUrlPrefix?: string): string;
         }
 
         /** Properties of a Chaincode. */
@@ -24310,6 +26192,13 @@ export namespace lifecycle {
              * @returns JSON object
              */
             public toJSON(): { [k: string]: any };
+
+            /**
+             * Gets the default type url for Chaincode
+             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns The default type url
+             */
+            public static getTypeUrl(typeUrlPrefix?: string): string;
         }
     }
 
@@ -24449,6 +26338,13 @@ export namespace lifecycle {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ApproveChaincodeDefinitionForMyOrgArgs
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ChaincodeSource. */
@@ -24548,6 +26444,13 @@ export namespace lifecycle {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ChaincodeSource
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     namespace ChaincodeSource {
@@ -24634,6 +26537,13 @@ export namespace lifecycle {
              * @returns JSON object
              */
             public toJSON(): { [k: string]: any };
+
+            /**
+             * Gets the default type url for Unavailable
+             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns The default type url
+             */
+            public static getTypeUrl(typeUrlPrefix?: string): string;
         }
 
         /** Properties of a Local. */
@@ -24724,6 +26634,13 @@ export namespace lifecycle {
              * @returns JSON object
              */
             public toJSON(): { [k: string]: any };
+
+            /**
+             * Gets the default type url for Local
+             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns The default type url
+             */
+            public static getTypeUrl(typeUrlPrefix?: string): string;
         }
     }
 
@@ -24809,6 +26726,13 @@ export namespace lifecycle {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ApproveChaincodeDefinitionForMyOrgResult
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a CommitChaincodeDefinitionArgs. */
@@ -24941,6 +26865,13 @@ export namespace lifecycle {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for CommitChaincodeDefinitionArgs
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a CommitChaincodeDefinitionResult. */
@@ -25025,6 +26956,13 @@ export namespace lifecycle {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for CommitChaincodeDefinitionResult
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a CheckCommitReadinessArgs. */
@@ -25157,6 +27095,13 @@ export namespace lifecycle {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for CheckCommitReadinessArgs
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a CheckCommitReadinessResult. */
@@ -25247,6 +27192,13 @@ export namespace lifecycle {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for CheckCommitReadinessResult
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a QueryChaincodeDefinitionArgs. */
@@ -25337,6 +27289,13 @@ export namespace lifecycle {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for QueryChaincodeDefinitionArgs
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a QueryChaincodeDefinitionResult. */
@@ -25469,6 +27428,13 @@ export namespace lifecycle {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for QueryChaincodeDefinitionResult
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a QueryChaincodeDefinitionsArgs. */
@@ -25553,6 +27519,13 @@ export namespace lifecycle {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for QueryChaincodeDefinitionsArgs
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a QueryChaincodeDefinitionsResult. */
@@ -25643,6 +27616,13 @@ export namespace lifecycle {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for QueryChaincodeDefinitionsResult
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     namespace QueryChaincodeDefinitionsResult {
@@ -25777,208 +27757,14 @@ export namespace lifecycle {
              * @returns JSON object
              */
             public toJSON(): { [k: string]: any };
+
+            /**
+             * Gets the default type url for ChaincodeDefinition
+             * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns The default type url
+             */
+            public static getTypeUrl(typeUrlPrefix?: string): string;
         }
-    }
-
-    /** Properties of a StateMetadata. */
-    interface IStateMetadata {
-
-        /** StateMetadata datatype */
-        datatype?: (string|null);
-
-        /** StateMetadata fields */
-        fields?: (string[]|null);
-    }
-
-    /** Represents a StateMetadata. */
-    class StateMetadata implements IStateMetadata {
-
-        /**
-         * Constructs a new StateMetadata.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: lifecycle.IStateMetadata);
-
-        /** StateMetadata datatype. */
-        public datatype: string;
-
-        /** StateMetadata fields. */
-        public fields: string[];
-
-        /**
-         * Creates a new StateMetadata instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns StateMetadata instance
-         */
-        public static create(properties?: lifecycle.IStateMetadata): lifecycle.StateMetadata;
-
-        /**
-         * Encodes the specified StateMetadata message. Does not implicitly {@link lifecycle.StateMetadata.verify|verify} messages.
-         * @param message StateMetadata message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: lifecycle.IStateMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified StateMetadata message, length delimited. Does not implicitly {@link lifecycle.StateMetadata.verify|verify} messages.
-         * @param message StateMetadata message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: lifecycle.IStateMetadata, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a StateMetadata message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns StateMetadata
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): lifecycle.StateMetadata;
-
-        /**
-         * Decodes a StateMetadata message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns StateMetadata
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): lifecycle.StateMetadata;
-
-        /**
-         * Verifies a StateMetadata message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a StateMetadata message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns StateMetadata
-         */
-        public static fromObject(object: { [k: string]: any }): lifecycle.StateMetadata;
-
-        /**
-         * Creates a plain object from a StateMetadata message. Also converts values to other types if specified.
-         * @param message StateMetadata
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: lifecycle.StateMetadata, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this StateMetadata to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
-    /** Properties of a StateData. */
-    interface IStateData {
-
-        /** StateData Int64 */
-        Int64?: (number|Long|null);
-
-        /** StateData Bytes */
-        Bytes?: (Uint8Array|null);
-
-        /** StateData String */
-        String?: (string|null);
-    }
-
-    /** Represents a StateData. */
-    class StateData implements IStateData {
-
-        /**
-         * Constructs a new StateData.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: lifecycle.IStateData);
-
-        /** StateData Int64. */
-        public Int64?: (number|Long|null);
-
-        /** StateData Bytes. */
-        public Bytes?: (Uint8Array|null);
-
-        /** StateData String. */
-        public String?: (string|null);
-
-        /** StateData Type. */
-        public Type?: ("Int64"|"Bytes"|"String");
-
-        /**
-         * Creates a new StateData instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns StateData instance
-         */
-        public static create(properties?: lifecycle.IStateData): lifecycle.StateData;
-
-        /**
-         * Encodes the specified StateData message. Does not implicitly {@link lifecycle.StateData.verify|verify} messages.
-         * @param message StateData message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: lifecycle.IStateData, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified StateData message, length delimited. Does not implicitly {@link lifecycle.StateData.verify|verify} messages.
-         * @param message StateData message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: lifecycle.IStateData, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a StateData message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns StateData
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): lifecycle.StateData;
-
-        /**
-         * Decodes a StateData message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns StateData
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): lifecycle.StateData;
-
-        /**
-         * Verifies a StateData message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a StateData message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns StateData
-         */
-        public static fromObject(object: { [k: string]: any }): lifecycle.StateData;
-
-        /**
-         * Creates a plain object from a StateData message. Also converts values to other types if specified.
-         * @param message StateData
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: lifecycle.StateData, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this StateData to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
     }
 
     /** Properties of a ChaincodeEndorsementInfo. */
@@ -26081,6 +27867,13 @@ export namespace lifecycle {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ChaincodeEndorsementInfo
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
     /** Properties of a ChaincodeValidationInfo. */
@@ -26177,5 +27970,12 @@ export namespace lifecycle {
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ChaincodeValidationInfo
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 }
