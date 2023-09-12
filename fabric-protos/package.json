@@ -31,13 +31,15 @@
   ],
   "types": "./types/index.d.ts",
   "dependencies": {
-    "@grpc/grpc-js": "~1.7.3",
+    "@grpc/grpc-js": "~1.9.0",
     "@grpc/proto-loader": "^0.7.0",
-    "protobufjs": "^7.0.0"
+    "long": "^5.2.3",
+    "protobufjs": "^7.2.0"
   },
   "devDependencies": {
     "cpx": "^1.5.0",
-    "mkdirp": "^1.0.4",
-    "rimraf": "^3.0.2"
+    "mkdirp": "^3.0.1",
+    "protobufjs-cli": "^1.1.2",
+    "rimraf": "^5.0.1"
   }
 }
