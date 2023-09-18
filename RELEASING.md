@@ -1,17 +1,21 @@
-# Node SDK Release Process Document - For Latest Branch
+# Node SDK release process
 
 Using v2.2 branch and last release of v2.2.3 as an example throughout.
 
-## Pre-Check
+## Pre-check
 
-Check top level `package.json` file properties **version** and **tag** are one above the current release and correct for publishing snapshots. Expect *2.2.4-snapshot* and *unstable-2.2*. If this is not the case then builds are likely to fail.  Consider fixing and creating a PR or move straight onto submit a PR for a new release.
+Check top level `package.json` file properties **version** and **tag** are one above the current release and correct for publishing snapshots. Expect *2.2.4-snapshot* and *unstable*. If this is not the case then builds are likely to fail.  Consider fixing and creating a PR or move straight onto submit a PR for a new release.
 
-## Submit Release PR
+## Submit release PR
 
-- Update the **version** and **tag** properties in the top-level `package.json` file to be the appropriate values - next release version *2.2.4* and release npm tag *latest*. **[NOTE: This would become latest-2.2 when a new branch supersedes as latest.]**
-- Git add, submit, push and create PR. Once the PR is merged, the build will do the npm publishing. Check it has npm published at https://www.npmjs.com/package/fabric-client and https://www.npmjs.com/package/fabric-common
+- Update the **version** and **tag** properties in the top-level `package.json` file to be the appropriate values - next release version *2.2.4* and release npm tag *latest*.
+- Git add, submit, push and create PR. Once the PR is merged, the build will do the npm publishing. Check the build completes successfully and that it has published to the npm registry at:
+    - https://www.npmjs.com/package/fabric-network
+    - https://www.npmjs.com/package/fabric-common
+    - https://www.npmjs.com/package/fabric-protos
+    - https://www.npmjs.com/package/fabric-ca-client
 
-## Tag Release
+## Tag release
 
 - Create in GitHub a [release](https://github.com/hyperledger/fabric-sdk-node/releases) draft, referring to previous releases for appropriate text. Be sure to set:
     - **Title**: v2.2.4
@@ -20,6 +24,6 @@ Check top level `package.json` file properties **version** and **tag** are one a
 - Save as draft initially.
 - When ready 'Publish release'. Publishing the release in GitHub creates a corresponding Git tag.
 
-## Post Release Clean-up
+## Post-release PR
 
-- Once the release is complete, create a PR to change the top-level `package.json` file's **version** and **tag** properties back to ones for publishing snapshots - *2.2.5-snapshot* and *unstable-2.2*.
+- Once the release is complete, create a PR to change the top-level `package.json` file's **version** and **tag** properties back to ones for publishing snapshots - *2.2.5-snapshot* and *unstable*.
