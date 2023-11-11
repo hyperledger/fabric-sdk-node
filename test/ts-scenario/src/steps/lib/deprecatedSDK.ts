@@ -105,7 +105,7 @@ export async function sdk_chaincode_install_for_org(ccType: 'golang' | 'car' | '
 		const errors: Client.ProposalErrorResponse[] = [];
 		for (const proposalResponse of proposalResponses) {
 			let valid = false;
-			if ((proposalResponse as Client.ProposalResponse).response && (proposalResponse as Client.ProposalResponse).response.status === 200) {
+			if ((proposalResponse as Client.ProposalResponse).response?.status === Client.Status.SUCCESS) {
 				valid = true;
 			} else {
 				errors.push(proposalResponse as Client.ProposalErrorResponse);
@@ -221,7 +221,7 @@ export async function sdk_chaincode_instantiate(ccName: string, ccType: 'golang'
 		}
 		const proposal: Client.Proposal = results[1];
 		for (const proposalResponse of proposalResponses) {
-			if (!((proposalResponse).response && (proposalResponse).response.status === 200)) {
+			if (proposalResponse.response?.status !== Client.Status.SUCCESS) {
 				throw new Error(`The proposal of type ${type} was bad: ${JSON.stringify(proposalResponse)}`);
 			}
 		}

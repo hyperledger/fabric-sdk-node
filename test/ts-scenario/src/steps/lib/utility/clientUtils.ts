@@ -318,7 +318,7 @@ export async function commitChannelRequest(requestName: string, clientName: stri
 					BaseUtils.logAndThrow('Eventer checkConnection test failed');
 				}
 			} catch (error) {
-				BaseUtils.logError(`Failed to connect to channel event hub ${eventer.toString()}`);
+				BaseUtils.logError(`Failed to connect to channel event hub ${util.inspect(eventer)}`);
 				BaseUtils.logError(`Failed to connect ${util.inspect(error)}`);
 				throw error;
 			}
@@ -513,7 +513,7 @@ export async function queryChannelRequest(clientName: string, channelName: strin
 						queryObject.results.chaincodecheck = queryObject.results.general;
 					}
 					for (const error of queryResponse.errors) {
-						queryObject.results[`peer${inc}`] = error.toString();
+						queryObject.results[`peer${inc}`] = String(error);
 						BaseUtils.logMsg(`Query failure ${util.inspect(queryObject.results[`peer${inc}`])}`);
 						inc++;
 					}
