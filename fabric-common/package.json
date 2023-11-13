@@ -27,7 +27,7 @@
 		"callsite": "^1.0.0",
 		"elliptic": "^6.5.4",
 		"fabric-protos": "file:../fabric-protos",
-		"js-sha3": "^0.8.0",
+		"js-sha3": "^0.9.2",
 		"jsrsasign": "^10.5.25",
 		"long": "^5.2.3",
 		"nconf": "^0.12.0",

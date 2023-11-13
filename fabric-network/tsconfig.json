@@ -1,16 +1,14 @@
 {
     "$schema": "https://json.schemastore.org/tsconfig",
-    "extends": "@tsconfig/node10/tsconfig.json",
+    "extends": "@tsconfig/node14/tsconfig.json",
 	"compilerOptions": {
 		"declaration": true,
         "declarationMap": true,
 		"outDir": "./lib",
 		"rootDir": "./src",
 		"sourceMap": true,
-		"strict": true,
         "noUnusedLocals": true,
-        "noImplicitReturns": true,
-        "forceConsistentCasingInFileNames": true
+        "noImplicitReturns": true
 	},
 	"include": [
 		"src/"

@@ -169,7 +169,7 @@ async function submitChannelRequest(
 					BaseUtils.logAndThrow(msg);
 				}
 			} else if (response.response && response.response.status) {
-				if (response.response.status === 200) {
+				if (response.response.status === Client.Status.SUCCESS) {
 					BaseUtils.logMsg(` - Good peer response ${response.response.status as number}`);
 				} else {
 					BaseUtils.logAndThrow(`Problem with the chaincode invoke :: status: ${response.response.status} message: ${response.response.message}`);

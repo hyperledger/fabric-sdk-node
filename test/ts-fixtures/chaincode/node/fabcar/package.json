@@ -4,8 +4,7 @@
     "description": "FabCar contract implemented in JavaScript",
     "main": "index.js",
     "engines": {
-        "node": ">=8",
-        "npm": ">=5"
+        "node": ">=8"
     },
     "scripts": {
         "lint": "eslint .",
@@ -17,8 +16,8 @@
     "author": "Hyperledger",
     "license": "Apache-2.0",
     "dependencies": {
-        "fabric-contract-api": "^2.0.0",
-        "fabric-shim": "^2.0.0"
+        "fabric-contract-api": "~2.2.0",
+        "fabric-shim": "~2.2.0"
     },
     "devDependencies": {
         "chai": "^4.1.2",
