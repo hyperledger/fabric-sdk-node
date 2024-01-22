@@ -28,7 +28,7 @@
 		"elliptic": "^6.5.4",
 		"fabric-protos": "file:../fabric-protos",
 		"js-sha3": "^0.9.2",
-		"jsrsasign": "^10.5.25",
+		"jsrsasign": "^11.0.0",
 		"long": "^5.2.3",
 		"nconf": "^0.12.0",
 		"promise-settle": "^0.3.0",
