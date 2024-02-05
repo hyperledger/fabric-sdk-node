@@ -14,7 +14,7 @@ jobs:
     needs: build
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: 18
           registry-url: 'https://registry.npmjs.org'
@@ -22,7 +22,7 @@ jobs:
         run: |
           npm update --global npm
           npm --version
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: npm install
       - run: npm run compile
       - name: Publish
@@ -36,7 +36,7 @@ jobs:
     needs: build
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: 18
       - name: Update npm
@@ -44,11 +44,11 @@ jobs:
           npm update --global npm
           npm --version
       - name: Checkout source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: source
       - name: Checkout publish
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: publish
           ref: gh-pages
