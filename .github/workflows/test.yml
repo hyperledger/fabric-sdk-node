@@ -30,11 +30,11 @@ jobs:
           - 20
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.checkout-ref }}
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
       - name: Install SoftHSM
@@ -49,13 +49,13 @@ jobs:
       - run: npm test
       - name: "Archive unit test debug log"
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.node-version }}-unit-test-debug.log
           path: test/temp/debug.log
       - name: "Archive scenario test debug log"
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.node-version }}-cucumber-debug.log
           path: test/temp/debugc.log
