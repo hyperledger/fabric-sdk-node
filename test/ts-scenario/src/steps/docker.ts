@@ -35,9 +35,9 @@ Given(/^I deploy a (.+?) Fabric network at (.+?) version/, {timeout: Constants.S
 	if (!fabricState || !fabricState.deployed) {
 		BaseUtils.logMsg(` **** deploying a new fabric network of type ${type} version ${version}`);
 		if (type.localeCompare('non-tls') === 0) {
-			await commandRunner.runShellCommand(true, 'docker-compose -f ' + nonTlsNetwork + ' -p node up -d');
+			await commandRunner.runShellCommand(true, 'docker compose -f ' + nonTlsNetwork + ' -p node up -d');
 		} else {
-			await commandRunner.runShellCommand(true, 'docker-compose -f ' + tlsNetwork + ' -p node up -d');
+			await commandRunner.runShellCommand(true, 'docker compose -f ' + tlsNetwork + ' -p node up -d');
 		}
 		stateStore.set(Constants.FABRIC_STATE, {deployed: true, type, version});
 		await BaseUtils.sleep(Constants.INC_SHORT);
@@ -54,9 +54,9 @@ Given(/^I deploy a (.+?) Fabric network at (.+?) version/, {timeout: Constants.S
 		await BaseUtils.sleep(Constants.INC_MED);
 
 		if (type.localeCompare('non-tls') === 0) {
-			await commandRunner.runShellCommand(true, 'docker-compose -f ' + nonTlsNetwork + ' -p node up -d');
+			await commandRunner.runShellCommand(true, 'docker compose -f ' + nonTlsNetwork + ' -p node up -d');
 		} else {
-			await commandRunner.runShellCommand(true, 'docker-compose -f ' + tlsNetwork + ' -p node up -d');
+			await commandRunner.runShellCommand(true, 'docker compose -f ' + tlsNetwork + ' -p node up -d');
 		}
 		stateStore.set(Constants.FABRIC_STATE, {deployed: true, type, version});
 		await BaseUtils.sleep(Constants.INC_SHORT);
