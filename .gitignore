@@ -5,7 +5,6 @@
 coverage
 docs/gen
 node_modules
-npm-shrinkwrap.json
 npm-debug.log
 yarn.lock
 tmp
